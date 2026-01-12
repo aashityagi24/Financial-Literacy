@@ -121,13 +121,23 @@ export default function LandingPage() {
               </div>
               <span className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>PocketQuest</span>
             </div>
-            <button
-              data-testid="login-btn-nav"
-              onClick={handleLogin}
-              className="btn-primary px-6 py-3 text-lg"
-            >
-              Sign In
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                data-testid="admin-login-btn"
+                onClick={() => setShowAdminLogin(true)}
+                className="px-4 py-2 text-[#3D5A80] hover:text-[#1D3557] text-sm font-medium flex items-center gap-1"
+              >
+                <Shield className="w-4 h-4" />
+                Admin
+              </button>
+              <button
+                data-testid="login-btn-nav"
+                onClick={handleLogin}
+                className="btn-primary px-6 py-3 text-lg"
+              >
+                Sign In
+              </button>
+            </div>
           </nav>
           
           <div className="grid lg:grid-cols-2 gap-12 items-center">
