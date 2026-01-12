@@ -174,12 +174,12 @@ export default function TeacherDashboard({ user }) {
           <>
             {/* Overview */}
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="card-playful p-5 animate-bounce-in">
+              <div className="card-playful p-5">
                 <Users className="w-8 h-8 text-[#3D5A80] mb-2" />
                 <p className="text-3xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{dashboard?.total_students || 0}</p>
                 <p className="text-sm text-[#3D5A80]">Total Students</p>
               </div>
-              <div className="card-playful p-5 animate-bounce-in stagger-1">
+              <div className="card-playful p-5">
                 <GraduationCap className="w-8 h-8 text-[#EE6C4D] mb-2" />
                 <p className="text-3xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{dashboard?.classrooms?.length || 0}</p>
                 <p className="text-sm text-[#3D5A80]">Classrooms</p>
