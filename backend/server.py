@@ -1543,6 +1543,8 @@ async def create_classroom(classroom: ClassroomCreate, request: Request):
     }
     
     await db.classrooms.insert_one(classroom_doc)
+    # Remove MongoDB _id before returning
+    classroom_doc.pop("_id", None)
     return {"message": "Classroom created", "classroom": classroom_doc}
 
 @api_router.get("/teacher/classrooms")
