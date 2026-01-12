@@ -172,12 +172,30 @@ export default function AdminPage({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
+        {/* Quick Action - Content Management */}
+        <Link 
+          to="/admin/content" 
+          className="mb-6 block card-playful p-4 bg-gradient-to-r from-[#FFD23F] to-[#EE6C4D] hover:scale-[1.01] transition-transform"
+          data-testid="content-management-link"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <BookOpen className="w-8 h-8 text-white" />
+              <div>
+                <h3 className="text-lg font-bold text-white" style={{ fontFamily: 'Fredoka' }}>Content Management</h3>
+                <p className="text-white/80 text-sm">Manage topics, subtopics, lessons, worksheets, and activities</p>
+              </div>
+            </div>
+            <ChevronLeft className="w-6 h-6 text-white rotate-180" />
+          </div>
+        </Link>
+        
         {/* Tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           {[
             { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
             { id: 'users', label: 'Users', icon: Users },
-            { id: 'content', label: 'Content', icon: BookOpen },
+            { id: 'content', label: 'Legacy Content', icon: BookOpen },
           ].map((tab) => (
             <button
               key={tab.id}
