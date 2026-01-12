@@ -2765,7 +2765,10 @@ async def get_all_topics(request: Request):
 
 @api_router.get("/content/topics/{topic_id}")
 async def get_topic_detail(topic_id: str, request: Request):
-    """Get topic details with content items"""
+    """Get topic details with content items (only published for non-admin)"""
+    user = await get_current_user(request)
+    is_admin = user and user.get("role") == "admin"
+    
     topic = await db.content_topics.find_one({"topic_id": topic_id}, {"_id": 0})
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
@@ -2776,9 +2779,13 @@ async def get_topic_detail(topic_id: str, request: Request):
         {"_id": 0}
     ).sort("order", 1).to_list(100)
     
-    # Get content items for this topic
+    # Get content items for this topic (only published for non-admin users)
+    content_query = {"topic_id": topic_id}
+    if not is_admin:
+        content_query["is_published"] = True
+    
     content_items = await db.content_items.find(
-        {"topic_id": topic_id},
+        content_query,
         {"_id": 0}
     ).sort("order", 1).to_list(100)
     
@@ -2791,9 +2798,17 @@ async def get_topic_detail(topic_id: str, request: Request):
 @api_router.get("/content/items/{content_id}")
 async def get_content_item(content_id: str, request: Request):
     """Get a single content item"""
+    user = await get_current_user(request)
+    is_admin = user and user.get("role") == "admin"
+    
     item = await db.content_items.find_one({"content_id": content_id}, {"_id": 0})
     if not item:
         raise HTTPException(status_code=404, detail="Content not found")
+    
+    # Non-admin users can only view published content
+    if not is_admin and not item.get("is_published", False):
+        raise HTTPException(status_code=404, detail="Content not found")
+    
     return item
 
 @api_router.post("/content/items/{content_id}/complete")
