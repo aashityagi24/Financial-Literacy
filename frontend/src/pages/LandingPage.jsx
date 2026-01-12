@@ -1,14 +1,41 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy } from 'lucide-react';
+import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, Shield, X } from 'lucide-react';
+import axios from 'axios';
+import { toast } from 'sonner';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   
   // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
   const handleLogin = () => {
     const redirectUrl = window.location.origin + '/dashboard';
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+  };
+  
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/auth/admin-login`, {
+        email: adminEmail,
+        password: adminPassword
+      }, { withCredentials: true });
+      
+      toast.success('Admin login successful!');
+      navigate('/dashboard', { state: { user: response.data.user } });
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Invalid credentials');
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const features = [
