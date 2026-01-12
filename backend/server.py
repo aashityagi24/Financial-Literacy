@@ -174,8 +174,102 @@ class FinancialTipRequest(BaseModel):
     grade: int
     topic: Optional[str] = None
 
-# ============== LEARNING CONTENT MODELS ==============
+# ============== LEARNING CONTENT MODELS (NEW HIERARCHICAL STRUCTURE) ==============
 
+class ContentTopic(BaseModel):
+    """Topic or Subtopic - supports hierarchy via parent_id"""
+    model_config = ConfigDict(extra="ignore")
+    topic_id: str
+    title: str
+    description: str
+    parent_id: Optional[str] = None  # null = parent topic, string = subtopic
+    thumbnail: Optional[str] = None  # URL to thumbnail image
+    order: int = 0  # For sorting
+    min_grade: int = 0
+    max_grade: int = 5
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_by: Optional[str] = None
+
+class TopicCreate(BaseModel):
+    title: str
+    description: str
+    parent_id: Optional[str] = None
+    thumbnail: Optional[str] = None
+    order: int = 0
+    min_grade: int = 0
+    max_grade: int = 5
+
+class TopicUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    parent_id: Optional[str] = None
+    thumbnail: Optional[str] = None
+    order: Optional[int] = None
+    min_grade: Optional[int] = None
+    max_grade: Optional[int] = None
+
+class ContentItem(BaseModel):
+    """Generic content item - can be lesson, book, worksheet, or activity"""
+    model_config = ConfigDict(extra="ignore")
+    content_id: str
+    topic_id: str  # Links to topic or subtopic
+    title: str
+    description: str
+    content_type: str  # 'lesson', 'book', 'worksheet', 'activity'
+    thumbnail: Optional[str] = None  # URL to thumbnail image
+    order: int = 0  # For sorting within topic
+    min_grade: int = 0
+    max_grade: int = 5
+    reward_coins: int = 5
+    # Type-specific fields
+    content_data: Dict[str, Any] = {}  # Stores type-specific data
+    # For lessons: { "content": "markdown/html", "lesson_type": "story/video/interactive/quiz", "media_url": "", "duration_minutes": 5 }
+    # For books: { "author": "", "cover_url": "", "content_url": "", "category": "story/workbook/guide" }
+    # For worksheets: { "pdf_url": "", "instructions": "" }
+    # For activities: { "html_folder": "", "instructions": "", "activity_type": "interactive/game" }
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_by: Optional[str] = None
+
+class ContentItemCreate(BaseModel):
+    topic_id: str
+    title: str
+    description: str
+    content_type: str
+    thumbnail: Optional[str] = None
+    order: int = 0
+    min_grade: int = 0
+    max_grade: int = 5
+    reward_coins: int = 5
+    content_data: Dict[str, Any] = {}
+
+class ContentItemUpdate(BaseModel):
+    topic_id: Optional[str] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+    content_type: Optional[str] = None
+    thumbnail: Optional[str] = None
+    order: Optional[int] = None
+    min_grade: Optional[int] = None
+    max_grade: Optional[int] = None
+    reward_coins: Optional[int] = None
+    content_data: Optional[Dict[str, Any]] = None
+
+class UserContentProgress(BaseModel):
+    """Track user progress on any content item"""
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    user_id: str
+    content_id: str
+    completed: bool = False
+    score: Optional[int] = None  # For quizzes
+    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    completed_at: Optional[datetime] = None
+
+class ReorderRequest(BaseModel):
+    """Request to reorder items"""
+    items: List[Dict[str, Any]]  # [{"id": "xxx", "order": 1}, ...]
+
+# Legacy models kept for backward compatibility
 class LearningTopic(BaseModel):
     model_config = ConfigDict(extra="ignore")
     topic_id: str
