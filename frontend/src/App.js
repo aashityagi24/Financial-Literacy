@@ -22,6 +22,7 @@ import LessonPage from "@/pages/LessonPage";
 import AdminPage from "@/pages/AdminPage";
 import TeacherDashboard from "@/pages/TeacherDashboard";
 import ParentDashboard from "@/pages/ParentDashboard";
+import ContentManagement from "@/pages/ContentManagement";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
