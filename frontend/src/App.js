@@ -138,6 +138,26 @@ function AppRouter() {
           {({ user, setUser }) => <ProfilePage user={user} setUser={setUser} />}
         </ProtectedRoute>
       } />
+      <Route path="/learn" element={
+        <ProtectedRoute>
+          {({ user }) => <LearnPage user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/learn/topic/:topicId" element={
+        <ProtectedRoute>
+          {({ user }) => <TopicPage user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/learn/lesson/:lessonId" element={
+        <ProtectedRoute>
+          {({ user }) => <LessonPage user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/admin" element={
+        <ProtectedRoute>
+          {({ user, setUser }) => <AdminPage user={user} setUser={setUser} />}
+        </ProtectedRoute>
+      } />
     </Routes>
   );
 }
