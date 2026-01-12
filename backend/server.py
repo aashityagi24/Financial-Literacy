@@ -158,6 +158,143 @@ class FinancialTipRequest(BaseModel):
     grade: int
     topic: Optional[str] = None
 
+# ============== LEARNING CONTENT MODELS ==============
+
+class LearningTopic(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    topic_id: str
+    title: str
+    description: str
+    category: str  # 'history', 'concepts', 'skills', 'activities'
+    icon: str
+    order: int = 0
+    min_grade: int = 0
+    max_grade: int = 5
+
+class LearningLesson(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    lesson_id: str
+    topic_id: str
+    title: str
+    content: str  # HTML or Markdown content
+    lesson_type: str  # 'story', 'video', 'interactive', 'quiz', 'activity'
+    media_url: Optional[str] = None
+    duration_minutes: int = 5
+    order: int = 0
+    min_grade: int = 0
+    max_grade: int = 5
+    reward_coins: int = 5
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_by: Optional[str] = None
+
+class LessonCreate(BaseModel):
+    topic_id: str
+    title: str
+    content: str
+    lesson_type: str
+    media_url: Optional[str] = None
+    duration_minutes: int = 5
+    order: int = 0
+    min_grade: int = 0
+    max_grade: int = 5
+    reward_coins: int = 5
+
+class LessonUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    lesson_type: Optional[str] = None
+    media_url: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    order: Optional[int] = None
+    min_grade: Optional[int] = None
+    max_grade: Optional[int] = None
+    reward_coins: Optional[int] = None
+
+class UserLessonProgress(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    user_id: str
+    lesson_id: str
+    completed: bool = False
+    score: Optional[int] = None  # For quizzes
+    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    completed_at: Optional[datetime] = None
+
+class QuizQuestion(BaseModel):
+    question: str
+    options: List[str]
+    correct_answer: int  # Index of correct option
+    explanation: str
+
+class Quiz(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    quiz_id: str
+    lesson_id: str
+    title: str
+    questions: List[Dict[str, Any]]
+    passing_score: int = 70
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class QuizCreate(BaseModel):
+    lesson_id: str
+    title: str
+    questions: List[Dict[str, Any]]
+    passing_score: int = 70
+
+class QuizSubmission(BaseModel):
+    quiz_id: str
+    answers: List[int]  # List of selected option indices
+
+class Book(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    book_id: str
+    title: str
+    author: str
+    description: str
+    cover_url: Optional[str] = None
+    content_url: Optional[str] = None  # PDF or external link
+    category: str  # 'story', 'workbook', 'guide'
+    min_grade: int = 0
+    max_grade: int = 5
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_by: Optional[str] = None
+
+class BookCreate(BaseModel):
+    title: str
+    author: str
+    description: str
+    cover_url: Optional[str] = None
+    content_url: Optional[str] = None
+    category: str
+    min_grade: int = 0
+    max_grade: int = 5
+
+class Activity(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    activity_id: str
+    title: str
+    description: str
+    instructions: str
+    activity_type: str  # 'printable', 'interactive', 'real_world', 'game'
+    topic_id: Optional[str] = None
+    resource_url: Optional[str] = None
+    min_grade: int = 0
+    max_grade: int = 5
+    reward_coins: int = 10
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_by: Optional[str] = None
+
+class ActivityCreate(BaseModel):
+    title: str
+    description: str
+    instructions: str
+    activity_type: str
+    topic_id: Optional[str] = None
+    resource_url: Optional[str] = None
+    min_grade: int = 0
+    max_grade: int = 5
+    reward_coins: int = 10
+
 # ============== AUTH HELPERS ==============
 
 async def get_session_from_header(request: Request) -> Optional[str]:
