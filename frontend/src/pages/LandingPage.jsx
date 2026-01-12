@@ -49,6 +49,63 @@ export default function LandingPage() {
   
   return (
     <div className="min-h-screen bg-[#E0FBFC]">
+      {/* Admin Login Modal */}
+      {showAdminLogin && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 w-full max-w-md mx-4 relative">
+            <button 
+              onClick={() => setShowAdminLogin(false)}
+              className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full"
+            >
+              <X className="w-5 h-5 text-[#1D3557]" />
+            </button>
+            
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 mx-auto mb-4 bg-[#1D3557] rounded-2xl border-3 border-[#1D3557] flex items-center justify-center">
+                <Shield className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Admin Login</h2>
+              <p className="text-[#3D5A80] text-sm mt-1">Access the admin dashboard</p>
+            </div>
+            
+            <form onSubmit={handleAdminLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-[#1D3557] mb-1">Email</label>
+                <input
+                  type="email"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  placeholder="admin@example.com"
+                  className="w-full px-4 py-3 rounded-xl border-3 border-[#1D3557] focus:outline-none focus:ring-2 focus:ring-[#FFD23F]"
+                  required
+                  data-testid="admin-email-input"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-[#1D3557] mb-1">Password</label>
+                <input
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  placeholder="Enter password"
+                  className="w-full px-4 py-3 rounded-xl border-3 border-[#1D3557] focus:outline-none focus:ring-2 focus:ring-[#FFD23F]"
+                  required
+                  data-testid="admin-password-input"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full btn-primary py-3 text-lg disabled:opacity-50"
+                data-testid="admin-login-submit"
+              >
+                {isLoading ? 'Signing in...' : 'Sign In as Admin'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+      
       {/* Hero Section */}
       <header className="relative overflow-hidden">
         {/* Decorative elements */}
