@@ -480,6 +480,76 @@ def generate_invite_code():
 
 # ============== AUTH ROUTES ==============
 
+class AdminLoginRequest(BaseModel):
+    email: str
+    password: str
+
+@api_router.post("/auth/admin-login")
+async def admin_login(login_data: AdminLoginRequest, response: Response):
+    """Admin login with email and password"""
+    # Fixed admin credentials
+    ADMIN_EMAIL = "admin@learnersplanet.com"
+    ADMIN_PASSWORD = "finlit@2026"
+    
+    if login_data.email != ADMIN_EMAIL:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    if login_data.password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Check if admin user exists
+    admin_user = await db.users.find_one({"email": ADMIN_EMAIL}, {"_id": 0})
+    
+    if not admin_user:
+        # Create admin user
+        user_id = f"admin_{uuid.uuid4().hex[:12]}"
+        admin_user = {
+            "user_id": user_id,
+            "email": ADMIN_EMAIL,
+            "name": "Admin",
+            "picture": None,
+            "role": "admin",
+            "grade": None,
+            "avatar": None,
+            "streak_count": 0,
+            "last_login_date": None,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.users.insert_one(admin_user)
+        admin_user = await db.users.find_one({"email": ADMIN_EMAIL}, {"_id": 0})
+    else:
+        # Ensure user has admin role
+        if admin_user.get("role") != "admin":
+            await db.users.update_one(
+                {"email": ADMIN_EMAIL},
+                {"$set": {"role": "admin"}}
+            )
+            admin_user["role"] = "admin"
+    
+    # Create session
+    session_token = f"admin_sess_{uuid.uuid4().hex}"
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    
+    await db.user_sessions.insert_one({
+        "user_id": admin_user["user_id"],
+        "session_token": session_token,
+        "expires_at": expires_at.isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Set cookie
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+        max_age=7 * 24 * 60 * 60
+    )
+    
+    return {"user": admin_user, "session_token": session_token}
+
 @api_router.post("/auth/session")
 async def create_session(request: Request, response: Response):
     """Exchange session_id from Google OAuth for session data"""
