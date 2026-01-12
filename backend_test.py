@@ -147,13 +147,17 @@ print('Session Token: ' + sessionToken);
         cleanup_script = """
 use('test_database');
 db.users.deleteMany({email: /test\.user\./});
+db.users.deleteMany({email: /test\.admin\./});
 db.user_sessions.deleteMany({session_token: /test_session/});
+db.user_sessions.deleteMany({session_token: /test_admin_session/});
 db.wallet_accounts.deleteMany({user_id: /test-user-/});
 db.transactions.deleteMany({user_id: /test-user-/});
 db.purchases.deleteMany({user_id: /test-user-/});
 db.investments.deleteMany({user_id: /test-user-/});
 db.user_achievements.deleteMany({user_id: /test-user-/});
 db.user_quests.deleteMany({user_id: /test-user-/});
+db.user_lesson_progress.deleteMany({user_id: /test-user-/});
+db.user_activity_progress.deleteMany({user_id: /test-user-/});
 print('✅ Test data cleaned up');
 """
         
