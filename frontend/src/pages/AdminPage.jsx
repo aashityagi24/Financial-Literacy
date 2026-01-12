@@ -318,7 +318,7 @@ export default function AdminPage({ user }) {
         
         {/* Content Tab */}
         {activeTab === 'content' && (
-          <div className="space-y-6 animate-bounce-in">
+          <div className="space-y-6">
             {/* Quick Actions */}
             <div className="flex flex-wrap gap-3">
               <Dialog open={showTopicDialog} onOpenChange={setShowTopicDialog}>
