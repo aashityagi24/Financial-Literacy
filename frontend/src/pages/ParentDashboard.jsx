@@ -252,7 +252,7 @@ export default function ParentDashboard({ user }) {
                 {dashboard?.children?.map((child, index) => (
                   <div 
                     key={child.user_id}
-                    className="card-playful p-5 animate-bounce-in cursor-pointer hover:scale-[1.01] transition-transform"
+                    className="card-playful p-5 cursor-pointer hover:scale-[1.01] transition-transform"
                     style={{ animationDelay: `${index * 0.05}s` }}
                     onClick={() => fetchChildProgress(child.user_id)}
                   >
