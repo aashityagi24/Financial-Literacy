@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { 
   Coins, Wallet, Store, TrendingUp, Target, Trophy, 
   MessageCircle, User, LogOut, Flame, Gift, Sparkles,
-  ChevronRight, Star, BookOpen, Shield
+  ChevronRight, Star, BookOpen, Shield, GraduationCap, Users
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
