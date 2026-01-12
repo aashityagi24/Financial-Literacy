@@ -1,0 +1,173 @@
+{
+  "design_system": {
+    "name": "PocketQuest - Financial Literacy for Kids",
+    "theme": "Neo-Playful",
+    "description": "A tactile, high-contrast, gamified interface that blends Saturday Morning Cartoon aesthetics with clear financial data. Uses 'Squircle' geometry, thick borders, and vibrant colors to create a safe, engaging learning environment.",
+    "typography": {
+      "font_family": {
+        "heading": "Fredoka, 'Comic Neue', cursive",
+        "body": "Outfit, 'Quicksand', sans-serif",
+        "mono": "'JetBrains Mono', monospace"
+      },
+      "scale": {
+        "h1": "text-4xl md:text-6xl font-bold tracking-tight leading-none",
+        "h2": "text-3xl md:text-5xl font-bold tracking-tight",
+        "h3": "text-2xl md:text-3xl font-semibold",
+        "body_lg": "text-lg md:text-xl font-medium leading-relaxed",
+        "body_base": "text-base font-medium leading-relaxed",
+        "caption": "text-sm font-bold uppercase tracking-widest"
+      }
+    },
+    "colors": {
+      "palette": {
+        "primary": {
+          "DEFAULT": "#FFD23F",
+          "foreground": "#1D3557",
+          "description": "Sunshine Yellow - Used for primary actions, highlights, and success states."
+        },
+        "secondary": {
+          "DEFAULT": "#3D5A80",
+          "foreground": "#FFFFFF",
+          "description": "Deep Ocean Blue - Used for headers, text, and structural elements."
+        },
+        "accent": {
+          "DEFAULT": "#EE6C4D",
+          "foreground": "#FFFFFF",
+          "description": "Burnt Orange - Used for urgent actions, alerts, and 'spending' contexts."
+        },
+        "background": {
+          "DEFAULT": "#E0FBFC",
+          "paper": "#FFFFFF",
+          "description": "Pale Cyan - Global background color. Keeps the app feeling fresh and airy."
+        },
+        "success": {
+          "DEFAULT": "#06D6A0",
+          "foreground": "#FFFFFF"
+        },
+        "muted": {
+          "DEFAULT": "#98C1D9",
+          "foreground": "#1D3557"
+        }
+      },
+      "gradients": {
+        "hero": "bg-gradient-to-b from-[#E0FBFC] to-[#FFFFFF]",
+        "card_hover": "bg-gradient-to-br from-white to-[#F0F0F0]"
+      }
+    },
+    "visual_enhancers": {
+      "borders": {
+        "default": "border-[3px] border-[#1D3557]",
+        "thick": "border-[4px] border-[#1D3557]",
+        "subtle": "border-2 border-[#98C1D9]"
+      },
+      "radius": {
+        "default": "rounded-2xl",
+        "large": "rounded-3xl",
+        "pill": "rounded-full"
+      },
+      "shadows": {
+        "card": "shadow-[4px_4px_0px_0px_#1D3557]",
+        "button": "shadow-[2px_2px_0px_0px_#1D3557] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]",
+        "floating": "shadow-[8px_8px_0px_0px_#1D3557]"
+      }
+    },
+    "layout": {
+      "grid_system": "Bento Grid (Mode A)",
+      "spacing": {
+        "container_padding": "p-4 md:p-8 lg:p-12",
+        "section_gap": "gap-8 md:gap-12",
+        "item_gap": "gap-4"
+      },
+      "containers": {
+        "card": "bg-white border-[3px] border-[#1D3557] rounded-3xl shadow-[4px_4px_0px_0px_#1D3557] p-6",
+        "panel": "bg-[#E0FBFC] border-[3px] border-[#1D3557] rounded-3xl p-6"
+      }
+    },
+    "motion": {
+      "default_transition": "transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+      "hover_lift": "hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_#1D3557]",
+      "click_press": "active:translate-y-1 active:shadow-none"
+    }
+  },
+  "components": {
+    "Button": {
+      "variants": {
+        "primary": "bg-[#FFD23F] text-[#1D3557] font-bold border-[3px] border-[#1D3557] rounded-full shadow-[4px_4px_0px_0px_#1D3557] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_#1D3557] active:translate-y-0 active:shadow-[2px_2px_0px_0px_#1D3557] transition-all",
+        "secondary": "bg-[#3D5A80] text-white font-bold border-[3px] border-[#1D3557] rounded-full shadow-[4px_4px_0px_0px_#1D3557] hover:bg-[#2C4260]",
+        "ghost": "bg-transparent text-[#1D3557] font-bold hover:bg-[#98C1D9]/20"
+      }
+    },
+    "Card": {
+      "base": "bg-white border-[3px] border-[#1D3557] rounded-3xl shadow-[4px_4px_0px_0px_#1D3557] overflow-hidden"
+    },
+    "Input": {
+      "base": "bg-white border-[3px] border-[#1D3557] rounded-xl px-4 py-3 font-medium focus:ring-4 focus:ring-[#FFD23F]/50 focus:outline-none"
+    }
+  },
+  "assets": {
+    "images": {
+      "hero_piggy_bank": {
+        "url": "https://images.pexels.com/photos/1602726/pexels-photo-1602726.jpeg",
+        "alt": "A playful piggy bank representing savings",
+        "category": "hero"
+      },
+      "rewards_chest": {
+        "url": "https://images.pexels.com/photos/7367861/pexels-photo-7367861.jpeg",
+        "alt": "A treasure chest overflowing with gold coins",
+        "category": "rewards"
+      },
+      "investment_garden": {
+        "url": "https://images.pexels.com/photos/1602726/pexels-photo-1602726.jpeg",
+        "alt": "Garden visualization for K-2 investments (Placeholder: Piggy Bank)",
+        "category": "investment"
+      },
+      "stock_market_space": {
+        "url": "https://images.pexels.com/photos/7367861/pexels-photo-7367861.jpeg",
+        "alt": "Space theme for 3-5 investments (Placeholder: Treasure Chest)",
+        "category": "investment"
+      },
+      "avatar_default": {
+        "url": "https://images.pexels.com/photos/1602726/pexels-photo-1602726.jpeg",
+        "alt": "Default user avatar",
+        "category": "user"
+      }
+    },
+    "icons": {
+      "library": "lucide-react",
+      "style": "stroke-width={2.5} size={24}"
+    }
+  },
+  "instructions_to_main_agent": {
+    "general": "You are building a high-fidelity, gamified educational platform. Do not use standard 'SaaS' layouts. Every element should feel like a toy or a game piece.",
+    "layout_rules": [
+      "Use the 'Bento Grid' for dashboards.",
+      "Ensure all containers have the 'thick border' and 'hard shadow' style defined in visual_enhancers.",
+      "Never use pure black (#000000). Use #1D3557 for text and borders.",
+      "Use generous padding (p-6 or p-8) inside cards."
+    ],
+    "component_overrides": {
+      "Shadcn": "Heavily customize Shadcn components. Remove default subtle borders and replace them with the 3px border-[#1D3557]. Increase border-radius to rounded-2xl or rounded-3xl."
+    },
+    "accessibility": "Ensure all text on the #FFD23F (Yellow) background is #1D3557 (Dark Blue) for contrast. Text on #3D5A80 (Blue) must be White."
+  },
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) sparingly, prefer solid 'card' aesthetics for this specific kids app.",
+    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms",
+    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file. This disrupts the human natural reading flow of text",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Main agent relies on these image URLs. Missing categories (especially sponsor logos) = main agent will use placeholder text which is FORBIDDEN",
+    "Prioritize using pre-existing components from src/components/ui when applicable",
+    "Create new components that match the style and conventions of existing components when needed",
+    "Examine existing components to understand the project's component patterns before creating new ones",
+    "Components MUST use named exports (export const ComponentName = ...)",
+    "Pages MUST use default exports (export default function PageName() {...})",
+    "Use sonner for toasts. Sonner component are located in /app/src/components/ui/sonner.tsx"
+  ]
+}
