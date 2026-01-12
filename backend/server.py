@@ -295,6 +295,119 @@ class ActivityCreate(BaseModel):
     max_grade: int = 5
     reward_coins: int = 10
 
+# ============== TEACHER/CLASSROOM MODELS ==============
+
+class Classroom(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    classroom_id: str
+    teacher_id: str
+    name: str
+    description: Optional[str] = None
+    grade_level: int
+    invite_code: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ClassroomCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    grade_level: int
+
+class ClassroomStudent(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    classroom_id: str
+    student_id: str
+    joined_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ClassroomReward(BaseModel):
+    student_ids: List[str]
+    amount: float
+    reason: str
+
+class ClassroomChallenge(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    challenge_id: str
+    classroom_id: str
+    title: str
+    description: str
+    reward_amount: float
+    deadline: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ChallengeCreate(BaseModel):
+    title: str
+    description: str
+    reward_amount: float
+    deadline: Optional[str] = None
+
+# ============== PARENT MODELS ==============
+
+class ParentChildLink(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    link_id: str
+    parent_id: str
+    child_id: str
+    status: str = "pending"  # pending, active
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class LinkChildRequest(BaseModel):
+    child_email: str
+
+class Chore(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    chore_id: str
+    parent_id: str
+    child_id: str
+    title: str
+    description: Optional[str] = None
+    reward_amount: float
+    frequency: str = "once"  # once, daily, weekly
+    status: str = "pending"  # pending, completed, approved
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    completed_at: Optional[datetime] = None
+    approved_at: Optional[datetime] = None
+
+class ChoreCreate(BaseModel):
+    child_id: str
+    title: str
+    description: Optional[str] = None
+    reward_amount: float
+    frequency: str = "once"
+
+class Allowance(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    allowance_id: str
+    parent_id: str
+    child_id: str
+    amount: float
+    frequency: str  # weekly, biweekly, monthly
+    next_date: str
+    active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class AllowanceCreate(BaseModel):
+    child_id: str
+    amount: float
+    frequency: str
+
+class SavingsGoal(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    goal_id: str
+    child_id: str
+    parent_id: Optional[str] = None
+    title: str
+    target_amount: float
+    current_amount: float = 0
+    deadline: Optional[str] = None
+    completed: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SavingsGoalCreate(BaseModel):
+    child_id: str
+    title: str
+    target_amount: float
+    deadline: Optional[str] = None
+
 # ============== AUTH HELPERS ==============
 
 async def get_session_from_header(request: Request) -> Optional[str]:
