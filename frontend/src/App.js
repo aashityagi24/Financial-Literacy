@@ -16,6 +16,10 @@ import QuestsPage from "@/pages/QuestsPage";
 import AchievementsPage from "@/pages/AchievementsPage";
 import ChatBuddy from "@/pages/ChatBuddy";
 import ProfilePage from "@/pages/ProfilePage";
+import LearnPage from "@/pages/LearnPage";
+import TopicPage from "@/pages/TopicPage";
+import LessonPage from "@/pages/LessonPage";
+import AdminPage from "@/pages/AdminPage";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
