@@ -3264,6 +3264,15 @@ async def admin_get_stats(request: Request):
             "admins": await db.users.count_documents({"role": "admin"})
         },
         "content": {
+            "topics": await db.content_topics.count_documents({"parent_id": None}),
+            "subtopics": await db.content_topics.count_documents({"parent_id": {"$ne": None}}),
+            "lessons": await db.content_items.count_documents({"content_type": "lesson"}),
+            "books": await db.content_items.count_documents({"content_type": "book"}),
+            "worksheets": await db.content_items.count_documents({"content_type": "worksheet"}),
+            "activities": await db.content_items.count_documents({"content_type": "activity"}),
+            "total_content": await db.content_items.count_documents({})
+        },
+        "legacy_content": {
             "topics": await db.learning_topics.count_documents({}),
             "lessons": await db.learning_lessons.count_documents({}),
             "books": await db.books.count_documents({}),
@@ -3271,6 +3280,7 @@ async def admin_get_stats(request: Request):
             "quizzes": await db.quizzes.count_documents({})
         },
         "engagement": {
+            "content_completed": await db.user_content_progress.count_documents({"completed": True}),
             "lessons_completed": await db.user_lesson_progress.count_documents({"completed": True}),
             "activities_completed": await db.user_activity_progress.count_documents({"completed": True}),
             "quests_completed": await db.user_quests.count_documents({"completed": True})
