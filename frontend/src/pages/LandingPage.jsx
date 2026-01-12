@@ -30,7 +30,8 @@ export default function LandingPage() {
       }, { withCredentials: true });
       
       toast.success('Admin login successful!');
-      navigate('/dashboard', { state: { user: response.data.user } });
+      // Redirect admin directly to admin dashboard
+      navigate('/admin', { state: { user: response.data.user } });
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Invalid credentials');
     } finally {
