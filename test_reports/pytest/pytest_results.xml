@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="28" time="1.651" timestamp="2026-01-12T12:39:42.290157+00:00" hostname="agent-env-1fbab5f4-4948-4cff-845b-d5d44918b4e4"><testcase classname="tests.test_teacher_parent_dashboards.TestTeacherAccessControl" name="test_teacher_dashboard_requires_auth" time="0.091" /><testcase classname="tests.test_teacher_parent_dashboards.TestTeacherAccessControl" name="test_teacher_dashboard_requires_teacher_role" time="0.041" /><testcase classname="tests.test_teacher_parent_dashboards.TestTeacherAccessControl" name="test_teacher_can_access_dashboard" time="0.034" /><testcase classname="tests.test_teacher_parent_dashboards.TestTeacherClassroomManagement" name="test_create_classroom" time="0.062"><failure message="assert 520 == 200&#10; +  where 520 = &lt;Response [520]&gt;.status_code">tests/test_teacher_parent_dashboards.py:101: in test_create_classroom
+    assert response.status_code == 200
+E   assert 520 == 200
+E    +  where 520 = &lt;Response [520]&gt;.status_code</failure></testcase><testcase classname="tests.test_teacher_parent_dashboards.TestTeacherClassroomManagement" name="test_get_classrooms" time="0.034" /><testcase classname="tests.test_teacher_parent_dashboards.TestTeacherClassroomManagement" name="test_get_classroom_details" time="0.036"><failure message="requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)">/root/.venv/lib/python3.11/site-packages/requests/models.py:976: in json
+    return complexjson.loads(self.text, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:355: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+tests/test_teacher_parent_dashboards.py:125: in test_get_classroom_details
+    classroom = create_response.json()["classroom"]
+                ^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/models.py:980: in json
+    raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
+E   requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)</failure></testcase><testcase classname="tests.test_teacher_parent_dashboards.TestTeacherClassroomManagement" name="test_delete_classroom" time="0.035"><failure message="requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)">/root/.venv/lib/python3.11/site-packages/requests/models.py:976: in json
+    return complexjson.loads(self.text, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:355: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+tests/test_teacher_parent_dashboards.py:143: in test_delete_classroom
+    classroom = create_response.json()["classroom"]
+                ^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/models.py:980: in json
+    raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
+E   requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)</failure></testcase><testcase classname="tests.test_teacher_parent_dashboards.TestTeacherRewardsAndChallenges" name="test_create_challenge" time="0.036"><failure message="requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)">/root/.venv/lib/python3.11/site-packages/requests/models.py:976: in json
+    return complexjson.loads(self.text, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:355: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+tests/test_teacher_parent_dashboards.py:165: in test_create_challenge
+    classroom = create_response.json()["classroom"]
+                ^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/models.py:980: in json
+    raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
+E   requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)</failure></testcase><testcase classname="tests.test_teacher_parent_dashboards.TestTeacherRewardsAndChallenges" name="test_delete_challenge" time="0.038"><failure message="requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)">/root/.venv/lib/python3.11/site-packages/requests/models.py:976: in json
+    return complexjson.loads(self.text, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:355: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+tests/test_teacher_parent_dashboards.py:189: in test_delete_challenge
+    classroom = create_response.json()["classroom"]
+                ^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/models.py:980: in json
+    raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
+E   requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)</failure></testcase><testcase classname="tests.test_teacher_parent_dashboards.TestParentAccessControl" name="test_parent_dashboard_requires_auth" time="0.039" /><testcase classname="tests.test_teacher_parent_dashboards.TestParentAccessControl" name="test_parent_dashboard_requires_parent_role" time="0.040" /><testcase classname="tests.test_teacher_parent_dashboards.TestParentAccessControl" name="test_parent_can_access_dashboard" time="0.049" /><testcase classname="tests.test_teacher_parent_dashboards.TestParentChildLinking" name="test_link_child_account" time="0.048" /><testcase classname="tests.test_teacher_parent_dashboards.TestParentChildLinking" name="test_link_nonexistent_child" time="0.078" /><testcase classname="tests.test_teacher_parent_dashboards.TestParentChildLinking" name="test_get_children" time="0.044" /><testcase classname="tests.test_teacher_parent_dashboards.TestParentChores" name="test_create_chore" time="0.054" /><testcase classname="tests.test_teacher_parent_dashboards.TestParentChores" name="test_get_chores" time="0.035" /><testcase classname="tests.test_teacher_parent_dashboards.TestParentChores" name="test_delete_chore" time="0.152" /><testcase classname="tests.test_teacher_parent_dashboards.TestParentAllowance" name="test_set_allowance" time="0.054" /><testcase classname="tests.test_teacher_parent_dashboards.TestParentAllowance" name="test_get_allowances" time="0.035" /><testcase classname="tests.test_teacher_parent_dashboards.TestParentSavingsGoals" name="test_create_savings_goal" time="0.058" /><testcase classname="tests.test_teacher_parent_dashboards.TestParentSavingsGoals" name="test_get_savings_goals" time="0.033" /><testcase classname="tests.test_teacher_parent_dashboards.TestParentChildProgress" name="test_view_child_progress" time="0.071" /><testcase classname="tests.test_teacher_parent_dashboards.TestParentGiveMoney" name="test_give_money_to_child" time="0.049" /><testcase classname="tests.test_teacher_parent_dashboards.TestChildChores" name="test_child_can_view_chores" time="0.035" /><testcase classname="tests.test_teacher_parent_dashboards.TestChildChores" name="test_child_can_view_savings_goals" time="0.035" /><testcase classname="tests.test_teacher_parent_dashboards.TestStudentClassroom" name="test_student_can_view_classrooms" time="0.031" /><testcase classname="tests.test_teacher_parent_dashboards.TestStudentClassroom" name="test_student_can_view_challenges" time="0.037" /></testsuite></testsuites>
