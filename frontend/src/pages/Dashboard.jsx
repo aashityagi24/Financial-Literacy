@@ -333,7 +333,7 @@ export default function Dashboard({ user, setUser }) {
         </div>
         
         {/* AI Buddy Banner */}
-        <div className="mt-8 animate-bounce-in stagger-5">
+        <div className={`mt-8 ${showAnimations ? 'animate-bounce-in stagger-5' : ''}`}>
           <Link 
             to="/chat"
             className="card-playful p-6 bg-gradient-to-r from-[#3D5A80] to-[#5A7BA0] flex items-center gap-6 hover:scale-[1.02] transition-transform"
