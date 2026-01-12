@@ -65,6 +65,7 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 
 ### Phase 3: Admin Dashboard ✅
 - Admin role enforcement
+- **Admin email/password login** (admin@learnersplanet.com / finlit@2026)
 - Platform statistics (users, content, engagement)
 - User management (view users, change roles)
 - Content creation interfaces for topics, lessons, books, activities
