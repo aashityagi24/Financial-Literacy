@@ -229,7 +229,7 @@ export default function Dashboard({ user, setUser }) {
         </div>
         
         {/* Wallet Overview */}
-        <div className="card-playful p-6 mb-8 animate-bounce-in stagger-2">
+        <div className={`card-playful p-6 mb-8 ${showAnimations ? 'animate-bounce-in stagger-2' : ''}`}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
               My Wallet
