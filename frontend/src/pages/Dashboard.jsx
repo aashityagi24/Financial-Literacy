@@ -198,7 +198,7 @@ export default function Dashboard({ user, setUser }) {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         {/* Welcome Section */}
-        <div className="mb-8 animate-bounce-in">
+        <div className={`mb-8 ${showAnimations ? 'animate-bounce-in' : ''}`}>
           <h1 className="text-3xl md:text-4xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
             Hey, {user?.name?.split(' ')[0]}! 👋
           </h1>
@@ -214,8 +214,8 @@ export default function Dashboard({ user, setUser }) {
               key={item.path}
               to={item.path}
               data-testid={`nav-${item.label.toLowerCase()}`}
-              className="card-playful p-4 text-center hover:scale-105 transition-transform animate-bounce-in"
-              style={{ animationDelay: `${index * 0.05}s` }}
+              className={`card-playful p-4 text-center hover:scale-105 transition-transform ${showAnimations ? 'animate-bounce-in' : ''}`}
+              style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
             >
               <div 
                 className="w-12 h-12 mx-auto mb-2 rounded-xl border-2 border-[#1D3557] flex items-center justify-center"
