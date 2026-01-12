@@ -1,5 +1,6 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, UploadFile, File, Form
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -12,10 +13,21 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import httpx
 import bcrypt
+import shutil
+import zipfile
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+# Create uploads directories
+UPLOADS_DIR = ROOT_DIR / "uploads"
+THUMBNAILS_DIR = UPLOADS_DIR / "thumbnails"
+PDFS_DIR = UPLOADS_DIR / "pdfs"
+ACTIVITIES_DIR = UPLOADS_DIR / "activities"
+
+for dir_path in [UPLOADS_DIR, THUMBNAILS_DIR, PDFS_DIR, ACTIVITIES_DIR]:
+    dir_path.mkdir(parents=True, exist_ok=True)
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
