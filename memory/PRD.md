@@ -13,14 +13,14 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 
 ## Core Requirements
 - Google Social Login authentication for regular users
-- **Admin email/password authentication** (admin@learnersplanet.com)
+- **Admin email/password authentication** (admin@learnersplanet.com / finlit@2026)
 - Grade-level appropriate content (K-5)
-- **Learning Content System** (primary focus)
-  - Topics with structured lessons
+- **Hierarchical Content System** (primary focus)
+  - Topics → Subtopics → Content Items
+  - Content types: Lessons, Books, Worksheets (PDF), Activities (HTML)
+  - Thumbnails for topics, subtopics, and content
+  - Admin ordering/sorting
   - Progress tracking per user
-  - Quizzes with scoring
-  - Books library
-  - Real-world activities
 - Digital wallet with 4 account types
 - Virtual store for purchases
 - Investment simulation (garden for K-2, stocks for 3-5)
@@ -49,17 +49,7 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - AI Financial Tips generation
 
 ### Phase 2: Learning Content System ✅
-- **10 Learning Topics** with categories:
-  - History: History of Money, The Barter System, Coins Through History
-  - Concepts: Modern Currency, Needs vs Wants, Giving and Sharing
-  - Skills: The Power of Saving, Smart Spending, Earning Money, Making a Budget
-- **20 Lessons** with content:
-  - Story-based lessons with markdown content
-  - Interactive lessons
-  - Quiz lessons with progress tracking
-  - Age-appropriate content per grade
-- **6 Books** library
-- **8 Activities** for real-world practice
+- **Legacy System**: 10 Topics, 20 Lessons, 6 Books, 8 Activities
 - Progress tracking per user/lesson/activity
 - Coin rewards for completing lessons
 
@@ -68,79 +58,62 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - **Admin email/password login** (admin@learnersplanet.com / finlit@2026)
 - Platform statistics (users, content, engagement)
 - User management (view users, change roles)
-- Content creation interfaces for topics, lessons, books, activities
+- Content creation interfaces (legacy system)
 
 ### Phase 4: Teacher Dashboard ✅ (January 2026)
-- **Classroom Management**:
-  - Create/delete classrooms with auto-generated invite codes
-  - Set grade level and description
-  - View all classrooms with student counts
-- **Student Tracking**:
-  - View students in each classroom
-  - See individual student balance, lessons completed, streak
-  - View detailed student progress with topic breakdown
-- **Reward System**:
-  - Give rewards to individual or multiple students
-  - Bulk reward distribution with custom reason
-  - Automatic transaction recording
-- **Challenge System**:
-  - Create classroom challenges with rewards
-  - Mark challenges as complete for individual students
-  - Delete challenges
+- **Classroom Management**: Create/delete classrooms, invite codes, grade levels
+- **Student Tracking**: View students, balances, progress
+- **Reward System**: Give rewards to individual or multiple students
+- **Challenge System**: Create challenges with rewards
 
 ### Phase 5: Parent Dashboard ✅ (January 2026)
-- **Child Linking**:
-  - Link child accounts by email
-  - View all linked children with summary stats
-  - See pending chores count per child
-- **Chore Management**:
-  - Create chores with title, description, reward amount
-  - Set frequency (once, daily, weekly)
-  - Approve completed chores (auto-rewards child)
-  - Delete chores
-- **Allowance System**:
-  - Set up recurring allowances (weekly, bi-weekly, monthly)
-  - View all active allowances
-  - Cancel allowances
-- **Savings Goals**:
-  - Create savings goals for children
-  - Track progress toward goals
-  - Goal completion tracking
-- **Progress Monitoring**:
-  - View child's full wallet breakdown
-  - See learning progress by topic
-  - View recent transactions
-  - Monitor streak count
-- **Quick Money Giving**:
-  - Give money to child with custom reason
-  - Automatic transaction recording
+- **Child Linking**: Link child accounts by email
+- **Chore Management**: Create, approve, delete chores
+- **Allowance System**: Set up recurring allowances
+- **Savings Goals**: Create and track savings goals
+- **Progress Monitoring**: View child's wallet, learning progress
 
-### Frontend Pages
-- Landing page with playful design
-- Google OAuth login flow
-- Role selection (child/parent/teacher)
-- Child dashboard with quick navigation
-- Learn page with Topics, Books, Activities tabs
-- Topic detail page with lesson list
-- Lesson page with content and completion
-- Wallet page with transfers
-- Store page with purchases
-- Investment page (garden/stocks based on grade)
-- Quests page with progress tracking
-- Achievements gallery
-- AI Chat buddy
-- Profile management
-- Admin dashboard (for admin users only)
-- **Teacher Dashboard** with full classroom management
-- **Parent Dashboard** with chore/allowance management
-
-### Design
-- Child-friendly, colorful, playful cartoon-style
-- Fredoka + Outfit fonts
-- Colors: Yellow (#FFD23F), Blue (#3D5A80), Orange (#EE6C4D), Cyan (#E0FBFC)
-- Thick borders, hard shadows, rounded corners
+### Phase 6: Hierarchical Content System ✅ (January 2026)
+- **Topic Hierarchy**: Parent topics → Subtopics structure
+- **Content Types**: 
+  - Lessons (markdown/HTML content)
+  - Books (with author, category)
+  - Worksheets (PDF upload and viewer)
+  - Activities (HTML zip upload and iframe viewer)
+- **Thumbnail Support**: Upload thumbnails for topics, subtopics, content
+- **Ordering System**: Admin can reorder topics and content items
+- **File Uploads**:
+  - `/api/upload/thumbnail` - Image uploads for thumbnails
+  - `/api/upload/pdf` - PDF uploads for worksheets
+  - `/api/upload/activity` - ZIP uploads for HTML activities
+- **Admin Content Management UI** (`/admin/content`):
+  - Tree view for topics/subtopics
+  - Create/Edit/Delete topics and content
+  - Type-specific forms (lesson settings, worksheet PDF, activity HTML)
+  - Drag reordering
+- **User Learn Page**: Shows hierarchical topics with subtopic preview
+- **User Topic Page**: PDF viewer modal, Activity iframe viewer
 
 ## API Endpoints
+
+### Content Management (New System)
+- `POST /api/upload/thumbnail` - Upload thumbnail image
+- `POST /api/upload/pdf` - Upload PDF for worksheet
+- `POST /api/upload/activity` - Upload ZIP for HTML activity
+- `GET /api/content/topics` - Get hierarchical topics for users
+- `GET /api/content/topics/{id}` - Get topic with subtopics and content
+- `GET /api/content/items/{id}` - Get single content item
+- `POST /api/content/items/{id}/complete` - Mark content complete, award coins
+- `GET /api/admin/content/topics` - Admin get all topics
+- `POST /api/admin/content/topics` - Create topic/subtopic
+- `PUT /api/admin/content/topics/{id}` - Update topic
+- `DELETE /api/admin/content/topics/{id}` - Delete topic (cascade)
+- `POST /api/admin/content/topics/reorder` - Reorder topics
+- `GET /api/admin/content/items` - Get all content items
+- `POST /api/admin/content/items` - Create content item
+- `PUT /api/admin/content/items/{id}` - Update content item
+- `DELETE /api/admin/content/items/{id}` - Delete content item
+- `POST /api/admin/content/items/reorder` - Reorder content
 
 ### Teacher Endpoints
 - `GET /api/teacher/dashboard` - Get teacher dashboard data
@@ -148,17 +121,15 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - `GET /api/teacher/classrooms` - List classrooms
 - `GET /api/teacher/classrooms/{id}` - Get classroom details
 - `DELETE /api/teacher/classrooms/{id}` - Delete classroom
-- `POST /api/teacher/classrooms/{id}/reward` - Give rewards to students
+- `POST /api/teacher/classrooms/{id}/reward` - Give rewards
 - `POST /api/teacher/classrooms/{id}/challenges` - Create challenge
 - `DELETE /api/teacher/challenges/{id}` - Delete challenge
-- `POST /api/teacher/challenges/{id}/complete/{student_id}` - Complete challenge for student
-- `GET /api/teacher/students/{id}/progress` - Get student progress
+- `POST /api/teacher/challenges/{id}/complete/{student_id}` - Complete challenge
 
 ### Parent Endpoints
-- `GET /api/parent/dashboard` - Get parent dashboard data
+- `GET /api/parent/dashboard` - Get parent dashboard
 - `POST /api/parent/link-child` - Link child account
 - `GET /api/parent/children` - Get linked children
-- `GET /api/parent/children/{id}/progress` - Get child progress
 - `POST /api/parent/chores` - Create chore
 - `GET /api/parent/chores` - Get all chores
 - `POST /api/parent/chores/{id}/approve` - Approve chore
@@ -170,14 +141,34 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - `POST /api/parent/savings-goals` - Create savings goal
 - `GET /api/parent/savings-goals` - Get savings goals
 
+## Database Collections
+
+### New Content System
+- **content_topics**: {`topic_id`, `title`, `description`, `parent_id`, `thumbnail`, `order`, `min_grade`, `max_grade`}
+- **content_items**: {`content_id`, `topic_id`, `title`, `description`, `content_type`, `thumbnail`, `order`, `min_grade`, `max_grade`, `reward_coins`, `content_data`}
+- **user_content_progress**: {`user_id`, `content_id`, `completed`, `score`, `completed_at`}
+
+### Other Collections
+- **users**: {`user_id`, `email`, `name`, `role`, `grade`, `avatar`, `streak_count`}
+- **wallet_accounts**: {`user_id`, `account_type`, `balance`}
+- **transactions**: {`user_id`, `type`, `amount`, `description`}
+- **classrooms**: {`teacher_id`, `name`, `grade`, `invite_code`, `students`}
+- **chores**: {`parent_id`, `child_id`, `description`, `reward`, `status`}
+- **allowances**: {`parent_id`, `child_id`, `amount`, `frequency`}
+
+## Test Coverage
+- Backend: 26 tests passing (100%) - `/app/tests/test_content_management.py`
+- Previous tests: 28 tests for Teacher/Parent dashboards
+
 ## Prioritized Backlog
 
 ### P0 (Complete) ✅
 - Child role full experience
 - Learning content system
 - Admin content management
-- Teacher Dashboard with classroom management
-- Parent Dashboard with chore/allowance management
+- Teacher Dashboard
+- Parent Dashboard
+- **Hierarchical Content Management System**
 
 ### P1 (Next Phase)
 - Interactive mini-games for earning coins
@@ -189,13 +180,7 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 
 ### P2 (Future)
 - Video lessons
-- PDF workbook downloads
 - Email notifications
 - Seasonal events
 - Teacher/Parent communication portal
 - Spending limits and parent approval for large transactions
-
-## Test Coverage
-- Backend: 28 tests passing (100%)
-- Frontend: All UI components working
-- Test file: `/app/tests/test_teacher_parent_dashboards.py`
