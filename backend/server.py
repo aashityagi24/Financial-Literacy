@@ -2648,6 +2648,406 @@ async def contribute_to_goal(goal_id: str, request: Request):
         "completed": completed
     }
 
+# ============== FILE UPLOAD ROUTES ==============
+
+@api_router.post("/upload/thumbnail")
+async def upload_thumbnail(file: UploadFile = File(...)):
+    """Upload a thumbnail image"""
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    file_ext = file.filename.split(".")[-1] if "." in file.filename else "png"
+    filename = f"{uuid.uuid4().hex[:16]}.{file_ext}"
+    file_path = THUMBNAILS_DIR / filename
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    return {"url": f"/uploads/thumbnails/{filename}"}
+
+@api_router.post("/upload/pdf")
+async def upload_pdf(file: UploadFile = File(...)):
+    """Upload a PDF worksheet"""
+    if not file.content_type == "application/pdf":
+        raise HTTPException(status_code=400, detail="File must be a PDF")
+    
+    filename = f"{uuid.uuid4().hex[:16]}.pdf"
+    file_path = PDFS_DIR / filename
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    return {"url": f"/uploads/pdfs/{filename}"}
+
+@api_router.post("/upload/activity")
+async def upload_activity_html(file: UploadFile = File(...)):
+    """Upload an HTML activity (zip file with index.html and assets)"""
+    if not file.filename.endswith(".zip"):
+        raise HTTPException(status_code=400, detail="File must be a ZIP archive")
+    
+    folder_name = uuid.uuid4().hex[:16]
+    activity_folder = ACTIVITIES_DIR / folder_name
+    activity_folder.mkdir(parents=True, exist_ok=True)
+    
+    # Save the zip file temporarily
+    zip_path = activity_folder / "temp.zip"
+    with open(zip_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    # Extract the zip file
+    try:
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(activity_folder)
+        zip_path.unlink()  # Remove the zip file after extraction
+        
+        # Check if index.html exists
+        index_path = activity_folder / "index.html"
+        if not index_path.exists():
+            # Check subdirectory
+            for item in activity_folder.iterdir():
+                if item.is_dir():
+                    sub_index = item / "index.html"
+                    if sub_index.exists():
+                        # Move contents up
+                        for sub_item in item.iterdir():
+                            shutil.move(str(sub_item), str(activity_folder / sub_item.name))
+                        item.rmdir()
+                        break
+        
+        if not (activity_folder / "index.html").exists():
+            shutil.rmtree(activity_folder)
+            raise HTTPException(status_code=400, detail="ZIP must contain an index.html file")
+            
+    except zipfile.BadZipFile:
+        shutil.rmtree(activity_folder)
+        raise HTTPException(status_code=400, detail="Invalid ZIP file")
+    
+    return {"url": f"/uploads/activities/{folder_name}/index.html", "folder": folder_name}
+
+# ============== CONTENT MANAGEMENT ROUTES (NEW HIERARCHICAL SYSTEM) ==============
+
+@api_router.get("/content/topics")
+async def get_all_topics(request: Request):
+    """Get all topics with hierarchy (for users)"""
+    user = await get_current_user(request)
+    user_grade = user.get("grade", 3) if user else 3
+    
+    # Get parent topics (no parent_id)
+    parent_topics = await db.content_topics.find(
+        {"parent_id": None, "min_grade": {"$lte": user_grade}, "max_grade": {"$gte": user_grade}},
+        {"_id": 0}
+    ).sort("order", 1).to_list(100)
+    
+    # For each parent, get subtopics
+    for topic in parent_topics:
+        subtopics = await db.content_topics.find(
+            {"parent_id": topic["topic_id"], "min_grade": {"$lte": user_grade}, "max_grade": {"$gte": user_grade}},
+            {"_id": 0}
+        ).sort("order", 1).to_list(100)
+        topic["subtopics"] = subtopics
+        
+        # Get content count for the topic
+        topic["content_count"] = await db.content_items.count_documents({"topic_id": topic["topic_id"]})
+        
+        for subtopic in subtopics:
+            subtopic["content_count"] = await db.content_items.count_documents({"topic_id": subtopic["topic_id"]})
+    
+    return parent_topics
+
+@api_router.get("/content/topics/{topic_id}")
+async def get_topic_detail(topic_id: str, request: Request):
+    """Get topic details with content items"""
+    topic = await db.content_topics.find_one({"topic_id": topic_id}, {"_id": 0})
+    if not topic:
+        raise HTTPException(status_code=404, detail="Topic not found")
+    
+    # Get subtopics if this is a parent topic
+    subtopics = await db.content_topics.find(
+        {"parent_id": topic_id},
+        {"_id": 0}
+    ).sort("order", 1).to_list(100)
+    
+    # Get content items for this topic
+    content_items = await db.content_items.find(
+        {"topic_id": topic_id},
+        {"_id": 0}
+    ).sort("order", 1).to_list(100)
+    
+    return {
+        **topic,
+        "subtopics": subtopics,
+        "content_items": content_items
+    }
+
+@api_router.get("/content/items/{content_id}")
+async def get_content_item(content_id: str, request: Request):
+    """Get a single content item"""
+    item = await db.content_items.find_one({"content_id": content_id}, {"_id": 0})
+    if not item:
+        raise HTTPException(status_code=404, detail="Content not found")
+    return item
+
+@api_router.post("/content/items/{content_id}/complete")
+async def complete_content_item(content_id: str, request: Request):
+    """Mark content item as completed and award coins"""
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    item = await db.content_items.find_one({"content_id": content_id}, {"_id": 0})
+    if not item:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    # Check if already completed
+    existing = await db.user_content_progress.find_one({
+        "user_id": user["user_id"],
+        "content_id": content_id,
+        "completed": True
+    })
+    
+    if existing:
+        return {"message": "Already completed", "reward": 0}
+    
+    # Record completion
+    progress_id = f"prog_{uuid.uuid4().hex[:12]}"
+    await db.user_content_progress.update_one(
+        {"user_id": user["user_id"], "content_id": content_id},
+        {
+            "$set": {
+                "id": progress_id,
+                "completed": True,
+                "completed_at": datetime.now(timezone.utc).isoformat()
+            },
+            "$setOnInsert": {
+                "started_at": datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    # Award coins
+    reward = item.get("reward_coins", 5)
+    await db.wallet_accounts.update_one(
+        {"user_id": user["user_id"], "account_type": "spending"},
+        {"$inc": {"balance": reward}}
+    )
+    
+    # Record transaction
+    await db.transactions.insert_one({
+        "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "amount": reward,
+        "transaction_type": "reward",
+        "description": f"Completed: {item['title']}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "Content completed!", "reward": reward}
+
+# ============== ADMIN CONTENT MANAGEMENT ROUTES ==============
+
+@api_router.get("/admin/content/topics")
+async def admin_get_all_topics(request: Request):
+    """Get all topics for admin (including hidden ones)"""
+    await require_admin(request)
+    
+    # Get all parent topics
+    parent_topics = await db.content_topics.find(
+        {"parent_id": None},
+        {"_id": 0}
+    ).sort("order", 1).to_list(100)
+    
+    # Get all subtopics grouped by parent
+    for topic in parent_topics:
+        subtopics = await db.content_topics.find(
+            {"parent_id": topic["topic_id"]},
+            {"_id": 0}
+        ).sort("order", 1).to_list(100)
+        topic["subtopics"] = subtopics
+    
+    return parent_topics
+
+@api_router.post("/admin/content/topics")
+async def admin_create_topic(topic: TopicCreate, request: Request):
+    """Create a topic or subtopic"""
+    admin = await require_admin(request)
+    
+    # If parent_id is provided, verify parent exists
+    if topic.parent_id:
+        parent = await db.content_topics.find_one({"topic_id": topic.parent_id})
+        if not parent:
+            raise HTTPException(status_code=404, detail="Parent topic not found")
+    
+    topic_doc = {
+        "topic_id": f"topic_{uuid.uuid4().hex[:12]}",
+        "title": topic.title,
+        "description": topic.description,
+        "parent_id": topic.parent_id,
+        "thumbnail": topic.thumbnail,
+        "order": topic.order,
+        "min_grade": topic.min_grade,
+        "max_grade": topic.max_grade,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": admin["user_id"]
+    }
+    
+    await db.content_topics.insert_one(topic_doc)
+    topic_doc.pop("_id", None)
+    return {"message": "Topic created", "topic": topic_doc}
+
+@api_router.put("/admin/content/topics/{topic_id}")
+async def admin_update_topic(topic_id: str, topic: TopicUpdate, request: Request):
+    """Update a topic"""
+    await require_admin(request)
+    
+    update_data = {k: v for k, v in topic.model_dump().items() if v is not None}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No update data provided")
+    
+    result = await db.content_topics.update_one(
+        {"topic_id": topic_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Topic not found")
+    
+    updated = await db.content_topics.find_one({"topic_id": topic_id}, {"_id": 0})
+    return {"message": "Topic updated", "topic": updated}
+
+@api_router.delete("/admin/content/topics/{topic_id}")
+async def admin_delete_topic(topic_id: str, request: Request):
+    """Delete a topic and all its content"""
+    await require_admin(request)
+    
+    # Delete subtopics first
+    subtopics = await db.content_topics.find({"parent_id": topic_id}, {"topic_id": 1}).to_list(100)
+    for subtopic in subtopics:
+        await db.content_items.delete_many({"topic_id": subtopic["topic_id"]})
+    await db.content_topics.delete_many({"parent_id": topic_id})
+    
+    # Delete content items
+    await db.content_items.delete_many({"topic_id": topic_id})
+    
+    # Delete the topic
+    await db.content_topics.delete_one({"topic_id": topic_id})
+    
+    return {"message": "Topic and all associated content deleted"}
+
+@api_router.post("/admin/content/topics/reorder")
+async def admin_reorder_topics(reorder: ReorderRequest, request: Request):
+    """Reorder topics"""
+    await require_admin(request)
+    
+    for item in reorder.items:
+        await db.content_topics.update_one(
+            {"topic_id": item["id"]},
+            {"$set": {"order": item["order"]}}
+        )
+    
+    return {"message": "Topics reordered"}
+
+@api_router.get("/admin/content/items")
+async def admin_get_all_content_items(request: Request, topic_id: Optional[str] = None):
+    """Get all content items, optionally filtered by topic"""
+    await require_admin(request)
+    
+    query = {}
+    if topic_id:
+        query["topic_id"] = topic_id
+    
+    items = await db.content_items.find(query, {"_id": 0}).sort("order", 1).to_list(500)
+    return items
+
+@api_router.post("/admin/content/items")
+async def admin_create_content_item(item: ContentItemCreate, request: Request):
+    """Create a content item"""
+    admin = await require_admin(request)
+    
+    # Verify topic exists
+    topic = await db.content_topics.find_one({"topic_id": item.topic_id})
+    if not topic:
+        raise HTTPException(status_code=404, detail="Topic not found")
+    
+    content_doc = {
+        "content_id": f"content_{uuid.uuid4().hex[:12]}",
+        "topic_id": item.topic_id,
+        "title": item.title,
+        "description": item.description,
+        "content_type": item.content_type,
+        "thumbnail": item.thumbnail,
+        "order": item.order,
+        "min_grade": item.min_grade,
+        "max_grade": item.max_grade,
+        "reward_coins": item.reward_coins,
+        "content_data": item.content_data,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": admin["user_id"]
+    }
+    
+    await db.content_items.insert_one(content_doc)
+    content_doc.pop("_id", None)
+    return {"message": "Content created", "content": content_doc}
+
+@api_router.put("/admin/content/items/{content_id}")
+async def admin_update_content_item(content_id: str, item: ContentItemUpdate, request: Request):
+    """Update a content item"""
+    await require_admin(request)
+    
+    update_data = {k: v for k, v in item.model_dump().items() if v is not None}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No update data provided")
+    
+    result = await db.content_items.update_one(
+        {"content_id": content_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    updated = await db.content_items.find_one({"content_id": content_id}, {"_id": 0})
+    return {"message": "Content updated", "content": updated}
+
+@api_router.delete("/admin/content/items/{content_id}")
+async def admin_delete_content_item(content_id: str, request: Request):
+    """Delete a content item"""
+    await require_admin(request)
+    
+    # Get item to check for associated files
+    item = await db.content_items.find_one({"content_id": content_id})
+    if item:
+        content_data = item.get("content_data", {})
+        # Clean up files if they exist
+        if content_data.get("pdf_url"):
+            pdf_path = ROOT_DIR / content_data["pdf_url"].lstrip("/")
+            if pdf_path.exists():
+                pdf_path.unlink()
+        if content_data.get("html_folder"):
+            activity_path = ACTIVITIES_DIR / content_data["html_folder"]
+            if activity_path.exists():
+                shutil.rmtree(activity_path)
+    
+    await db.content_items.delete_one({"content_id": content_id})
+    await db.user_content_progress.delete_many({"content_id": content_id})
+    
+    return {"message": "Content deleted"}
+
+@api_router.post("/admin/content/items/reorder")
+async def admin_reorder_content_items(reorder: ReorderRequest, request: Request):
+    """Reorder content items within a topic"""
+    await require_admin(request)
+    
+    for item in reorder.items:
+        await db.content_items.update_one(
+            {"content_id": item["id"]},
+            {"$set": {"order": item["order"]}}
+        )
+    
+    return {"message": "Content items reordered"}
+
 # ============== ADMIN ROUTES ==============
 
 @api_router.get("/admin/users")
