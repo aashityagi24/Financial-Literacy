@@ -124,8 +124,33 @@ export default function Dashboard({ user, setUser }) {
                   to="/admin" 
                   className="p-2 rounded-xl border-2 border-[#1D3557] bg-[#1D3557] hover:bg-[#3D5A80] transition-colors"
                   title="Admin Dashboard"
+                  data-testid="admin-dashboard-link"
                 >
                   <Shield className="w-5 h-5 text-white" />
+                </Link>
+              )}
+              
+              {/* Teacher dashboard link */}
+              {user?.role === 'teacher' && (
+                <Link 
+                  to="/teacher-dashboard" 
+                  className="p-2 rounded-xl border-2 border-[#1D3557] bg-[#EE6C4D] hover:bg-[#FF8A6C] transition-colors"
+                  title="Teacher Dashboard"
+                  data-testid="teacher-dashboard-link"
+                >
+                  <GraduationCap className="w-5 h-5 text-white" />
+                </Link>
+              )}
+              
+              {/* Parent dashboard link */}
+              {user?.role === 'parent' && (
+                <Link 
+                  to="/parent-dashboard" 
+                  className="p-2 rounded-xl border-2 border-[#1D3557] bg-[#06D6A0] hover:bg-[#42E8B3] transition-colors"
+                  title="Parent Dashboard"
+                  data-testid="parent-dashboard-link"
+                >
+                  <Users className="w-5 h-5 text-white" />
                 </Link>
               )}
               
