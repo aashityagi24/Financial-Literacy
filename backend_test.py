@@ -312,6 +312,193 @@ print('✅ Test data cleaned up');
         success, _ = self.run_test("AI Financial Tip", "POST", "ai/tip", 200, tip_data)
         return success
 
+    def test_seed_learning_content(self):
+        """Test seeding learning content"""
+        return self.run_test("Seed Learning Content", "POST", "seed-learning", 200)
+
+    def test_learning_content_operations(self):
+        """Test learning content operations"""
+        print("\n📚 Testing Learning Content Operations...")
+        
+        # Get learning topics
+        success, topics_data = self.run_test("Get Learning Topics", "GET", "learn/topics", 200)
+        if not success:
+            return False
+        
+        # Get learning progress
+        success, _ = self.run_test("Get Learning Progress", "GET", "learn/progress", 200)
+        if not success:
+            return False
+        
+        # Get books
+        success, _ = self.run_test("Get Books", "GET", "learn/books", 200)
+        if not success:
+            return False
+        
+        # Get activities
+        success, activities_data = self.run_test("Get Activities", "GET", "learn/activities", 200)
+        if not success:
+            return False
+        
+        # Test topic details if topics exist
+        if isinstance(topics_data, list) and len(topics_data) > 0:
+            topic_id = topics_data[0].get("topic_id")
+            if topic_id:
+                success, topic_details = self.run_test("Get Topic Details", "GET", f"learn/topics/{topic_id}", 200)
+                if success and isinstance(topic_details, dict):
+                    lessons = topic_details.get("lessons", [])
+                    if len(lessons) > 0:
+                        lesson_id = lessons[0].get("lesson_id")
+                        if lesson_id:
+                            # Get lesson details
+                            success, _ = self.run_test("Get Lesson Details", "GET", f"learn/lessons/{lesson_id}", 200)
+                            if success:
+                                # Complete the lesson
+                                success, _ = self.run_test("Complete Lesson", "POST", f"learn/lessons/{lesson_id}/complete", 200)
+        
+        # Complete an activity if available
+        if isinstance(activities_data, list) and len(activities_data) > 0:
+            activity_id = activities_data[0].get("activity_id")
+            if activity_id:
+                success, _ = self.run_test("Complete Activity", "POST", f"learn/activities/{activity_id}/complete", 200)
+        
+        return True
+
+    def create_admin_user_and_session(self):
+        """Create admin test user and session using MongoDB"""
+        print("\n🔧 Creating admin test user and session...")
+        
+        timestamp = int(time.time())
+        self.admin_user_id = f"test-admin-{timestamp}"
+        self.admin_session_token = f"test_admin_session_{timestamp}"
+        
+        mongo_script = f"""
+use('test_database');
+var userId = '{self.admin_user_id}';
+var sessionToken = '{self.admin_session_token}';
+
+// Create admin test user
+db.users.insertOne({{
+  user_id: userId,
+  email: 'test.admin.{timestamp}@example.com',
+  name: 'Test Admin {timestamp}',
+  picture: 'https://via.placeholder.com/150',
+  role: 'admin',
+  grade: null,
+  avatar: {{"body": "default", "hair": "default", "clothes": "default", "accessories": []}},
+  streak_count: 0,
+  last_login_date: null,
+  created_at: new Date()
+}});
+
+// Create admin session
+db.user_sessions.insertOne({{
+  user_id: userId,
+  session_token: sessionToken,
+  expires_at: new Date(Date.now() + 7*24*60*60*1000),
+  created_at: new Date()
+}});
+
+print('✅ Admin test user and session created');
+print('Admin User ID: ' + userId);
+print('Admin Session Token: ' + sessionToken);
+"""
+        
+        try:
+            result = subprocess.run(['mongosh', '--eval', mongo_script], 
+                                  capture_output=True, text=True, timeout=30)
+            if result.returncode == 0:
+                print("✅ Admin test user and session created successfully")
+                return True
+            else:
+                print(f"❌ Failed to create admin test user: {result.stderr}")
+                return False
+        except Exception as e:
+            print(f"❌ Error creating admin test user: {e}")
+            return False
+
+    def test_admin_operations(self):
+        """Test admin operations"""
+        print("\n👑 Testing Admin Operations...")
+        
+        # Switch to admin session
+        original_token = self.session_token
+        self.session_token = self.admin_session_token
+        
+        try:
+            # Get admin stats
+            success, _ = self.run_test("Get Admin Stats", "GET", "admin/stats", 200)
+            if not success:
+                return False
+            
+            # Get all users
+            success, users_data = self.run_test("Get All Users", "GET", "admin/users", 200)
+            if not success:
+                return False
+            
+            # Update a user role (if users exist)
+            if isinstance(users_data, list) and len(users_data) > 0:
+                user_id = users_data[0].get("user_id")
+                if user_id:
+                    role_data = {"role": "child"}
+                    success, _ = self.run_test("Update User Role", "PUT", f"admin/users/{user_id}/role", 200, role_data)
+            
+            # Create a topic
+            topic_data = {
+                "title": "Test Topic",
+                "description": "A test topic for API testing",
+                "category": "concepts",
+                "icon": "🧪",
+                "min_grade": 0,
+                "max_grade": 5
+            }
+            success, topic_response = self.run_test("Create Topic", "POST", "admin/topics", 200, topic_data)
+            if success and isinstance(topic_response, dict):
+                topic_id = topic_response.get("topic_id")
+                
+                # Create a lesson for the topic
+                if topic_id:
+                    lesson_data = {
+                        "topic_id": topic_id,
+                        "title": "Test Lesson",
+                        "content": "This is a test lesson content.",
+                        "lesson_type": "story",
+                        "duration_minutes": 5,
+                        "reward_coins": 5,
+                        "min_grade": 0,
+                        "max_grade": 5
+                    }
+                    success, _ = self.run_test("Create Lesson", "POST", "admin/lessons", 200, lesson_data)
+            
+            # Create a book
+            book_data = {
+                "title": "Test Book",
+                "author": "Test Author",
+                "description": "A test book for API testing",
+                "category": "story",
+                "min_grade": 0,
+                "max_grade": 5
+            }
+            success, _ = self.run_test("Create Book", "POST", "admin/books", 200, book_data)
+            
+            # Create an activity
+            activity_data = {
+                "title": "Test Activity",
+                "description": "A test activity for API testing",
+                "instructions": "Follow these test instructions",
+                "activity_type": "real_world",
+                "reward_coins": 10,
+                "min_grade": 0,
+                "max_grade": 5
+            }
+            success, _ = self.run_test("Create Activity", "POST", "admin/activities", 200, activity_data)
+            
+            return True
+            
+        finally:
+            # Restore original session
+            self.session_token = original_token
+
     def run_all_tests(self):
         """Run all API tests"""
         print("🚀 Starting PocketQuest API Testing...")
