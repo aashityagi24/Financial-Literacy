@@ -1,34 +1,24 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* App level styles - minimal since most is in index.css */
+
+/* Prevent text-align center on app container */
+.App {
+  min-height: 100vh;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+/* Global link styles */
+a {
+  text-decoration: none;
+  color: inherit;
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+/* Selection color */
+::selection {
+  background: rgba(255, 210, 63, 0.4);
+  color: #1D3557;
 }
 
-.App-link {
-    color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+/* Focus visible for accessibility */
+:focus-visible {
+  outline: 3px solid #FFD23F;
+  outline-offset: 2px;
 }
