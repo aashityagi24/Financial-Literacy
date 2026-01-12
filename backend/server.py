@@ -1650,6 +1650,106 @@ async def seed_data():
     
     return {"message": "Seed data created successfully"}
 
+@api_router.post("/seed-learning")
+async def seed_learning_content():
+    """Seed learning topics, lessons, books and activities"""
+    
+    # Learning Topics
+    topics = [
+        {"topic_id": "topic_history", "title": "History of Money", "description": "Learn how money was invented and evolved over time", "category": "history", "icon": "🏛️", "order": 1, "min_grade": 0, "max_grade": 5},
+        {"topic_id": "topic_barter", "title": "The Barter System", "description": "Discover how people traded before money existed", "category": "history", "icon": "🤝", "order": 2, "min_grade": 0, "max_grade": 5},
+        {"topic_id": "topic_coins", "title": "Coins Through History", "description": "From gold and silver to modern coins", "category": "history", "icon": "🪙", "order": 3, "min_grade": 1, "max_grade": 5},
+        {"topic_id": "topic_currency", "title": "Modern Currency", "description": "How money works today - bills, coins, and digital money", "category": "concepts", "icon": "💵", "order": 4, "min_grade": 0, "max_grade": 5},
+        {"topic_id": "topic_needs_wants", "title": "Needs vs Wants", "description": "Learn the difference between things you need and things you want", "category": "concepts", "icon": "🤔", "order": 5, "min_grade": 0, "max_grade": 5},
+        {"topic_id": "topic_saving", "title": "The Power of Saving", "description": "Why saving money is important and how to do it", "category": "skills", "icon": "🐷", "order": 6, "min_grade": 0, "max_grade": 5},
+        {"topic_id": "topic_spending", "title": "Smart Spending", "description": "How to make wise choices when spending money", "category": "skills", "icon": "🛒", "order": 7, "min_grade": 0, "max_grade": 5},
+        {"topic_id": "topic_earning", "title": "Earning Money", "description": "Different ways people earn money", "category": "skills", "icon": "💼", "order": 8, "min_grade": 0, "max_grade": 5},
+        {"topic_id": "topic_budget", "title": "Making a Budget", "description": "Planning how to use your money wisely", "category": "skills", "icon": "📊", "order": 9, "min_grade": 2, "max_grade": 5},
+        {"topic_id": "topic_giving", "title": "Giving and Sharing", "description": "The joy of helping others with your money", "category": "concepts", "icon": "❤️", "order": 10, "min_grade": 0, "max_grade": 5},
+    ]
+    
+    # Lessons
+    lessons = [
+        # History of Money
+        {"lesson_id": "lesson_001", "topic_id": "topic_history", "title": "Before Money Existed", "content": "# Life Before Money\n\nA long, long time ago, there was no money! People had to find other ways to get what they needed.\n\n## What Did People Do?\n\nImagine you have some apples but need shoes. What would you do? You would have to find someone who:\n- Has shoes\n- Wants apples\n\nThis was very hard! Sometimes people walked for days to find the right trade.", "lesson_type": "story", "duration_minutes": 5, "order": 1, "min_grade": 0, "max_grade": 5, "reward_coins": 5},
+        {"lesson_id": "lesson_002", "topic_id": "topic_history", "title": "The Invention of Money", "content": "# How Money Was Invented\n\n## The Problem\nTrading (bartering) was hard because you had to find someone who wanted exactly what you had.\n\n## The Solution\nPeople started using special objects that everyone agreed had value:\n- Shells 🐚\n- Beads \n- Salt\n- Metal pieces\n\n## Why It Worked\nNow you could trade your apples for shells, then use shells to buy shoes anytime!", "lesson_type": "story", "duration_minutes": 5, "order": 2, "min_grade": 0, "max_grade": 5, "reward_coins": 5},
+        
+        # Barter System
+        {"lesson_id": "lesson_003", "topic_id": "topic_barter", "title": "What is Bartering?", "content": "# The Barter System\n\n**Bartering** means trading one thing for another without using money.\n\n## Examples of Bartering\n- Trading your sandwich for someone's cookie at lunch\n- Trading toys with a friend\n- A farmer trading vegetables for eggs\n\n## The Challenge\nWhat if someone has what you want, but doesn't want what you have? That's why bartering was tricky!", "lesson_type": "story", "duration_minutes": 5, "order": 1, "min_grade": 0, "max_grade": 5, "reward_coins": 5},
+        {"lesson_id": "lesson_004", "topic_id": "topic_barter", "title": "Bartering Game", "content": "# Let's Practice Bartering!\n\nImagine you have these items:\n- 3 apples 🍎🍎🍎\n- 2 pencils ✏️✏️\n- 1 book 📖\n\n## Your Mission\nYou want to get a toy car 🚗\n\n**Think about:**\n- What would you trade?\n- What might be a fair trade?\n- How would you convince someone to trade?", "lesson_type": "interactive", "duration_minutes": 10, "order": 2, "min_grade": 0, "max_grade": 3, "reward_coins": 10},
+        
+        # Coins Through History
+        {"lesson_id": "lesson_005", "topic_id": "topic_coins", "title": "The First Coins", "content": "# The First Coins Ever Made\n\n## Gold and Silver\nAbout 2,600 years ago, people started making coins from:\n- **Gold** ✨ - Very valuable and rare\n- **Silver** 🥈 - Valuable but more common\n- **Bronze** 🥉 - For everyday purchases\n\n## Why Coins Were Great\n- Easy to carry\n- Everyone knew their value\n- Didn't spoil like food\n- Could be saved for later", "lesson_type": "story", "duration_minutes": 5, "order": 1, "min_grade": 1, "max_grade": 5, "reward_coins": 5},
+        {"lesson_id": "lesson_006", "topic_id": "topic_coins", "title": "Coins Today", "content": "# Modern Coins\n\n## Coins in Your Country\nToday's coins are made from:\n- Copper\n- Nickel\n- Zinc\n\n## Did You Know?\n- Coins have different sizes for different values\n- Blind people can tell coins apart by touch\n- Some coins are worth collecting!\n\n## Fun Fact\nPennies in the US used to be bigger than today's quarters!", "lesson_type": "story", "duration_minutes": 5, "order": 2, "min_grade": 1, "max_grade": 5, "reward_coins": 5},
+        
+        # Modern Currency
+        {"lesson_id": "lesson_007", "topic_id": "topic_currency", "title": "Paper Money", "content": "# Bills and Paper Money\n\n## Why Paper?\nCoins were heavy! Imagine carrying 100 gold coins. 😅\n\n**Paper money is:**\n- Light and easy to carry\n- Can show bigger amounts\n- Has special pictures and security features\n\n## Important!\nPaper money is only valuable because we all agree it is. The paper itself isn't worth much!", "lesson_type": "story", "duration_minutes": 5, "order": 1, "min_grade": 0, "max_grade": 5, "reward_coins": 5},
+        {"lesson_id": "lesson_008", "topic_id": "topic_currency", "title": "Digital Money", "content": "# Money on Computers!\n\n## What is Digital Money?\nMoney doesn't always need to be physical. Today we have:\n- Money in bank accounts 🏦\n- Credit cards 💳\n- Mobile payments 📱\n\n## How It Works\nWhen your parents pay with a card, the store's computer talks to the bank's computer to move the money.\n\n## It's Still Real!\nDigital money is just as real as cash - it's just invisible!", "lesson_type": "story", "duration_minutes": 5, "order": 2, "min_grade": 2, "max_grade": 5, "reward_coins": 5},
+        
+        # Needs vs Wants
+        {"lesson_id": "lesson_009", "topic_id": "topic_needs_wants", "title": "What Do You Need?", "content": "# Needs - Things You Can't Live Without\n\n## What Are Needs?\nNeeds are things you MUST have to survive and stay healthy:\n\n- 🏠 **Shelter** - A safe place to live\n- 🍎 **Food** - Healthy meals to grow strong\n- 💧 **Water** - Clean water to drink\n- 👕 **Clothing** - To stay warm and protected\n- 💊 **Healthcare** - When you're sick\n\n## Remember\nNeeds come FIRST when spending money!", "lesson_type": "story", "duration_minutes": 5, "order": 1, "min_grade": 0, "max_grade": 5, "reward_coins": 5},
+        {"lesson_id": "lesson_010", "topic_id": "topic_needs_wants", "title": "What Do You Want?", "content": "# Wants - Nice to Have!\n\n## What Are Wants?\nWants are things that make life fun, but you can live without:\n\n- 🎮 Video games\n- 🍦 Ice cream\n- 🧸 New toys\n- 📱 Latest gadgets\n\n## Important Lesson\nWants are okay! But...\n- Pay for needs FIRST\n- Save for wants\n- You can't have EVERYTHING you want\n\n## Think About It\nIs a birthday cake a need or a want? 🎂", "lesson_type": "story", "duration_minutes": 5, "order": 2, "min_grade": 0, "max_grade": 5, "reward_coins": 5},
+        {"lesson_id": "lesson_011", "topic_id": "topic_needs_wants", "title": "Need or Want? Game", "content": "# Let's Sort! Need or Want?\n\nLook at each item and decide: Is it a NEED or a WANT?\n\n1. 🥛 Milk\n2. 🎸 Guitar\n3. 🏠 House\n4. 🛹 Skateboard\n5. 🥾 Winter boots\n6. 🎪 Circus tickets\n7. 📚 School books\n8. 🍕 Pizza party\n\n## Think Deeper\nSome things can be tricky!\n- You NEED shoes, but do you NEED the most expensive ones?\n- You NEED food, but is candy a need?", "lesson_type": "quiz", "duration_minutes": 10, "order": 3, "min_grade": 0, "max_grade": 5, "reward_coins": 10},
+        
+        # Saving
+        {"lesson_id": "lesson_012", "topic_id": "topic_saving", "title": "Why Save Money?", "content": "# The Magic of Saving!\n\n## What is Saving?\nSaving means keeping some money instead of spending it all right away.\n\n## Why Should You Save?\n\n🎯 **Goals** - Save for something special\n🛡️ **Safety** - Have money for emergencies\n😊 **Choices** - Have more options later\n📈 **Growth** - Your money can grow!\n\n## The Piggy Bank Way\nEvery time you get money, put some in your piggy bank BEFORE spending any!", "lesson_type": "story", "duration_minutes": 5, "order": 1, "min_grade": 0, "max_grade": 5, "reward_coins": 5},
+        {"lesson_id": "lesson_013", "topic_id": "topic_saving", "title": "Setting a Savings Goal", "content": "# Pick a Savings Goal!\n\n## How to Set a Goal\n\n1. **Choose something** you really want\n2. **Find out** how much it costs\n3. **Make a plan** to save that amount\n4. **Track** your progress\n5. **Celebrate** when you reach it! 🎉\n\n## Example\n- Goal: New book ($10)\n- You get $2 per week allowance\n- Saving half = $1 per week\n- Time to reach goal: 10 weeks!\n\n## Your Turn\nWhat would YOU save for?", "lesson_type": "interactive", "duration_minutes": 10, "order": 2, "min_grade": 0, "max_grade": 5, "reward_coins": 10},
+        
+        # Spending
+        {"lesson_id": "lesson_014", "topic_id": "topic_spending", "title": "Think Before You Buy", "content": "# Smart Spending Starts Here!\n\n## The STOP Method\n\n🛑 **S**top - Don't buy right away\n🤔 **T**hink - Do I really need this?\n⚖️ **O**ptions - Is there a better choice?\n📝 **P**lan - Does this fit my budget?\n\n## Questions to Ask\n- Will I still want this tomorrow?\n- Can I afford it AND still save?\n- Is there something similar that costs less?", "lesson_type": "story", "duration_minutes": 5, "order": 1, "min_grade": 0, "max_grade": 5, "reward_coins": 5},
+        {"lesson_id": "lesson_015", "topic_id": "topic_spending", "title": "Comparing Prices", "content": "# Become a Price Detective! 🔍\n\n## Why Compare?\nThe same thing can cost different amounts in different places!\n\n## Where to Look\n- Different stores\n- Online vs in-store\n- Sales and discounts\n- Generic vs brand name\n\n## Example\n- Toy at Store A: $15\n- Same toy at Store B: $12\n- Same toy on sale: $10\n\n**You saved $5 by comparing!**", "lesson_type": "story", "duration_minutes": 5, "order": 2, "min_grade": 1, "max_grade": 5, "reward_coins": 5},
+        
+        # Earning
+        {"lesson_id": "lesson_016", "topic_id": "topic_earning", "title": "How Do People Earn Money?", "content": "# Ways to Earn Money\n\n## Adults Earn By:\n- Working at jobs 👨‍💼👩‍🔬👨‍🍳\n- Running businesses 🏪\n- Creating things to sell 🎨\n- Helping others with services 💇\n\n## Kids Can Earn By:\n- Doing extra chores at home 🧹\n- Helping neighbors (with parent permission) 🌻\n- Having a lemonade stand 🍋\n- Selling crafts or drawings 🖼️\n\n## Important!\nEarning money takes time and effort. That's why it's important to spend it wisely!", "lesson_type": "story", "duration_minutes": 5, "order": 1, "min_grade": 0, "max_grade": 5, "reward_coins": 5},
+        {"lesson_id": "lesson_017", "topic_id": "topic_earning", "title": "Work and Rewards", "content": "# The Connection: Work = Money\n\n## Understanding Value\n\nWhen you work, you're giving your:\n- ⏰ Time\n- 💪 Effort\n- 🧠 Skills\n\nIn return, you get money that represents that value!\n\n## Fair Exchange\n- Harder work often means more money\n- Special skills can earn more\n- Everyone's time is valuable\n\n## Think About It\nWhat skills do you have that could help someone?", "lesson_type": "story", "duration_minutes": 5, "order": 2, "min_grade": 1, "max_grade": 5, "reward_coins": 5},
+        
+        # Budget
+        {"lesson_id": "lesson_018", "topic_id": "topic_budget", "title": "What is a Budget?", "content": "# Your Money Plan: The Budget!\n\n## What is a Budget?\nA budget is a plan for how to use your money.\n\n## Simple Budget Example\nIf you get $10:\n- 💰 Save: $4 (40%)\n- 🎁 Spend: $4 (40%)\n- ❤️ Give: $2 (20%)\n\n## Why Budget?\n- No surprises\n- Reach goals faster\n- Feel in control\n- Less money stress", "lesson_type": "story", "duration_minutes": 5, "order": 1, "min_grade": 2, "max_grade": 5, "reward_coins": 5},
+        {"lesson_id": "lesson_019", "topic_id": "topic_budget", "title": "Create Your Budget", "content": "# Make Your Own Budget!\n\n## The Jar System 🫙\n\nGet 3 jars and label them:\n1. **SAVE** - For future goals\n2. **SPEND** - For things you want now\n3. **SHARE** - For helping others\n\n## How to Use\nEvery time you get money:\n1. Divide it between jars\n2. Only spend from SPEND jar\n3. Watch SAVE jar grow!\n\n## Your Plan\nDecide: What % goes in each jar?", "lesson_type": "interactive", "duration_minutes": 10, "order": 2, "min_grade": 2, "max_grade": 5, "reward_coins": 10},
+        
+        # Giving
+        {"lesson_id": "lesson_020", "topic_id": "topic_giving", "title": "The Joy of Giving", "content": "# Sharing Makes Us Happy!\n\n## Why Give?\n- Helps people who need it 🤗\n- Makes you feel good inside 💖\n- Creates a kinder world 🌍\n- Sets a good example 🌟\n\n## Ways to Give\n- Donate to charity\n- Buy a gift for someone\n- Give to your community\n- Help someone in need\n\n## Fun Fact\nStudies show that giving money away actually makes people happier than spending it on themselves!", "lesson_type": "story", "duration_minutes": 5, "order": 1, "min_grade": 0, "max_grade": 5, "reward_coins": 5},
+    ]
+    
+    # Books
+    books = [
+        {"book_id": "book_001", "title": "The Berenstain Bears' Trouble with Money", "author": "Stan & Jan Berenstain", "description": "Brother and Sister Bear learn the value of money and what it means to earn, save, and spend wisely.", "cover_url": "📚", "category": "story", "min_grade": 0, "max_grade": 2},
+        {"book_id": "book_002", "title": "Alexander, Who Used to Be Rich Last Sunday", "author": "Judith Viorst", "description": "Alexander gets a dollar from his grandparents, but it doesn't last long! A funny story about spending decisions.", "cover_url": "📖", "category": "story", "min_grade": 0, "max_grade": 3},
+        {"book_id": "book_003", "title": "Money Ninja", "author": "Mary Nhin", "description": "A fun ninja-themed book teaching kids about saving, spending, and sharing money.", "cover_url": "🥷", "category": "story", "min_grade": 1, "max_grade": 4},
+        {"book_id": "book_004", "title": "Rock, Brock, and the Savings Shock", "author": "Sheila Bair", "description": "Twin brothers learn about compound interest and the magic of saving.", "cover_url": "💎", "category": "story", "min_grade": 2, "max_grade": 5},
+        {"book_id": "book_005", "title": "My First Money Book", "author": "PocketQuest Team", "description": "A beginner's guide to coins, bills, and the basics of money.", "cover_url": "🌟", "category": "workbook", "min_grade": 0, "max_grade": 1},
+        {"book_id": "book_006", "title": "Budgeting for Kids", "author": "PocketQuest Team", "description": "Interactive workbook to help kids create and maintain their first budget.", "cover_url": "📊", "category": "workbook", "min_grade": 2, "max_grade": 5},
+    ]
+    
+    # Activities
+    activities = [
+        {"activity_id": "act_001", "title": "Coin Sorting Game", "description": "Practice identifying and sorting different coins", "instructions": "1. Gather all the coins you can find\\n2. Sort them into piles by type\\n3. Count how much each pile is worth\\n4. Add up your total!", "activity_type": "real_world", "topic_id": "topic_currency", "min_grade": 0, "max_grade": 2, "reward_coins": 10},
+        {"activity_id": "act_002", "title": "Needs vs Wants Collage", "description": "Create a visual collage sorting needs and wants", "instructions": "1. Find old magazines or print pictures\\n2. Cut out items you want and need\\n3. Glue NEEDS on one side, WANTS on the other\\n4. Share with your family!", "activity_type": "real_world", "topic_id": "topic_needs_wants", "min_grade": 0, "max_grade": 3, "reward_coins": 15},
+        {"activity_id": "act_003", "title": "My Savings Tracker", "description": "Create and use a savings goal tracker", "instructions": "1. Draw a big thermometer on paper\\n2. Write your savings goal at the top\\n3. Color in your progress as you save\\n4. Celebrate when you reach the top!", "activity_type": "printable", "topic_id": "topic_saving", "min_grade": 0, "max_grade": 5, "reward_coins": 10},
+        {"activity_id": "act_004", "title": "Price Comparison Challenge", "description": "Be a detective and compare prices", "instructions": "1. Choose an item you want\\n2. Find its price at 3 different stores\\n3. Record prices in a chart\\n4. Which store has the best deal?", "activity_type": "real_world", "topic_id": "topic_spending", "min_grade": 1, "max_grade": 5, "reward_coins": 15},
+        {"activity_id": "act_005", "title": "Barter Simulation", "description": "Experience trading without money", "instructions": "1. With friends/family, each pick 5 items to trade\\n2. Try to trade for something you want\\n3. No money allowed!\\n4. Discuss: What was hard about bartering?", "activity_type": "real_world", "topic_id": "topic_barter", "min_grade": 0, "max_grade": 5, "reward_coins": 20},
+        {"activity_id": "act_006", "title": "Design Your Own Currency", "description": "Create a pretend currency for your family", "instructions": "1. Design bills and coins (draw them!)\\n2. Give your currency a name\\n3. Decide what each is worth\\n4. Use it to practice money skills!", "activity_type": "real_world", "topic_id": "topic_currency", "min_grade": 1, "max_grade": 5, "reward_coins": 20},
+        {"activity_id": "act_007", "title": "Chore Chart & Earnings", "description": "Set up a real earning system at home", "instructions": "1. List chores you can do\\n2. Agree on payment with parents\\n3. Track completed chores\\n4. Collect your earnings weekly!", "activity_type": "real_world", "topic_id": "topic_earning", "min_grade": 0, "max_grade": 5, "reward_coins": 15},
+        {"activity_id": "act_008", "title": "Budget Your Allowance", "description": "Practice budgeting with real money", "instructions": "1. Get 3 jars or envelopes\\n2. Label: SAVE, SPEND, SHARE\\n3. Decide percentages for each\\n4. Divide your next allowance!", "activity_type": "real_world", "topic_id": "topic_budget", "min_grade": 2, "max_grade": 5, "reward_coins": 15},
+    ]
+    
+    # Clear and insert
+    await db.learning_topics.delete_many({})
+    await db.learning_lessons.delete_many({})
+    await db.books.delete_many({})
+    await db.activities.delete_many({})
+    
+    if topics:
+        await db.learning_topics.insert_many(topics)
+    if lessons:
+        await db.learning_lessons.insert_many(lessons)
+    if books:
+        await db.books.insert_many(books)
+    if activities:
+        await db.activities.insert_many(activities)
+    
+    return {"message": "Learning content seeded successfully", "topics": len(topics), "lessons": len(lessons), "books": len(books), "activities": len(activities)}
+
 # ============== ROOT ==============
 
 @api_router.get("/")
