@@ -1,0 +1,232 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy } from 'lucide-react';
+
+export default function LandingPage() {
+  const navigate = useNavigate();
+  
+  // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+  const handleLogin = () => {
+    const redirectUrl = window.location.origin + '/dashboard';
+    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+  };
+  
+  const features = [
+    { icon: Coins, title: "Digital Wallet", description: "Learn to manage money with 4 account types: Spending, Savings, Investing & Giving", color: "#FFD23F" },
+    { icon: TrendingUp, title: "Investment Zone", description: "Grow your money! Garden for K-2, Stock market for 3-5 graders", color: "#06D6A0" },
+    { icon: Gift, title: "Virtual Store", description: "Earn rewards and spend wisely on cool avatar items and privileges", color: "#EE6C4D" },
+    { icon: Trophy, title: "Quests & Achievements", description: "Complete fun financial challenges and earn badges", color: "#3D5A80" },
+  ];
+  
+  const grades = ["Kindergarten", "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"];
+  
+  return (
+    <div className="min-h-screen bg-[#E0FBFC]">
+      {/* Hero Section */}
+      <header className="relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-10 left-10 w-20 h-20 bg-[#FFD23F] rounded-full opacity-60 animate-float"></div>
+        <div className="absolute top-32 right-20 w-16 h-16 bg-[#EE6C4D] rounded-full opacity-60 animate-float stagger-2"></div>
+        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-[#06D6A0] rounded-full opacity-60 animate-float stagger-3"></div>
+        
+        <div className="container mx-auto px-6 py-12 lg:py-20">
+          <nav className="flex justify-between items-center mb-16">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-[#FFD23F] rounded-2xl border-3 border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] flex items-center justify-center">
+                <Coins className="w-7 h-7 text-[#1D3557]" />
+              </div>
+              <span className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>PocketQuest</span>
+            </div>
+            <button
+              data-testid="login-btn-nav"
+              onClick={handleLogin}
+              className="btn-primary px-6 py-3 text-lg"
+            >
+              Sign In
+            </button>
+          </nav>
+          
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="animate-bounce-in">
+              <h1 className="text-5xl lg:text-7xl font-bold text-[#1D3557] mb-6 leading-tight" style={{ fontFamily: 'Fredoka' }}>
+                Learn Money Skills <span className="text-[#EE6C4D]">While Having Fun!</span>
+              </h1>
+              <p className="text-xl text-[#3D5A80] mb-8 leading-relaxed">
+                PocketQuest teaches K-5 kids about saving, spending, investing, and giving through exciting games, quests, and real-world simulations!
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <button
+                  data-testid="get-started-btn"
+                  onClick={handleLogin}
+                  className="btn-primary px-8 py-4 text-xl flex items-center gap-2"
+                >
+                  <Sparkles className="w-6 h-6" />
+                  Start Your Adventure
+                </button>
+                <a
+                  href="#features"
+                  className="btn-secondary px-8 py-4 text-xl flex items-center gap-2"
+                >
+                  <BookOpen className="w-6 h-6" />
+                  Learn More
+                </a>
+              </div>
+            </div>
+            
+            <div className="relative animate-bounce-in stagger-2">
+              <div className="card-playful p-8 bg-white">
+                <img 
+                  src="https://images.pexels.com/photos/1602726/pexels-photo-1602726.jpeg" 
+                  alt="Piggy Bank" 
+                  className="w-full h-64 object-cover rounded-2xl border-3 border-[#1D3557]"
+                />
+                <div className="mt-6 grid grid-cols-3 gap-4">
+                  <div className="text-center p-3 bg-[#FFD23F]/20 rounded-xl border-2 border-[#1D3557]">
+                    <Star className="w-8 h-8 mx-auto text-[#FFD23F]" />
+                    <p className="text-sm font-bold text-[#1D3557] mt-1">Fun Quests</p>
+                  </div>
+                  <div className="text-center p-3 bg-[#06D6A0]/20 rounded-xl border-2 border-[#1D3557]">
+                    <TrendingUp className="w-8 h-8 mx-auto text-[#06D6A0]" />
+                    <p className="text-sm font-bold text-[#1D3557] mt-1">Grow Money</p>
+                  </div>
+                  <div className="text-center p-3 bg-[#EE6C4D]/20 rounded-xl border-2 border-[#1D3557]">
+                    <Trophy className="w-8 h-8 mx-auto text-[#EE6C4D]" />
+                    <p className="text-sm font-bold text-[#1D3557] mt-1">Win Badges</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      {/* Features Section */}
+      <section id="features" className="py-20 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
+              Everything Kids Need to Learn About Money
+            </h2>
+            <p className="text-xl text-[#3D5A80]">Age-appropriate financial education from Kindergarten to 5th Grade</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, index) => (
+              <div 
+                key={index}
+                className="card-playful p-6 animate-bounce-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div 
+                  className="w-16 h-16 rounded-2xl border-3 border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] flex items-center justify-center mb-4"
+                  style={{ backgroundColor: feature.color }}
+                >
+                  <feature.icon className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>{feature.title}</h3>
+                <p className="text-[#3D5A80]">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      
+      {/* Grade Levels Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
+              Tailored for Every Grade Level
+            </h2>
+            <p className="text-xl text-[#3D5A80]">Content adapts to your child's age and learning level</p>
+          </div>
+          
+          <div className="flex flex-wrap justify-center gap-4">
+            {grades.map((grade, index) => (
+              <div 
+                key={index}
+                className="card-playful px-6 py-4 hover:bg-[#FFD23F] transition-colors cursor-pointer"
+              >
+                <span className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{grade}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      
+      {/* User Types Section */}
+      <section className="py-20 bg-[#3D5A80]">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'Fredoka' }}>
+              For Kids, Parents & Teachers
+            </h2>
+            <p className="text-xl text-[#98C1D9]">Everyone plays a role in building financial literacy</p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">
+              <div className="w-20 h-20 mx-auto mb-4 bg-[#FFD23F] rounded-full border-3 border-[#1D3557] flex items-center justify-center">
+                <span className="text-4xl">🧒</span>
+              </div>
+              <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Kids</h3>
+              <p className="text-[#3D5A80]">Play games, earn coins, complete quests, and learn money skills through fun activities!</p>
+            </div>
+            
+            <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">
+              <div className="w-20 h-20 mx-auto mb-4 bg-[#06D6A0] rounded-full border-3 border-[#1D3557] flex items-center justify-center">
+                <span className="text-4xl">👨‍👩‍👧</span>
+              </div>
+              <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Parents</h3>
+              <p className="text-[#3D5A80]">Track your child's progress, set up chores, and give digital rewards for real achievements!</p>
+            </div>
+            
+            <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">
+              <div className="w-20 h-20 mx-auto mb-4 bg-[#EE6C4D] rounded-full border-3 border-[#1D3557] flex items-center justify-center">
+                <span className="text-4xl">👩‍🏫</span>
+              </div>
+              <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Teachers</h3>
+              <p className="text-[#3D5A80]">Set up classroom economies, track student progress, and reward financial learning!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* CTA Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="card-playful p-12 bg-[#FFD23F] text-center">
+            <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-6" style={{ fontFamily: 'Fredoka' }}>
+              Ready to Start the Adventure?
+            </h2>
+            <p className="text-xl text-[#1D3557] mb-8 max-w-2xl mx-auto">
+              Join thousands of kids learning financial literacy through play. It's free to start!
+            </p>
+            <button
+              data-testid="cta-get-started-btn"
+              onClick={handleLogin}
+              className="bg-[#1D3557] text-white font-bold text-xl px-10 py-5 rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_white] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_white] transition-all"
+            >
+              Sign Up with Google
+            </button>
+          </div>
+        </div>
+      </section>
+      
+      {/* Footer */}
+      <footer className="bg-[#1D3557] py-12">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center gap-3 mb-6 md:mb-0">
+              <div className="w-10 h-10 bg-[#FFD23F] rounded-xl border-2 border-white flex items-center justify-center">
+                <Coins className="w-6 h-6 text-[#1D3557]" />
+              </div>
+              <span className="text-xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>PocketQuest</span>
+            </div>
+            <p className="text-[#98C1D9]">© 2025 PocketQuest. Teaching kids financial literacy through fun.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
