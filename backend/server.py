@@ -3072,6 +3072,24 @@ async def admin_reorder_content_items(reorder: ReorderRequest, request: Request)
     
     return {"message": "Content items reordered"}
 
+@api_router.post("/admin/content/items/{content_id}/toggle-publish")
+async def admin_toggle_publish(content_id: str, request: Request):
+    """Toggle the publish status of a content item"""
+    await require_admin(request)
+    
+    item = await db.content_items.find_one({"content_id": content_id})
+    if not item:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    new_status = not item.get("is_published", False)
+    
+    await db.content_items.update_one(
+        {"content_id": content_id},
+        {"$set": {"is_published": new_status}}
+    )
+    
+    return {"message": f"Content {'published' if new_status else 'unpublished'}", "is_published": new_status}
+
 # ============== ADMIN ROUTES ==============
 
 @api_router.get("/admin/users")
