@@ -295,7 +295,7 @@ export default function Dashboard({ user, setUser }) {
           </div>
           
           {/* Recent Achievements */}
-          <div className="card-playful p-6 animate-bounce-in stagger-4">
+          <div className={`card-playful p-6 ${showAnimations ? 'animate-bounce-in stagger-4' : ''}`}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
                 My Badges
