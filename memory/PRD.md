@@ -12,7 +12,8 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 4. **Admin**: Manage content (topics, lessons, books, activities), manage users, view platform statistics
 
 ## Core Requirements
-- Google Social Login authentication
+- Google Social Login authentication for regular users
+- **Admin email/password authentication** (admin@learnersplanet.com)
 - Grade-level appropriate content (K-5)
 - **Learning Content System** (primary focus)
   - Topics with structured lessons
