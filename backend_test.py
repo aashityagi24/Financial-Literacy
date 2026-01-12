@@ -515,6 +515,11 @@ print('Admin Session Token: ' + sessionToken);
             print("❌ Failed to create test user. Stopping tests.")
             return False
         
+        # Create admin user and session
+        if not self.create_admin_user_and_session():
+            print("❌ Failed to create admin user. Stopping tests.")
+            return False
+        
         try:
             # Test basic endpoints
             print("\n" + "="*50)
@@ -523,6 +528,9 @@ print('Admin Session Token: ' + sessionToken);
             
             # Seed data first
             self.test_seed_data()
+            
+            # Seed learning content
+            self.test_seed_learning_content()
             
             # Test authentication
             self.test_auth_me()
@@ -539,6 +547,20 @@ print('Admin Session Token: ' + sessionToken);
             self.test_achievement_operations()
             self.test_streak_operations()
             self.test_ai_operations()
+            
+            # Test new learning content features
+            print("\n" + "="*50)
+            print("LEARNING CONTENT TESTS")
+            print("="*50)
+            
+            self.test_learning_content_operations()
+            
+            # Test admin features
+            print("\n" + "="*50)
+            print("ADMIN TESTS")
+            print("="*50)
+            
+            self.test_admin_operations()
             
         finally:
             # Clean up test data
