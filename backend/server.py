@@ -1497,6 +1497,975 @@ async def get_learning_progress(request: Request):
         "topics": topic_progress
     }
 
+# ============== TEACHER ROUTES ==============
+
+@api_router.get("/teacher/dashboard")
+async def teacher_dashboard(request: Request):
+    """Get teacher dashboard data"""
+    teacher = await require_teacher(request)
+    
+    classrooms = await db.classrooms.find(
+        {"teacher_id": teacher["user_id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    for classroom in classrooms:
+        students = await db.classroom_students.find(
+            {"classroom_id": classroom["classroom_id"]},
+            {"_id": 0}
+        ).to_list(100)
+        classroom["student_count"] = len(students)
+        
+        challenges = await db.classroom_challenges.find(
+            {"classroom_id": classroom["classroom_id"]},
+            {"_id": 0}
+        ).to_list(100)
+        classroom["active_challenges"] = len(challenges)
+    
+    return {
+        "classrooms": classrooms,
+        "total_students": sum(c.get("student_count", 0) for c in classrooms)
+    }
+
+@api_router.post("/teacher/classrooms")
+async def create_classroom(classroom: ClassroomCreate, request: Request):
+    """Create a new classroom"""
+    teacher = await require_teacher(request)
+    
+    classroom_doc = {
+        "classroom_id": f"class_{uuid.uuid4().hex[:12]}",
+        "teacher_id": teacher["user_id"],
+        "name": classroom.name,
+        "description": classroom.description,
+        "grade_level": classroom.grade_level,
+        "invite_code": generate_invite_code(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.classrooms.insert_one(classroom_doc)
+    return {"message": "Classroom created", "classroom": classroom_doc}
+
+@api_router.get("/teacher/classrooms")
+async def get_classrooms(request: Request):
+    """Get teacher's classrooms"""
+    teacher = await require_teacher(request)
+    
+    classrooms = await db.classrooms.find(
+        {"teacher_id": teacher["user_id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return classrooms
+
+@api_router.get("/teacher/classrooms/{classroom_id}")
+async def get_classroom_details(classroom_id: str, request: Request):
+    """Get detailed classroom info with students"""
+    teacher = await require_teacher(request)
+    
+    classroom = await db.classrooms.find_one({
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["user_id"]
+    }, {"_id": 0})
+    
+    if not classroom:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+    
+    student_links = await db.classroom_students.find(
+        {"classroom_id": classroom_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    students = []
+    for link in student_links:
+        student = await db.users.find_one(
+            {"user_id": link["student_id"]},
+            {"_id": 0}
+        )
+        if student:
+            wallet = await db.wallet_accounts.find(
+                {"user_id": student["user_id"]},
+                {"_id": 0}
+            ).to_list(10)
+            total_balance = sum(w.get("balance", 0) for w in wallet)
+            
+            lessons_completed = await db.user_lesson_progress.count_documents({
+                "user_id": student["user_id"],
+                "completed": True
+            })
+            
+            quests_completed = await db.user_quests.count_documents({
+                "user_id": student["user_id"],
+                "completed": True
+            })
+            
+            students.append({
+                **student,
+                "total_balance": total_balance,
+                "lessons_completed": lessons_completed,
+                "quests_completed": quests_completed,
+                "joined_at": link.get("joined_at")
+            })
+    
+    challenges = await db.classroom_challenges.find(
+        {"classroom_id": classroom_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return {
+        "classroom": classroom,
+        "students": students,
+        "challenges": challenges
+    }
+
+@api_router.delete("/teacher/classrooms/{classroom_id}")
+async def delete_classroom(classroom_id: str, request: Request):
+    """Delete a classroom"""
+    teacher = await require_teacher(request)
+    
+    classroom = await db.classrooms.find_one({
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["user_id"]
+    })
+    
+    if not classroom:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+    
+    await db.classrooms.delete_one({"classroom_id": classroom_id})
+    await db.classroom_students.delete_many({"classroom_id": classroom_id})
+    await db.classroom_challenges.delete_many({"classroom_id": classroom_id})
+    
+    return {"message": "Classroom deleted"}
+
+@api_router.post("/teacher/classrooms/{classroom_id}/reward")
+async def give_classroom_reward(classroom_id: str, reward: ClassroomReward, request: Request):
+    """Give coins to students"""
+    teacher = await require_teacher(request)
+    
+    classroom = await db.classrooms.find_one({
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["user_id"]
+    })
+    
+    if not classroom:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+    
+    for student_id in reward.student_ids:
+        await db.wallet_accounts.update_one(
+            {"user_id": student_id, "account_type": "spending"},
+            {"$inc": {"balance": reward.amount}}
+        )
+        
+        await db.transactions.insert_one({
+            "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+            "user_id": student_id,
+            "from_account": None,
+            "to_account": "spending",
+            "amount": reward.amount,
+            "transaction_type": "reward",
+            "description": f"Teacher reward: {reward.reason}",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    return {"message": f"Rewarded {len(reward.student_ids)} students with ${reward.amount} each"}
+
+@api_router.post("/teacher/classrooms/{classroom_id}/challenges")
+async def create_classroom_challenge(classroom_id: str, challenge: ChallengeCreate, request: Request):
+    """Create a classroom challenge"""
+    teacher = await require_teacher(request)
+    
+    classroom = await db.classrooms.find_one({
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["user_id"]
+    })
+    
+    if not classroom:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+    
+    challenge_doc = {
+        "challenge_id": f"chal_{uuid.uuid4().hex[:12]}",
+        "classroom_id": classroom_id,
+        "title": challenge.title,
+        "description": challenge.description,
+        "reward_amount": challenge.reward_amount,
+        "deadline": challenge.deadline,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.classroom_challenges.insert_one(challenge_doc)
+    return {"message": "Challenge created", "challenge_id": challenge_doc["challenge_id"]}
+
+@api_router.delete("/teacher/challenges/{challenge_id}")
+async def delete_challenge(challenge_id: str, request: Request):
+    """Delete a classroom challenge"""
+    teacher = await require_teacher(request)
+    
+    challenge = await db.classroom_challenges.find_one({"challenge_id": challenge_id})
+    if not challenge:
+        raise HTTPException(status_code=404, detail="Challenge not found")
+    
+    classroom = await db.classrooms.find_one({
+        "classroom_id": challenge["classroom_id"],
+        "teacher_id": teacher["user_id"]
+    })
+    
+    if not classroom:
+        raise HTTPException(status_code=403, detail="Not your challenge")
+    
+    await db.classroom_challenges.delete_one({"challenge_id": challenge_id})
+    return {"message": "Challenge deleted"}
+
+@api_router.post("/teacher/challenges/{challenge_id}/complete/{student_id}")
+async def complete_challenge_for_student(challenge_id: str, student_id: str, request: Request):
+    """Mark a challenge as complete for a student and give reward"""
+    teacher = await require_teacher(request)
+    
+    challenge = await db.classroom_challenges.find_one({"challenge_id": challenge_id})
+    if not challenge:
+        raise HTTPException(status_code=404, detail="Challenge not found")
+    
+    classroom = await db.classrooms.find_one({
+        "classroom_id": challenge["classroom_id"],
+        "teacher_id": teacher["user_id"]
+    })
+    
+    if not classroom:
+        raise HTTPException(status_code=403, detail="Not your classroom")
+    
+    existing = await db.challenge_completions.find_one({
+        "challenge_id": challenge_id,
+        "student_id": student_id
+    })
+    
+    if existing:
+        return {"message": "Challenge already completed by this student"}
+    
+    await db.challenge_completions.insert_one({
+        "id": f"cc_{uuid.uuid4().hex[:12]}",
+        "challenge_id": challenge_id,
+        "student_id": student_id,
+        "completed_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    await db.wallet_accounts.update_one(
+        {"user_id": student_id, "account_type": "spending"},
+        {"$inc": {"balance": challenge["reward_amount"]}}
+    )
+    
+    await db.transactions.insert_one({
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": student_id,
+        "from_account": None,
+        "to_account": "spending",
+        "amount": challenge["reward_amount"],
+        "transaction_type": "reward",
+        "description": f"Challenge completed: {challenge['title']}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "Challenge completed", "reward": challenge["reward_amount"]}
+
+@api_router.get("/teacher/students/{student_id}/progress")
+async def get_student_progress(student_id: str, request: Request):
+    """Get detailed progress for a student"""
+    teacher = await require_teacher(request)
+    
+    student_classrooms = await db.classroom_students.find(
+        {"student_id": student_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    classroom_ids = [sc["classroom_id"] for sc in student_classrooms]
+    teacher_classroom = await db.classrooms.find_one({
+        "classroom_id": {"$in": classroom_ids},
+        "teacher_id": teacher["user_id"]
+    })
+    
+    if not teacher_classroom:
+        raise HTTPException(status_code=403, detail="Student not in your classroom")
+    
+    student = await db.users.find_one({"user_id": student_id}, {"_id": 0})
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    topics = await db.learning_topics.find({}, {"_id": 0}).to_list(100)
+    topic_progress = []
+    for topic in topics:
+        lessons = await db.learning_lessons.find({"topic_id": topic["topic_id"]}).to_list(100)
+        lesson_ids = [l["lesson_id"] for l in lessons]
+        completed = await db.user_lesson_progress.count_documents({
+            "user_id": student_id,
+            "lesson_id": {"$in": lesson_ids},
+            "completed": True
+        })
+        topic_progress.append({
+            "topic": topic["title"],
+            "total": len(lessons),
+            "completed": completed
+        })
+    
+    wallet = await db.wallet_accounts.find({"user_id": student_id}, {"_id": 0}).to_list(10)
+    
+    transactions = await db.transactions.find(
+        {"user_id": student_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(20)
+    
+    achievements = await db.user_achievements.find(
+        {"user_id": student_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return {
+        "student": student,
+        "wallet": wallet,
+        "topic_progress": topic_progress,
+        "transactions": transactions,
+        "achievements_count": len(achievements),
+        "streak": student.get("streak_count", 0)
+    }
+
+@api_router.post("/student/join-classroom")
+async def join_classroom(request: Request):
+    """Join a classroom using invite code"""
+    user = await get_current_user(request)
+    
+    if user.get("role") != "child":
+        raise HTTPException(status_code=400, detail="Only students can join classrooms")
+    
+    body = await request.json()
+    invite_code = body.get("invite_code", "").upper()
+    
+    classroom = await db.classrooms.find_one({"invite_code": invite_code}, {"_id": 0})
+    if not classroom:
+        raise HTTPException(status_code=404, detail="Invalid invite code")
+    
+    existing = await db.classroom_students.find_one({
+        "classroom_id": classroom["classroom_id"],
+        "student_id": user["user_id"]
+    })
+    
+    if existing:
+        return {"message": "Already in this classroom", "classroom": classroom}
+    
+    await db.classroom_students.insert_one({
+        "id": f"cs_{uuid.uuid4().hex[:12]}",
+        "classroom_id": classroom["classroom_id"],
+        "student_id": user["user_id"],
+        "joined_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "Joined classroom successfully", "classroom": classroom}
+
+@api_router.get("/student/classrooms")
+async def get_student_classrooms(request: Request):
+    """Get classrooms the student is in"""
+    user = await get_current_user(request)
+    
+    student_links = await db.classroom_students.find(
+        {"student_id": user["user_id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    classrooms = []
+    for link in student_links:
+        classroom = await db.classrooms.find_one(
+            {"classroom_id": link["classroom_id"]},
+            {"_id": 0}
+        )
+        if classroom:
+            teacher = await db.users.find_one(
+                {"user_id": classroom["teacher_id"]},
+                {"_id": 0, "name": 1}
+            )
+            classroom["teacher_name"] = teacher.get("name", "Unknown") if teacher else "Unknown"
+            classrooms.append(classroom)
+    
+    return classrooms
+
+@api_router.get("/student/challenges")
+async def get_student_challenges(request: Request):
+    """Get challenges available to the student"""
+    user = await get_current_user(request)
+    
+    student_links = await db.classroom_students.find(
+        {"student_id": user["user_id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    classroom_ids = [link["classroom_id"] for link in student_links]
+    
+    challenges = await db.classroom_challenges.find(
+        {"classroom_id": {"$in": classroom_ids}},
+        {"_id": 0}
+    ).to_list(100)
+    
+    for challenge in challenges:
+        completion = await db.challenge_completions.find_one({
+            "challenge_id": challenge["challenge_id"],
+            "student_id": user["user_id"]
+        })
+        challenge["completed"] = completion is not None
+    
+    return challenges
+
+# ============== PARENT ROUTES ==============
+
+@api_router.get("/parent/dashboard")
+async def parent_dashboard(request: Request):
+    """Get parent dashboard data"""
+    parent = await require_parent(request)
+    
+    links = await db.parent_child_links.find(
+        {"parent_id": parent["user_id"], "status": "active"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    children = []
+    for link in links:
+        child = await db.users.find_one(
+            {"user_id": link["child_id"]},
+            {"_id": 0}
+        )
+        if child:
+            wallet = await db.wallet_accounts.find(
+                {"user_id": child["user_id"]},
+                {"_id": 0}
+            ).to_list(10)
+            total_balance = sum(w.get("balance", 0) for w in wallet)
+            
+            total_lessons = await db.learning_lessons.count_documents({})
+            completed_lessons = await db.user_lesson_progress.count_documents({
+                "user_id": child["user_id"],
+                "completed": True
+            })
+            
+            pending_chores = await db.chores.count_documents({
+                "child_id": child["user_id"],
+                "status": "completed"
+            })
+            
+            children.append({
+                **child,
+                "total_balance": total_balance,
+                "lessons_completed": completed_lessons,
+                "total_lessons": total_lessons,
+                "pending_chores": pending_chores
+            })
+    
+    pending_links = await db.parent_child_links.find(
+        {"parent_id": parent["user_id"], "status": "pending"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return {
+        "children": children,
+        "pending_links": len(pending_links)
+    }
+
+@api_router.post("/parent/link-child")
+async def link_child(link_request: LinkChildRequest, request: Request):
+    """Send a link request to a child account"""
+    parent = await require_parent(request)
+    
+    child = await db.users.find_one(
+        {"email": link_request.child_email, "role": "child"},
+        {"_id": 0}
+    )
+    
+    if not child:
+        raise HTTPException(status_code=404, detail="Child account not found")
+    
+    existing = await db.parent_child_links.find_one({
+        "parent_id": parent["user_id"],
+        "child_id": child["user_id"]
+    })
+    
+    if existing:
+        return {"message": "Link already exists", "status": existing.get("status")}
+    
+    await db.parent_child_links.insert_one({
+        "link_id": f"link_{uuid.uuid4().hex[:12]}",
+        "parent_id": parent["user_id"],
+        "child_id": child["user_id"],
+        "status": "active",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "Child linked successfully", "child": child}
+
+@api_router.get("/parent/children")
+async def get_children(request: Request):
+    """Get parent's linked children"""
+    parent = await require_parent(request)
+    
+    links = await db.parent_child_links.find(
+        {"parent_id": parent["user_id"], "status": "active"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    children = []
+    for link in links:
+        child = await db.users.find_one(
+            {"user_id": link["child_id"]},
+            {"_id": 0}
+        )
+        if child:
+            children.append(child)
+    
+    return children
+
+@api_router.get("/parent/children/{child_id}/progress")
+async def get_child_progress(child_id: str, request: Request):
+    """Get detailed progress for a child"""
+    parent = await require_parent(request)
+    
+    link = await db.parent_child_links.find_one({
+        "parent_id": parent["user_id"],
+        "child_id": child_id,
+        "status": "active"
+    })
+    
+    if not link:
+        raise HTTPException(status_code=403, detail="Child not linked to your account")
+    
+    child = await db.users.find_one({"user_id": child_id}, {"_id": 0})
+    if not child:
+        raise HTTPException(status_code=404, detail="Child not found")
+    
+    wallet = await db.wallet_accounts.find({"user_id": child_id}, {"_id": 0}).to_list(10)
+    
+    topics = await db.learning_topics.find({}, {"_id": 0}).to_list(100)
+    topic_progress = []
+    for topic in topics:
+        lessons = await db.learning_lessons.find({"topic_id": topic["topic_id"]}).to_list(100)
+        lesson_ids = [l["lesson_id"] for l in lessons]
+        completed = await db.user_lesson_progress.count_documents({
+            "user_id": child_id,
+            "lesson_id": {"$in": lesson_ids},
+            "completed": True
+        })
+        topic_progress.append({
+            "topic": topic["title"],
+            "icon": topic.get("icon", "📚"),
+            "total": len(lessons),
+            "completed": completed
+        })
+    
+    transactions = await db.transactions.find(
+        {"user_id": child_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(20)
+    
+    chores = await db.chores.find(
+        {"child_id": child_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    goals = await db.savings_goals.find(
+        {"child_id": child_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return {
+        "child": child,
+        "wallet": wallet,
+        "topic_progress": topic_progress,
+        "transactions": transactions,
+        "chores": chores,
+        "savings_goals": goals,
+        "streak": child.get("streak_count", 0)
+    }
+
+@api_router.post("/parent/chores")
+async def create_chore(chore: ChoreCreate, request: Request):
+    """Create a chore for a child"""
+    parent = await require_parent(request)
+    
+    link = await db.parent_child_links.find_one({
+        "parent_id": parent["user_id"],
+        "child_id": chore.child_id,
+        "status": "active"
+    })
+    
+    if not link:
+        raise HTTPException(status_code=403, detail="Child not linked to your account")
+    
+    chore_doc = {
+        "chore_id": f"chore_{uuid.uuid4().hex[:12]}",
+        "parent_id": parent["user_id"],
+        "child_id": chore.child_id,
+        "title": chore.title,
+        "description": chore.description,
+        "reward_amount": chore.reward_amount,
+        "frequency": chore.frequency,
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "completed_at": None,
+        "approved_at": None
+    }
+    
+    await db.chores.insert_one(chore_doc)
+    return {"message": "Chore created", "chore_id": chore_doc["chore_id"]}
+
+@api_router.get("/parent/chores")
+async def get_parent_chores(request: Request):
+    """Get all chores created by parent"""
+    parent = await require_parent(request)
+    
+    chores = await db.chores.find(
+        {"parent_id": parent["user_id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    for chore in chores:
+        child = await db.users.find_one(
+            {"user_id": chore["child_id"]},
+            {"_id": 0, "name": 1}
+        )
+        chore["child_name"] = child.get("name", "Unknown") if child else "Unknown"
+    
+    return chores
+
+@api_router.post("/parent/chores/{chore_id}/approve")
+async def approve_chore(chore_id: str, request: Request):
+    """Approve a completed chore and give reward"""
+    parent = await require_parent(request)
+    
+    chore = await db.chores.find_one({
+        "chore_id": chore_id,
+        "parent_id": parent["user_id"]
+    })
+    
+    if not chore:
+        raise HTTPException(status_code=404, detail="Chore not found")
+    
+    if chore.get("status") != "completed":
+        raise HTTPException(status_code=400, detail="Chore not completed yet")
+    
+    await db.chores.update_one(
+        {"chore_id": chore_id},
+        {"$set": {"status": "approved", "approved_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    await db.wallet_accounts.update_one(
+        {"user_id": chore["child_id"], "account_type": "spending"},
+        {"$inc": {"balance": chore["reward_amount"]}}
+    )
+    
+    await db.transactions.insert_one({
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": chore["child_id"],
+        "from_account": None,
+        "to_account": "spending",
+        "amount": chore["reward_amount"],
+        "transaction_type": "reward",
+        "description": f"Chore completed: {chore['title']}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    if chore.get("frequency") in ["daily", "weekly"]:
+        new_chore = {
+            "chore_id": f"chore_{uuid.uuid4().hex[:12]}",
+            "parent_id": parent["user_id"],
+            "child_id": chore["child_id"],
+            "title": chore["title"],
+            "description": chore.get("description"),
+            "reward_amount": chore["reward_amount"],
+            "frequency": chore["frequency"],
+            "status": "pending",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.chores.insert_one(new_chore)
+    
+    return {"message": "Chore approved", "reward": chore["reward_amount"]}
+
+@api_router.delete("/parent/chores/{chore_id}")
+async def delete_chore(chore_id: str, request: Request):
+    """Delete a chore"""
+    parent = await require_parent(request)
+    
+    result = await db.chores.delete_one({
+        "chore_id": chore_id,
+        "parent_id": parent["user_id"]
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Chore not found")
+    
+    return {"message": "Chore deleted"}
+
+@api_router.post("/parent/allowance")
+async def create_allowance(allowance: AllowanceCreate, request: Request):
+    """Set up recurring allowance for a child"""
+    parent = await require_parent(request)
+    
+    link = await db.parent_child_links.find_one({
+        "parent_id": parent["user_id"],
+        "child_id": allowance.child_id,
+        "status": "active"
+    })
+    
+    if not link:
+        raise HTTPException(status_code=403, detail="Child not linked to your account")
+    
+    today = datetime.now(timezone.utc)
+    if allowance.frequency == "weekly":
+        next_date = today + timedelta(days=7)
+    elif allowance.frequency == "biweekly":
+        next_date = today + timedelta(days=14)
+    else:
+        next_date = today + timedelta(days=30)
+    
+    existing = await db.allowances.find_one({
+        "parent_id": parent["user_id"],
+        "child_id": allowance.child_id,
+        "active": True
+    })
+    
+    if existing:
+        await db.allowances.update_one(
+            {"allowance_id": existing["allowance_id"]},
+            {"$set": {
+                "amount": allowance.amount,
+                "frequency": allowance.frequency,
+                "next_date": next_date.strftime("%Y-%m-%d")
+            }}
+        )
+        return {"message": "Allowance updated"}
+    
+    allowance_doc = {
+        "allowance_id": f"allow_{uuid.uuid4().hex[:12]}",
+        "parent_id": parent["user_id"],
+        "child_id": allowance.child_id,
+        "amount": allowance.amount,
+        "frequency": allowance.frequency,
+        "next_date": next_date.strftime("%Y-%m-%d"),
+        "active": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.allowances.insert_one(allowance_doc)
+    return {"message": "Allowance set up", "allowance_id": allowance_doc["allowance_id"]}
+
+@api_router.get("/parent/allowances")
+async def get_allowances(request: Request):
+    """Get parent's allowance settings"""
+    parent = await require_parent(request)
+    
+    allowances = await db.allowances.find(
+        {"parent_id": parent["user_id"], "active": True},
+        {"_id": 0}
+    ).to_list(100)
+    
+    for allowance in allowances:
+        child = await db.users.find_one(
+            {"user_id": allowance["child_id"]},
+            {"_id": 0, "name": 1}
+        )
+        allowance["child_name"] = child.get("name", "Unknown") if child else "Unknown"
+    
+    return allowances
+
+@api_router.delete("/parent/allowances/{allowance_id}")
+async def delete_allowance(allowance_id: str, request: Request):
+    """Cancel an allowance"""
+    parent = await require_parent(request)
+    
+    result = await db.allowances.update_one(
+        {"allowance_id": allowance_id, "parent_id": parent["user_id"]},
+        {"$set": {"active": False}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Allowance not found")
+    
+    return {"message": "Allowance cancelled"}
+
+@api_router.post("/parent/give-money")
+async def give_money_to_child(request: Request):
+    """Give money directly to a child"""
+    parent = await require_parent(request)
+    
+    body = await request.json()
+    child_id = body.get("child_id")
+    amount = body.get("amount", 0)
+    reason = body.get("reason", "Gift from parent")
+    
+    link = await db.parent_child_links.find_one({
+        "parent_id": parent["user_id"],
+        "child_id": child_id,
+        "status": "active"
+    })
+    
+    if not link:
+        raise HTTPException(status_code=403, detail="Child not linked to your account")
+    
+    await db.wallet_accounts.update_one(
+        {"user_id": child_id, "account_type": "spending"},
+        {"$inc": {"balance": amount}}
+    )
+    
+    await db.transactions.insert_one({
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": child_id,
+        "from_account": None,
+        "to_account": "spending",
+        "amount": amount,
+        "transaction_type": "deposit",
+        "description": reason,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": f"Gave ${amount} to child"}
+
+@api_router.post("/parent/savings-goals")
+async def create_savings_goal(goal: SavingsGoalCreate, request: Request):
+    """Create a savings goal for a child"""
+    parent = await require_parent(request)
+    
+    link = await db.parent_child_links.find_one({
+        "parent_id": parent["user_id"],
+        "child_id": goal.child_id,
+        "status": "active"
+    })
+    
+    if not link:
+        raise HTTPException(status_code=403, detail="Child not linked to your account")
+    
+    goal_doc = {
+        "goal_id": f"goal_{uuid.uuid4().hex[:12]}",
+        "child_id": goal.child_id,
+        "parent_id": parent["user_id"],
+        "title": goal.title,
+        "target_amount": goal.target_amount,
+        "current_amount": 0,
+        "deadline": goal.deadline,
+        "completed": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.savings_goals.insert_one(goal_doc)
+    return {"message": "Savings goal created", "goal_id": goal_doc["goal_id"]}
+
+@api_router.get("/parent/savings-goals")
+async def get_savings_goals(request: Request):
+    """Get savings goals for all children"""
+    parent = await require_parent(request)
+    
+    links = await db.parent_child_links.find(
+        {"parent_id": parent["user_id"], "status": "active"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    child_ids = [link["child_id"] for link in links]
+    
+    goals = await db.savings_goals.find(
+        {"child_id": {"$in": child_ids}},
+        {"_id": 0}
+    ).to_list(100)
+    
+    for goal in goals:
+        child = await db.users.find_one(
+            {"user_id": goal["child_id"]},
+            {"_id": 0, "name": 1}
+        )
+        goal["child_name"] = child.get("name", "Unknown") if child else "Unknown"
+    
+    return goals
+
+@api_router.get("/child/chores")
+async def get_child_chores(request: Request):
+    """Get chores assigned to the child"""
+    user = await get_current_user(request)
+    
+    chores = await db.chores.find(
+        {"child_id": user["user_id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return chores
+
+@api_router.post("/child/chores/{chore_id}/complete")
+async def complete_chore(chore_id: str, request: Request):
+    """Mark a chore as completed (awaiting parent approval)"""
+    user = await get_current_user(request)
+    
+    chore = await db.chores.find_one({
+        "chore_id": chore_id,
+        "child_id": user["user_id"]
+    })
+    
+    if not chore:
+        raise HTTPException(status_code=404, detail="Chore not found")
+    
+    if chore.get("status") != "pending":
+        raise HTTPException(status_code=400, detail="Chore already completed or approved")
+    
+    await db.chores.update_one(
+        {"chore_id": chore_id},
+        {"$set": {"status": "completed", "completed_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Chore marked as completed, waiting for parent approval"}
+
+@api_router.get("/child/savings-goals")
+async def get_child_savings_goals(request: Request):
+    """Get savings goals for the child"""
+    user = await get_current_user(request)
+    
+    goals = await db.savings_goals.find(
+        {"child_id": user["user_id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return goals
+
+@api_router.post("/child/savings-goals/{goal_id}/contribute")
+async def contribute_to_goal(goal_id: str, request: Request):
+    """Contribute to a savings goal from savings account"""
+    user = await get_current_user(request)
+    
+    body = await request.json()
+    amount = body.get("amount", 0)
+    
+    goal = await db.savings_goals.find_one({
+        "goal_id": goal_id,
+        "child_id": user["user_id"]
+    })
+    
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    
+    if goal.get("completed"):
+        raise HTTPException(status_code=400, detail="Goal already completed")
+    
+    savings = await db.wallet_accounts.find_one({
+        "user_id": user["user_id"],
+        "account_type": "savings"
+    })
+    
+    if not savings or savings.get("balance", 0) < amount:
+        raise HTTPException(status_code=400, detail="Insufficient savings balance")
+    
+    await db.wallet_accounts.update_one(
+        {"user_id": user["user_id"], "account_type": "savings"},
+        {"$inc": {"balance": -amount}}
+    )
+    
+    new_amount = goal.get("current_amount", 0) + amount
+    completed = new_amount >= goal["target_amount"]
+    
+    await db.savings_goals.update_one(
+        {"goal_id": goal_id},
+        {"$set": {"current_amount": new_amount, "completed": completed}}
+    )
+    
+    return {
+        "message": "Contribution added",
+        "new_total": new_amount,
+        "completed": completed
+    }
+
 # ============== ADMIN ROUTES ==============
 
 @api_router.get("/admin/users")
