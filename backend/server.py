@@ -1040,6 +1040,560 @@ async def get_financial_tip(tip_request: FinancialTipRequest, request: Request):
         logger.error(f"AI tip error: {e}")
         return {"tip": "Save a little bit every day and watch your money grow! 🌱", "suggested_topics": suggested_topics}
 
+# ============== LEARNING CONTENT ROUTES ==============
+
+@api_router.get("/learn/topics")
+async def get_learning_topics(request: Request):
+    """Get all learning topics for user's grade"""
+    user = await get_current_user(request)
+    grade = user.get("grade", 3) or 3
+    
+    topics = await db.learning_topics.find(
+        {"min_grade": {"$lte": grade}, "max_grade": {"$gte": grade}},
+        {"_id": 0}
+    ).sort("order", 1).to_list(100)
+    
+    # Get user's progress for each topic
+    for topic in topics:
+        lessons = await db.learning_lessons.find(
+            {"topic_id": topic["topic_id"]},
+            {"_id": 0}
+        ).to_list(100)
+        
+        completed = await db.user_lesson_progress.count_documents({
+            "user_id": user["user_id"],
+            "lesson_id": {"$in": [l["lesson_id"] for l in lessons]},
+            "completed": True
+        })
+        
+        topic["total_lessons"] = len(lessons)
+        topic["completed_lessons"] = completed
+    
+    return topics
+
+@api_router.get("/learn/topics/{topic_id}")
+async def get_topic_details(topic_id: str, request: Request):
+    """Get a specific topic with its lessons"""
+    user = await get_current_user(request)
+    
+    topic = await db.learning_topics.find_one({"topic_id": topic_id}, {"_id": 0})
+    if not topic:
+        raise HTTPException(status_code=404, detail="Topic not found")
+    
+    grade = user.get("grade", 3) or 3
+    lessons = await db.learning_lessons.find(
+        {
+            "topic_id": topic_id,
+            "min_grade": {"$lte": grade},
+            "max_grade": {"$gte": grade}
+        },
+        {"_id": 0}
+    ).sort("order", 1).to_list(100)
+    
+    # Add progress info
+    for lesson in lessons:
+        progress = await db.user_lesson_progress.find_one({
+            "user_id": user["user_id"],
+            "lesson_id": lesson["lesson_id"]
+        }, {"_id": 0})
+        lesson["completed"] = progress["completed"] if progress else False
+        lesson["score"] = progress.get("score") if progress else None
+    
+    return {"topic": topic, "lessons": lessons}
+
+@api_router.get("/learn/lessons/{lesson_id}")
+async def get_lesson(lesson_id: str, request: Request):
+    """Get a specific lesson"""
+    user = await get_current_user(request)
+    
+    lesson = await db.learning_lessons.find_one({"lesson_id": lesson_id}, {"_id": 0})
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    # Mark as started if not already
+    existing = await db.user_lesson_progress.find_one({
+        "user_id": user["user_id"],
+        "lesson_id": lesson_id
+    })
+    
+    if not existing:
+        await db.user_lesson_progress.insert_one({
+            "id": f"ulp_{uuid.uuid4().hex[:12]}",
+            "user_id": user["user_id"],
+            "lesson_id": lesson_id,
+            "completed": False,
+            "score": None,
+            "started_at": datetime.now(timezone.utc).isoformat(),
+            "completed_at": None
+        })
+    
+    # Get quiz if exists
+    quiz = await db.quizzes.find_one({"lesson_id": lesson_id}, {"_id": 0})
+    
+    return {"lesson": lesson, "quiz": quiz}
+
+@api_router.post("/learn/lessons/{lesson_id}/complete")
+async def complete_lesson(lesson_id: str, request: Request):
+    """Mark a lesson as completed and earn reward"""
+    user = await get_current_user(request)
+    
+    lesson = await db.learning_lessons.find_one({"lesson_id": lesson_id}, {"_id": 0})
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    # Check if already completed
+    progress = await db.user_lesson_progress.find_one({
+        "user_id": user["user_id"],
+        "lesson_id": lesson_id
+    })
+    
+    if progress and progress.get("completed"):
+        return {"message": "Lesson already completed", "reward": 0}
+    
+    # Update or create progress
+    if progress:
+        await db.user_lesson_progress.update_one(
+            {"user_id": user["user_id"], "lesson_id": lesson_id},
+            {"$set": {"completed": True, "completed_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    else:
+        await db.user_lesson_progress.insert_one({
+            "id": f"ulp_{uuid.uuid4().hex[:12]}",
+            "user_id": user["user_id"],
+            "lesson_id": lesson_id,
+            "completed": True,
+            "score": None,
+            "started_at": datetime.now(timezone.utc).isoformat(),
+            "completed_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    # Award coins
+    reward = lesson.get("reward_coins", 5)
+    await db.wallet_accounts.update_one(
+        {"user_id": user["user_id"], "account_type": "spending"},
+        {"$inc": {"balance": reward}}
+    )
+    
+    # Record transaction
+    await db.transactions.insert_one({
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "from_account": None,
+        "to_account": "spending",
+        "amount": reward,
+        "transaction_type": "reward",
+        "description": f"Completed lesson: {lesson['title']}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "Lesson completed!", "reward": reward}
+
+@api_router.post("/learn/quiz/submit")
+async def submit_quiz(submission: QuizSubmission, request: Request):
+    """Submit quiz answers and get results"""
+    user = await get_current_user(request)
+    
+    quiz = await db.quizzes.find_one({"quiz_id": submission.quiz_id}, {"_id": 0})
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    
+    # Calculate score
+    questions = quiz["questions"]
+    correct = 0
+    results = []
+    
+    for i, answer in enumerate(submission.answers):
+        if i < len(questions):
+            is_correct = answer == questions[i]["correct_answer"]
+            if is_correct:
+                correct += 1
+            results.append({
+                "question": questions[i]["question"],
+                "your_answer": answer,
+                "correct_answer": questions[i]["correct_answer"],
+                "is_correct": is_correct,
+                "explanation": questions[i].get("explanation", "")
+            })
+    
+    score = int((correct / len(questions)) * 100) if questions else 0
+    passed = score >= quiz.get("passing_score", 70)
+    
+    # Update lesson progress with score
+    await db.user_lesson_progress.update_one(
+        {"user_id": user["user_id"], "lesson_id": quiz["lesson_id"]},
+        {"$set": {"score": score, "completed": passed, "completed_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Award bonus if passed
+    bonus = 10 if passed else 0
+    if bonus:
+        await db.wallet_accounts.update_one(
+            {"user_id": user["user_id"], "account_type": "spending"},
+            {"$inc": {"balance": bonus}}
+        )
+    
+    return {
+        "score": score,
+        "passed": passed,
+        "correct": correct,
+        "total": len(questions),
+        "results": results,
+        "bonus_coins": bonus
+    }
+
+@api_router.get("/learn/books")
+async def get_books(request: Request):
+    """Get books for user's grade"""
+    user = await get_current_user(request)
+    grade = user.get("grade", 3) or 3
+    
+    books = await db.books.find(
+        {"min_grade": {"$lte": grade}, "max_grade": {"$gte": grade}},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return books
+
+@api_router.get("/learn/activities")
+async def get_activities(request: Request):
+    """Get activities for user's grade"""
+    user = await get_current_user(request)
+    grade = user.get("grade", 3) or 3
+    
+    activities = await db.activities.find(
+        {"min_grade": {"$lte": grade}, "max_grade": {"$gte": grade}},
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Get completed activities
+    completed = await db.user_activity_progress.find(
+        {"user_id": user["user_id"], "completed": True},
+        {"_id": 0}
+    ).to_list(100)
+    completed_ids = {c["activity_id"] for c in completed}
+    
+    for activity in activities:
+        activity["completed"] = activity["activity_id"] in completed_ids
+    
+    return activities
+
+@api_router.post("/learn/activities/{activity_id}/complete")
+async def complete_activity(activity_id: str, request: Request):
+    """Mark an activity as completed"""
+    user = await get_current_user(request)
+    
+    activity = await db.activities.find_one({"activity_id": activity_id}, {"_id": 0})
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    
+    # Check if already completed
+    existing = await db.user_activity_progress.find_one({
+        "user_id": user["user_id"],
+        "activity_id": activity_id
+    })
+    
+    if existing and existing.get("completed"):
+        return {"message": "Activity already completed", "reward": 0}
+    
+    # Mark complete
+    if existing:
+        await db.user_activity_progress.update_one(
+            {"user_id": user["user_id"], "activity_id": activity_id},
+            {"$set": {"completed": True, "completed_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    else:
+        await db.user_activity_progress.insert_one({
+            "id": f"uap_{uuid.uuid4().hex[:12]}",
+            "user_id": user["user_id"],
+            "activity_id": activity_id,
+            "completed": True,
+            "completed_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    # Award coins
+    reward = activity.get("reward_coins", 10)
+    await db.wallet_accounts.update_one(
+        {"user_id": user["user_id"], "account_type": "spending"},
+        {"$inc": {"balance": reward}}
+    )
+    
+    return {"message": "Activity completed!", "reward": reward}
+
+@api_router.get("/learn/progress")
+async def get_learning_progress(request: Request):
+    """Get overall learning progress for user"""
+    user = await get_current_user(request)
+    
+    # Get total and completed lessons
+    total_lessons = await db.learning_lessons.count_documents({})
+    completed_lessons = await db.user_lesson_progress.count_documents({
+        "user_id": user["user_id"],
+        "completed": True
+    })
+    
+    # Get completed activities
+    total_activities = await db.activities.count_documents({})
+    completed_activities = await db.user_activity_progress.count_documents({
+        "user_id": user["user_id"],
+        "completed": True
+    })
+    
+    # Get topic progress
+    topics = await db.learning_topics.find({}, {"_id": 0}).to_list(100)
+    topic_progress = []
+    
+    for topic in topics:
+        lessons = await db.learning_lessons.find({"topic_id": topic["topic_id"]}).to_list(100)
+        lesson_ids = [l["lesson_id"] for l in lessons]
+        completed = await db.user_lesson_progress.count_documents({
+            "user_id": user["user_id"],
+            "lesson_id": {"$in": lesson_ids},
+            "completed": True
+        })
+        topic_progress.append({
+            "topic_id": topic["topic_id"],
+            "title": topic["title"],
+            "total": len(lessons),
+            "completed": completed
+        })
+    
+    return {
+        "lessons": {"total": total_lessons, "completed": completed_lessons},
+        "activities": {"total": total_activities, "completed": completed_activities},
+        "topics": topic_progress
+    }
+
+# ============== ADMIN ROUTES ==============
+
+@api_router.get("/admin/users")
+async def admin_get_users(request: Request):
+    """Get all users (admin only)"""
+    await require_admin(request)
+    
+    users = await db.users.find({}, {"_id": 0}).to_list(1000)
+    return users
+
+@api_router.put("/admin/users/{user_id}/role")
+async def admin_update_user_role(user_id: str, request: Request):
+    """Update user role (admin only)"""
+    await require_admin(request)
+    
+    body = await request.json()
+    new_role = body.get("role")
+    
+    if new_role not in ["child", "parent", "teacher", "admin"]:
+        raise HTTPException(status_code=400, detail="Invalid role")
+    
+    await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {"role": new_role}}
+    )
+    
+    return {"message": "Role updated"}
+
+@api_router.post("/admin/topics")
+async def admin_create_topic(request: Request):
+    """Create a learning topic (admin only)"""
+    admin = await require_admin(request)
+    body = await request.json()
+    
+    topic = {
+        "topic_id": f"topic_{uuid.uuid4().hex[:12]}",
+        "title": body["title"],
+        "description": body["description"],
+        "category": body["category"],
+        "icon": body.get("icon", "📚"),
+        "order": body.get("order", 0),
+        "min_grade": body.get("min_grade", 0),
+        "max_grade": body.get("max_grade", 5),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": admin["user_id"]
+    }
+    
+    await db.learning_topics.insert_one(topic)
+    return {"message": "Topic created", "topic_id": topic["topic_id"]}
+
+@api_router.put("/admin/topics/{topic_id}")
+async def admin_update_topic(topic_id: str, request: Request):
+    """Update a learning topic (admin only)"""
+    await require_admin(request)
+    body = await request.json()
+    
+    update_data = {k: v for k, v in body.items() if v is not None}
+    
+    await db.learning_topics.update_one(
+        {"topic_id": topic_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Topic updated"}
+
+@api_router.delete("/admin/topics/{topic_id}")
+async def admin_delete_topic(topic_id: str, request: Request):
+    """Delete a learning topic (admin only)"""
+    await require_admin(request)
+    
+    await db.learning_topics.delete_one({"topic_id": topic_id})
+    await db.learning_lessons.delete_many({"topic_id": topic_id})
+    
+    return {"message": "Topic and associated lessons deleted"}
+
+@api_router.post("/admin/lessons")
+async def admin_create_lesson(lesson: LessonCreate, request: Request):
+    """Create a lesson (admin only)"""
+    admin = await require_admin(request)
+    
+    lesson_doc = {
+        "lesson_id": f"lesson_{uuid.uuid4().hex[:12]}",
+        "topic_id": lesson.topic_id,
+        "title": lesson.title,
+        "content": lesson.content,
+        "lesson_type": lesson.lesson_type,
+        "media_url": lesson.media_url,
+        "duration_minutes": lesson.duration_minutes,
+        "order": lesson.order,
+        "min_grade": lesson.min_grade,
+        "max_grade": lesson.max_grade,
+        "reward_coins": lesson.reward_coins,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": admin["user_id"]
+    }
+    
+    await db.learning_lessons.insert_one(lesson_doc)
+    return {"message": "Lesson created", "lesson_id": lesson_doc["lesson_id"]}
+
+@api_router.put("/admin/lessons/{lesson_id}")
+async def admin_update_lesson(lesson_id: str, lesson: LessonUpdate, request: Request):
+    """Update a lesson (admin only)"""
+    await require_admin(request)
+    
+    update_data = {k: v for k, v in lesson.model_dump().items() if v is not None}
+    
+    await db.learning_lessons.update_one(
+        {"lesson_id": lesson_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Lesson updated"}
+
+@api_router.delete("/admin/lessons/{lesson_id}")
+async def admin_delete_lesson(lesson_id: str, request: Request):
+    """Delete a lesson (admin only)"""
+    await require_admin(request)
+    
+    await db.learning_lessons.delete_one({"lesson_id": lesson_id})
+    await db.quizzes.delete_many({"lesson_id": lesson_id})
+    
+    return {"message": "Lesson deleted"}
+
+@api_router.post("/admin/quizzes")
+async def admin_create_quiz(quiz: QuizCreate, request: Request):
+    """Create a quiz for a lesson (admin only)"""
+    admin = await require_admin(request)
+    
+    quiz_doc = {
+        "quiz_id": f"quiz_{uuid.uuid4().hex[:12]}",
+        "lesson_id": quiz.lesson_id,
+        "title": quiz.title,
+        "questions": quiz.questions,
+        "passing_score": quiz.passing_score,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": admin["user_id"]
+    }
+    
+    await db.quizzes.insert_one(quiz_doc)
+    return {"message": "Quiz created", "quiz_id": quiz_doc["quiz_id"]}
+
+@api_router.post("/admin/books")
+async def admin_create_book(book: BookCreate, request: Request):
+    """Create a book (admin only)"""
+    admin = await require_admin(request)
+    
+    book_doc = {
+        "book_id": f"book_{uuid.uuid4().hex[:12]}",
+        "title": book.title,
+        "author": book.author,
+        "description": book.description,
+        "cover_url": book.cover_url,
+        "content_url": book.content_url,
+        "category": book.category,
+        "min_grade": book.min_grade,
+        "max_grade": book.max_grade,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": admin["user_id"]
+    }
+    
+    await db.books.insert_one(book_doc)
+    return {"message": "Book created", "book_id": book_doc["book_id"]}
+
+@api_router.delete("/admin/books/{book_id}")
+async def admin_delete_book(book_id: str, request: Request):
+    """Delete a book (admin only)"""
+    await require_admin(request)
+    
+    await db.books.delete_one({"book_id": book_id})
+    return {"message": "Book deleted"}
+
+@api_router.post("/admin/activities")
+async def admin_create_activity(activity: ActivityCreate, request: Request):
+    """Create an activity (admin only)"""
+    admin = await require_admin(request)
+    
+    activity_doc = {
+        "activity_id": f"activity_{uuid.uuid4().hex[:12]}",
+        "title": activity.title,
+        "description": activity.description,
+        "instructions": activity.instructions,
+        "activity_type": activity.activity_type,
+        "topic_id": activity.topic_id,
+        "resource_url": activity.resource_url,
+        "min_grade": activity.min_grade,
+        "max_grade": activity.max_grade,
+        "reward_coins": activity.reward_coins,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": admin["user_id"]
+    }
+    
+    await db.activities.insert_one(activity_doc)
+    return {"message": "Activity created", "activity_id": activity_doc["activity_id"]}
+
+@api_router.delete("/admin/activities/{activity_id}")
+async def admin_delete_activity(activity_id: str, request: Request):
+    """Delete an activity (admin only)"""
+    await require_admin(request)
+    
+    await db.activities.delete_one({"activity_id": activity_id})
+    return {"message": "Activity deleted"}
+
+@api_router.get("/admin/stats")
+async def admin_get_stats(request: Request):
+    """Get platform statistics (admin only)"""
+    await require_admin(request)
+    
+    stats = {
+        "users": {
+            "total": await db.users.count_documents({}),
+            "children": await db.users.count_documents({"role": "child"}),
+            "parents": await db.users.count_documents({"role": "parent"}),
+            "teachers": await db.users.count_documents({"role": "teacher"}),
+            "admins": await db.users.count_documents({"role": "admin"})
+        },
+        "content": {
+            "topics": await db.learning_topics.count_documents({}),
+            "lessons": await db.learning_lessons.count_documents({}),
+            "books": await db.books.count_documents({}),
+            "activities": await db.activities.count_documents({}),
+            "quizzes": await db.quizzes.count_documents({})
+        },
+        "engagement": {
+            "lessons_completed": await db.user_lesson_progress.count_documents({"completed": True}),
+            "activities_completed": await db.user_activity_progress.count_documents({"completed": True}),
+            "quests_completed": await db.user_quests.count_documents({"completed": True})
+        }
+    }
+    
+    return stats
+
 # ============== SEED DATA ROUTE ==============
 
 @api_router.post("/seed")
