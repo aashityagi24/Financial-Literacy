@@ -196,7 +196,7 @@ export default function AdminPage({ user }) {
         
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-bounce-in">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {/* User Stats */}
             <div className="card-playful p-5">
               <Users className="w-8 h-8 text-[#3D5A80] mb-2" />
