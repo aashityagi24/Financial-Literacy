@@ -9,6 +9,7 @@ import {
   ChevronRight, Star, BookOpen, Shield, GraduationCap, Users
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
 
 export default function Dashboard({ user, setUser }) {
   const navigate = useNavigate();
