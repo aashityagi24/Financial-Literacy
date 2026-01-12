@@ -19,18 +19,11 @@ export default function Dashboard({ user, setUser }) {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showStreakModal, setShowStreakModal] = useState(false);
-  const [showAnimations, setShowAnimations] = useState(false);
+  const showAnimations = useFirstVisitAnimation('dashboard');
   
   const gradeNames = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
   
   useEffect(() => {
-    // Check if this is the first visit this session
-    const hasAnimated = sessionStorage.getItem('dashboard_animated');
-    if (!hasAnimated) {
-      setShowAnimations(true);
-      sessionStorage.setItem('dashboard_animated', 'true');
-    }
-    
     fetchDashboardData();
     handleDailyCheckin();
   }, []);
