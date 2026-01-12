@@ -209,24 +209,26 @@ class TopicUpdate(BaseModel):
     max_grade: Optional[int] = None
 
 class ContentItem(BaseModel):
-    """Generic content item - can be lesson, book, worksheet, or activity"""
+    """Generic content item - can be worksheet, activity, book, workbook, or video"""
     model_config = ConfigDict(extra="ignore")
     content_id: str
     topic_id: str  # Links to topic or subtopic
     title: str
     description: str
-    content_type: str  # 'lesson', 'book', 'worksheet', 'activity'
+    content_type: str  # 'worksheet', 'activity', 'book', 'workbook', 'video'
     thumbnail: Optional[str] = None  # URL to thumbnail image
     order: int = 0  # For sorting within topic
     min_grade: int = 0
     max_grade: int = 5
     reward_coins: int = 5
+    is_published: bool = False  # Toggle for live/draft status
     # Type-specific fields
     content_data: Dict[str, Any] = {}  # Stores type-specific data
-    # For lessons: { "content": "markdown/html", "lesson_type": "story/video/interactive/quiz", "media_url": "", "duration_minutes": 5 }
-    # For books: { "author": "", "cover_url": "", "content_url": "", "category": "story/workbook/guide" }
     # For worksheets: { "pdf_url": "", "instructions": "" }
-    # For activities: { "html_folder": "", "instructions": "", "activity_type": "interactive/game" }
+    # For activities: { "html_url": "", "html_folder": "", "instructions": "" }
+    # For books: { "author": "", "cover_url": "", "content_url": "" }
+    # For workbooks: { "pdf_url": "", "page_count": 0 }
+    # For videos: { "video_url": "", "duration_minutes": 0 }
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     created_by: Optional[str] = None
 
@@ -240,6 +242,7 @@ class ContentItemCreate(BaseModel):
     min_grade: int = 0
     max_grade: int = 5
     reward_coins: int = 5
+    is_published: bool = False
     content_data: Dict[str, Any] = {}
 
 class ContentItemUpdate(BaseModel):
@@ -252,6 +255,7 @@ class ContentItemUpdate(BaseModel):
     min_grade: Optional[int] = None
     max_grade: Optional[int] = None
     reward_coins: Optional[int] = None
+    is_published: Optional[bool] = None
     content_data: Optional[Dict[str, Any]] = None
 
 class UserContentProgress(BaseModel):
