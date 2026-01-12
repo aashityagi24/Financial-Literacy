@@ -456,6 +456,27 @@ async def require_admin(request: Request) -> dict:
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
+async def require_teacher(request: Request) -> dict:
+    """Require teacher role"""
+    user = await get_current_user(request)
+    if user.get("role") != "teacher":
+        raise HTTPException(status_code=403, detail="Teacher access required")
+    return user
+
+async def require_parent(request: Request) -> dict:
+    """Require parent role"""
+    user = await get_current_user(request)
+    if user.get("role") != "parent":
+        raise HTTPException(status_code=403, detail="Parent access required")
+    return user
+
+import random
+import string
+
+def generate_invite_code():
+    """Generate a 6-character invite code"""
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
 # ============== AUTH ROUTES ==============
 
 @api_router.post("/auth/session")
