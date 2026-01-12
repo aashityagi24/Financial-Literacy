@@ -160,6 +160,16 @@ function AppRouter() {
           {({ user, setUser }) => <AdminPage user={user} setUser={setUser} />}
         </ProtectedRoute>
       } />
+      <Route path="/teacher-dashboard" element={
+        <ProtectedRoute>
+          {({ user }) => <TeacherDashboard user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/parent-dashboard" element={
+        <ProtectedRoute>
+          {({ user }) => <ParentDashboard user={user} />}
+        </ProtectedRoute>
+      } />
     </Routes>
   );
 }
