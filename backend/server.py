@@ -2730,20 +2730,25 @@ async def upload_activity_html(file: UploadFile = File(...)):
 async def get_all_topics(request: Request):
     """Get all topics with hierarchy (for users)"""
     user = await get_current_user(request)
-    user_grade = user.get("grade", 3) if user else 3
+    user_grade = user.get("grade") if user else None
+    
+    # Build query - if user has no grade or is admin, show all topics
+    if user_grade is None or (user and user.get("role") == "admin"):
+        query = {"parent_id": None}
+    else:
+        query = {"parent_id": None, "min_grade": {"$lte": user_grade}, "max_grade": {"$gte": user_grade}}
     
     # Get parent topics (no parent_id)
-    parent_topics = await db.content_topics.find(
-        {"parent_id": None, "min_grade": {"$lte": user_grade}, "max_grade": {"$gte": user_grade}},
-        {"_id": 0}
-    ).sort("order", 1).to_list(100)
+    parent_topics = await db.content_topics.find(query, {"_id": 0}).sort("order", 1).to_list(100)
     
     # For each parent, get subtopics
     for topic in parent_topics:
-        subtopics = await db.content_topics.find(
-            {"parent_id": topic["topic_id"], "min_grade": {"$lte": user_grade}, "max_grade": {"$gte": user_grade}},
-            {"_id": 0}
-        ).sort("order", 1).to_list(100)
+        if user_grade is None or (user and user.get("role") == "admin"):
+            subtopic_query = {"parent_id": topic["topic_id"]}
+        else:
+            subtopic_query = {"parent_id": topic["topic_id"], "min_grade": {"$lte": user_grade}, "max_grade": {"$gte": user_grade}}
+        
+        subtopics = await db.content_topics.find(subtopic_query, {"_id": 0}).sort("order", 1).to_list(100)
         topic["subtopics"] = subtopics
         
         # Get content count for the topic
