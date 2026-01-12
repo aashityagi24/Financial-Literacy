@@ -264,7 +264,7 @@ export default function AdminPage({ user }) {
         
         {/* Users Tab */}
         {activeTab === 'users' && (
-          <div className="card-playful p-6 animate-bounce-in">
+          <div className="card-playful p-6">
             <h2 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>User Management</h2>
             
             <div className="overflow-x-auto">
