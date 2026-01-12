@@ -75,24 +75,27 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 
 ### Phase 6: Hierarchical Content System ✅ (January 2026)
 - **Topic Hierarchy**: Parent topics → Subtopics structure
-- **Content Types**: 
-  - Lessons (markdown/HTML content)
-  - Books (with author, category)
+- **Content Types** (5 types):
   - Worksheets (PDF upload and viewer)
   - Activities (HTML zip upload and iframe viewer)
+  - Books (reading materials with external links)
+  - Workbooks (PDF exercises)
+  - Videos (embedded video content)
 - **Thumbnail Support**: Upload thumbnails for topics, subtopics, content
+- **Publish Toggle**: Draft/Live status for each content item
 - **Ordering System**: Admin can reorder topics and content items
 - **File Uploads**:
   - `/api/upload/thumbnail` - Image uploads for thumbnails
-  - `/api/upload/pdf` - PDF uploads for worksheets
+  - `/api/upload/pdf` - PDF uploads for worksheets/workbooks
   - `/api/upload/activity` - ZIP uploads for HTML activities
-- **Admin Content Management UI** (`/admin/content`):
-  - Tree view for topics/subtopics
-  - Create/Edit/Delete topics and content
-  - Type-specific forms (lesson settings, worksheet PDF, activity HTML)
-  - Drag reordering
+- **Admin Content Management UI** (`/admin/content`) - Redesigned with 4-step workflow:
+  1. **Topics Tab** - Create and manage main learning topics
+  2. **Subtopics Tab** - Add subtopics under selected topic
+  3. **Lesson Plan Tab** - Order content, toggle publish status
+  4. **Add Content Tab** - Upload content by selecting type
 - **User Learn Page**: Shows hierarchical topics with subtopic preview
 - **User Topic Page**: PDF viewer modal, Activity iframe viewer
+- **Content Visibility**: Only published content visible to users
 
 ## API Endpoints
 
