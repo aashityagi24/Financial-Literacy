@@ -242,7 +242,7 @@ export default function TeacherDashboard({ user }) {
                 {dashboard?.classrooms?.map((classroom, index) => (
                   <div 
                     key={classroom.classroom_id}
-                    className="card-playful p-5 animate-bounce-in cursor-pointer hover:scale-[1.01] transition-transform"
+                    className="card-playful p-5 cursor-pointer hover:scale-[1.01] transition-transform"
                     style={{ animationDelay: `${index * 0.05}s` }}
                     onClick={() => fetchClassroomDetails(classroom.classroom_id)}
                   >
