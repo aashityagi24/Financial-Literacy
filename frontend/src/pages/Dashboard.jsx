@@ -68,11 +68,11 @@ export default function Dashboard({ user, setUser }) {
   };
   
   const navItems = [
-    { icon: Wallet, label: 'Wallet', path: '/wallet', color: '#FFD23F' },
+    { icon: BookOpen, label: 'Learn', path: '/learn', color: '#FFD23F' },
+    { icon: Wallet, label: 'Wallet', path: '/wallet', color: '#3D5A80' },
     { icon: Store, label: 'Store', path: '/store', color: '#EE6C4D' },
     { icon: TrendingUp, label: 'Invest', path: '/investments', color: '#06D6A0' },
-    { icon: Target, label: 'Quests', path: '/quests', color: '#3D5A80' },
-    { icon: Trophy, label: 'Badges', path: '/achievements', color: '#9B5DE5' },
+    { icon: Target, label: 'Quests', path: '/quests', color: '#9B5DE5' },
     { icon: MessageCircle, label: 'AI Buddy', path: '/chat', color: '#FFD23F' },
   ];
   
