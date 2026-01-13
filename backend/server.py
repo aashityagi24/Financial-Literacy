@@ -4261,7 +4261,8 @@ async def get_store_categories(request: Request):
 async def get_store_items_by_category(request: Request):
     """Get store items grouped by category for users"""
     user = await get_current_user(request)
-    user_grade = user.get("grade", 0)
+    user_grade = user.get("grade")
+    user_role = user.get("role", "child")
     
     categories = await db.admin_store_categories.find(
         {"is_active": True},
@@ -4270,19 +4271,29 @@ async def get_store_items_by_category(request: Request):
     
     result = []
     for cat in categories:
-        items = await db.admin_store_items.find(
-            {
-                "category_id": cat["category_id"],
-                "is_active": True,
-                "min_grade": {"$lte": user_grade},
-                "max_grade": {"$gte": user_grade}
-            },
-            {"_id": 0}
-        ).to_list(100)
+        # Admin sees all items, children see grade-appropriate items
+        if user_role == "admin" or user_grade is None:
+            items = await db.admin_store_items.find(
+                {
+                    "category_id": cat["category_id"],
+                    "is_active": True
+                },
+                {"_id": 0}
+            ).to_list(100)
+        else:
+            items = await db.admin_store_items.find(
+                {
+                    "category_id": cat["category_id"],
+                    "is_active": True,
+                    "min_grade": {"$lte": user_grade},
+                    "max_grade": {"$gte": user_grade}
+                },
+                {"_id": 0}
+            ).to_list(100)
         
         if items:  # Only include categories with items
             result.append({
-                "category": cat,
+                **cat,
                 "items": items
             })
     
