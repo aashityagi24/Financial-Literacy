@@ -68,7 +68,7 @@ export default function InvestmentPage({ user }) {
     setCreating(true);
     try {
       await axios.post(`${API}/investments/buy`, {
-        asset_type: investmentType,
+        investment_type: investmentType,
         asset_id: isYounger ? selectedAsset.plant_id : selectedAsset.stock_id,
         quantity: Math.floor(amount / price)
       });
