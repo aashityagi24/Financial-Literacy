@@ -3998,6 +3998,45 @@ async def admin_simulate_market_day(request: Request):
     
     return {"message": f"Simulated market day for {updated_count} stocks", "date": today}
 
+@api_router.get("/admin/investments/scheduler-logs")
+async def admin_get_scheduler_logs(request: Request, limit: int = 30):
+    """Get scheduler execution logs (admin only)"""
+    await require_admin(request)
+    
+    logs = await db.scheduler_logs.find(
+        {},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    return logs
+
+@api_router.get("/admin/investments/scheduler-status")
+async def admin_get_scheduler_status(request: Request):
+    """Get scheduler status and next run time (admin only)"""
+    await require_admin(request)
+    
+    jobs = []
+    for job in scheduler.get_jobs():
+        jobs.append({
+            "id": job.id,
+            "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
+            "trigger": str(job.trigger)
+        })
+    
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    last_run = await db.scheduler_logs.find_one(
+        {"task": "daily_market"},
+        {"_id": 0},
+        sort=[("created_at", -1)]
+    )
+    
+    return {
+        "scheduler_running": scheduler.running,
+        "jobs": jobs,
+        "last_run": last_run,
+        "ran_today": last_run["date"] == today if last_run else False
+    }
+
 # ============== USER INVESTMENT ENDPOINTS (Updated) ==============
 
 @api_router.get("/investments/plants")
