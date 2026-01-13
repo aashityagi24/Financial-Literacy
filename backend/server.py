@@ -3759,6 +3759,7 @@ async def admin_create_store_item(data: StoreItemCreate, request: Request):
         "description": data.description,
         "price": data.price,
         "image_url": data.image_url,
+        "unit": data.unit,
         "min_grade": data.min_grade,
         "max_grade": data.max_grade,
         "stock": data.stock,
