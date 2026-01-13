@@ -121,7 +121,7 @@ export default function LearnPage({ user }) {
                     <img 
                       src={getAssetUrl(topic.thumbnail)} 
                       alt={topic.title} 
-                      className="w-20 h-20 rounded-2xl border-3 border-[#1D3557] object-cover flex-shrink-0"
+                      className="w-20 h-20 rounded-2xl border-3 border-[#1D3557] object-contain bg-white flex-shrink-0"
                     />
                   ) : (
                     <div className="w-20 h-20 rounded-2xl border-3 border-[#1D3557] bg-[#FFD23F] flex items-center justify-center flex-shrink-0">
