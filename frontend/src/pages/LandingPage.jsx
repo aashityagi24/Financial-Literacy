@@ -265,7 +265,7 @@ export default function LandingPage() {
                 <span className="text-4xl">🧒</span>
               </div>
               <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Kids</h3>
-              <p className="text-[#3D5A80]">Play games, earn coins, complete quests, and learn money skills through fun activities!</p>
+              <p className="text-[#3D5A80]">Play games, earn ₹, complete quests, and learn money skills through fun activities!</p>
             </div>
             
             <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">

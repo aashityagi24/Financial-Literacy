@@ -72,7 +72,7 @@ export default function LessonPage({ user }) {
       setQuizResults(response.data);
       
       if (response.data.passed) {
-        toast.success(`Quiz passed! +${response.data.bonus_coins} bonus coins`);
+        toast.success(`Quiz passed! +₹${response.data.bonus_coins} bonus!`);
       } else {
         toast.info(`Score: ${response.data.score}%. Try again!`);
       }
@@ -170,7 +170,7 @@ export default function LessonPage({ user }) {
             </div>
             
             <p className="text-center text-sm text-[#3D5A80] mt-4">
-              <Star className="w-4 h-4 inline text-[#FFD23F]" /> Earn {lesson?.reward_coins} coins for completing this lesson
+              <Star className="w-4 h-4 inline text-[#FFD23F]" /> Earn ₹{lesson?.reward_coins} for completing this lesson
             </p>
           </>
         ) : (
@@ -234,7 +234,7 @@ export default function LessonPage({ user }) {
                     </p>
                     {quizResults.passed && quizResults.bonus_coins > 0 && (
                       <p className="mt-2 text-[#06D6A0] font-bold">
-                        +{quizResults.bonus_coins} bonus coins!
+                        +₹{quizResults.bonus_coins} bonus!
                       </p>
                     )}
                   </div>

@@ -174,7 +174,7 @@ export default function AchievementsPage({ user }) {
             💡 How to Earn Badges
           </h3>
           <ul className="text-[#3D5A80] space-y-1 text-sm">
-            <li>• <strong>Savings badges:</strong> Save coins in your savings account</li>
+            <li>• <strong>Savings badges:</strong> Save ₹ in your savings account</li>
             <li>• <strong>Investing badges:</strong> Grow your investments</li>
             <li>• <strong>Learning badges:</strong> Complete educational quests</li>
             <li>• <strong>Streak badges:</strong> Log in every day</li>
