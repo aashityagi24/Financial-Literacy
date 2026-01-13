@@ -302,7 +302,7 @@ export default function StorePage({ user }) {
             <li>• <strong>Compare prices</strong> before buying - is it a good deal?</li>
             <li>• <strong>Think about needs vs wants</strong> - do you really need it?</li>
             <li>• <strong>Save up</strong> for bigger items you really want!</li>
-            <li>• <strong>Budget wisely</strong> - don't spend all your ₹ at once!</li>
+            <li>• <strong>Budget wisely</strong> - don&apos;t spend all your ₹ at once!</li>
           </ul>
         </div>
       </main>
