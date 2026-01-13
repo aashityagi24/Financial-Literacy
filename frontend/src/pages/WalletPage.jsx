@@ -155,7 +155,7 @@ export default function WalletPage({ user }) {
         <div className="card-playful p-6 mb-6 bg-gradient-to-r from-[#3D5A80] to-[#5A7BA0] text-white animate-bounce-in">
           <p className="text-sm opacity-80 mb-1">Total Balance</p>
           <p className="text-5xl font-bold mb-4" style={{ fontFamily: 'Fredoka' }}>
-            ${wallet?.total_balance?.toFixed(2) || '0.00'}
+            ₹{wallet?.total_balance?.toFixed(2) || '0.00'}
           </p>
           
           <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
@@ -185,7 +185,7 @@ export default function WalletPage({ user }) {
                     <SelectContent>
                       {wallet?.accounts?.map((acc) => (
                         <SelectItem key={acc.account_type} value={acc.account_type}>
-                          {accountInfo[acc.account_type]?.icon} {acc.account_type} (${acc.balance.toFixed(2)})
+                          {accountInfo[acc.account_type]?.icon} {acc.account_type} (₹{acc.balance.toFixed(2)})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -204,7 +204,7 @@ export default function WalletPage({ user }) {
                     <SelectContent>
                       {wallet?.accounts?.filter(a => a.account_type !== transferData.from_account).map((acc) => (
                         <SelectItem key={acc.account_type} value={acc.account_type}>
-                          {accountInfo[acc.account_type]?.icon} {acc.account_type} (${acc.balance.toFixed(2)})
+                          {accountInfo[acc.account_type]?.icon} {acc.account_type} (₹{acc.balance.toFixed(2)})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -244,7 +244,7 @@ export default function WalletPage({ user }) {
             >
               <div className="text-3xl mb-2">{accountInfo[account.account_type]?.icon}</div>
               <p className="text-sm opacity-90 capitalize font-medium">{account.account_type}</p>
-              <p className="text-3xl font-bold my-1" style={{ fontFamily: 'Fredoka' }}>${account.balance?.toFixed(2)}</p>
+              <p className="text-3xl font-bold my-1" style={{ fontFamily: 'Fredoka' }}>₹{account.balance?.toFixed(2)}</p>
               <p className="text-xs opacity-80">{accountInfo[account.account_type]?.description}</p>
             </div>
           ))}
@@ -280,7 +280,7 @@ export default function WalletPage({ user }) {
                     </div>
                   </div>
                   <span className={`font-bold ${trans.to_account ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
-                    {trans.to_account ? '+' : '-'}${trans.amount?.toFixed(2)}
+                    {trans.to_account ? '+' : '-'}₹{trans.amount?.toFixed(2)}
                   </span>
                 </div>
               ))}
