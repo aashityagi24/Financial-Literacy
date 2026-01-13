@@ -452,7 +452,7 @@ export default function ParentDashboard({ user }) {
                               {chore.status}
                             </span>
                           </div>
-                          <p className="text-sm text-[#3D5A80]">{chore.child_name} • +${chore.reward_amount} • {chore.frequency}</p>
+                          <p className="text-sm text-[#3D5A80]">{chore.child_name} • +₹{chore.reward_amount} • {chore.frequency}</p>
                         </div>
                         <button onClick={() => handleDeleteChore(chore.chore_id)} className="p-2 hover:bg-[#EE6C4D]/20 rounded-lg">
                           <Trash2 className="w-4 h-4 text-[#EE6C4D]" />
