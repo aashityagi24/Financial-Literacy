@@ -474,7 +474,7 @@ export default function ParentDashboard({ user }) {
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="font-bold text-[#1D3557]">{allowance.child_name}</h4>
-                          <p className="text-sm text-[#3D5A80]">${allowance.amount} {allowance.frequency} • Next: {allowance.next_date}</p>
+                          <p className="text-sm text-[#3D5A80]">₹{allowance.amount} {allowance.frequency} • Next: {allowance.next_date}</p>
                         </div>
                         <button onClick={() => handleCancelAllowance(allowance.allowance_id)} className="text-[#EE6C4D] text-sm hover:underline">
                           Cancel
@@ -542,7 +542,7 @@ export default function ParentDashboard({ user }) {
                 <div className="grid grid-cols-4 gap-3 mb-6">
                   {childProgress.wallet.map((acc) => (
                     <div key={acc.account_type} className="card-playful p-3 text-center">
-                      <p className="text-lg font-bold text-[#1D3557]">${acc.balance.toFixed(0)}</p>
+                      <p className="text-lg font-bold text-[#1D3557]">₹{acc.balance.toFixed(0)}</p>
                       <p className="text-xs text-[#3D5A80] capitalize">{acc.account_type}</p>
                     </div>
                   ))}
