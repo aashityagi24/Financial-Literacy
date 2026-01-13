@@ -651,6 +651,20 @@ export default function ContentManagement({ user }) {
                         </div>
                         
                         <div className="flex items-center gap-2">
+                          {/* Preview Button */}
+                          {(content.content_data?.pdf_url || content.content_data?.html_url || content.content_data?.content_url) && (
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              onClick={() => {
+                                const url = content.content_data?.html_url || content.content_data?.pdf_url || content.content_data?.content_url;
+                                if (url) window.open(getAssetUrl(url), '_blank');
+                              }}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          )}
                           <Switch 
                             checked={content.is_published} 
                             onCheckedChange={() => togglePublish(content.content_id)}
