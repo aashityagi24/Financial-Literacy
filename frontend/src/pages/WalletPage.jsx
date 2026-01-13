@@ -240,18 +240,29 @@ export default function WalletPage({ user }) {
         {/* Account Cards */}
         <h2 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>Your Accounts</h2>
         <div className="grid grid-cols-2 gap-4 mb-8">
-          {wallet?.accounts?.map((account, index) => (
-            <div
-              key={account.account_type}
-              className={`card-playful p-5 bg-gradient-to-br ${accountInfo[account.account_type]?.color} text-white animate-bounce-in`}
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className="text-3xl mb-2">{accountInfo[account.account_type]?.icon}</div>
-              <p className="text-sm opacity-90 capitalize font-medium">{account.account_type}</p>
-              <p className="text-3xl font-bold my-1" style={{ fontFamily: 'Fredoka' }}>₹{account.balance?.toFixed(2)}</p>
-              <p className="text-xs opacity-80">{accountInfo[account.account_type]?.description}</p>
-            </div>
-          ))}
+          {wallet?.accounts?.map((account, index) => {
+            const info = accountInfo[account.account_type];
+            return (
+              <div
+                key={account.account_type}
+                className={`card-playful p-5 bg-gradient-to-br ${info?.color} text-white animate-bounce-in`}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="text-3xl">{info?.icon}</div>
+                  <p className="text-2xl font-bold" style={{ fontFamily: 'Fredoka' }}>₹{account.balance?.toFixed(0)}</p>
+                </div>
+                <p className="text-lg capitalize font-bold mb-1">{account.account_type}</p>
+                <p className="text-xs opacity-90 mb-3">{info?.description}</p>
+                <Link 
+                  to={info?.action?.path || '/dashboard'}
+                  className="block w-full py-2 bg-white/20 hover:bg-white/30 rounded-xl text-center text-sm font-bold transition-colors border-2 border-white/30"
+                >
+                  {info?.action?.label} →
+                </Link>
+              </div>
+            );
+          })}
         </div>
         
         {/* Transaction History */}
