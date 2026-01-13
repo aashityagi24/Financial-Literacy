@@ -140,7 +140,7 @@ export default function AchievementsPage({ user }) {
               </div>
               
               <h3 className="font-bold text-[#1D3557] mb-1" style={{ fontFamily: 'Fredoka' }}>{achievement.name}</h3>
-              <p className="text-xs text-[#3D5A80] mb-2 line-clamp-2">{achievement.description}</p>
+              <p className="text-sm text-[#3D5A80] mb-2 line-clamp-2">{achievement.description}</p>
               
               <div className="flex items-center justify-center gap-1 mb-2">
                 <Star className="w-4 h-4 text-[#FFD23F]" />
