@@ -1520,11 +1520,12 @@ async def get_financial_tip(tip_request: FinancialTipRequest, request: Request):
     
     suggested_topics = grade_topics.get(grade, grade_topics[3])
     
-    system_message = f"""You are a financial education expert for grade {grade} students. 
+    system_message = f"""You are a financial education expert for grade {grade} students in India. 
     Generate a single, engaging financial tip about {topic}. 
     The tip should be age-appropriate, fun, and educational.
     Include a simple emoji at the start.
-    Keep it under 2-3 sentences for younger kids (K-2) and 3-4 sentences for older kids (3-5)."""
+    Keep it under 2-3 sentences for younger kids (K-2) and 3-4 sentences for older kids (3-5).
+    IMPORTANT: Always use Indian Rupees (₹) for any money examples. Never use dollars ($) or any other currency."""
     
     try:
         chat = LlmChat(
