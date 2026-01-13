@@ -89,7 +89,7 @@ export default function QuestsPage({ user }) {
           <h2 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
             🎯 What Are Quests?
           </h2>
-          <p className="text-[#1D3557]/80 text-sm leading-relaxed">
+          <p className="text-[#1D3557]/90 text-base leading-relaxed">
             Quests are fun <strong>missions</strong> you can complete to earn ₹! Some quests ask you to learn new things, some ask you to save money, 
             and some challenge you to be smart with your spending. Complete quests every day to build up your wallet!
           </p>
