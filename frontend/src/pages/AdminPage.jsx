@@ -5,7 +5,7 @@ import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
   Shield, ChevronLeft, ChevronRight, Users, BookOpen, BarChart3,
-  Trash2, Edit2, Library
+  Trash2, Edit2, Library, Store, TrendingUp
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
