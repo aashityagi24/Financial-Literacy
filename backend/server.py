@@ -2726,7 +2726,7 @@ async def upload_activity_html(file: UploadFile = File(...)):
         shutil.rmtree(activity_folder)
         raise HTTPException(status_code=400, detail="Invalid ZIP file")
     
-    return {"url": f"/uploads/activities/{folder_name}/index.html", "folder": folder_name}
+    return {"url": f"/api/uploads/activities/{folder_name}/index.html", "folder": folder_name}
 
 # ============== CONTENT MANAGEMENT ROUTES (NEW HIERARCHICAL SYSTEM) ==============
 
