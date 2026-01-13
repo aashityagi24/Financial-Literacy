@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { API } from '@/App';
+import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
   BookOpen, ChevronLeft, ChevronRight, Check, Download,
@@ -47,7 +47,7 @@ export default function TopicPage({ user }) {
   const handleCompleteContent = async (contentId) => {
     try {
       const response = await axios.post(`${API}/content/items/${contentId}/complete`);
-      toast.success(`Completed! +${response.data.reward} coins 🎉`);
+      toast.success(`Completed! +₹${response.data.reward} 🎉`);
       fetchTopicData();
     } catch (error) {
       if (error.response?.data?.message === 'Already completed') {
@@ -142,7 +142,7 @@ export default function TopicPage({ user }) {
             </Link>
             <div className="flex items-center gap-3 flex-1 min-w-0">
               {topic.thumbnail ? (
-                <img src={topic.thumbnail} alt="" className="w-12 h-12 rounded-xl border-3 border-[#1D3557] object-cover" />
+                <img src={getAssetUrl(topic.thumbnail)} alt="" className="w-12 h-12 rounded-xl border-3 border-[#1D3557] object-cover" />
               ) : (
                 <div className="w-12 h-12 bg-[#FFD23F] rounded-xl border-3 border-[#1D3557] flex items-center justify-center">
                   <FolderOpen className="w-7 h-7 text-[#1D3557]" />
@@ -175,7 +175,7 @@ export default function TopicPage({ user }) {
                   style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
                 >
                   {subtopic.thumbnail ? (
-                    <img src={subtopic.thumbnail} alt="" className="w-full aspect-video rounded-xl border-3 border-[#1D3557] object-cover mb-3" />
+                    <img src={getAssetUrl(subtopic.thumbnail)} alt="" className="w-full aspect-video rounded-xl border-3 border-[#1D3557] object-cover mb-3" />
                   ) : (
                     <div className="w-full aspect-video rounded-xl border-3 border-[#1D3557] bg-[#FFD23F]/30 flex items-center justify-center mb-3">
                       <FolderOpen className="w-10 h-10 text-[#1D3557]" />
@@ -211,7 +211,7 @@ export default function TopicPage({ user }) {
                   >
                     <div className="flex items-center gap-4">
                       {content.thumbnail ? (
-                        <img src={content.thumbnail} alt="" className="w-20 h-20 rounded-xl border-3 border-[#1D3557] object-cover flex-shrink-0" />
+                        <img src={getAssetUrl(content.thumbnail)} alt="" className="w-20 h-20 rounded-xl border-3 border-[#1D3557] object-cover flex-shrink-0" />
                       ) : (
                         <div className={`w-20 h-20 rounded-xl border-3 border-[#1D3557] ${config.bg} flex items-center justify-center flex-shrink-0`}>
                           <Icon className={`w-10 h-10 ${config.color}`} />
@@ -226,7 +226,7 @@ export default function TopicPage({ user }) {
                         </div>
                         <h3 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{content.title}</h3>
                         <p className="text-[#3D5A80] line-clamp-1">{content.description}</p>
-                        <p className="text-sm text-[#06D6A0] font-bold mt-1">+{content.reward_coins} coins</p>
+                        <p className="text-sm text-[#06D6A0] font-bold mt-1">+₹{content.reward_coins}</p>
                       </div>
                       
                       <div className="flex items-center">
@@ -332,7 +332,7 @@ export default function TopicPage({ user }) {
             
             {/* Modal Footer */}
             <div className="p-4 border-t-3 border-[#1D3557] flex justify-between items-center bg-[#FFD23F]/20">
-              <span className="text-lg font-bold text-[#06D6A0]">+{selectedContent.reward_coins} coins on completion</span>
+              <span className="text-lg font-bold text-[#06D6A0]">+₹{selectedContent.reward_coins} on completion</span>
               <button 
                 onClick={() => { handleCompleteContent(selectedContent.content_id); closeViewer(); }}
                 className="btn-primary px-6 py-3 text-lg"
