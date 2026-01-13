@@ -245,7 +245,7 @@ export default function WalletPage({ user }) {
             return (
               <div
                 key={account.account_type}
-                className={`card-playful p-5 bg-gradient-to-br ${info?.color} text-white animate-bounce-in`}
+                className={`p-5 rounded-2xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] bg-gradient-to-br ${info?.color} text-white animate-bounce-in`}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="flex items-start justify-between mb-2">
