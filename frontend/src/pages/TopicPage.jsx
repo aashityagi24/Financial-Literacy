@@ -211,7 +211,7 @@ export default function TopicPage({ user }) {
                   >
                     <div className="flex items-center gap-4">
                       {content.thumbnail ? (
-                        <img src={getAssetUrl(content.thumbnail)} alt="" className="w-20 h-20 rounded-xl border-3 border-[#1D3557] object-cover flex-shrink-0" />
+                        <img src={getAssetUrl(content.thumbnail)} alt="" className="w-20 h-20 rounded-xl border-3 border-[#1D3557] object-contain bg-white flex-shrink-0" />
                       ) : (
                         <div className={`w-20 h-20 rounded-xl border-3 border-[#1D3557] ${config.bg} flex items-center justify-center flex-shrink-0`}>
                           <Icon className={`w-10 h-10 ${config.color}`} />
