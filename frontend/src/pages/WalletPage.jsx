@@ -161,7 +161,7 @@ export default function WalletPage({ user }) {
             💰 Welcome to Your Wallet!
           </h2>
           <p className="text-[#1D3557]/80 text-sm leading-relaxed">
-            This is like your very own <strong>digital piggy bank</strong>! Here you can see all the ₹ you've earned from completing lessons and quests. 
+            This is like your very own <strong>digital piggy bank</strong>! Here you can see all the ₹ you&apos;ve earned from completing lessons and quests. 
             You have <strong>4 special jars</strong> to keep your money organized - one for spending, one for saving, one for growing (investing), and one for giving to others!
           </p>
         </div>
