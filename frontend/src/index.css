@@ -41,6 +41,18 @@
   --color-success: #06D6A0;
   --color-muted: #98C1D9;
   --border-dark: #1D3557;
+  
+  /* Legacy variable names for backward compatibility */
+  --primary: #FFD23F;
+  --primary-foreground: #1D3557;
+  --secondary: #3D5A80;
+  --secondary-foreground: #FFFFFF;
+  --accent: #EE6C4D;
+  --accent-foreground: #FFFFFF;
+  --background: #E0FBFC;
+  --background-paper: #FFFFFF;
+  --success: #06D6A0;
+  --muted: #98C1D9;
 }
 
 * {
