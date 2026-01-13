@@ -172,6 +172,24 @@ export default function ContentManagement({ user }) {
     }
   };
   
+  const uploadVideo = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      toast.loading('Uploading video...', { id: 'video-upload' });
+      const res = await axios.post(`${API}/upload/video`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setContentForm(prev => ({
+        ...prev,
+        content_data: { ...prev.content_data, video_url: res.data.url }
+      }));
+      toast.success('Video uploaded', { id: 'video-upload' });
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to upload video', { id: 'video-upload' });
+    }
+  };
+  
   // CRUD operations
   const saveTopic = async () => {
     try {
