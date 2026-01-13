@@ -107,6 +107,49 @@ export default function AdminPage({ user }) {
           </div>
         </Link>
         
+        {/* Store & Investment Management Grid */}
+        <div className="grid md:grid-cols-2 gap-4 mb-6">
+          {/* Store Management Card */}
+          <Link 
+            to="/admin/store" 
+            className="block bg-gradient-to-r from-[#EE6C4D] to-[#FF8A6C] rounded-xl p-5 hover:shadow-lg transition-shadow"
+            data-testid="store-management-link"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Store className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Store Management</h3>
+                  <p className="text-white/80 text-sm">Manage store categories and items</p>
+                </div>
+              </div>
+              <ChevronRight className="w-6 h-6 text-white" />
+            </div>
+          </Link>
+          
+          {/* Investment Management Card */}
+          <Link 
+            to="/admin/investments" 
+            className="block bg-gradient-to-r from-[#06D6A0] to-[#42E8B3] rounded-xl p-5 hover:shadow-lg transition-shadow"
+            data-testid="investment-management-link"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Investment Management</h3>
+                  <p className="text-white/80 text-sm">Manage plants (K-2) and stocks (3-5)</p>
+                </div>
+              </div>
+              <ChevronRight className="w-6 h-6 text-white" />
+            </div>
+          </Link>
+        </div>
+        
         {/* Tabs */}
         <div className="flex gap-2 mb-6">
           {[
