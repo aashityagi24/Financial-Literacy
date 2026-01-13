@@ -44,8 +44,19 @@ export default function AdminStoreManagement({ user }) {
   });
   const [itemForm, setItemForm] = useState({
     category_id: '', name: '', description: '', price: 10, image_url: '',
-    min_grade: 0, max_grade: 5, stock: -1, is_active: true
+    unit: 'piece', min_grade: 0, max_grade: 5, stock: -1, is_active: true
   });
+  
+  const unitOptions = [
+    { value: 'piece', label: 'Piece (pc)' },
+    { value: 'unit', label: 'Unit' },
+    { value: 'kg', label: 'Kilogram (kg)' },
+    { value: 'gram', label: 'Gram (g)' },
+    { value: 'litre', label: 'Litre (L)' },
+    { value: 'ml', label: 'Millilitre (ml)' },
+    { value: 'pack', label: 'Pack' },
+    { value: 'dozen', label: 'Dozen' }
+  ];
   
   const [uploading, setUploading] = useState(false);
   
