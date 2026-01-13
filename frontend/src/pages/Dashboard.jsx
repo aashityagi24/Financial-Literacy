@@ -165,7 +165,7 @@ export default function Dashboard({ user, setUser }) {
               {/* Total balance */}
               <div className="flex items-center gap-2 bg-[#06D6A0]/20 px-3 py-2 rounded-xl border-2 border-[#1D3557]">
                 <Coins className="w-5 h-5 text-[#06D6A0]" />
-                <span className="font-bold text-[#1D3557]">${wallet?.total_balance?.toFixed(0) || 0}</span>
+                <span className="font-bold text-[#1D3557]">₹{wallet?.total_balance?.toFixed(0) || 0}</span>
               </div>
               
               {/* Profile */}
@@ -240,8 +240,9 @@ export default function Dashboard({ user, setUser }) {
                 className={`${accountColors[account.account_type]?.bg} rounded-2xl border-3 border-[#1D3557] p-4 text-white`}
               >
                 <div className="text-2xl mb-2">{accountColors[account.account_type]?.icon}</div>
-                <p className="text-sm opacity-90 capitalize">{account.account_type}</p>
-                <p className="text-2xl font-bold">${account.balance?.toFixed(0)}</p>
+                <p className="text-sm opacity-90 capitalize font-medium">{account.account_type}</p>
+                <p className="text-xs opacity-75 mb-1">{accountColors[account.account_type]?.description}</p>
+                <p className="text-2xl font-bold">₹{account.balance?.toFixed(0)}</p>
               </div>
             ))}
           </div>
@@ -278,7 +279,7 @@ export default function Dashboard({ user, setUser }) {
                         <p className="text-sm text-[#3D5A80]">{quest.description}</p>
                       </div>
                       <span className="bg-[#FFD23F] text-[#1D3557] px-2 py-1 rounded-lg text-sm font-bold">
-                        +${quest.reward_amount}
+                        +₹{quest.reward_amount}
                       </span>
                     </div>
                     <Progress value={quest.progress || 0} className="h-2" />
