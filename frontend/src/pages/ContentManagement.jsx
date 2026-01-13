@@ -334,7 +334,7 @@ export default function ContentManagement({ user }) {
       <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail</label>
       <div className="flex items-start gap-3">
         {value ? (
-          <img src={value} alt="" className="w-20 h-16 rounded-lg object-cover border border-gray-200" />
+          <img src={getAssetUrl(value)} alt="" className="w-20 h-16 rounded-lg object-cover border border-gray-200" />
         ) : (
           <div className="w-20 h-16 rounded-lg bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center">
             <Image className="w-6 h-6 text-gray-400" />
