@@ -298,7 +298,7 @@ export default function StorePage({ user }) {
           <h3 className="text-lg font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
             💡 Smart Shopping Tips
           </h3>
-          <ul className="space-y-2 text-[#3D5A80]">
+          <ul className="space-y-2 text-[#3D5A80] text-base">
             <li>• <strong>Compare prices</strong> before buying - is it a good deal?</li>
             <li>• <strong>Think about needs vs wants</strong> - do you really need it?</li>
             <li>• <strong>Save up</strong> for bigger items you really want!</li>
