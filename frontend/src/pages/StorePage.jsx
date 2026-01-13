@@ -184,12 +184,23 @@ export default function StorePage({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
+        {/* Welcome Banner - Explains what the store is for */}
+        <div className="card-playful p-5 mb-6 bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] border-3 border-[#1D3557] animate-bounce-in">
+          <h2 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
+            🛒 How Does the Store Work?
+          </h2>
+          <p className="text-[#1D3557]/80 text-sm leading-relaxed">
+            This is your very own <strong>practice store</strong> where you can learn to shop wisely! Use the ₹ from your <strong>Spending jar</strong> to buy things. 
+            Look at the price tags, think about if you really need something, and make smart choices! Remember: once you buy something, that ₹ is gone - so spend carefully!
+          </p>
+        </div>
+
         {/* Store Banner */}
         <div className="card-playful p-6 mb-6 bg-gradient-to-r from-[#EE6C4D] to-[#FF8A6C] text-white animate-bounce-in">
           <h2 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Fredoka' }}>
             Welcome to the Store! 🛍️
           </h2>
-          <p className="opacity-90 text-lg">Practice buying things with your ₹ - just like real shopping!</p>
+          <p className="opacity-90">Your spending money: <strong>₹{spendingBalance.toFixed(0)}</strong> • Browse the shops below and find something you like!</p>
         </div>
         
         {/* Category Tabs */}
