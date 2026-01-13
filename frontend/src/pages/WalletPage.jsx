@@ -155,12 +155,24 @@ export default function WalletPage({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
+        {/* Welcome Banner - Explains what wallet is for */}
+        <div className="card-playful p-5 mb-6 bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] border-3 border-[#1D3557] animate-bounce-in">
+          <h2 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
+            💰 Welcome to Your Wallet!
+          </h2>
+          <p className="text-[#1D3557]/80 text-sm leading-relaxed">
+            This is like your very own <strong>digital piggy bank</strong>! Here you can see all the ₹ you've earned from completing lessons and quests. 
+            You have <strong>4 special jars</strong> to keep your money organized - one for spending, one for saving, one for growing (investing), and one for giving to others!
+          </p>
+        </div>
+
         {/* Total Balance */}
         <div className="card-playful p-6 mb-6 bg-gradient-to-r from-[#3D5A80] to-[#5A7BA0] text-white animate-bounce-in">
           <p className="text-sm opacity-80 mb-1">Total Balance</p>
-          <p className="text-5xl font-bold mb-4" style={{ fontFamily: 'Fredoka' }}>
+          <p className="text-5xl font-bold mb-2" style={{ fontFamily: 'Fredoka' }}>
             ₹{wallet?.total_balance?.toFixed(2) || '0.00'}
           </p>
+          <p className="text-sm opacity-80 mb-4">This is all the ₹ you have in your wallet!</p>
           
           <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
             <DialogTrigger asChild>
@@ -172,8 +184,9 @@ export default function WalletPage({ user }) {
             <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                  Transfer Money
+                  Move Money Between Jars
                 </DialogTitle>
+                <p className="text-sm text-[#3D5A80] mt-1">Move your ₹ from one jar to another!</p>
               </DialogHeader>
               
               <div className="space-y-4 mt-4">
