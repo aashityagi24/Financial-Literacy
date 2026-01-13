@@ -42,7 +42,7 @@ export default function InvestmentPage({ user }) {
       ]);
       setPlants(plantsRes.data || []);
       setStocks(stocksRes.data || []);
-      setPortfolio(portfolioRes.data || []);
+      setPortfolio(portfolioRes.data?.holdings || []);
       setWallet(walletRes.data);
     } catch (error) {
       console.error('Failed to load investments:', error);
