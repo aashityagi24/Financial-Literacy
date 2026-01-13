@@ -175,6 +175,22 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - **CSS Gradient Fix**: Fixed `.card-playful` class to allow gradient backgrounds when combined with `bg-gradient-*` classes
 - **Admin Dashboard Navigation**: Added colorful gradient cards for Store Management (orange) and Investment Management (green)
 
+### Phase 12: Child-Facing Store & Investment Integration ✅ (January 13, 2026)
+- **Store Page Revamp** (`/store`):
+  - Now fetches ONLY admin-created categories and items (removed all hardcoded sample data)
+  - Shows "Store Coming Soon!" message when no items exist
+  - Category tabs for filtering items
+  - Items display price with unit suffix (₹50/kg, ₹100/piece, etc.)
+  - Grade-appropriate filtering (children only see items for their grade level)
+- **Investment Page Revamp** (`/investments`):
+  - Now fetches ONLY admin-created plants (K-2) and stocks (grades 3-5)
+  - Shows "Money Garden Coming Soon!" or "Stock Market Coming Soon!" when no assets exist
+  - Fixed portfolio display to use correct API response structure (holdings array)
+  - Fixed buy/sell API calls to use correct field names (investment_type, holding_id)
+  - Shows asset images/logos from admin uploads
+- **Store Item Units**: Added unit field with dropdown options (piece, kg, gram, litre, ml, pack, dozen)
+- **API Grade Filtering Fix**: Store API now returns all items for admin users (who have null grade)
+
 ## API Endpoints
 
 ### Admin Store Management (New - Phase 11)
