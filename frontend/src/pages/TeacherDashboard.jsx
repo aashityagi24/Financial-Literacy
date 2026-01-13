@@ -464,7 +464,7 @@ export default function TeacherDashboard({ user }) {
                             <p className="text-sm text-[#3D5A80]">{challenge.description}</p>
                           </div>
                           <span className="bg-[#FFD23F] px-3 py-1 rounded-lg font-bold text-[#1D3557]">
-                            +${challenge.reward_amount}
+                            +₹{challenge.reward_amount}
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-2">
