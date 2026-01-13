@@ -259,13 +259,54 @@ export default function AdminInvestmentManagement({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
+        {/* Scheduler Status Card */}
+        {schedulerStatus && (
+          <div className="bg-gradient-to-r from-[#06D6A0] to-[#42E8B3] rounded-xl p-4 mb-6 text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Clock className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold">Daily Price Fluctuation</h3>
+                  <p className="text-sm opacity-90">
+                    {schedulerStatus.scheduler_running ? (
+                      <>Automatic daily updates at 6:00 AM UTC (11:30 AM IST)</>
+                    ) : (
+                      <>Scheduler not running</>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="flex items-center gap-2 mb-1">
+                  {schedulerStatus.ran_today ? (
+                    <span className="flex items-center gap-1 text-sm bg-white/20 px-2 py-1 rounded-lg">
+                      <CheckCircle className="w-4 h-4" /> Updated today
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-sm bg-yellow-500/20 px-2 py-1 rounded-lg">
+                      <AlertCircle className="w-4 h-4" /> Not run today
+                    </span>
+                  )}
+                </div>
+                {schedulerStatus.jobs?.[0]?.next_run_time && (
+                  <p className="text-xs opacity-80">
+                    Next run: {new Date(schedulerStatus.jobs[0].next_run_time).toLocaleString()}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Info Banner */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <h3 className="font-bold text-blue-800 mb-1">Investment System</h3>
           <p className="text-sm text-blue-700">
             <strong>Plants</strong> (for K-2): Seeds grow over time based on growth rate. 
             <strong> Stocks</strong> (for 3-5): Prices fluctuate daily based on volatility. 
-            Click "Simulate Market Day" to apply random price changes to all stocks.
+            Click &quot;Simulate Market Day&quot; to manually trigger price changes, or wait for the automated daily update.
           </p>
         </div>
         
