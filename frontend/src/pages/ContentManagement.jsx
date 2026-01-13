@@ -149,9 +149,26 @@ export default function ContentManagement({ user }) {
         ...prev,
         content_data: { ...prev.content_data, html_url: res.data.url, html_folder: res.data.folder }
       }));
-      toast.success('HTML Activity uploaded');
+      toast.success('HTML ZIP uploaded');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to upload activity');
+      toast.error(error.response?.data?.detail || 'Failed to upload HTML ZIP');
+    }
+  };
+  
+  const uploadHtmlFile = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await axios.post(`${API}/upload/html`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setContentForm(prev => ({
+        ...prev,
+        content_data: { ...prev.content_data, html_url: res.data.url, html_folder: res.data.folder }
+      }));
+      toast.success('HTML file uploaded');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to upload HTML file');
     }
   };
   
