@@ -2667,7 +2667,7 @@ async def upload_thumbnail(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
-    return {"url": f"/uploads/thumbnails/{filename}"}
+    return {"url": f"/api/uploads/thumbnails/{filename}"}
 
 @api_router.post("/upload/pdf")
 async def upload_pdf(file: UploadFile = File(...)):
@@ -2681,7 +2681,7 @@ async def upload_pdf(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
-    return {"url": f"/uploads/pdfs/{filename}"}
+    return {"url": f"/api/uploads/pdfs/{filename}"}
 
 @api_router.post("/upload/activity")
 async def upload_activity_html(file: UploadFile = File(...)):
