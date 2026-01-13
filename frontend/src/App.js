@@ -23,7 +23,6 @@ import AdminPage from "@/pages/AdminPage";
 import TeacherDashboard from "@/pages/TeacherDashboard";
 import ParentDashboard from "@/pages/ParentDashboard";
 import ContentManagement from "@/pages/ContentManagement";
-import GradientTest from "@/pages/GradientTest";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
