@@ -175,7 +175,7 @@ export default function TopicPage({ user }) {
                   style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
                 >
                   {subtopic.thumbnail ? (
-                    <img src={getAssetUrl(subtopic.thumbnail)} alt="" className="w-full aspect-video rounded-xl border-3 border-[#1D3557] object-cover mb-3" />
+                    <img src={getAssetUrl(subtopic.thumbnail)} alt="" className="w-full aspect-video rounded-xl border-3 border-[#1D3557] object-contain bg-white mb-3" />
                   ) : (
                     <div className="w-full aspect-video rounded-xl border-3 border-[#1D3557] bg-[#FFD23F]/30 flex items-center justify-center mb-3">
                       <FolderOpen className="w-10 h-10 text-[#1D3557]" />
