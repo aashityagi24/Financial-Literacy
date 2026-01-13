@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { API } from '@/App';
+import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
   BookOpen, ChevronLeft, ChevronRight, Trophy, FolderOpen,
@@ -84,7 +84,7 @@ export default function LearnPage({ user }) {
               <h2 className="text-2xl font-bold mb-2 text-white" style={{ fontFamily: 'Fredoka' }}>
                 📚 Your Learning Adventure
               </h2>
-              <p className="text-white text-lg opacity-90">Learn about money and earn coins!</p>
+              <p className="text-white text-lg opacity-90">Learn about money and earn ₹!</p>
             </div>
             <div className="text-right">
               <p className="text-4xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>{topics.length}</p>
@@ -119,7 +119,7 @@ export default function LearnPage({ user }) {
                 >
                   {topic.thumbnail ? (
                     <img 
-                      src={topic.thumbnail} 
+                      src={getAssetUrl(topic.thumbnail)} 
                       alt={topic.title} 
                       className="w-20 h-20 rounded-2xl border-3 border-[#1D3557] object-cover flex-shrink-0"
                     />
@@ -159,7 +159,7 @@ export default function LearnPage({ user }) {
                           className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl border-2 border-[#1D3557]/30 hover:border-[#FFD23F] hover:bg-[#FFD23F]/10 transition-all"
                         >
                           {subtopic.thumbnail ? (
-                            <img src={subtopic.thumbnail} alt="" className="w-6 h-6 rounded object-cover" />
+                            <img src={getAssetUrl(subtopic.thumbnail)} alt="" className="w-6 h-6 rounded object-cover" />
                           ) : (
                             <FolderOpen className="w-5 h-5 text-[#3D5A80]" />
                           )}
