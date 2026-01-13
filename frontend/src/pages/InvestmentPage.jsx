@@ -217,18 +217,11 @@ export default function InvestmentPage({ user }) {
         </h2>
         
         {investments.length === 0 ? (
-          <div className="card-playful p-8 text-center">
-            <span className="text-6xl block mb-4">{isYounger ? '🌱' : '📊'}</span>
-            <h3 className="text-xl font-bold text-[#1D3557] mb-2">Nothing Growing Yet!</h3>
-            <p className="text-[#3D5A80] mb-4">
-              {isYounger 
-                ? 'Transfer ₹ to your investing account and plant your first seed!'
-                : 'Transfer ₹ to your investing account and buy your first stock!'}
-            </p>
-            <Link to="/wallet" className="btn-secondary inline-block px-6 py-3">
-              Go to Wallet
-            </Link>
-          </div>
+          <p className="text-center text-[#3D5A80] py-4">
+            {isYounger 
+              ? 'No plants growing yet! Use the button above to plant your first seed.'
+              : 'No investments yet! Use the button above to buy your first stock.'}
+          </p>
         ) : (
           <div className="grid gap-4">
             {investments.map((inv, index) => {
