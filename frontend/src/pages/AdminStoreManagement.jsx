@@ -213,6 +213,7 @@ export default function AdminStoreManagement({ user }) {
       description: item.description,
       price: item.price,
       image_url: item.image_url || '',
+      unit: item.unit || 'piece',
       min_grade: item.min_grade,
       max_grade: item.max_grade,
       stock: item.stock,
@@ -223,7 +224,7 @@ export default function AdminStoreManagement({ user }) {
   
   const openNewItem = (categoryId) => {
     setEditingItem(null);
-    setItemForm({ ...itemForm, category_id: categoryId || categories[0]?.category_id || '' });
+    setItemForm({ category_id: categoryId || categories[0]?.category_id || '', name: '', description: '', price: 10, image_url: '', unit: 'piece', min_grade: 0, max_grade: 5, stock: -1, is_active: true });
     setItemDialog(true);
   };
   
