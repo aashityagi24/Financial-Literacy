@@ -96,7 +96,7 @@ export default function QuestsPage({ user }) {
         </div>
 
         {/* Main Banner */}
-        <div className="card-playful p-6 mb-6 bg-gradient-to-r from-[#3D5A80] to-[#5A7BA0] text-white animate-bounce-in">
+        <div className="p-6 mb-6 bg-gradient-to-r from-[#3D5A80] to-[#5A7BA0] text-white rounded-3xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] animate-bounce-in">
           <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Fredoka' }}>
             🎯 Complete Quests, Earn ₹!
           </h2>
