@@ -2912,6 +2912,24 @@ async def upload_activity_html(file: UploadFile = File(...)):
     
     return {"url": f"/api/uploads/activities/{folder_name}/index.html", "folder": folder_name}
 
+@api_router.post("/upload/html")
+async def upload_html_file(file: UploadFile = File(...)):
+    """Upload a standalone HTML file (not zipped)"""
+    if not file.filename.endswith(".html") and not file.filename.endswith(".htm"):
+        raise HTTPException(status_code=400, detail="File must be an HTML file (.html or .htm)")
+    
+    folder_name = uuid.uuid4().hex[:16]
+    html_folder = ACTIVITIES_DIR / folder_name
+    html_folder.mkdir(parents=True, exist_ok=True)
+    
+    # Save as index.html so it can be served the same way as ZIP extracts
+    file_path = html_folder / "index.html"
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    return {"url": f"/api/uploads/activities/{folder_name}/index.html", "folder": folder_name}
+
 # ============== CONTENT MANAGEMENT ROUTES (NEW HIERARCHICAL SYSTEM) ==============
 
 @api_router.get("/content/topics")
