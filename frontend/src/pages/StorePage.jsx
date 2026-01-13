@@ -185,7 +185,7 @@ export default function StorePage({ user }) {
       
       <main className="container mx-auto px-4 py-6">
         {/* Welcome Banner - Explains what the store is for */}
-        <div className="card-playful p-5 mb-6 bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] border-3 border-[#1D3557] animate-bounce-in">
+        <div className="p-5 mb-6 bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-3xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] animate-bounce-in">
           <h2 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
             🛒 How Does the Store Work?
           </h2>
@@ -196,7 +196,7 @@ export default function StorePage({ user }) {
         </div>
 
         {/* Store Banner */}
-        <div className="card-playful p-6 mb-6 bg-gradient-to-r from-[#EE6C4D] to-[#FF8A6C] text-white animate-bounce-in">
+        <div className="p-6 mb-6 bg-gradient-to-r from-[#EE6C4D] to-[#FF8A6C] text-white rounded-3xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] animate-bounce-in">
           <h2 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Fredoka' }}>
             Welcome to the Store! 🛍️
           </h2>
