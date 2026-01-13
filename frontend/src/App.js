@@ -27,6 +27,17 @@ import ContentManagement from "@/pages/ContentManagement";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
 
+// Helper to build full URL for uploaded assets (thumbnails, pdfs, etc.)
+export const getAssetUrl = (path) => {
+  if (!path) return null;
+  // If already a full URL, return as is
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  // If it's a relative path starting with /api/uploads, prepend backend URL
+  if (path.startsWith('/api/')) return `${BACKEND_URL}${path}`;
+  // Otherwise, assume it's a path needing the full uploads prefix
+  return `${BACKEND_URL}/api/uploads/${path}`;
+};
+
 // Configure axios defaults
 axios.defaults.withCredentials = true;
 
