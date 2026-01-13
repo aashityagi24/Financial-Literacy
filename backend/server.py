@@ -4327,6 +4327,133 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ============== DAILY PRICE FLUCTUATION SCHEDULER ==============
+
+# Initialize the scheduler
+scheduler = AsyncIOScheduler()
+
+async def daily_market_simulation():
+    """
+    Automated daily price fluctuation for stocks.
+    This simulates market changes by adjusting stock prices based on their volatility.
+    Also updates plant growth values.
+    """
+    logger.info("Running daily market simulation...")
+    
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    # Check if already run today
+    last_run = await db.scheduler_logs.find_one({"task": "daily_market", "date": today})
+    if last_run:
+        logger.info(f"Daily market simulation already ran today ({today}). Skipping.")
+        return
+    
+    try:
+        # Update all active stocks
+        stocks = await db.investment_stocks.find({"is_active": True}).to_list(100)
+        updated_stocks = 0
+        
+        for stock in stocks:
+            # Random price change based on volatility
+            volatility = stock.get("volatility", 0.05)
+            change_percent = random.uniform(-volatility, volatility)
+            current_price = stock.get("current_price", stock.get("base_price", 10))
+            new_price = max(0.01, current_price * (1 + change_percent))  # Don't go below 0.01
+            new_price = round(new_price, 2)
+            
+            # Update stock price
+            await db.investment_stocks.update_one(
+                {"stock_id": stock["stock_id"]},
+                {"$set": {
+                    "current_price": new_price,
+                    "last_price_update": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            # Record in price history
+            await db.price_history.insert_one({
+                "history_id": f"hist_{uuid.uuid4().hex[:12]}",
+                "stock_id": stock["stock_id"],
+                "price": new_price,
+                "date": today,
+                "change_percent": round(change_percent * 100, 2),
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            
+            updated_stocks += 1
+        
+        # Update plant growth values for user holdings
+        plant_holdings = await db.user_investment_holdings.find({"investment_type": "plant"}).to_list(1000)
+        updated_plants = 0
+        
+        for holding in plant_holdings:
+            plant = await db.investment_plants.find_one({"plant_id": holding["asset_id"]})
+            if plant:
+                # Calculate days held
+                purchase_date = holding.get("purchase_date")
+                if isinstance(purchase_date, str):
+                    purchase_date = datetime.fromisoformat(purchase_date.replace('Z', '+00:00'))
+                days_held = (datetime.now(timezone.utc) - purchase_date).days
+                
+                # Update days_held in holding
+                await db.user_investment_holdings.update_one(
+                    {"holding_id": holding["holding_id"]},
+                    {"$set": {"days_held": days_held}}
+                )
+                updated_plants += 1
+        
+        # Log successful run
+        await db.scheduler_logs.insert_one({
+            "log_id": f"log_{uuid.uuid4().hex[:12]}",
+            "task": "daily_market",
+            "date": today,
+            "status": "success",
+            "details": {
+                "stocks_updated": updated_stocks,
+                "plant_holdings_updated": updated_plants
+            },
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        logger.info(f"Daily market simulation completed: {updated_stocks} stocks, {updated_plants} plant holdings updated")
+        
+    except Exception as e:
+        logger.error(f"Daily market simulation failed: {str(e)}")
+        await db.scheduler_logs.insert_one({
+            "log_id": f"log_{uuid.uuid4().hex[:12]}",
+            "task": "daily_market",
+            "date": today,
+            "status": "failed",
+            "error": str(e),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+
+@app.on_event("startup")
+async def startup_scheduler():
+    """Start the scheduler when the app starts"""
+    # Run daily at 6:00 AM UTC (11:30 AM IST)
+    scheduler.add_job(
+        daily_market_simulation,
+        CronTrigger(hour=6, minute=0),
+        id="daily_market_simulation",
+        replace_existing=True
+    )
+    scheduler.start()
+    logger.info("Daily price fluctuation scheduler started (runs at 6:00 AM UTC / 11:30 AM IST)")
+    
+    # Run immediately if it hasn't run today (useful for server restarts)
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    last_run = await db.scheduler_logs.find_one({"task": "daily_market", "date": today})
+    if not last_run:
+        logger.info("Running initial market simulation on startup...")
+        await daily_market_simulation()
+
+@app.on_event("shutdown")
+async def shutdown_scheduler():
+    """Shutdown the scheduler gracefully"""
+    scheduler.shutdown()
+    logger.info("Daily price fluctuation scheduler stopped")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
