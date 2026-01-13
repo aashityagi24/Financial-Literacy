@@ -435,7 +435,7 @@ export default function ContentManagement({ user }) {
                     >
                       <div className="flex items-start gap-3">
                         {topic.thumbnail ? (
-                          <img src={topic.thumbnail} alt="" className="w-16 h-12 rounded-lg object-cover border border-gray-200" />
+                          <img src={getAssetUrl(topic.thumbnail)} alt="" className="w-16 h-12 rounded-lg object-cover border border-gray-200" />
                         ) : (
                           <div className="w-16 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
                             <FolderOpen className="w-6 h-6 text-blue-500" />
@@ -519,7 +519,7 @@ export default function ContentManagement({ user }) {
                     >
                       <div className="flex items-start gap-3">
                         {subtopic.thumbnail ? (
-                          <img src={subtopic.thumbnail} alt="" className="w-12 h-9 rounded-lg object-cover border border-gray-200" />
+                          <img src={getAssetUrl(subtopic.thumbnail)} alt="" className="w-12 h-9 rounded-lg object-cover border border-gray-200" />
                         ) : (
                           <div className="w-12 h-9 rounded-lg bg-green-100 flex items-center justify-center">
                             <Layers className="w-5 h-5 text-green-500" />
@@ -625,7 +625,7 @@ export default function ContentManagement({ user }) {
                         </div>
                         
                         {content.thumbnail ? (
-                          <img src={content.thumbnail} alt="" className="w-14 h-10 rounded-lg object-cover border border-gray-200" />
+                          <img src={getAssetUrl(content.thumbnail)} alt="" className="w-14 h-10 rounded-lg object-cover border border-gray-200" />
                         ) : (
                           <div className={`w-14 h-10 rounded-lg flex items-center justify-center ${typeConfig.color}`}>
                             <Icon className="w-5 h-5" />
