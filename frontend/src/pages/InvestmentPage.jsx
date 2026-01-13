@@ -89,7 +89,7 @@ export default function InvestmentPage({ user }) {
   const handleSell = async (investmentId) => {
     try {
       const response = await axios.post(`${API}/investments/${investmentId}/sell`);
-      toast.success(`Sold for $${response.data.amount_received}!`);
+      toast.success(`Sold for ₹${response.data.amount_received}!`);
       fetchData();
     } catch (error) {
       toast.error('Failed to sell investment');
@@ -133,7 +133,7 @@ export default function InvestmentPage({ user }) {
             
             <div className="flex items-center gap-2 bg-[#06D6A0] px-4 py-2 rounded-xl border-2 border-[#1D3557]">
               <span className="text-lg">📈</span>
-              <span className="font-bold text-white">${investingBalance.toFixed(0)}</span>
+              <span className="font-bold text-white">₹{investingBalance.toFixed(0)}</span>
             </div>
           </div>
         </div>
@@ -177,7 +177,7 @@ export default function InvestmentPage({ user }) {
                   onChange={(e) => setInvestData({...investData, amount: e.target.value})}
                   className="border-3 border-[#1D3557] rounded-xl"
                 />
-                <p className="text-xs text-[#3D5A80] mt-1">Available: ${investingBalance.toFixed(0)}</p>
+                <p className="text-xs text-[#3D5A80] mt-1">Available: ₹{investingBalance.toFixed(0)}</p>
               </div>
               
               <div className="grid grid-cols-2 gap-3">
@@ -238,7 +238,7 @@ export default function InvestmentPage({ user }) {
                       <h3 className="font-bold text-[#1D3557] text-lg">{inv.name}</h3>
                       <div className="flex items-center gap-4 mt-1">
                         <span className="text-sm text-[#3D5A80]">
-                          Invested: ${inv.amount_invested.toFixed(0)}
+                          Invested: ₹{inv.amount_invested.toFixed(0)}
                         </span>
                         <span className={`text-sm font-bold ${isProfit ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
                           {isProfit ? '+' : ''}{growthPercent}%
@@ -247,7 +247,7 @@ export default function InvestmentPage({ user }) {
                     </div>
                     
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-[#1D3557]">${inv.current_value.toFixed(0)}</p>
+                      <p className="text-2xl font-bold text-[#1D3557]">₹{inv.current_value.toFixed(0)}</p>
                       <button
                         onClick={() => handleSell(inv.investment_id)}
                         className="btn-accent px-4 py-2 text-sm mt-2"
