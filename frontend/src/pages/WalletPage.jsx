@@ -38,22 +38,26 @@ export default function WalletPage({ user }) {
     spending: { 
       icon: '💳', 
       color: 'from-[#EE6C4D] to-[#FF8A6C]',
-      description: 'Use this for your everyday purchases!'
+      description: 'Use this for your everyday purchases!',
+      action: { label: 'Go to Store', path: '/store' }
     },
     savings: { 
       icon: '🐷', 
       color: 'from-[#06D6A0] to-[#42E8B3]',
-      description: 'Save up for something special!'
+      description: 'Save up for something special!',
+      action: { label: 'Set Goal', path: '/quests' }
     },
     investing: { 
       icon: '📈', 
       color: 'from-[#3D5A80] to-[#5A7BA0]',
-      description: 'Grow your money over time!'
+      description: 'Grow your money over time!',
+      action: { label: 'Go Invest', path: '/investments' }
     },
     giving: { 
       icon: '❤️', 
       color: 'from-[#9B5DE5] to-[#B47EE5]',
-      description: 'Share with others who need it!'
+      description: 'Share with others who need it!',
+      action: { label: 'Give ₹', path: '/quests' }
     },
   };
   
