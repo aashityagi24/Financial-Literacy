@@ -52,6 +52,7 @@ export default function AdminInvestmentManagement({ user }) {
   
   const [uploading, setUploading] = useState(false);
   const [simulating, setSimulating] = useState(false);
+  const [schedulerStatus, setSchedulerStatus] = useState(null);
   
   const lotSizeOptions = [
     { value: 1, label: '1 unit' },
