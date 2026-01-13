@@ -290,7 +290,7 @@ export default function InvestmentPage({ user }) {
           <h3 className="font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
             💡 Investment Tip
           </h3>
-          <p className="text-[#3D5A80]">
+          <p className="text-[#3D5A80] text-base">
             {isYounger 
               ? 'Patience is key! The longer you let your plants grow, the more ₹ they\'ll be worth. Don\'t pick them too early!'
               : 'Diversify your portfolio! Owning different types of stocks helps protect your money if one doesn\'t do well.'}
