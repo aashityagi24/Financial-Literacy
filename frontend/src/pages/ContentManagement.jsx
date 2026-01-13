@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { API } from '@/App';
+import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
   Shield, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
