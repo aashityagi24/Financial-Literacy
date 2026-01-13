@@ -93,6 +93,17 @@ export default function LearnPage({ user }) {
           </div>
         </div>
         
+        {/* Explanation Banner */}
+        <div className="card-playful p-5 mb-6 bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] border-3 border-[#1D3557]">
+          <h2 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
+            📖 How Does Learning Work?
+          </h2>
+          <p className="text-[#1D3557]/80 text-sm leading-relaxed">
+            Click on any <strong>topic</strong> below to start learning! Each topic has fun <strong>lessons, activities, and games</strong> that teach you about money. 
+            When you finish an activity, you'll earn ₹ to add to your wallet. The more you learn, the smarter you get with money!
+          </p>
+        </div>
+        
         {/* Topics List */}
         {topics.length === 0 ? (
           <div className="card-playful p-12 text-center">
