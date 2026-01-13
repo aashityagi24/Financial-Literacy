@@ -2931,6 +2931,25 @@ async def upload_html_file(file: UploadFile = File(...)):
     
     return {"url": f"/api/uploads/activities/{folder_name}/index.html", "folder": folder_name}
 
+@api_router.post("/upload/video")
+async def upload_video_file(file: UploadFile = File(...)):
+    """Upload an MP4 video file"""
+    allowed_extensions = [".mp4", ".webm", ".mov"]
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    
+    if file_ext not in allowed_extensions:
+        raise HTTPException(status_code=400, detail=f"File must be a video ({', '.join(allowed_extensions)})")
+    
+    # Generate unique filename
+    filename = f"{uuid.uuid4().hex[:16]}{file_ext}"
+    file_path = VIDEOS_DIR / filename
+    
+    # Save the video file
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    return {"url": f"/api/uploads/videos/{filename}"}
+
 # ============== CONTENT MANAGEMENT ROUTES (NEW HIERARCHICAL SYSTEM) ==============
 
 @api_router.get("/content/topics")
