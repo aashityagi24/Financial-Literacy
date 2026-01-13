@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian Currency Master - Learn Money!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-orange: #FF6B35;
+            --primary-blue: #004E89;
+            --success-green: #06D6A0;
+            --warning-yellow: #FFD23F;
+            --purple: #8338EC;
+            --bg-light: #F7F7FF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 3rem;
+            color: white;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: var(--warning-yellow);
+            font-weight: 600;
+        }
+
+        .activity-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .activity-btn {
+            background: white;
+            color: var(--primary-blue);
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .activity-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .activity-btn.active {
+            background: var(--success-green);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .activity-section {
+            display: none;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .activity-section.active {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Currency Gallery */
+        .currency-gallery {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .gallery-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 2rem;
+            color: var(--primary-blue);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .currency-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .currency-item {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid #e0e0e0;
+        }
+
+        .currency-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .currency-image {
+            width: 100%;
+            height: 150px;
+            object-fit: contain;
+            margin-bottom: 15px;
+            border-radius: 10px;
+        }
+
+        .currency-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 5px;
+        }
+
+        .currency-value {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        /* Matching Game */
+        .matching-game {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .score-display {
+            background: var(--success-green);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 20px;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .matching-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .matching-column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .column-title {
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 10px;
+            padding: 10px;
+            background: var(--bg-light);
+            border-radius: 10px;
+        }
+
+        .match-item {
+            background: white;
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 100px;
+            height: 100px;
+        }
+
+        .match-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .match-item.selected {
+            border-color: var(--primary-blue);
+            background: #e3f2fd;
+            transform: scale(1.05);
+        }
+
+        .match-item.matched {
+            border-color: var(--success-green);
+            background: #e8f5e9;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .match-item.wrong {
+            border-color: var(--primary-orange);
+            background: #ffebee;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .match-value-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            text-align: center;
+        }
+
+        .match-image {
+            width: 100%;
+            max-width: 150px;
+            height: 70px;
+            object-fit: contain;
+        }
+
+        /* Connection Lines */
+        #linesCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .matching-container {
+            position: relative;
+        }
+
+        /* Feedback Popup */
+        .feedback-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #FFF9E6 0%, #FFF3CD 100%);
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            max-width: 550px;
+            text-align: center;
+            transition: transform 0.3s ease;
+            border: 5px solid #FFD93D;
+        }
+
+        .feedback-popup.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 999;
+            display: none;
+        }
+
+        .popup-overlay.show {
+            display: block;
+        }
+
+        .popup-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            animation: bounce 0.6s ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .popup-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #FF8C42;
+            margin-bottom: 20px;
+        }
+
+        .popup-message {
+            font-size: 1.2rem;
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 25px;
+        }
+
+        .popup-correct {
+            background: #E8F5E9;
+            padding: 20px;
+            border-radius: 20px;
+            margin: 20px 0;
+            border: 3px solid var(--success-green);
+        }
+
+        .popup-correct-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--success-green);
+            margin-bottom: 15px;
+        }
+
+        .popup-images {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 15px 0;
+        }
+
+        .popup-img {
+            width: 120px;
+            height: 90px;
+            object-fit: contain;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .popup-close-btn {
+            background: linear-gradient(135deg, #06D6A0, #1DE9B6);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(6, 214, 160, 0.4);
+        }
+
+        .popup-close-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(6, 214, 160, 0.6);
+        }
+
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success-green);
+        }
+
+        .btn-warning {
+            background: var(--primary-orange);
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .currency-grid { grid-template-columns: 1fr; }
+            .matching-container { 
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💰 Indian Currency Master 💰</h1>
+            <p class="subtitle">Learn about Indian Notes and Coins!</p>
+        </header>
+
+        <div class="activity-selector">
+            <button class="activity-btn active" onclick="showActivity('gallery')">📚 Currency Gallery</button>
+            <button class="activity-btn" onclick="showActivity('matching')">🎮 Matching Game</button>
+        </div>
+
+        <!-- Currency Gallery -->
+        <div id="gallery" class="activity-section active">
+            <div class="currency-gallery">
+                <h2 class="gallery-title">Indian Coins</h2>
+                <div class="currency-grid">
+                    <div class="currency-item">
+                        <img src="images/coin-1.png" alt="1 Rupee Coin" class="currency-image">
+                        <div class="currency-name">₹1 Coin</div>
+                        <div class="currency-value">One Rupee Coin</div>
+                    </div>
+                    <div class="currency-item">
+                        <img src="images/coin-2.png" alt="2 Rupees Coin" class="currency-image">
+                        <div class="currency-name">₹2 Coin</div>
+                        <div class="currency-value">Two Rupees Coin</div>
+                    </div>
+                    <div class="currency-item">
+                        <img src="images/coin-5.png" alt="5 Rupees Coin" class="currency-image">
+                        <div class="currency-name">₹5 Coin</div>
+                        <div class="currency-value">Five Rupees Coin</div>
+                    </div>
+                    <div class="currency-item">
+                        <img src="images/coin-10.png" alt="10 Rupees Coin" class="currency-image">
+                        <div class="currency-name">₹10 Coin</div>
+                        <div class="currency-value">Ten Rupees Coin</div>
+                    </div>
+                    <div class="currency-item">
+                        <img src="images/coin-20.png" alt="20 Rupees Coin" class="currency-image">
+                        <div class="currency-name">₹20 Coin</div>
+                        <div class="currency-value">Twenty Rupees Coin</div>
+                    </div>
+                </div>
+
+                <h2 class="gallery-title">Indian Notes</h2>
+                <div class="currency-grid">
+                    <div class="currency-item">
+                        <img src="images/note-10.png" alt="10 Rupees Note" class="currency-image">
+                        <div class="currency-name">₹10 Note</div>
+                        <div class="currency-value">Ten Rupees Note</div>
+                    </div>
+                    <div class="currency-item">
+                        <img src="images/note-20.png" alt="20 Rupees Note" class="currency-image">
+                        <div class="currency-name">₹20 Note</div>
+                        <div class="currency-value">Twenty Rupees Note</div>
+                    </div>
+                    <div class="currency-item">
+                        <img src="images/note-50.png" alt="50 Rupees Note" class="currency-image">
+                        <div class="currency-name">₹50 Note</div>
+                        <div class="currency-value">Fifty Rupees Note</div>
+                    </div>
+                    <div class="currency-item">
+                        <img src="images/note-100.png" alt="100 Rupees Note" class="currency-image">
+                        <div class="currency-name">₹100 Note</div>
+                        <div class="currency-value">One Hundred Rupees Note</div>
+                    </div>
+                    <div class="currency-item">
+                        <img src="images/note-200.png" alt="200 Rupees Note" class="currency-image">
+                        <div class="currency-name">₹200 Note</div>
+                        <div class="currency-value">Two Hundred Rupees Note</div>
+                    </div>
+                    <div class="currency-item">
+                        <img src="images/note-500.png" alt="500 Rupees Note" class="currency-image">
+                        <div class="currency-name">₹500 Note</div>
+                        <div class="currency-value">Five Hundred Rupees Note</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Matching Game -->
+        <div id="matching" class="activity-section">
+            <div class="matching-game">
+                <div class="game-header">
+                    <h2 class="gallery-title">🎯 Match Value to Currency!</h2>
+                    <div class="score-display">Matches: <span id="matchScore">0/3</span></div>
+                </div>
+                
+                <div class="matching-container">
+                    <canvas id="linesCanvas"></canvas>
+                    <div class="matching-column">
+                        <div class="column-title">Values</div>
+                        <div id="valuesColumn"></div>
+                    </div>
+                    
+                    <div class="matching-column">
+                        <div class="column-title">Currency</div>
+                        <div id="imagesColumn"></div>
+                    </div>
+                </div>
+                
+                <div class="control-buttons">
+                    <button class="btn btn-success" onclick="resetMatching()">🔄 New Game</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Popup -->
+        <div class="popup-overlay" id="popupOverlay" onclick="closeFeedback()"></div>
+        <div class="feedback-popup" id="feedbackPopup">
+            <div class="popup-icon" id="popupIcon">🤔</div>
+            <div class="popup-title" id="popupTitle">Let's Learn Together!</div>
+            <div class="popup-message" id="popupMessage"></div>
+            <div class="popup-correct" id="popupCorrect"></div>
+            <button class="popup-close-btn" onclick="closeFeedback()">Try Again! 🌟</button>
+        </div>
+
+        <!-- Confetti Container -->
+        <div class="confetti-container" id="confettiContainer"></div>
+
+    </div>
+
+    <script>
+        const currency = [
+            { type: 'coin', value: 1, img: 'images/coin-1.png', name: '₹1 Coin' },
+            { type: 'coin', value: 2, img: 'images/coin-2.png', name: '₹2 Coin' },
+            { type: 'coin', value: 5, img: 'images/coin-5.png', name: '₹5 Coin' },
+            { type: 'coin', value: 10, img: 'images/coin-10.png', name: '₹10 Coin' },
+            { type: 'coin', value: 20, img: 'images/coin-20.png', name: '₹20 Coin' },
+            { type: 'note', value: 10, img: 'images/note-10.png', name: '₹10 Note' },
+            { type: 'note', value: 20, img: 'images/note-20.png', name: '₹20 Note' },
+            { type: 'note', value: 50, img: 'images/note-50.png', name: '₹50 Note' },
+            { type: 'note', value: 100, img: 'images/note-100.png', name: '₹100 Note' },
+            { type: 'note', value: 200, img: 'images/note-200.png', name: '₹200 Note' },
+            { type: 'note', value: 500, img: 'images/note-500.png', name: '₹500 Note' }
+        ];
+
+        function showActivity(activity) {
+            document.querySelectorAll('.activity-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(activity).classList.add('active');
+            event.target.classList.add('active');
+
+            if (activity === 'matching') {
+                initializeMatching();
+            }
+        }
+
+        // Matching Game
+        let selectedValue = null;
+        let selectedImage = null;
+        let matchedPairs = 0;
+        let matchingItems = [];
+        let totalItems = 3;
+        let canvas, ctx;
+        let matchedConnections = [];
+
+        function initializeMatching() {
+            // Randomly select 3 items from all currency types
+            const shuffledCurrency = [...currency].sort(() => Math.random() - 0.5);
+            matchingItems = shuffledCurrency.slice(0, 3);
+            
+            const valuesColumn = document.getElementById('valuesColumn');
+            const imagesColumn = document.getElementById('imagesColumn');
+            
+            valuesColumn.innerHTML = '';
+            imagesColumn.innerHTML = '';
+            
+            // Shuffle items differently for each column
+            const shuffledValues = [...matchingItems].sort(() => Math.random() - 0.5);
+            const shuffledImages = [...matchingItems].sort(() => Math.random() - 0.5);
+            
+            // Create value items
+            shuffledValues.forEach((item, index) => {
+                const valueDiv = document.createElement('div');
+                valueDiv.className = 'match-item';
+                valueDiv.dataset.value = item.value;
+                valueDiv.dataset.type = item.type;
+                valueDiv.dataset.name = item.name;
+                valueDiv.dataset.img = item.img;
+                valueDiv.innerHTML = `<div class="match-value-text">${item.name}</div>`;
+                valueDiv.onclick = () => selectValue(valueDiv, item);
+                valuesColumn.appendChild(valueDiv);
+            });
+            
+            // Create image items
+            shuffledImages.forEach((item, index) => {
+                const imageDiv = document.createElement('div');
+                imageDiv.className = 'match-item';
+                imageDiv.dataset.value = item.value;
+                imageDiv.dataset.type = item.type;
+                imageDiv.dataset.name = item.name;
+                imageDiv.dataset.img = item.img;
+                imageDiv.innerHTML = `<img src="${item.img}" class="match-image">`;
+                imageDiv.onclick = () => selectImage(imageDiv, item);
+                imagesColumn.appendChild(imageDiv);
+            });
+            
+            matchedPairs = 0;
+            selectedValue = null;
+            selectedImage = null;
+            matchedConnections = [];
+            document.getElementById('matchScore').textContent = `0/3`;
+            
+            // Initialize canvas
+            setupCanvas();
+        }
+
+        function setupCanvas() {
+            canvas = document.getElementById('linesCanvas');
+            const container = document.querySelector('.matching-container');
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
+            ctx = canvas.getContext('2d');
+            drawLines();
+        }
+
+        function drawLines() {
+            if (!ctx) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw lines for matched pairs
+            matchedConnections.forEach(connection => {
+                const valueRect = connection.valueElement.getBoundingClientRect();
+                const imageRect = connection.imageElement.getBoundingClientRect();
+                const containerRect = document.querySelector('.matching-container').getBoundingClientRect();
+                
+                const startX = valueRect.right - containerRect.left;
+                const startY = valueRect.top + valueRect.height / 2 - containerRect.top;
+                const endX = imageRect.left - containerRect.left;
+                const endY = imageRect.top + imageRect.height / 2 - containerRect.top;
+                
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.strokeStyle = '#06D6A0';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+            });
+        }
+
+        function selectValue(element, item) {
+            if (element.classList.contains('matched')) return;
+            
+            // Deselect previous value
+            document.querySelectorAll('#valuesColumn .match-item').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            selectedValue = { element, item };
+            element.classList.add('selected');
+            
+            // Check if we have both selections
+            if (selectedImage) {
+                checkMatch();
+            }
+        }
+
+        function selectImage(element, item) {
+            if (element.classList.contains('matched')) return;
+            
+            // Deselect previous image
+            document.querySelectorAll('#imagesColumn .match-item').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            selectedImage = { element, item };
+            element.classList.add('selected');
+            
+            // Check if we have both selections
+            if (selectedValue) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            // Match based on both value and type
+            if (selectedValue.item.value === selectedImage.item.value && 
+                selectedValue.item.type === selectedImage.item.type) {
+                // Correct match
+                selectedValue.element.classList.remove('selected', 'wrong');
+                selectedImage.element.classList.remove('selected', 'wrong');
+                selectedValue.element.classList.add('matched');
+                selectedImage.element.classList.add('matched');
+                
+                // Add connection for line drawing
+                matchedConnections.push({
+                    valueElement: selectedValue.element,
+                    imageElement: selectedImage.element
+                });
+                
+                drawLines();
+                
+                // Play success sound and show confetti
+                playSuccessSound();
+                createConfetti();
+                
+                matchedPairs++;
+                document.getElementById('matchScore').textContent = `${matchedPairs}/3`;
+                
+                // Victory celebration when all matched
+                if (matchedPairs === 3) {
+                    setTimeout(() => {
+                        createVictoryConfetti();
+                    }, 300);
+                }
+            } else {
+                // Wrong match - show gentle feedback
+                showFeedback(selectedValue.item, selectedImage.item);
+                
+                selectedValue.element.classList.add('wrong');
+                selectedImage.element.classList.add('wrong');
+                
+                setTimeout(() => {
+                    selectedValue.element.classList.remove('selected', 'wrong');
+                    selectedImage.element.classList.remove('selected', 'wrong');
+                }, 800);
+            }
+            
+            selectedValue = null;
+            selectedImage = null;
+        }
+
+        function playSuccessSound() {
+            // Create a simple success sound using Web Audio API
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+            
+            // Add a second note for harmony
+            setTimeout(() => {
+                const osc2 = audioContext.createOscillator();
+                const gain2 = audioContext.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioContext.destination);
+                osc2.frequency.value = 1000;
+                osc2.type = 'sine';
+                gain2.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                osc2.start(audioContext.currentTime);
+                osc2.stop(audioContext.currentTime + 0.3);
+            }, 100);
+        }
+
+        function createConfetti() {
+            const container = document.getElementById('confettiContainer');
+            const colors = ['#FFD93D', '#FF6B9D', '#4ECDC4', '#95E1D3', '#A78BFA', '#06D6A0', '#FF8C42'];
+            const confettiCount = 50;
+            
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'absolute';
+                confetti.style.width = '10px';
+                confetti.style.height = '10px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = '50%';
+                confetti.style.top = '50%';
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0%';
+                confetti.style.opacity = '1';
+                confetti.style.pointerEvents = 'none';
+                container.appendChild(confetti);
+
+                const angle = (Math.PI * 2 * i) / confettiCount;
+                const velocity = 200 + Math.random() * 200;
+                const tx = Math.cos(angle) * velocity;
+                const ty = Math.sin(angle) * velocity;
+
+                confetti.animate([
+                    { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
+                    { transform: `translate(${tx}px, ${ty}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+                ], {
+                    duration: 1000 + Math.random() * 500,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                }).onfinish = () => confetti.remove();
+            }
+        }
+
+        function createVictoryConfetti() {
+            const container = document.getElementById('confettiContainer');
+            const colors = ['#FFD93D', '#FF6B9D', '#4ECDC4', '#95E1D3', '#A78BFA', '#06D6A0', '#FF8C42'];
+            
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.style.position = 'absolute';
+                    confetti.style.width = '12px';
+                    confetti.style.height = '12px';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.top = '-20px';
+                    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0%';
+                    confetti.style.opacity = '1';
+                    confetti.style.pointerEvents = 'none';
+                    container.appendChild(confetti);
+
+                    confetti.animate([
+                        { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                        { transform: `translateY(${window.innerHeight}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+                    ], {
+                        duration: 2000 + Math.random() * 1000,
+                        easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                    }).onfinish = () => confetti.remove();
+                }, i * 20);
+            }
+        }
+
+        function showFeedback(selectedValueItem, selectedImageItem) {
+            const popup = document.getElementById('feedbackPopup');
+            const overlay = document.getElementById('popupOverlay');
+            const message = document.getElementById('popupMessage');
+            const correctSection = document.getElementById('popupCorrect');
+            
+            // Determine the reason with positive, child-friendly language
+            let reason = '';
+            if (selectedValueItem.value === selectedImageItem.value) {
+                // Same value but different type
+                const valueType = selectedValueItem.type === 'coin' ? 'coin' : 'note';
+                const imageType = selectedImageItem.type === 'coin' ? 'coin' : 'note';
+                reason = `Good try! You picked <strong>${selectedValueItem.name}</strong>, but you matched it with a <strong>${imageType}</strong>. <br><br>` +
+                         `Remember: Even though they both show <strong>₹${selectedValueItem.value}</strong>, coins and notes are different types of money!`;
+            } else {
+                // Different values
+                reason = `Almost there! You tried to match <strong>${selectedValueItem.name}</strong> with <strong>${selectedImageItem.name}</strong>. <br><br>` +
+                         `Let's look carefully: <strong>₹${selectedValueItem.value}</strong> and <strong>₹${selectedImageItem.value}</strong> are different amounts of money.`;
+            }
+            
+            message.innerHTML = reason;
+            
+            // Show correct match with encouraging message
+            correctSection.innerHTML = `
+                <div class="popup-correct-text">✨ Here's the correct match for ${selectedValueItem.name}:</div>
+                <div class="popup-images">
+                    <div style="text-align: center;">
+                        <div style="font-weight: 700; font-size: 1.3rem; margin-bottom: 10px; color: #004E89;">${selectedValueItem.name}</div>
+                    </div>
+                    <div style="font-size: 2.5rem; color: #06D6A0;">→</div>
+                    <div style="text-align: center;">
+                        <img src="${selectedValueItem.img}" class="popup-img">
+                    </div>
+                </div>
+                <div style="color: #555; font-size: 1rem; margin-top: 10px;">You'll get it next time! Keep trying! 💪</div>
+            `;
+            
+            popup.classList.add('show');
+            overlay.classList.add('show');
+        }
+
+        function closeFeedback() {
+            document.getElementById('feedbackPopup').classList.remove('show');
+            document.getElementById('popupOverlay').classList.remove('show');
+        }
+
+        function resetMatching() {
+            initializeMatching();
+        }
+
+        // Redraw lines on window resize
+        window.addEventListener('resize', () => {
+            if (canvas) {
+                setupCanvas();
+            }
+        });
+
+        // Start the game when page loads
+        window.onload = () => {
+            // Gallery is shown by default
+        };
+    </script>
+</body>
+</html>
