@@ -153,6 +153,28 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
   - Made wallet account cards clickable (link to /wallet page)
 - **Age-Appropriate Language**: All text uses simple words and concepts K-5 children can understand
 
+### Phase 11: Admin Store & Investment Management ✅ (January 13, 2026)
+- **Admin Store Management** (`/admin/store`):
+  - Categories CRUD: Create, edit, delete store categories
+  - Category fields: name, description, icon (emoji), color, image, order, active status
+  - Items CRUD: Create, edit, delete store items
+  - Item fields: category, name, description, price (₹), image, min/max grade, stock, active status
+  - Image upload support for categories and items
+  - Filter items by category
+  - Table view for items with all details
+- **Admin Investment Management** (`/admin/investments`):
+  - **Plants (for K-2 children)**:
+    - Plant CRUD: Create, edit, delete plants for Money Garden
+    - Plant fields: name, description, image, base price, growth rate (min/max), lot size, maturity days, active status
+  - **Stocks (for 3-5 children)**:
+    - Stock CRUD: Create, edit, delete fictional companies
+    - Stock fields: company name, ticker symbol, description, logo, base price, current price, volatility, lot size, active status
+    - Price history tracking with date/price records
+    - View price history dialog
+  - **Simulate Market Day**: Button to apply random price changes to all stocks based on their volatility settings
+- **CSS Gradient Fix**: Fixed `.card-playful` class to allow gradient backgrounds when combined with `bg-gradient-*` classes
+- **Admin Dashboard Navigation**: Added colorful gradient cards for Store Management (orange) and Investment Management (green)
+
 ## API Endpoints
 
 ### Content Management (New System)
