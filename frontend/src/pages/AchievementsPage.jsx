@@ -80,7 +80,7 @@ export default function AchievementsPage({ user }) {
       
       <main className="container mx-auto px-4 py-6">
         {/* Progress Banner */}
-        <div className="card-playful p-6 mb-6 bg-gradient-to-r from-[#9B5DE5] to-[#B47EE5] text-white animate-bounce-in">
+        <div className="p-6 mb-6 bg-gradient-to-r from-[#9B5DE5] to-[#B47EE5] text-white rounded-3xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] animate-bounce-in">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-2xl font-bold mb-1" style={{ fontFamily: 'Fredoka' }}>
