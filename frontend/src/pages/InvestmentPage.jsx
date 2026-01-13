@@ -153,7 +153,7 @@ export default function InvestmentPage({ user }) {
         </div>
 
         {/* Available Balance */}
-        <div className="card-playful p-6 mb-6 bg-gradient-to-r from-[#06D6A0] to-[#42E8B3] text-white animate-bounce-in">
+        <div className="p-6 mb-6 bg-gradient-to-r from-[#06D6A0] to-[#42E8B3] text-white rounded-3xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] animate-bounce-in">
           <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Fredoka' }}>
             {isYounger ? '🌱 Your Garden Money' : '📈 Your Investing Money'}
           </h2>
