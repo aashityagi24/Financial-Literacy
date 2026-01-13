@@ -208,7 +208,7 @@ export default function QuestsPage({ user }) {
           <h3 className="font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
             💡 Quest Tips
           </h3>
-          <ul className="text-[#3D5A80] space-y-1 text-sm">
+          <ul className="text-[#3D5A80] space-y-1 text-base">
             <li>• <strong>Daily quests</strong> reset each day - complete them for quick ₹!</li>
             <li>• <strong>Weekly quests</strong> give bigger rewards but take more time.</li>
             <li>• <strong>Challenges</strong> are special one-time quests with the best rewards!</li>
