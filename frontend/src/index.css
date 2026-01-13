@@ -98,11 +98,16 @@ code {
 
 /* Card styles */
 .card-playful {
-  background: white;
+  background-color: white;
   border: 3px solid var(--border-dark);
   border-radius: 1.5rem;
   box-shadow: 4px 4px 0px 0px var(--border-dark);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Allow gradient backgrounds to override card-playful white background */
+.card-playful[class*="bg-gradient"] {
+  background-color: transparent;
 }
 
 .card-playful:hover {
