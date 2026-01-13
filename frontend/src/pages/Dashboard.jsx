@@ -278,9 +278,9 @@ export default function Dashboard({ user, setUser }) {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h3 className="font-bold text-[#1D3557]">{quest.title}</h3>
-                        <p className="text-sm text-[#3D5A80]">{quest.description}</p>
+                        <p className="text-base text-[#3D5A80]">{quest.description}</p>
                       </div>
-                      <span className="bg-[#FFD23F] text-[#1D3557] px-2 py-1 rounded-lg text-sm font-bold">
+                      <span className="bg-[#FFD23F] text-[#1D3557] px-2 py-1 rounded-lg text-base font-bold">
                         +₹{quest.reward_amount}
                       </span>
                     </div>
