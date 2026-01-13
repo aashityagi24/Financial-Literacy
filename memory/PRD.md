@@ -334,6 +334,8 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - **Unified Content Uploads (PDF/HTML for all types)**
 - **Admin Store Management** (categories, items CRUD, image upload)
 - **Admin Investment Management** (plants for K-2, stocks for 3-5, price history, market simulation)
+- **Store & Investment Child Integration** (removed hardcoded data, grade filtering)
+- **Daily Price Fluctuations** (APScheduler at 6:00 AM UTC, price history, scheduler status UI)
 
 ### P1 (Next Phase)
 - Daily Login Rewards & Streak Bonuses
