@@ -250,10 +250,10 @@ export default function InvestmentPage({ user }) {
                     <div className="flex-1">
                       <h3 className="font-bold text-[#1D3557] text-lg">{inv.name}</h3>
                       <div className="flex items-center gap-4 mt-1">
-                        <span className="text-sm text-[#3D5A80]">
+                        <span className="text-base text-[#3D5A80]">
                           Invested: ₹{inv.amount_invested.toFixed(0)}
                         </span>
-                        <span className={`text-sm font-bold ${isProfit ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
+                        <span className={`text-base font-bold ${isProfit ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
                           {isProfit ? '+' : ''}{growthPercent}%
                         </span>
                       </div>
