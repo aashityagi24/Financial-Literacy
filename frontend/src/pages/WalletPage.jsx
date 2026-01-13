@@ -288,9 +288,7 @@ export default function WalletPage({ user }) {
           </div>
           
           {transactions.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-[#3D5A80]">No transactions yet. Start by completing quests!</p>
-            </div>
+            <p className="text-center text-[#3D5A80] py-4">No transactions yet. Complete quests to start earning!</p>
           ) : (
             <div className="space-y-3">
               {transactions.slice(0, 10).map((trans, index) => (
