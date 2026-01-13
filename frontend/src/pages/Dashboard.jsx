@@ -224,26 +224,28 @@ export default function Dashboard({ user, setUser }) {
         
         {/* Wallet Overview */}
         <div className={`card-playful p-6 mb-8 ${showAnimations ? 'animate-bounce-in stagger-2' : ''}`}>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-2">
             <h2 className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-              My Wallet
+              💰 My Money Jars
             </h2>
             <Link to="/wallet" className="text-[#3D5A80] hover:text-[#1D3557] flex items-center gap-1">
               View All <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
+          <p className="text-sm text-[#3D5A80] mb-4">Your ₹ is organized in 4 special jars. Tap any jar to learn more!</p>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {wallet?.accounts?.map((account) => (
-              <div
+              <Link
+                to="/wallet"
                 key={account.account_type}
-                className={`${accountColors[account.account_type]?.bg} rounded-2xl border-3 border-[#1D3557] p-4 text-white`}
+                className={`${accountColors[account.account_type]?.bg} rounded-2xl border-3 border-[#1D3557] p-4 text-white hover:scale-105 transition-transform cursor-pointer`}
               >
                 <div className="text-2xl mb-2">{accountColors[account.account_type]?.icon}</div>
                 <p className="text-sm opacity-90 capitalize font-medium">{account.account_type}</p>
                 <p className="text-xs opacity-75 mb-1">{accountColors[account.account_type]?.description}</p>
                 <p className="text-2xl font-bold">₹{account.balance?.toFixed(0)}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
