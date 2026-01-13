@@ -103,7 +103,7 @@ export default function Dashboard({ user, setUser }) {
             <h2 className="text-3xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
               Day {streak.streak} Streak!
             </h2>
-            <p className="text-xl text-[#1D3557]">You earned <strong>{streak.reward} coins</strong>!</p>
+            <p className="text-xl text-[#1D3557]">You earned <strong>₹{streak.reward}</strong>!</p>
           </div>
         </div>
       )}

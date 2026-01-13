@@ -87,10 +87,10 @@ export default function QuestsPage({ user }) {
         {/* Banner */}
         <div className="card-playful p-6 mb-6 bg-gradient-to-r from-[#3D5A80] to-[#5A7BA0] text-white animate-bounce-in">
           <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Fredoka' }}>
-            🎯 Complete Quests, Earn Coins!
+            🎯 Complete Quests, Earn ₹!
           </h2>
           <p className="opacity-90">
-            Each quest teaches you something new about money while rewarding you with coins!
+            Each quest teaches you something new about money while rewarding you with ₹!
           </p>
         </div>
         
@@ -198,7 +198,7 @@ export default function QuestsPage({ user }) {
             💡 Quest Tips
           </h3>
           <ul className="text-[#3D5A80] space-y-1 text-sm">
-            <li>• <strong>Daily quests</strong> reset each day - complete them for quick coins!</li>
+            <li>• <strong>Daily quests</strong> reset each day - complete them for quick ₹!</li>
             <li>• <strong>Weekly quests</strong> give bigger rewards but take more time.</li>
             <li>• <strong>Challenges</strong> are special one-time quests with the best rewards!</li>
           </ul>
