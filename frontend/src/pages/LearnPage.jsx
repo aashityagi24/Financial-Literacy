@@ -98,9 +98,9 @@ export default function LearnPage({ user }) {
           <h2 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
             📖 How Does Learning Work?
           </h2>
-          <p className="text-[#1D3557]/80 text-sm leading-relaxed">
+          <p className="text-[#1D3557]/90 text-base leading-relaxed">
             Click on any <strong>topic</strong> below to start learning! Each topic has fun <strong>lessons, activities, and games</strong> that teach you about money. 
-            When you finish an activity, you'll earn ₹ to add to your wallet. The more you learn, the smarter you get with money!
+            When you finish an activity, you&apos;ll earn ₹ to add to your wallet. The more you learn, the smarter you get with money!
           </p>
         </div>
         
