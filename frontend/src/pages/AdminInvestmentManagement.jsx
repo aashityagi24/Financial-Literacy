@@ -72,12 +72,14 @@ export default function AdminInvestmentManagement({ user }) {
   
   const fetchData = async () => {
     try {
-      const [plantsRes, stocksRes] = await Promise.all([
+      const [plantsRes, stocksRes, schedulerRes] = await Promise.all([
         axios.get(`${API}/admin/investments/plants`),
-        axios.get(`${API}/admin/investments/stocks`)
+        axios.get(`${API}/admin/investments/stocks`),
+        axios.get(`${API}/admin/investments/scheduler-status`)
       ]);
       setPlants(plantsRes.data);
       setStocks(stocksRes.data);
+      setSchedulerStatus(schedulerRes.data);
     } catch (error) {
       toast.error('Failed to load investment data');
     } finally {
