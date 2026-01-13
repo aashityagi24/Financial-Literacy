@@ -142,7 +142,7 @@ export default function TopicPage({ user }) {
             </Link>
             <div className="flex items-center gap-3 flex-1 min-w-0">
               {topic.thumbnail ? (
-                <img src={getAssetUrl(topic.thumbnail)} alt="" className="w-12 h-12 rounded-xl border-3 border-[#1D3557] object-cover" />
+                <img src={getAssetUrl(topic.thumbnail)} alt="" className="w-12 h-12 rounded-xl border-3 border-[#1D3557] object-contain bg-white" />
               ) : (
                 <div className="w-12 h-12 bg-[#FFD23F] rounded-xl border-3 border-[#1D3557] flex items-center justify-center">
                   <FolderOpen className="w-7 h-7 text-[#1D3557]" />
