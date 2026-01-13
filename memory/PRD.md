@@ -167,8 +167,8 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 
 ### P0 (Complete) ✅
 - Child role full experience
-- Learning content system
-- Admin content management
+- Learning content system (single hierarchical system)
+- Admin content management (single unified system - legacy removed)
 - Teacher Dashboard
 - Parent Dashboard
 - **Hierarchical Content Management System**
