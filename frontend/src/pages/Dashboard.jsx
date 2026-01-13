@@ -264,13 +264,7 @@ export default function Dashboard({ user, setUser }) {
             </div>
             
             {quests.length === 0 ? (
-              <div className="text-center py-8">
-                <Target className="w-12 h-12 mx-auto text-[#98C1D9] mb-2" />
-                <p className="text-[#3D5A80]">No active quests yet!</p>
-                <Link to="/quests" className="btn-primary inline-block mt-3 px-4 py-2">
-                  Find Quests
-                </Link>
-              </div>
+              <p className="text-center text-[#3D5A80] py-4">No active quests. <Link to="/quests" className="text-[#3D5A80] underline font-bold">Find some!</Link></p>
             ) : (
               <div className="space-y-3">
                 {quests.map((quest) => (
