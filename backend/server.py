@@ -524,6 +524,181 @@ class SavingsGoalCreate(BaseModel):
     target_amount: float
     deadline: Optional[str] = None
 
+# ============== ADMIN STORE MANAGEMENT MODELS ==============
+
+class StoreCategory(BaseModel):
+    """Store category like Vegetable Market, Toy Store, etc."""
+    model_config = ConfigDict(extra="ignore")
+    category_id: str
+    name: str
+    description: str
+    icon: str  # Emoji icon for display
+    color: str  # Hex color for styling
+    image_url: Optional[str] = None
+    order: int = 0
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class StoreCategoryCreate(BaseModel):
+    name: str
+    description: str
+    icon: str = "🛒"
+    color: str = "#3D5A80"
+    image_url: Optional[str] = None
+    order: int = 0
+    is_active: bool = True
+
+class StoreCategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    icon: Optional[str] = None
+    color: Optional[str] = None
+    image_url: Optional[str] = None
+    order: Optional[int] = None
+    is_active: Optional[bool] = None
+
+class StoreItem(BaseModel):
+    """Store item that users can purchase"""
+    model_config = ConfigDict(extra="ignore")
+    item_id: str
+    category_id: str
+    name: str
+    description: str
+    price: float
+    image_url: Optional[str] = None
+    min_grade: int = 0  # Minimum grade to see this item
+    max_grade: int = 5  # Maximum grade to see this item
+    stock: int = -1  # -1 means unlimited
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class StoreItemCreate(BaseModel):
+    category_id: str
+    name: str
+    description: str
+    price: float
+    image_url: Optional[str] = None
+    min_grade: int = 0
+    max_grade: int = 5
+    stock: int = -1
+    is_active: bool = True
+
+class StoreItemUpdate(BaseModel):
+    category_id: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    image_url: Optional[str] = None
+    min_grade: Optional[int] = None
+    max_grade: Optional[int] = None
+    stock: Optional[int] = None
+    is_active: Optional[bool] = None
+
+# ============== ADMIN INVESTMENT MANAGEMENT MODELS ==============
+
+class InvestmentPlant(BaseModel):
+    """Plants for K-2 grades (Money Garden)"""
+    model_config = ConfigDict(extra="ignore")
+    plant_id: str
+    name: str
+    description: str
+    image_url: Optional[str] = None
+    base_price: float  # Price per seed/plant
+    growth_rate_min: float = 0.02  # Minimum daily growth rate (2%)
+    growth_rate_max: float = 0.08  # Maximum daily growth rate (8%)
+    min_lot_size: int = 1  # Minimum number of seeds to buy (1, 3, 5, or 10)
+    maturity_days: int = 7  # Days until fully grown
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class InvestmentPlantCreate(BaseModel):
+    name: str
+    description: str
+    image_url: Optional[str] = None
+    base_price: float
+    growth_rate_min: float = 0.02
+    growth_rate_max: float = 0.08
+    min_lot_size: int = 1
+    maturity_days: int = 7
+    is_active: bool = True
+
+class InvestmentPlantUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    base_price: Optional[float] = None
+    growth_rate_min: Optional[float] = None
+    growth_rate_max: Optional[float] = None
+    min_lot_size: Optional[int] = None
+    maturity_days: Optional[int] = None
+    is_active: Optional[bool] = None
+
+class InvestmentStock(BaseModel):
+    """Stocks for grades 3-5 (Stock Market)"""
+    model_config = ConfigDict(extra="ignore")
+    stock_id: str
+    name: str  # Company name
+    ticker: str  # Stock ticker symbol (e.g., "TCO" for TechCo)
+    description: str
+    logo_url: Optional[str] = None
+    current_price: float  # Current price per share
+    base_price: float  # Original/base price for reference
+    volatility: float = 0.05  # Daily volatility (5% means ±5% daily change)
+    min_lot_size: int = 1  # Minimum shares to buy (1, 3, 5, or 10)
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_price_update: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class InvestmentStockCreate(BaseModel):
+    name: str
+    ticker: str
+    description: str
+    logo_url: Optional[str] = None
+    base_price: float
+    volatility: float = 0.05
+    min_lot_size: int = 1
+    is_active: bool = True
+
+class InvestmentStockUpdate(BaseModel):
+    name: Optional[str] = None
+    ticker: Optional[str] = None
+    description: Optional[str] = None
+    logo_url: Optional[str] = None
+    base_price: Optional[float] = None
+    current_price: Optional[float] = None
+    volatility: Optional[float] = None
+    min_lot_size: Optional[int] = None
+    is_active: Optional[bool] = None
+
+class PriceHistory(BaseModel):
+    """Track daily price history for stocks"""
+    model_config = ConfigDict(extra="ignore")
+    history_id: str
+    stock_id: str
+    price: float
+    date: str  # YYYY-MM-DD format
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class UserInvestmentHolding(BaseModel):
+    """User's investment holdings (plants or stocks)"""
+    model_config = ConfigDict(extra="ignore")
+    holding_id: str
+    user_id: str
+    investment_type: str  # 'plant' or 'stock'
+    asset_id: str  # plant_id or stock_id
+    quantity: float  # Number of seeds/shares
+    purchase_price: float  # Price at time of purchase
+    purchase_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class BuyInvestmentRequest(BaseModel):
+    investment_type: str  # 'plant' or 'stock'
+    asset_id: str
+    quantity: int
+
+class SellInvestmentRequest(BaseModel):
+    holding_id: str
+    quantity: Optional[int] = None  # If None, sell all
+
 # ============== AUTH HELPERS ==============
 
 async def get_session_from_header(request: Request) -> Optional[str]:
