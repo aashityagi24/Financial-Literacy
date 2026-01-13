@@ -18,9 +18,9 @@ export default function ChatBuddy({ user }) {
   const suggestedQuestions = user?.grade <= 2 
     ? [
         "What is saving?",
-        "Why should I save my coins?",
+        "Why should I save my ₹?",
         "What's the difference between wants and needs?",
-        "How can I earn more coins?"
+        "How can I earn more ₹?"
       ]
     : [
         "How does investing work?",
