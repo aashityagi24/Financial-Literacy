@@ -125,11 +125,7 @@ export default function QuestsPage({ user }) {
         {/* Quests Grid */}
         <div className="grid gap-4">
           {filteredQuests.length === 0 ? (
-            <div className="card-playful p-8 text-center">
-              <Target className="w-16 h-16 mx-auto text-[#98C1D9] mb-4" />
-              <h3 className="text-xl font-bold text-[#1D3557] mb-2">No Quests Found</h3>
-              <p className="text-[#3D5A80]">Check back later for new adventures!</p>
-            </div>
+            <p className="text-center text-[#3D5A80] py-4">No quests available right now. Check back soon!</p>
           ) : (
             filteredQuests.map((quest, index) => {
               const colors = questTypeColors[quest.quest_type];
