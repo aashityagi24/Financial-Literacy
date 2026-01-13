@@ -578,6 +578,7 @@ class StoreItemCreate(BaseModel):
     description: str
     price: float
     image_url: Optional[str] = None
+    unit: str = "piece"  # piece, kg, gram, litre, ml, pack, dozen
     min_grade: int = 0
     max_grade: int = 5
     stock: int = -1
@@ -589,6 +590,7 @@ class StoreItemUpdate(BaseModel):
     description: Optional[str] = None
     price: Optional[float] = None
     image_url: Optional[str] = None
+    unit: Optional[str] = None
     min_grade: Optional[int] = None
     max_grade: Optional[int] = None
     stock: Optional[int] = None
