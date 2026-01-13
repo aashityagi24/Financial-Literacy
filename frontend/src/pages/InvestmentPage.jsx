@@ -147,7 +147,7 @@ export default function InvestmentPage({ user }) {
           </h2>
           <p className="opacity-90">
             {isYounger 
-              ? 'Plant seeds with your coins and watch them grow over time! The longer you wait, the more your plants are worth!'
+              ? 'Plant seeds with your ₹ and watch them grow over time! The longer you wait, the more your plants are worth!'
               : 'Buy stocks in fun companies and watch your money grow! Stocks can go up and down, so choose wisely!'}
           </p>
         </div>
@@ -209,8 +209,8 @@ export default function InvestmentPage({ user }) {
             <h3 className="text-xl font-bold text-[#1D3557] mb-2">Nothing Growing Yet!</h3>
             <p className="text-[#3D5A80] mb-4">
               {isYounger 
-                ? 'Transfer coins to your investing account and plant your first seed!'
-                : 'Transfer coins to your investing account and buy your first stock!'}
+                ? 'Transfer ₹ to your investing account and plant your first seed!'
+                : 'Transfer ₹ to your investing account and buy your first stock!'}
             </p>
             <Link to="/wallet" className="btn-secondary inline-block px-6 py-3">
               Go to Wallet
@@ -279,7 +279,7 @@ export default function InvestmentPage({ user }) {
           </h3>
           <p className="text-[#3D5A80]">
             {isYounger 
-              ? 'Patience is key! The longer you let your plants grow, the more coins they\'ll be worth. Don\'t pick them too early!'
+              ? 'Patience is key! The longer you let your plants grow, the more ₹ they\'ll be worth. Don\'t pick them too early!'
               : 'Diversify your portfolio! Owning different types of stocks helps protect your money if one doesn\'t do well.'}
           </p>
         </div>
