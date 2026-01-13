@@ -134,7 +134,7 @@ export default function ParentDashboard({ user }) {
   const handleGiveMoney = async () => {
     try {
       await axios.post(`${API}/parent/give-money`, giveMoneyForm);
-      toast.success(`Gave $${giveMoneyForm.amount} to child!`);
+      toast.success(`Gave ₹${giveMoneyForm.amount} to child!`);
       setShowGiveMoney(false);
       setGiveMoneyForm({ child_id: '', amount: 10, reason: '' });
       fetchData();
@@ -265,7 +265,7 @@ export default function ParentDashboard({ user }) {
                       <div className="flex-1">
                         <h3 className="font-bold text-[#1D3557] text-lg">{child.name}</h3>
                         <div className="flex items-center gap-4 text-sm text-[#3D5A80]">
-                          <span>💰 ${child.total_balance?.toFixed(0)}</span>
+                          <span>💰 ₹{child.total_balance?.toFixed(0)}</span>
                           <span>📚 {child.lessons_completed}/{child.total_lessons}</span>
                           {child.pending_chores > 0 && (
                             <span className="bg-[#EE6C4D] text-white px-2 py-0.5 rounded-full text-xs">
@@ -499,7 +499,7 @@ export default function ParentDashboard({ user }) {
                           <p className="text-sm text-[#3D5A80]">{goal.child_name}</p>
                         </div>
                         <span className={`font-bold ${goal.completed ? 'text-[#06D6A0]' : 'text-[#1D3557]'}`}>
-                          ${goal.current_amount}/${goal.target_amount}
+                          ₹{goal.current_amount}/₹{goal.target_amount}
                         </span>
                       </div>
                       <Progress value={(goal.current_amount / goal.target_amount) * 100} className="h-2" />
@@ -573,7 +573,7 @@ export default function ParentDashboard({ user }) {
                         <div key={tx.transaction_id} className="flex items-center justify-between py-2 border-b border-[#1D3557]/10 last:border-0">
                           <span className="text-sm text-[#3D5A80]">{tx.description}</span>
                           <span className={`font-bold ${tx.to_account ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
-                            {tx.to_account ? '+' : '-'}${tx.amount.toFixed(0)}
+                            {tx.to_account ? '+' : '-'}₹{tx.amount.toFixed(0)}
                           </span>
                         </div>
                       ))}
