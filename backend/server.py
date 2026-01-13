@@ -3664,6 +3664,627 @@ async def seed_learning_content():
     
     return {"message": "Learning content seeded successfully", "topics": len(topics), "lessons": len(lessons), "books": len(books), "activities": len(activities)}
 
+# ============== ADMIN STORE MANAGEMENT ==============
+
+@api_router.post("/upload/store-image")
+async def upload_store_image(file: UploadFile = File(...)):
+    """Upload an image for store items"""
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    file_ext = file.filename.split(".")[-1] if "." in file.filename else "png"
+    filename = f"{uuid.uuid4().hex[:16]}.{file_ext}"
+    file_path = STORE_IMAGES_DIR / filename
+    
+    content = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    return {"url": f"/api/uploads/store/{filename}"}
+
+@api_router.get("/admin/store/categories")
+async def admin_get_store_categories(request: Request):
+    """Get all store categories (admin only)"""
+    await require_admin(request)
+    categories = await db.admin_store_categories.find({}, {"_id": 0}).sort("order", 1).to_list(100)
+    return categories
+
+@api_router.post("/admin/store/categories")
+async def admin_create_store_category(data: StoreCategoryCreate, request: Request):
+    """Create a store category (admin only)"""
+    await require_admin(request)
+    
+    category = {
+        "category_id": f"cat_{uuid.uuid4().hex[:12]}",
+        "name": data.name,
+        "description": data.description,
+        "icon": data.icon,
+        "color": data.color,
+        "image_url": data.image_url,
+        "order": data.order,
+        "is_active": data.is_active,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.admin_store_categories.insert_one(category)
+    return {"message": "Category created", "category_id": category["category_id"]}
+
+@api_router.put("/admin/store/categories/{category_id}")
+async def admin_update_store_category(category_id: str, data: StoreCategoryUpdate, request: Request):
+    """Update a store category (admin only)"""
+    await require_admin(request)
+    
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    
+    await db.admin_store_categories.update_one(
+        {"category_id": category_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Category updated"}
+
+@api_router.delete("/admin/store/categories/{category_id}")
+async def admin_delete_store_category(category_id: str, request: Request):
+    """Delete a store category and its items (admin only)"""
+    await require_admin(request)
+    
+    await db.admin_store_categories.delete_one({"category_id": category_id})
+    await db.admin_store_items.delete_many({"category_id": category_id})
+    
+    return {"message": "Category and items deleted"}
+
+@api_router.get("/admin/store/items")
+async def admin_get_store_items(request: Request, category_id: Optional[str] = None):
+    """Get all store items (admin only)"""
+    await require_admin(request)
+    
+    query = {}
+    if category_id:
+        query["category_id"] = category_id
+    
+    items = await db.admin_store_items.find(query, {"_id": 0}).to_list(500)
+    return items
+
+@api_router.post("/admin/store/items")
+async def admin_create_store_item(data: StoreItemCreate, request: Request):
+    """Create a store item (admin only)"""
+    await require_admin(request)
+    
+    item = {
+        "item_id": f"item_{uuid.uuid4().hex[:12]}",
+        "category_id": data.category_id,
+        "name": data.name,
+        "description": data.description,
+        "price": data.price,
+        "image_url": data.image_url,
+        "min_grade": data.min_grade,
+        "max_grade": data.max_grade,
+        "stock": data.stock,
+        "is_active": data.is_active,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.admin_store_items.insert_one(item)
+    return {"message": "Item created", "item_id": item["item_id"]}
+
+@api_router.put("/admin/store/items/{item_id}")
+async def admin_update_store_item(item_id: str, data: StoreItemUpdate, request: Request):
+    """Update a store item (admin only)"""
+    await require_admin(request)
+    
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    
+    await db.admin_store_items.update_one(
+        {"item_id": item_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Item updated"}
+
+@api_router.delete("/admin/store/items/{item_id}")
+async def admin_delete_store_item(item_id: str, request: Request):
+    """Delete a store item (admin only)"""
+    await require_admin(request)
+    
+    await db.admin_store_items.delete_one({"item_id": item_id})
+    
+    return {"message": "Item deleted"}
+
+# ============== ADMIN INVESTMENT MANAGEMENT ==============
+
+@api_router.post("/upload/investment-image")
+async def upload_investment_image(file: UploadFile = File(...)):
+    """Upload an image for investments (plant images or stock logos)"""
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    file_ext = file.filename.split(".")[-1] if "." in file.filename else "png"
+    filename = f"{uuid.uuid4().hex[:16]}.{file_ext}"
+    file_path = INVESTMENT_IMAGES_DIR / filename
+    
+    content = await file.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+    
+    return {"url": f"/api/uploads/investments/{filename}"}
+
+# Plants (for K-2 grades)
+@api_router.get("/admin/investments/plants")
+async def admin_get_plants(request: Request):
+    """Get all plants (admin only)"""
+    await require_admin(request)
+    plants = await db.investment_plants.find({}, {"_id": 0}).to_list(100)
+    return plants
+
+@api_router.post("/admin/investments/plants")
+async def admin_create_plant(data: InvestmentPlantCreate, request: Request):
+    """Create an investment plant (admin only)"""
+    await require_admin(request)
+    
+    plant = {
+        "plant_id": f"plant_{uuid.uuid4().hex[:12]}",
+        "name": data.name,
+        "description": data.description,
+        "image_url": data.image_url,
+        "base_price": data.base_price,
+        "growth_rate_min": data.growth_rate_min,
+        "growth_rate_max": data.growth_rate_max,
+        "min_lot_size": data.min_lot_size,
+        "maturity_days": data.maturity_days,
+        "is_active": data.is_active,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.investment_plants.insert_one(plant)
+    return {"message": "Plant created", "plant_id": plant["plant_id"]}
+
+@api_router.put("/admin/investments/plants/{plant_id}")
+async def admin_update_plant(plant_id: str, data: InvestmentPlantUpdate, request: Request):
+    """Update an investment plant (admin only)"""
+    await require_admin(request)
+    
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    
+    await db.investment_plants.update_one(
+        {"plant_id": plant_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Plant updated"}
+
+@api_router.delete("/admin/investments/plants/{plant_id}")
+async def admin_delete_plant(plant_id: str, request: Request):
+    """Delete an investment plant (admin only)"""
+    await require_admin(request)
+    
+    await db.investment_plants.delete_one({"plant_id": plant_id})
+    
+    return {"message": "Plant deleted"}
+
+# Stocks (for grades 3-5)
+@api_router.get("/admin/investments/stocks")
+async def admin_get_stocks(request: Request):
+    """Get all stocks (admin only)"""
+    await require_admin(request)
+    stocks = await db.investment_stocks.find({}, {"_id": 0}).to_list(100)
+    return stocks
+
+@api_router.post("/admin/investments/stocks")
+async def admin_create_stock(data: InvestmentStockCreate, request: Request):
+    """Create an investment stock (admin only)"""
+    await require_admin(request)
+    
+    stock = {
+        "stock_id": f"stock_{uuid.uuid4().hex[:12]}",
+        "name": data.name,
+        "ticker": data.ticker.upper(),
+        "description": data.description,
+        "logo_url": data.logo_url,
+        "current_price": data.base_price,  # Start at base price
+        "base_price": data.base_price,
+        "volatility": data.volatility,
+        "min_lot_size": data.min_lot_size,
+        "is_active": data.is_active,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "last_price_update": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.investment_stocks.insert_one(stock)
+    
+    # Add initial price to history
+    await db.price_history.insert_one({
+        "history_id": f"hist_{uuid.uuid4().hex[:12]}",
+        "stock_id": stock["stock_id"],
+        "price": data.base_price,
+        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "Stock created", "stock_id": stock["stock_id"]}
+
+@api_router.put("/admin/investments/stocks/{stock_id}")
+async def admin_update_stock(stock_id: str, data: InvestmentStockUpdate, request: Request):
+    """Update an investment stock (admin only)"""
+    await require_admin(request)
+    
+    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    
+    # If updating current price manually, record in history
+    if "current_price" in update_data:
+        update_data["last_price_update"] = datetime.now(timezone.utc).isoformat()
+        await db.price_history.insert_one({
+            "history_id": f"hist_{uuid.uuid4().hex[:12]}",
+            "stock_id": stock_id,
+            "price": update_data["current_price"],
+            "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    await db.investment_stocks.update_one(
+        {"stock_id": stock_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Stock updated"}
+
+@api_router.delete("/admin/investments/stocks/{stock_id}")
+async def admin_delete_stock(stock_id: str, request: Request):
+    """Delete an investment stock (admin only)"""
+    await require_admin(request)
+    
+    await db.investment_stocks.delete_one({"stock_id": stock_id})
+    await db.price_history.delete_many({"stock_id": stock_id})
+    
+    return {"message": "Stock deleted"}
+
+@api_router.get("/admin/investments/stocks/{stock_id}/history")
+async def admin_get_stock_history(stock_id: str, request: Request, days: int = 30):
+    """Get price history for a stock (admin only)"""
+    await require_admin(request)
+    
+    history = await db.price_history.find(
+        {"stock_id": stock_id},
+        {"_id": 0}
+    ).sort("date", -1).limit(days).to_list(days)
+    
+    return history
+
+@api_router.post("/admin/investments/simulate-day")
+async def admin_simulate_market_day(request: Request):
+    """Simulate a day of market fluctuations (admin only)"""
+    import random
+    await require_admin(request)
+    
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    # Update all active stocks
+    stocks = await db.investment_stocks.find({"is_active": True}).to_list(100)
+    updated_count = 0
+    
+    for stock in stocks:
+        # Random price change based on volatility
+        volatility = stock.get("volatility", 0.05)
+        change_percent = random.uniform(-volatility, volatility)
+        current_price = stock.get("current_price", stock.get("base_price", 10))
+        new_price = max(0.01, current_price * (1 + change_percent))  # Don't go below 0.01
+        new_price = round(new_price, 2)
+        
+        # Update stock price
+        await db.investment_stocks.update_one(
+            {"stock_id": stock["stock_id"]},
+            {"$set": {
+                "current_price": new_price,
+                "last_price_update": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        # Record in history
+        await db.price_history.insert_one({
+            "history_id": f"hist_{uuid.uuid4().hex[:12]}",
+            "stock_id": stock["stock_id"],
+            "price": new_price,
+            "date": today,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        updated_count += 1
+    
+    return {"message": f"Simulated market day for {updated_count} stocks", "date": today}
+
+# ============== USER INVESTMENT ENDPOINTS (Updated) ==============
+
+@api_router.get("/investments/plants")
+async def get_available_plants(request: Request):
+    """Get available plants for investment (K-2 grades)"""
+    user = await get_current_user(request)
+    
+    plants = await db.investment_plants.find({"is_active": True}, {"_id": 0}).to_list(100)
+    return plants
+
+@api_router.get("/investments/stocks")
+async def get_available_stocks(request: Request):
+    """Get available stocks for investment (grades 3-5)"""
+    user = await get_current_user(request)
+    
+    stocks = await db.investment_stocks.find({"is_active": True}, {"_id": 0}).to_list(100)
+    return stocks
+
+@api_router.get("/investments/stocks/{stock_id}/chart")
+async def get_stock_chart(stock_id: str, request: Request, period: str = "7d"):
+    """Get stock price chart data"""
+    await get_current_user(request)
+    
+    # Determine number of days based on period
+    days_map = {"7d": 7, "30d": 30, "90d": 90, "all": 365}
+    days = days_map.get(period, 7)
+    
+    history = await db.price_history.find(
+        {"stock_id": stock_id},
+        {"_id": 0, "date": 1, "price": 1}
+    ).sort("date", -1).limit(days).to_list(days)
+    
+    # Reverse to get chronological order
+    history.reverse()
+    
+    return {"stock_id": stock_id, "period": period, "data": history}
+
+@api_router.get("/investments/portfolio")
+async def get_user_portfolio(request: Request):
+    """Get user's investment portfolio with current values"""
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    holdings = await db.user_investment_holdings.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    portfolio = []
+    total_invested = 0
+    total_current_value = 0
+    
+    for holding in holdings:
+        if holding["investment_type"] == "plant":
+            asset = await db.investment_plants.find_one(
+                {"plant_id": holding["asset_id"]},
+                {"_id": 0}
+            )
+            if asset:
+                # Calculate plant growth based on days since purchase
+                purchase_date = holding.get("purchase_date")
+                if isinstance(purchase_date, str):
+                    purchase_date = datetime.fromisoformat(purchase_date)
+                days_held = (datetime.now(timezone.utc) - purchase_date).days
+                
+                # Growth rate calculation
+                growth_rate = (asset.get("growth_rate_min", 0.02) + asset.get("growth_rate_max", 0.08)) / 2
+                growth_multiplier = 1 + (growth_rate * days_held)
+                current_value = holding["purchase_price"] * holding["quantity"] * growth_multiplier
+                
+                portfolio.append({
+                    "holding_id": holding["holding_id"],
+                    "type": "plant",
+                    "asset": asset,
+                    "quantity": holding["quantity"],
+                    "purchase_price": holding["purchase_price"],
+                    "purchase_date": holding["purchase_date"],
+                    "days_held": days_held,
+                    "current_value": round(current_value, 2),
+                    "profit_loss": round(current_value - (holding["purchase_price"] * holding["quantity"]), 2)
+                })
+                total_invested += holding["purchase_price"] * holding["quantity"]
+                total_current_value += current_value
+        else:  # stock
+            asset = await db.investment_stocks.find_one(
+                {"stock_id": holding["asset_id"]},
+                {"_id": 0}
+            )
+            if asset:
+                current_value = asset["current_price"] * holding["quantity"]
+                portfolio.append({
+                    "holding_id": holding["holding_id"],
+                    "type": "stock",
+                    "asset": asset,
+                    "quantity": holding["quantity"],
+                    "purchase_price": holding["purchase_price"],
+                    "purchase_date": holding["purchase_date"],
+                    "current_value": round(current_value, 2),
+                    "profit_loss": round(current_value - (holding["purchase_price"] * holding["quantity"]), 2)
+                })
+                total_invested += holding["purchase_price"] * holding["quantity"]
+                total_current_value += current_value
+    
+    return {
+        "holdings": portfolio,
+        "total_invested": round(total_invested, 2),
+        "total_current_value": round(total_current_value, 2),
+        "total_profit_loss": round(total_current_value - total_invested, 2)
+    }
+
+@api_router.post("/investments/buy")
+async def buy_investment(data: BuyInvestmentRequest, request: Request):
+    """Buy plants or stocks"""
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    # Get asset details
+    if data.investment_type == "plant":
+        asset = await db.investment_plants.find_one({"plant_id": data.asset_id, "is_active": True})
+        if not asset:
+            raise HTTPException(status_code=404, detail="Plant not found")
+        price_per_unit = asset["base_price"]
+        min_lot_size = asset.get("min_lot_size", 1)
+    elif data.investment_type == "stock":
+        asset = await db.investment_stocks.find_one({"stock_id": data.asset_id, "is_active": True})
+        if not asset:
+            raise HTTPException(status_code=404, detail="Stock not found")
+        price_per_unit = asset["current_price"]
+        min_lot_size = asset.get("min_lot_size", 1)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid investment type")
+    
+    # Check minimum lot size
+    if data.quantity < min_lot_size:
+        raise HTTPException(status_code=400, detail=f"Minimum purchase is {min_lot_size} units")
+    
+    total_cost = price_per_unit * data.quantity
+    
+    # Check investing account balance
+    investing_account = await db.wallet_accounts.find_one({
+        "user_id": user_id,
+        "account_type": "investing"
+    })
+    
+    if not investing_account or investing_account.get("balance", 0) < total_cost:
+        raise HTTPException(status_code=400, detail="Insufficient funds in investing account")
+    
+    # Deduct from investing account
+    await db.wallet_accounts.update_one(
+        {"user_id": user_id, "account_type": "investing"},
+        {"$inc": {"balance": -total_cost}}
+    )
+    
+    # Create holding
+    holding = {
+        "holding_id": f"hold_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id,
+        "investment_type": data.investment_type,
+        "asset_id": data.asset_id,
+        "quantity": data.quantity,
+        "purchase_price": price_per_unit,
+        "purchase_date": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.user_investment_holdings.insert_one(holding)
+    
+    # Record transaction
+    await db.transactions.insert_one({
+        "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id,
+        "type": "investment_purchase",
+        "amount": -total_cost,
+        "description": f"Bought {data.quantity} {asset.get('name', 'investment')}",
+        "from_account": "investing",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "message": f"Successfully purchased {data.quantity} {asset.get('name', 'investment')}",
+        "holding_id": holding["holding_id"],
+        "total_cost": total_cost
+    }
+
+@api_router.post("/investments/sell")
+async def sell_investment(data: SellInvestmentRequest, request: Request):
+    """Sell plants or stocks"""
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    holding = await db.user_investment_holdings.find_one({
+        "holding_id": data.holding_id,
+        "user_id": user_id
+    })
+    
+    if not holding:
+        raise HTTPException(status_code=404, detail="Holding not found")
+    
+    quantity_to_sell = data.quantity if data.quantity else holding["quantity"]
+    
+    if quantity_to_sell > holding["quantity"]:
+        raise HTTPException(status_code=400, detail="Cannot sell more than you own")
+    
+    # Calculate current value
+    if holding["investment_type"] == "plant":
+        asset = await db.investment_plants.find_one({"plant_id": holding["asset_id"]})
+        purchase_date = holding.get("purchase_date")
+        if isinstance(purchase_date, str):
+            purchase_date = datetime.fromisoformat(purchase_date)
+        days_held = (datetime.now(timezone.utc) - purchase_date).days
+        growth_rate = (asset.get("growth_rate_min", 0.02) + asset.get("growth_rate_max", 0.08)) / 2
+        growth_multiplier = 1 + (growth_rate * days_held)
+        price_per_unit = holding["purchase_price"] * growth_multiplier
+    else:  # stock
+        asset = await db.investment_stocks.find_one({"stock_id": holding["asset_id"]})
+        price_per_unit = asset["current_price"]
+    
+    total_proceeds = round(price_per_unit * quantity_to_sell, 2)
+    
+    # Add to investing account
+    await db.wallet_accounts.update_one(
+        {"user_id": user_id, "account_type": "investing"},
+        {"$inc": {"balance": total_proceeds}}
+    )
+    
+    # Update or delete holding
+    if quantity_to_sell >= holding["quantity"]:
+        await db.user_investment_holdings.delete_one({"holding_id": data.holding_id})
+    else:
+        await db.user_investment_holdings.update_one(
+            {"holding_id": data.holding_id},
+            {"$inc": {"quantity": -quantity_to_sell}}
+        )
+    
+    # Record transaction
+    await db.transactions.insert_one({
+        "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id,
+        "type": "investment_sale",
+        "amount": total_proceeds,
+        "description": f"Sold {quantity_to_sell} {asset.get('name', 'investment')}",
+        "to_account": "investing",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "message": f"Successfully sold {quantity_to_sell} {asset.get('name', 'investment')}",
+        "amount_received": total_proceeds
+    }
+
+# ============== USER STORE ENDPOINTS (Updated) ==============
+
+@api_router.get("/store/categories")
+async def get_store_categories(request: Request):
+    """Get active store categories for users"""
+    user = await get_current_user(request)
+    
+    categories = await db.admin_store_categories.find(
+        {"is_active": True},
+        {"_id": 0}
+    ).sort("order", 1).to_list(100)
+    
+    return categories
+
+@api_router.get("/store/items-by-category")
+async def get_store_items_by_category(request: Request):
+    """Get store items grouped by category for users"""
+    user = await get_current_user(request)
+    user_grade = user.get("grade", 0)
+    
+    categories = await db.admin_store_categories.find(
+        {"is_active": True},
+        {"_id": 0}
+    ).sort("order", 1).to_list(100)
+    
+    result = []
+    for cat in categories:
+        items = await db.admin_store_items.find(
+            {
+                "category_id": cat["category_id"],
+                "is_active": True,
+                "min_grade": {"$lte": user_grade},
+                "max_grade": {"$gte": user_grade}
+            },
+            {"_id": 0}
+        ).to_list(100)
+        
+        if items:  # Only include categories with items
+            result.append({
+                "category": cat,
+                "items": items
+            })
+    
+    return result
+
 # ============== ROOT ==============
 
 @api_router.get("/")
