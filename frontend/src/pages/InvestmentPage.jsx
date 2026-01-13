@@ -298,15 +298,15 @@ export default function InvestmentPage({ user }) {
                       />
                     ) : (
                       <div className="w-16 h-16 bg-[#E0FBFC] rounded-2xl border-3 border-[#1D3557] flex items-center justify-center">
-                        {isYounger ? <Leaf className="w-8 h-8 text-[#06D6A0]" /> : <Building2 className="w-8 h-8 text-[#3D5A80]" />}
+                        {inv.type === 'plant' ? <Leaf className="w-8 h-8 text-[#06D6A0]" /> : <Building2 className="w-8 h-8 text-[#3D5A80]" />}
                       </div>
                     )}
                     
                     <div className="flex-1">
-                      <h3 className="font-bold text-[#1D3557] text-lg">{inv.asset_name}</h3>
+                      <h3 className="font-bold text-[#1D3557] text-lg">{assetName}</h3>
                       <div className="flex items-center gap-4 mt-1">
                         <span className="text-base text-[#3D5A80]">
-                          {inv.quantity} {isYounger ? 'seeds' : 'shares'} @ ₹{inv.purchase_price?.toFixed(0)}
+                          {inv.quantity} {inv.type === 'plant' ? 'seeds' : 'shares'} @ ₹{inv.purchase_price?.toFixed(0)}
                         </span>
                         <span className={`text-base font-bold ${isProfit ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
                           {isProfit ? '+' : ''}{growthPercent}%
@@ -327,11 +327,11 @@ export default function InvestmentPage({ user }) {
                   
                   <div className="mt-3">
                     <Progress 
-                      value={Math.min((inv.current_value / inv.purchase_value) * 50, 100)} 
+                      value={Math.min((inv.current_value / purchaseValue) * 50, 100)} 
                       className="h-3"
                     />
                     <p className="text-xs text-[#3D5A80] mt-1">
-                      Invested: ₹{inv.purchase_value?.toFixed(0)} → Now: ₹{inv.current_value?.toFixed(0)}
+                      Invested: ₹{purchaseValue?.toFixed(0)} → Now: ₹{inv.current_value?.toFixed(0)}
                     </p>
                   </div>
                 </div>
