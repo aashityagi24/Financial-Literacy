@@ -108,7 +108,7 @@ export default function StorePage({ user }) {
           <h2 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Fredoka' }}>
             Welcome to the Store! 🛍️
           </h2>
-          <p className="opacity-90">Spend your coins on cool items and rewards!</p>
+          <p className="opacity-90">Spend your ₹ on cool items and rewards!</p>
         </div>
         
         {/* Items Grid */}

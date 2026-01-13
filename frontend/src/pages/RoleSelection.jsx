@@ -13,7 +13,7 @@ export default function RoleSelection({ user, setUser }) {
   const [loading, setLoading] = useState(false);
   
   const roles = [
-    { id: 'child', label: 'I\'m a Kid', icon: '🧒', description: 'Play games, earn coins, and learn about money!', color: '#FFD23F' },
+    { id: 'child', label: 'I\'m a Kid', icon: '🧒', description: 'Play games, earn ₹, and learn about money!', color: '#FFD23F' },
     { id: 'parent', label: 'I\'m a Parent', icon: '👨‍👩‍👧', description: 'Track your child\'s progress and give rewards', color: '#06D6A0' },
     { id: 'teacher', label: 'I\'m a Teacher', icon: '👩‍🏫', description: 'Set up classroom economies and track students', color: '#EE6C4D' },
   ];
