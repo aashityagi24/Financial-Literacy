@@ -191,6 +191,23 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - **Store Item Units**: Added unit field with dropdown options (piece, kg, gram, litre, ml, pack, dozen)
 - **API Grade Filtering Fix**: Store API now returns all items for admin users (who have null grade)
 
+### Phase 13: Automated Daily Price Fluctuations ✅ (January 13, 2026)
+- **APScheduler Integration**: Added asyncio scheduler for automated daily tasks
+- **Daily Market Simulation**: Runs automatically at 6:00 AM UTC (11:30 AM IST)
+  - Updates all active stock prices based on their volatility settings (±volatility%)
+  - Records price history for each stock
+  - Updates plant holdings with days_held count
+  - Logs execution status in scheduler_logs collection
+- **On-Startup Run**: Scheduler checks on app startup if it ran today - if not, runs immediately
+- **Admin Scheduler Status Card**: Green gradient card in Investment Management showing:
+  - Schedule time (6:00 AM UTC / 11:30 AM IST)
+  - "Updated today" badge when simulation has run
+  - Next run time display
+- **Stock Change Percentage**: Table now shows change from base price (green for positive, red for negative)
+- **Admin APIs**:
+  - `GET /api/admin/investments/scheduler-status` - Returns scheduler running status, jobs, next run time
+  - `GET /api/admin/investments/scheduler-logs` - Returns execution history with success/failure details
+
 ## API Endpoints
 
 ### Admin Store Management (New - Phase 11)
