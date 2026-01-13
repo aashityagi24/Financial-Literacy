@@ -887,14 +887,14 @@ export default function ContentManagement({ user }) {
             {/* Content Files - PDF and HTML options for all types */}
             <div className="p-4 bg-gray-50 rounded-lg space-y-4">
               <h4 className="font-medium text-gray-800">Content Files</h4>
-              <p className="text-sm text-gray-500">Upload either PDF or HTML (ZIP) or both. At least one is recommended.</p>
+              <p className="text-sm text-gray-500">Upload PDF, HTML file, or HTML ZIP. At least one is recommended.</p>
               
               {/* PDF Upload */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">PDF File</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">📄 PDF File</label>
                 <div className="flex items-center gap-3">
                   {contentForm.content_data.pdf_url && (
-                    <a href={contentForm.content_data.pdf_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline flex items-center gap-1">
+                    <a href={getAssetUrl(contentForm.content_data.pdf_url)} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline flex items-center gap-1">
                       <Eye className="w-4 h-4" /> View PDF
                     </a>
                   )}
@@ -905,21 +905,33 @@ export default function ContentManagement({ user }) {
                 </div>
               </div>
               
-              {/* HTML Upload */}
+              {/* HTML File Upload (standalone) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Interactive HTML (ZIP file)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">🌐 HTML File (standalone)</label>
                 <div className="flex items-center gap-3">
                   {contentForm.content_data.html_url && (
-                    <a href={contentForm.content_data.html_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline flex items-center gap-1">
-                      <Eye className="w-4 h-4" /> Preview
+                    <a href={getAssetUrl(contentForm.content_data.html_url)} target="_blank" rel="noopener noreferrer" className="text-sm text-green-600 underline flex items-center gap-1">
+                      <Eye className="w-4 h-4" /> Preview HTML
                     </a>
                   )}
+                  <input type="file" className="hidden" id="html-file-upload" accept=".html,.htm" onChange={(e) => e.target.files[0] && uploadHtmlFile(e.target.files[0])} />
+                  <Button variant="outline" size="sm" onClick={() => document.getElementById('html-file-upload')?.click()}>
+                    <Upload className="w-4 h-4 mr-2" /> Upload HTML
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Simple HTML file without external dependencies</p>
+              </div>
+              
+              {/* HTML ZIP Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">📦 HTML ZIP (with assets)</label>
+                <div className="flex items-center gap-3">
                   <input type="file" ref={activityRef} className="hidden" accept=".zip" onChange={(e) => e.target.files[0] && uploadActivity(e.target.files[0])} />
                   <Button variant="outline" size="sm" onClick={() => activityRef.current?.click()}>
                     <Upload className="w-4 h-4 mr-2" /> Upload ZIP
                   </Button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">ZIP must contain index.html and all assets</p>
+                <p className="text-xs text-gray-500 mt-1">ZIP must contain index.html and all assets (images, CSS, JS)</p>
               </div>
               
               {/* Video URL - only show for video type */}
