@@ -106,15 +106,7 @@ export default function LearnPage({ user }) {
         
         {/* Topics List */}
         {topics.length === 0 ? (
-          <div className="card-playful p-12 text-center">
-            <BookOpen className="w-20 h-20 mx-auto text-[#98C1D9] mb-4" />
-            <h3 className="text-2xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
-              Coming Soon!
-            </h3>
-            <p className="text-lg text-[#3D5A80]">
-              Exciting learning content is being prepared for you!
-            </p>
-          </div>
+          <p className="text-center text-[#3D5A80] py-4 text-lg">Exciting learning content is coming soon!</p>
         ) : (
           <div className="grid gap-5">
             {topics.map((topic, index) => (
