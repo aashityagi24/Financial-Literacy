@@ -260,6 +260,15 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 
 ## Database Collections
 
+### Admin Store Management (New - Phase 11)
+- **admin_store_categories**: {`category_id`, `name`, `description`, `icon`, `color`, `image_url`, `order`, `is_active`}
+- **admin_store_items**: {`item_id`, `category_id`, `name`, `description`, `price`, `image_url`, `min_grade`, `max_grade`, `stock`, `is_active`}
+
+### Admin Investment Management (New - Phase 11)
+- **investment_plants**: {`plant_id`, `name`, `description`, `image_url`, `base_price`, `growth_rate_min`, `growth_rate_max`, `min_lot_size`, `maturity_days`, `is_active`}
+- **investment_stocks**: {`stock_id`, `name`, `ticker`, `description`, `logo_url`, `base_price`, `current_price`, `volatility`, `min_lot_size`, `is_active`, `price_history`}
+- **user_investments**: {`investment_id`, `user_id`, `asset_type` (plant/stock), `asset_id`, `quantity`, `purchase_price`, `purchase_date`}
+
 ### New Content System
 - **content_topics**: {`topic_id`, `title`, `description`, `parent_id`, `thumbnail`, `order`, `min_grade`, `max_grade`}
 - **content_items**: {`content_id`, `topic_id`, `title`, `description`, `content_type`, `thumbnail`, `order`, `min_grade`, `max_grade`, `reward_coins`, `content_data`}
