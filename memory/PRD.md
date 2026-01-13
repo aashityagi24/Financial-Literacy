@@ -104,9 +104,30 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - **Content Visibility**: Only published content visible to users
 
 ### Phase 7: UI/UX Improvements ✅ (January 13, 2026)
-- **Currency Localization**: Changed all "coins" references to "₹" (Indian Rupees)
+- **Currency Localization**: Changed ALL "coins" and "$" references to "₹" (Indian Rupees) across entire platform:
+  - Dashboard, Wallet, Store, Quests, Investments pages
+  - Teacher Dashboard (student balances, challenge rewards)
+  - Parent Dashboard (chore rewards, allowances, child balances)
+  - All toast messages and notifications
 - **Thumbnail Display Fix**: Added `getAssetUrl()` helper function to properly construct full URLs for uploaded assets
 - **CORS Fix**: Updated backend CORS configuration to support credentials from localhost and preview domain
+- **Wallet Labels for Children**: Added child-friendly descriptions to wallet account types:
+  - Spending: "Money to buy things"
+  - Savings: "Money saved for later"
+  - Investing: "Money that grows"
+  - Giving: "Money to help others"
+
+### Phase 8: Store Redesign ✅ (January 13, 2026)
+- **Category Sections**: Redesigned store with 5 realistic shopping categories:
+  - 🥕 Vegetable Market (carrots, tomatoes, broccoli, corn, potatoes)
+  - 🍎 Fruit Market (apples, bananas, oranges, grapes, watermelon, mango)
+  - 🧸 Toy Store (balls, teddy bears, cars, dolls, robots, puzzles, kites)
+  - 📱 Electronics (watches, headphones, cameras, tablets, game consoles)
+  - 🍕 Restaurant (pizza, burgers, ice cream, cake, noodles, sandwiches)
+- **Grade-Appropriate Items**: 30+ items filtered by user grade (min_grade field)
+- **Category Filter**: Tab-based category navigation at top of store
+- **Realistic Pricing**: Items priced in ₹ from ₹5 to ₹200
+- **Shopping Tips**: Educational tips about smart shopping for children
 
 ## API Endpoints
 
