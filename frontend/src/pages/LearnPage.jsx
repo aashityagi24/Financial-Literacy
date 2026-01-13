@@ -78,17 +78,17 @@ export default function LearnPage({ user }) {
       
       <main className="container mx-auto px-4 py-6">
         {/* Welcome Banner */}
-        <div className={`card-playful p-6 mb-6 bg-gradient-to-r from-[#3D5A80] to-[#5A7BA0] text-white ${showAnimations ? 'animate-bounce-in' : ''}`}>
+        <div className={`rounded-2xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] p-6 mb-6 bg-[#3D5A80] ${showAnimations ? 'animate-bounce-in' : ''}`}>
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Fredoka' }}>
+              <h2 className="text-2xl font-bold mb-2 text-white" style={{ fontFamily: 'Fredoka' }}>
                 📚 Your Learning Adventure
               </h2>
-              <p className="text-white/90 text-lg">Learn about money and earn coins!</p>
+              <p className="text-white text-lg opacity-90">Learn about money and earn coins!</p>
             </div>
             <div className="text-right">
-              <p className="text-4xl font-bold" style={{ fontFamily: 'Fredoka' }}>{topics.length}</p>
-              <p className="text-white/80">Topics to explore</p>
+              <p className="text-4xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>{topics.length}</p>
+              <p className="text-white opacity-80">Topics to explore</p>
             </div>
           </div>
         </div>
