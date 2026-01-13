@@ -108,6 +108,7 @@ function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/gradient-test" element={<GradientTest />} />
       <Route path="/role-selection" element={
         <ProtectedRoute>
           {({ user, setUser }) => <RoleSelection user={user} setUser={setUser} />}
