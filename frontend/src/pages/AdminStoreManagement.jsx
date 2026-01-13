@@ -588,6 +588,21 @@ export default function AdminStoreManagement({ user }) {
             </div>
             
             <div>
+              <label className="text-sm font-medium text-gray-700">Unit *</label>
+              <Select value={itemForm.unit} onValueChange={(v) => setItemForm({ ...itemForm, unit: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  {unitOptions.map((u) => (
+                    <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">E.g., ₹{itemForm.price}/{itemForm.unit}</p>
+            </div>
+            
+            <div>
               <label className="text-sm font-medium text-gray-700">Item Image</label>
               <div className="flex items-center gap-3 mt-1">
                 {itemForm.image_url ? (
