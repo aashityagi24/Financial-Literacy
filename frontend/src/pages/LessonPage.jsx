@@ -46,7 +46,7 @@ export default function LessonPage({ user }) {
     try {
       const response = await axios.post(`${API}/learn/lessons/${lessonId}/complete`);
       if (response.data.reward > 0) {
-        toast.success(`Lesson completed! +${response.data.reward} coins`);
+        toast.success(`Lesson completed! +₹${response.data.reward}`);
       } else {
         toast.info('Lesson already completed');
       }
