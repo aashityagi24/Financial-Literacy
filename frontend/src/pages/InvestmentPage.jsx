@@ -277,20 +277,23 @@ export default function InvestmentPage({ user }) {
         ) : (
           <div className="grid gap-4">
             {portfolio.map((inv, index) => {
-              const isProfit = inv.current_value >= inv.purchase_value;
-              const growthPercent = ((inv.current_value - inv.purchase_value) / inv.purchase_value * 100).toFixed(1);
+              const purchaseValue = inv.purchase_price * inv.quantity;
+              const isProfit = inv.current_value >= purchaseValue;
+              const growthPercent = ((inv.current_value - purchaseValue) / purchaseValue * 100).toFixed(1);
+              const assetName = inv.asset?.name || 'Investment';
+              const imageUrl = inv.type === 'plant' ? inv.asset?.image_url : inv.asset?.logo_url;
               
               return (
                 <div 
-                  key={inv.investment_id}
+                  key={inv.holding_id}
                   className="card-playful p-5"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <div className="flex items-center gap-4">
-                    {inv.image_url ? (
+                    {imageUrl ? (
                       <img 
-                        src={getAssetUrl(inv.image_url)} 
-                        alt={inv.asset_name}
+                        src={getAssetUrl(imageUrl)} 
+                        alt={assetName}
                         className="w-16 h-16 rounded-2xl border-3 border-[#1D3557] object-contain bg-white"
                       />
                     ) : (
