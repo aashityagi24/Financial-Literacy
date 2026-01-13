@@ -189,6 +189,16 @@ function AppRouter() {
           {({ user }) => <ContentManagement user={user} />}
         </ProtectedRoute>
       } />
+      <Route path="/admin/store" element={
+        <ProtectedRoute>
+          {({ user }) => <AdminStoreManagement user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/investments" element={
+        <ProtectedRoute>
+          {({ user }) => <AdminInvestmentManagement user={user} />}
+        </ProtectedRoute>
+      } />
     </Routes>
   );
 }
