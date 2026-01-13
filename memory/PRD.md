@@ -129,6 +129,18 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - **Realistic Pricing**: Items priced in ₹ from ₹5 to ₹200
 - **Shopping Tips**: Educational tips about smart shopping for children
 
+### Phase 9: Wallet & Thumbnail Improvements ✅ (January 13, 2026)
+- **Wallet Action Buttons**: Added navigation buttons to each account card:
+  - Spending: "Go to Store →" links to /store
+  - Savings: "Set Goal →" links to /quests
+  - Investing: "Go Invest →" links to /investments
+  - Giving: "Give ₹ →" links to /quests
+- **Wallet Card Styling Fix**: Fixed gradient backgrounds not showing due to CSS class conflict
+- **Thumbnail Image Fix**: Changed all thumbnails from `object-cover` to `object-contain` with white background to prevent cropping:
+  - LearnPage topic thumbnails
+  - TopicPage subtopic and content thumbnails
+  - ContentManagement admin thumbnails
+
 ## API Endpoints
 
 ### Content Management (New System)
