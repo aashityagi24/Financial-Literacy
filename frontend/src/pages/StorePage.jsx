@@ -199,7 +199,15 @@ export default function StorePage({ user }) {
                   }`}
                   style={selectedCategory === cat.category_id ? { backgroundColor: cat.color } : {}}
                 >
-                  <span className="text-xl">{cat.icon}</span>
+                  {cat.image_url ? (
+                    <img 
+                      src={getAssetUrl(cat.image_url)} 
+                      alt={cat.name}
+                      className="w-8 h-8 rounded-lg object-contain bg-white"
+                    />
+                  ) : (
+                    <span className="text-xl">{cat.icon}</span>
+                  )}
                   <span className="font-bold">{cat.name}</span>
                 </button>
               ))}
