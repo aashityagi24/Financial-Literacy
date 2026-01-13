@@ -283,7 +283,8 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - **allowances**: {`parent_id`, `child_id`, `amount`, `frequency`}
 
 ## Test Coverage
-- Backend: 26 tests passing (100%) - `/app/tests/test_content_management.py`
+- Backend: 30 tests passing (100%) - `/app/tests/test_admin_store_investment.py` (Admin Store & Investment)
+- Backend: 26 tests passing (100%) - `/app/tests/test_content_management.py` (Content Management)
 - Previous tests: 28 tests for Teacher/Parent dashboards
 
 ## Prioritized Backlog
@@ -298,6 +299,8 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - **Currency Localization (₹)**
 - **Thumbnail Display Fix**
 - **Unified Content Uploads (PDF/HTML for all types)**
+- **Admin Store Management** (categories, items CRUD, image upload)
+- **Admin Investment Management** (plants for K-2, stocks for 3-5, price history, market simulation)
 
 ### P1 (Next Phase)
 - Daily Login Rewards & Streak Bonuses
