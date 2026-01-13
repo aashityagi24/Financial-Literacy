@@ -297,13 +297,7 @@ export default function Dashboard({ user, setUser }) {
             </div>
             
             {achievements.length === 0 ? (
-              <div className="text-center py-8">
-                <Trophy className="w-12 h-12 mx-auto text-[#98C1D9] mb-2" />
-                <p className="text-[#3D5A80]">Complete quests to earn badges!</p>
-                <Link to="/quests" className="btn-primary inline-block mt-3 px-4 py-2">
-                  Start a Quest
-                </Link>
-              </div>
+              <p className="text-center text-[#3D5A80] py-4">Complete quests to earn your first badge!</p>
             ) : (
               <div className="grid grid-cols-4 gap-3">
                 {achievements.map((ach) => (
