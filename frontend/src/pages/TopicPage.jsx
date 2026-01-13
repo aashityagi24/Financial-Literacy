@@ -225,8 +225,8 @@ export default function TopicPage({ user }) {
                           </span>
                         </div>
                         <h3 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{content.title}</h3>
-                        <p className="text-[#3D5A80] line-clamp-1">{content.description}</p>
-                        <p className="text-sm text-[#06D6A0] font-bold mt-1">+₹{content.reward_coins}</p>
+                        <p className="text-base text-[#3D5A80] line-clamp-1">{content.description}</p>
+                        <p className="text-base text-[#06D6A0] font-bold mt-1">+₹{content.reward_coins}</p>
                       </div>
                       
                       <div className="flex items-center">
