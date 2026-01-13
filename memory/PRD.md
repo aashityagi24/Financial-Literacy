@@ -5,6 +5,8 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 
 **Key Requirement**: Learning comes FIRST - children learn about different financial literacy aspects (barter system, gold/silver coins, modern currency, needs vs wants, savings, spending, earning). Then they practice with the digital economy tools.
 
+**Localization**: Indian Rupees (₹) used throughout the platform instead of generic "coins"
+
 ## User Personas
 1. **Child (K-5 Students)**: Primary users who learn financial concepts through educational content then practice with gamified activities
 2. **Parent**: Monitor child progress, set up chores, give digital rewards, manage allowances
@@ -18,10 +20,11 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - **Hierarchical Content System** (primary focus)
   - Topics → Subtopics → Content Items
   - Content types: Lessons, Books, Worksheets (PDF), Activities (HTML)
-  - Thumbnails for topics, subtopics, and content
+  - **All content types support both PDF and HTML uploads**
+  - Thumbnails for topics, subtopics, and content (with recommended dimensions)
   - Admin ordering/sorting
   - Progress tracking per user
-- Digital wallet with 4 account types
+- Digital wallet with 4 account types (balances in ₹)
 - Virtual store for purchases
 - Investment simulation (garden for K-2, stocks for 3-5)
 - Quests and achievements system
@@ -81,7 +84,10 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
   - Books (reading materials with external links)
   - Workbooks (PDF exercises)
   - Videos (embedded video content)
+- **Unified Content Uploads**: All content types support both PDF and HTML (ZIP) uploads
 - **Thumbnail Support**: Upload thumbnails for topics, subtopics, content
+  - Recommended dimensions displayed in UI
+  - Topics: 400×300px, Subtopics: 320×240px, Content: 320×180px
 - **Publish Toggle**: Draft/Live status for each content item
 - **Ordering System**: Admin can reorder topics and content items
 - **File Uploads**:
@@ -97,6 +103,11 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - **User Topic Page**: PDF viewer modal, Activity iframe viewer
 - **Content Visibility**: Only published content visible to users
 
+### Phase 7: UI/UX Improvements ✅ (January 13, 2026)
+- **Currency Localization**: Changed all "coins" references to "₹" (Indian Rupees)
+- **Thumbnail Display Fix**: Added `getAssetUrl()` helper function to properly construct full URLs for uploaded assets
+- **CORS Fix**: Updated backend CORS configuration to support credentials from localhost and preview domain
+
 ## API Endpoints
 
 ### Content Management (New System)
@@ -106,7 +117,7 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - `GET /api/content/topics` - Get hierarchical topics for users
 - `GET /api/content/topics/{id}` - Get topic with subtopics and content
 - `GET /api/content/items/{id}` - Get single content item
-- `POST /api/content/items/{id}/complete` - Mark content complete, award coins
+- `POST /api/content/items/{id}/complete` - Mark content complete, award ₹
 - `GET /api/admin/content/topics` - Admin get all topics
 - `POST /api/admin/content/topics` - Create topic/subtopic
 - `PUT /api/admin/content/topics/{id}` - Update topic
@@ -172,18 +183,22 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - Teacher Dashboard
 - Parent Dashboard
 - **Hierarchical Content Management System**
+- **Currency Localization (₹)**
+- **Thumbnail Display Fix**
+- **Unified Content Uploads (PDF/HTML for all types)**
 
 ### P1 (Next Phase)
-- Interactive mini-games for earning coins
+- Daily Login Rewards & Streak Bonuses
+- Leaderboards
+- Safety Guardrails (spending limits, parent approval)
+- Interactive mini-games for earning ₹
 - Detailed avatar customization
-- Class/Family leaderboards
 - Child ability to complete chores (mark as done)
 - Student join classroom with invite code
-- Chore approval workflow improvements
 
 ### P2 (Future)
-- Video lessons
+- Teacher/Parent collaboration portal
+- Seasonal events & classroom goals
+- Avatar customization shop
 - Email notifications
-- Seasonal events
-- Teacher/Parent communication portal
-- Spending limits and parent approval for large transactions
+- Tutorial system for new users
