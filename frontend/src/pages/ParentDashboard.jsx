@@ -335,7 +335,7 @@ export default function ParentDashboard({ user }) {
                       <Input placeholder="Chore Title" value={choreForm.title} onChange={(e) => setChoreForm({...choreForm, title: e.target.value})} className="border-3 border-[#1D3557]" />
                       <Textarea placeholder="Description (optional)" value={choreForm.description} onChange={(e) => setChoreForm({...choreForm, description: e.target.value})} className="border-3 border-[#1D3557]" />
                       <div className="grid grid-cols-2 gap-3">
-                        <Input type="number" placeholder="Reward $" value={choreForm.reward_amount} onChange={(e) => setChoreForm({...choreForm, reward_amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
+                        <Input type="number" placeholder="Reward ₹" value={choreForm.reward_amount} onChange={(e) => setChoreForm({...choreForm, reward_amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
                         <Select value={choreForm.frequency} onValueChange={(v) => setChoreForm({...choreForm, frequency: v})}>
                           <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue /></SelectTrigger>
                           <SelectContent>
