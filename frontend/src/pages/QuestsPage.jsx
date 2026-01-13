@@ -39,7 +39,7 @@ export default function QuestsPage({ user }) {
   const handleCompleteQuest = async (questId) => {
     try {
       const response = await axios.post(`${API}/quests/${questId}/complete`);
-      toast.success(`Quest completed! Earned $${response.data.reward}!`);
+      toast.success(`Quest completed! Earned ₹${response.data.reward}!`);
       fetchQuests();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to complete quest');
@@ -161,7 +161,7 @@ export default function QuestsPage({ user }) {
                       
                       <div className="flex items-center justify-between">
                         <span className="bg-[#06D6A0]/20 text-[#06D6A0] px-3 py-1 rounded-lg font-bold text-sm border border-[#06D6A0]">
-                          +${quest.reward_amount} reward
+                          +₹{quest.reward_amount} reward
                         </span>
                         
                         {quest.completed ? (
