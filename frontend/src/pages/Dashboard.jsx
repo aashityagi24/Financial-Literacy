@@ -232,7 +232,7 @@ export default function Dashboard({ user, setUser }) {
               View All <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
-          <p className="text-sm text-[#3D5A80] mb-4">Your ₹ is organized in 4 special jars. Tap any jar to learn more!</p>
+          <p className="text-base text-[#3D5A80] mb-4">Your ₹ is organized in 4 special jars. Tap any jar to see more or move money between them!</p>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {wallet?.accounts?.map((account) => (
@@ -242,8 +242,8 @@ export default function Dashboard({ user, setUser }) {
                 className={`${accountColors[account.account_type]?.bg} rounded-2xl border-3 border-[#1D3557] p-4 text-white hover:scale-105 transition-transform cursor-pointer`}
               >
                 <div className="text-2xl mb-2">{accountColors[account.account_type]?.icon}</div>
-                <p className="text-sm opacity-90 capitalize font-medium">{account.account_type}</p>
-                <p className="text-xs opacity-75 mb-1">{accountColors[account.account_type]?.description}</p>
+                <p className="text-base opacity-90 capitalize font-medium">{account.account_type}</p>
+                <p className="text-sm opacity-80 mb-1">{accountColors[account.account_type]?.description}</p>
                 <p className="text-2xl font-bold">₹{account.balance?.toFixed(0)}</p>
               </Link>
             ))}
