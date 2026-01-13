@@ -145,7 +145,7 @@ export default function InvestmentPage({ user }) {
           <h2 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
             {isYounger ? '🌱 What is the Money Garden?' : '📈 What is the Stock Market?'}
           </h2>
-          <p className="text-[#1D3557]/80 text-sm leading-relaxed">
+          <p className="text-[#1D3557]/90 text-base leading-relaxed">
             {isYounger 
               ? 'This is a magical place where your ₹ can GROW into more ₹! When you plant a seed (put in some money), it grows bigger over time - just like a real plant! The longer you wait before picking it, the more ₹ it becomes. But be patient - good things take time!'
               : 'Here you can buy tiny pieces of pretend companies called "stocks." When a company does well, your stock grows in value and you make more ₹! But stocks can also go down, so think carefully before you invest.'}
