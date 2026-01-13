@@ -286,11 +286,7 @@ export default function StorePage({ user }) {
         )}
         
         {filteredItems.length === 0 && (
-          <div className="text-center py-12">
-            <Store className="w-16 h-16 mx-auto text-[#98C1D9] mb-4" />
-            <h3 className="text-xl font-bold text-[#1D3557] mb-2">No Items Here Yet</h3>
-            <p className="text-[#3D5A80]">Check other categories or come back later!</p>
-          </div>
+          <p className="text-center text-[#3D5A80] py-4">No items in this category. Try another one!</p>
         )}
         
         {/* Shopping Tips */}
