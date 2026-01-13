@@ -25,8 +25,10 @@ UPLOADS_DIR = ROOT_DIR / "uploads"
 THUMBNAILS_DIR = UPLOADS_DIR / "thumbnails"
 PDFS_DIR = UPLOADS_DIR / "pdfs"
 ACTIVITIES_DIR = UPLOADS_DIR / "activities"
+STORE_IMAGES_DIR = UPLOADS_DIR / "store"
+INVESTMENT_IMAGES_DIR = UPLOADS_DIR / "investments"
 
-for dir_path in [UPLOADS_DIR, THUMBNAILS_DIR, PDFS_DIR, ACTIVITIES_DIR]:
+for dir_path in [UPLOADS_DIR, THUMBNAILS_DIR, PDFS_DIR, ACTIVITIES_DIR, STORE_IMAGES_DIR, INVESTMENT_IMAGES_DIR]:
     dir_path.mkdir(parents=True, exist_ok=True)
 
 # MongoDB connection
