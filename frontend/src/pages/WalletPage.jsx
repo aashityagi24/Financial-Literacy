@@ -268,10 +268,10 @@ export default function WalletPage({ user }) {
                   <p className="text-2xl font-bold" style={{ fontFamily: 'Fredoka' }}>₹{account.balance?.toFixed(0)}</p>
                 </div>
                 <p className="text-lg capitalize font-bold mb-1">{account.account_type}</p>
-                <p className="text-xs opacity-90 mb-3">{info?.description}</p>
+                <p className="text-sm opacity-90 mb-3">{info?.description}</p>
                 <Link 
                   to={info?.action?.path || '/dashboard'}
-                  className="block w-full py-2 bg-white/20 hover:bg-white/30 rounded-xl text-center text-sm font-bold transition-colors border-2 border-white/30"
+                  className="block w-full py-2 bg-white/20 hover:bg-white/30 rounded-xl text-center text-base font-bold transition-colors border-2 border-white/30"
                 >
                   {info?.action?.label} →
                 </Link>
