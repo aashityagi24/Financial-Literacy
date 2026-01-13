@@ -88,9 +88,9 @@ export default function InvestmentPage({ user }) {
   const handleSell = async (investment) => {
     try {
       await axios.post(`${API}/investments/sell`, {
-        investment_id: investment.investment_id
+        holding_id: investment.holding_id
       });
-      toast.success(`Sold ${investment.asset_name}!`);
+      toast.success(`Sold ${investment.asset?.name || 'investment'}!`);
       fetchData();
     } catch (error) {
       toast.error('Failed to sell investment');
