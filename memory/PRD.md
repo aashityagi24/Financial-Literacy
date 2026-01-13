@@ -141,6 +141,18 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
   - TopicPage subtopic and content thumbnails
   - ContentManagement admin thumbnails
 
+### Phase 10: Child-Friendly Explanatory Banners ✅ (January 13, 2026)
+- **Yellow Explanation Banners**: Added prominent yellow banners (gradient #FFD23F to #FFEB99) to key pages explaining what each section does in child-friendly language:
+  - **Wallet**: "Welcome to Your Wallet!" - explains digital piggy bank and 4 money jars concept
+  - **Investment/Money Garden**: "What is the Money Garden?" / "What is the Stock Market?" - explains growing money over time
+  - **Store**: "How Does the Store Work?" - explains practice shopping and spending wisely
+  - **Quests**: "What Are Quests?" - explains missions and earning ₹
+  - **Learn**: "How Does Learning Work?" - explains topics, lessons, and earning ₹
+- **Dashboard Updates**: 
+  - Renamed "My Wallet" to "My Money Jars" with subtitle explanation
+  - Made wallet account cards clickable (link to /wallet page)
+- **Age-Appropriate Language**: All text uses simple words and concepts K-5 children can understand
+
 ## API Endpoints
 
 ### Content Management (New System)
