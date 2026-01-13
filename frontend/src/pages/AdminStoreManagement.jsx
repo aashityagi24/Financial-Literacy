@@ -411,7 +411,10 @@ export default function AdminStoreManagement({ user }) {
                               {cat?.icon} {cat?.name}
                             </span>
                           </td>
-                          <td className="px-4 py-3 font-bold text-gray-900">₹{item.price}</td>
+                          <td className="px-4 py-3 font-bold text-gray-900">
+                            ₹{item.price}
+                            <span className="text-xs font-normal text-gray-500">/{item.unit || 'piece'}</span>
+                          </td>
                           <td className="px-4 py-3 text-sm text-gray-600">K{item.min_grade}-{item.max_grade}</td>
                           <td className="px-4 py-3">
                             <span className={`text-xs px-2 py-1 rounded-full ${item.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
