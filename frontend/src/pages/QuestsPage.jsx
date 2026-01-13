@@ -158,7 +158,7 @@ export default function QuestsPage({ user }) {
                           {quest.quest_type}
                         </span>
                       </div>
-                      <p className="text-[#3D5A80] text-sm mb-3">{quest.description}</p>
+                      <p className="text-[#3D5A80] text-base mb-3">{quest.description}</p>
                       
                       {quest.assigned && !quest.completed && (
                         <div className="mb-3">
