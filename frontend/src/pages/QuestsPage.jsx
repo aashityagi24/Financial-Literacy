@@ -84,13 +84,24 @@ export default function QuestsPage({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
-        {/* Banner */}
+        {/* Welcome Banner - Explains what quests are */}
+        <div className="card-playful p-5 mb-6 bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] border-3 border-[#1D3557] animate-bounce-in">
+          <h2 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
+            🎯 What Are Quests?
+          </h2>
+          <p className="text-[#1D3557]/80 text-sm leading-relaxed">
+            Quests are fun <strong>missions</strong> you can complete to earn ₹! Some quests ask you to learn new things, some ask you to save money, 
+            and some challenge you to be smart with your spending. Complete quests every day to build up your wallet!
+          </p>
+        </div>
+
+        {/* Main Banner */}
         <div className="card-playful p-6 mb-6 bg-gradient-to-r from-[#3D5A80] to-[#5A7BA0] text-white animate-bounce-in">
           <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Fredoka' }}>
             🎯 Complete Quests, Earn ₹!
           </h2>
           <p className="opacity-90">
-            Each quest teaches you something new about money while rewarding you with ₹!
+            Pick a quest below and follow the instructions. When you finish, you'll get ₹ added to your wallet!
           </p>
         </div>
         
