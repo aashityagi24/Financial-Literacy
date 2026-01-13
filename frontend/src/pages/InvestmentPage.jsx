@@ -140,15 +140,28 @@ export default function InvestmentPage({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
-        {/* Explanation Banner */}
+        {/* Welcome Banner - Explains what investing is */}
+        <div className="card-playful p-5 mb-6 bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] border-3 border-[#1D3557] animate-bounce-in">
+          <h2 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
+            {isYounger ? '🌱 What is the Money Garden?' : '📈 What is the Stock Market?'}
+          </h2>
+          <p className="text-[#1D3557]/80 text-sm leading-relaxed">
+            {isYounger 
+              ? 'This is a magical place where your ₹ can GROW into more ₹! When you plant a seed (put in some money), it grows bigger over time - just like a real plant! The longer you wait before picking it, the more ₹ it becomes. But be patient - good things take time!'
+              : 'Here you can buy tiny pieces of pretend companies called "stocks." When a company does well, your stock grows in value and you make more ₹! But stocks can also go down, so think carefully before you invest.'}
+          </p>
+        </div>
+
+        {/* Available Balance */}
         <div className="card-playful p-6 mb-6 bg-gradient-to-r from-[#06D6A0] to-[#42E8B3] text-white animate-bounce-in">
           <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'Fredoka' }}>
-            {isYounger ? '🌱 Grow Your Money Garden!' : '📈 Become a Stock Star!'}
+            {isYounger ? '🌱 Your Garden Money' : '📈 Your Investing Money'}
           </h2>
-          <p className="opacity-90">
+          <p className="text-4xl font-bold mb-2" style={{ fontFamily: 'Fredoka' }}>₹{investingBalance.toFixed(0)}</p>
+          <p className="opacity-90 text-sm">
             {isYounger 
-              ? 'Plant seeds with your ₹ and watch them grow over time! The longer you wait, the more your plants are worth!'
-              : 'Buy stocks in fun companies and watch your money grow! Stocks can go up and down, so choose wisely!'}
+              ? 'This is how much ₹ you have to plant new seeds! Transfer more from your wallet to grow your garden.'
+              : 'This is how much ₹ you have to buy stocks! Transfer more from your wallet to invest.'}
           </p>
         </div>
         
@@ -157,7 +170,7 @@ export default function InvestmentPage({ user }) {
           <DialogTrigger asChild>
             <button className="btn-primary w-full py-4 text-lg mb-6 flex items-center justify-center gap-2">
               <Plus className="w-5 h-5" />
-              {isYounger ? 'Plant Something New' : 'Buy New Stock'}
+              {isYounger ? '🌱 Plant Something New' : '📈 Buy New Stock'}
             </button>
           </DialogTrigger>
           <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-lg">
