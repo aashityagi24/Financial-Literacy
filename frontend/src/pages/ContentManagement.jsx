@@ -952,15 +952,35 @@ export default function ContentManagement({ user }) {
                 <p className="text-xs text-gray-500 mt-1">ZIP must contain index.html and all assets (images, CSS, JS)</p>
               </div>
               
-              {/* Video URL - only show for video type */}
+              {/* Video Upload & URL - only show for video type */}
               {contentForm.content_type === 'video' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Video URL</label>
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-700">🎬 Video Content</label>
+                  
+                  {/* Video File Upload */}
+                  <div className="flex items-center gap-3">
+                    {contentForm.content_data.video_url && contentForm.content_data.video_url.startsWith('/api/uploads') && (
+                      <a href={getAssetUrl(contentForm.content_data.video_url)} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline flex items-center gap-1">
+                        <Eye className="w-4 h-4" /> View Video
+                      </a>
+                    )}
+                    <input type="file" className="hidden" id="video-file-upload" accept=".mp4,.webm,.mov" onChange={(e) => e.target.files[0] && uploadVideo(e.target.files[0])} />
+                    <Button variant="outline" size="sm" onClick={() => document.getElementById('video-file-upload')?.click()}>
+                      <Upload className="w-4 h-4 mr-2" /> Upload MP4
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500">Supports MP4, WebM, MOV formats</p>
+                  
+                  {/* Or Video URL */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">— OR —</span>
+                  </div>
                   <Input 
-                    value={contentForm.content_data.video_url || ''} 
+                    value={contentForm.content_data.video_url?.startsWith('/api/uploads') ? '' : (contentForm.content_data.video_url || '')} 
                     onChange={e => setContentForm(p => ({ ...p, content_data: { ...p.content_data, video_url: e.target.value } }))}
-                    placeholder="YouTube or video URL"
+                    placeholder="YouTube or external video URL"
                   />
+                  <p className="text-xs text-gray-500">Paste a YouTube or other video URL</p>
                 </div>
               )}
               
