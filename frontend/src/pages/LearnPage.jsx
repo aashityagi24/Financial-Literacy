@@ -69,7 +69,7 @@ export default function LearnPage({ user }) {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Learn</h1>
-                <p className="text-sm text-[#3D5A80]">Explore fun money lessons!</p>
+                <p className="text-base text-[#3D5A80]">Explore fun money lessons!</p>
               </div>
             </div>
           </div>
