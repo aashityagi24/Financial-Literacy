@@ -386,7 +386,7 @@ function ItemCard({ item, index, isOwned, canAfford, categoryColor, onSelect }) 
       </div>
       
       <h3 className="font-bold text-[#1D3557] mb-1" style={{ fontFamily: 'Fredoka' }}>{item.name}</h3>
-      <p className="text-xs text-[#3D5A80] mb-2 line-clamp-2">{item.description}</p>
+      <p className="text-sm text-[#3D5A80] mb-2 line-clamp-2">{item.description}</p>
       
       <div className="flex items-center justify-between mb-2">
         <span 
