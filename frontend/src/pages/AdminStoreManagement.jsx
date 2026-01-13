@@ -172,7 +172,7 @@ export default function AdminStoreManagement({ user }) {
       }
       setItemDialog(false);
       setEditingItem(null);
-      setItemForm({ category_id: '', name: '', description: '', price: 10, image_url: '', min_grade: 0, max_grade: 5, stock: -1, is_active: true });
+      setItemForm({ category_id: '', name: '', description: '', price: 10, image_url: '', unit: 'piece', min_grade: 0, max_grade: 5, stock: -1, is_active: true });
       fetchData();
     } catch (error) {
       toast.error('Failed to save item');
