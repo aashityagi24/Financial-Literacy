@@ -7,7 +7,7 @@ import {
   Shield, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   Plus, Trash2, Edit2, Save, X, FolderOpen, FileText, BookOpen,
   FileSpreadsheet, Gamepad2, Upload, Image, Eye, EyeOff,
-  Video, Book, Layers, ListOrdered, Library, Settings
+  Video, Book, Layers, ListOrdered, Library, Settings, Info
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,10 +29,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const CONTENT_TYPES = [
-  { value: 'worksheet', label: 'Worksheet', icon: FileSpreadsheet, color: 'bg-orange-100 text-orange-600', description: 'PDF worksheets for practice' },
-  { value: 'activity', label: 'Activity', icon: Gamepad2, color: 'bg-purple-100 text-purple-600', description: 'Interactive HTML activities' },
+  { value: 'worksheet', label: 'Worksheet', icon: FileSpreadsheet, color: 'bg-orange-100 text-orange-600', description: 'Practice sheets' },
+  { value: 'activity', label: 'Activity', icon: Gamepad2, color: 'bg-purple-100 text-purple-600', description: 'Interactive content' },
   { value: 'book', label: 'Book', icon: BookOpen, color: 'bg-green-100 text-green-600', description: 'Reading materials' },
-  { value: 'workbook', label: 'Workbook', icon: Book, color: 'bg-blue-100 text-blue-600', description: 'PDF workbooks with exercises' },
+  { value: 'workbook', label: 'Workbook', icon: Book, color: 'bg-blue-100 text-blue-600', description: 'Exercise books' },
   { value: 'video', label: 'Video', icon: Video, color: 'bg-red-100 text-red-600', description: 'Educational videos' },
 ];
 
@@ -44,6 +44,13 @@ const GRADE_OPTIONS = [
   { value: 4, label: '4th Grade' },
   { value: 5, label: '5th Grade' },
 ];
+
+// Thumbnail dimensions recommendation
+const THUMBNAIL_DIMENSIONS = {
+  topic: { width: 400, height: 300, label: '400×300 pixels (4:3 ratio)' },
+  subtopic: { width: 320, height: 240, label: '320×240 pixels (4:3 ratio)' },
+  content: { width: 320, height: 180, label: '320×180 pixels (16:9 ratio)' },
+};
 
 export default function ContentManagement({ user }) {
   const navigate = useNavigate();
@@ -142,7 +149,7 @@ export default function ContentManagement({ user }) {
         ...prev,
         content_data: { ...prev.content_data, html_url: res.data.url, html_folder: res.data.folder }
       }));
-      toast.success('Activity uploaded');
+      toast.success('HTML Activity uploaded');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to upload activity');
     }
@@ -321,6 +328,32 @@ export default function ContentManagement({ user }) {
     ? allContent.filter(c => c.topic_id === selectedSubtopic.topic_id).sort((a, b) => a.order - b.order)
     : [];
   
+  // Thumbnail upload component with dimension info
+  const ThumbnailUpload = ({ value, onChange, dimensions, inputRef }) => (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail</label>
+      <div className="flex items-start gap-3">
+        {value ? (
+          <img src={value} alt="" className="w-20 h-16 rounded-lg object-cover border border-gray-200" />
+        ) : (
+          <div className="w-20 h-16 rounded-lg bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center">
+            <Image className="w-6 h-6 text-gray-400" />
+          </div>
+        )}
+        <div className="flex-1">
+          <input type="file" ref={inputRef} className="hidden" accept="image/*" onChange={onChange} />
+          <Button variant="outline" size="sm" onClick={() => inputRef.current?.click()} className="mb-2">
+            <Upload className="w-4 h-4 mr-2" /> Upload Image
+          </Button>
+          <p className="text-xs text-gray-500 flex items-center gap-1">
+            <Info className="w-3 h-3" />
+            Recommended: {dimensions.label}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -402,10 +435,10 @@ export default function ContentManagement({ user }) {
                     >
                       <div className="flex items-start gap-3">
                         {topic.thumbnail ? (
-                          <img src={topic.thumbnail} alt="" className="w-16 h-16 rounded-lg object-cover" />
+                          <img src={topic.thumbnail} alt="" className="w-16 h-12 rounded-lg object-cover border border-gray-200" />
                         ) : (
-                          <div className="w-16 h-16 rounded-lg bg-blue-100 flex items-center justify-center">
-                            <FolderOpen className="w-8 h-8 text-blue-500" />
+                          <div className="w-16 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <FolderOpen className="w-6 h-6 text-blue-500" />
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
@@ -486,10 +519,10 @@ export default function ContentManagement({ user }) {
                     >
                       <div className="flex items-start gap-3">
                         {subtopic.thumbnail ? (
-                          <img src={subtopic.thumbnail} alt="" className="w-12 h-12 rounded-lg object-cover" />
+                          <img src={subtopic.thumbnail} alt="" className="w-12 h-9 rounded-lg object-cover border border-gray-200" />
                         ) : (
-                          <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                            <Layers className="w-6 h-6 text-green-500" />
+                          <div className="w-12 h-9 rounded-lg bg-green-100 flex items-center justify-center">
+                            <Layers className="w-5 h-5 text-green-500" />
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
@@ -565,7 +598,7 @@ export default function ContentManagement({ user }) {
               ) : (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-500 mb-4">
-                    Drag or use arrows to reorder content. Students will see content in this order.
+                    Use arrows to reorder content. Students will see content in this order.
                   </p>
                   {subtopicContent.map((content, index) => {
                     const typeConfig = getContentTypeConfig(content.content_type);
@@ -591,9 +624,13 @@ export default function ContentManagement({ user }) {
                           </button>
                         </div>
                         
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${typeConfig.color}`}>
-                          <Icon className="w-6 h-6" />
-                        </div>
+                        {content.thumbnail ? (
+                          <img src={content.thumbnail} alt="" className="w-14 h-10 rounded-lg object-cover border border-gray-200" />
+                        ) : (
+                          <div className={`w-14 h-10 rounded-lg flex items-center justify-center ${typeConfig.color}`}>
+                            <Icon className="w-5 h-5" />
+                          </div>
+                        )}
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
@@ -610,6 +647,7 @@ export default function ContentManagement({ user }) {
                             )}
                           </div>
                           <p className="text-sm text-gray-500 truncate">{content.description}</p>
+                          <p className="text-xs text-green-600 font-medium">₹{content.reward_coins} reward</p>
                         </div>
                         
                         <div className="flex items-center gap-2">
@@ -698,33 +736,29 @@ export default function ContentManagement({ user }) {
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Title *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
               <Input value={topicForm.title} onChange={e => setTopicForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g., Money Basics" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Description</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
               <Textarea value={topicForm.description} onChange={e => setTopicForm(p => ({ ...p, description: e.target.value }))} placeholder="Brief description" rows={2} />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Thumbnail</label>
-              <div className="flex items-center gap-3">
-                {topicForm.thumbnail && <img src={topicForm.thumbnail} alt="" className="w-16 h-16 rounded-lg object-cover" />}
-                <input type="file" ref={thumbnailRef} className="hidden" accept="image/*" onChange={(e) => e.target.files[0] && uploadThumbnail(e.target.files[0], setTopicForm)} />
-                <Button variant="outline" onClick={() => thumbnailRef.current?.click()}>
-                  <Upload className="w-4 h-4 mr-2" /> Upload
-                </Button>
-              </div>
-            </div>
+            <ThumbnailUpload 
+              value={topicForm.thumbnail} 
+              onChange={(e) => e.target.files[0] && uploadThumbnail(e.target.files[0], setTopicForm)}
+              dimensions={THUMBNAIL_DIMENSIONS.topic}
+              inputRef={thumbnailRef}
+            />
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Min Grade</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Min Grade</label>
                 <Select value={String(topicForm.min_grade)} onValueChange={v => setTopicForm(p => ({ ...p, min_grade: parseInt(v) }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{GRADE_OPTIONS.map(g => <SelectItem key={g.value} value={String(g.value)}>{g.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Max Grade</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Max Grade</label>
                 <Select value={String(topicForm.max_grade)} onValueChange={v => setTopicForm(p => ({ ...p, max_grade: parseInt(v) }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{GRADE_OPTIONS.map(g => <SelectItem key={g.value} value={String(g.value)}>{g.label}</SelectItem>)}</SelectContent>
@@ -750,33 +784,29 @@ export default function ContentManagement({ user }) {
               Parent Topic: <strong>{selectedTopic?.title}</strong>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Title *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
               <Input value={subtopicForm.title} onChange={e => setSubtopicForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g., What is Money?" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Description</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
               <Textarea value={subtopicForm.description} onChange={e => setSubtopicForm(p => ({ ...p, description: e.target.value }))} placeholder="Brief description" rows={2} />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Thumbnail</label>
-              <div className="flex items-center gap-3">
-                {subtopicForm.thumbnail && <img src={subtopicForm.thumbnail} alt="" className="w-16 h-16 rounded-lg object-cover" />}
-                <input type="file" ref={thumbnailRef} className="hidden" accept="image/*" onChange={(e) => e.target.files[0] && uploadThumbnail(e.target.files[0], setSubtopicForm)} />
-                <Button variant="outline" onClick={() => thumbnailRef.current?.click()}>
-                  <Upload className="w-4 h-4 mr-2" /> Upload
-                </Button>
-              </div>
-            </div>
+            <ThumbnailUpload 
+              value={subtopicForm.thumbnail} 
+              onChange={(e) => e.target.files[0] && uploadThumbnail(e.target.files[0], setSubtopicForm)}
+              dimensions={THUMBNAIL_DIMENSIONS.subtopic}
+              inputRef={thumbnailRef}
+            />
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Min Grade</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Min Grade</label>
                 <Select value={String(subtopicForm.min_grade)} onValueChange={v => setSubtopicForm(p => ({ ...p, min_grade: parseInt(v) }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{GRADE_OPTIONS.map(g => <SelectItem key={g.value} value={String(g.value)}>{g.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Max Grade</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Max Grade</label>
                 <Select value={String(subtopicForm.max_grade)} onValueChange={v => setSubtopicForm(p => ({ ...p, max_grade: parseInt(v) }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{GRADE_OPTIONS.map(g => <SelectItem key={g.value} value={String(g.value)}>{g.label}</SelectItem>)}</SelectContent>
@@ -807,145 +837,114 @@ export default function ContentManagement({ user }) {
             
             {/* Basic Info */}
             <div>
-              <label className="block text-sm font-medium mb-1">Title *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
               <Input value={contentForm.title} onChange={e => setContentForm(p => ({ ...p, title: e.target.value }))} placeholder="Content title" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Description</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
               <Textarea value={contentForm.description} onChange={e => setContentForm(p => ({ ...p, description: e.target.value }))} placeholder="Brief description" rows={2} />
             </div>
             
             {/* Thumbnail */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Thumbnail</label>
-              <div className="flex items-center gap-3">
-                {contentForm.thumbnail && <img src={contentForm.thumbnail} alt="" className="w-16 h-16 rounded-lg object-cover" />}
-                <input type="file" ref={thumbnailRef} className="hidden" accept="image/*" onChange={(e) => e.target.files[0] && uploadThumbnail(e.target.files[0], setContentForm)} />
-                <Button variant="outline" onClick={() => thumbnailRef.current?.click()}>
-                  <Upload className="w-4 h-4 mr-2" /> Upload
-                </Button>
-              </div>
-            </div>
+            <ThumbnailUpload 
+              value={contentForm.thumbnail} 
+              onChange={(e) => e.target.files[0] && uploadThumbnail(e.target.files[0], setContentForm)}
+              dimensions={THUMBNAIL_DIMENSIONS.content}
+              inputRef={thumbnailRef}
+            />
             
-            {/* Type-specific fields */}
-            {(contentForm.content_type === 'worksheet' || contentForm.content_type === 'workbook') && (
-              <div className="p-4 bg-orange-50 rounded-lg space-y-3">
-                <h4 className="font-medium text-orange-700">{contentForm.content_type === 'worksheet' ? 'Worksheet' : 'Workbook'} Settings</h4>
-                <div>
-                  <label className="block text-sm font-medium mb-1">PDF File *</label>
-                  <div className="flex items-center gap-3">
-                    {contentForm.content_data.pdf_url && (
-                      <a href={contentForm.content_data.pdf_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline">View PDF</a>
-                    )}
-                    <input type="file" ref={pdfRef} className="hidden" accept="application/pdf" onChange={(e) => e.target.files[0] && uploadPdf(e.target.files[0])} />
-                    <Button variant="outline" onClick={() => pdfRef.current?.click()}>
-                      <Upload className="w-4 h-4 mr-2" /> Upload PDF
-                    </Button>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Instructions</label>
-                  <Textarea 
-                    value={contentForm.content_data.instructions || ''} 
-                    onChange={e => setContentForm(p => ({ ...p, content_data: { ...p.content_data, instructions: e.target.value } }))}
-                    placeholder="Instructions for students"
-                    rows={2}
-                  />
+            {/* Content Files - PDF and HTML options for all types */}
+            <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+              <h4 className="font-medium text-gray-800">Content Files</h4>
+              <p className="text-sm text-gray-500">Upload either PDF or HTML (ZIP) or both. At least one is recommended.</p>
+              
+              {/* PDF Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">PDF File</label>
+                <div className="flex items-center gap-3">
+                  {contentForm.content_data.pdf_url && (
+                    <a href={contentForm.content_data.pdf_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline flex items-center gap-1">
+                      <Eye className="w-4 h-4" /> View PDF
+                    </a>
+                  )}
+                  <input type="file" ref={pdfRef} className="hidden" accept="application/pdf" onChange={(e) => e.target.files[0] && uploadPdf(e.target.files[0])} />
+                  <Button variant="outline" size="sm" onClick={() => pdfRef.current?.click()}>
+                    <Upload className="w-4 h-4 mr-2" /> Upload PDF
+                  </Button>
                 </div>
               </div>
-            )}
-            
-            {contentForm.content_type === 'activity' && (
-              <div className="p-4 bg-purple-50 rounded-lg space-y-3">
-                <h4 className="font-medium text-purple-700">Activity Settings</h4>
-                <div>
-                  <label className="block text-sm font-medium mb-1">HTML Activity (ZIP file) *</label>
-                  <div className="flex items-center gap-3">
-                    {contentForm.content_data.html_url && (
-                      <a href={contentForm.content_data.html_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline">Preview</a>
-                    )}
-                    <input type="file" ref={activityRef} className="hidden" accept=".zip" onChange={(e) => e.target.files[0] && uploadActivity(e.target.files[0])} />
-                    <Button variant="outline" onClick={() => activityRef.current?.click()}>
-                      <Upload className="w-4 h-4 mr-2" /> Upload ZIP
-                    </Button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">ZIP must contain index.html and all assets</p>
+              
+              {/* HTML Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Interactive HTML (ZIP file)</label>
+                <div className="flex items-center gap-3">
+                  {contentForm.content_data.html_url && (
+                    <a href={contentForm.content_data.html_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline flex items-center gap-1">
+                      <Eye className="w-4 h-4" /> Preview
+                    </a>
+                  )}
+                  <input type="file" ref={activityRef} className="hidden" accept=".zip" onChange={(e) => e.target.files[0] && uploadActivity(e.target.files[0])} />
+                  <Button variant="outline" size="sm" onClick={() => activityRef.current?.click()}>
+                    <Upload className="w-4 h-4 mr-2" /> Upload ZIP
+                  </Button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Instructions</label>
-                  <Textarea 
-                    value={contentForm.content_data.instructions || ''} 
-                    onChange={e => setContentForm(p => ({ ...p, content_data: { ...p.content_data, instructions: e.target.value } }))}
-                    placeholder="Activity instructions"
-                    rows={2}
-                  />
-                </div>
+                <p className="text-xs text-gray-500 mt-1">ZIP must contain index.html and all assets</p>
               </div>
-            )}
-            
-            {contentForm.content_type === 'book' && (
-              <div className="p-4 bg-green-50 rounded-lg space-y-3">
-                <h4 className="font-medium text-green-700">Book Settings</h4>
+              
+              {/* Video URL - only show for video type */}
+              {contentForm.content_type === 'video' && (
                 <div>
-                  <label className="block text-sm font-medium mb-1">Author</label>
-                  <Input 
-                    value={contentForm.content_data.author || ''} 
-                    onChange={e => setContentForm(p => ({ ...p, content_data: { ...p.content_data, author: e.target.value } }))}
-                    placeholder="Author name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Book URL (external link or PDF)</label>
-                  <Input 
-                    value={contentForm.content_data.content_url || ''} 
-                    onChange={e => setContentForm(p => ({ ...p, content_data: { ...p.content_data, content_url: e.target.value } }))}
-                    placeholder="https://..."
-                  />
-                </div>
-              </div>
-            )}
-            
-            {contentForm.content_type === 'video' && (
-              <div className="p-4 bg-red-50 rounded-lg space-y-3">
-                <h4 className="font-medium text-red-700">Video Settings</h4>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Video URL *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Video URL</label>
                   <Input 
                     value={contentForm.content_data.video_url || ''} 
                     onChange={e => setContentForm(p => ({ ...p, content_data: { ...p.content_data, video_url: e.target.value } }))}
                     placeholder="YouTube or video URL"
                   />
                 </div>
+              )}
+              
+              {/* External URL - for books */}
+              {contentForm.content_type === 'book' && (
                 <div>
-                  <label className="block text-sm font-medium mb-1">Duration (minutes)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">External Book URL</label>
                   <Input 
-                    type="number"
-                    value={contentForm.content_data.duration_minutes || ''} 
-                    onChange={e => setContentForm(p => ({ ...p, content_data: { ...p.content_data, duration_minutes: parseInt(e.target.value) || 0 } }))}
-                    placeholder="5"
+                    value={contentForm.content_data.content_url || ''} 
+                    onChange={e => setContentForm(p => ({ ...p, content_data: { ...p.content_data, content_url: e.target.value } }))}
+                    placeholder="https://..."
                   />
                 </div>
+              )}
+              
+              {/* Instructions */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Instructions (optional)</label>
+                <Textarea 
+                  value={contentForm.content_data.instructions || ''} 
+                  onChange={e => setContentForm(p => ({ ...p, content_data: { ...p.content_data, instructions: e.target.value } }))}
+                  placeholder="Instructions for students"
+                  rows={2}
+                />
               </div>
-            )}
+            </div>
             
             {/* Grade & Rewards */}
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Min Grade</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Min Grade</label>
                 <Select value={String(contentForm.min_grade)} onValueChange={v => setContentForm(p => ({ ...p, min_grade: parseInt(v) }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{GRADE_OPTIONS.map(g => <SelectItem key={g.value} value={String(g.value)}>{g.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Max Grade</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Max Grade</label>
                 <Select value={String(contentForm.max_grade)} onValueChange={v => setContentForm(p => ({ ...p, max_grade: parseInt(v) }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>{GRADE_OPTIONS.map(g => <SelectItem key={g.value} value={String(g.value)}>{g.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Reward Coins</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reward (₹)</label>
                 <Input type="number" value={contentForm.reward_coins} onChange={e => setContentForm(p => ({ ...p, reward_coins: parseInt(e.target.value) || 0 }))} />
               </div>
             </div>
@@ -957,7 +956,7 @@ export default function ContentManagement({ user }) {
                 <p className="text-sm text-gray-500">Make this content visible to students</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className={contentForm.is_published ? 'text-green-600' : 'text-gray-500'}>
+                <span className={contentForm.is_published ? 'text-green-600 font-medium' : 'text-gray-500'}>
                   {contentForm.is_published ? 'Live' : 'Draft'}
                 </span>
                 <Switch checked={contentForm.is_published} onCheckedChange={v => setContentForm(p => ({ ...p, is_published: v }))} />
