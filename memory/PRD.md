@@ -177,6 +177,42 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 
 ## API Endpoints
 
+### Admin Store Management (New - Phase 11)
+- `POST /api/upload/store-image` - Upload image for store items/categories
+- `GET /api/admin/store/categories` - Get all store categories
+- `POST /api/admin/store/categories` - Create store category
+- `PUT /api/admin/store/categories/{id}` - Update store category
+- `DELETE /api/admin/store/categories/{id}` - Delete store category
+- `GET /api/admin/store/items` - Get all store items
+- `POST /api/admin/store/items` - Create store item
+- `PUT /api/admin/store/items/{id}` - Update store item
+- `DELETE /api/admin/store/items/{id}` - Delete store item
+
+### Admin Investment Management (New - Phase 11)
+- `POST /api/upload/investment-image` - Upload image for plants/stocks
+- `GET /api/admin/investments/plants` - Get all plants (Money Garden)
+- `POST /api/admin/investments/plants` - Create plant
+- `PUT /api/admin/investments/plants/{id}` - Update plant
+- `DELETE /api/admin/investments/plants/{id}` - Delete plant
+- `GET /api/admin/investments/stocks` - Get all stocks
+- `POST /api/admin/investments/stocks` - Create stock
+- `PUT /api/admin/investments/stocks/{id}` - Update stock
+- `DELETE /api/admin/investments/stocks/{id}` - Delete stock
+- `GET /api/admin/investments/stocks/{id}/history` - Get stock price history
+- `POST /api/admin/investments/simulate-day` - Simulate market day (price fluctuations)
+
+### User Investment Endpoints (New - Phase 11)
+- `GET /api/investments/plants` - Get available plants for user
+- `GET /api/investments/stocks` - Get available stocks for user
+- `GET /api/investments/stocks/{id}/chart` - Get stock chart data
+- `GET /api/investments/portfolio` - Get user's investment portfolio
+- `POST /api/investments/buy` - Buy plant seeds or stock shares
+- `POST /api/investments/sell` - Sell plants or stocks
+
+### User Store Endpoints (New - Phase 11)
+- `GET /api/store/categories` - Get active store categories
+- `GET /api/store/items-by-category` - Get store items grouped by category
+
 ### Content Management (New System)
 - `POST /api/upload/thumbnail` - Upload thumbnail image
 - `POST /api/upload/pdf` - Upload PDF for worksheet
