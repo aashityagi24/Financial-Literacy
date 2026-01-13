@@ -427,7 +427,7 @@ export default function TeacherDashboard({ user }) {
                           <div className="flex-1">
                             <h4 className="font-bold text-[#1D3557]">{student.name}</h4>
                             <div className="flex items-center gap-4 text-sm text-[#3D5A80]">
-                              <span>💰 ${student.total_balance?.toFixed(0)}</span>
+                              <span>💰 ₹{student.total_balance?.toFixed(0)}</span>
                               <span>📚 {student.lessons_completed} lessons</span>
                               <span>🔥 {student.streak_count || 0} streak</span>
                             </div>
@@ -499,7 +499,7 @@ export default function TeacherDashboard({ user }) {
               <div className="space-y-4 mt-4">
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div className="bg-[#FFD23F]/20 rounded-xl p-3">
-                    <p className="text-2xl font-bold text-[#1D3557]">${showStudentProgress.total_balance?.toFixed(0)}</p>
+                    <p className="text-2xl font-bold text-[#1D3557]">₹{showStudentProgress.total_balance?.toFixed(0)}</p>
                     <p className="text-xs text-[#3D5A80]">Balance</p>
                   </div>
                   <div className="bg-[#06D6A0]/20 rounded-xl p-3">
