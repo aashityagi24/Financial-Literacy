@@ -425,7 +425,7 @@ export default function ParentDashboard({ user }) {
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="font-bold text-[#1D3557]">{chore.title}</h4>
-                          <p className="text-sm text-[#3D5A80]">{chore.child_name} • +${chore.reward_amount}</p>
+                          <p className="text-sm text-[#3D5A80]">{chore.child_name} • +₹{chore.reward_amount}</p>
                         </div>
                         <button onClick={() => handleApproveChore(chore.chore_id)} className="btn-primary px-4 py-2">
                           <Check className="w-4 h-4 mr-1 inline" /> Approve
