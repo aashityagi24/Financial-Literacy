@@ -189,7 +189,7 @@ export default function StorePage({ user }) {
           <h2 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
             🛒 How Does the Store Work?
           </h2>
-          <p className="text-[#1D3557]/80 text-sm leading-relaxed">
+          <p className="text-[#1D3557]/90 text-base leading-relaxed">
             This is your very own <strong>practice store</strong> where you can learn to shop wisely! Use the ₹ from your <strong>Spending jar</strong> to buy things. 
             Look at the price tags, think about if you really need something, and make smart choices! Remember: once you buy something, that ₹ is gone - so spend carefully!
           </p>
