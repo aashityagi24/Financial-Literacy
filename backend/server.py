@@ -1663,7 +1663,7 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
         teacher_quests = await db.new_quests.find({
             "creator_type": "teacher",
             "is_active": True,
-            "classroom_ids": classroom_id,
+            "classroom_ids": {"$in": [classroom_id]},
             "due_date": {"$gte": today}
         }, {"_id": 0}).to_list(100)
         quests.extend(teacher_quests)
@@ -1737,20 +1737,34 @@ async def submit_quest_answers(quest_id: str, request: Request):
             user_answer = answers.get(q_id)
             correct_answer = question["correct_answer"]
             points = question.get("points", 0) or 0
+            options = question.get("options", [])
             
             is_correct = False
             if question["question_type"] == "multi_select":
-                # Compare lists (order doesn't matter)
+                # Compare lists - convert letter answers (A,B,C,D) to option text for comparison
                 if isinstance(user_answer, list) and isinstance(correct_answer, list):
-                    is_correct = set(user_answer) == set(correct_answer)
+                    # Convert correct_answer letters to option indices, then get user selections
+                    correct_options = set()
+                    for letter in correct_answer:
+                        idx = ord(letter.upper()) - ord('A')
+                        if 0 <= idx < len(options):
+                            correct_options.add(options[idx])
+                    is_correct = set(user_answer) == correct_options
             elif question["question_type"] == "value":
                 # Numeric comparison
                 try:
                     is_correct = float(user_answer) == float(correct_answer)
                 except:
                     is_correct = False
+            elif question["question_type"] == "mcq":
+                # MCQ - correct_answer is letter (A,B,C,D), user_answer is option text
+                if correct_answer and options:
+                    idx = ord(str(correct_answer).upper()) - ord('A')
+                    if 0 <= idx < len(options):
+                        correct_option_text = options[idx]
+                        is_correct = str(user_answer) == str(correct_option_text)
             else:
-                # MCQ or True/False
+                # True/False - direct string comparison
                 is_correct = str(user_answer).lower() == str(correct_answer).lower()
             
             if is_correct and not has_already_earned:
