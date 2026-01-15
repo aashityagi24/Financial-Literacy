@@ -603,7 +603,7 @@ export default function MoneyGardenPage({ user }) {
               </div>
             ) : (
               <div className="space-y-3">
-                <p className="text-sm text-[#3D5A80] mb-3">Today's prices (change daily):</p>
+                <p className="text-sm text-[#3D5A80] mb-3">Today&apos;s prices (change daily):</p>
                 {farm.inventory.map((item) => {
                   const price = getMarketPrice(item.plant_id);
                   const qty = sellQuantity[item.inventory_id] || 1;
