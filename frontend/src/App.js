@@ -139,6 +139,11 @@ function AppRouter() {
           {({ user }) => <InvestmentPage user={user} />}
         </ProtectedRoute>
       } />
+      <Route path="/garden" element={
+        <ProtectedRoute>
+          {({ user }) => <MoneyGardenPage user={user} />}
+        </ProtectedRoute>
+      } />
       <Route path="/quests" element={
         <ProtectedRoute>
           {({ user }) => <QuestsPage user={user} />}
