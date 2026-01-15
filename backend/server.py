@@ -2640,6 +2640,78 @@ async def get_child_progress(child_id: str, request: Request):
         "streak": child.get("streak_count", 0)
     }
 
+@api_router.get("/parent/children/{child_id}/classroom")
+async def get_child_classroom(child_id: str, request: Request):
+    """Get child's classroom info and announcements for parent view"""
+    parent = await require_parent(request)
+    
+    # Verify parent-child link
+    link = await db.parent_child_links.find_one({
+        "parent_id": parent["user_id"],
+        "child_id": child_id,
+        "status": "active"
+    })
+    
+    if not link:
+        raise HTTPException(status_code=403, detail="Child not linked to your account")
+    
+    # Get child info
+    child = await db.users.find_one({"user_id": child_id}, {"_id": 0, "name": 1})
+    child_name = child.get("name", "Child") if child else "Child"
+    
+    # Get child's classroom
+    student_link = await db.classroom_students.find_one(
+        {"student_id": child_id},
+        {"_id": 0}
+    )
+    
+    if not student_link:
+        return {
+            "has_classroom": False,
+            "child_name": child_name,
+            "classroom": None,
+            "teacher": None,
+            "announcements": []
+        }
+    
+    classroom = await db.classrooms.find_one(
+        {"classroom_id": student_link["classroom_id"]},
+        {"_id": 0}
+    )
+    
+    if not classroom:
+        return {
+            "has_classroom": False,
+            "child_name": child_name,
+            "classroom": None,
+            "teacher": None,
+            "announcements": []
+        }
+    
+    # Get teacher info
+    teacher = await db.users.find_one(
+        {"user_id": classroom["teacher_id"]},
+        {"_id": 0, "name": 1, "email": 1, "picture": 1}
+    )
+    
+    # Get announcements
+    announcements = await db.classroom_announcements.find(
+        {"classroom_id": classroom["classroom_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(20)
+    
+    return {
+        "has_classroom": True,
+        "child_name": child_name,
+        "classroom": {
+            "name": classroom.get("name"),
+            "description": classroom.get("description"),
+            "grade_level": classroom.get("grade_level")
+        },
+        "teacher": teacher,
+        "announcements": announcements
+    }
+
 @api_router.post("/parent/chores")
 async def create_chore(chore: ChoreCreate, request: Request):
     """Create a chore for a child"""
