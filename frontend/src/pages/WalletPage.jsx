@@ -115,7 +115,9 @@ export default function WalletPage({ user }) {
       await axios.post(`${API}/wallet/transfer`, {
         from_account: transferData.from_account,
         to_account: transferData.to_account,
-        amount: amount
+        amount: amount,
+        transaction_type: 'transfer',
+        description: `Transfer from ${transferData.from_account} to ${transferData.to_account}`
       });
       
       toast.success('Transfer successful!');
