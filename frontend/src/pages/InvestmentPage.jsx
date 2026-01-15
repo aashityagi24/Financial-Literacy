@@ -106,7 +106,43 @@ export default function InvestmentPage({ user }) {
     }
   };
   
+  const handleTransfer = async () => {
+    const amount = parseFloat(transferData.amount);
+    if (!amount || amount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    if (transferData.from_account === transferData.to_account) {
+      toast.error('Cannot transfer to the same account');
+      return;
+    }
+    
+    try {
+      await axios.post(`${API}/wallet/transfer`, {
+        from_account: transferData.from_account,
+        to_account: transferData.to_account,
+        amount: amount
+      });
+      toast.success(`Transferred ₹${amount} successfully! 💰`);
+      setShowTransfer(false);
+      setTransferData({ from_account: 'spending', to_account: 'investing', amount: '' });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Transfer failed');
+    }
+  };
+  
+  const spendingBalance = wallet?.accounts?.find(a => a.account_type === 'spending')?.balance || 0;
   const investingBalance = wallet?.accounts?.find(a => a.account_type === 'investing')?.balance || 0;
+  const savingsBalance = wallet?.accounts?.find(a => a.account_type === 'savings')?.balance || 0;
+  const giftingBalance = wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance || 0;
+  
+  const accountOptions = [
+    { value: 'spending', label: '💳 Spending', balance: spendingBalance },
+    { value: 'savings', label: '🐷 Savings', balance: savingsBalance },
+    { value: 'investing', label: '📈 Investing', balance: investingBalance },
+    { value: 'gifting', label: '❤️ Gifting', balance: giftingBalance },
+  ];
   
   // Get the assets for current grade level
   const availableAssets = isYounger ? plants : stocks;
