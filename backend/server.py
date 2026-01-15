@@ -2293,7 +2293,7 @@ async def join_classroom(request: Request):
         raise HTTPException(status_code=400, detail="Only students can join classrooms")
     
     body = await request.json()
-    invite_code = body.get("invite_code", "").upper()
+    invite_code = (body.get("invite_code") or "").upper()
     
     classroom = await db.classrooms.find_one({"invite_code": invite_code}, {"_id": 0})
     if not classroom:
