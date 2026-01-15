@@ -283,34 +283,41 @@ export default function Dashboard({ user, setUser }) {
               </Link>
             </div>
             
-            {savingsGoal ? (
-              <div className="flex-1">
-                <div className="bg-[#F8F9FA] rounded-xl p-3 border border-[#E0E0E0]">
-                  <div className="flex gap-3 items-center mb-2">
-                    {savingsGoal.image_url ? (
-                      <img 
-                        src={getAssetUrl(savingsGoal.image_url)} 
-                        alt={savingsGoal.title}
-                        className="w-10 h-10 rounded-lg border-2 border-[#1D3557] object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-lg border-2 border-[#1D3557] bg-[#FFD23F] flex items-center justify-center text-lg flex-shrink-0">
-                        🎯
-                      </div>
-                    )}
-                    <h3 className="font-bold text-[#1D3557] text-sm flex-1 truncate">{savingsGoal.title}</h3>
+            {savingsGoals.length > 0 ? (
+              <div className="flex-1 space-y-2">
+                {savingsGoals.slice(0, 2).map((goal) => (
+                  <div key={goal.goal_id} className="bg-[#F8F9FA] rounded-xl p-3 border border-[#E0E0E0]">
+                    <div className="flex gap-3 items-center mb-2">
+                      {goal.image_url ? (
+                        <img 
+                          src={getAssetUrl(goal.image_url)} 
+                          alt={goal.title}
+                          className="w-10 h-10 rounded-lg border-2 border-[#1D3557] object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg border-2 border-[#1D3557] bg-[#FFD23F] flex items-center justify-center text-lg flex-shrink-0">
+                          🎯
+                        </div>
+                      )}
+                      <h3 className="font-bold text-[#1D3557] text-sm flex-1 truncate">{goal.title}</h3>
+                    </div>
+                    
+                    <Progress value={Math.min(((goal.current_amount || 0) / goal.target_amount) * 100, 100)} className="h-2 mb-2" />
+                    
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[#06D6A0] font-bold">₹{goal.current_amount?.toFixed(0) || 0} saved</span>
+                      <span className="text-[#EE6C4D] font-medium">₹{(goal.target_amount - (goal.current_amount || 0)).toFixed(0)} to go</span>
+                      <span className="text-[#1D3557] font-bold flex items-center gap-1">
+                        <Target className="w-3 h-3" />₹{goal.target_amount?.toFixed(0)}
+                      </span>
+                    </div>
                   </div>
-                  
-                  <Progress value={Math.min((savingsGoal.current_amount / savingsGoal.target_amount) * 100, 100)} className="h-2 mb-2" />
-                  
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[#06D6A0] font-bold">₹{savingsGoal.current_amount?.toFixed(0) || 0} saved</span>
-                    <span className="text-[#EE6C4D] font-medium">₹{(savingsGoal.target_amount - (savingsGoal.current_amount || 0)).toFixed(0)} to go</span>
-                    <span className="text-[#1D3557] font-bold flex items-center gap-1">
-                      <Target className="w-3 h-3" />₹{savingsGoal.target_amount?.toFixed(0)}
-                    </span>
-                  </div>
-                </div>
+                ))}
+                {savingsGoals.length > 2 && (
+                  <Link to="/wallet" className="text-xs text-center text-[#3D5A80] hover:text-[#1D3557] block">
+                    +{savingsGoals.length - 2} more goals →
+                  </Link>
+                )}
               </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-center py-4">
