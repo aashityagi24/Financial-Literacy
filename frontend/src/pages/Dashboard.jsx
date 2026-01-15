@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
+import NotificationCenter from '@/components/NotificationCenter';
+import ClassmatesSection from '@/components/ClassmatesSection';
 
 export default function Dashboard({ user, setUser }) {
   const navigate = useNavigate();
