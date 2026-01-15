@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import NotificationCenter from '@/components/NotificationCenter';
 
 export default function ParentDashboard({ user }) {
   const navigate = useNavigate();
