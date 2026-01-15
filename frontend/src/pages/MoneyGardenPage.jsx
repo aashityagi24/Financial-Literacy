@@ -472,24 +472,82 @@ export default function MoneyGardenPage({ user }) {
           </div>
         )}
         
-        {/* Available Seeds */}
-        <div className="card-playful p-4 bg-white">
-          <h2 className="text-lg font-bold text-[#228B22] mb-3" style={{ fontFamily: 'Fredoka' }}>
-            🌱 Seed Shop
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {farm.seeds.map((seed) => (
-              <div key={seed.plant_id} className="bg-[#F0FFF0] rounded-xl p-3 border-2 border-[#228B22]/30">
-                <div className="text-center">
-                  <span className="text-3xl">{seed.emoji}</span>
-                  <p className="font-bold text-[#1D3557]">{seed.name}</p>
-                  <p className="text-xs text-[#3D5A80]">{seed.growth_days} days to grow</p>
-                  <p className="text-xs text-[#3D5A80]">Yields: {seed.harvest_yield} {seed.yield_unit}</p>
-                  <p className="font-bold text-[#06D6A0]">₹{seed.seed_cost}</p>
+        {/* Reports Section - Investment Projections */}
+        <div className="card-playful p-4 bg-white" data-testid="garden-reports">
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 className="w-6 h-6 text-[#228B22]" />
+            <h2 className="text-lg font-bold text-[#228B22]" style={{ fontFamily: 'Fredoka' }}>
+              📊 Garden Reports
+            </h2>
+          </div>
+          
+          {reportsData.plotReports.length === 0 ? (
+            <div className="text-center py-6">
+              <span className="text-4xl">🌱</span>
+              <p className="text-[#3D5A80] mt-2">Plant some seeds to see your projections!</p>
+            </div>
+          ) : (
+            <>
+              {/* Summary Card */}
+              <div className="bg-gradient-to-r from-[#228B22]/10 to-[#90EE90]/20 rounded-xl p-4 mb-4 border-2 border-[#228B22]/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <TrendingUp className="w-8 h-8 text-[#228B22]" />
+                    <div>
+                      <p className="text-sm text-[#3D5A80]">Total Projected Earnings</p>
+                      <p className="text-2xl font-bold text-[#228B22]" style={{ fontFamily: 'Fredoka' }}>
+                        ₹{reportsData.totalProjectedEarnings.toFixed(0)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-[#3D5A80]">Active Plants</p>
+                    <p className="text-xl font-bold text-[#1D3557]">{reportsData.plotReports.length}</p>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
+              
+              {/* Individual Plot Reports */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-bold text-[#1D3557] flex items-center gap-2">
+                  <Clock className="w-4 h-4" /> Time to Harvest & Projected Returns
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {reportsData.plotReports.map((report) => (
+                    <div 
+                      key={report.plot_id} 
+                      className={`rounded-xl p-3 border-2 flex items-center gap-3 ${
+                        report.status === 'ready' 
+                          ? 'bg-[#FFD700]/20 border-[#FFD700]' 
+                          : 'bg-[#F0FFF0] border-[#228B22]/30'
+                      }`}
+                    >
+                      <span className="text-3xl">{report.plant_emoji}</span>
+                      <div className="flex-1">
+                        <p className="font-bold text-[#1D3557]">{report.plant_name}</p>
+                        <div className="flex items-center gap-2 text-xs text-[#3D5A80]">
+                          <span>Plot #{report.position}</span>
+                          <span>•</span>
+                          <span>{Math.round(report.growth_progress)}% grown</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-sm font-bold ${
+                          report.status === 'ready' ? 'text-[#FFD700]' : 'text-[#00CED1]'
+                        }`}>
+                          <Clock className="w-3 h-3 inline mr-1" />
+                          {report.time_remaining}
+                        </p>
+                        <p className="text-sm font-bold text-[#06D6A0]">
+                          ₹{report.projected_value.toFixed(0)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </main>
       
