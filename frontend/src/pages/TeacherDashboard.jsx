@@ -181,6 +181,75 @@ export default function TeacherDashboard({ user }) {
     }
   };
   
+  const handleCreateQuest = async () => {
+    if (!questForm.title || !questForm.due_date || questForm.questions.length === 0) {
+      toast.error('Please fill title, due date, and add at least one question');
+      return;
+    }
+    try {
+      await axios.post(`${API}/teacher/quests`, questForm);
+      toast.success('Quest created! Students will be notified.');
+      setShowCreateQuest(false);
+      setQuestForm({ title: '', description: '', min_grade: 0, max_grade: 5, due_date: '', questions: [] });
+      fetchDashboard();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create quest');
+    }
+  };
+  
+  const addQuestion = () => {
+    setQuestForm(prev => ({
+      ...prev,
+      questions: [
+        ...prev.questions,
+        {
+          question_id: `q_${Date.now()}`,
+          question_text: '',
+          question_type: 'mcq',
+          options: ['', '', '', ''],
+          correct_answer: '',
+          points: 10
+        }
+      ]
+    }));
+  };
+  
+  const updateQuestion = (index, field, value) => {
+    setQuestForm(prev => ({
+      ...prev,
+      questions: prev.questions.map((q, i) => 
+        i === index ? { ...q, [field]: value } : q
+      )
+    }));
+  };
+  
+  const updateOption = (qIndex, oIndex, value) => {
+    setQuestForm(prev => ({
+      ...prev,
+      questions: prev.questions.map((q, i) => 
+        i === qIndex ? { ...q, options: q.options.map((o, j) => j === oIndex ? value : o) } : q
+      )
+    }));
+  };
+  
+  const removeQuestion = (index) => {
+    setQuestForm(prev => ({
+      ...prev,
+      questions: prev.questions.filter((_, i) => i !== index)
+    }));
+  };
+  
+  const handleDeleteQuest = async (questId) => {
+    if (!window.confirm('Delete this quest?')) return;
+    try {
+      await axios.delete(`${API}/teacher/quests/${questId}`);
+      toast.success('Quest deleted');
+      fetchDashboard();
+    } catch (error) {
+      toast.error('Failed to delete quest');
+    }
+  };
+  
   const handleCompleteChallenge = async (challengeId, studentId) => {
     try {
       await axios.post(`${API}/teacher/challenges/${challengeId}/complete/${studentId}`);
