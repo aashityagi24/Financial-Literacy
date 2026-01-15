@@ -456,6 +456,50 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - **Wallet Refactor** (dedicated /savings-goals page, streamlined wallet, "giving" → "gifting" rename)
 - **Role-Based Dashboard Separation** (Admin/Teacher/Parent isolated from child dashboard, each with logout and role-specific module access)
 
+### Phase 19: Complete Quest System Overhaul ✅ (January 15, 2026)
+- **Removed Old Hardcoded Quests**: Legacy quests system completely replaced
+- **Admin Quest Management** (`/admin/quests`):
+  - Create Q&A quests with multiple question types: MCQ, Multi-select, True/False, Value entry
+  - Upload quest images and PDFs
+  - Set grade range (Kindergarten - 5th Grade)
+  - Set due date (11:59 PM closure time)
+  - Each question has its own point value (₹)
+  - Edit and delete quests
+- **Teacher Quest System** (`/teacher/quests`):
+  - Same Q&A format as admin quests
+  - Quests assigned to teacher's classrooms
+  - Automatic notifications sent to students
+- **Parent Chore System** (`/parent/chores-new`):
+  - Create chores for children (shown as "Chores" tab in child quest board)
+  - Frequency options: One-time, Daily, Weekly (select days), Monthly (select date)
+  - Child requests completion, parent validates
+  - Money awarded only after parent approval
+  - Daily chore reset at 6 AM IST
+- **Child Quest Board** (`/quests`):
+  - Unified view of all quests/chores
+  - Filter tabs: All, Admin, Teacher, Chores
+  - Sort by Due Date or Reward amount
+  - Quest detail dialog with Q&A interface
+  - Partial credit: earn based on correct answers
+  - Can retake quests but money earned only once
+- **Automated Notifications**:
+  - Quest reminder 1 day before due date
+  - Daily chore reminder at 6 AM IST
+  - Chore completion request to parent
+  - Approval/rejection notification to child
+- **New API Endpoints**:
+  - `/api/admin/quests` - CRUD for admin quests
+  - `/api/teacher/quests` - CRUD for teacher quests
+  - `/api/parent/chores-new` - CRUD for parent chores
+  - `/api/child/quests-new` - Get all quests with filtering
+  - `/api/child/quests-new/{id}/submit` - Submit quest answers
+  - `/api/child/chores/{id}/request-complete` - Request chore validation
+  - `/api/parent/chore-requests` - Get pending validation requests
+  - `/api/parent/chore-requests/{id}/validate` - Approve/reject chore
+  - `/api/upload/quest-asset` - Upload images/PDFs for quests
+- **Scheduler Jobs**:
+  - Quest reminder notifications (7 PM UTC daily)
+  - Daily chore reset (00:30 UTC = 6 AM IST)
 ### P1 (Next Phase)
 - Daily Login Rewards & Streak Bonuses
 - Leaderboards
