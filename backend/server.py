@@ -2440,6 +2440,38 @@ async def get_child_parents(request: Request):
     
     return parents
 
+@api_router.get("/child/announcements")
+async def get_child_announcements(request: Request):
+    """Get announcements from all classrooms the child is in"""
+    user = await get_current_user(request)
+    
+    # Get child's classrooms
+    student_links = await db.classroom_students.find(
+        {"student_id": user["user_id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    classroom_ids = [link["classroom_id"] for link in student_links]
+    
+    if not classroom_ids:
+        return []
+    
+    # Get announcements from those classrooms
+    announcements = await db.classroom_announcements.find(
+        {"classroom_id": {"$in": classroom_ids}},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    # Add classroom name to each announcement
+    for ann in announcements:
+        classroom = await db.classrooms.find_one(
+            {"classroom_id": ann["classroom_id"]},
+            {"_id": 0, "name": 1}
+        )
+        ann["classroom_name"] = classroom.get("name", "Unknown") if classroom else "Unknown"
+    
+    return announcements
+
 # ============== PARENT ROUTES ==============
 
 @api_router.get("/parent/dashboard")
