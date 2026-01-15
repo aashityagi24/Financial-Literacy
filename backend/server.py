@@ -3265,6 +3265,18 @@ async def approve_chore(chore_id: str, request: Request):
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
+    # Notify child about approved chore
+    await create_notification(
+        user_id=chore["child_id"],
+        notification_type="reward",
+        title=f"✅ Task Approved: {chore['title']}",
+        message=f"Great job! You earned ₹{chore['reward_amount']}!",
+        from_user_id=parent["user_id"],
+        from_user_name=parent.get("name"),
+        related_id=chore_id,
+        amount=chore["reward_amount"]
+    )
+    
     if chore.get("frequency") in ["daily", "weekly"]:
         new_chore = {
             "chore_id": f"chore_{uuid.uuid4().hex[:12]}",
