@@ -458,21 +458,21 @@ export default function WalletPage({ user }) {
                 style={{ animationDelay: `${0.1 * (index + 2)}s` }}
               >
                 <div className="text-3xl mb-2">{info?.icon}</div>
-                <p className="capitalize text-base font-medium opacity-90">{acc.account_type}</p>
+                <p className="capitalize text-lg font-bold">{acc.account_type}</p>
                 <p className="text-2xl font-bold" style={{ fontFamily: 'Fredoka' }}>₹{acc.balance?.toFixed(0)}</p>
-                <p className="text-sm opacity-80 mt-1">{info?.description}</p>
+                <p className="text-base opacity-90 mt-1">{info?.description}</p>
                 {info?.action && (
                   info.action.onClick === 'openGoal' ? (
                     <button 
                       onClick={() => setGoalOpen(true)}
-                      className="mt-3 w-full py-2 bg-white/20 hover:bg-white/30 rounded-xl text-base font-bold"
+                      className="mt-3 w-full py-2 bg-white/20 hover:bg-white/30 rounded-xl text-lg font-bold"
                     >
                       {info.action.label}
                     </button>
                   ) : (
                     <Link 
                       to={info.action.path}
-                      className="mt-3 block w-full py-2 bg-white/20 hover:bg-white/30 rounded-xl text-base font-bold text-center"
+                      className="mt-3 block w-full py-2 bg-white/20 hover:bg-white/30 rounded-xl text-lg font-bold text-center"
                     >
                       {info.action.label}
                     </Link>
