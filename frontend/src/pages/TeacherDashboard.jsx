@@ -140,18 +140,6 @@ export default function TeacherDashboard({ user }) {
     }
   };
   
-  const handleCreateChallenge = async () => {
-    try {
-      await axios.post(`${API}/teacher/classrooms/${selectedClassroom}/challenges`, challengeForm);
-      toast.success('Challenge created!');
-      setShowChallenge(false);
-      setChallengeForm({ title: '', description: '', reward_amount: 20 });
-      fetchClassroomDetails(selectedClassroom);
-    } catch (error) {
-      toast.error('Failed to create challenge');
-    }
-  };
-  
   const handlePostAnnouncement = async () => {
     if (!announcementForm.title || !announcementForm.message) {
       toast.error('Please fill in title and message');
