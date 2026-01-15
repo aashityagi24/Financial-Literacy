@@ -288,7 +288,7 @@ export default function WalletPage({ user }) {
                       <SelectContent>
                         {wallet?.accounts?.map(acc => (
                           <SelectItem key={acc.account_type} value={acc.account_type}>
-                            {accountInfo[acc.account_type]?.icon} {acc.account_type} (₹{acc.balance?.toFixed(0)})
+                            {accountInfo[acc.account_type]?.icon} {acc.account_type.charAt(0).toUpperCase() + acc.account_type.slice(1)} (₹{acc.balance?.toFixed(0)})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -304,7 +304,7 @@ export default function WalletPage({ user }) {
                       <SelectContent>
                         {wallet?.accounts?.map(acc => (
                           <SelectItem key={acc.account_type} value={acc.account_type}>
-                            {accountInfo[acc.account_type]?.icon} {acc.account_type} (₹{acc.balance?.toFixed(0)})
+                            {accountInfo[acc.account_type]?.icon} {acc.account_type.charAt(0).toUpperCase() + acc.account_type.slice(1)} (₹{acc.balance?.toFixed(0)})
                           </SelectItem>
                         ))}
                       </SelectContent>
