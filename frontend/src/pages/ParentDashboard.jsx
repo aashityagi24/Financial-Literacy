@@ -226,18 +226,26 @@ export default function ParentDashboard({ user }) {
       <header className="bg-[#06D6A0] border-b-3 border-[#1D3557]">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link to="/dashboard" className="p-2 rounded-xl border-2 border-white hover:bg-white/20">
-                <ChevronLeft className="w-5 h-5 text-white" />
-              </Link>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-xl border-3 border-[#1D3557] flex items-center justify-center">
-                  <Users className="w-6 h-6 text-[#06D6A0]" />
-                </div>
-                <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>Parent Dashboard</h1>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white rounded-xl border-3 border-[#1D3557] flex items-center justify-center">
+                <Users className="w-6 h-6 text-[#06D6A0]" />
               </div>
+              <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>Parent Dashboard</h1>
             </div>
-            <NotificationCenter />
+            <div className="flex items-center gap-3">
+              <NotificationCenter />
+              <div className="flex items-center gap-2 px-3 py-2 bg-white/20 rounded-xl">
+                <User className="w-4 h-4 text-white" />
+                <span className="text-sm font-medium text-white">{user?.name || 'Parent'}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-xl border-2 border-white hover:bg-white/20 transition-colors"
+                data-testid="parent-logout-btn"
+              >
+                <LogOut className="w-5 h-5 text-white" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
