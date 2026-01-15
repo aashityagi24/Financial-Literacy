@@ -132,6 +132,32 @@ export default function TeacherDashboard({ user }) {
     }
   };
   
+  const handlePostAnnouncement = async () => {
+    if (!announcementForm.title || !announcementForm.message) {
+      toast.error('Please fill in title and message');
+      return;
+    }
+    try {
+      await axios.post(`${API}/teacher/classrooms/${selectedClassroom}/announcements`, announcementForm);
+      toast.success('Announcement posted!');
+      setShowAnnouncement(false);
+      setAnnouncementForm({ title: '', message: '' });
+      fetchClassroomDetails(selectedClassroom);
+    } catch (error) {
+      toast.error('Failed to post announcement');
+    }
+  };
+  
+  const handleDeleteAnnouncement = async (announcementId) => {
+    try {
+      await axios.delete(`${API}/teacher/announcements/${announcementId}`);
+      toast.success('Announcement deleted');
+      setAnnouncements(announcements.filter(a => a.announcement_id !== announcementId));
+    } catch (error) {
+      toast.error('Failed to delete announcement');
+    }
+  };
+  
   const handleCompleteChallenge = async (challengeId, studentId) => {
     try {
       await axios.post(`${API}/teacher/challenges/${challengeId}/complete/${studentId}`);
