@@ -211,7 +211,7 @@ export default function WalletPage({ user }) {
                         <SelectValue placeholder="Select account" />
                       </SelectTrigger>
                       <SelectContent>
-                        {wallet?.accounts?.map(acc => (
+                        {filteredAccounts.map(acc => (
                           <SelectItem key={acc.account_type} value={acc.account_type}>
                             {accountInfo[acc.account_type]?.icon} {acc.account_type.charAt(0).toUpperCase() + acc.account_type.slice(1)} (₹{acc.balance?.toFixed(0)})
                           </SelectItem>
@@ -227,7 +227,7 @@ export default function WalletPage({ user }) {
                         <SelectValue placeholder="Select account" />
                       </SelectTrigger>
                       <SelectContent>
-                        {wallet?.accounts?.map(acc => (
+                        {filteredAccounts.map(acc => (
                           <SelectItem key={acc.account_type} value={acc.account_type}>
                             {accountInfo[acc.account_type]?.icon} {acc.account_type.charAt(0).toUpperCase() + acc.account_type.slice(1)} (₹{acc.balance?.toFixed(0)})
                           </SelectItem>
@@ -274,7 +274,7 @@ export default function WalletPage({ user }) {
         {/* Account Cards */}
         <h2 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>Your Money Jars</h2>
         <div className="grid grid-cols-2 gap-4 mb-8" data-testid="money-jars-grid">
-          {wallet?.accounts?.map((acc, index) => {
+          {filteredAccounts.map((acc, index) => {
             const info = accountInfo[acc.account_type];
             return (
               <div 
