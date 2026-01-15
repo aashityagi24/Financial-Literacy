@@ -2472,6 +2472,406 @@ async def get_child_announcements(request: Request):
     
     return announcements
 
+# ============== NOTIFICATION SYSTEM ==============
+
+class NotificationCreate(BaseModel):
+    user_id: str
+    notification_type: str  # announcement, reward, gift_received, gift_request, quest_created, quest_completed
+    title: str
+    message: str
+    from_user_id: Optional[str] = None
+    from_user_name: Optional[str] = None
+    related_id: Optional[str] = None  # classroom_id, chore_id, etc.
+    amount: Optional[float] = None
+
+async def create_notification(
+    user_id: str, 
+    notification_type: str, 
+    title: str, 
+    message: str,
+    from_user_id: str = None,
+    from_user_name: str = None,
+    related_id: str = None,
+    amount: float = None
+):
+    """Helper function to create notifications"""
+    notification = {
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id,
+        "notification_type": notification_type,
+        "title": title,
+        "message": message,
+        "from_user_id": from_user_id,
+        "from_user_name": from_user_name,
+        "related_id": related_id,
+        "amount": amount,
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification)
+    return notification
+
+@api_router.get("/notifications")
+async def get_notifications(request: Request):
+    """Get notifications for current user"""
+    user = await get_current_user(request)
+    
+    notifications = await db.notifications.find(
+        {"user_id": user["user_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    # Count unread
+    unread_count = sum(1 for n in notifications if not n.get("read"))
+    
+    return {
+        "notifications": notifications,
+        "unread_count": unread_count
+    }
+
+@api_router.post("/notifications/mark-read")
+async def mark_notifications_read(request: Request):
+    """Mark all notifications as read"""
+    user = await get_current_user(request)
+    
+    await db.notifications.update_many(
+        {"user_id": user["user_id"], "read": False},
+        {"$set": {"read": True}}
+    )
+    
+    return {"message": "Notifications marked as read"}
+
+@api_router.delete("/notifications/{notification_id}")
+async def delete_notification(notification_id: str, request: Request):
+    """Delete a notification"""
+    user = await get_current_user(request)
+    
+    result = await db.notifications.delete_one({
+        "notification_id": notification_id,
+        "user_id": user["user_id"]
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
+    return {"message": "Notification deleted"}
+
+# ============== CLASSMATES & GIFTING ==============
+
+@api_router.get("/child/classmates")
+async def get_classmates(request: Request):
+    """Get all classmates with their info and savings goals"""
+    user = await get_current_user(request)
+    
+    if user.get("role") != "child":
+        raise HTTPException(status_code=400, detail="Only children can view classmates")
+    
+    # Get child's classrooms
+    student_links = await db.classroom_students.find(
+        {"student_id": user["user_id"]},
+        {"_id": 0}
+    ).to_list(10)
+    
+    if not student_links:
+        return {"classmates": [], "classroom": None}
+    
+    # Get first classroom
+    classroom_id = student_links[0]["classroom_id"]
+    classroom = await db.classrooms.find_one(
+        {"classroom_id": classroom_id},
+        {"_id": 0}
+    )
+    
+    # Get all students in classroom
+    all_students = await db.classroom_students.find(
+        {"classroom_id": classroom_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    classmates = []
+    for student_link in all_students:
+        student_id = student_link["student_id"]
+        if student_id == user["user_id"]:
+            continue  # Skip self
+        
+        student = await db.users.find_one(
+            {"user_id": student_id},
+            {"_id": 0, "user_id": 1, "name": 1, "picture": 1, "streak_count": 1}
+        )
+        
+        if not student:
+            continue
+        
+        # Get wallet balance
+        wallet = await db.wallet_accounts.find(
+            {"user_id": student_id},
+            {"_id": 0}
+        ).to_list(10)
+        total_balance = sum(w.get("balance", 0) for w in wallet)
+        
+        # Get lessons completed
+        lessons_completed = await db.user_lesson_progress.count_documents({
+            "user_id": student_id,
+            "completed": True
+        })
+        
+        # Get active savings goals (public)
+        savings_goals = await db.savings_goals.find(
+            {"user_id": student_id, "completed": False},
+            {"_id": 0, "title": 1, "target_amount": 1, "current_amount": 1, "deadline": 1, "image_url": 1}
+        ).to_list(5)
+        
+        classmates.append({
+            "user_id": student["user_id"],
+            "name": student.get("name"),
+            "picture": student.get("picture"),
+            "total_balance": total_balance,
+            "lessons_completed": lessons_completed,
+            "streak_count": student.get("streak_count", 0),
+            "savings_goals": savings_goals
+        })
+    
+    return {
+        "classmates": classmates,
+        "classroom": classroom
+    }
+
+class GiftMoneyRequest(BaseModel):
+    recipient_id: str
+    amount: float
+    message: Optional[str] = ""
+
+@api_router.post("/child/gift-money")
+async def gift_money_to_classmate(gift: GiftMoneyRequest, request: Request):
+    """Send money as a gift to a classmate"""
+    user = await get_current_user(request)
+    
+    if user.get("role") != "child":
+        raise HTTPException(status_code=400, detail="Only children can send gifts")
+    
+    if gift.amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be positive")
+    
+    # Check sender's giving account balance
+    giving_account = await db.wallet_accounts.find_one({
+        "user_id": user["user_id"],
+        "account_type": "giving"
+    })
+    
+    if not giving_account or giving_account.get("balance", 0) < gift.amount:
+        raise HTTPException(status_code=400, detail="Not enough balance in your Giving jar")
+    
+    # Verify recipient exists and is a classmate
+    recipient = await db.users.find_one({"user_id": gift.recipient_id})
+    if not recipient:
+        raise HTTPException(status_code=404, detail="Recipient not found")
+    
+    # Deduct from sender's giving account
+    await db.wallet_accounts.update_one(
+        {"user_id": user["user_id"], "account_type": "giving"},
+        {"$inc": {"balance": -gift.amount}}
+    )
+    
+    # Add to recipient's spending account
+    await db.wallet_accounts.update_one(
+        {"user_id": gift.recipient_id, "account_type": "spending"},
+        {"$inc": {"balance": gift.amount}}
+    )
+    
+    # Record transactions
+    await db.transactions.insert_one({
+        "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "type": "gift_sent",
+        "amount": -gift.amount,
+        "description": f"Gift to {recipient.get('name', 'classmate')}",
+        "account_type": "giving",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    await db.transactions.insert_one({
+        "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
+        "user_id": gift.recipient_id,
+        "type": "gift_received",
+        "amount": gift.amount,
+        "description": f"Gift from {user.get('name', 'classmate')}",
+        "account_type": "spending",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Create notification for recipient
+    await create_notification(
+        user_id=gift.recipient_id,
+        notification_type="gift_received",
+        title="🎁 You received a gift!",
+        message=f"{user.get('name', 'A classmate')} sent you ₹{gift.amount}" + (f": {gift.message}" if gift.message else ""),
+        from_user_id=user["user_id"],
+        from_user_name=user.get("name"),
+        amount=gift.amount
+    )
+    
+    return {"message": f"Gift of ₹{gift.amount} sent successfully!"}
+
+class GiftRequestCreate(BaseModel):
+    recipient_id: str
+    amount: float
+    reason: Optional[str] = ""
+
+@api_router.post("/child/request-gift")
+async def request_gift(req: GiftRequestCreate, request: Request):
+    """Request money from a classmate"""
+    user = await get_current_user(request)
+    
+    if user.get("role") != "child":
+        raise HTTPException(status_code=400, detail="Only children can request gifts")
+    
+    if req.amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be positive")
+    
+    # Verify recipient exists
+    recipient = await db.users.find_one({"user_id": req.recipient_id})
+    if not recipient:
+        raise HTTPException(status_code=404, detail="Recipient not found")
+    
+    # Create gift request record
+    gift_request = {
+        "request_id": f"giftreq_{uuid.uuid4().hex[:12]}",
+        "requester_id": user["user_id"],
+        "requester_name": user.get("name"),
+        "recipient_id": req.recipient_id,
+        "amount": req.amount,
+        "reason": req.reason,
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.gift_requests.insert_one(gift_request)
+    
+    # Create notification for recipient
+    await create_notification(
+        user_id=req.recipient_id,
+        notification_type="gift_request",
+        title="💝 Gift Request",
+        message=f"{user.get('name', 'A classmate')} is asking for ₹{req.amount}" + (f": {req.reason}" if req.reason else ""),
+        from_user_id=user["user_id"],
+        from_user_name=user.get("name"),
+        related_id=gift_request["request_id"],
+        amount=req.amount
+    )
+    
+    return {"message": "Gift request sent!", "request_id": gift_request["request_id"]}
+
+@api_router.get("/child/gift-requests")
+async def get_gift_requests(request: Request):
+    """Get pending gift requests for user"""
+    user = await get_current_user(request)
+    
+    # Requests received
+    received = await db.gift_requests.find(
+        {"recipient_id": user["user_id"], "status": "pending"},
+        {"_id": 0}
+    ).to_list(20)
+    
+    # Requests sent
+    sent = await db.gift_requests.find(
+        {"requester_id": user["user_id"], "status": "pending"},
+        {"_id": 0}
+    ).to_list(20)
+    
+    return {"received": received, "sent": sent}
+
+@api_router.post("/child/gift-requests/{request_id}/respond")
+async def respond_to_gift_request(request_id: str, request: Request):
+    """Accept or decline a gift request"""
+    user = await get_current_user(request)
+    body = await request.json()
+    action = body.get("action")  # "accept" or "decline"
+    
+    gift_request = await db.gift_requests.find_one({
+        "request_id": request_id,
+        "recipient_id": user["user_id"],
+        "status": "pending"
+    })
+    
+    if not gift_request:
+        raise HTTPException(status_code=404, detail="Gift request not found")
+    
+    if action == "accept":
+        # Check balance
+        giving_account = await db.wallet_accounts.find_one({
+            "user_id": user["user_id"],
+            "account_type": "giving"
+        })
+        
+        if not giving_account or giving_account.get("balance", 0) < gift_request["amount"]:
+            raise HTTPException(status_code=400, detail="Not enough balance in your Giving jar")
+        
+        # Transfer money
+        await db.wallet_accounts.update_one(
+            {"user_id": user["user_id"], "account_type": "giving"},
+            {"$inc": {"balance": -gift_request["amount"]}}
+        )
+        
+        await db.wallet_accounts.update_one(
+            {"user_id": gift_request["requester_id"], "account_type": "spending"},
+            {"$inc": {"balance": gift_request["amount"]}}
+        )
+        
+        # Record transactions
+        await db.transactions.insert_one({
+            "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
+            "user_id": user["user_id"],
+            "type": "gift_sent",
+            "amount": -gift_request["amount"],
+            "description": f"Gift to {gift_request.get('requester_name', 'classmate')}",
+            "account_type": "giving",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        await db.transactions.insert_one({
+            "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
+            "user_id": gift_request["requester_id"],
+            "type": "gift_received",
+            "amount": gift_request["amount"],
+            "description": f"Gift from {user.get('name', 'classmate')} (requested)",
+            "account_type": "spending",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Notify requester
+        await create_notification(
+            user_id=gift_request["requester_id"],
+            notification_type="gift_received",
+            title="🎁 Gift request accepted!",
+            message=f"{user.get('name', 'A classmate')} accepted your request and sent ₹{gift_request['amount']}",
+            from_user_id=user["user_id"],
+            from_user_name=user.get("name"),
+            amount=gift_request["amount"]
+        )
+        
+        await db.gift_requests.update_one(
+            {"request_id": request_id},
+            {"$set": {"status": "accepted"}}
+        )
+        
+        return {"message": f"Gift sent! ₹{gift_request['amount']} given."}
+    else:
+        await db.gift_requests.update_one(
+            {"request_id": request_id},
+            {"$set": {"status": "declined"}}
+        )
+        
+        # Notify requester
+        await create_notification(
+            user_id=gift_request["requester_id"],
+            notification_type="gift_request_declined",
+            title="Gift request declined",
+            message=f"{user.get('name', 'A classmate')} couldn't fulfill your gift request",
+            from_user_id=user["user_id"],
+            from_user_name=user.get("name")
+        )
+        
+        return {"message": "Request declined"}
+
 # ============== PARENT ROUTES ==============
 
 @api_router.get("/parent/dashboard")
