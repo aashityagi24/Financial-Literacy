@@ -435,7 +435,68 @@ export default function TeacherDashboard({ user }) {
                       </div>
                     </DialogContent>
                   </Dialog>
+                  
+                  <Dialog open={showAnnouncement} onOpenChange={setShowAnnouncement}>
+                    <DialogTrigger asChild>
+                      <button className="bg-[#FFD23F] border-3 border-[#1D3557] rounded-xl font-bold text-[#1D3557] hover:bg-[#FFE066] flex-1 py-3 flex items-center justify-center gap-2">
+                        <Megaphone className="w-5 h-5" /> Announce
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
+                      <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Post Announcement</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 mt-4">
+                        <p className="text-sm text-[#3D5A80]">This will be visible to all students and their parents.</p>
+                        <Input 
+                          placeholder="Announcement Title" 
+                          value={announcementForm.title} 
+                          onChange={(e) => setAnnouncementForm({...announcementForm, title: e.target.value})}
+                          className="border-3 border-[#1D3557]"
+                        />
+                        <Textarea 
+                          placeholder="Message" 
+                          value={announcementForm.message} 
+                          onChange={(e) => setAnnouncementForm({...announcementForm, message: e.target.value})}
+                          className="border-3 border-[#1D3557]"
+                          rows={4}
+                        />
+                        <button onClick={handlePostAnnouncement} className="btn-primary w-full py-3">Post Announcement</button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
+                
+                {/* Announcements Section */}
+                {announcements.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
+                      <Megaphone className="w-5 h-5 inline mr-2" />
+                      Announcements ({announcements.length})
+                    </h3>
+                    <div className="space-y-3">
+                      {announcements.map((ann) => (
+                        <div key={ann.announcement_id} className="card-playful p-4 bg-[#FFD23F]/10">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="font-bold text-[#1D3557]">{ann.title}</h4>
+                              <p className="text-sm text-[#3D5A80] mt-1">{ann.message}</p>
+                              <p className="text-xs text-[#3D5A80]/60 mt-2">
+                                Posted: {new Date(ann.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <button 
+                              onClick={() => handleDeleteAnnouncement(ann.announcement_id)}
+                              className="p-2 hover:bg-[#EE6C4D]/20 rounded-lg text-[#EE6C4D]"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 {/* Students List */}
                 <h3 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
