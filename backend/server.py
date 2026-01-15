@@ -2053,8 +2053,19 @@ async def give_classroom_reward(classroom_id: str, reward: ClassroomReward, requ
             "description": f"Teacher reward: {reward.reason}",
             "created_at": datetime.now(timezone.utc).isoformat()
         })
+        
+        # Create notification for student
+        await create_notification(
+            user_id=student_id,
+            notification_type="reward",
+            title="🌟 You received a reward!",
+            message=f"Your teacher gave you ₹{reward.amount}: {reward.reason}",
+            from_user_id=teacher["user_id"],
+            from_user_name=teacher.get("name"),
+            amount=reward.amount
+        )
     
-    return {"message": f"Rewarded {len(reward.student_ids)} students with ${reward.amount} each"}
+    return {"message": f"Rewarded {len(reward.student_ids)} students with ₹{reward.amount} each"}
 
 @api_router.post("/teacher/classrooms/{classroom_id}/challenges")
 async def create_classroom_challenge(classroom_id: str, challenge: ChallengeCreate, request: Request):
