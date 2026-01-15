@@ -27,6 +27,7 @@ import AdminStoreManagement from "@/pages/AdminStoreManagement";
 import AdminInvestmentManagement from "@/pages/AdminInvestmentManagement";
 import ClassmatesPage from "@/pages/ClassmatesPage";
 import SavingsGoalsPage from "@/pages/SavingsGoalsPage";
+import AdminQuestsPage from "@/pages/AdminQuestsPage";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
