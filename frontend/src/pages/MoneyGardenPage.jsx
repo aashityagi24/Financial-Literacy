@@ -201,9 +201,72 @@ export default function MoneyGardenPage({ user }) {
     { value: 'gifting', label: '❤️ Gifting', balance: wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance || 0 },
   ];
   
+  // Calculate reports data
+  const calculateReportsData = () => {
+    const growingPlots = sortedPlots.filter(p => p.status === 'growing' || p.status === 'water_needed' || p.status === 'wilting');
+    const readyPlots = sortedPlots.filter(p => p.status === 'ready');
+    
+    let totalProjectedEarnings = 0;
+    const plotReports = [];
+    
+    // Calculate for growing plants
+    growingPlots.forEach(plot => {
+      const seed = farm.seeds.find(s => s.plant_id === plot.plant_id);
+      const marketPrice = getMarketPrice(plot.plant_id);
+      if (seed && marketPrice) {
+        const projectedValue = seed.harvest_yield * marketPrice;
+        totalProjectedEarnings += projectedValue;
+        
+        // Calculate time remaining
+        const growthRemaining = 100 - plot.growth_progress;
+        const hoursRemaining = Math.ceil((growthRemaining / 100) * (seed.growth_days * 24));
+        const daysRemaining = Math.floor(hoursRemaining / 24);
+        const hoursRemainder = hoursRemaining % 24;
+        
+        plotReports.push({
+          plot_id: plot.plot_id,
+          position: plot.position,
+          plant_name: plot.plant_name,
+          plant_emoji: plot.plant_emoji,
+          growth_progress: plot.growth_progress,
+          projected_value: projectedValue,
+          time_remaining: daysRemaining > 0 
+            ? `${daysRemaining}d ${hoursRemainder}h` 
+            : `${hoursRemainder}h`,
+          status: plot.status
+        });
+      }
+    });
+    
+    // Add ready-to-harvest plants
+    readyPlots.forEach(plot => {
+      const seed = farm.seeds.find(s => s.plant_id === plot.plant_id);
+      const marketPrice = getMarketPrice(plot.plant_id);
+      if (seed && marketPrice) {
+        const projectedValue = seed.harvest_yield * marketPrice;
+        totalProjectedEarnings += projectedValue;
+        
+        plotReports.push({
+          plot_id: plot.plot_id,
+          position: plot.position,
+          plant_name: plot.plant_name,
+          plant_emoji: plot.plant_emoji,
+          growth_progress: 100,
+          projected_value: projectedValue,
+          time_remaining: 'Ready!',
+          status: 'ready'
+        });
+      }
+    });
+    
+    return { totalProjectedEarnings, plotReports };
+  };
+  
+  const reportsData = calculateReportsData();
+  
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#87CEEB] to-[#90EE90]" data-testid="money-garden-page">
-      {/* Header */}
+      {/* Header - Simplified */}
       <header className="bg-[#228B22] border-b-4 border-[#1D3557]">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -214,48 +277,34 @@ export default function MoneyGardenPage({ user }) {
               <span className="text-3xl">🌻</span>
               <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>Money Garden</h1>
             </div>
-            <div className="flex items-center gap-3">
-              {/* Wallet Balances */}
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setShowTransfer(true)}
-                  className="bg-white/20 rounded-xl px-3 py-2 flex items-center gap-2 border-2 border-white/30 hover:bg-white/30 transition-colors"
-                >
-                  <span className="text-lg">💳</span>
-                  <div className="text-white text-left">
-                    <p className="text-xs opacity-80">Spending</p>
-                    <p className="font-bold text-sm">₹{spendingBalance.toFixed(0)}</p>
-                  </div>
-                </button>
-                <button 
-                  onClick={() => setShowTransfer(true)}
-                  className="bg-white/20 rounded-xl px-3 py-2 flex items-center gap-2 border-2 border-white/30 hover:bg-white/30 transition-colors"
-                >
-                  <span className="text-lg">🌱</span>
-                  <div className="text-white text-left">
-                    <p className="text-xs opacity-80">Farming</p>
-                    <p className="font-bold text-sm">₹{farmingBalance.toFixed(0)}</p>
-                  </div>
-                </button>
-                <button
-                  onClick={() => setShowTransfer(true)}
-                  className="bg-[#FFD700] hover:bg-[#FFC000] text-[#1D3557] p-2 rounded-xl font-bold border-2 border-[#1D3557]"
-                  title="Transfer Money"
-                >
-                  <ArrowRightLeft className="w-5 h-5" />
-                </button>
-              </div>
-              <button
-                onClick={handleWaterAll}
-                className="bg-[#00CED1] hover:bg-[#00B5B8] text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 border-2 border-white"
+            {/* Wallet Balances */}
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setShowTransfer(true)}
+                className="bg-white/20 rounded-xl px-3 py-2 flex items-center gap-2 border-2 border-white/30 hover:bg-white/30 transition-colors"
               >
-                <Droplets className="w-5 h-5" /> Water All
+                <span className="text-lg">💳</span>
+                <div className="text-white text-left">
+                  <p className="text-xs opacity-80">Spending</p>
+                  <p className="font-bold text-sm">₹{spendingBalance.toFixed(0)}</p>
+                </div>
+              </button>
+              <button 
+                onClick={() => setShowTransfer(true)}
+                className="bg-white/20 rounded-xl px-3 py-2 flex items-center gap-2 border-2 border-white/30 hover:bg-white/30 transition-colors"
+              >
+                <span className="text-lg">🌱</span>
+                <div className="text-white text-left">
+                  <p className="text-xs opacity-80">Farming</p>
+                  <p className="font-bold text-sm">₹{farmingBalance.toFixed(0)}</p>
+                </div>
               </button>
               <button
-                onClick={() => setShowMarket(true)}
-                className="bg-[#FFD700] hover:bg-[#FFC000] text-[#1D3557] px-4 py-2 rounded-xl font-bold flex items-center gap-2 border-2 border-[#1D3557]"
+                onClick={() => setShowTransfer(true)}
+                className="bg-[#FFD700] hover:bg-[#FFC000] text-[#1D3557] p-2 rounded-xl font-bold border-2 border-[#1D3557]"
+                title="Transfer Money"
               >
-                <ShoppingBag className="w-5 h-5" /> Market
+                <ArrowRightLeft className="w-5 h-5" />
               </button>
             </div>
           </div>
