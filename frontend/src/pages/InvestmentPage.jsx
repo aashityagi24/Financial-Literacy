@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
-import { TrendingUp, ChevronLeft, Sprout, BarChart3, Plus, Leaf, Building2, Wallet } from 'lucide-react';
+import { TrendingUp, ChevronLeft, Sprout, BarChart3, Plus, Leaf, Building2, Wallet, ArrowRightLeft } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function InvestmentPage({ user }) {
   const [plants, setPlants] = useState([]);
@@ -24,6 +31,8 @@ export default function InvestmentPage({ user }) {
   const [investAmount, setInvestAmount] = useState('');
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [transferData, setTransferData] = useState({ from_account: 'spending', to_account: 'investing', amount: '' });
   
   const isYounger = user?.grade <= 2;
   const investmentType = isYounger ? 'plant' : 'stock';
