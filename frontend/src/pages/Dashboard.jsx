@@ -258,6 +258,57 @@ export default function Dashboard({ user, setUser }) {
           </div>
         </div>
         
+        {/* Savings Goal - Show if child has an active goal */}
+        {savingsGoal && (
+          <div className={`card-playful p-6 mb-8 bg-gradient-to-r from-[#FFD23F]/20 to-[#FFEB99]/20 ${showAnimations ? 'animate-bounce-in stagger-2' : ''}`} data-testid="dashboard-savings-goal">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Target className="w-6 h-6 text-[#06D6A0]" />
+                <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                  My Savings Goal
+                </h2>
+              </div>
+              <Link to="/wallet" className="text-[#3D5A80] hover:text-[#1D3557] flex items-center gap-1">
+                Manage <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            
+            <div className="flex gap-4 items-start">
+              {savingsGoal.image_url ? (
+                <img 
+                  src={getAssetUrl(savingsGoal.image_url)} 
+                  alt={savingsGoal.title}
+                  className="w-20 h-20 rounded-xl border-3 border-[#1D3557] object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-xl border-3 border-[#1D3557] bg-[#FFD23F] flex items-center justify-center text-4xl flex-shrink-0">
+                  🎯
+                </div>
+              )}
+              
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-[#1D3557] text-lg truncate">{savingsGoal.title}</h3>
+                {savingsGoal.description && (
+                  <p className="text-sm text-[#3D5A80] truncate">{savingsGoal.description}</p>
+                )}
+                
+                <div className="mt-3">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-[#3D5A80] font-medium">₹{savingsGoal.current_amount?.toFixed(0) || 0} saved</span>
+                    <span className="font-bold text-[#1D3557]">₹{savingsGoal.target_amount?.toFixed(0)} goal</span>
+                  </div>
+                  <Progress value={Math.min((savingsGoal.current_amount / savingsGoal.target_amount) * 100, 100)} className="h-3" />
+                  {savingsGoal.target_amount - savingsGoal.current_amount > 0 && (
+                    <p className="text-sm text-[#EE6C4D] mt-2 font-medium">
+                      ₹{(savingsGoal.target_amount - (savingsGoal.current_amount || 0)).toFixed(0)} more to go! Keep saving! 💪
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Two Column Layout */}
         <div className="grid md:grid-cols-2 gap-6">
           {/* Active Quests */}
