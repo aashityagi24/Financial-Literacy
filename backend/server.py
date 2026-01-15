@@ -4927,29 +4927,14 @@ async def seed_data():
         {"achievement_id": "ach_008", "name": "Money Master", "description": "Reach a total balance of 500", "icon": "🎓", "category": "savings", "requirement_value": 500, "points": 75},
     ]
     
-    # Quests
-    quests = [
-        {"quest_id": "quest_001", "title": "Piggy Bank Starter", "description": "Move 10 coins to your savings account", "reward_amount": 5, "quest_type": "daily", "min_grade": 0, "max_grade": 5, "requirements": {"action": "save", "amount": 10}},
-        {"quest_id": "quest_002", "title": "Smart Shopper", "description": "Compare prices and find the better deal", "reward_amount": 10, "quest_type": "daily", "min_grade": 1, "max_grade": 5, "requirements": {"action": "compare", "count": 1}},
-        {"quest_id": "quest_003", "title": "Garden Grower", "description": "Plant your first money garden", "reward_amount": 15, "quest_type": "challenge", "min_grade": 0, "max_grade": 2, "requirements": {"action": "invest", "type": "garden"}},
-        {"quest_id": "quest_004", "title": "Stock Star", "description": "Buy your first stock", "reward_amount": 20, "quest_type": "challenge", "min_grade": 3, "max_grade": 5, "requirements": {"action": "invest", "type": "stock"}},
-        {"quest_id": "quest_005", "title": "Giving is Caring", "description": "Donate 5 coins to the giving jar", "reward_amount": 8, "quest_type": "daily", "min_grade": 0, "max_grade": 5, "requirements": {"action": "give", "amount": 5}},
-        {"quest_id": "quest_006", "title": "Budget Boss", "description": "Split your earnings into all 4 accounts", "reward_amount": 15, "quest_type": "weekly", "min_grade": 2, "max_grade": 5, "requirements": {"action": "distribute", "accounts": 4}},
-        {"quest_id": "quest_007", "title": "Chat Champion", "description": "Ask your AI buddy a money question", "reward_amount": 5, "quest_type": "daily", "min_grade": 0, "max_grade": 5, "requirements": {"action": "chat", "count": 1}},
-        {"quest_id": "quest_008", "title": "Savings Goal Setter", "description": "Set and reach a savings goal of 50 coins", "reward_amount": 25, "quest_type": "weekly", "min_grade": 1, "max_grade": 5, "requirements": {"action": "save_goal", "amount": 50}},
-    ]
-    
-    # Clear and insert
+    # Clear and insert (quests are now managed by admin/teacher/parent)
     await db.store_items.delete_many({})
     await db.achievements.delete_many({})
-    await db.quests.delete_many({})
     
     if store_items:
         await db.store_items.insert_many(store_items)
     if achievements:
         await db.achievements.insert_many(achievements)
-    if quests:
-        await db.quests.insert_many(quests)
     
     return {"message": "Seed data created successfully"}
 
