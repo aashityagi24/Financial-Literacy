@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { 
   GraduationCap, ChevronLeft, Plus, Users, 
   Copy, Trash2, Gift, Star, ChevronRight, Eye, Megaphone,
-  BookOpen, LogOut, User, Target, Calendar
+  BookOpen, LogOut, User, Target, Calendar, Edit2
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
