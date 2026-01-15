@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { API } from '@/App';
+import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
   GraduationCap, ChevronLeft, Plus, Users, Trophy, 
   Copy, Trash2, Gift, Star, ChevronRight, Eye, Megaphone,
-  BookOpen, LogOut, User
+  BookOpen, LogOut, User, Target, Calendar
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 export default function TeacherDashboard({ user }) {
   const navigate = useNavigate();
@@ -33,11 +39,14 @@ export default function TeacherDashboard({ user }) {
   const [classroomDetails, setClassroomDetails] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [teacherQuests, setTeacherQuests] = useState([]);
+  const [activeTab, setActiveTab] = useState('classroom');
   
   // Forms
   const [showCreateClass, setShowCreateClass] = useState(false);
   const [showReward, setShowReward] = useState(false);
   const [showChallenge, setShowChallenge] = useState(false);
+  const [showCreateQuest, setShowCreateQuest] = useState(false);
   const [showAnnouncement, setShowAnnouncement] = useState(false);
   const [showStudentProgress, setShowStudentProgress] = useState(null);
   
