@@ -194,6 +194,13 @@ export default function MoneyGardenPage({ user }) {
   const spendingBalance = wallet?.accounts?.find(a => a.account_type === 'spending')?.balance || 0;
   const farmingBalance = wallet?.accounts?.find(a => a.account_type === 'investing')?.balance || 0;
   
+  const accountOptions = [
+    { value: 'spending', label: '💳 Spending', balance: spendingBalance },
+    { value: 'savings', label: '🐷 Savings', balance: wallet?.accounts?.find(a => a.account_type === 'savings')?.balance || 0 },
+    { value: 'investing', label: '🌱 Farming', balance: farmingBalance },
+    { value: 'gifting', label: '❤️ Gifting', balance: wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance || 0 },
+  ];
+  
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#87CEEB] to-[#90EE90]" data-testid="money-garden-page">
       {/* Header */}
@@ -210,20 +217,33 @@ export default function MoneyGardenPage({ user }) {
             <div className="flex items-center gap-3">
               {/* Wallet Balances */}
               <div className="flex items-center gap-2">
-                <div className="bg-white/20 rounded-xl px-3 py-2 flex items-center gap-2 border-2 border-white/30">
+                <button 
+                  onClick={() => setShowTransfer(true)}
+                  className="bg-white/20 rounded-xl px-3 py-2 flex items-center gap-2 border-2 border-white/30 hover:bg-white/30 transition-colors"
+                >
                   <span className="text-lg">💳</span>
-                  <div className="text-white">
+                  <div className="text-white text-left">
                     <p className="text-xs opacity-80">Spending</p>
                     <p className="font-bold text-sm">₹{spendingBalance.toFixed(0)}</p>
                   </div>
-                </div>
-                <div className="bg-white/20 rounded-xl px-3 py-2 flex items-center gap-2 border-2 border-white/30">
+                </button>
+                <button 
+                  onClick={() => setShowTransfer(true)}
+                  className="bg-white/20 rounded-xl px-3 py-2 flex items-center gap-2 border-2 border-white/30 hover:bg-white/30 transition-colors"
+                >
                   <span className="text-lg">🌱</span>
-                  <div className="text-white">
+                  <div className="text-white text-left">
                     <p className="text-xs opacity-80">Farming</p>
                     <p className="font-bold text-sm">₹{farmingBalance.toFixed(0)}</p>
                   </div>
-                </div>
+                </button>
+                <button
+                  onClick={() => setShowTransfer(true)}
+                  className="bg-[#FFD700] hover:bg-[#FFC000] text-[#1D3557] p-2 rounded-xl font-bold border-2 border-[#1D3557]"
+                  title="Transfer Money"
+                >
+                  <ArrowRightLeft className="w-5 h-5" />
+                </button>
               </div>
               <button
                 onClick={handleWaterAll}
