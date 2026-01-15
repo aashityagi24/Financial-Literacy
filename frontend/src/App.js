@@ -29,6 +29,7 @@ import ClassmatesPage from "@/pages/ClassmatesPage";
 import SavingsGoalsPage from "@/pages/SavingsGoalsPage";
 import AdminQuestsPage from "@/pages/AdminQuestsPage";
 import ParentShoppingList from "@/pages/ParentShoppingList";
+import MoneyGardenPage from "@/pages/MoneyGardenPage";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
