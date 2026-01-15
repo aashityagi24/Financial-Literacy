@@ -154,6 +154,10 @@ export default function MoneyGardenPage({ user }) {
   const sortedPlots = [...farm.plots].sort((a, b) => a.position - b.position);
   const gridSize = Math.ceil(Math.sqrt(sortedPlots.length));
   
+  // Get spending and farming balances
+  const spendingBalance = wallet?.accounts?.find(a => a.account_type === 'spending')?.balance || 0;
+  const farmingBalance = wallet?.accounts?.find(a => a.account_type === 'investing')?.balance || 0;
+  
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#87CEEB] to-[#90EE90]" data-testid="money-garden-page">
       {/* Header */}
