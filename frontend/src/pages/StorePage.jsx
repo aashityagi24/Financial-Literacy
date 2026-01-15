@@ -251,6 +251,41 @@ export default function StorePage({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
+        {/* Shopping List Section - For Children */}
+        {user?.role === 'child' && shoppingList.length > 0 && (
+          <div className="card-playful p-5 mb-6 bg-[#FFD23F]/20 border-2 border-[#FFD23F]">
+            <h2 className="text-lg font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>
+              📋 Your Shopping List
+            </h2>
+            <p className="text-sm text-[#3D5A80] mb-3">These items are on your shopping list from chores. Buy them to check them off!</p>
+            <div className="space-y-2">
+              {shoppingList.map((item) => (
+                <div 
+                  key={item.list_id} 
+                  className={`flex items-center justify-between p-2 rounded-lg ${item.purchased ? 'bg-[#06D6A0]/20' : 'bg-white'}`}
+                >
+                  <div className="flex items-center gap-2">
+                    {item.purchased ? (
+                      <span className="text-[#06D6A0] font-bold">✓</span>
+                    ) : (
+                      <span className="text-[#FFD23F]">○</span>
+                    )}
+                    <span className={`font-medium ${item.purchased ? 'line-through text-[#06D6A0]' : 'text-[#1D3557]'}`}>
+                      {item.item_name} × {item.quantity}
+                    </span>
+                  </div>
+                  <span className="text-xs text-[#3D5A80] bg-[#E0FBFC] px-2 py-1 rounded-full">
+                    {item.chore_title}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {shoppingList.filter(i => !i.purchased).length === 0 && (
+              <p className="text-center text-[#06D6A0] font-bold mt-3">🎉 All items purchased!</p>
+            )}
+          </div>
+        )}
+        
         {/* Welcome Banner */}
         <div className="p-5 mb-6 bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-3xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557]">
           <h2 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
