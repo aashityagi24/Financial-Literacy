@@ -1192,6 +1192,18 @@ async def purchase_item(purchase: PurchaseCreate, request: Request):
     }
     await db.transactions.insert_one(trans_doc)
     
+    # Auto-mark shopping list item as purchased if applicable
+    if user.get("role") == "child":
+        await db.new_quests.update_one(
+            {
+                "child_id": user["user_id"],
+                "is_shopping_chore": True,
+                "is_active": True,
+                "shopping_item_details.item_id": purchase.item_id
+            },
+            {"$set": {"shopping_item_details.$.purchased": True}}
+        )
+    
     return {"message": "Purchase successful", "item": item}
 
 @api_router.get("/store/purchases")
