@@ -262,11 +262,11 @@ export default function ParentDashboard({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
-        {/* Store Link - Create shopping lists */}
+        {/* Shopping List Link */}
         <Link 
-          to="/store" 
+          to="/parent/shopping-list" 
           className="mb-6 block bg-gradient-to-r from-[#EE6C4D] to-[#FF8A6C] rounded-xl p-5 hover:shadow-lg transition-shadow border-3 border-[#1D3557]"
-          data-testid="parent-store-link"
+          data-testid="parent-shopping-link"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -274,8 +274,8 @@ export default function ParentDashboard({ user }) {
                 <Store className="w-6 h-6 text-[#EE6C4D]" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Virtual Store</h3>
-                <p className="text-white/80 text-sm">View items to create shopping list chores for your child</p>
+                <h3 className="text-lg font-bold text-white">Shopping List</h3>
+                <p className="text-white/80 text-sm">Create shopping lists and assign chores to your child</p>
               </div>
             </div>
             <ChevronRight className="w-6 h-6 text-white" />
