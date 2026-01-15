@@ -1898,7 +1898,7 @@ async def create_chore_from_shopping_list(chore_data: ShoppingListChoreCreate, r
     return {
         "chore_id": chore_id,
         "message": "Shopping chore created",
-        "total_reward": total_value,
+        "total_reward": reward_amount,
         "items_count": len(items)
     }
 
