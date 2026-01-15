@@ -250,8 +250,8 @@ export default function Dashboard({ user, setUser }) {
                 className={`${accountColors[account.account_type]?.bg} rounded-2xl border-3 border-[#1D3557] p-4 text-white hover:scale-105 transition-transform cursor-pointer`}
               >
                 <div className="text-2xl mb-2">{accountColors[account.account_type]?.icon}</div>
-                <p className="text-base opacity-90 capitalize font-medium">{account.account_type}</p>
-                <p className="text-sm opacity-80 mb-1">{accountColors[account.account_type]?.description}</p>
+                <p className="text-lg font-bold capitalize">{account.account_type}</p>
+                <p className="text-base opacity-90 mb-1">{accountColors[account.account_type]?.description}</p>
                 <p className="text-2xl font-bold">₹{account.balance?.toFixed(0)}</p>
               </Link>
             ))}
