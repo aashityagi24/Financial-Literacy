@@ -66,8 +66,12 @@ export default function TeacherDashboard({ user }) {
   
   const fetchDashboard = async () => {
     try {
-      const response = await axios.get(`${API}/teacher/dashboard`);
-      setDashboard(response.data);
+      const [dashRes, questsRes] = await Promise.all([
+        axios.get(`${API}/teacher/dashboard`),
+        axios.get(`${API}/teacher/quests`).catch(() => ({ data: [] }))
+      ]);
+      setDashboard(dashRes.data);
+      setTeacherQuests(questsRes.data);
     } catch (error) {
       toast.error('Failed to load dashboard');
     } finally {
