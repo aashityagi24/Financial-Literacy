@@ -6,51 +6,50 @@
 -   **Authentication:** Google Social Login for users, email/password for Admin.
 -   **Localization:** The application's currency must be Indian Rupees (₹).
 -   **UI/UX:** The app should be visually appealing and child-friendly.
--   **Admin Features (Store & Investment Management):** Admins must be able to create and manage store categories, store items (with images and measurement units), and investment instruments (Plants and Stocks).
--   **Automated Price Fluctuation:** An automated system for daily price fluctuations to simulate market changes.
--   **Child Savings Goals:** Children should be able to set their own savings goals with a name, image, target amount, and deadline.
--   **Store Experience:** The store should allow purchasing multiple quantities of an item and show a history of purchased items.
--   **User Connections:** A seamless system for Parents, Children, and Teachers to connect with each other. Parents can manage multiple children, and children can have multiple parents.
--   **Notifications & Social Features:** A notification center for important events (rewards, announcements, quests) and a My Classroom section for children to see classmates' progress and interact.
+-   **Admin Features (Store & Investment Management):** Admins must be able to create and manage store categories, store items (with images and measurement units), and investment instruments.
 -   **Dynamic Quest/Chore System:** A complete overhaul of the static quest system to allow Admins, Teachers, and Parents to create dynamic quests and chores with various question types, rewards, and validation mechanisms.
+-   **Child Savings Goals:** Children should be able to set their own savings goals.
+-   **User Connections:** A seamless system for Parents, Children, and Teachers to connect.
+-   **Gamified Investment (Money Garden):** For Grades 1-2, a visual and interactive farming simulation where children plant seeds, care for them (watering), and harvest produce to sell at a market. This replaces the standard investment module for this age group.
+-   **Parent Shopping List:** Parents should not buy from the store directly but instead create shopping lists which are then assigned to children as chores with a custom reward.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack MVP with a completely overhauled, dynamic quest system.
--   **Role-Based Access:** Admins, Teachers, and Parents are now blocked from the child's user dashboard and are redirected to their respective dashboards (, , ). Profile and Logout functions have been added to these role-specific dashboards.
--   **Integrated Dashboards:** The Teacher dashboard now includes a Learn module link, and the Parent dashboard includes a Store module link, integrating parts of the child's experience into their workflows.
--   **Dynamic Quest System:**
-    -   **Admin/Teacher:** Can create complex quests with titles, descriptions, due dates, file attachments (image/PDF), and a mix of question types (MCQ, Multi-select, True/False, Value Entry). They can also set a base reward for quests that have no questions.
-    -   **Parent:** Can create Chores (one-time, daily, weekly, or specific date) for their children, which appear in the child's quest list. Parents must manually validate chore completion to release the reward.
-    -   **Child:** Has a new  that displays all assigned quests and chores, with filtering by creator (Admin, Teacher, Parent) and sorting options.
--   **Scheduler:** A background job runs to send reminder notifications for quests that are due soon.
--   **Core MVP Features:** The previous features like user connections, notifications, a My Classroom view, store/investment management, and automated price simulation remain functional. The Gifting Jar bug has been resolved. The Wallet page has been decluttered, with savings goal functionality moved to a dedicated .
+The application is a full-stack MVP featuring a dynamic quest system, role-based access for Admin, Teacher, Parent, and Child, and a newly implemented Money Garden investment game for younger children (Grades 1-2).
+
+-   **Grade-Aware Features:** The application now dynamically adjusts features based on the child's grade. The main dashboard and wallet page hide investment features for Kindergarten, show the Money Garden for Grades 1-2, and show Stocks for older children.
+-   **Dynamic Quests & Chores:** The system allows Admins/Teachers to create complex quests and Parents to create chores. Multiple bugs related to visibility, answer validation, and reward management have been fixed. Teachers can now view and edit their created quests.
+-   **Parent Dashboard:** Parents can create chores, including special shopping list chores. A key feature is the chore validation flow, where parents can approve or reject a child's completed chore directly from their dashboard via tick/cross buttons, which triggers rewards and notifications.
+-   **Shopping List Feature:** Parents can create shopping lists that are assigned to children as chores. The child sees this list in the virtual store, and items are visually marked off as they are purchased.
+-   **Money Garden:** A new, gamified investment system for Grades 1-2 is in place. It includes backend models for plant configuration (growth time, yield, etc.), user plots, and actions like planting, watering, and harvesting. The frontend features a dedicated page with a visual grid for the garden and an admin page for managing plant types.
+-   **UI/UX Improvements:** The Admin dashboard has been reorganized into a more efficient grid. Numerous forms across the application have been updated with clear labels for better usability. Money transfer functionality has been added to both the Money Garden and standard Investment pages.
 
 **Last working item**:
-    - Last item agent was working: The user requested a significant UI/UX improvement for the question creation/editing interface within the new quest system. The goal is to make it more intuitive for Admins and Teachers by replacing text inputs for answers with interactive controls.
-    - Status: IN PROGRESS
+    - Last item agent was working: The user provided a screenshot and requested a UI/UX overhaul for the :
+        1.  Remove the Seed Shop block from the bottom.
+        2.  Relocate the Water All, Market, and Buy Plot actions to be simple buttons below the garden plots.
+        3.  Add a new Reports section to show individual investment projections and potential returns over time.
+    - Status: NOT STARTED
     - Agent Testing Done: N
-    - Which testing method agent to use? both
+    - Which testing method agent to use? frontend testing agent
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: Refine Quest Creation UI for different question types. (PRIORITY: P0)
+  - Issue 1: Refactor the Money Garden UI to match user's request. (PRIORITY: P0)
 
   Issues Detail:
   - Issue 1: 
-     - Attempted fixes: The agent started implementing the changes by modifying . The code for rendering the question section was replaced with a new structure to accommodate the requested UI changes.
+     - Attempted fixes: None. This is a new request.
      - Next debug checklist: with file & method reference
-        1.  **AdminQuestsPage.jsx & TeacherDashboard.jsx**:
-            -   **MCQ & True/False**: Replace the  text input with radio buttons. The options should be labeled A, B, C, D for MCQ and True, False for T/F. The selection should update the  in the component's state.
-            -   **Multi-select**: Replace the  text input with checkboxes. The options should be labeled A, B, C, D. The component state for  should store an array of the selected options.
-            -   **Value Entry**: Ensure the input field for the answer only accepts numbers, allowing up to two decimal points.
-        2.  **server.py**:
-            -   Verify the backend endpoints for creating and submitting quests correctly handle the new answer formats (single string for MCQ/TF, array of strings for Multi-select). The  logic might need adjustments to correctly grade these new formats.
-     - Why fix this issue and what will be achieved with the fix? This will vastly improve the user experience for Admins and Teachers creating quests, making the process faster, less error-prone, and more intuitive. It's the final polish on the new quest system.
-     - Status:  IN PROGRESS
+        1.  **File to Edit**: .
+        2.  **Action 1**: Locate and remove the JSX block that renders the Seed Shop section.
+        3.  **Action 2**: Move the  components for Water All, Market, and Buy Plot to a flex container directly beneath the garden plot grid.
+        4.  **Action 3**: Design and implement a new Reports component. This will require fetching plant data and calculating potential returns based on  and . This component should be added to the .
+     - Why fix this issue and what will be achieved with the fix? To improve the layout and usability of the Money Garden page, making it cleaner and adding a data-driven reporting feature as requested by the user.
+     - Status:  NOT STARTED
      - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? both
+     - Should Test frontend/backend/both after fix? frontend
      - Blocked on other issue: None
 
 **In progress Task List**:
@@ -58,135 +57,142 @@ The application is a full-stack MVP with a completely overhauled, dynamic quest 
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
+    - **P1: Full Money Garden E2E Test:** After the UI refactor, a full end-to-end test is needed: Admin creates a plant, a child (Grade 1-2) buys a seed, plants it, waters it, waits for it to grow, harvests it, and sells it at the market.
     - **P1: Enhance Gamification:** Implement Daily Login Rewards, Streak Bonuses, and Leaderboards.
     - **P1: Implement Safety Guardrails:** Add features like spending limits and parent approval for large transactions.
 
     Future Tasks:
+    - **P2: Refactor Backend:** Split the monolithic  into a modular structure (e.g., , , ) for better maintainability. This is the most critical piece of technical debt.
     - **P2: Teacher/Parent Collaboration:** Create a dedicated communication portal.
     - **P2: Collaborative & Seasonal Events:** Introduce classroom-wide goals and themed challenges.
     - **P2: Avatar Customization.**
     - **P2: Email notifications.**
     - **P2: Develop a Tutorial System:** Create guided walkthroughs for new users.
-    - **P2: Refactor Backend:** Split the monolithic  into a modular structure (e.g., , , ) for better maintainability.
 
 **Completed work in this session**
-- **Dynamic Quest System Overhaul:**
-  - Implemented a completely new backend ( collection, new Pydantic models, new API endpoints for Admin, Teacher, Parent, and Child) to replace the old static quest system.
-  - Created a new  for children with filtering and sorting.
-  - Created a new  for admins to create and manage quests with complex question types, file uploads, and grade targeting.
-  - Integrated quest creation and management directly into the  within the context of a specific classroom.
-  - Integrated chore creation into the , allowing parents to assign tasks and validate completion.
-  - Added a scheduled job to send reminder notifications for quests nearing their due date.
-- **Role-Based Dashboard & Navigation:**
-  - Blocked Admin, Teacher, and Parent roles from accessing the child's user dashboard ().
-  - Added profile and logout functionality directly to the Admin, Teacher, and Parent dashboard headers.
-  - Integrated a link to the Learn module on the  and a link to the Store on the .
-- **Teacher Dashboard UI Refinement:**
-  - Removed the deprecated Challenge functionality.
-  - Redesigned the classroom action buttons for a consistent look and feel, incorporating Create Quest, Give Reward, and Announce.
-- **P0 Bug Fix & Refactor:**
-  - **Gifting Jar Bug:** Resolved the issue where the Gifting jar was not visible. Verified the database migration was successful and the issue was likely frontend-related.
-  - **Wallet Page Refactor:** Moved savings goals functionality from  to a new, dedicated , decluttering the main wallet view.
+- **Parent & Chore System Overhaul:**
+    - Fixed chore creation authorization bug for parents.
+    - Implemented a Shopping List feature for parents, converting lists into chores.
+    - Redesigned the  to have a single, unified chore list with status tags and intuitive inline approve/reject buttons for completed chores.
+- **Quest System Bug Fixes & Enhancements:**
+    - Fixed a bug preventing teacher-created quests from appearing for students.
+    - Fixed an answer-validation bug where correct MCQ choices were marked as incorrect.
+    - Added edit functionality for teachers to modify their created quests.
+    - Made reward points a mandatory field for quest creation.
+- **Money Garden Feature Implementation (Grades 1-2):**
+    - Built backend models and API endpoints for a new gamified farming investment system.
+    - Created  for children with a visual plot grid and actions (plant, water, harvest).
+    - Created  for admins to configure plants (cost, growth time, yield).
+- **Grade-Aware UI:**
+    - Updated  and  to conditionally display Money Garden (G1-2), Stocks (G3+), or no investment options (Kindergarten).
+- **UI/UX & General Fixes:**
+    - Added money transfer functionality to both  and .
+    - Added wallet balance to the header of the Money Garden page.
+    - Improved input field labels across , , and  for clarity.
+    - Fixed a critical rendering error on  caused by leftover code.
 
 **Earlier issues found/mentioned but not fixed**
    - None.
 
 **Known issue recurrence from previous fork**
-  - **Issue:** Gradient banners rendering as white boxes.
+  - **Issue recurrence in previous fork:** Gradient banners rendering as white boxes.
   - **Recurrence count:** 1
-  - **Status:** RESOLVED (in previous sessions)
+  - **Status:** RESOLVED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, Pydantic, APScheduler,  for file uploads.
-- **Frontend:** React, React Router, Axios, Tailwind CSS, Shadcn UI components.
-- **Database:** MongoDB.
-- **Authentication:** Emergent-managed Google Auth, Custom JWT for admin.
+- **Backend:** FastAPI, Pydantic, MongoDB.
+- **Frontend:** React, React Router, Axios, Tailwind CSS, Shadcn UI,  for toasts.
 - **State Management:** React Hooks (, ).
-- **Background Jobs:**  for price fluctuations and quest reminders.
+- **Core Logic:** Grade-based conditional rendering to tailor the user experience.
 
 **key DB schema**
-- **new_quests:** {, , ,  ('admin', 'teacher', 'parent'), ,  (for teachers), , , ,  (base reward), , , : [{, ,  ('mcq', 'multi-select', 'true_false', 'value'), , , }], }
-- **user_quests:** {, ,  ('pending', 'completed', 'validated'), , , , }
-- **users:** {..., : [str], : [str], : str}
-- **wallet_accounts:** {..., : str} (now uses 'gifting')
+  - **garden_plants:** {, , , , , , , }
+  - **user_plots:** {, , , , , }
+  - **user_inventory:** {, , }
+  - **shopping_lists:** {, , , , : [{, }], }
+  - **user_shopping_list_items**: {, , , : bool}
+  - **chore_requests:** {, , , , : ('pending', 'validated', 'rejected')}
+  - **new_quests:** (Modified to include ).
 
 **changes in tech stack**
-- None.
+  - None.
 
 **All files of reference**
-- : Heavily modified to add the entire new quest system (models, CRUD endpoints for all roles, submission/grading logic, scheduler job).
-- : Updated to block non-child roles and redirect them.
-- : Updated to add a link to the new Admin Quests page and a new header with logout.
-- : Massively updated to remove Challenge functionality and integrate a full quest creation/management UI within the classroom view.
-- : Updated to use the new chore creation API and add a new header.
-- : Overhauled to fetch and display quests from the new system, with filtering and sorting capabilities.
-- : New page for comprehensive admin quest management.
-- : Refactored to remove savings goals.
-- : New page created to house savings goals functionality.
-- : Updated with new routes for  and .
-- : Updated to reflect completed features.
+- **New Files:**
+  - 
+  - 
+  - 
+- **Heavily Modified Files:**
+  - : Added all logic for Money Garden, Shopping Lists, and fixed numerous bugs.
+  - : Overhauled the chore display and validation flow.
+  - : Added quest editing functionality.
+  - : Integrated shopping list display and auto-completion.
+  - : Implemented grade-aware navigation.
+  - : Implemented grade-aware account display.
+  - : Added money transfer functionality.
+  - : Added new routes for the created pages.
 
 **Areas that need refactoring**:
--  is critically oversized and complex. It urgently needs to be broken down into a modular structure (routes, models, services). This is the highest priority technical debt.
--  has also become very large and state-heavy. It could benefit from being broken down into smaller, more manageable components.
+-  is critically oversized. It urgently needs to be broken down into a modular structure (routes, models, services). This remains the highest priority technical debt.
+- , , and  are growing in complexity and would benefit from being broken down into smaller components.
 
 **key api endpoints**
-- : POST, GET, PUT, DELETE for admin quest management.
-- : POST, GET for teacher quest management.
-- : POST, GET for parent chore management.
-- : POST for parents to approve chore completion.
-- : GET for children to fetch their quests.
-- : POST for children to submit answers.
-- : POST for children to mark a parent-assigned chore as done.
+- : Full CRUD for managing Money Garden plants.
+- : GET user plots, POST to buy a new plot.
+- : POST to plant a seed.
+- : POST to water a plant.
+- : POST to harvest a grown plant.
+- : POST to sell harvested produce.
+- : Full CRUD for parent shopping lists.
+- : POST to convert a list into a chore.
+- : GET active shopping list chores for a child.
+- : (Modified) Now automatically marks items off a child's shopping list.
+- : PUT endpoint for editing quests.
+- : GET all pending chore approval requests for a parent.
+- : POST to approve a chore.
+- : POST to reject a chore.
 
 **Critical Info for New Agent**
-- **Top Priority (P0):** Complete the user's request to refine the question creation UI in  and . This involves replacing text inputs with interactive radio buttons and checkboxes for marking correct answers.
-- After completing the UI refinement, perform thorough testing using the  to ensure the entire quest creation and completion flow works flawlessly for all roles.
-- **Propose Backend Refactor:** Once the quest system is fully verified and complete, the next logical and critical step is to propose and execute the refactoring of .
+- **P0 Priority:** Address the user's latest request to refactor the Money Garden UI (). This is the immediate next step.
+- After completing the UI task, perform a thorough end-to-end test of the entire Money Garden flow to ensure stability.
+- **Backend Refactor:** The  file is extremely large and complex. Once the current feature work is stable and verified by the user, proposing and executing the refactoring of  should be the next major technical task.
 
 **documents and test reports created in this job**
-- 
-- 
-- 
-- 
--  (Updated)
+  -  (Updated)
 
-**Last 10 User Messages and any pending HUMAN messages**
-1.  **Request:** Overhaul the entire quest system to be dynamic. - **Status: Completed**
-2.  **Clarification:** User provided detailed requirements for Admin, Teacher, and Parent quest/chore creation rules. - **Status: Completed**
-3.  **Request:** Fix the missing quest functionality in the teacher dashboard. - **Status: Completed**
-4.  **Feedback:** User pointed out the Challenge button was still present and the Announce button design was inconsistent. - **Status: Completed**
-5.  **Request:** Remove the Challenge functionality entirely and move the Create Quest button into the main action row for teachers. - **Status: Completed**
-6.  **Feedback:** User noted several issues with the Teacher quest creation form: grade selection was redundant for classroom-specific quests, file uploads were missing, questions had a default point value, and quests without questions weren't possible. - **Status: Completed**
-7.  **Request:** Implement the fixes from the previous feedback point. - **Status: Completed**
-8.  **Request (Current Task):** Refine the UI for question creation across all question types (MCQ, Multi-select, T/F, Value) to use interactive controls (radio/checkboxes) instead of text fields for specifying answers. - **Status: In Progress**
+**Last 10 User Messages and any pending HUMAN messages** 
+ -  10. **(LATEST)** Request to refactor the Money Garden UI: remove seed shop, move action buttons, and add a reports section. (Status: Not Started)
+ -  9. Report that investment/farming jars were still visible for incorrect grade levels on the dashboard/wallet. (Status: Completed)
+ -  8. Request to add the user's wallet balance to the Money Garden page header. (Status: Completed)
+ -  7. Request to allow money transfers from within the Garden and Investment pages. (Status: Completed)
+ -  6. User provided clarifications for the Money Garden feature requirements. (Status: Completed)
+ -  5. Initial detailed request to build the Money Garden feature and remove standard investments for younger kids. (Status: Completed)
+ -  4. Report of a blank white screen, blocking the app from loading. (Status: Completed)
+ -  3. Request to improve the shopping list and parent chore UI (show list items, unify chore sections). (Status: Completed)
+ -  2. Request to add parent validation for chores and allow custom rewards for shopping list chores. (Status: Completed)
+ -  1. Report that parents couldn't create chores (not authorized) and a request for the parent shopping list feature. (Status: Completed)
 
 **Project Health Check:**
-- **Working:** The vast majority of the application, including the new dynamic quest system, role-based dashboards, user connections, notifications, store, and investments.
-- **Broken:** The quest creation UI for Admins and Teachers is in an incomplete state, halfway through a refactor to improve usability.
+- **Working:** The majority of the application is functional, including the newly implemented Money Garden and Shopping List features, alongside the heavily debugged quest system.
+- **Broken:** No features are critically broken. The Money Garden UI needs refinement based on the user's latest feedback.
 - **Mocked:** None.
 
 **3rd Party Integrations**
 - **Emergent-managed Google Auth:** For user authentication.
-- **Claude Sonnet 4.5:** (via ) For AI Chatbot and Financial Tips. Uses the Emergent LLM Key.
-- **APScheduler:** For running daily background jobs (price changes, quest reminders).
+- **APScheduler:** For running daily background jobs.
 
 **Testing status**
-  - Testing agent used after significant changes: YES (multiple times for each major feature step)
+  - Testing agent used after significant changes: YES
   - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created:
-    - 
-    - 
-    - 
-    - 
-  - Known regressions: None in this session.
+  - Test files created: []
+  - Known regressions: None.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
 -   **Users:** Log in via the Google Social Login button.
 
 **What agent forgot to execute**
-The agent was in the middle of executing the user's latest request to refactor the question creation UI. It had started modifying  but has not completed the implementation for all question types (MCQ, Multi-select, True/False, Value) and has not applied the same changes to the . The backend also needs verification to ensure it can handle the new answer formats.</analysis>
+The agent has not yet started implementing the user's most recent request to refactor the UI of the . This is the highest priority task for the next agent.</analysis>
