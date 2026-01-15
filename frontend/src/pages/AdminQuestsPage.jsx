@@ -38,6 +38,7 @@ export default function AdminQuestsPage({ user }) {
     min_grade: 0,
     max_grade: 5,
     due_date: '',
+    reward_amount: 0,
     questions: []
   });
   
