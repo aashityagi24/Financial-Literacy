@@ -657,8 +657,9 @@ export default function TeacherDashboard({ user }) {
                                   </Select>
                                   <Input 
                                     type="number" 
-                                    placeholder="Points (₹)" 
-                                    value={q.points} 
+                                    min="1"
+                                    placeholder="Reward (₹) *" 
+                                    value={q.points || ''} 
                                     onChange={(e) => updateQuestion(qIndex, 'points', parseInt(e.target.value) || 0)}
                                     className="border-2 border-[#1D3557]/30"
                                   />
