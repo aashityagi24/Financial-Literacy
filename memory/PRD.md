@@ -408,6 +408,8 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - **Daily Price Fluctuations** (APScheduler at 6:00 AM UTC, price history, scheduler status UI)
 - **Child Savings Goals** (dashboard display, goal creation, allocation from savings, progress tracking)
 - **User Connection System** (child-parent linking, classroom join, teacher announcements to parents)
+- **Notification Center** (bell with unread count, notifications for rewards/announcements/gifts/chores)
+- **Classmates & Gifting** (view classmates, gift money, request gifts, accept/decline)
 
 ### P1 (Next Phase)
 - Daily Login Rewards & Streak Bonuses
