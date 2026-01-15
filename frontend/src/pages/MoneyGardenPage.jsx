@@ -172,6 +172,23 @@ export default function MoneyGardenPage({ user }) {
               <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>Money Garden</h1>
             </div>
             <div className="flex items-center gap-3">
+              {/* Wallet Balances */}
+              <div className="flex items-center gap-2">
+                <div className="bg-white/20 rounded-xl px-3 py-2 flex items-center gap-2 border-2 border-white/30">
+                  <span className="text-lg">💳</span>
+                  <div className="text-white">
+                    <p className="text-xs opacity-80">Spending</p>
+                    <p className="font-bold text-sm">₹{spendingBalance.toFixed(0)}</p>
+                  </div>
+                </div>
+                <div className="bg-white/20 rounded-xl px-3 py-2 flex items-center gap-2 border-2 border-white/30">
+                  <span className="text-lg">🌱</span>
+                  <div className="text-white">
+                    <p className="text-xs opacity-80">Farming</p>
+                    <p className="font-bold text-sm">₹{farmingBalance.toFixed(0)}</p>
+                  </div>
+                </div>
+              </div>
               <button
                 onClick={handleWaterAll}
                 className="bg-[#00CED1] hover:bg-[#00B5B8] text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 border-2 border-white"
