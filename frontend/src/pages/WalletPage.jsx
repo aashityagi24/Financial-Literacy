@@ -70,7 +70,7 @@ export default function WalletPage({ user }) {
       description: 'Grow your money over time!',
       action: { label: 'Go Invest', path: '/investments' }
     },
-    giving: { 
+    gifting: { 
       icon: '❤️', 
       color: 'from-[#9B5DE5] to-[#B47EE5]',
       description: 'Share with others who need it!',
