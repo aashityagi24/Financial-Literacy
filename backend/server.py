@@ -2296,6 +2296,78 @@ async def get_student_challenges(request: Request):
     
     return challenges
 
+# ============== CHILD CONNECTION ROUTES ==============
+
+class AddParentRequest(BaseModel):
+    parent_email: str
+
+@api_router.post("/child/add-parent")
+async def child_add_parent(add_request: AddParentRequest, request: Request):
+    """Child adds a parent by email (max 2 parents)"""
+    user = await get_current_user(request)
+    
+    if user.get("role") != "child":
+        raise HTTPException(status_code=400, detail="Only children can add parents")
+    
+    # Check if child already has 2 parents
+    existing_links = await db.parent_child_links.find(
+        {"child_id": user["user_id"], "status": "active"}
+    ).to_list(10)
+    
+    if len(existing_links) >= 2:
+        raise HTTPException(status_code=400, detail="You can only have up to 2 parents linked")
+    
+    # Find parent by email
+    parent = await db.users.find_one(
+        {"email": add_request.parent_email, "role": "parent"},
+        {"_id": 0}
+    )
+    
+    if not parent:
+        raise HTTPException(status_code=404, detail="Parent account not found. Make sure they signed up as a parent.")
+    
+    # Check if link already exists
+    existing = await db.parent_child_links.find_one({
+        "parent_id": parent["user_id"],
+        "child_id": user["user_id"]
+    })
+    
+    if existing:
+        return {"message": "Already connected to this parent", "parent_name": parent.get("name")}
+    
+    # Create link
+    await db.parent_child_links.insert_one({
+        "link_id": f"link_{uuid.uuid4().hex[:12]}",
+        "parent_id": parent["user_id"],
+        "child_id": user["user_id"],
+        "status": "active",
+        "initiated_by": "child",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "Parent added successfully!", "parent_name": parent.get("name")}
+
+@api_router.get("/child/parents")
+async def get_child_parents(request: Request):
+    """Get child's linked parents"""
+    user = await get_current_user(request)
+    
+    links = await db.parent_child_links.find(
+        {"child_id": user["user_id"], "status": "active"},
+        {"_id": 0}
+    ).to_list(10)
+    
+    parents = []
+    for link in links:
+        parent = await db.users.find_one(
+            {"user_id": link["parent_id"]},
+            {"_id": 0, "user_id": 1, "name": 1, "email": 1, "picture": 1}
+        )
+        if parent:
+            parents.append(parent)
+    
+    return parents
+
 # ============== PARENT ROUTES ==============
 
 @api_router.get("/parent/dashboard")
