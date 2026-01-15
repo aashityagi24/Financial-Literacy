@@ -1640,8 +1640,14 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
         raise HTTPException(status_code=403, detail="Only children can access quests")
     
     grade = user.get("grade", 3) or 3
-    classroom_id = user.get("classroom_id")
     parent_ids = user.get("parent_ids", [])
+    
+    # Get child's classroom IDs from classroom_students collection
+    student_links = await db.classroom_students.find(
+        {"user_id": user["user_id"]},
+        {"classroom_id": 1}
+    ).to_list(20)
+    child_classroom_ids = [link["classroom_id"] for link in student_links]
     
     # Build query for different quest sources
     quests = []
@@ -1658,12 +1664,12 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
         }, {"_id": 0}).to_list(100)
         quests.extend(admin_quests)
     
-    # Teacher quests (from child's classroom)
-    if (not source or source == "teacher") and classroom_id:
+    # Teacher quests (from child's classrooms)
+    if (not source or source == "teacher") and child_classroom_ids:
         teacher_quests = await db.new_quests.find({
             "creator_type": "teacher",
             "is_active": True,
-            "classroom_ids": {"$in": [classroom_id]},
+            "classroom_ids": {"$in": child_classroom_ids},
             "due_date": {"$gte": today}
         }, {"_id": 0}).to_list(100)
         quests.extend(teacher_quests)
