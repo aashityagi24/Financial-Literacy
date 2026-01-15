@@ -25,6 +25,7 @@ import ParentDashboard from "@/pages/ParentDashboard";
 import ContentManagement from "@/pages/ContentManagement";
 import AdminStoreManagement from "@/pages/AdminStoreManagement";
 import AdminInvestmentManagement from "@/pages/AdminInvestmentManagement";
+import ClassmatesPage from "@/pages/ClassmatesPage";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
