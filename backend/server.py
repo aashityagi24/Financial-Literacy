@@ -2994,6 +2994,23 @@ async def upload_video_file(file: UploadFile = File(...)):
     
     return {"url": f"/api/uploads/videos/{filename}"}
 
+@api_router.post("/upload/goal-image")
+async def upload_goal_image(file: UploadFile = File(...)):
+    """Upload an image for a savings goal"""
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    # Generate unique filename
+    file_ext = os.path.splitext(file.filename)[1].lower() or ".jpg"
+    filename = f"goal_{uuid.uuid4().hex[:16]}{file_ext}"
+    file_path = THUMBNAILS_DIR / filename
+    
+    # Save the image
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    return {"url": f"/api/uploads/thumbnails/{filename}"}
+
 # ============== CONTENT MANAGEMENT ROUTES (NEW HIERARCHICAL SYSTEM) ==============
 
 @api_router.get("/content/topics")
