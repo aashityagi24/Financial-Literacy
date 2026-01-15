@@ -31,15 +31,22 @@ export default function Dashboard({ user, setUser }) {
   
   const fetchDashboardData = async () => {
     try {
-      const [walletRes, questsRes, achievementsRes] = await Promise.all([
+      const [walletRes, questsRes, achievementsRes, goalsRes] = await Promise.all([
         axios.get(`${API}/wallet`),
         axios.get(`${API}/quests`),
-        axios.get(`${API}/achievements`)
+        axios.get(`${API}/achievements`),
+        axios.get(`${API}/child/savings-goals`)
       ]);
       
       setWallet(walletRes.data);
       setQuests(questsRes.data.slice(0, 3));
       setAchievements(achievementsRes.data.filter(a => a.earned).slice(0, 4));
+      
+      // Set the first active (not completed) savings goal
+      const activeGoals = (goalsRes.data || []).filter(g => !g.completed);
+      if (activeGoals.length > 0) {
+        setSavingsGoal(activeGoals[0]);
+      }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
