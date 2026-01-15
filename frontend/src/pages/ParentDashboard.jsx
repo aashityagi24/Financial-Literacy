@@ -72,6 +72,22 @@ export default function ParentDashboard({ user }) {
       setChores(choresRes.data);
       setAllowances(allowRes.data);
       setSavingsGoals(goalsRes.data);
+      
+      // Fetch classroom info for each child
+      if (dashRes.data?.children) {
+        const classroomData = {};
+        await Promise.all(
+          dashRes.data.children.map(async (child) => {
+            try {
+              const classRes = await axios.get(`${API}/parent/children/${child.user_id}/classroom`);
+              classroomData[child.user_id] = classRes.data;
+            } catch (err) {
+              classroomData[child.user_id] = { has_classroom: false };
+            }
+          })
+        );
+        setChildClassrooms(classroomData);
+      }
     } catch (error) {
       toast.error('Failed to load dashboard');
     } finally {
