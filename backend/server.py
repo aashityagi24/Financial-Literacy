@@ -2807,7 +2807,7 @@ async def complete_quest(quest_id: str, request: Request):
 
 @api_router.post("/streak/checkin")
 async def daily_checkin(request: Request):
-    """Record daily login and update streak"""
+    """Record daily login and update streak - Children get ₹5 daily reward"""
     user = await get_current_user(request)
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     
@@ -2836,8 +2836,15 @@ async def daily_checkin(request: Request):
         {"$set": {"last_login_date": today, "streak_count": current_streak}}
     )
     
-    # Award streak bonus
-    bonus = min(current_streak * 2, 20)  # Max 20 coins per day
+    # Award daily login bonus - Children get flat ₹5, others get streak-based bonus
+    user_role = user.get("role")
+    if user_role == "child":
+        bonus = 5  # Flat ₹5 daily reward for children
+        description = "Daily login reward"
+    else:
+        bonus = min(current_streak * 2, 20)  # Max 20 coins per day for others
+        description = f"Daily login bonus (Day {current_streak})"
+    
     await db.wallet_accounts.update_one(
         {"user_id": user["user_id"], "account_type": "spending"},
         {"$inc": {"balance": bonus}}
@@ -2851,7 +2858,7 @@ async def daily_checkin(request: Request):
         "to_account": "spending",
         "amount": bonus,
         "transaction_type": "reward",
-        "description": f"Daily login bonus (Day {current_streak})",
+        "description": description,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.transactions.insert_one(trans_doc)
