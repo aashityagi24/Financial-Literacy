@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-export default function ClassmatesSection({ givingBalance }) {
+export default function ClassmatesSection({ givingBalance, compact = false }) {
   const [classmates, setClassmates] = useState([]);
   const [classroom, setClassroom] = useState(null);
   const [loading, setLoading] = useState(true);
