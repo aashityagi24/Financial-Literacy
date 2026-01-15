@@ -38,22 +38,27 @@ const getWaterStatus = (status) => {
 export default function MoneyGardenPage({ user }) {
   const [loading, setLoading] = useState(true);
   const [farm, setFarm] = useState({ plots: [], seeds: [], inventory: [], market_prices: [], is_market_open: false });
+  const [wallet, setWallet] = useState(null);
   const [showSeedDialog, setShowSeedDialog] = useState(false);
   const [selectedPlot, setSelectedPlot] = useState(null);
   const [showMarket, setShowMarket] = useState(false);
   const [sellQuantity, setSellQuantity] = useState({});
   
   useEffect(() => {
-    fetchFarm();
+    fetchData();
     // Refresh every 30 seconds
-    const interval = setInterval(fetchFarm, 30000);
+    const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
   
-  const fetchFarm = async () => {
+  const fetchData = async () => {
     try {
-      const res = await axios.get(`${API}/garden/farm`);
-      setFarm(res.data);
+      const [farmRes, walletRes] = await Promise.all([
+        axios.get(`${API}/garden/farm`),
+        axios.get(`${API}/wallet`)
+      ]);
+      setFarm(farmRes.data);
+      setWallet(walletRes.data);
     } catch (error) {
       if (error.response?.status === 403) {
         toast.error('Money Garden is for Grade 1-2 only');
