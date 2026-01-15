@@ -1702,7 +1702,7 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
     
     # Get child's classroom IDs from classroom_students collection
     student_links = await db.classroom_students.find(
-        {"user_id": user["user_id"]},
+        {"student_id": user["user_id"]},
         {"classroom_id": 1}
     ).to_list(20)
     child_classroom_ids = [link["classroom_id"] for link in student_links]
