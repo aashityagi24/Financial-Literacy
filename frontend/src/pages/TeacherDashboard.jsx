@@ -45,7 +45,6 @@ export default function TeacherDashboard({ user }) {
   // Forms
   const [showCreateClass, setShowCreateClass] = useState(false);
   const [showReward, setShowReward] = useState(false);
-  const [showChallenge, setShowChallenge] = useState(false);
   const [showCreateQuest, setShowCreateQuest] = useState(false);
   const [showAnnouncement, setShowAnnouncement] = useState(false);
   const [showStudentProgress, setShowStudentProgress] = useState(null);
