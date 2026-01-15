@@ -591,7 +591,7 @@ export default function TeacherDashboard({ user }) {
                     </DialogContent>
                   </Dialog>
                   
-                  <Dialog open={showCreateQuest} onOpenChange={setShowCreateQuest}>
+                  <Dialog open={showCreateQuest} onOpenChange={(open) => { setShowCreateQuest(open); if (!open) resetQuestForm(); }}>
                     <DialogTrigger asChild>
                       <button className="btn-secondary flex-1 py-3 flex items-center justify-center gap-2" data-testid="create-quest-btn">
                         <Target className="w-5 h-5" /> Create Quest
@@ -599,7 +599,7 @@ export default function TeacherDashboard({ user }) {
                     </DialogTrigger>
                     <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-2xl max-h-[85vh] overflow-y-auto">
                       <DialogHeader>
-                        <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Create Quest</DialogTitle>
+                        <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{editingQuest ? 'Edit Quest' : 'Create Quest'}</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 mt-4">
                         <Input 
