@@ -642,18 +642,6 @@ export default function ParentDashboard({ user }) {
                 </div>
               </>
             )}
-                              <button onClick={() => handleDeleteChore(chore.chore_id)} className="p-2 hover:bg-[#EE6C4D]/20 rounded-lg">
-                                <Trash2 className="w-4 h-4 text-[#EE6C4D]" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
             
             {/* Allowances */}
             {allowances.length > 0 && (
