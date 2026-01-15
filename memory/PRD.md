@@ -74,10 +74,31 @@ A gamified financial literacy learning application for children (K-5) with disti
 - **Admin:** admin@learnersplanet.com / finlit@2026
 - **Users:** Google Social Login
 
+## Recent Updates (January 15, 2026)
+
+### Money Garden UI Refactor ✅
+- **Removed Seed Shop** from bottom of page
+- **Action buttons relocated** (Water All, Market, Buy Plot) to row below garden plots
+- **New Reports Section** added with:
+  - Total projected earnings from all plants
+  - Time-to-harvest countdown for each plant
+  - Projected value per plant
+- **Enhanced Seed Selection Dialog:**
+  - Two-view system: List view → Detail view
+  - Shows description, cost, growth time, yield, sell price
+  - Watering schedule information
+  - Profit calculation preview
+  - "Buy & Plant" button
+
+### Welcome Bonus & Daily Rewards ✅
+- **₹100 Welcome Bonus** for all new users (in Spending account)
+- **₹5 Daily Login Reward** for children (flat rate)
+- Streak-based rewards for other users (2x streak, max ₹20)
+
 ## Pending/Backlog
 
 ### P1 - High Priority
-- [ ] Daily Login Rewards & Streak Bonuses
+- [x] Daily Login Rewards & Streak Bonuses ✅
 - [ ] Leaderboards
 - [ ] Spending limits & parent approval
 
