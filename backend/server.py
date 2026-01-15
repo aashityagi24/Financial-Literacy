@@ -1473,7 +1473,9 @@ async def create_teacher_quest(quest_data: QuestCreate, request: Request):
     user = await require_teacher(request)
     
     quest_id = f"quest_{uuid.uuid4().hex[:12]}"
-    total_points = sum(q.get("points", 0) for q in quest_data.questions)
+    questions_points = sum(q.get("points", 0) or 0 for q in quest_data.questions)
+    base_reward = quest_data.reward_amount or 0
+    total_points = questions_points + base_reward if len(quest_data.questions) == 0 else questions_points
     
     processed_questions = []
     for q in quest_data.questions:
@@ -1484,7 +1486,7 @@ async def create_teacher_quest(quest_data: QuestCreate, request: Request):
             "image_url": q.get("image_url"),
             "options": q.get("options"),
             "correct_answer": q.get("correct_answer"),
-            "points": q.get("points", 10)
+            "points": q.get("points", 0) or 0
         })
     
     # Get teacher's classrooms
@@ -1504,12 +1506,11 @@ async def create_teacher_quest(quest_data: QuestCreate, request: Request):
         "description": quest_data.description,
         "image_url": quest_data.image_url,
         "pdf_url": quest_data.pdf_url,
-        "min_grade": quest_data.min_grade,
-        "max_grade": quest_data.max_grade,
+        "reward_amount": base_reward,
         "due_date": quest_data.due_date,
         "due_time": "23:59:00",
         "questions": processed_questions,
-        "total_points": total_points,
+        "total_points": total_points if total_points > 0 else base_reward,
         "is_active": True,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
