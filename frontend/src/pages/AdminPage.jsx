@@ -169,6 +169,26 @@ export default function AdminPage({ user }) {
             </div>
           </Link>
           
+          {/* Garden Plants Management Card */}
+          <Link 
+            to="/admin/garden" 
+            className="block bg-gradient-to-r from-[#228B22] to-[#32CD32] rounded-xl p-5 hover:shadow-lg transition-shadow"
+            data-testid="garden-management-link"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">🌱</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Garden Plants (G1-2)</h3>
+                  <p className="text-white/80 text-sm">Manage seeds & plant types</p>
+                </div>
+              </div>
+              <ChevronRight className="w-6 h-6 text-white" />
+            </div>
+          </Link>
+          
           {/* Investment Management Card */}
           <Link 
             to="/admin/investments" 
