@@ -128,6 +128,63 @@ export default function WalletPage({ user }) {
     }
   };
   
+  const uploadGoalImage = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    setUploadingImage(true);
+    try {
+      const res = await axios.post(`${API}/upload/goal-image`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setGoalForm(prev => ({ ...prev, image_url: res.data.url }));
+      toast.success('Image uploaded!');
+    } catch (error) {
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+  
+  const handleCreateGoal = async () => {
+    if (!goalForm.title || !goalForm.target_amount) {
+      toast.error('Please enter a name and target amount');
+      return;
+    }
+    
+    const target = parseFloat(goalForm.target_amount);
+    if (isNaN(target) || target <= 0) {
+      toast.error('Please enter a valid target amount');
+      return;
+    }
+    
+    try {
+      await axios.post(`${API}/child/savings-goals`, {
+        title: goalForm.title,
+        description: goalForm.description || null,
+        image_url: goalForm.image_url || null,
+        target_amount: target,
+        deadline: goalForm.deadline || null
+      });
+      
+      toast.success('Savings goal created! 🎯');
+      setGoalOpen(false);
+      setGoalForm({ title: '', description: '', image_url: '', target_amount: '', deadline: '' });
+      fetchWalletData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create goal');
+    }
+  };
+  
+  const contributeToGoal = async (goalId, amount) => {
+    try {
+      await axios.post(`${API}/child/savings-goals/${goalId}/contribute`, { amount });
+      toast.success('Contribution added!');
+      fetchWalletData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Contribution failed');
+    }
+  };
+  
   const getTransactionIcon = (type) => {
     switch (type) {
       case 'deposit': return <ArrowDown className="w-4 h-4 text-[#06D6A0]" />;
