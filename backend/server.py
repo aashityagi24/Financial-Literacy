@@ -1353,111 +1353,615 @@ async def claim_achievement(achievement_id: str, request: Request):
     
     return {"message": "Achievement claimed", "points_earned": achievement["points"]}
 
-# ============== QUESTS ROUTES ==============
+# ============== NEW QUEST SYSTEM ==============
 
-@api_router.get("/quests")
-async def get_quests(request: Request):
-    """Get available and assigned quests"""
-    user = await get_current_user(request)
-    grade = user.get("grade", 3) or 3
+# Upload quest image/pdf
+@api_router.post("/upload/quest-asset")
+async def upload_quest_asset(file: UploadFile = File(...)):
+    """Upload image or PDF for quests"""
+    QUEST_ASSETS_DIR = UPLOADS_DIR / "quests"
+    QUEST_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
     
-    available_quests = await db.quests.find(
-        {"min_grade": {"$lte": grade}, "max_grade": {"$gte": grade}},
-        {"_id": 0}
-    ).to_list(100)
+    ext = file.filename.split('.')[-1].lower()
+    if ext not in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf']:
+        raise HTTPException(status_code=400, detail="Invalid file type. Allowed: jpg, jpeg, png, gif, webp, pdf")
     
-    user_quests = await db.user_quests.find(
-        {"user_id": user["user_id"]},
-        {"_id": 0}
-    ).to_list(100)
+    filename = f"{uuid.uuid4().hex[:12]}.{ext}"
+    file_path = QUEST_ASSETS_DIR / filename
     
-    assigned_ids = {uq["quest_id"] for uq in user_quests}
+    with open(file_path, "wb") as f:
+        content = await file.read()
+        f.write(content)
     
-    result = []
-    for quest in available_quests:
-        user_quest = next((uq for uq in user_quests if uq["quest_id"] == quest["quest_id"]), None)
-        result.append({
-            **quest,
-            "assigned": quest["quest_id"] in assigned_ids,
-            "progress": user_quest["progress"] if user_quest else 0,
-            "completed": user_quest["completed"] if user_quest else False
+    return {"url": f"/api/uploads/quests/{filename}"}
+
+# Admin Quest Management
+@api_router.post("/admin/quests")
+async def create_admin_quest(quest_data: QuestCreate, request: Request):
+    """Admin creates a new quest with Q&A"""
+    user = await require_admin(request)
+    
+    quest_id = f"quest_{uuid.uuid4().hex[:12]}"
+    total_points = sum(q.get("points", 0) for q in quest_data.questions)
+    
+    # Process questions
+    processed_questions = []
+    for i, q in enumerate(quest_data.questions):
+        processed_questions.append({
+            "question_id": f"q_{uuid.uuid4().hex[:8]}",
+            "question_text": q.get("question_text", ""),
+            "question_type": q.get("question_type", "mcq"),
+            "image_url": q.get("image_url"),
+            "options": q.get("options"),
+            "correct_answer": q.get("correct_answer"),
+            "points": q.get("points", 10)
         })
     
-    return result
-
-@api_router.post("/quests/{quest_id}/accept")
-async def accept_quest(quest_id: str, request: Request):
-    """Accept a quest"""
-    user = await get_current_user(request)
+    quest_doc = {
+        "quest_id": quest_id,
+        "creator_type": "admin",
+        "creator_id": user["user_id"],
+        "title": quest_data.title,
+        "description": quest_data.description,
+        "image_url": quest_data.image_url,
+        "pdf_url": quest_data.pdf_url,
+        "min_grade": quest_data.min_grade,
+        "max_grade": quest_data.max_grade,
+        "due_date": quest_data.due_date,
+        "due_time": "23:59:00",  # 11:59 PM
+        "questions": processed_questions,
+        "total_points": total_points,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
     
-    # Check if already accepted
-    existing = await db.user_quests.find_one({
-        "user_id": user["user_id"],
-        "quest_id": quest_id
+    await db.new_quests.insert_one(quest_doc)
+    return {"quest_id": quest_id, "message": "Quest created successfully"}
+
+@api_router.get("/admin/quests")
+async def get_admin_quests(request: Request):
+    """Get all admin-created quests"""
+    await require_admin(request)
+    quests = await db.new_quests.find(
+        {"creator_type": "admin"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(200)
+    return quests
+
+@api_router.put("/admin/quests/{quest_id}")
+async def update_admin_quest(quest_id: str, quest_data: QuestCreate, request: Request):
+    """Update an admin quest"""
+    await require_admin(request)
+    
+    total_points = sum(q.get("points", 0) for q in quest_data.questions)
+    processed_questions = []
+    for q in quest_data.questions:
+        processed_questions.append({
+            "question_id": q.get("question_id") or f"q_{uuid.uuid4().hex[:8]}",
+            "question_text": q.get("question_text", ""),
+            "question_type": q.get("question_type", "mcq"),
+            "image_url": q.get("image_url"),
+            "options": q.get("options"),
+            "correct_answer": q.get("correct_answer"),
+            "points": q.get("points", 10)
+        })
+    
+    await db.new_quests.update_one(
+        {"quest_id": quest_id, "creator_type": "admin"},
+        {"$set": {
+            "title": quest_data.title,
+            "description": quest_data.description,
+            "image_url": quest_data.image_url,
+            "pdf_url": quest_data.pdf_url,
+            "min_grade": quest_data.min_grade,
+            "max_grade": quest_data.max_grade,
+            "due_date": quest_data.due_date,
+            "questions": processed_questions,
+            "total_points": total_points
+        }}
+    )
+    return {"message": "Quest updated"}
+
+@api_router.delete("/admin/quests/{quest_id}")
+async def delete_admin_quest(quest_id: str, request: Request):
+    """Delete an admin quest"""
+    await require_admin(request)
+    await db.new_quests.delete_one({"quest_id": quest_id, "creator_type": "admin"})
+    return {"message": "Quest deleted"}
+
+# Teacher Quest Management
+@api_router.post("/teacher/quests")
+async def create_teacher_quest(quest_data: QuestCreate, request: Request):
+    """Teacher creates a quest for their classrooms"""
+    user = await require_teacher(request)
+    
+    quest_id = f"quest_{uuid.uuid4().hex[:12]}"
+    total_points = sum(q.get("points", 0) for q in quest_data.questions)
+    
+    processed_questions = []
+    for q in quest_data.questions:
+        processed_questions.append({
+            "question_id": f"q_{uuid.uuid4().hex[:8]}",
+            "question_text": q.get("question_text", ""),
+            "question_type": q.get("question_type", "mcq"),
+            "image_url": q.get("image_url"),
+            "options": q.get("options"),
+            "correct_answer": q.get("correct_answer"),
+            "points": q.get("points", 10)
+        })
+    
+    # Get teacher's classrooms
+    classrooms = await db.classrooms.find(
+        {"teacher_id": user["user_id"]},
+        {"classroom_id": 1}
+    ).to_list(50)
+    classroom_ids = [c["classroom_id"] for c in classrooms]
+    
+    quest_doc = {
+        "quest_id": quest_id,
+        "creator_type": "teacher",
+        "creator_id": user["user_id"],
+        "creator_name": user.get("name", "Teacher"),
+        "classroom_ids": classroom_ids,
+        "title": quest_data.title,
+        "description": quest_data.description,
+        "image_url": quest_data.image_url,
+        "pdf_url": quest_data.pdf_url,
+        "min_grade": quest_data.min_grade,
+        "max_grade": quest_data.max_grade,
+        "due_date": quest_data.due_date,
+        "due_time": "23:59:00",
+        "questions": processed_questions,
+        "total_points": total_points,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.new_quests.insert_one(quest_doc)
+    
+    # Create notifications for students
+    for classroom in classrooms:
+        students = await db.users.find(
+            {"classroom_id": classroom["classroom_id"], "role": "child"},
+            {"user_id": 1}
+        ).to_list(100)
+        for student in students:
+            await db.notifications.insert_one({
+                "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+                "user_id": student["user_id"],
+                "message": f"New quest from {user.get('name', 'Teacher')}: {quest_data.title}",
+                "type": "quest",
+                "link": "/quests",
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+    
+    return {"quest_id": quest_id, "message": "Quest created successfully"}
+
+@api_router.get("/teacher/quests")
+async def get_teacher_quests(request: Request):
+    """Get teacher's created quests"""
+    user = await require_teacher(request)
+    quests = await db.new_quests.find(
+        {"creator_type": "teacher", "creator_id": user["user_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(200)
+    return quests
+
+@api_router.delete("/teacher/quests/{quest_id}")
+async def delete_teacher_quest(quest_id: str, request: Request):
+    """Delete a teacher quest"""
+    user = await require_teacher(request)
+    await db.new_quests.delete_one({
+        "quest_id": quest_id,
+        "creator_type": "teacher",
+        "creator_id": user["user_id"]
+    })
+    return {"message": "Quest deleted"}
+
+# Parent Chore Management (shown as quests to children)
+@api_router.post("/parent/chores-new")
+async def create_parent_chore(chore_data: ChoreCreate, request: Request):
+    """Parent creates a chore for their child"""
+    user = await require_parent(request)
+    
+    # Verify child belongs to parent
+    child = await db.users.find_one({"user_id": chore_data.child_id})
+    if not child or user["user_id"] not in child.get("parent_ids", []):
+        raise HTTPException(status_code=403, detail="Not authorized for this child")
+    
+    chore_id = f"chore_{uuid.uuid4().hex[:12]}"
+    
+    chore_doc = {
+        "chore_id": chore_id,
+        "quest_id": chore_id,  # For unified quest display
+        "creator_type": "parent",
+        "creator_id": user["user_id"],
+        "creator_name": user.get("name", "Parent"),
+        "child_id": chore_data.child_id,
+        "title": chore_data.title,
+        "description": chore_data.description,
+        "reward_amount": chore_data.reward_amount,
+        "total_points": chore_data.reward_amount,
+        "frequency": chore_data.frequency,
+        "weekly_days": chore_data.weekly_days,
+        "monthly_date": chore_data.monthly_date,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.new_quests.insert_one(chore_doc)
+    
+    # Create notification for child
+    await db.notifications.insert_one({
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": chore_data.child_id,
+        "message": f"New chore from {user.get('name', 'Parent')}: {chore_data.title}",
+        "type": "chore",
+        "link": "/quests",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    if existing:
-        raise HTTPException(status_code=400, detail="Quest already accepted")
+    return {"chore_id": chore_id, "message": "Chore created successfully"}
+
+@api_router.get("/parent/chores-new")
+async def get_parent_chores(request: Request):
+    """Get parent's created chores"""
+    user = await require_parent(request)
+    chores = await db.new_quests.find(
+        {"creator_type": "parent", "creator_id": user["user_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(200)
+    return chores
+
+@api_router.delete("/parent/chores-new/{chore_id}")
+async def delete_parent_chore(chore_id: str, request: Request):
+    """Delete a parent chore"""
+    user = await require_parent(request)
+    await db.new_quests.delete_one({
+        "chore_id": chore_id,
+        "creator_type": "parent",
+        "creator_id": user["user_id"]
+    })
+    return {"message": "Chore deleted"}
+
+# Child Quest/Chore completion tracking
+@api_router.get("/child/quests-new")
+async def get_child_quests(request: Request, source: str = None, sort: str = "due_date"):
+    """Get all quests for a child (admin, teacher, parent chores)"""
+    user = await get_current_user(request)
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can access quests")
     
-    quest = await db.quests.find_one({"quest_id": quest_id}, {"_id": 0})
+    grade = user.get("grade", 3) or 3
+    classroom_id = user.get("classroom_id")
+    parent_ids = user.get("parent_ids", [])
+    
+    # Build query for different quest sources
+    quests = []
+    
+    # Admin quests (grade-appropriate and not expired)
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    if not source or source == "admin":
+        admin_quests = await db.new_quests.find({
+            "creator_type": "admin",
+            "is_active": True,
+            "min_grade": {"$lte": grade},
+            "max_grade": {"$gte": grade},
+            "due_date": {"$gte": today}
+        }, {"_id": 0}).to_list(100)
+        quests.extend(admin_quests)
+    
+    # Teacher quests (from child's classroom)
+    if (not source or source == "teacher") and classroom_id:
+        teacher_quests = await db.new_quests.find({
+            "creator_type": "teacher",
+            "is_active": True,
+            "classroom_ids": classroom_id,
+            "due_date": {"$gte": today}
+        }, {"_id": 0}).to_list(100)
+        quests.extend(teacher_quests)
+    
+    # Parent chores
+    if not source or source == "parent":
+        parent_chores = await db.new_quests.find({
+            "creator_type": "parent",
+            "child_id": user["user_id"],
+            "is_active": True
+        }, {"_id": 0}).to_list(100)
+        quests.extend(parent_chores)
+    
+    # Get user's completion status for each quest
+    completions = await db.quest_completions.find(
+        {"user_id": user["user_id"]},
+        {"_id": 0}
+    ).to_list(500)
+    completion_map = {c["quest_id"]: c for c in completions}
+    
+    # Add completion status and calculate if can earn
+    for quest in quests:
+        quest_id = quest.get("quest_id") or quest.get("chore_id")
+        completion = completion_map.get(quest_id)
+        quest["completion_status"] = completion
+        quest["has_earned"] = completion.get("has_earned", False) if completion else False
+        quest["earned_amount"] = completion.get("earned_amount", 0) if completion else 0
+    
+    # Sort
+    if sort == "due_date":
+        quests.sort(key=lambda x: x.get("due_date", "9999-99-99"))
+    elif sort == "reward":
+        quests.sort(key=lambda x: x.get("total_points", 0), reverse=True)
+    
+    return quests
+
+@api_router.post("/child/quests-new/{quest_id}/submit")
+async def submit_quest_answers(quest_id: str, request: Request):
+    """Child submits answers for a quest (Q&A type)"""
+    user = await get_current_user(request)
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can submit quests")
+    
+    body = await request.json()
+    answers = body.get("answers", {})  # {question_id: answer}
+    
+    quest = await db.new_quests.find_one({"quest_id": quest_id}, {"_id": 0})
     if not quest:
         raise HTTPException(status_code=404, detail="Quest not found")
     
-    uq_doc = {
-        "id": f"uq_{uuid.uuid4().hex[:12]}",
-        "user_id": user["user_id"],
-        "quest_id": quest_id,
-        "progress": 0,
-        "completed": False,
-        "assigned_at": datetime.now(timezone.utc).isoformat(),
-        "completed_at": None
-    }
-    await db.user_quests.insert_one(uq_doc)
-    
-    return {"message": "Quest accepted"}
-
-@api_router.post("/quests/{quest_id}/complete")
-async def complete_quest(quest_id: str, request: Request):
-    """Complete a quest and receive reward"""
-    user = await get_current_user(request)
-    
-    user_quest = await db.user_quests.find_one({
+    # Check if already earned (can retake but no more money)
+    existing = await db.quest_completions.find_one({
         "user_id": user["user_id"],
         "quest_id": quest_id
     })
+    has_already_earned = existing.get("has_earned", False) if existing else False
     
-    if not user_quest:
-        raise HTTPException(status_code=404, detail="Quest not accepted")
+    # Grade answers
+    earned = 0
+    results = []
+    for question in quest.get("questions", []):
+        q_id = question["question_id"]
+        user_answer = answers.get(q_id)
+        correct_answer = question["correct_answer"]
+        points = question["points"]
+        
+        is_correct = False
+        if question["question_type"] == "multi_select":
+            # Compare lists (order doesn't matter)
+            if isinstance(user_answer, list) and isinstance(correct_answer, list):
+                is_correct = set(user_answer) == set(correct_answer)
+        elif question["question_type"] == "value":
+            # Numeric comparison
+            try:
+                is_correct = float(user_answer) == float(correct_answer)
+            except:
+                is_correct = False
+        else:
+            # MCQ or True/False
+            is_correct = str(user_answer).lower() == str(correct_answer).lower()
+        
+        if is_correct and not has_already_earned:
+            earned += points
+        
+        results.append({
+            "question_id": q_id,
+            "is_correct": is_correct,
+            "points_earned": points if is_correct else 0
+        })
     
-    if user_quest.get("completed"):
-        raise HTTPException(status_code=400, detail="Quest already completed")
-    
-    quest = await db.quests.find_one({"quest_id": quest_id}, {"_id": 0})
-    
-    # Mark as complete
-    await db.user_quests.update_one(
-        {"user_id": user["user_id"], "quest_id": quest_id},
-        {"$set": {"completed": True, "progress": 100, "completed_at": datetime.now(timezone.utc).isoformat()}}
-    )
-    
-    # Award reward
-    await db.wallet_accounts.update_one(
-        {"user_id": user["user_id"], "account_type": "spending"},
-        {"$inc": {"balance": quest["reward_amount"]}}
-    )
-    
-    # Record transaction
-    trans_doc = {
-        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+    # Update or create completion record
+    completion_doc = {
         "user_id": user["user_id"],
-        "from_account": None,
-        "to_account": "spending",
-        "amount": quest["reward_amount"],
-        "transaction_type": "reward",
-        "description": f"Quest completed: {quest['title']}",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "quest_id": quest_id,
+        "last_attempt_at": datetime.now(timezone.utc).isoformat(),
+        "last_results": results,
+        "last_earned": earned if not has_already_earned else 0
     }
-    await db.transactions.insert_one(trans_doc)
+    
+    if not existing:
+        completion_doc["completion_id"] = f"comp_{uuid.uuid4().hex[:12]}"
+        completion_doc["has_earned"] = earned > 0
+        completion_doc["earned_amount"] = earned
+        completion_doc["first_attempt_at"] = datetime.now(timezone.utc).isoformat()
+        await db.quest_completions.insert_one(completion_doc)
+    else:
+        update_data = {
+            "last_attempt_at": completion_doc["last_attempt_at"],
+            "last_results": results,
+            "last_earned": earned if not has_already_earned else 0
+        }
+        if not has_already_earned and earned > 0:
+            update_data["has_earned"] = True
+            update_data["earned_amount"] = earned
+        await db.quest_completions.update_one(
+            {"user_id": user["user_id"], "quest_id": quest_id},
+            {"$set": update_data}
+        )
+    
+    # Award money if first time earning
+    if earned > 0 and not has_already_earned:
+        await db.wallet_accounts.update_one(
+            {"user_id": user["user_id"], "account_type": "spending"},
+            {"$inc": {"balance": earned}}
+        )
+        
+        # Record transaction
+        await db.transactions.insert_one({
+            "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+            "user_id": user["user_id"],
+            "from_account": None,
+            "to_account": "spending",
+            "amount": earned,
+            "transaction_type": "reward",
+            "description": f"Quest completed: {quest['title']}",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    return {
+        "results": results,
+        "earned": earned if not has_already_earned else 0,
+        "already_earned": has_already_earned,
+        "message": "Quest submitted successfully"
+    }
+
+# Parent validates chore completion
+@api_router.post("/child/chores/{chore_id}/request-complete")
+async def request_chore_completion(chore_id: str, request: Request):
+    """Child requests chore completion validation from parent"""
+    user = await get_current_user(request)
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can request completion")
+    
+    chore = await db.new_quests.find_one({
+        "chore_id": chore_id,
+        "child_id": user["user_id"]
+    })
+    if not chore:
+        raise HTTPException(status_code=404, detail="Chore not found")
+    
+    # Create pending completion request
+    request_id = f"creq_{uuid.uuid4().hex[:12]}"
+    await db.chore_requests.insert_one({
+        "request_id": request_id,
+        "chore_id": chore_id,
+        "child_id": user["user_id"],
+        "parent_id": chore["creator_id"],
+        "status": "pending",
+        "requested_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Notify parent
+    await db.notifications.insert_one({
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": chore["creator_id"],
+        "message": f"{user.get('name', 'Your child')} says they completed: {chore['title']}",
+        "type": "chore_validation",
+        "link": "/parent-dashboard",
+        "is_read": False,
+        "data": {"request_id": request_id, "chore_id": chore_id},
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "Completion request sent to parent"}
+
+@api_router.get("/parent/chore-requests")
+async def get_chore_requests(request: Request):
+    """Get pending chore completion requests for parent"""
+    user = await require_parent(request)
+    requests = await db.chore_requests.find(
+        {"parent_id": user["user_id"], "status": "pending"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Enrich with chore and child info
+    for req in requests:
+        chore = await db.new_quests.find_one({"chore_id": req["chore_id"]}, {"_id": 0, "title": 1, "reward_amount": 1})
+        child = await db.users.find_one({"user_id": req["child_id"]}, {"_id": 0, "name": 1})
+        req["chore"] = chore
+        req["child"] = child
+    
+    return requests
+
+@api_router.post("/parent/chore-requests/{request_id}/validate")
+async def validate_chore_completion(request_id: str, request: Request):
+    """Parent validates (approves/rejects) chore completion"""
+    user = await require_parent(request)
+    body = await request.json()
+    action = body.get("action")  # 'approve' or 'reject'
+    
+    chore_req = await db.chore_requests.find_one({
+        "request_id": request_id,
+        "parent_id": user["user_id"]
+    })
+    if not chore_req:
+        raise HTTPException(status_code=404, detail="Request not found")
+    
+    if action == "approve":
+        chore = await db.new_quests.find_one({"chore_id": chore_req["chore_id"]})
+        reward = chore.get("reward_amount", 0)
+        
+        # Award money to child
+        await db.wallet_accounts.update_one(
+            {"user_id": chore_req["child_id"], "account_type": "spending"},
+            {"$inc": {"balance": reward}}
+        )
+        
+        # Record transaction
+        await db.transactions.insert_one({
+            "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+            "user_id": chore_req["child_id"],
+            "from_account": None,
+            "to_account": "spending",
+            "amount": reward,
+            "transaction_type": "reward",
+            "description": f"Chore completed: {chore['title']}",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Record completion
+        await db.quest_completions.insert_one({
+            "completion_id": f"comp_{uuid.uuid4().hex[:12]}",
+            "user_id": chore_req["child_id"],
+            "quest_id": chore_req["chore_id"],
+            "has_earned": True,
+            "earned_amount": reward,
+            "completed_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Notify child
+        await db.notifications.insert_one({
+            "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+            "user_id": chore_req["child_id"],
+            "message": f"Great job! {user.get('name', 'Parent')} approved your chore. You earned ₹{reward}!",
+            "type": "chore_approved",
+            "is_read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # For recurring chores, reset for next occurrence
+        if chore.get("frequency") != "one_time":
+            # Keep chore active for next time
+            pass
+        else:
+            # One-time chore, mark as inactive
+            await db.new_quests.update_one(
+                {"chore_id": chore_req["chore_id"]},
+                {"$set": {"is_active": False}}
+            )
+    else:
+        # Rejected
+        await db.notifications.insert_one({
+            "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+            "user_id": chore_req["child_id"],
+            "message": f"{user.get('name', 'Parent')} needs you to try again on: {chore_req.get('chore', {}).get('title', 'chore')}",
+            "type": "chore_rejected",
+            "is_read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    # Update request status
+    await db.chore_requests.update_one(
+        {"request_id": request_id},
+        {"$set": {"status": action + "d", "validated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": f"Chore {action}d"}
+
+# Legacy quest routes (for backward compatibility during transition)
+@api_router.get("/quests")
+async def get_quests(request: Request):
+    """Get available quests - redirects to new system"""
+    return await get_child_quests(request)
+
+@api_router.post("/quests/{quest_id}/accept")
+async def accept_quest(quest_id: str, request: Request):
+    """Legacy - quests no longer need acceptance"""
+    return {"message": "Quest system updated - quests are automatically available"}
+
+@api_router.post("/quests/{quest_id}/complete")
+async def complete_quest(quest_id: str, request: Request):
+    """Legacy - redirect to new submission"""
+    return {"message": "Please use the new quest submission system"}
     
     return {"message": "Quest completed", "reward": quest["reward_amount"]}
 
