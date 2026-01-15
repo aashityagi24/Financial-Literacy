@@ -3430,7 +3430,18 @@ async def give_money_to_child(request: Request):
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    return {"message": f"Gave ${amount} to child"}
+    # Notify child about received money
+    await create_notification(
+        user_id=child_id,
+        notification_type="gift_received",
+        title="💝 You received money!",
+        message=f"Your parent sent you ₹{amount}: {reason}",
+        from_user_id=parent["user_id"],
+        from_user_name=parent.get("name"),
+        amount=amount
+    )
+    
+    return {"message": f"Gave ₹{amount} to child"}
 
 @api_router.post("/parent/savings-goals")
 async def create_savings_goal(goal: SavingsGoalCreate, request: Request):
