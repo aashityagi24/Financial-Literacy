@@ -545,7 +545,7 @@ export default function TeacherDashboard({ user }) {
                       </DialogHeader>
                       <div className="space-y-4 mt-4">
                         <Input 
-                          placeholder="Quest Title" 
+                          placeholder="Quest Title *" 
                           value={questForm.title} 
                           onChange={(e) => setQuestForm({...questForm, title: e.target.value})}
                           className="border-3 border-[#1D3557]"
@@ -558,56 +558,75 @@ export default function TeacherDashboard({ user }) {
                           rows={2}
                         />
                         
+                        {/* File Uploads */}
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-sm font-bold text-[#1D3557] mb-1 block">Min Grade</label>
-                            <Select value={String(questForm.min_grade)} onValueChange={(v) => setQuestForm({...questForm, min_grade: parseInt(v)})}>
-                              <SelectTrigger className="border-3 border-[#1D3557]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {gradeLabels.map((label, i) => (
-                                  <SelectItem key={i} value={String(i)}>{label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <label className="text-sm font-bold text-[#1D3557] mb-1 block">Image (optional)</label>
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleQuestFileUpload(e, 'image_url')}
+                              className="border-2 border-[#1D3557]/30"
+                            />
+                            {questForm.image_url && (
+                              <img src={getAssetUrl(questForm.image_url)} alt="Preview" className="mt-2 h-16 rounded-lg" />
+                            )}
                           </div>
                           <div>
-                            <label className="text-sm font-bold text-[#1D3557] mb-1 block">Max Grade</label>
-                            <Select value={String(questForm.max_grade)} onValueChange={(v) => setQuestForm({...questForm, max_grade: parseInt(v)})}>
-                              <SelectTrigger className="border-3 border-[#1D3557]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {gradeLabels.map((label, i) => (
-                                  <SelectItem key={i} value={String(i)}>{label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <label className="text-sm font-bold text-[#1D3557] mb-1 block">PDF (optional)</label>
+                            <Input
+                              type="file"
+                              accept=".pdf"
+                              onChange={(e) => handleQuestFileUpload(e, 'pdf_url')}
+                              className="border-2 border-[#1D3557]/30"
+                            />
+                            {questForm.pdf_url && (
+                              <p className="text-sm text-green-600 mt-1">✓ PDF uploaded</p>
+                            )}
                           </div>
                         </div>
                         
-                        <div>
-                          <label className="text-sm font-bold text-[#1D3557] mb-1 block">Due Date</label>
-                          <Input 
-                            type="date" 
-                            value={questForm.due_date} 
-                            onChange={(e) => setQuestForm({...questForm, due_date: e.target.value})}
-                            min={new Date().toISOString().split('T')[0]}
-                            className="border-3 border-[#1D3557]"
-                          />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-bold text-[#1D3557] mb-1 block">Due Date *</label>
+                            <Input 
+                              type="date" 
+                              value={questForm.due_date} 
+                              onChange={(e) => setQuestForm({...questForm, due_date: e.target.value})}
+                              min={new Date().toISOString().split('T')[0]}
+                              className="border-3 border-[#1D3557]"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-bold text-[#1D3557] mb-1 block">Base Reward (₹)</label>
+                            <Input 
+                              type="number" 
+                              min="0"
+                              placeholder="0 if using questions"
+                              value={questForm.reward_amount || ''} 
+                              onChange={(e) => setQuestForm({...questForm, reward_amount: parseFloat(e.target.value) || 0})}
+                              className="border-3 border-[#1D3557]"
+                            />
+                            <p className="text-xs text-[#3D5A80] mt-1">For quests without questions</p>
+                          </div>
                         </div>
                         
                         {/* Questions */}
                         <div>
                           <div className="flex items-center justify-between mb-3">
                             <label className="text-sm font-bold text-[#1D3557]">
-                              Questions ({questForm.questions.length}) - Total: ₹{questForm.questions.reduce((sum, q) => sum + (q.points || 0), 0)}
+                              Questions ({questForm.questions.length}) {questForm.questions.length > 0 && `- Total: ₹${questForm.questions.reduce((sum, q) => sum + (parseFloat(q.points) || 0), 0)}`}
                             </label>
                             <button type="button" onClick={addQuestion} className="text-sm text-[#06D6A0] hover:underline font-bold">
                               + Add Question
                             </button>
                           </div>
+                          
+                          {questForm.questions.length === 0 && (
+                            <p className="text-sm text-[#3D5A80] bg-[#E0FBFC] p-3 rounded-lg">
+                              No questions added. Students will complete the quest and earn the base reward.
+                            </p>
+                          )}
                           
                           <div className="space-y-4 max-h-60 overflow-y-auto">
                             {questForm.questions.map((q, qIndex) => (
