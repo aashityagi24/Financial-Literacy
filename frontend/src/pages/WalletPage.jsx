@@ -409,24 +409,24 @@ export default function WalletPage({ user }) {
                           <div>
                             <h3 className="font-bold text-[#1D3557] text-lg">{goal.title}</h3>
                             {goal.description && (
-                              <p className="text-xs text-[#3D5A80] mt-0.5">{goal.description}</p>
+                              <p className="text-sm text-[#3D5A80] mt-0.5">{goal.description}</p>
                             )}
                           </div>
                           {goal.completed && (
-                            <span className="bg-[#06D6A0] text-white text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1">
-                              <Check className="w-3 h-3" /> Goal Reached!
+                            <span className="bg-[#06D6A0] text-white text-sm px-3 py-1 rounded-full font-bold flex items-center gap-1">
+                              <Check className="w-4 h-4" /> Goal Reached!
                             </span>
                           )}
                         </div>
                         
                         <div className="mt-3">
-                          <div className="flex justify-between text-sm mb-1">
+                          <div className="flex justify-between text-base mb-1">
                             <span className="text-[#3D5A80] font-medium">₹{goal.current_amount?.toFixed(0)} saved</span>
                             <span className="font-bold text-[#1D3557]">₹{goal.target_amount?.toFixed(0)} goal</span>
                           </div>
                           <Progress value={progress} className="h-4" />
                           {!goal.completed && remaining > 0 && (
-                            <p className="text-sm text-[#EE6C4D] mt-2 font-medium">
+                            <p className="text-base text-[#EE6C4D] mt-2 font-medium">
                               ₹{remaining.toFixed(0)} more to reach your goal!
                             </p>
                           )}
