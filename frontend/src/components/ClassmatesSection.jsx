@@ -95,11 +95,18 @@ export default function ClassmatesSection({ givingBalance, compact = false }) {
 
   if (loading) {
     return (
-      <div className="card-playful p-6 animate-pulse">
-        <div className="h-6 bg-[#E0FBFC] rounded w-1/3 mb-4"></div>
-        <div className="space-y-3">
-          <div className="h-20 bg-[#E0FBFC] rounded"></div>
-          <div className="h-20 bg-[#E0FBFC] rounded"></div>
+      <div className={compact ? "flex flex-col h-full" : "card-playful p-6 animate-pulse"}>
+        {compact && (
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+              <Users className="w-5 h-5 inline mr-2" />
+              My Classroom
+            </h2>
+          </div>
+        )}
+        <div className="space-y-2 flex-1">
+          <div className="h-16 bg-[#E0FBFC] rounded"></div>
+          <div className="h-16 bg-[#E0FBFC] rounded"></div>
         </div>
       </div>
     );
@@ -107,12 +114,208 @@ export default function ClassmatesSection({ givingBalance, compact = false }) {
 
   if (!classroom) {
     return (
-      <div className="card-playful p-6 text-center">
-        <Users className="w-12 h-12 mx-auto text-[#98C1D9] mb-2" />
-        <h3 className="text-lg font-bold text-[#1D3557] mb-1" style={{ fontFamily: 'Fredoka' }}>No Classroom Yet</h3>
-        <p className="text-sm text-[#3D5A80]">Join a classroom to see your classmates!</p>
-        <p className="text-xs text-[#3D5A80] mt-2">Go to Profile → Join Classroom</p>
+      <div className={compact ? "flex flex-col h-full" : "card-playful p-6 text-center"}>
+        {compact && (
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+              <Users className="w-5 h-5 inline mr-2" />
+              My Classroom
+            </h2>
+          </div>
+        )}
+        <div className="flex-1 flex flex-col items-center justify-center text-center">
+          <Users className={`${compact ? 'w-10 h-10' : 'w-12 h-12'} mx-auto text-[#98C1D9] mb-2`} />
+          <h3 className={`${compact ? 'text-sm' : 'text-lg'} font-bold text-[#1D3557] mb-1`} style={{ fontFamily: 'Fredoka' }}>No Classroom Yet</h3>
+          <p className="text-xs text-[#3D5A80]">Join a classroom to see your classmates!</p>
+          <p className="text-xs text-[#3D5A80] mt-1">Profile → Join Class</p>
+        </div>
       </div>
+    );
+  }
+
+  // Compact view for dashboard card
+  if (compact) {
+    return (
+      <>
+        <div className="flex flex-col h-full" data-testid="classmates-section">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+              <Users className="w-5 h-5 inline mr-2" />
+              My Classroom
+            </h2>
+            <span className="text-xs text-[#3D5A80] bg-[#E0FBFC] px-2 py-1 rounded-full truncate max-w-[100px]">
+              {classroom.name}
+            </span>
+          </div>
+
+          {classmates.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center text-center py-2">
+              <p className="text-sm text-[#3D5A80]">No classmates yet</p>
+            </div>
+          ) : (
+            <div className="space-y-2 flex-1 overflow-y-auto max-h-48">
+              {classmates.slice(0, 3).map((classmate) => (
+                <div 
+                  key={classmate.user_id}
+                  className="bg-[#E0FBFC] rounded-lg p-2 border border-[#1D3557]/20"
+                >
+                  <div className="flex items-center gap-2">
+                    <img 
+                      src={classmate.picture || 'https://via.placeholder.com/32'} 
+                      alt={classmate.name}
+                      className="w-8 h-8 rounded-full border border-[#1D3557]"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-[#1D3557] text-sm truncate">{classmate.name}</p>
+                      <div className="flex gap-2 text-xs text-[#3D5A80]">
+                        <span>₹{classmate.total_balance?.toFixed(0)}</span>
+                        <span>📚{classmate.lessons_completed}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => {
+                          setSelectedClassmate(classmate);
+                          setShowGiftDialog(true);
+                        }}
+                        className="p-1.5 bg-[#06D6A0] text-white rounded-lg hover:bg-[#05b88a]"
+                        title="Give Gift"
+                      >
+                        <Gift className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {classmates.length > 3 && (
+                <p className="text-xs text-center text-[#3D5A80]">+{classmates.length - 3} more</p>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* Keep dialogs */}
+        {renderDialogs()}
+      </>
+    );
+  }
+
+  // Helper function to render dialogs
+  function renderDialogs() {
+    return (
+      <>
+        {/* Gift Money Dialog */}
+        <Dialog open={showGiftDialog} onOpenChange={setShowGiftDialog}>
+          <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                <Gift className="w-5 h-5 inline mr-2 text-[#06D6A0]" />
+                Give a Gift to {selectedClassmate?.name}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="bg-[#FFD23F]/20 rounded-xl p-3 border-2 border-[#FFD23F]">
+                <p className="text-sm text-[#1D3557]">
+                  Your Giving Jar: <strong>₹{givingBalance?.toFixed(0) || 0}</strong>
+                </p>
+              </div>
+              
+              <div>
+                <label className="text-sm font-bold text-[#1D3557] mb-1 block">Amount (₹)</label>
+                <Input
+                  type="number"
+                  placeholder="How much?"
+                  value={giftForm.amount}
+                  onChange={(e) => setGiftForm({...giftForm, amount: e.target.value})}
+                  className="border-3 border-[#1D3557] rounded-xl"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-bold text-[#1D3557] mb-1 block">Message (optional)</label>
+                <Textarea
+                  placeholder="Write a nice message!"
+                  value={giftForm.message}
+                  onChange={(e) => setGiftForm({...giftForm, message: e.target.value})}
+                  className="border-3 border-[#1D3557] rounded-xl"
+                  rows={2}
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowGiftDialog(false)}
+                  className="flex-1 py-3 font-bold rounded-xl border-3 border-[#1D3557] bg-white text-[#1D3557] hover:bg-[#E0FBFC]"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleGiftMoney}
+                  disabled={submitting || !giftForm.amount}
+                  className="flex-1 btn-primary py-3 disabled:opacity-50"
+                >
+                  {submitting ? 'Sending...' : 'Send Gift 🎁'}
+                </button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Request Gift Dialog */}
+        <Dialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
+          <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                <HandHeart className="w-5 h-5 inline mr-2 text-[#FFD23F]" />
+                Ask {selectedClassmate?.name} for a Gift
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <p className="text-sm text-[#3D5A80]">
+                They'll get a notification and can choose to help you out! 💝
+              </p>
+              
+              <div>
+                <label className="text-sm font-bold text-[#1D3557] mb-1 block">Amount (₹)</label>
+                <Input
+                  type="number"
+                  placeholder="How much do you need?"
+                  value={requestForm.amount}
+                  onChange={(e) => setRequestForm({...requestForm, amount: e.target.value})}
+                  className="border-3 border-[#1D3557] rounded-xl"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-bold text-[#1D3557] mb-1 block">Reason (optional)</label>
+                <Textarea
+                  placeholder="Tell them why you need it!"
+                  value={requestForm.reason}
+                  onChange={(e) => setRequestForm({...requestForm, reason: e.target.value})}
+                  className="border-3 border-[#1D3557] rounded-xl"
+                  rows={2}
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowRequestDialog(false)}
+                  className="flex-1 py-3 font-bold rounded-xl border-3 border-[#1D3557] bg-white text-[#1D3557] hover:bg-[#E0FBFC]"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRequestGift}
+                  disabled={submitting || !requestForm.amount}
+                  className="flex-1 btn-primary py-3 disabled:opacity-50"
+                >
+                  {submitting ? 'Sending...' : 'Send Request 💝'}
+                </button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 
