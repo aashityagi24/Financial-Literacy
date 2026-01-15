@@ -176,6 +176,16 @@ export default function TeacherDashboard({ user }) {
   
   const gradeLabels = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
   
+  const handleLogout = async () => {
+    try {
+      await axios.post(`${API}/auth/logout`);
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      navigate('/');
+    }
+  };
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-[#E0FBFC] flex items-center justify-center">
