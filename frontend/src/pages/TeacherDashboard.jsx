@@ -5,7 +5,7 @@ import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
   GraduationCap, ChevronLeft, Plus, Users, Trophy, 
-  Copy, Trash2, Gift, Star, ChevronRight, Eye
+  Copy, Trash2, Gift, Star, ChevronRight, Eye, Megaphone
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,17 +30,20 @@ export default function TeacherDashboard({ user }) {
   const [dashboard, setDashboard] = useState(null);
   const [selectedClassroom, setSelectedClassroom] = useState(null);
   const [classroomDetails, setClassroomDetails] = useState(null);
+  const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Forms
   const [showCreateClass, setShowCreateClass] = useState(false);
   const [showReward, setShowReward] = useState(false);
   const [showChallenge, setShowChallenge] = useState(false);
+  const [showAnnouncement, setShowAnnouncement] = useState(false);
   const [showStudentProgress, setShowStudentProgress] = useState(null);
   
   const [classForm, setClassForm] = useState({ name: '', description: '', grade_level: 3 });
   const [rewardForm, setRewardForm] = useState({ student_ids: [], amount: 10, reason: '' });
   const [challengeForm, setChallengeForm] = useState({ title: '', description: '', reward_amount: 20 });
+  const [announcementForm, setAnnouncementForm] = useState({ title: '', message: '' });
   
   useEffect(() => {
     if (user?.role !== 'teacher') {
