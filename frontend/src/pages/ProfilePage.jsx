@@ -25,6 +25,16 @@ export default function ProfilePage({ user, setUser }) {
   const [grade, setGrade] = useState(user?.grade?.toString() || '3');
   const [saving, setSaving] = useState(false);
   
+  // Connection states
+  const [parents, setParents] = useState([]);
+  const [classrooms, setClassrooms] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [showAddParent, setShowAddParent] = useState(false);
+  const [showJoinClass, setShowJoinClass] = useState(false);
+  const [parentEmail, setParentEmail] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  
   const grades = [
     { value: '0', label: 'Kindergarten' },
     { value: '1', label: '1st Grade' },
@@ -35,6 +45,71 @@ export default function ProfilePage({ user, setUser }) {
   ];
   
   const gradeNames = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
+  
+  useEffect(() => {
+    if (user?.role === 'child') {
+      fetchConnections();
+    }
+  }, [user]);
+  
+  const fetchConnections = async () => {
+    try {
+      const [parentsRes, classroomsRes, announcementsRes] = await Promise.all([
+        axios.get(`${API}/child/parents`),
+        axios.get(`${API}/student/classrooms`),
+        axios.get(`${API}/child/announcements`)
+      ]);
+      setParents(parentsRes.data || []);
+      setClassrooms(classroomsRes.data || []);
+      setAnnouncements(announcementsRes.data || []);
+    } catch (error) {
+      console.error('Failed to fetch connections:', error);
+    }
+  };
+  
+  const handleAddParent = async () => {
+    if (!parentEmail.trim()) {
+      toast.error('Please enter parent\'s email');
+      return;
+    }
+    
+    setSubmitting(true);
+    try {
+      const res = await axios.post(`${API}/child/add-parent`, {
+        parent_email: parentEmail.trim()
+      });
+      toast.success(res.data.message);
+      setShowAddParent(false);
+      setParentEmail('');
+      fetchConnections();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to add parent');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  
+  const handleJoinClassroom = async () => {
+    if (!inviteCode.trim()) {
+      toast.error('Please enter invite code');
+      return;
+    }
+    
+    setSubmitting(true);
+    try {
+      const res = await axios.post(`${API}/student/join-classroom`, {
+        invite_code: inviteCode.trim().toUpperCase()
+      });
+      toast.success(res.data.message);
+      setShowJoinClass(false);
+      setInviteCode('');
+      fetchConnections();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to join classroom');
+    } finally {
+      setSubmitting(false);
+    }
+  };
   
   const handleSave = async () => {
     setSaving(true);
