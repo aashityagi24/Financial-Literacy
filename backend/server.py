@@ -158,13 +158,14 @@ class QuestQuestion(BaseModel):
 class QuestCreate(BaseModel):
     """Create a new quest (admin/teacher)"""
     title: str
-    description: str
+    description: str = ""
     image_url: Optional[str] = None
     pdf_url: Optional[str] = None
     min_grade: int = 0
     max_grade: int = 5
     due_date: str  # ISO date string (YYYY-MM-DD)
-    questions: List[Dict[str, Any]]  # List of questions
+    reward_amount: float = 0  # Base reward for quests without questions
+    questions: List[Dict[str, Any]] = []  # List of questions (optional)
 
 class ChoreCreate(BaseModel):
     """Create a new chore (parent)"""
