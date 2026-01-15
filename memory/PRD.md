@@ -430,6 +430,7 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
 - **User Connection System** (child-parent linking, classroom join, teacher announcements to parents)
 - **Notification Center** (bell with unread count, notifications for rewards/announcements/gifts/chores)
 - **Classmates & Gifting** (view classmates, gift money, request gifts, accept/decline)
+- **Wallet Refactor** (dedicated /savings-goals page, streamlined wallet, "giving" → "gifting" rename)
 
 ### P1 (Next Phase)
 - Daily Login Rewards & Streak Bonuses
