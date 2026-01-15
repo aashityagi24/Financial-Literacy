@@ -1071,9 +1071,14 @@ async def purchase_item(purchase: PurchaseCreate, request: Request):
     """Purchase an item from the store"""
     user = await get_current_user(request)
     
-    item = await db.store_items.find_one({"item_id": purchase.item_id}, {"_id": 0})
+    # Check in admin_store_items (the new admin-created items)
+    item = await db.admin_store_items.find_one({"item_id": purchase.item_id}, {"_id": 0})
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
+    
+    # Check if item is active
+    if not item.get("is_active", True):
+        raise HTTPException(status_code=400, detail="Item is not available")
     
     # Check spending balance
     spending_acc = await db.wallet_accounts.find_one({
@@ -1101,13 +1106,13 @@ async def purchase_item(purchase: PurchaseCreate, request: Request):
     }
     await db.purchases.insert_one(purchase_doc)
     
-    # Record transaction
+    # Record transaction (negative amount for spending)
     trans_doc = {
         "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
         "user_id": user["user_id"],
         "from_account": "spending",
         "to_account": None,
-        "amount": item["price"],
+        "amount": -item["price"],  # Negative for spending
         "transaction_type": "purchase",
         "description": f"Purchased {item['name']}",
         "created_at": datetime.now(timezone.utc).isoformat()
