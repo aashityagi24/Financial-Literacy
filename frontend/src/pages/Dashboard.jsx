@@ -26,10 +26,19 @@ export default function Dashboard({ user, setUser }) {
   
   const gradeNames = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
   
+  // Redirect admin users to admin dashboard
   useEffect(() => {
+    if (user?.role === 'admin') {
+      navigate('/admin', { replace: true });
+    }
+  }, [user, navigate]);
+  
+  useEffect(() => {
+    // Don't fetch data if user is admin (will be redirected)
+    if (user?.role === 'admin') return;
     fetchDashboardData();
     handleDailyCheckin();
-  }, []);
+  }, [user]);
   
   const fetchDashboardData = async () => {
     try {
