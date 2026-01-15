@@ -322,17 +322,21 @@ export default function Dashboard({ user, setUser }) {
             </div>
             
             <div className="grid grid-cols-2 gap-2 flex-1">
-              {wallet?.accounts?.map((account) => (
-                <Link
-                  to="/wallet"
-                  key={account.account_type}
-                  className={`${accountColors[account.account_type]?.bg} rounded-xl border-2 border-[#1D3557] p-3 text-white hover:scale-[1.02] transition-transform cursor-pointer`}
-                >
-                  <div className="text-xl mb-1">{accountColors[account.account_type]?.icon}</div>
-                  <p className="text-sm font-bold capitalize">{account.account_type}</p>
-                  <p className="text-lg font-bold">₹{account.balance?.toFixed(0)}</p>
-                </Link>
-              ))}
+              {filteredAccounts.map((account) => {
+                const config = accountColors[account.account_type];
+                const displayLabel = config?.label || account.account_type;
+                return (
+                  <Link
+                    to={account.account_type === 'investing' && grade <= 2 ? '/garden' : '/wallet'}
+                    key={account.account_type}
+                    className={`${config?.bg || 'bg-gray-400'} rounded-xl border-2 border-[#1D3557] p-3 text-white hover:scale-[1.02] transition-transform cursor-pointer`}
+                  >
+                    <div className="text-xl mb-1">{config?.icon}</div>
+                    <p className="text-sm font-bold capitalize">{displayLabel}</p>
+                    <p className="text-lg font-bold">₹{account.balance?.toFixed(0)}</p>
+                  </Link>
+                );
+              })}
             </div>
           </div>
           
