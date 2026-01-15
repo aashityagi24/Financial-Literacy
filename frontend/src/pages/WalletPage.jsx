@@ -431,8 +431,8 @@ export default function WalletPage({ user }) {
                             </p>
                           )}
                           {goal.deadline && (
-                            <p className="text-xs text-[#3D5A80] mt-1 flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
+                            <p className="text-sm text-[#3D5A80] mt-1 flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
                               Target date: {new Date(goal.deadline).toLocaleDateString()}
                             </p>
                           )}
