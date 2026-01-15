@@ -430,7 +430,7 @@ export default function StorePage({ user }) {
         <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-              <ShoppingCart className="w-6 h-6 inline mr-2" />
+              <ShoppingBag className="w-6 h-6 inline mr-2" />
               My Purchases ({purchases.length})
             </DialogTitle>
           </DialogHeader>
