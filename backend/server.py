@@ -2233,12 +2233,16 @@ async def validate_chore_completion(request_id: str, request: Request):
                 {"$set": {"is_active": False}}
             )
     else:
-        # Rejected
+        # Rejected - Get chore title for notification
+        chore = await db.new_quests.find_one({"chore_id": chore_req["chore_id"]})
+        chore_title = chore.get("title", "chore") if chore else "chore"
+        
         await db.notifications.insert_one({
             "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
             "user_id": chore_req["child_id"],
-            "message": f"{user.get('name', 'Parent')} needs you to try again on: {chore_req.get('chore', {}).get('title', 'chore')}",
+            "message": f"Your chore '{chore_title}' was not approved. {user.get('name', 'Parent')} wants you to try again!",
             "type": "chore_rejected",
+            "link": "/quests",
             "is_read": False,
             "created_at": datetime.now(timezone.utc).isoformat()
         })
