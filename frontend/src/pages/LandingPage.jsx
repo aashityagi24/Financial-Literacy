@@ -147,7 +147,7 @@ export default function LandingPage() {
                 Learn Money Skills <span className="text-[#EE6C4D]">While Having Fun!</span>
               </h1>
               <p className="text-xl text-[#3D5A80] mb-8 leading-relaxed">
-                PocketQuest teaches K-5 kids about saving, spending, investing, and giving through exciting games, quests, and real-world simulations!
+                PocketQuest teaches K-5 kids about saving, spending, investing, and gifting through exciting games, quests, and real-world simulations!
               </p>
               <div className="flex flex-wrap gap-4">
                 <button
