@@ -168,6 +168,26 @@ export default function AdminPage({ user }) {
               <ChevronRight className="w-6 h-6 text-white" />
             </div>
           </Link>
+          
+          {/* Quest Management Card */}
+          <Link 
+            to="/admin/quests" 
+            className="block bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-xl p-5 hover:shadow-lg transition-shadow md:col-span-2"
+            data-testid="quest-management-link"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-[#1D3557] rounded-xl flex items-center justify-center">
+                  <Target className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#1D3557]">Quest Management</h3>
+                  <p className="text-[#1D3557]/80 text-sm">Create Q&A quests with rewards for students</p>
+                </div>
+              </div>
+              <ChevronRight className="w-6 h-6 text-[#1D3557]" />
+            </div>
+          </Link>
         </div>
         
         {/* Tabs */}
