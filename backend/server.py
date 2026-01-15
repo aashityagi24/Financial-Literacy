@@ -79,7 +79,7 @@ class WalletAccount(BaseModel):
     model_config = ConfigDict(extra="ignore")
     account_id: str
     user_id: str
-    account_type: str  # 'spending', 'savings', 'investing', 'giving'
+    account_type: str  # 'spending', 'savings', 'investing', 'gifting'
     balance: float = 0.0
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -911,7 +911,7 @@ async def create_session(request: Request, response: Response):
         await db.users.insert_one(new_user)
         
         # Create wallet accounts for new user
-        for account_type in ['spending', 'savings', 'investing', 'giving']:
+        for account_type in ['spending', 'savings', 'investing', 'gifting']:
             wallet = {
                 "account_id": f"acc_{uuid.uuid4().hex[:12]}",
                 "user_id": user_id,
