@@ -32,6 +32,7 @@ export default function StorePage({ user }) {
   const [showPurchases, setShowPurchases] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferData, setTransferData] = useState({ from_account: 'savings', amount: '' });
+  const [shoppingList, setShoppingList] = useState([]);
   
   useEffect(() => {
     fetchStoreData();
@@ -39,12 +40,19 @@ export default function StorePage({ user }) {
   
   const fetchStoreData = async () => {
     try {
-      const [categoriesRes, itemsRes, purchasesRes, walletRes] = await Promise.all([
+      const requests = [
         axios.get(`${API}/store/categories`),
         axios.get(`${API}/store/items-by-category`),
         axios.get(`${API}/store/purchases`),
         axios.get(`${API}/wallet`)
-      ]);
+      ];
+      
+      // Fetch shopping list for children
+      if (user?.role === 'child') {
+        requests.push(axios.get(`${API}/child/shopping-list`).catch(() => ({ data: [] })));
+      }
+      
+      const [categoriesRes, itemsRes, purchasesRes, walletRes, shoppingRes] = await Promise.all(requests);
       
       setCategories(categoriesRes.data || []);
       
@@ -62,12 +70,22 @@ export default function StorePage({ user }) {
       setItems(allItems);
       setPurchases(purchasesRes.data || []);
       setWallet(walletRes.data);
+      if (shoppingRes) setShoppingList(shoppingRes.data || []);
     } catch (error) {
       console.error('Failed to load store data:', error);
       toast.error('Could not load store data');
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Check if an item is in shopping list
+  const isInShoppingList = (itemId) => {
+    return shoppingList.find(s => s.item_id === itemId && !s.purchased);
+  };
+  
+  const isItemPurchased = (itemId) => {
+    return shoppingList.find(s => s.item_id === itemId && s.purchased);
   };
   
   const handlePurchase = async () => {
