@@ -131,7 +131,7 @@ export default function InvestmentPage({ user }) {
             </div>
             
             <div className="flex items-center gap-2 bg-[#06D6A0] px-4 py-2 rounded-xl border-2 border-[#1D3557]">
-              <span className="text-lg">📈</span>
+              <Wallet className="w-5 h-5 text-white" />
               <span className="font-bold text-white">₹{investingBalance.toFixed(0)}</span>
             </div>
           </div>
