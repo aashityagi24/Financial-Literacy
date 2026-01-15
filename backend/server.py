@@ -1379,7 +1379,9 @@ async def create_admin_quest(quest_data: QuestCreate, request: Request):
     user = await require_admin(request)
     
     quest_id = f"quest_{uuid.uuid4().hex[:12]}"
-    total_points = sum(q.get("points", 0) for q in quest_data.questions)
+    questions_points = sum(q.get("points", 0) or 0 for q in quest_data.questions)
+    base_reward = quest_data.reward_amount or 0
+    total_points = questions_points + base_reward if len(quest_data.questions) == 0 else questions_points
     
     # Process questions
     processed_questions = []
@@ -1391,7 +1393,7 @@ async def create_admin_quest(quest_data: QuestCreate, request: Request):
             "image_url": q.get("image_url"),
             "options": q.get("options"),
             "correct_answer": q.get("correct_answer"),
-            "points": q.get("points", 10)
+            "points": q.get("points", 0) or 0
         })
     
     quest_doc = {
@@ -1406,8 +1408,9 @@ async def create_admin_quest(quest_data: QuestCreate, request: Request):
         "max_grade": quest_data.max_grade,
         "due_date": quest_data.due_date,
         "due_time": "23:59:00",  # 11:59 PM
+        "reward_amount": base_reward,
         "questions": processed_questions,
-        "total_points": total_points,
+        "total_points": total_points if total_points > 0 else base_reward,
         "is_active": True,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
