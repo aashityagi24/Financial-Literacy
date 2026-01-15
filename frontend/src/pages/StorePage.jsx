@@ -435,9 +435,17 @@ export default function StorePage({ user }) {
                 </div>
                 
                 {!canAfford && (
-                  <p className="text-center text-[#EE6C4D] text-sm mt-2 font-bold">
-                    😢 Oh no! You don&apos;t have enough money!
-                  </p>
+                  <div className="bg-[#EE6C4D]/10 rounded-xl p-3 border-2 border-[#EE6C4D] mt-2">
+                    <p className="text-center text-[#EE6C4D] text-sm font-bold mb-2">
+                      😢 Oh no! You need ₹{(totalCost - spendingBalance).toFixed(0)} more!
+                    </p>
+                    <button
+                      onClick={() => setShowTransfer(true)}
+                      className="w-full py-2 bg-[#FFD23F] text-[#1D3557] font-bold rounded-xl hover:bg-[#FFE066] flex items-center justify-center gap-2"
+                    >
+                      <ArrowLeftRight className="w-4 h-4" /> Move money to Spending Jar
+                    </button>
+                  </div>
                 )}
               </div>
               
@@ -463,6 +471,75 @@ export default function StorePage({ user }) {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Quick Transfer Dialog */}
+      <Dialog open={showTransfer} onOpenChange={setShowTransfer}>
+        <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+              <ArrowLeftRight className="w-5 h-5 inline mr-2" />
+              Move Money to Spending
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="bg-[#E0FBFC] rounded-xl p-3">
+              <p className="text-sm text-[#3D5A80]">
+                Your Spending Jar: <strong className="text-[#06D6A0]">₹{spendingBalance.toFixed(0)}</strong>
+              </p>
+            </div>
+            
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Transfer from:</label>
+              <Select 
+                value={transferData.from_account} 
+                onValueChange={(v) => setTransferData({...transferData, from_account: v})}
+              >
+                <SelectTrigger className="border-3 border-[#1D3557] rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="savings">
+                    💰 Savings (₹{wallet?.accounts?.find(a => a.account_type === 'savings')?.balance?.toFixed(0) || 0})
+                  </SelectItem>
+                  <SelectItem value="investing">
+                    📈 Investing (₹{wallet?.accounts?.find(a => a.account_type === 'investing')?.balance?.toFixed(0) || 0})
+                  </SelectItem>
+                  <SelectItem value="gifting">
+                    🎁 Gifting (₹{wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance?.toFixed(0) || 0})
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Amount (₹)</label>
+              <Input
+                type="number"
+                placeholder="How much to move?"
+                value={transferData.amount}
+                onChange={(e) => setTransferData({...transferData, amount: e.target.value})}
+                className="border-3 border-[#1D3557] rounded-xl"
+              />
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowTransfer(false)}
+                className="flex-1 py-3 font-bold rounded-xl border-3 border-[#1D3557] bg-white text-[#1D3557] hover:bg-[#E0FBFC]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleQuickTransfer}
+                disabled={!transferData.amount}
+                className="flex-1 btn-primary py-3 disabled:opacity-50"
+              >
+                Transfer
+              </button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
       
