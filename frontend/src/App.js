@@ -28,6 +28,7 @@ import AdminInvestmentManagement from "@/pages/AdminInvestmentManagement";
 import ClassmatesPage from "@/pages/ClassmatesPage";
 import SavingsGoalsPage from "@/pages/SavingsGoalsPage";
 import AdminQuestsPage from "@/pages/AdminQuestsPage";
+import ParentShoppingList from "@/pages/ParentShoppingList";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
@@ -215,6 +216,11 @@ function AppRouter() {
       <Route path="/admin/quests" element={
         <ProtectedRoute>
           {({ user }) => <AdminQuestsPage user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/parent/shopping-list" element={
+        <ProtectedRoute>
+          {({ user }) => <ParentShoppingList user={user} />}
         </ProtectedRoute>
       } />
     </Routes>
