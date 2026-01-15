@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-export default function ClassmatesSection({ givingBalance, compact = false }) {
+export default function ClassmatesSection({ giftingBalance, compact = false }) {
   const [classmates, setClassmates] = useState([]);
   const [classroom, setClassroom] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -47,7 +47,7 @@ export default function ClassmatesSection({ givingBalance, compact = false }) {
       return;
     }
 
-    if (parseFloat(giftForm.amount) > givingBalance) {
+    if (parseFloat(giftForm.amount) > giftingBalance) {
       toast.error('Not enough balance in your Giving jar');
       return;
     }
@@ -219,7 +219,7 @@ export default function ClassmatesSection({ givingBalance, compact = false }) {
             <div className="space-y-4 pt-2">
               <div className="bg-[#FFD23F]/20 rounded-xl p-3 border-2 border-[#FFD23F]">
                 <p className="text-sm text-[#1D3557]">
-                  Your Giving Jar: <strong>₹{givingBalance?.toFixed(0) || 0}</strong>
+                  Your Giving Jar: <strong>₹{giftingBalance?.toFixed(0) || 0}</strong>
                 </p>
               </div>
               
