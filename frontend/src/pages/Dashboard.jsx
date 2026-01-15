@@ -286,36 +286,31 @@ export default function Dashboard({ user, setUser }) {
             </div>
             
             {savingsGoal ? (
-              <div className="flex-1 flex flex-col">
-                <div className="bg-[#FFD23F]/10 rounded-xl p-3 border border-[#FFD23F]/30">
-                  <div className="flex gap-3 items-start">
+              <div className="flex-1">
+                <div className="bg-[#F8F9FA] rounded-xl p-3 border border-[#E0E0E0]">
+                  <div className="flex gap-3 items-center mb-2">
                     {savingsGoal.image_url ? (
                       <img 
                         src={getAssetUrl(savingsGoal.image_url)} 
                         alt={savingsGoal.title}
-                        className="w-12 h-12 rounded-lg border-2 border-[#1D3557] object-cover flex-shrink-0"
+                        className="w-10 h-10 rounded-lg border-2 border-[#1D3557] object-cover flex-shrink-0"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-lg border-2 border-[#1D3557] bg-[#FFD23F] flex items-center justify-center text-xl flex-shrink-0">
+                      <div className="w-10 h-10 rounded-lg border-2 border-[#1D3557] bg-[#FFD23F] flex items-center justify-center text-lg flex-shrink-0">
                         🎯
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-[#1D3557] text-sm truncate">{savingsGoal.title}</h3>
-                      <div className="mt-2">
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-[#06D6A0] font-medium">₹{savingsGoal.current_amount?.toFixed(0) || 0} saved</span>
-                          <span className="font-bold text-[#1D3557] flex items-center gap-1">
-                            <Target className="w-3 h-3" />
-                            ₹{savingsGoal.target_amount?.toFixed(0)}
-                          </span>
-                        </div>
-                        <Progress value={Math.min((savingsGoal.current_amount / savingsGoal.target_amount) * 100, 100)} className="h-2" />
-                        <p className="text-xs text-[#EE6C4D] mt-1 font-medium">
-                          ₹{(savingsGoal.target_amount - (savingsGoal.current_amount || 0)).toFixed(0)} more 💪
-                        </p>
-                      </div>
-                    </div>
+                    <h3 className="font-bold text-[#1D3557] text-sm flex-1 truncate">{savingsGoal.title}</h3>
+                  </div>
+                  
+                  <Progress value={Math.min((savingsGoal.current_amount / savingsGoal.target_amount) * 100, 100)} className="h-2 mb-2" />
+                  
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[#06D6A0] font-bold">₹{savingsGoal.current_amount?.toFixed(0) || 0} saved</span>
+                    <span className="text-[#EE6C4D] font-medium">₹{(savingsGoal.target_amount - (savingsGoal.current_amount || 0)).toFixed(0)} to go</span>
+                    <span className="text-[#1D3557] font-bold flex items-center gap-1">
+                      <Target className="w-3 h-3" />₹{savingsGoal.target_amount?.toFixed(0)}
+                    </span>
                   </div>
                 </div>
               </div>
