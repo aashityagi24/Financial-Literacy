@@ -540,6 +540,33 @@ class AllowanceCreate(BaseModel):
     amount: float
     frequency: str
 
+# ============== SHOPPING LIST MODELS ==============
+
+class ShoppingListItem(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    list_id: str
+    parent_id: str
+    child_id: str
+    item_id: str
+    item_name: str
+    item_price: float
+    quantity: int = 1
+    image_url: Optional[str] = None
+    status: str = "pending"  # pending, assigned, purchased
+    chore_id: Optional[str] = None  # linked chore if assigned
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ShoppingListItemCreate(BaseModel):
+    child_id: str
+    item_id: str
+    quantity: int = 1
+
+class ShoppingListChoreCreate(BaseModel):
+    child_id: str
+    list_item_ids: List[str]  # IDs of shopping list items to include
+    title: str
+    description: Optional[str] = None
+
 class SavingsGoal(BaseModel):
     model_config = ConfigDict(extra="ignore")
     goal_id: str
