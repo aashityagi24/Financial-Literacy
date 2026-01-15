@@ -74,7 +74,7 @@ export default function MoneyGardenPage({ user }) {
     try {
       await axios.post(`${API}/garden/buy-plot`);
       toast.success('New plot purchased! 🎉');
-      fetchFarm();
+      fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to buy plot');
     }
@@ -87,7 +87,7 @@ export default function MoneyGardenPage({ user }) {
       toast.success('Seed planted! 🌱');
       setShowSeedDialog(false);
       setSelectedPlot(null);
-      fetchFarm();
+      fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to plant seed');
     }
@@ -97,7 +97,7 @@ export default function MoneyGardenPage({ user }) {
     try {
       await axios.post(`${API}/garden/water/${plotId}`);
       toast.success('Plant watered! 💧');
-      fetchFarm();
+      fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to water');
     }
@@ -107,7 +107,7 @@ export default function MoneyGardenPage({ user }) {
     try {
       const res = await axios.post(`${API}/garden/water-all`);
       toast.success(res.data.message);
-      fetchFarm();
+      fetchData();
     } catch (error) {
       toast.error('Failed to water plants');
     }
@@ -117,7 +117,7 @@ export default function MoneyGardenPage({ user }) {
     try {
       const res = await axios.post(`${API}/garden/harvest/${plotId}`);
       toast.success(res.data.message);
-      fetchFarm();
+      fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to harvest');
     }
@@ -127,7 +127,7 @@ export default function MoneyGardenPage({ user }) {
     try {
       const res = await axios.post(`${API}/garden/sell?plant_id=${plantId}&quantity=${quantity}`);
       toast.success(res.data.message);
-      fetchFarm();
+      fetchData();
       setSellQuantity({});
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to sell');
