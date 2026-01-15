@@ -1693,7 +1693,7 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
 
 @api_router.post("/child/quests-new/{quest_id}/submit")
 async def submit_quest_answers(quest_id: str, request: Request):
-    """Child submits answers for a quest (Q&A type)"""
+    """Child submits answers for a quest (Q&A type) or marks quest as complete"""
     user = await get_current_user(request)
     if user.get("role") != "child":
         raise HTTPException(status_code=403, detail="Only children can submit quests")
@@ -1712,12 +1712,20 @@ async def submit_quest_answers(quest_id: str, request: Request):
     })
     has_already_earned = existing.get("has_earned", False) if existing else False
     
-    # Grade answers
+    questions = quest.get("questions", [])
     earned = 0
     results = []
-    for question in quest.get("questions", []):
-        q_id = question["question_id"]
-        user_answer = answers.get(q_id)
+    
+    # If no questions, award the base reward_amount
+    if len(questions) == 0:
+        base_reward = quest.get("reward_amount", 0) or quest.get("total_points", 0)
+        if not has_already_earned and base_reward > 0:
+            earned = base_reward
+    else:
+        # Grade answers
+        for question in questions:
+            q_id = question["question_id"]
+            user_answer = answers.get(q_id)
         correct_answer = question["correct_answer"]
         points = question["points"]
         
