@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
-import { ChevronLeft, Droplets, ShoppingBag, Coins, Plus, Sparkles, ArrowRightLeft } from 'lucide-react';
+import { ChevronLeft, Droplets, ShoppingBag, Plus, Sparkles, ArrowRightLeft, Clock, TrendingUp, BarChart3 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
