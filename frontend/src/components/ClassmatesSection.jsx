@@ -319,6 +319,7 @@ export default function ClassmatesSection({ givingBalance, compact = false }) {
     );
   }
 
+  // Full view (non-compact)
   return (
     <>
       <div className="card-playful p-6" data-testid="classmates-section">
@@ -417,120 +418,7 @@ export default function ClassmatesSection({ givingBalance, compact = false }) {
         )}
       </div>
 
-      {/* Gift Money Dialog */}
-      <Dialog open={showGiftDialog} onOpenChange={setShowGiftDialog}>
-        <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-              <Gift className="w-5 h-5 inline mr-2 text-[#06D6A0]" />
-              Give a Gift to {selectedClassmate?.name}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div className="bg-[#FFD23F]/20 rounded-xl p-3 border-2 border-[#FFD23F]">
-              <p className="text-sm text-[#1D3557]">
-                Your Giving Jar: <strong>₹{givingBalance?.toFixed(0) || 0}</strong>
-              </p>
-              <p className="text-xs text-[#3D5A80] mt-1">
-                Gifts come from your Giving jar 💝
-              </p>
-            </div>
-            
-            <div>
-              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Amount (₹)</label>
-              <Input
-                type="number"
-                placeholder="How much?"
-                value={giftForm.amount}
-                onChange={(e) => setGiftForm({...giftForm, amount: e.target.value})}
-                className="border-3 border-[#1D3557] rounded-xl"
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Message (optional)</label>
-              <Textarea
-                placeholder="Write a nice message!"
-                value={giftForm.message}
-                onChange={(e) => setGiftForm({...giftForm, message: e.target.value})}
-                className="border-3 border-[#1D3557] rounded-xl"
-                rows={2}
-              />
-            </div>
-            
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowGiftDialog(false)}
-                className="flex-1 py-3 font-bold rounded-xl border-3 border-[#1D3557] bg-white text-[#1D3557] hover:bg-[#E0FBFC]"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleGiftMoney}
-                disabled={submitting || !giftForm.amount}
-                className="flex-1 btn-primary py-3 disabled:opacity-50"
-              >
-                {submitting ? 'Sending...' : 'Send Gift 🎁'}
-              </button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Request Gift Dialog */}
-      <Dialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
-        <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-              <HandHeart className="w-5 h-5 inline mr-2 text-[#FFD23F]" />
-              Ask {selectedClassmate?.name} for a Gift
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <p className="text-sm text-[#3D5A80]">
-              They'll get a notification and can choose to help you out! 💝
-            </p>
-            
-            <div>
-              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Amount (₹)</label>
-              <Input
-                type="number"
-                placeholder="How much do you need?"
-                value={requestForm.amount}
-                onChange={(e) => setRequestForm({...requestForm, amount: e.target.value})}
-                className="border-3 border-[#1D3557] rounded-xl"
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Reason (optional)</label>
-              <Textarea
-                placeholder="Tell them why you need it!"
-                value={requestForm.reason}
-                onChange={(e) => setRequestForm({...requestForm, reason: e.target.value})}
-                className="border-3 border-[#1D3557] rounded-xl"
-                rows={2}
-              />
-            </div>
-            
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowRequestDialog(false)}
-                className="flex-1 py-3 font-bold rounded-xl border-3 border-[#1D3557] bg-white text-[#1D3557] hover:bg-[#E0FBFC]"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRequestGift}
-                disabled={submitting || !requestForm.amount}
-                className="flex-1 btn-primary py-3 disabled:opacity-50"
-              >
-                {submitting ? 'Sending...' : 'Send Request 💝'}
-              </button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {renderDialogs()}
     </>
   );
 }
