@@ -324,6 +324,11 @@ export default function Dashboard({ user, setUser }) {
           </div>
         )}
         
+        {/* My Classroom Section */}
+        <div className={`mb-8 ${showAnimations ? 'animate-bounce-in stagger-3' : ''}`}>
+          <ClassmatesSection givingBalance={wallet?.accounts?.find(a => a.account_type === 'giving')?.balance || 0} />
+        </div>
+        
         {/* Two Column Layout */}
         <div className="grid md:grid-cols-2 gap-6">
           {/* Active Quests */}
