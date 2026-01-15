@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
-import { User, ChevronLeft, LogOut, GraduationCap, Edit2, Save } from 'lucide-react';
+import { User, ChevronLeft, LogOut, GraduationCap, Edit2, Save, Users, School, UserPlus, Megaphone, X } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -11,6 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 export default function ProfilePage({ user, setUser }) {
   const navigate = useNavigate();
