@@ -185,14 +185,6 @@ export default function StorePage({ user }) {
             Look at the price tags, think about if you really need something, and make smart choices!
           </p>
         </div>
-
-        {/* Store Banner */}
-        <div className="p-6 mb-6 bg-gradient-to-r from-[#EE6C4D] to-[#FF8A6C] text-white rounded-3xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557]">
-          <h2 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Fredoka' }}>
-            Welcome to the Store! 🛍️
-          </h2>
-          <p className="opacity-90">Your spending money: <strong>₹{spendingBalance.toFixed(0)}</strong> • Click on items to buy them!</p>
-        </div>
         
         {/* Check if store has items */}
         {categories.length === 0 || items.length === 0 ? (
