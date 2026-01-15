@@ -146,7 +146,7 @@ export default function ParentShoppingList({ user }) {
   
   const filteredStoreItems = selectedCategory === 'all' 
     ? storeItems 
-    : storeItems.filter(item => item.category === selectedCategory);
+    : storeItems.filter(item => item.category_id === selectedCategory);
   
   const handleLogout = async () => {
     try {
