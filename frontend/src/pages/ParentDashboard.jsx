@@ -567,58 +567,12 @@ export default function ParentDashboard({ user }) {
               </div>
             )}
             
-            {/* Chores Pending Approval - Show only chores with pending requests */}
-            {choreRequests.filter(r => r.status === 'pending').length > 0 && (
-              <>
-                <h2 className="text-xl font-bold text-[#EE6C4D] mb-4" style={{ fontFamily: 'Fredoka' }}>
-                  ⏳ Chores Awaiting Your Approval
-                </h2>
-                <div className="space-y-3 mb-6">
-                  {choreRequests.filter(r => r.status === 'pending').map((req) => (
-                    <div key={req.request_id} className="card-playful p-4 bg-[#FFD23F]/20 border-2 border-[#FFD23F]">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-bold text-[#1D3557]">{req.chore_title || req.title}</h4>
-                            <span className="bg-[#06D6A0] text-white text-xs px-2 py-1 rounded-full font-bold animate-pulse">
-                              ✓ {req.child_name} marked as completed
-                            </span>
-                          </div>
-                          <p className="text-sm text-[#3D5A80] mt-1">Reward: ₹{req.reward_amount}</p>
-                          {req.completed_at && (
-                            <p className="text-xs text-[#3D5A80]">Completed: {new Date(req.completed_at).toLocaleDateString()}</p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button 
-                            onClick={() => handleValidateChore(req.request_id, 'approve')}
-                            className="p-3 bg-[#06D6A0] hover:bg-[#05C090] rounded-xl text-white"
-                            title="Approve - Money will be credited"
-                          >
-                            <Check className="w-5 h-5" />
-                          </button>
-                          <button 
-                            onClick={() => handleValidateChore(req.request_id, 'reject')}
-                            className="p-3 bg-[#EE6C4D] hover:bg-[#DD5B3C] rounded-xl text-white"
-                            title="Reject - Child will be notified"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-            
-            {/* All Chores */}
+            {/* All Chores - Single unified section */}
             {chores.length > 0 && (
               <>
-                <h2 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>All Chores</h2>
+                <h2 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>Chores</h2>
                 <div className="space-y-3 mb-6">
                   {chores.map((chore) => {
-                    // Check if this chore has a pending completion request
                     const pendingRequest = choreRequests.find(r => r.chore_id === chore.chore_id && r.status === 'pending');
                     
                     return (
@@ -631,13 +585,31 @@ export default function ParentDashboard({ user }) {
                                 <span className="bg-[#06D6A0] text-white text-xs px-2 py-1 rounded-full font-bold">
                                   ✓ {chore.child_name} marked complete
                                 </span>
+                              ) : chore.status === 'pending' || chore.is_active ? (
+                                <span className="bg-[#FFD23F]/30 text-[#1D3557] text-xs px-2 py-1 rounded-full font-bold">
+                                  ⏳ Pending
+                                </span>
                               ) : (
-                                <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${choreStatusColors[chore.status] || 'bg-gray-100'}`}>
-                                  {chore.status}
+                                <span className="bg-[#06D6A0]/20 text-[#06D6A0] text-xs px-2 py-1 rounded-full font-bold">
+                                  ✓ Completed
                                 </span>
                               )}
                             </div>
                             <p className="text-sm text-[#3D5A80]">{chore.child_name} • +₹{chore.reward_amount} • {chore.frequency}</p>
+                            
+                            {/* Shopping list items */}
+                            {chore.shopping_item_details && chore.shopping_item_details.length > 0 && (
+                              <div className="mt-2 bg-[#E0FBFC] rounded-lg p-2">
+                                <p className="text-xs font-bold text-[#3D5A80] mb-1">🛒 Shopping List:</p>
+                                <ul className="text-xs text-[#1D3557] space-y-0.5">
+                                  {chore.shopping_item_details.map((item, idx) => (
+                                    <li key={idx} className={item.purchased ? 'line-through text-[#06D6A0]' : ''}>
+                                      • {item.item_name} × {item.quantity} {item.purchased && '✓'}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </div>
                           <div className="flex items-center gap-2">
                             {pendingRequest ? (
@@ -645,19 +617,31 @@ export default function ParentDashboard({ user }) {
                                 <button 
                                   onClick={() => handleValidateChore(pendingRequest.request_id, 'approve')}
                                   className="p-2 bg-[#06D6A0] hover:bg-[#05C090] rounded-lg text-white"
-                                  title="Approve"
+                                  title="Approve - Money will be credited"
                                 >
-                                  <Check className="w-4 h-4" />
+                                  <Check className="w-5 h-5" />
                                 </button>
                                 <button 
                                   onClick={() => handleValidateChore(pendingRequest.request_id, 'reject')}
                                   className="p-2 bg-[#EE6C4D] hover:bg-[#DD5B3C] rounded-lg text-white"
-                                  title="Reject"
+                                  title="Reject - Ask to try again"
                                 >
-                                  <X className="w-4 h-4" />
+                                  <X className="w-5 h-5" />
                                 </button>
                               </>
                             ) : (
+                              <button onClick={() => handleDeleteChore(chore.chore_id)} className="p-2 hover:bg-[#EE6C4D]/20 rounded-lg">
+                                <Trash2 className="w-4 h-4 text-[#EE6C4D]" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
                               <button onClick={() => handleDeleteChore(chore.chore_id)} className="p-2 hover:bg-[#EE6C4D]/20 rounded-lg">
                                 <Trash2 className="w-4 h-4 text-[#EE6C4D]" />
                               </button>
