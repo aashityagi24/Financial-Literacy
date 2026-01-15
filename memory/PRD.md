@@ -298,6 +298,29 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
   - Goal cards are clickable and navigate to /savings-goals
 - **Route Addition**: Added `/savings-goals` route in App.js
 
+### Phase 18: Role-Based Dashboard Separation ✅ (January 15, 2026)
+- **Admin, Teacher, Parent Dashboard Isolation**: These roles no longer have access to the child user dashboard
+- **Dashboard Redirect Logic**: Non-child users accessing `/dashboard` are automatically redirected to their respective dashboards
+- **Admin Dashboard Updates**:
+  - Removed "Back to Dashboard" link (no longer applicable)
+  - Added user email display in header
+  - Added logout button with proper functionality
+- **Teacher Dashboard Updates**:
+  - Removed "Back to Dashboard" link
+  - Added user name display in header
+  - Added logout button
+  - Added **Learn Module Link**: Teachers can now access `/learn` to preview what children see
+  - Learn page shows "Preview learning content" message for teachers
+  - Back navigation from Learn returns to `/teacher-dashboard`
+- **Parent Dashboard Updates**:
+  - Removed "Back to Dashboard" link
+  - Added user name display in header
+  - Added logout button
+  - Added **Store Module Link**: Parents can view store items to create shopping list chores
+  - Store page shows view-only mode for parents with "Shopping List Ideas" message
+  - Back navigation from Store returns to `/parent-dashboard`
+- **Role-Aware Navigation**: LearnPage and StorePage dynamically adjust back links based on user role
+
 ## API Endpoints
 
 ### Admin Store Management (New - Phase 11)
