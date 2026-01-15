@@ -172,12 +172,37 @@ export default function TeacherDashboard({ user }) {
       toast.error('Please fill title and due date');
       return;
     }
-    // Must have either questions or a base reward amount
+    
+    // Calculate total reward points
     const totalQuestPoints = questForm.questions.reduce((sum, q) => sum + (q.points || 0), 0);
+    
+    // If no questions, base reward is mandatory
     if (questForm.questions.length === 0 && (!questForm.reward_amount || questForm.reward_amount <= 0)) {
       toast.error('Please add questions or set a reward amount');
       return;
     }
+    
+    // If there are questions, each must have reward points
+    if (questForm.questions.length > 0) {
+      const missingPoints = questForm.questions.some(q => !q.points || q.points <= 0);
+      if (missingPoints) {
+        toast.error('Each question must have reward points');
+        return;
+      }
+      
+      // Also check each question has correct answer set
+      const missingAnswer = questForm.questions.some(q => {
+        if (q.question_type === 'multi_select') {
+          return !Array.isArray(q.correct_answer) || q.correct_answer.length === 0;
+        }
+        return !q.correct_answer || q.correct_answer === '';
+      });
+      if (missingAnswer) {
+        toast.error('Each question must have a correct answer selected');
+        return;
+      }
+    }
+    
     try {
       await axios.post(`${API}/teacher/quests`, questForm);
       toast.success('Quest created! Students will be notified.');
