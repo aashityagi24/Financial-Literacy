@@ -51,6 +51,8 @@ export default function MoneyGardenPage({ user }) {
   const [selectedPlot, setSelectedPlot] = useState(null);
   const [showMarket, setShowMarket] = useState(false);
   const [sellQuantity, setSellQuantity] = useState({});
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [transferData, setTransferData] = useState({ from_account: 'spending', to_account: 'investing', amount: '' });
   
   useEffect(() => {
     fetchData();
