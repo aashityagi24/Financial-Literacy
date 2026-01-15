@@ -168,18 +168,42 @@ export default function TeacherDashboard({ user }) {
   };
   
   const handleCreateQuest = async () => {
-    if (!questForm.title || !questForm.due_date || questForm.questions.length === 0) {
-      toast.error('Please fill title, due date, and add at least one question');
+    if (!questForm.title || !questForm.due_date) {
+      toast.error('Please fill title and due date');
+      return;
+    }
+    // Must have either questions or a base reward amount
+    const totalQuestPoints = questForm.questions.reduce((sum, q) => sum + (q.points || 0), 0);
+    if (questForm.questions.length === 0 && (!questForm.reward_amount || questForm.reward_amount <= 0)) {
+      toast.error('Please add questions or set a reward amount');
       return;
     }
     try {
       await axios.post(`${API}/teacher/quests`, questForm);
       toast.success('Quest created! Students will be notified.');
       setShowCreateQuest(false);
-      setQuestForm({ title: '', description: '', min_grade: 0, max_grade: 5, due_date: '', questions: [] });
+      setQuestForm({ title: '', description: '', image_url: '', pdf_url: '', reward_amount: 0, due_date: '', questions: [] });
       fetchDashboard();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to create quest');
+    }
+  };
+  
+  const handleQuestFileUpload = async (e, type) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formDataUpload = new FormData();
+    formDataUpload.append('file', file);
+    
+    try {
+      const res = await axios.post(`${API}/upload/quest-asset`, formDataUpload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setQuestForm(prev => ({ ...prev, [type]: res.data.url }));
+      toast.success(`${type === 'image_url' ? 'Image' : 'PDF'} uploaded!`);
+    } catch (error) {
+      toast.error('Upload failed');
     }
   };
   
@@ -194,7 +218,7 @@ export default function TeacherDashboard({ user }) {
           question_type: 'mcq',
           options: ['', '', '', ''],
           correct_answer: '',
-          points: 10
+          points: ''
         }
       ]
     }));
