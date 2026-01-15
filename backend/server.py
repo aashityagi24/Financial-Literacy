@@ -1842,15 +1842,17 @@ async def create_chore_from_shopping_list(chore_data: ShoppingListChoreCreate, r
     if not items:
         raise HTTPException(status_code=400, detail="No valid pending items found")
     
-    # Calculate total value as reward
-    total_value = sum(item["item_price"] * item["quantity"] for item in items)
+    # Use custom reward amount set by parent
+    reward_amount = chore_data.reward_amount
+    if reward_amount <= 0:
+        raise HTTPException(status_code=400, detail="Reward amount must be greater than 0")
     
     # Build item list description
     item_list = ", ".join([f"{item['item_name']} x{item['quantity']}" for item in items])
     full_description = chore_data.description or ""
     if full_description:
         full_description += "\n\n"
-    full_description += f"🛒 Shopping List Items:\n{item_list}\nTotal Value: ₹{total_value:.2f}"
+    full_description += f"🛒 Shopping List Items:\n{item_list}"
     
     # Create the chore
     chore_id = f"chore_{uuid.uuid4().hex[:12]}"
@@ -1864,8 +1866,8 @@ async def create_chore_from_shopping_list(chore_data: ShoppingListChoreCreate, r
         "child_id": chore_data.child_id,
         "title": chore_data.title,
         "description": full_description,
-        "reward_amount": total_value,
-        "total_points": total_value,
+        "reward_amount": reward_amount,
+        "total_points": reward_amount,
         "frequency": "once",
         "is_shopping_chore": True,
         "shopping_items": [item["list_id"] for item in items],
