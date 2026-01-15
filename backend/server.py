@@ -2152,6 +2152,78 @@ async def complete_challenge_for_student(challenge_id: str, student_id: str, req
     
     return {"message": "Challenge completed", "reward": challenge["reward_amount"]}
 
+# ============== TEACHER ANNOUNCEMENT ROUTES ==============
+
+class AnnouncementCreate(BaseModel):
+    title: str
+    message: str
+
+@api_router.post("/teacher/classrooms/{classroom_id}/announcements")
+async def create_announcement(classroom_id: str, announcement: AnnouncementCreate, request: Request):
+    """Post an announcement to a classroom (visible to students and their parents)"""
+    teacher = await require_teacher(request)
+    
+    classroom = await db.classrooms.find_one({
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["user_id"]
+    })
+    
+    if not classroom:
+        raise HTTPException(status_code=403, detail="Not your classroom")
+    
+    announcement_doc = {
+        "announcement_id": f"ann_{uuid.uuid4().hex[:12]}",
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["user_id"],
+        "teacher_name": teacher.get("name", "Teacher"),
+        "title": announcement.title,
+        "message": announcement.message,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.classroom_announcements.insert_one(announcement_doc)
+    return {"message": "Announcement posted", "announcement_id": announcement_doc["announcement_id"]}
+
+@api_router.get("/teacher/classrooms/{classroom_id}/announcements")
+async def get_classroom_announcements(classroom_id: str, request: Request):
+    """Get announcements for a classroom"""
+    teacher = await require_teacher(request)
+    
+    classroom = await db.classrooms.find_one({
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["user_id"]
+    })
+    
+    if not classroom:
+        raise HTTPException(status_code=403, detail="Not your classroom")
+    
+    announcements = await db.classroom_announcements.find(
+        {"classroom_id": classroom_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    return announcements
+
+@api_router.delete("/teacher/announcements/{announcement_id}")
+async def delete_announcement(announcement_id: str, request: Request):
+    """Delete an announcement"""
+    teacher = await require_teacher(request)
+    
+    announcement = await db.classroom_announcements.find_one({"announcement_id": announcement_id})
+    if not announcement:
+        raise HTTPException(status_code=404, detail="Announcement not found")
+    
+    classroom = await db.classrooms.find_one({
+        "classroom_id": announcement["classroom_id"],
+        "teacher_id": teacher["user_id"]
+    })
+    
+    if not classroom:
+        raise HTTPException(status_code=403, detail="Not your announcement")
+    
+    await db.classroom_announcements.delete_one({"announcement_id": announcement_id})
+    return {"message": "Announcement deleted"}
+
 @api_router.get("/teacher/students/{student_id}/progress")
 async def get_student_progress(student_id: str, request: Request):
     """Get detailed progress for a student"""
