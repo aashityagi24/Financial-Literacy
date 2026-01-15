@@ -84,6 +84,7 @@ export default function AdminQuestsPage({ user }) {
       min_grade: quest.min_grade,
       max_grade: quest.max_grade,
       due_date: quest.due_date,
+      reward_amount: quest.reward_amount || 0,
       questions: quest.questions || []
     });
     setDialogOpen(true);
