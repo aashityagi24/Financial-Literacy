@@ -3,13 +3,21 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
-import { ChevronLeft, Droplets, ShoppingBag, Coins, Plus, Sparkles } from 'lucide-react';
+import { ChevronLeft, Droplets, ShoppingBag, Coins, Plus, Sparkles, ArrowRightLeft } from 'lucide-react';
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const GROWTH_STAGES = [
   { min: 0, max: 20, emoji: '🌱', label: 'Tiny sprout' },
