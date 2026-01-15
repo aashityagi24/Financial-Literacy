@@ -418,6 +418,85 @@ export default function ProfilePage({ user, setUser }) {
           Sign Out
         </button>
       </main>
+      
+      {/* Add Parent Dialog */}
+      <Dialog open={showAddParent} onOpenChange={setShowAddParent}>
+        <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+              <UserPlus className="w-5 h-5 inline mr-2" />
+              Add a Parent
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-[#3D5A80]">
+              Enter your parent's email address. They need to have signed up as a parent first!
+            </p>
+            <Input
+              type="email"
+              placeholder="parent@example.com"
+              value={parentEmail}
+              onChange={(e) => setParentEmail(e.target.value)}
+              className="border-3 border-[#1D3557] rounded-xl text-lg py-3"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowAddParent(false)}
+                className="flex-1 py-3 font-bold rounded-xl border-3 border-[#1D3557] bg-white text-[#1D3557] hover:bg-[#E0FBFC]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddParent}
+                disabled={submitting}
+                className="flex-1 btn-primary py-3"
+              >
+                {submitting ? 'Adding...' : 'Add Parent'}
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Join Classroom Dialog */}
+      <Dialog open={showJoinClass} onOpenChange={setShowJoinClass}>
+        <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+              <School className="w-5 h-5 inline mr-2" />
+              Join a Classroom
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-[#3D5A80]">
+              Ask your teacher for the classroom invite code!
+            </p>
+            <Input
+              type="text"
+              placeholder="Enter code (e.g. ABC123)"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+              maxLength={10}
+              className="border-3 border-[#1D3557] rounded-xl text-lg py-3 text-center tracking-wider font-mono"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowJoinClass(false)}
+                className="flex-1 py-3 font-bold rounded-xl border-3 border-[#1D3557] bg-white text-[#1D3557] hover:bg-[#E0FBFC]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleJoinClassroom}
+                disabled={submitting}
+                className="flex-1 btn-primary py-3"
+              >
+                {submitting ? 'Joining...' : 'Join Class'}
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
