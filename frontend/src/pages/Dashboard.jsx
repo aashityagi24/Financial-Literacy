@@ -114,8 +114,8 @@ export default function Dashboard({ user, setUser }) {
     );
   }
   
-  // Admin users should not see this dashboard - show nothing while redirecting
-  if (user?.role === 'admin') {
+  // Non-child users should not see this dashboard - show loading while redirecting
+  if (user?.role && user.role !== 'child') {
     return (
       <div className="min-h-screen bg-[#E0FBFC] flex items-center justify-center">
         <div className="w-16 h-16 border-4 border-[#1D3557] border-t-[#FFD23F] rounded-full animate-spin"></div>
