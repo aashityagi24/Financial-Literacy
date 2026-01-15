@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
-import { Users, Gift, Target, ChevronRight, Send, HandHeart } from 'lucide-react';
+import { Users, Gift, Target, ChevronRight, Send, HandHeart, ArrowLeftRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import {
   Dialog,
@@ -13,16 +13,25 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-export default function ClassmatesSection({ giftingBalance, compact = false }) {
+export default function ClassmatesSection({ giftingBalance, compact = false, wallet, onRefresh }) {
   const [classmates, setClassmates] = useState([]);
   const [classroom, setClassroom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedClassmate, setSelectedClassmate] = useState(null);
   const [showGiftDialog, setShowGiftDialog] = useState(false);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
+  const [showTransfer, setShowTransfer] = useState(false);
   const [giftForm, setGiftForm] = useState({ amount: '', message: '' });
   const [requestForm, setRequestForm] = useState({ amount: '', reason: '' });
+  const [transferData, setTransferData] = useState({ from_account: 'spending', amount: '' });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
