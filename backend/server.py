@@ -1459,8 +1459,9 @@ async def update_admin_quest(quest_id: str, quest_data: QuestCreate, request: Re
             "min_grade": quest_data.min_grade,
             "max_grade": quest_data.max_grade,
             "due_date": quest_data.due_date,
+            "reward_amount": quest_data.reward_amount or 0,
             "questions": processed_questions,
-            "total_points": total_points
+            "total_points": total_points if total_points > 0 else (quest_data.reward_amount or 0)
         }}
     )
     return {"message": "Quest updated"}
