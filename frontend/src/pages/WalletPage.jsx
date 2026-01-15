@@ -291,27 +291,54 @@ export default function WalletPage({ user }) {
             <p className="text-center text-[#3D5A80] py-4">No transactions yet. Complete quests to start earning!</p>
           ) : (
             <div className="space-y-3">
-              {transactions.slice(0, 10).map((trans, index) => (
-                <div 
-                  key={trans.transaction_id}
-                  className="flex items-center justify-between bg-[#E0FBFC] rounded-xl p-3 border-2 border-[#1D3557]/20"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white rounded-xl border-2 border-[#1D3557] flex items-center justify-center">
-                      {getTransactionIcon(trans.transaction_type)}
+              {transactions.slice(0, 10).map((trans, index) => {
+                // Determine the display amount and color
+                let displayAmount = Math.abs(trans.amount || 0);
+                let isPositive = false;
+                let isNeutral = false;
+                
+                // Rewards and earnings are positive (money coming in)
+                if (trans.transaction_type === 'reward' || trans.transaction_type === 'earning' || trans.transaction_type === 'deposit') {
+                  isPositive = true;
+                }
+                // Purchases and withdrawals are negative (money going out)
+                else if (trans.transaction_type === 'purchase' || trans.transaction_type === 'withdrawal') {
+                  isPositive = false;
+                }
+                // Transfers are neutral (moving between accounts)
+                else if (trans.transaction_type === 'transfer') {
+                  isNeutral = true;
+                }
+                // Default: check if amount is already negative or if to_account exists
+                else {
+                  isPositive = trans.amount > 0 || trans.to_account !== null;
+                }
+                
+                return (
+                  <div 
+                    key={trans.transaction_id}
+                    className="flex items-center justify-between bg-[#E0FBFC] rounded-xl p-3 border-2 border-[#1D3557]/20"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white rounded-xl border-2 border-[#1D3557] flex items-center justify-center">
+                        {getTransactionIcon(trans.transaction_type)}
+                      </div>
+                      <div>
+                        <p className="font-bold text-[#1D3557]">{trans.description}</p>
+                        <p className="text-xs text-[#3D5A80]">
+                          {new Date(trans.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold text-[#1D3557]">{trans.description}</p>
-                      <p className="text-xs text-[#3D5A80]">
-                        {new Date(trans.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
+                    <span className={`font-bold ${
+                      isNeutral ? 'text-[#3D5A80]' : 
+                      isPositive ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'
+                    }`}>
+                      {isNeutral ? '↔' : isPositive ? '+' : '-'}₹{displayAmount.toFixed(0)}
+                    </span>
                   </div>
-                  <span className={`font-bold ${trans.to_account ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
-                    {trans.to_account ? '+' : '-'}₹{trans.amount?.toFixed(2)}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
