@@ -387,9 +387,9 @@ export default function AdminQuestsPage({ user }) {
                               <Input
                                 type="number"
                                 min="1"
-                                value={q.points}
+                                value={q.points || ''}
                                 onChange={(e) => updateQuestion(qIndex, 'points', parseInt(e.target.value) || 0)}
-                                placeholder="Points (₹)"
+                                placeholder="Reward (₹) *"
                               />
                               
                               <Input
