@@ -72,16 +72,18 @@ export default function ParentDashboard({ user }) {
   
   const fetchData = async () => {
     try {
-      const [dashRes, choresRes, allowRes, goalsRes] = await Promise.all([
+      const [dashRes, choresRes, allowRes, goalsRes, choreReqRes] = await Promise.all([
         axios.get(`${API}/parent/dashboard`),
-        axios.get(`${API}/parent/chores`),
+        axios.get(`${API}/parent/chores-new`).catch(() => ({ data: [] })),
         axios.get(`${API}/parent/allowances`),
-        axios.get(`${API}/parent/savings-goals`)
+        axios.get(`${API}/parent/savings-goals`),
+        axios.get(`${API}/parent/chore-requests`).catch(() => ({ data: [] }))
       ]);
       setDashboard(dashRes.data);
       setChores(choresRes.data);
       setAllowances(allowRes.data);
       setSavingsGoals(goalsRes.data);
+      setChoreRequests(choreReqRes.data);
       
       // Fetch classroom info for each child
       if (dashRes.data?.children) {
