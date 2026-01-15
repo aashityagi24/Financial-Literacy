@@ -54,13 +54,20 @@ export default function LearnPage({ user }) {
     return acc + topicContent + subtopicContent;
   }, 0);
   
+  // Determine back link based on user role
+  const getBackLink = () => {
+    if (user?.role === 'teacher') return '/teacher-dashboard';
+    if (user?.role === 'parent') return '/parent-dashboard';
+    return '/dashboard';
+  };
+  
   return (
     <div className="min-h-screen bg-[#E0FBFC]" data-testid="learn-page">
       {/* Header */}
       <header className="bg-white border-b-4 border-[#1D3557]">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Link to="/dashboard" className="p-2 rounded-xl border-3 border-[#1D3557] bg-white hover:bg-[#FFD23F]/20 transition-colors">
+            <Link to={getBackLink()} className="p-2 rounded-xl border-3 border-[#1D3557] bg-white hover:bg-[#FFD23F]/20 transition-colors">
               <ChevronLeft className="w-6 h-6 text-[#1D3557]" />
             </Link>
             <div className="flex items-center gap-3">
@@ -69,7 +76,9 @@ export default function LearnPage({ user }) {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Learn</h1>
-                <p className="text-base text-[#3D5A80]">Explore fun money lessons!</p>
+                <p className="text-base text-[#3D5A80]">
+                  {user?.role === 'teacher' ? 'Preview learning content' : 'Explore fun money lessons!'}
+                </p>
               </div>
             </div>
           </div>
