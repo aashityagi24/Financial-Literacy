@@ -517,6 +517,8 @@ class SavingsGoal(BaseModel):
     child_id: str
     parent_id: Optional[str] = None
     title: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
     target_amount: float
     current_amount: float = 0
     deadline: Optional[str] = None
@@ -526,6 +528,16 @@ class SavingsGoal(BaseModel):
 class SavingsGoalCreate(BaseModel):
     child_id: str
     title: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    target_amount: float
+    deadline: Optional[str] = None
+
+class ChildSavingsGoalCreate(BaseModel):
+    """For children to create their own savings goals"""
+    title: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
     target_amount: float
     deadline: Optional[str] = None
 
