@@ -90,7 +90,7 @@ export default function Dashboard({ user, setUser }) {
     spending: { bg: 'bg-gradient-to-br from-[#EE6C4D] to-[#FF8A6C]', icon: '💳', description: 'Money to buy things' },
     savings: { bg: 'bg-gradient-to-br from-[#06D6A0] to-[#42E8B3]', icon: '🐷', description: 'Money saved for later' },
     investing: { bg: 'bg-gradient-to-br from-[#3D5A80] to-[#5A7BA0]', icon: '📈', description: 'Money that grows' },
-    giving: { bg: 'bg-gradient-to-br from-[#9B5DE5] to-[#B47EE5]', icon: '❤️', description: 'Money to help others' },
+    gifting: { bg: 'bg-gradient-to-br from-[#9B5DE5] to-[#B47EE5]', icon: '❤️', description: 'Money to help others' },
   };
   
   if (loading) {
@@ -332,7 +332,7 @@ export default function Dashboard({ user, setUser }) {
           
           {/* Classroom Card */}
           <div className="card-playful p-4 flex flex-col">
-            <ClassmatesSection givingBalance={wallet?.accounts?.find(a => a.account_type === 'giving')?.balance || 0} compact={true} />
+            <ClassmatesSection giftingBalance={wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance || 0} compact={true} />
           </div>
         </div>
         
