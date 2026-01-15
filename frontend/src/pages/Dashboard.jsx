@@ -172,7 +172,7 @@ export default function Dashboard({ user, setUser }) {
               
               {/* Total balance */}
               <div className="flex items-center gap-2 bg-[#06D6A0]/20 px-3 py-2 rounded-xl border-2 border-[#1D3557]">
-                <Coins className="w-5 h-5 text-[#06D6A0]" />
+                <Wallet className="w-5 h-5 text-[#06D6A0]" />
                 <span className="font-bold text-[#1D3557]">₹{wallet?.total_balance?.toFixed(0) || 0}</span>
               </div>
               
