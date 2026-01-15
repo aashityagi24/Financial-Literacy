@@ -131,29 +131,29 @@ export default function ParentDashboard({ user }) {
   
   const handleCreateChore = async () => {
     try {
-      await axios.post(`${API}/parent/chores`, choreForm);
+      await axios.post(`${API}/parent/chores-new`, choreForm);
       toast.success('Chore created!');
       setShowCreateChore(false);
-      setChoreForm({ child_id: '', title: '', description: '', reward_amount: 5, frequency: 'once' });
+      setChoreForm({ child_id: '', title: '', description: '', reward_amount: 5, frequency: 'one_time', weekly_days: [], monthly_date: 1 });
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to create chore');
     }
   };
   
-  const handleApproveChore = async (choreId) => {
+  const handleValidateChore = async (requestId, action) => {
     try {
-      await axios.post(`${API}/parent/chores/${choreId}/approve`);
-      toast.success('Chore approved! Reward given.');
+      await axios.post(`${API}/parent/chore-requests/${requestId}/validate`, { action });
+      toast.success(action === 'approve' ? 'Chore approved! Reward sent.' : 'Chore rejected');
       fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to approve');
+      toast.error(error.response?.data?.detail || 'Failed to validate chore');
     }
   };
   
   const handleDeleteChore = async (choreId) => {
     try {
-      await axios.delete(`${API}/parent/chores/${choreId}`);
+      await axios.delete(`${API}/parent/chores-new/${choreId}`);
       toast.success('Chore deleted');
       fetchData();
     } catch (error) {
