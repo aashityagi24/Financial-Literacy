@@ -1553,6 +1553,64 @@ async def get_teacher_quests(request: Request):
     ).sort("created_at", -1).to_list(200)
     return quests
 
+@api_router.get("/teacher/quests/{quest_id}")
+async def get_teacher_quest(quest_id: str, request: Request):
+    """Get a specific teacher quest for viewing/editing"""
+    user = await require_teacher(request)
+    quest = await db.new_quests.find_one({
+        "quest_id": quest_id,
+        "creator_type": "teacher",
+        "creator_id": user["user_id"]
+    }, {"_id": 0})
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    return quest
+
+@api_router.put("/teacher/quests/{quest_id}")
+async def update_teacher_quest(quest_id: str, quest_data: QuestCreate, request: Request):
+    """Update a teacher quest"""
+    user = await require_teacher(request)
+    
+    # Verify quest belongs to this teacher
+    existing = await db.new_quests.find_one({
+        "quest_id": quest_id,
+        "creator_type": "teacher",
+        "creator_id": user["user_id"]
+    })
+    if not existing:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    questions_points = sum(q.get("points", 0) or 0 for q in quest_data.questions)
+    base_reward = quest_data.reward_amount or 0
+    total_points = questions_points + base_reward if len(quest_data.questions) == 0 else questions_points
+    
+    processed_questions = []
+    for q in quest_data.questions:
+        processed_questions.append({
+            "question_id": q.get("question_id") or f"q_{uuid.uuid4().hex[:8]}",
+            "question_text": q.get("question_text", ""),
+            "question_type": q.get("question_type", "mcq"),
+            "image_url": q.get("image_url"),
+            "options": q.get("options"),
+            "correct_answer": q.get("correct_answer"),
+            "points": q.get("points", 0) or 0
+        })
+    
+    await db.new_quests.update_one(
+        {"quest_id": quest_id, "creator_type": "teacher", "creator_id": user["user_id"]},
+        {"$set": {
+            "title": quest_data.title,
+            "description": quest_data.description,
+            "image_url": quest_data.image_url,
+            "pdf_url": quest_data.pdf_url,
+            "due_date": quest_data.due_date,
+            "reward_amount": quest_data.reward_amount or 0,
+            "questions": processed_questions,
+            "total_points": total_points if total_points > 0 else (quest_data.reward_amount or 0)
+        }}
+    )
+    return {"message": "Quest updated"}
+
 @api_router.delete("/teacher/quests/{quest_id}")
 async def delete_teacher_quest(quest_id: str, request: Request):
     """Delete a teacher quest"""
