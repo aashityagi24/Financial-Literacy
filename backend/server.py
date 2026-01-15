@@ -521,12 +521,7 @@ class Chore(BaseModel):
     completed_at: Optional[datetime] = None
     approved_at: Optional[datetime] = None
 
-class ChoreCreate(BaseModel):
-    child_id: str
-    title: str
-    description: Optional[str] = None
-    reward_amount: float
-    frequency: str = "once"
+# ChoreCreate model is defined earlier in the file (line ~169) with weekly_days and monthly_date fields
 
 class Allowance(BaseModel):
     model_config = ConfigDict(extra="ignore")
