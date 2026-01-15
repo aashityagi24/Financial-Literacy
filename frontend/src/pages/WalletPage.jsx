@@ -200,6 +200,27 @@ export default function WalletPage({ user }) {
     }
   };
   
+  const handleAllocateToGoalWithId = async (goalId, amountStr) => {
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    
+    try {
+      await axios.post(`${API}/child/savings-goals/${goalId}/contribute`, {
+        amount: amount
+      });
+      
+      toast.success('Money added to your goal! 🎯');
+      setAllocateOpen(false);
+      setAllocateData({ goal_id: '', amount: '' });
+      fetchWalletData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to add to goal');
+    }
+  };
+  
   const getTransactionIcon = (type) => {
     switch(type) {
       case 'deposit': return <ArrowDown className="w-4 h-4 text-[#06D6A0]" />;
