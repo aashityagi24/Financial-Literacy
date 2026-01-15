@@ -1433,7 +1433,10 @@ async def update_admin_quest(quest_id: str, quest_data: QuestCreate, request: Re
     """Update an admin quest"""
     await require_admin(request)
     
-    total_points = sum(q.get("points", 0) for q in quest_data.questions)
+    questions_points = sum(q.get("points", 0) or 0 for q in quest_data.questions)
+    base_reward = quest_data.reward_amount or 0
+    total_points = questions_points + base_reward if len(quest_data.questions) == 0 else questions_points
+    
     processed_questions = []
     for q in quest_data.questions:
         processed_questions.append({
@@ -1443,7 +1446,7 @@ async def update_admin_quest(quest_id: str, quest_data: QuestCreate, request: Re
             "image_url": q.get("image_url"),
             "options": q.get("options"),
             "correct_answer": q.get("correct_answer"),
-            "points": q.get("points", 10)
+            "points": q.get("points", 0) or 0
         })
     
     await db.new_quests.update_one(
