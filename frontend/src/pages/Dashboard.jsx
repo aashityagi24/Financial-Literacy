@@ -44,11 +44,9 @@ export default function Dashboard({ user, setUser }) {
       setQuests(questsRes.data.slice(0, 3));
       setAchievements(achievementsRes.data.filter(a => a.earned).slice(0, 4));
       
-      // Set the first active (not completed) savings goal
+      // Set active savings goals (up to 2 for dashboard display)
       const activeGoals = (goalsRes.data || []).filter(g => !g.completed);
-      if (activeGoals.length > 0) {
-        setSavingsGoal(activeGoals[0]);
-      }
+      setSavingsGoals(activeGoals);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
