@@ -228,6 +228,31 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
   - `POST /api/child/savings-goals/{id}/contribute` - Contribute from savings to goal
   - `POST /api/upload/goal-image` - Upload image for savings goal
 
+### Phase 15: User Connection System ✅ (January 15, 2026)
+- **Child ↔ Parent Connection**:
+  - Child can add up to 2 parents by email via Profile page
+  - Parent can link child by email (existing feature)
+  - Child can view linked parents on Profile page
+- **Child ↔ Classroom Connection**:
+  - Child enters 6-digit invite code to join classroom
+  - Child can view classroom info and teacher on Profile page
+  - Child can see announcements from all joined classrooms
+- **Parent ↔ Classroom Connection** (via Child):
+  - Parent automatically sees each child's classroom (labeled as "Child's Name's Classroom")
+  - Parent sees teacher announcements in their dashboard
+- **Teacher Announcements**:
+  - Teacher can post announcements to classroom (visible to students AND their parents)
+  - Teacher can delete announcements
+  - Announcements show on child's Profile and parent's Dashboard
+- **Connection APIs**:
+  - `POST /api/child/add-parent` - Child adds parent by email (max 2)
+  - `GET /api/child/parents` - Get child's linked parents
+  - `GET /api/child/announcements` - Get announcements from all classrooms
+  - `POST /api/student/join-classroom` - Join classroom with invite code
+  - `GET /api/parent/children/{id}/classroom` - Get child's classroom and announcements
+  - `POST /api/teacher/classrooms/{id}/announcements` - Post announcement
+  - `DELETE /api/teacher/announcements/{id}` - Delete announcement
+
 ## API Endpoints
 
 ### Admin Store Management (New - Phase 11)
