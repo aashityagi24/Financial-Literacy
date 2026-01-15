@@ -28,14 +28,23 @@ import { Progress } from "@/components/ui/progress";
 export default function WalletPage({ user }) {
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [savingsGoals, setSavingsGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [transferOpen, setTransferOpen] = useState(false);
+  const [goalOpen, setGoalOpen] = useState(false);
   const [transferData, setTransferData] = useState({
     from_account: '',
     to_account: '',
     amount: ''
   });
-  
+  const [goalForm, setGoalForm] = useState({
+    title: '',
+    description: '',
+    image_url: '',
+    target_amount: '',
+    deadline: ''
+  });
+  const [uploadingImage, setUploadingImage] = useState(false);  
   const accountInfo = {
     spending: { 
       icon: '💳', 
