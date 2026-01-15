@@ -90,14 +90,24 @@ export default function Dashboard({ user, setUser }) {
     }
   };
   
+  // Dynamic nav items based on grade
+  const grade = user?.grade ?? 3;
+  const getInvestmentItem = () => {
+    if (grade === 0) return null; // No investments for Kindergarten
+    if (grade <= 2) return { icon: TrendingUp, label: 'Garden', path: '/garden', color: '#228B22', emoji: '🌻' };
+    return { icon: TrendingUp, label: 'Invest', path: '/investments', color: '#06D6A0' };
+  };
+  
+  const investmentItem = getInvestmentItem();
+  
   const navItems = [
     { icon: BookOpen, label: 'Learn', path: '/learn', color: '#FFD23F' },
     { icon: Wallet, label: 'Wallet', path: '/wallet', color: '#3D5A80' },
     { icon: Store, label: 'Store', path: '/store', color: '#EE6C4D' },
-    { icon: TrendingUp, label: 'Invest', path: '/investments', color: '#06D6A0' },
+    investmentItem,
     { icon: Target, label: 'Quests', path: '/quests', color: '#9B5DE5' },
     { icon: MessageCircle, label: 'AI Buddy', path: '/chat', color: '#FFD23F' },
-  ];
+  ].filter(Boolean); // Remove null items
   
   const accountColors = {
     spending: { bg: 'bg-gradient-to-br from-[#EE6C4D] to-[#FF8A6C]', icon: '💳', description: 'Money to buy things' },
