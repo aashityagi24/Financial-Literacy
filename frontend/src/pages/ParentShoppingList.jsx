@@ -47,22 +47,17 @@ export default function ParentShoppingList({ user }) {
   
   const fetchData = async () => {
     try {
-      const [dashRes, listRes, catRes] = await Promise.all([
+      const [dashRes, listRes, catRes, itemsRes] = await Promise.all([
         axios.get(`${API}/parent/dashboard`),
         axios.get(`${API}/parent/shopping-list`),
-        axios.get(`${API}/store/categories`).catch(() => ({ data: [] }))
+        axios.get(`${API}/store/categories`).catch(() => ({ data: [] })),
+        axios.get(`${API}/store/items-by-category`).catch(() => ({ data: [] }))
       ]);
       
-      // Fetch all items from each category
+      // Extract all items from the grouped response
       const allItems = [];
-      for (const cat of catRes.data || []) {
-        const itemsRes = await axios.get(`${API}/store/items-by-category`).catch(() => ({ data: [] }));
-        if (itemsRes.data) {
-          for (const catData of itemsRes.data) {
-            allItems.push(...(catData.items || []));
-          }
-        }
-        break; // Only need to call once since it returns all categories with items
+      for (const catData of itemsRes.data || []) {
+        allItems.push(...(catData.items || []));
       }
       
       setChildren(dashRes.data.children || []);
