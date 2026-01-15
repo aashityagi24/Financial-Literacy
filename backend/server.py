@@ -673,41 +673,95 @@ class StoreItemUpdate(BaseModel):
 # ============== ADMIN INVESTMENT MANAGEMENT MODELS ==============
 
 class InvestmentPlant(BaseModel):
-    """Plants for K-2 grades (Money Garden)"""
+    """Plants for Grade 1-2 (Money Garden) - Admin configured seeds"""
     model_config = ConfigDict(extra="ignore")
     plant_id: str
     name: str
+    emoji: str  # e.g., 🍅, 🌻, 🥕
     description: str
     image_url: Optional[str] = None
-    base_price: float  # Price per seed/plant
-    growth_rate_min: float = 0.02  # Minimum daily growth rate (2%)
-    growth_rate_max: float = 0.08  # Maximum daily growth rate (8%)
-    min_lot_size: int = 1  # Minimum number of seeds to buy (1, 3, 5, or 10)
-    maturity_days: int = 7  # Days until fully grown
+    seed_cost: float  # Cost to buy one seed
+    growth_days: int  # Days to fully mature
+    harvest_yield: int  # How many items produced
+    yield_unit: str  # 'pieces', 'kg', 'bunch', 'dozen', 'flowers'
+    base_sell_price: float  # Base price per unit at market
+    price_fluctuation_percent: float = 10.0  # Market price can fluctuate ±10%
+    water_frequency_hours: int = 24  # How often needs watering (in hours)
     is_active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class InvestmentPlantCreate(BaseModel):
     name: str
+    emoji: str = "🌱"
     description: str
     image_url: Optional[str] = None
-    base_price: float
-    growth_rate_min: float = 0.02
-    growth_rate_max: float = 0.08
-    min_lot_size: int = 1
-    maturity_days: int = 7
+    seed_cost: float
+    growth_days: int = 5
+    harvest_yield: int = 10
+    yield_unit: str = "pieces"
+    base_sell_price: float
+    price_fluctuation_percent: float = 10.0
+    water_frequency_hours: int = 24
     is_active: bool = True
 
 class InvestmentPlantUpdate(BaseModel):
     name: Optional[str] = None
+    emoji: Optional[str] = None
     description: Optional[str] = None
     image_url: Optional[str] = None
-    base_price: Optional[float] = None
-    growth_rate_min: Optional[float] = None
-    growth_rate_max: Optional[float] = None
-    min_lot_size: Optional[int] = None
-    maturity_days: Optional[int] = None
+    seed_cost: Optional[float] = None
+    growth_days: Optional[int] = None
+    harvest_yield: Optional[int] = None
+    yield_unit: Optional[str] = None
+    base_sell_price: Optional[float] = None
+    price_fluctuation_percent: Optional[float] = None
+    water_frequency_hours: Optional[int] = None
     is_active: Optional[bool] = None
+
+# ============== MONEY GARDEN MODELS (Grade 1-2) ==============
+
+class FarmPlot(BaseModel):
+    """A single plot in child's farm grid"""
+    model_config = ConfigDict(extra="ignore")
+    plot_id: str
+    user_id: str
+    position: int  # 0-based position in grid
+    plant_id: Optional[str] = None  # Currently planted seed
+    plant_name: Optional[str] = None
+    plant_emoji: Optional[str] = None
+    planted_at: Optional[str] = None
+    last_watered: Optional[str] = None
+    growth_days_total: int = 0
+    growth_progress: float = 0  # 0-100%
+    status: str = "empty"  # empty, growing, water_needed, wilting, ready, dead
+    is_active: bool = True
+
+class PlantSeedRequest(BaseModel):
+    plot_id: str
+    plant_id: str
+
+class HarvestInventory(BaseModel):
+    """Child's harvested produce inventory"""
+    model_config = ConfigDict(extra="ignore")
+    inventory_id: str
+    user_id: str
+    plant_id: str
+    plant_name: str
+    plant_emoji: str
+    quantity: int
+    yield_unit: str
+    harvested_at: str
+
+class MarketPrices(BaseModel):
+    """Daily market prices for produce"""
+    model_config = ConfigDict(extra="ignore")
+    price_id: str
+    plant_id: str
+    current_price: float
+    base_price: float
+    fluctuation_percent: float
+    date: str  # YYYY-MM-DD
+    is_market_open: bool = True
 
 class InvestmentStock(BaseModel):
     """Stocks for grades 3-5 (Stock Market)"""
