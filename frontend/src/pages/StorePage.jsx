@@ -375,7 +375,7 @@ export default function StorePage({ user }) {
                 
                 {/* What you have */}
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-[#3D5A80] font-medium">💰 Money you have:</span>
+                  <span className="text-[#3D5A80] font-medium">🪙 Money you have:</span>
                   <span className="text-xl font-bold text-[#1D3557]">₹{spendingBalance.toFixed(0)}</span>
                 </div>
                 
