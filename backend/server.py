@@ -2810,11 +2810,8 @@ async def get_child_savings_goals(request: Request):
 
 @api_router.post("/child/savings-goals")
 async def create_child_savings_goal(goal: ChildSavingsGoalCreate, request: Request):
-    """Child creates their own savings goal"""
+    """User creates their own savings goal"""
     user = await get_current_user(request)
-    
-    if user.get("role") != "child":
-        raise HTTPException(status_code=403, detail="Only children can create their own savings goals")
     
     goal_doc = {
         "goal_id": f"goal_{uuid.uuid4().hex[:12]}",
@@ -2827,7 +2824,7 @@ async def create_child_savings_goal(goal: ChildSavingsGoalCreate, request: Reque
         "current_amount": 0,
         "deadline": goal.deadline,
         "completed": False,
-        "created_by": "child",
+        "created_by": user.get("role", "child"),
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
