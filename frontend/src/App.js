@@ -212,6 +212,11 @@ function AppRouter() {
           {({ user }) => <AdminInvestmentManagement user={user} />}
         </ProtectedRoute>
       } />
+      <Route path="/admin/quests" element={
+        <ProtectedRoute>
+          {({ user }) => <AdminQuestsPage user={user} />}
+        </ProtectedRoute>
+      } />
     </Routes>
   );
 }
