@@ -319,16 +319,10 @@ export default function MoneyGardenPage({ user }) {
               🏡 Your Farm
             </h2>
             <p className="text-sm text-[#3D5A80]">
-              {sortedPlots.length} plots • {sortedPlots.filter(p => p.status === 'growing').length} growing • 
+              {sortedPlots.length} plots • {sortedPlots.filter(p => p.status === 'growing' || p.status === 'water_needed' || p.status === 'wilting').length} growing • 
               {sortedPlots.filter(p => p.status === 'ready').length} ready to harvest
             </p>
           </div>
-          <button
-            onClick={handleBuyPlot}
-            className="bg-[#8B4513] hover:bg-[#A0522D] text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 border-2 border-[#1D3557]"
-          >
-            <Plus className="w-5 h-5" /> Buy Plot (₹{farm.plot_cost})
-          </button>
         </div>
         
         {/* Farm Grid */}
