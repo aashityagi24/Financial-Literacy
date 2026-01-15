@@ -72,10 +72,42 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
       setShowGiftDialog(false);
       setGiftForm({ amount: '', message: '' });
       setSelectedClassmate(null);
+      if (onRefresh) onRefresh();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to send gift');
     } finally {
       setSubmitting(false);
+    }
+  };
+  
+  const handleQuickTransfer = async () => {
+    const amount = parseFloat(transferData.amount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    
+    const fromBalance = wallet?.accounts?.find(a => a.account_type === transferData.from_account)?.balance || 0;
+    if (amount > fromBalance) {
+      toast.error(`Not enough in ${transferData.from_account} jar`);
+      return;
+    }
+    
+    try {
+      await axios.post(`${API}/wallet/transfer`, {
+        from_account: transferData.from_account,
+        to_account: 'gifting',
+        amount: amount,
+        transaction_type: 'transfer',
+        description: `Quick transfer for gifting`
+      });
+      
+      toast.success('Transfer successful!');
+      setShowTransfer(false);
+      setTransferData({ from_account: 'spending', amount: '' });
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Transfer failed');
     }
   };
 
