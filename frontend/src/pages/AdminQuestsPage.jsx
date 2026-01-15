@@ -193,7 +193,8 @@ export default function AdminQuestsPage({ user }) {
   };
   
   const getTotalPoints = () => {
-    return formData.questions.reduce((sum, q) => sum + (parseFloat(q.points) || 0), 0);
+    const questionsTotal = formData.questions.reduce((sum, q) => sum + (parseFloat(q.points) || 0), 0);
+    return formData.questions.length === 0 ? (formData.reward_amount || 0) : questionsTotal;
   };
   
   if (loading) {
