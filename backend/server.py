@@ -1847,12 +1847,14 @@ async def create_chore_from_shopping_list(chore_data: ShoppingListChoreCreate, r
     if reward_amount <= 0:
         raise HTTPException(status_code=400, detail="Reward amount must be greater than 0")
     
-    # Build item list description
-    item_list = ", ".join([f"{item['item_name']} x{item['quantity']}" for item in items])
-    full_description = chore_data.description or ""
-    if full_description:
-        full_description += "\n\n"
-    full_description += f"🛒 Shopping List Items:\n{item_list}"
+    # Store shopping items as structured list for display
+    shopping_item_details = [{
+        "list_id": item["list_id"],
+        "item_id": item["item_id"],
+        "item_name": item["item_name"],
+        "quantity": item["quantity"],
+        "purchased": False
+    } for item in items]
     
     # Create the chore
     chore_id = f"chore_{uuid.uuid4().hex[:12]}"
@@ -1865,12 +1867,13 @@ async def create_chore_from_shopping_list(chore_data: ShoppingListChoreCreate, r
         "creator_name": user.get("name", "Parent"),
         "child_id": chore_data.child_id,
         "title": chore_data.title,
-        "description": full_description,
+        "description": chore_data.description or "",
         "reward_amount": reward_amount,
         "total_points": reward_amount,
         "frequency": "once",
         "is_shopping_chore": True,
         "shopping_items": [item["list_id"] for item in items],
+        "shopping_item_details": shopping_item_details,
         "is_active": True,
         "requires_validation": True,
         "created_at": datetime.now(timezone.utc).isoformat()
