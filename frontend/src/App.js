@@ -30,6 +30,7 @@ import SavingsGoalsPage from "@/pages/SavingsGoalsPage";
 import AdminQuestsPage from "@/pages/AdminQuestsPage";
 import ParentShoppingList from "@/pages/ParentShoppingList";
 import MoneyGardenPage from "@/pages/MoneyGardenPage";
+import AdminGardenManagement from "@/pages/AdminGardenManagement";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
