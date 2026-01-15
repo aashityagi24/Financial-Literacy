@@ -119,7 +119,7 @@ export default function AdminQuestsPage({ user }) {
           question_type: 'mcq',
           options: ['', '', '', ''],
           correct_answer: '',
-          points: 10,
+          points: '',
           image_url: ''
         }
       ]
