@@ -166,8 +166,8 @@ export default function StorePage({ user }) {
                 <span className="font-bold text-[#1D3557]">{purchases.length}</span>
               </button>
               <div className="flex items-center gap-2 bg-[#FFD23F] px-4 py-2 rounded-xl border-2 border-[#1D3557]">
-                <span className="text-lg font-bold text-[#1D3557]">₹</span>
-                <span className="font-bold text-[#1D3557]">{spendingBalance.toFixed(0)}</span>
+                <Wallet className="w-5 h-5 text-[#1D3557]" />
+                <span className="font-bold text-[#1D3557]">₹{spendingBalance.toFixed(0)}</span>
               </div>
             </div>
           </div>
