@@ -4,7 +4,7 @@ import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
-  GraduationCap, ChevronLeft, Plus, Users, Trophy, 
+  GraduationCap, ChevronLeft, Plus, Users, 
   Copy, Trash2, Gift, Star, ChevronRight, Eye, Megaphone,
   BookOpen, LogOut, User, Target, Calendar
 } from 'lucide-react';
