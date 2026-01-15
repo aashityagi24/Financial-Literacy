@@ -2,64 +2,58 @@
 
 **PRODUCT REQUIREMENTS:**
 -   **User Roles & Core Features:** Teacher (manage class), Parent (manage chores), Child (digital wallet, store, investments), and Admin (content management). Features include a virtual store, investment simulations, quests, achievements, and avatar customization.
--   **Content System:** A hierarchical content structure (Topic -> Subtopic -> Content Item) managed by the Admin, supporting various content formats (PDF, HTML).
+-   **Content System:** A hierarchical content structure (Topic -> Subtopic -> Content Item) managed by the Admin, supporting various content formats (PDF, HTML, HTML ZIP, MP4).
 -   **Authentication:** Google Social Login for users, email/password for Admin.
 -   **Localization:** The application's currency must be Indian Rupees (₹).
--   **UI/UX:** The app should be visually appealing, easy to read for children, with good contrast and minimal animations.
--   **New Admin Features (Store & Investment Management):**
-    -   **Store Management:** Admins must be able to create store categories and items, including uploading names, descriptions, and images.
-    -   **Investment Management:** A comprehensive system for admins to manage investment instruments. This includes:
-        -   Creating two separate types: Plants (for K-2) and Stocks (for 3-5).
-        -   Uploading names, images/logos, descriptions, and purchase prices.
-        -   Setting optional lot sizes for purchases (e.g., 1, 3, 5, 10).
-        -   Implementing an automated system for daily price fluctuations to simulate market changes.
-        -   Providing a UI for the user to view their investment portfolio, including charts showing value over time.
+-   **UI/UX:** The app should be visually appealing and child-friendly.
+-   **Admin Features (Store & Investment Management):** Admins must be able to create and manage store categories, store items (with images and measurement units), and investment instruments (Plants and Stocks).
+-   **Automated Price Fluctuation:** An automated system for daily price fluctuations to simulate market changes.
+-   **Child Savings Goals:** Children should be able to set their own savings goals with a name, image, target amount, and deadline.
+-   **Store Experience:** The store should allow purchasing multiple quantities of an item and show a history of purchased items.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack application (FastAPI + React) with a functional MVP. It includes multi-role authentication, dashboards for all roles, and a complete hierarchical content management system for the admin. In this session, numerous UI/UX improvements were made, including localizing the currency to '₹', fixing thumbnail displays, adding child-friendly descriptions, increasing font sizes, and improving page layouts. The initial backend scaffolding (models and API routes) for the new Admin Store and Investment Management feature has been added to .
+The application is a full-stack FastAPI and React app with a functional MVP. It includes multi-role authentication and dashboards. The admin has full CRUD capabilities for content (including PDF, HTML, and MP4 uploads), store items (with categories and units), and investment instruments. A daily automated scheduler () adjusts investment prices and logs the history. Child-facing pages for the store and investments now dynamically display this admin-created content. The wallet page includes a Recent Activity section with corrected transaction displays and a UI for creating detailed savings goals. The store purchase flow has been improved with a quantity selector and a child-friendly purchase confirmation dialog.
 
 **Last working item**:
-    - Last item agent was working: The agent just began a major new feature: creating an Admin dashboard for managing the in-game Store and Investments. The agent added the necessary Pydantic models (, , , ) and the corresponding CRUD API endpoints to . Placeholder files for the frontend admin pages were also created.
+    - Last item agent was working: The agent was addressing a multi-part user request to fix and enhance the Savings Goal functionality. The user reported that the Set Goal button was redirecting incorrectly and requested several UI/UX and logic changes. The agent began by overwriting  to implement the requested layout changes and fix the button's behavior.
     - Status: IN PROGRESS
     - Agent Testing Done: N
     - Which testing method agent to use? both
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: Gradient banners are showing as white boxes. (PRIORITY: P0)
+  - Issue 1: Complete the Savings Goal feature enhancement. (PRIORITY: P0)
 
   Issues Detail:
   - Issue 1: 
-     - Attempted fixes: The user has repeatedly reported that colored gradient banners on pages like Quests, Store, and Investments are rendering as plain white boxes. The agent identified that the  CSS class, which sets a white background, was overriding the gradient styles. The agent attempted to fix this by removing the  class from the affected banner elements. However, the user's latest message and screenshots confirm the issue persists.
-     - Next debug checklist: with file & method reference
-        1.  Verify in  that the  class still has .
-        2.  Thoroughly inspect the JSX for the banners in , , and .
-        3.  Confirm the  class was actually removed from the  string of the banner s. If it was, investigate other potential style conflicts.
-        4.  Consider a more robust fix, such as creating a new class specifically for banners that does not conflict with existing styles, or using inline styles with  as a last resort.
-     - Why fix this issue and what will be achieved with the fix? This is a significant visual regression that makes the application look broken and detracts from the user experience. Fixing it is critical to restoring the intended design.
+     - Attempted fixes: The agent has already overwritten  to address some of the user's requests. The role-based restriction on creating goals in the backend was also removed.
+     - Next debug checklist:
+        1.  **Dashboard Integration:** Modify  to fetch and prominently display the child's active savings goal.
+        2.  **Allocation Logic:** When a child's savings account balance increases, implement logic to allocate those funds towards their goal(s). If multiple goals exist, create a UI modal asking the child which goal to contribute to and by how much. This will likely involve changes in  and .
+        3.  **Final Verification:** Test the entire flow: create a goal, see it on the dashboard, earn money, and verify the allocation logic works as expected.
+     - Why fix this issue and what will be achieved with the fix? This is a core gamification feature that helps keep the child engaged and focused on their financial goals. Completing this will fulfill a key user requirement.
      - Status:  IN PROGRESS
-     - Is recurring issue? Y
-     - Should Test frontend/backend/both after fix? frontend
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? both
      - Blocked on other issue: None
 
 **In progress Task List**:
-  - Task 1: Implement Admin Store and Investment Management Feature (PRIORITY: P0)
+  - Task 1: Complete the Savings Goal feature enhancement (PRIORITY: P0)
 
  Task Detail:
   - Task 1: 
-     - Where to resume: The backend models and API endpoints have been created in . The next step is to build the frontend interfaces. Start by developing the UI for store management in . This will involve creating forms to add/edit categories and items, including image upload functionality. Then create the UI for investment management in .
-     - What will be achieved with this? This will provide the admin with the necessary tools to populate and manage the application's economy, a core part of the user's recent request.
+     - Where to resume: The agent has just updated . The next step is to modify  to display the active saving goal. After that, implement the savings allocation logic on the backend and frontend.
+     - What will be achieved with this? A fully functional and user-friendly savings goal system that integrates with the dashboard and wallet.
      - Status:  IN PROGRESS
      - Should Test frontend/backend/both after fix? both
-     - Blocked on something: Blocked by P0 Issue 1. The user is unlikely to approve new features until the glaring UI bugs are fixed.
+     - Blocked on something: None
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - **P1: Implement Daily Price Fluctuations:** Create the backend scheduled task or trigger to automatically adjust the prices of stocks and plants daily.
     - **P1: Enhance Gamification:** Implement Daily Login Rewards, Streak Bonuses, and Leaderboards.
-    - **P1: Implement Safety Guardrails:** Add features like spending limits, required savings percentages, and parent approval for large transactions.
+    - **P1: Implement Safety Guardrails:** Add features like spending limits and parent approval for large transactions.
 
     Future Tasks:
     - **P2: Teacher/Parent Collaboration:** Create a communication portal.
@@ -69,106 +63,125 @@ A full-stack application (FastAPI + React) with a functional MVP. It includes mu
     - **P2: Develop a Tutorial System:** Create guided walkthroughs for new users.
 
 **Completed work in this session**
-- **Currency Localization (₹):** Replaced all instances of coins, , and dollar amounts with the Indian Rupee symbol ₹ across all frontend pages (, , , etc.).
-- **Thumbnail Display Fix:** Fixed broken thumbnail images by implementing a  helper to prefix backend URLs and changing CSS  to  to prevent cropping.
-- **Child-Friendly UI Text:** Added descriptive, age-appropriate headers and banners to the Wallet, Investment, Store, Quests, and Learn pages.
-- **Improved Readability:** Increased the base font size of descriptive text on all pages to make it easier for children to read.
-- **Layout Enhancements:**
-    - Redesigned the Store page to use category tabs.
-    - Refined the Wallet page layout, removing excessive white space and adding action buttons to account cards.
-- **Admin Login CORS Fix:** Resolved a critical admin login failure by correcting the CORS configuration in  and  to allow credentials from the frontend origin.
-- **Initial Admin Feature Scaffolding:** Added backend models, API routes, and placeholder frontend files for the new Store and Investment Management features.
+- **UI Bug Fix:** Resolved the critical white box bug where gradient banners were not rendering correctly.
+- **Admin Management UI:** Successfully implemented the frontend for Admin Store and Investment Management, linking them from the main admin page.
+- **Dynamic Content Integration:** Rewrote the child-facing Store and Investment pages to fetch data from the backend APIs instead of using hardcoded sample data.
+- **Store Item Units:** Added a  field (e.g., piece, kg, grams) to store items, including backend model changes and frontend UI in the admin form.
+- **Investment Page Fix:** Corrected multiple bugs on the child's Investment page related to data fetching, API payload mismatches ( vs. ), and portfolio display.
+- **Content Preview:** Added a Preview button for content items in the Admin Content Management view.
+- **Store UI Enhancement:** Replaced static category emojis with dynamic, uploaded category images on the Store page.
+- **Automated Price Fluctuation:** Implemented a daily scheduled job using  to simulate market changes for investments and added a status UI on the admin dashboard.
+- **Localization Fix:** Corrected the AI chatbot (Moneybuddy) and financial tip generator to use Indian Rupees (₹) instead of dollars.
+- **Expanded Content Uploads:** Added support for uploading standalone HTML files and MP4 videos as content types.
+- **Store Purchase Flow Fixes:**
+    - Fixed a bug preventing purchases by pointing the API to the correct  collection.
+    - Added a quantity selector to the purchase dialog.
+    - Removed the Owned state, allowing items to be purchased multiple times.
+    - Redesigned the purchase dialog to be more child-friendly.
+    - Added a My Purchases history view.
+- **Transaction Display Fix:** Corrected the Recent Activity display to show positive amounts for earnings (e.g., quest rewards) and neutral for transfers.
+- **Child Savings Goals:** Implemented the full UI for children to create their own savings goals, including image upload, name, target amount, and deadline.
 
 **Earlier issues found/mentioned but not fixed**
-   - **Issue 1: Gradient banners render as white boxes.**
-     - **Debug checklist:** See All Pending/In progress Issue list for a detailed checklist. The issue is a CSS conflict with the  class.
-     - **Why to solve this issue and what will be achieved with this?** This is a high-visibility UI bug that makes the app appear broken. Fixing it is crucial for user satisfaction.
-     - **Should Test frontend/backend/both after fix:** frontend
-     - **Is recurring issue?** Y
+   - None. All previously identified issues in this session have been resolved.
 
 **Known issue recurrence from previous fork**
-  - None.
+  - **Issue:** Gradient banners rendering as white boxes.
+  - **Recurrence count:** 1
+  - **Status:** RESOLVED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, Pydantic
+- **Backend:** FastAPI, Pydantic, APScheduler
 - **Frontend:** React, React Router, Axios, Tailwind CSS
 - **Database:** MongoDB
 - **Authentication:** Emergent-managed Google Auth, Custom JWT for admin
 - **File Handling:** FastAPI  and .
-- **Debugging:** Resolved a complex CORS issue related to .
+- **Background Jobs:**  for daily automated tasks.
 
 **key DB schema**
-- **content_topics:** {, , , , ...}
-- **content_items:** {, , , , ...}
-- **users:** {, , , , ...}
-- **store_categories:** {, , }
-- **store_items:** {, , , , , , , }
-- **investment_plants:** {, , , , , , }
-- **investment_stocks:** {, , , , , , }
+- **admin_store_items:** {..., : str}
+- **savings_goals:** {..., : str, : datetime}
+- **price_history:** {, , , }
+- **scheduler_logs:** {, , , }
 
 **changes in tech stack**
-- None.
+- **Added:**  library for running scheduled background jobs on the backend.
 
 **All files of reference**
-- : Heavily modified to add Store/Investment models and APIs, and to fix CORS.
-- : Modified to fix CORS configuration.
-- : Created to house the  helper function.
-- **Modified (Numerous UI/UX fixes):** , , , , , , , , , , .
-- **Created:** ,  (placeholder).
+- : Heavily modified to add scheduler, fix purchase logic, add new models/endpoints for savings goals, and support new upload types (HTML, MP4).
+- : Updated with .
+- : Completely rewritten to fetch dynamic data and implement a new purchasing flow.
+- : Rewritten to fetch dynamic data and fix multiple display/API bugs.
+- : Heavily modified to fix transaction display and add the savings goal creation and display feature.
+- : Updated to include a 'unit' dropdown in the item creation form.
+- : Updated to show scheduler status and price change percentages.
+- : Updated to add links to the new management pages.
+- : Updated to add a Preview button and new upload options for HTML and MP4 files.
+- : Added routes for the new admin pages.
+- : Updated to reflect completed tasks and new features.
 
 **Areas that need refactoring**:
--  is now critically oversized (approaching 4000+ lines). It urgently needs to be broken down into a modular structure (e.g., , , ) to remain maintainable.
+-  is now extremely large and complex. It manages all models, API routes, and background scheduling logic in a single file. It urgently needs to be refactored into a modular structure (e.g., , , , ) to ensure maintainability.
 
 **key api endpoints**
-- 
-- 
-- 
-- **New Store Endpoints:** , , 
-- **New Investment Endpoints:** , , 
+- : GET scheduler status.
+- : POST to create a savings goal for a child.
+- : GET child's savings goals.
+- : POST to upload an image for a savings goal.
+- : POST to upload a standalone HTML file.
+- : POST to upload an MP4 video file.
+- : GET to fetch store items for the child view.
+- , : GET to fetch available investments for the child view.
 
 **Critical Info for New Agent**
-- **P0 Blocker:** The user is frustrated by a persistent UI bug where gradient banners appear as white boxes. This must be fixed before any new feature development. The issue stems from a CSS conflict with the  class. The previous agent's attempt to fix it was unsuccessful.
-- **P0 Task:** After fixing the UI bug, continue the implementation of the Admin Store and Investment Management feature. The backend is scaffolded, but the entire frontend UI needs to be built. Follow the user's detailed requirements from message #533.
-- The  file is extremely large. Be cautious when adding new code and consider recommending a refactor after the current high-priority tasks are complete.
+- **Top Priority (P0):** The immediate task is to complete the Savings Goal feature as per the user's latest request. The agent has already started by updating the . You need to continue by:
+    1.  Showing the active goal on the .
+    2.  Implementing the logic for allocating earned/deposited savings to the goal(s).
+    3.  Thoroughly testing the end-to-end flow.
+- **Refactoring Needed:** The  file has grown to an unmanageable size. After completing the current P0 task, strongly recommend and plan the refactoring of the backend into a modular structure.
 
 **documents and test reports created in this job**
 - 
 - 
 - 
-- 
-- 
--  (Updated multiple times)
+-  (Updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-- **#369, #370:** User requested larger font sizes for descriptions and a layout fix on the wallet page. - **Status: Completed**
-- **#394, #395:** User reported random white boxes and requested more font size increases. - **Status: Completed** (Agent identified these were empty states and oversized fonts across the app).
-- **#458, #459:** User pointed out the white blocks again, this time clarifying they appear on the Store, Invest, and Quest pages. - **Status: In Progress (Failed Fix)**
-- **#488:** User confirmed the white blocks are still not removed. - **Status: In Progress**
-- **#530, #531:** User requested a major new feature: admin management for the Store and Investments. - **Status: In Progress**
-- **#533:** User provided detailed specifications for the new admin management feature. - **Status: In Progress**
+1.  **#547:** User requested multiple improvements for the store: quantity selection, removal of Owned state, a better purchase dialog design, and a My Purchases history section. - **Status: Completed**
+2.  **#564:** User reported that they are still unable to set a saving goal. - **Status: In Progress (Backend fix applied)**
+3.  **#574:** User provided detailed feedback on the savings goal flow:
+    - The Set Goal button redirects to Quests incorrectly.
+    - The My Savings Goal section should be moved higher on the Wallet page.
+    - The active savings goal should be visible on the main Dashboard.
+    - Logic is needed to allocate savings to goals. - **Status: In Progress**
 
 **Project Health Check:**
-- **Working:** Core application logic, authentication, content management, and most UI elements. The currency, font sizes, and general layouts have been significantly improved.
-- **Broken:** A critical UI regression where colored gradient banners on multiple pages are rendering as plain white boxes. This is the top priority to fix.
+- **Working:** Core application, all admin management features, automated price simulation, content uploads, and the improved store purchase flow.
+- **Broken:** The savings goal functionality is incomplete and does not fully meet user requirements. The Set Goal button behavior and allocation logic are the main broken pieces.
 - **Mocked:** None.
 
 **3rd Party Integrations**
 - **Emergent-managed Google Auth:** For user authentication.
 - **Claude Sonnet 4.5:** (via ) For AI Chatbot and Financial Tips. Uses the Emergent LLM Key.
+- **APScheduler:** For running daily background jobs on the backend.
 
 **Testing status**
   - Testing agent used after significant changes: YES
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created:
-    -  to 
-  - Known regressions: The gradient banners displaying as white boxes is a major regression that occurred during this session.
+    - 
+    - 
+    - 
+  - Known regressions: None.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
 -   **Users:** Log in via the Google Social Login button.
 
 **What agent forgot to execute**
-- The agent did not forget but failed to successfully resolve the white block UI regression. Despite identifying the root cause (CSS conflict with ) and attempting a fix, the issue persists, as confirmed by the user's latest message and screenshots. This is the most critical pending item.</analysis>
+The agent is currently in the middle of implementing the multi-part request from the user's last message (). The following parts are still pending:
+-   Displaying the active savings goal on the main .
+-   Implementing the backend and frontend logic to allocate funds from the savings account to the active goal(s).</analysis>

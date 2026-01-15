@@ -6,7 +6,7 @@ import subprocess
 import time
 
 class PocketQuestAPITester:
-    def __init__(self, base_url="https://coinquest-23.preview.emergentagent.com"):
+    def __init__(self, base_url="https://cashquest-12.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.session_token = None
