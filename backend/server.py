@@ -1206,6 +1206,62 @@ async def get_purchases(request: Request):
     
     return purchases
 
+@api_router.get("/child/shopping-list")
+async def get_child_shopping_list(request: Request):
+    """Get child's shopping list from parent-assigned chores"""
+    user = await get_current_user(request)
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can access this")
+    
+    # Find active shopping chores for this child
+    shopping_chores = await db.new_quests.find({
+        "child_id": user["user_id"],
+        "is_shopping_chore": True,
+        "is_active": True
+    }, {"_id": 0}).to_list(50)
+    
+    # Extract all shopping items
+    items = []
+    for chore in shopping_chores:
+        for item in chore.get("shopping_item_details", []):
+            items.append({
+                "chore_id": chore["chore_id"],
+                "chore_title": chore["title"],
+                "list_id": item["list_id"],
+                "item_id": item["item_id"],
+                "item_name": item["item_name"],
+                "quantity": item["quantity"],
+                "purchased": item.get("purchased", False)
+            })
+    
+    return items
+
+@api_router.post("/child/shopping-list/{item_id}/mark-purchased")
+async def mark_shopping_item_purchased(item_id: str, request: Request):
+    """Mark a shopping list item as purchased after buying from store"""
+    user = await get_current_user(request)
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can access this")
+    
+    # Find the chore containing this item
+    chore = await db.new_quests.find_one({
+        "child_id": user["user_id"],
+        "is_shopping_chore": True,
+        "is_active": True,
+        "shopping_item_details.item_id": item_id
+    })
+    
+    if not chore:
+        return {"message": "Item not in shopping list"}
+    
+    # Update the item as purchased
+    await db.new_quests.update_one(
+        {"chore_id": chore["chore_id"], "shopping_item_details.item_id": item_id},
+        {"$set": {"shopping_item_details.$.purchased": True}}
+    )
+    
+    return {"message": "Item marked as purchased"}
+
 # ============== INVESTMENT ROUTES ==============
 
 @api_router.get("/investments")
