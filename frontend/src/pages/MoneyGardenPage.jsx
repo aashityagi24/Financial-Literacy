@@ -173,7 +173,10 @@ export default function MoneyGardenPage({ user }) {
   
   const getMarketPrice = (plantId) => {
     const price = farm.market_prices.find(p => p.plant_id === plantId);
-    return price?.current_price || 0;
+    if (price?.current_price) return price.current_price;
+    // Fallback to base_sell_price from seeds if market price not available
+    const seed = farm.seeds.find(s => s.plant_id === plantId);
+    return seed?.base_sell_price || 0;
   };
   
   if (loading) {
