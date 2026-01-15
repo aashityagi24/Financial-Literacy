@@ -67,7 +67,7 @@ export default function ParentShoppingList({ user }) {
       
       setChildren(dashRes.data.children || []);
       setShoppingList(listRes.data || []);
-      setStoreItems(itemsRes.data || []);
+      setStoreItems(allItems);
       setCategories(catRes.data || []);
       
       if (dashRes.data.children?.length > 0) {
