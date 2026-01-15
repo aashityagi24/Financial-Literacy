@@ -5316,6 +5316,14 @@ async def daily_market_simulation():
 @app.on_event("startup")
 async def startup_scheduler():
     """Start the scheduler when the app starts"""
+    # Migrate "giving" accounts to "gifting"
+    result = await db.wallet_accounts.update_many(
+        {"account_type": "giving"},
+        {"$set": {"account_type": "gifting"}}
+    )
+    if result.modified_count > 0:
+        logger.info(f"Migrated {result.modified_count} 'giving' accounts to 'gifting'")
+    
     # Run daily at 6:00 AM UTC (11:30 AM IST)
     scheduler.add_job(
         daily_market_simulation,
