@@ -2153,18 +2153,29 @@ async def get_chore_requests(request: Request):
     """Get pending chore completion requests for parent"""
     user = await require_parent(request)
     requests = await db.chore_requests.find(
-        {"parent_id": user["user_id"], "status": "pending"},
+        {"parent_id": user["user_id"]},
         {"_id": 0}
-    ).to_list(100)
+    ).sort("created_at", -1).to_list(100)
     
     # Enrich with chore and child info
+    enriched = []
     for req in requests:
         chore = await db.new_quests.find_one({"chore_id": req["chore_id"]}, {"_id": 0, "title": 1, "reward_amount": 1})
-        child = await db.users.find_one({"user_id": req["child_id"]}, {"_id": 0, "name": 1})
-        req["chore"] = chore
-        req["child"] = child
+        child = await db.users.find_one({"user_id": req["child_id"]}, {"_id": 0, "name": 1, "picture": 1})
+        enriched.append({
+            "request_id": req["request_id"],
+            "chore_id": req["chore_id"],
+            "child_id": req["child_id"],
+            "child_name": child.get("name", "Unknown") if child else "Unknown",
+            "child_picture": child.get("picture") if child else None,
+            "chore_title": chore.get("title") if chore else "Unknown Chore",
+            "reward_amount": chore.get("reward_amount", 0) if chore else 0,
+            "status": req.get("status", "pending"),
+            "completed_at": req.get("created_at"),
+            "validated_at": req.get("validated_at")
+        })
     
-    return requests
+    return enriched
 
 @api_router.post("/parent/chore-requests/{request_id}/validate")
 async def validate_chore_completion(request_id: str, request: Request):
