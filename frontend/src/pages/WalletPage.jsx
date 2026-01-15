@@ -78,12 +78,14 @@ export default function WalletPage({ user }) {
   
   const fetchWalletData = async () => {
     try {
-      const [walletRes, transRes] = await Promise.all([
+      const [walletRes, transRes, goalsRes] = await Promise.all([
         axios.get(`${API}/wallet`),
-        axios.get(`${API}/wallet/transactions`)
+        axios.get(`${API}/wallet/transactions`),
+        axios.get(`${API}/child/savings-goals`)
       ]);
       setWallet(walletRes.data);
       setTransactions(transRes.data);
+      setSavingsGoals(goalsRes.data || []);
     } catch (error) {
       toast.error('Failed to load wallet');
     } finally {
