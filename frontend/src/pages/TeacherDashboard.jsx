@@ -55,6 +55,14 @@ export default function TeacherDashboard({ user }) {
   const [rewardForm, setRewardForm] = useState({ student_ids: [], amount: 10, reason: '' });
   const [challengeForm, setChallengeForm] = useState({ title: '', description: '', reward_amount: 20 });
   const [announcementForm, setAnnouncementForm] = useState({ title: '', message: '' });
+  const [questForm, setQuestForm] = useState({
+    title: '',
+    description: '',
+    min_grade: 0,
+    max_grade: 5,
+    due_date: '',
+    questions: []
+  });
   
   useEffect(() => {
     if (user?.role !== 'teacher') {
