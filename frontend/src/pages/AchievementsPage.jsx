@@ -41,7 +41,7 @@ export default function AchievementsPage({ user }) {
     investing: '#3D5A80',
     learning: '#FFD23F',
     streak: '#EE6C4D',
-    giving: '#9B5DE5'
+    gifting: '#9B5DE5'
   };
   
   const earnedCount = achievements.filter(a => a.earned).length;
@@ -98,7 +98,7 @@ export default function AchievementsPage({ user }) {
         
         {/* Filter Tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {['all', 'savings', 'investing', 'learning', 'streak', 'giving'].map((cat) => (
+          {['all', 'savings', 'investing', 'learning', 'streak', 'gifting'].map((cat) => (
             <button
               key={cat}
               onClick={() => setFilter(cat)}
@@ -178,7 +178,7 @@ export default function AchievementsPage({ user }) {
             <li>• <strong>Investing badges:</strong> Grow your investments</li>
             <li>• <strong>Learning badges:</strong> Complete educational quests</li>
             <li>• <strong>Streak badges:</strong> Log in every day</li>
-            <li>• <strong>Giving badges:</strong> Donate to your giving jar</li>
+            <li>• <strong>Giving badges:</strong> Donate to your gifting jar</li>
           </ul>
         </div>
       </main>
