@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { 
   Users, ChevronLeft, Plus, Gift, Target, Wallet, 
   Check, Clock, X, ChevronRight, Eye, Calendar, Trash2,
-  School, Megaphone
+  School, Megaphone, Store, LogOut, User
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
