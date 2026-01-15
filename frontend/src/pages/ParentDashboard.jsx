@@ -267,36 +267,76 @@ export default function ParentDashboard({ user }) {
               </div>
             ) : (
               <div className="grid gap-4 mb-6">
-                {dashboard?.children?.map((child, index) => (
-                  <div 
-                    key={child.user_id}
-                    className="card-playful p-5 cursor-pointer hover:scale-[1.01] transition-transform"
-                    style={{ animationDelay: `${index * 0.05}s` }}
-                    onClick={() => fetchChildProgress(child.user_id)}
-                  >
-                    <div className="flex items-center gap-4">
-                      <img 
-                        src={child.picture || 'https://via.placeholder.com/50'} 
-                        alt={child.name}
-                        className="w-14 h-14 rounded-full border-3 border-[#1D3557]"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-bold text-[#1D3557] text-lg">{child.name}</h3>
-                        <div className="flex items-center gap-4 text-sm text-[#3D5A80]">
-                          <span>💰 ₹{child.total_balance?.toFixed(0)}</span>
-                          <span>📚 {child.lessons_completed}/{child.total_lessons}</span>
-                          {child.pending_chores > 0 && (
-                            <span className="bg-[#EE6C4D] text-white px-2 py-0.5 rounded-full text-xs">
-                              {child.pending_chores} chores waiting
-                            </span>
+                {dashboard?.children?.map((child, index) => {
+                  const classroomInfo = childClassrooms[child.user_id];
+                  return (
+                    <div 
+                      key={child.user_id}
+                      className="card-playful p-5"
+                      style={{ animationDelay: `${index * 0.05}s` }}
+                    >
+                      <div 
+                        className="flex items-center gap-4 cursor-pointer hover:opacity-90"
+                        onClick={() => fetchChildProgress(child.user_id)}
+                      >
+                        <img 
+                          src={child.picture || 'https://via.placeholder.com/50'} 
+                          alt={child.name}
+                          className="w-14 h-14 rounded-full border-3 border-[#1D3557]"
+                        />
+                        <div className="flex-1">
+                          <h3 className="font-bold text-[#1D3557] text-lg">{child.name}</h3>
+                          <div className="flex items-center gap-4 text-sm text-[#3D5A80]">
+                            <span>💰 ₹{child.total_balance?.toFixed(0)}</span>
+                            <span>📚 {child.lessons_completed}/{child.total_lessons}</span>
+                            {child.pending_chores > 0 && (
+                              <span className="bg-[#EE6C4D] text-white px-2 py-0.5 rounded-full text-xs">
+                                {child.pending_chores} chores waiting
+                              </span>
+                            )}
+                          </div>
+                          <Progress value={(child.lessons_completed / (child.total_lessons || 1)) * 100} className="h-2 mt-2" />
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-[#3D5A80]" />
+                      </div>
+                      
+                      {/* Child's Classroom Section */}
+                      {classroomInfo?.has_classroom && (
+                        <div className="mt-4 pt-4 border-t border-[#1D3557]/20">
+                          <div className="flex items-center gap-2 mb-2">
+                            <School className="w-4 h-4 text-[#06D6A0]" />
+                            <span className="font-bold text-[#1D3557] text-base">{child.name}'s Classroom</span>
+                          </div>
+                          <div className="bg-[#06D6A0]/10 rounded-xl p-3 border-2 border-[#06D6A0]">
+                            <p className="font-bold text-[#1D3557]">{classroomInfo.classroom?.name}</p>
+                            <p className="text-sm text-[#3D5A80]">Teacher: {classroomInfo.teacher?.name}</p>
+                          </div>
+                          
+                          {/* Announcements */}
+                          {classroomInfo.announcements?.length > 0 && (
+                            <div className="mt-3">
+                              <div className="flex items-center gap-1 mb-2">
+                                <Megaphone className="w-4 h-4 text-[#FFD23F]" />
+                                <span className="text-sm font-medium text-[#3D5A80]">Announcements</span>
+                              </div>
+                              <div className="space-y-2 max-h-32 overflow-y-auto">
+                                {classroomInfo.announcements.slice(0, 2).map((ann) => (
+                                  <div key={ann.announcement_id} className="bg-[#FFD23F]/20 rounded-lg p-2 border border-[#FFD23F]">
+                                    <p className="font-bold text-[#1D3557] text-sm">{ann.title}</p>
+                                    <p className="text-xs text-[#3D5A80]">{ann.message}</p>
+                                    <p className="text-xs text-[#3D5A80]/60 mt-1">
+                                      {new Date(ann.created_at).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           )}
                         </div>
-                        <Progress value={(child.lessons_completed / (child.total_lessons || 1)) * 100} className="h-2 mt-2" />
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-[#3D5A80]" />
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
             
