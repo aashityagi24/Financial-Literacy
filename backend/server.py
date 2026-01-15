@@ -3531,6 +3531,18 @@ async def complete_chore(chore_id: str, request: Request):
         {"$set": {"status": "completed", "completed_at": datetime.now(timezone.utc).isoformat()}}
     )
     
+    # Notify parent that child completed the chore
+    await create_notification(
+        user_id=chore["parent_id"],
+        notification_type="quest_completed",
+        title=f"✅ {user.get('name', 'Your child')} completed a task!",
+        message=f"Task: {chore['title']} - Please review and approve to give the reward of ₹{chore['reward_amount']}",
+        from_user_id=user["user_id"],
+        from_user_name=user.get("name"),
+        related_id=chore_id,
+        amount=chore["reward_amount"]
+    )
+    
     return {"message": "Chore marked as completed, waiting for parent approval"}
 
 @api_router.get("/child/savings-goals")
