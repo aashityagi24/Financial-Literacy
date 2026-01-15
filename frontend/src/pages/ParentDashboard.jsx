@@ -202,6 +202,16 @@ export default function ParentDashboard({ user }) {
     approved: 'bg-[#06D6A0]/20 text-[#06D6A0]'
   };
   
+  const handleLogout = async () => {
+    try {
+      await axios.post(`${API}/auth/logout`);
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      navigate('/');
+    }
+  };
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-[#E0FBFC] flex items-center justify-center">
