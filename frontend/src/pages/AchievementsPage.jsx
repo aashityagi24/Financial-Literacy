@@ -178,7 +178,7 @@ export default function AchievementsPage({ user }) {
             <li>• <strong>Investing badges:</strong> Grow your investments</li>
             <li>• <strong>Learning badges:</strong> Complete educational quests</li>
             <li>• <strong>Streak badges:</strong> Log in every day</li>
-            <li>• <strong>Giving badges:</strong> Donate to your gifting jar</li>
+            <li>• <strong>Gifting badges:</strong> Donate to your gifting jar</li>
           </ul>
         </div>
       </main>
