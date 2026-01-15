@@ -408,16 +408,25 @@ export default function ParentDashboard({ user }) {
                       <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Give Money</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 mt-4">
-                      <Select value={giveMoneyForm.child_id} onValueChange={(v) => setGiveMoneyForm({...giveMoneyForm, child_id: v})}>
-                        <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Select Child" /></SelectTrigger>
-                        <SelectContent>
-                          {dashboard?.children?.map((c) => (
-                            <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input type="number" placeholder="Amount" value={giveMoneyForm.amount} onChange={(e) => setGiveMoneyForm({...giveMoneyForm, amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
-                      <Input placeholder="Reason (optional)" value={giveMoneyForm.reason} onChange={(e) => setGiveMoneyForm({...giveMoneyForm, reason: e.target.value})} className="border-3 border-[#1D3557]" />
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
+                        <Select value={giveMoneyForm.child_id} onValueChange={(v) => setGiveMoneyForm({...giveMoneyForm, child_id: v})}>
+                          <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Choose a child" /></SelectTrigger>
+                          <SelectContent>
+                            {dashboard?.children?.map((c) => (
+                              <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Amount (₹) *</label>
+                        <Input type="number" placeholder="Enter amount in Rupees" value={giveMoneyForm.amount} onChange={(e) => setGiveMoneyForm({...giveMoneyForm, amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Reason (Optional)</label>
+                        <Input placeholder="e.g., Birthday gift, Good grades" value={giveMoneyForm.reason} onChange={(e) => setGiveMoneyForm({...giveMoneyForm, reason: e.target.value})} className="border-3 border-[#1D3557]" />
+                      </div>
                       <button onClick={handleGiveMoney} className="btn-primary w-full py-3">Give Money</button>
                     </div>
                   </DialogContent>
@@ -435,27 +444,43 @@ export default function ParentDashboard({ user }) {
                       <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Create Chore</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 mt-4">
-                      <Select value={choreForm.child_id} onValueChange={(v) => setChoreForm({...choreForm, child_id: v})}>
-                        <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Select Child" /></SelectTrigger>
-                        <SelectContent>
-                          {dashboard?.children?.map((c) => (
-                            <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input placeholder="Chore Title" value={choreForm.title} onChange={(e) => setChoreForm({...choreForm, title: e.target.value})} className="border-3 border-[#1D3557]" />
-                      <Textarea placeholder="Description (optional)" value={choreForm.description} onChange={(e) => setChoreForm({...choreForm, description: e.target.value})} className="border-3 border-[#1D3557]" />
-                      <div className="grid grid-cols-2 gap-3">
-                        <Input type="number" placeholder="Reward ₹" value={choreForm.reward_amount} onChange={(e) => setChoreForm({...choreForm, reward_amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
-                        <Select value={choreForm.frequency} onValueChange={(v) => setChoreForm({...choreForm, frequency: v})}>
-                          <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue /></SelectTrigger>
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
+                        <Select value={choreForm.child_id} onValueChange={(v) => setChoreForm({...choreForm, child_id: v})}>
+                          <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Choose a child" /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="once">One-time</SelectItem>
-                            <SelectItem value="daily">Daily</SelectItem>
-                            <SelectItem value="weekly">Weekly</SelectItem>
+                            {dashboard?.children?.map((c) => (
+                              <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Chore Title *</label>
+                        <Input placeholder="e.g., Clean your room" value={choreForm.title} onChange={(e) => setChoreForm({...choreForm, title: e.target.value})} className="border-3 border-[#1D3557]" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Description (Optional)</label>
+                        <Textarea placeholder="Add more details about the chore" value={choreForm.description} onChange={(e) => setChoreForm({...choreForm, description: e.target.value})} className="border-3 border-[#1D3557]" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-bold text-[#1D3557] mb-1">Reward (₹) *</label>
+                          <Input type="number" placeholder="Amount" value={choreForm.reward_amount} onChange={(e) => setChoreForm({...choreForm, reward_amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1D3557] mb-1">Frequency *</label>
+                          <Select value={choreForm.frequency} onValueChange={(v) => setChoreForm({...choreForm, frequency: v})}>
+                            <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="once">One-time</SelectItem>
+                              <SelectItem value="daily">Daily</SelectItem>
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <p className="text-xs text-[#3D5A80]">Your child will need to complete this chore and request approval. You'll need to validate it before the reward is credited.</p>
                       <button onClick={handleCreateChore} className="btn-primary w-full py-3">Create Chore</button>
                     </div>
                   </DialogContent>
@@ -473,23 +498,32 @@ export default function ParentDashboard({ user }) {
                       <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Set Up Allowance</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 mt-4">
-                      <Select value={allowanceForm.child_id} onValueChange={(v) => setAllowanceForm({...allowanceForm, child_id: v})}>
-                        <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Select Child" /></SelectTrigger>
-                        <SelectContent>
-                          {dashboard?.children?.map((c) => (
-                            <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input type="number" placeholder="Amount" value={allowanceForm.amount} onChange={(e) => setAllowanceForm({...allowanceForm, amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
-                      <Select value={allowanceForm.frequency} onValueChange={(v) => setAllowanceForm({...allowanceForm, frequency: v})}>
-                        <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                          <SelectItem value="biweekly">Bi-weekly</SelectItem>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
+                        <Select value={allowanceForm.child_id} onValueChange={(v) => setAllowanceForm({...allowanceForm, child_id: v})}>
+                          <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Choose a child" /></SelectTrigger>
+                          <SelectContent>
+                            {dashboard?.children?.map((c) => (
+                              <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Allowance Amount (₹) *</label>
+                        <Input type="number" placeholder="Enter amount per period" value={allowanceForm.amount} onChange={(e) => setAllowanceForm({...allowanceForm, amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Frequency *</label>
+                        <Select value={allowanceForm.frequency} onValueChange={(v) => setAllowanceForm({...allowanceForm, frequency: v})}>
+                          <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="biweekly">Bi-weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <button onClick={handleSetAllowance} className="btn-primary w-full py-3">Set Allowance</button>
                     </div>
                   </DialogContent>
