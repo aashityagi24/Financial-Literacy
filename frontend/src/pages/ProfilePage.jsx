@@ -251,6 +251,113 @@ export default function ProfilePage({ user, setUser }) {
           )}
         </div>
         
+        {/* My Connections - Only for Child */}
+        {user?.role === 'child' && (
+          <div className="card-playful p-6 mb-6 animate-bounce-in stagger-1">
+            <h3 className="text-lg font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
+              <Users className="w-5 h-5 inline mr-2" />
+              My Connections
+            </h3>
+            
+            {/* Parents Section */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-base font-medium text-[#3D5A80]">My Parents</p>
+                {parents.length < 2 && (
+                  <button 
+                    onClick={() => setShowAddParent(true)}
+                    className="text-sm text-[#06D6A0] hover:text-[#05b88a] flex items-center gap-1"
+                  >
+                    <UserPlus className="w-4 h-4" /> Add Parent
+                  </button>
+                )}
+              </div>
+              {parents.length === 0 ? (
+                <div className="bg-[#FFD23F]/10 rounded-xl p-4 border-2 border-dashed border-[#FFD23F] text-center">
+                  <p className="text-[#3D5A80] text-sm">No parents linked yet</p>
+                  <button 
+                    onClick={() => setShowAddParent(true)}
+                    className="mt-2 text-sm font-bold text-[#FFD23F] hover:underline"
+                  >
+                    + Add your parent's email
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {parents.map((parent) => (
+                    <div key={parent.user_id} className="flex items-center gap-3 bg-[#E0FBFC] rounded-xl p-3 border-2 border-[#1D3557]">
+                      <img 
+                        src={parent.picture || 'https://via.placeholder.com/40'} 
+                        alt={parent.name}
+                        className="w-10 h-10 rounded-full border-2 border-[#1D3557]"
+                      />
+                      <div>
+                        <p className="font-bold text-[#1D3557]">{parent.name}</p>
+                        <p className="text-xs text-[#3D5A80]">{parent.email}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Classroom Section */}
+            <div className="pt-4 border-t border-[#1D3557]/20">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-base font-medium text-[#3D5A80]">My Classroom</p>
+                {classrooms.length === 0 && (
+                  <button 
+                    onClick={() => setShowJoinClass(true)}
+                    className="text-sm text-[#06D6A0] hover:text-[#05b88a] flex items-center gap-1"
+                  >
+                    <School className="w-4 h-4" /> Join Class
+                  </button>
+                )}
+              </div>
+              {classrooms.length === 0 ? (
+                <div className="bg-[#3D5A80]/10 rounded-xl p-4 border-2 border-dashed border-[#3D5A80] text-center">
+                  <p className="text-[#3D5A80] text-sm">Not in a classroom yet</p>
+                  <button 
+                    onClick={() => setShowJoinClass(true)}
+                    className="mt-2 text-sm font-bold text-[#3D5A80] hover:underline"
+                  >
+                    + Enter invite code to join
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {classrooms.map((classroom) => (
+                    <div key={classroom.classroom_id} className="bg-[#06D6A0]/10 rounded-xl p-3 border-2 border-[#06D6A0]">
+                      <p className="font-bold text-[#1D3557]">{classroom.name}</p>
+                      <p className="text-sm text-[#3D5A80]">Teacher: {classroom.teacher_name}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Announcements */}
+            {announcements.length > 0 && (
+              <div className="pt-4 mt-4 border-t border-[#1D3557]/20">
+                <p className="text-base font-medium text-[#3D5A80] mb-2 flex items-center gap-1">
+                  <Megaphone className="w-4 h-4" /> Announcements
+                </p>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {announcements.slice(0, 3).map((ann) => (
+                    <div key={ann.announcement_id} className="bg-[#FFD23F]/20 rounded-xl p-3 border-2 border-[#FFD23F]">
+                      <p className="font-bold text-[#1D3557] text-sm">{ann.title}</p>
+                      <p className="text-xs text-[#3D5A80] mt-1">{ann.message}</p>
+                      <p className="text-xs text-[#3D5A80]/60 mt-1">
+                        From: {ann.classroom_name} • {new Date(ann.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
         {/* Avatar Section */}
         <div className="card-playful p-6 mb-6 animate-bounce-in stagger-2">
           <h3 className="text-lg font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
