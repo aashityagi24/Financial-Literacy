@@ -333,7 +333,7 @@ export default function MoneyGardenPage({ user }) {
         
         {/* Farm Grid */}
         <div 
-          className="grid gap-4 mb-6"
+          className="grid gap-4 mb-4"
           style={{ gridTemplateColumns: `repeat(${Math.min(gridSize, 4)}, minmax(0, 1fr))` }}
         >
           {sortedPlots.map((plot) => {
@@ -429,6 +429,28 @@ export default function MoneyGardenPage({ user }) {
               </div>
             );
           })}
+        </div>
+        
+        {/* Action Buttons Row - Moved below garden */}
+        <div className="flex flex-wrap gap-3 justify-center mb-6" data-testid="garden-actions">
+          <button
+            onClick={handleWaterAll}
+            className="bg-[#00CED1] hover:bg-[#00B5B8] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 border-2 border-white shadow-lg"
+          >
+            <Droplets className="w-5 h-5" /> Water All Plants
+          </button>
+          <button
+            onClick={() => setShowMarket(true)}
+            className="bg-[#FFD700] hover:bg-[#FFC000] text-[#1D3557] px-6 py-3 rounded-xl font-bold flex items-center gap-2 border-2 border-[#1D3557] shadow-lg"
+          >
+            <ShoppingBag className="w-5 h-5" /> Go to Market
+          </button>
+          <button
+            onClick={handleBuyPlot}
+            className="bg-[#8B4513] hover:bg-[#A0522D] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 border-2 border-[#1D3557] shadow-lg"
+          >
+            <Plus className="w-5 h-5" /> Buy Plot (₹{farm.plot_cost})
+          </button>
         </div>
         
         {/* Inventory Section */}
