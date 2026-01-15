@@ -1726,32 +1726,32 @@ async def submit_quest_answers(quest_id: str, request: Request):
         for question in questions:
             q_id = question["question_id"]
             user_answer = answers.get(q_id)
-        correct_answer = question["correct_answer"]
-        points = question["points"]
-        
-        is_correct = False
-        if question["question_type"] == "multi_select":
-            # Compare lists (order doesn't matter)
-            if isinstance(user_answer, list) and isinstance(correct_answer, list):
-                is_correct = set(user_answer) == set(correct_answer)
-        elif question["question_type"] == "value":
-            # Numeric comparison
-            try:
-                is_correct = float(user_answer) == float(correct_answer)
-            except:
-                is_correct = False
-        else:
-            # MCQ or True/False
-            is_correct = str(user_answer).lower() == str(correct_answer).lower()
-        
-        if is_correct and not has_already_earned:
-            earned += points
-        
-        results.append({
-            "question_id": q_id,
-            "is_correct": is_correct,
-            "points_earned": points if is_correct else 0
-        })
+            correct_answer = question["correct_answer"]
+            points = question.get("points", 0) or 0
+            
+            is_correct = False
+            if question["question_type"] == "multi_select":
+                # Compare lists (order doesn't matter)
+                if isinstance(user_answer, list) and isinstance(correct_answer, list):
+                    is_correct = set(user_answer) == set(correct_answer)
+            elif question["question_type"] == "value":
+                # Numeric comparison
+                try:
+                    is_correct = float(user_answer) == float(correct_answer)
+                except:
+                    is_correct = False
+            else:
+                # MCQ or True/False
+                is_correct = str(user_answer).lower() == str(correct_answer).lower()
+            
+            if is_correct and not has_already_earned:
+                earned += points
+            
+            results.append({
+                "question_id": q_id,
+                "is_correct": is_correct,
+                "points_earned": points if is_correct else 0
+            })
     
     # Update or create completion record
     completion_doc = {
