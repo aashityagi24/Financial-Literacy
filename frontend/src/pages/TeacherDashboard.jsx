@@ -224,6 +224,26 @@ export default function TeacherDashboard({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
+        {/* Learn Module Link - View what children see */}
+        <Link 
+          to="/learn" 
+          className="mb-6 block bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-xl p-5 hover:shadow-lg transition-shadow border-3 border-[#1D3557]"
+          data-testid="teacher-learn-link"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white rounded-xl border-3 border-[#1D3557] flex items-center justify-center">
+                <BookOpen className="w-6 h-6 text-[#1D3557]" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-[#1D3557]">Learning Content</h3>
+                <p className="text-[#1D3557]/80 text-sm">View lessons and content that children see</p>
+              </div>
+            </div>
+            <ChevronRight className="w-6 h-6 text-[#1D3557]" />
+          </div>
+        </Link>
+        
         {!selectedClassroom ? (
           <>
             {/* Overview */}
