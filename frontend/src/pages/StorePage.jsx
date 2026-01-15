@@ -3,13 +3,21 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
-import { Store, ChevronLeft, ShoppingBag, Package, Minus, Plus, History, Wallet } from 'lucide-react';
+import { Store, ChevronLeft, ShoppingBag, Package, Minus, Plus, History, Wallet, ArrowLeftRight } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function StorePage({ user }) {
   const [categories, setCategories] = useState([]);
@@ -22,6 +30,8 @@ export default function StorePage({ user }) {
   const [purchasing, setPurchasing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showPurchases, setShowPurchases] = useState(false);
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [transferData, setTransferData] = useState({ from_account: 'savings', amount: '' });
   
   useEffect(() => {
     fetchStoreData();
