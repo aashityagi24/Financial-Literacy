@@ -644,7 +644,17 @@ export default function TeacherDashboard({ user }) {
                                 />
                                 
                                 <div className="grid grid-cols-2 gap-2 mb-2">
-                                  <Select value={q.question_type} onValueChange={(v) => updateQuestion(qIndex, 'question_type', v)}>
+                                  <Select value={q.question_type} onValueChange={(v) => {
+                                    updateQuestion(qIndex, 'question_type', v);
+                                    // Reset correct_answer when type changes
+                                    if (v === 'true_false') {
+                                      updateQuestion(qIndex, 'correct_answer', '');
+                                    } else if (v === 'multi_select') {
+                                      updateQuestion(qIndex, 'correct_answer', []);
+                                    } else {
+                                      updateQuestion(qIndex, 'correct_answer', '');
+                                    }
+                                  }}>
                                     <SelectTrigger className="border-2 border-[#1D3557]/30">
                                       <SelectValue />
                                     </SelectTrigger>
@@ -665,28 +675,111 @@ export default function TeacherDashboard({ user }) {
                                   />
                                 </div>
                                 
-                                {(q.question_type === 'mcq' || q.question_type === 'multi_select') && (
-                                  <div className="space-y-1 mb-2">
-                                    {q.options.map((opt, oIndex) => (
-                                      <Input 
-                                        key={oIndex}
-                                        placeholder={`Option ${oIndex + 1}`}
-                                        value={opt}
-                                        onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
-                                        className="border-2 border-[#1D3557]/30 text-sm"
-                                      />
+                                {/* MCQ Options with Radio for correct answer */}
+                                {q.question_type === 'mcq' && (
+                                  <div className="space-y-2">
+                                    <label className="text-xs text-[#3D5A80] font-medium">Options (select correct answer):</label>
+                                    {['A', 'B', 'C', 'D'].map((label, oIndex) => (
+                                      <div key={label} className="flex items-center gap-2">
+                                        <input
+                                          type="radio"
+                                          name={`mcq_teacher_${q.question_id}`}
+                                          checked={q.correct_answer === label}
+                                          onChange={() => updateQuestion(qIndex, 'correct_answer', label)}
+                                          className="w-4 h-4 text-[#06D6A0]"
+                                        />
+                                        <span className="font-bold text-[#1D3557] w-6">{label}.</span>
+                                        <Input
+                                          value={q.options?.[oIndex] || ''}
+                                          onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
+                                          placeholder={`Option ${label}`}
+                                          className="flex-1 border-2 border-[#1D3557]/30"
+                                        />
+                                      </div>
                                     ))}
                                   </div>
                                 )}
                                 
-                                <Input 
-                                  placeholder={q.question_type === 'multi_select' ? 'Correct answers (comma-separated)' : q.question_type === 'true_false' ? 'True or False' : 'Correct answer'}
-                                  value={Array.isArray(q.correct_answer) ? q.correct_answer.join(', ') : q.correct_answer}
-                                  onChange={(e) => updateQuestion(qIndex, 'correct_answer', 
-                                    q.question_type === 'multi_select' ? e.target.value.split(',').map(s => s.trim()) : e.target.value
-                                  )}
-                                  className="border-2 border-[#1D3557]/30"
-                                />
+                                {/* Multi-Select Options with Checkboxes */}
+                                {q.question_type === 'multi_select' && (
+                                  <div className="space-y-2">
+                                    <label className="text-xs text-[#3D5A80] font-medium">Options (select all correct answers):</label>
+                                    {['A', 'B', 'C', 'D'].map((label, oIndex) => (
+                                      <div key={label} className="flex items-center gap-2">
+                                        <input
+                                          type="checkbox"
+                                          checked={Array.isArray(q.correct_answer) && q.correct_answer.includes(label)}
+                                          onChange={(e) => {
+                                            const current = Array.isArray(q.correct_answer) ? q.correct_answer : [];
+                                            if (e.target.checked) {
+                                              updateQuestion(qIndex, 'correct_answer', [...current, label].sort());
+                                            } else {
+                                              updateQuestion(qIndex, 'correct_answer', current.filter(a => a !== label));
+                                            }
+                                          }}
+                                          className="w-4 h-4 text-[#06D6A0]"
+                                        />
+                                        <span className="font-bold text-[#1D3557] w-6">{label}.</span>
+                                        <Input
+                                          value={q.options?.[oIndex] || ''}
+                                          onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
+                                          placeholder={`Option ${label}`}
+                                          className="flex-1 border-2 border-[#1D3557]/30"
+                                        />
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                
+                                {/* True/False Radio Buttons */}
+                                {q.question_type === 'true_false' && (
+                                  <div className="space-y-2">
+                                    <label className="text-xs text-[#3D5A80] font-medium">Select correct answer:</label>
+                                    <div className="flex gap-6">
+                                      <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                          type="radio"
+                                          name={`tf_teacher_${q.question_id}`}
+                                          checked={q.correct_answer === 'True'}
+                                          onChange={() => updateQuestion(qIndex, 'correct_answer', 'True')}
+                                          className="w-5 h-5 text-green-600"
+                                        />
+                                        <span className="font-bold text-green-600">True</span>
+                                      </label>
+                                      <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                          type="radio"
+                                          name={`tf_teacher_${q.question_id}`}
+                                          checked={q.correct_answer === 'False'}
+                                          onChange={() => updateQuestion(qIndex, 'correct_answer', 'False')}
+                                          className="w-5 h-5 text-red-600"
+                                        />
+                                        <span className="font-bold text-red-600">False</span>
+                                      </label>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Value Entry - Number with 2 decimal places */}
+                                {q.question_type === 'value' && (
+                                  <div>
+                                    <label className="text-xs text-[#3D5A80] font-medium">Correct Answer (number):</label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      value={q.correct_answer || ''}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        // Allow up to 2 decimal places
+                                        if (val === '' || /^\d*\.?\d{0,2}$/.test(val)) {
+                                          updateQuestion(qIndex, 'correct_answer', val);
+                                        }
+                                      }}
+                                      placeholder="Enter the correct number"
+                                      className="mt-1 border-2 border-[#1D3557]/30"
+                                    />
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>

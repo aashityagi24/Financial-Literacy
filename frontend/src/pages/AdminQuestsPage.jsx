@@ -541,14 +541,6 @@ export default function AdminQuestsPage({ user }) {
                         </div>
                       ))}
                     </div>
-                                )}
-                                placeholder={q.question_type === 'true_false' ? 'True or False' : 'Enter correct answer'}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                   
                   <button
