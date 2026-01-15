@@ -2708,7 +2708,7 @@ async def gift_money_to_classmate(gift: GiftMoneyRequest, request: Request):
     # Check sender's giving account balance
     giving_account = await db.wallet_accounts.find_one({
         "user_id": user["user_id"],
-        "account_type": "giving"
+        "account_type": "gifting"
     })
     
     if not giving_account or giving_account.get("balance", 0) < gift.amount:
@@ -2721,7 +2721,7 @@ async def gift_money_to_classmate(gift: GiftMoneyRequest, request: Request):
     
     # Deduct from sender's giving account
     await db.wallet_accounts.update_one(
-        {"user_id": user["user_id"], "account_type": "giving"},
+        {"user_id": user["user_id"], "account_type": "gifting"},
         {"$inc": {"balance": -gift.amount}}
     )
     
@@ -2738,7 +2738,7 @@ async def gift_money_to_classmate(gift: GiftMoneyRequest, request: Request):
         "type": "gift_sent",
         "amount": -gift.amount,
         "description": f"Gift to {recipient.get('name', 'classmate')}",
-        "account_type": "giving",
+        "account_type": "gifting",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
@@ -2852,7 +2852,7 @@ async def respond_to_gift_request(request_id: str, request: Request):
         # Check balance
         giving_account = await db.wallet_accounts.find_one({
             "user_id": user["user_id"],
-            "account_type": "giving"
+            "account_type": "gifting"
         })
         
         if not giving_account or giving_account.get("balance", 0) < gift_request["amount"]:
@@ -2860,7 +2860,7 @@ async def respond_to_gift_request(request_id: str, request: Request):
         
         # Transfer money
         await db.wallet_accounts.update_one(
-            {"user_id": user["user_id"], "account_type": "giving"},
+            {"user_id": user["user_id"], "account_type": "gifting"},
             {"$inc": {"balance": -gift_request["amount"]}}
         )
         
@@ -2876,7 +2876,7 @@ async def respond_to_gift_request(request_id: str, request: Request):
             "type": "gift_sent",
             "amount": -gift_request["amount"],
             "description": f"Gift to {gift_request.get('requester_name', 'classmate')}",
-            "account_type": "giving",
+            "account_type": "gifting",
             "created_at": datetime.now(timezone.utc).isoformat()
         })
         
@@ -4386,7 +4386,7 @@ async def seed_data():
         {"achievement_id": "ach_004", "name": "Week Warrior", "description": "Login 7 days in a row", "icon": "🔥", "category": "streak", "requirement_value": 7, "points": 30},
         {"achievement_id": "ach_005", "name": "Month Master", "description": "Login 30 days in a row", "icon": "⭐", "category": "streak", "requirement_value": 30, "points": 100},
         {"achievement_id": "ach_006", "name": "Quest Champion", "description": "Complete 5 quests", "icon": "🏆", "category": "learning", "requirement_value": 5, "points": 40},
-        {"achievement_id": "ach_007", "name": "Generous Heart", "description": "Give 50 coins to charity", "icon": "❤️", "category": "giving", "requirement_value": 50, "points": 35},
+        {"achievement_id": "ach_007", "name": "Generous Heart", "description": "Give 50 coins to charity", "icon": "❤️", "category": "gifting", "requirement_value": 50, "points": 35},
         {"achievement_id": "ach_008", "name": "Money Master", "description": "Reach a total balance of 500", "icon": "🎓", "category": "savings", "requirement_value": 500, "points": 75},
     ]
     
