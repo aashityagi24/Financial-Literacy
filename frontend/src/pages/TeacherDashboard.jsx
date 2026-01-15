@@ -41,6 +41,7 @@ export default function TeacherDashboard({ user }) {
   const [loading, setLoading] = useState(true);
   const [teacherQuests, setTeacherQuests] = useState([]);
   const [activeTab, setActiveTab] = useState('classroom');
+  const [editingQuest, setEditingQuest] = useState(null);
   
   // Forms
   const [showCreateClass, setShowCreateClass] = useState(false);
@@ -61,6 +62,33 @@ export default function TeacherDashboard({ user }) {
     due_date: '',
     questions: []
   });
+  
+  const resetQuestForm = () => {
+    setQuestForm({
+      title: '',
+      description: '',
+      image_url: '',
+      pdf_url: '',
+      reward_amount: 0,
+      due_date: '',
+      questions: []
+    });
+    setEditingQuest(null);
+  };
+  
+  const openEditQuest = (quest) => {
+    setEditingQuest(quest);
+    setQuestForm({
+      title: quest.title,
+      description: quest.description || '',
+      image_url: quest.image_url || '',
+      pdf_url: quest.pdf_url || '',
+      reward_amount: quest.reward_amount || 0,
+      due_date: quest.due_date,
+      questions: quest.questions || []
+    });
+    setShowCreateQuest(true);
+  };
   
   useEffect(() => {
     if (user?.role !== 'teacher') {
