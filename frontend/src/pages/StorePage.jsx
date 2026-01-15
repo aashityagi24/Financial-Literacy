@@ -197,30 +197,37 @@ export default function StorePage({ user }) {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to="/dashboard" className="p-2 rounded-xl border-2 border-[#1D3557] hover:bg-[#E0FBFC]">
+              <Link to={getBackLink()} className="p-2 rounded-xl border-2 border-[#1D3557] hover:bg-[#E0FBFC]">
                 <ChevronLeft className="w-5 h-5 text-[#1D3557]" />
               </Link>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#EE6C4D] rounded-xl border-3 border-[#1D3557] flex items-center justify-center">
                   <Store className="w-6 h-6 text-white" />
                 </div>
-                <h1 className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Store</h1>
+                <div>
+                  <h1 className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Store</h1>
+                  {isParentViewMode && (
+                    <p className="text-sm text-[#3D5A80]">View items for shopping list chores</p>
+                  )}
+                </div>
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowPurchases(true)}
-                className="flex items-center gap-2 px-3 py-2 bg-[#E0FBFC] rounded-xl border-2 border-[#1D3557] hover:bg-[#98C1D9]"
-              >
-                <ShoppingBag className="w-5 h-5 text-[#1D3557]" />
-                <span className="font-bold text-[#1D3557]">{purchases.length}</span>
-              </button>
-              <div className="flex items-center gap-2 bg-[#FFD23F] px-4 py-2 rounded-xl border-2 border-[#1D3557]">
-                <Wallet className="w-5 h-5 text-[#1D3557]" />
-                <span className="font-bold text-[#1D3557]">₹{spendingBalance.toFixed(0)}</span>
+            {!isParentViewMode && (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowPurchases(true)}
+                  className="flex items-center gap-2 px-3 py-2 bg-[#E0FBFC] rounded-xl border-2 border-[#1D3557] hover:bg-[#98C1D9]"
+                >
+                  <ShoppingBag className="w-5 h-5 text-[#1D3557]" />
+                  <span className="font-bold text-[#1D3557]">{purchases.length}</span>
+                </button>
+                <div className="flex items-center gap-2 bg-[#FFD23F] px-4 py-2 rounded-xl border-2 border-[#1D3557]">
+                  <Wallet className="w-5 h-5 text-[#1D3557]" />
+                  <span className="font-bold text-[#1D3557]">₹{spendingBalance.toFixed(0)}</span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </header>
