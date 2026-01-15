@@ -899,12 +899,21 @@ export default function TeacherDashboard({ user }) {
                                 <span>Due: {quest.due_date}</span>
                               </div>
                             </div>
-                            <button 
-                              onClick={() => handleDeleteQuest(quest.quest_id)}
-                              className="p-2 hover:bg-[#EE6C4D]/20 rounded-lg text-[#EE6C4D]"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button 
+                                onClick={() => openEditQuest(quest)}
+                                className="p-2 hover:bg-[#3D5A80]/20 rounded-lg text-[#3D5A80]"
+                                data-testid={`edit-quest-${quest.quest_id}`}
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteQuest(quest.quest_id)}
+                                className="p-2 hover:bg-[#EE6C4D]/20 rounded-lg text-[#EE6C4D]"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
