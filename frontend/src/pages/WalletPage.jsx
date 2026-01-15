@@ -350,6 +350,186 @@ export default function WalletPage({ user }) {
           })}
         </div>
         
+        {/* Savings Goals Section */}
+        <div className="card-playful p-6 mb-8 animate-bounce-in stagger-2">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-[#06D6A0]" />
+              <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>My Savings Goals</h2>
+            </div>
+            <Dialog open={goalOpen} onOpenChange={setGoalOpen}>
+              <DialogTrigger asChild>
+                <button className="btn-primary px-4 py-2 text-sm flex items-center gap-2">
+                  <Plus className="w-4 h-4" /> New Goal
+                </button>
+              </DialogTrigger>
+              <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                    Create Savings Goal 🎯
+                  </DialogTitle>
+                </DialogHeader>
+                
+                <div className="space-y-4 mt-4">
+                  {/* Goal Image */}
+                  <div>
+                    <label className="text-sm font-bold text-[#1D3557] mb-2 block">Picture of what you&apos;re saving for</label>
+                    <div className="flex items-center gap-4">
+                      {goalForm.image_url && (
+                        <img 
+                          src={getAssetUrl(goalForm.image_url)} 
+                          alt="Goal" 
+                          className="w-20 h-20 rounded-xl border-3 border-[#1D3557] object-cover"
+                        />
+                      )}
+                      <input 
+                        type="file" 
+                        id="goal-image" 
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={(e) => e.target.files[0] && uploadGoalImage(e.target.files[0])}
+                      />
+                      <button
+                        onClick={() => document.getElementById('goal-image')?.click()}
+                        disabled={uploadingImage}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#E0FBFC] text-[#1D3557] rounded-xl border-2 border-[#1D3557] hover:bg-[#98C1D9]"
+                      >
+                        <Upload className="w-4 h-4" />
+                        {uploadingImage ? 'Uploading...' : 'Upload Image'}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Goal Name */}
+                  <div>
+                    <label className="text-sm font-bold text-[#1D3557] mb-2 block">What are you saving for? *</label>
+                    <Input 
+                      value={goalForm.title}
+                      onChange={(e) => setGoalForm({...goalForm, title: e.target.value})}
+                      placeholder="e.g., New bicycle, Video game, Trip to zoo"
+                      className="border-3 border-[#1D3557] rounded-xl"
+                    />
+                  </div>
+                  
+                  {/* Description */}
+                  <div>
+                    <label className="text-sm font-bold text-[#1D3557] mb-2 block">Why do you want it?</label>
+                    <Textarea 
+                      value={goalForm.description}
+                      onChange={(e) => setGoalForm({...goalForm, description: e.target.value})}
+                      placeholder="Tell us why this is important to you!"
+                      rows={2}
+                      className="border-3 border-[#1D3557] rounded-xl"
+                    />
+                  </div>
+                  
+                  {/* Target Amount */}
+                  <div>
+                    <label className="text-sm font-bold text-[#1D3557] mb-2 block">How much does it cost? (₹) *</label>
+                    <Input 
+                      type="number"
+                      min="1"
+                      value={goalForm.target_amount}
+                      onChange={(e) => setGoalForm({...goalForm, target_amount: e.target.value})}
+                      placeholder="e.g., 500"
+                      className="border-3 border-[#1D3557] rounded-xl"
+                    />
+                  </div>
+                  
+                  {/* Deadline */}
+                  <div>
+                    <label className="text-sm font-bold text-[#1D3557] mb-2 block">
+                      <Calendar className="w-4 h-4 inline mr-1" /> When do you want it by?
+                    </label>
+                    <Input 
+                      type="date"
+                      value={goalForm.deadline}
+                      onChange={(e) => setGoalForm({...goalForm, deadline: e.target.value})}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="border-3 border-[#1D3557] rounded-xl"
+                    />
+                  </div>
+                  
+                  <button
+                    onClick={handleCreateGoal}
+                    className="btn-primary w-full py-3 text-lg"
+                  >
+                    Create My Goal! 🎯
+                  </button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          
+          {savingsGoals.length === 0 ? (
+            <div className="text-center py-6">
+              <p className="text-[#3D5A80] mb-2">No savings goals yet!</p>
+              <p className="text-sm text-[#3D5A80]/70">Click &quot;New Goal&quot; to start saving for something special! 🌟</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {savingsGoals.map((goal) => {
+                const progress = Math.min((goal.current_amount / goal.target_amount) * 100, 100);
+                const remaining = goal.target_amount - goal.current_amount;
+                
+                return (
+                  <div 
+                    key={goal.goal_id}
+                    className={`p-4 rounded-2xl border-3 border-[#1D3557] ${goal.completed ? 'bg-[#06D6A0]/20' : 'bg-[#FFD23F]/20'}`}
+                  >
+                    <div className="flex gap-4">
+                      {goal.image_url ? (
+                        <img 
+                          src={getAssetUrl(goal.image_url)} 
+                          alt={goal.title}
+                          className="w-16 h-16 rounded-xl border-2 border-[#1D3557] object-cover"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-xl border-2 border-[#1D3557] bg-[#E0FBFC] flex items-center justify-center text-3xl">
+                          🎯
+                        </div>
+                      )}
+                      
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-bold text-[#1D3557]">{goal.title}</h3>
+                            {goal.description && (
+                              <p className="text-xs text-[#3D5A80] mt-0.5">{goal.description}</p>
+                            )}
+                          </div>
+                          {goal.completed && (
+                            <span className="bg-[#06D6A0] text-white text-xs px-2 py-1 rounded-full font-bold">
+                              ✓ Done!
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="mt-2">
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="text-[#3D5A80]">₹{goal.current_amount?.toFixed(0)} saved</span>
+                            <span className="font-bold text-[#1D3557]">₹{goal.target_amount?.toFixed(0)} goal</span>
+                          </div>
+                          <Progress value={progress} className="h-3" />
+                          {!goal.completed && remaining > 0 && (
+                            <p className="text-xs text-[#3D5A80] mt-1">₹{remaining.toFixed(0)} more to go!</p>
+                          )}
+                          {goal.deadline && (
+                            <p className="text-xs text-[#EE6C4D] mt-1">
+                              <Calendar className="w-3 h-3 inline mr-1" />
+                              Target: {new Date(goal.deadline).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        
         {/* Transaction History */}
         <div className="card-playful p-6 animate-bounce-in stagger-3">
           <div className="flex items-center gap-2 mb-4">
