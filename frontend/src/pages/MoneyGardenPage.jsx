@@ -49,6 +49,7 @@ export default function MoneyGardenPage({ user }) {
   const [wallet, setWallet] = useState(null);
   const [showSeedDialog, setShowSeedDialog] = useState(false);
   const [selectedPlot, setSelectedPlot] = useState(null);
+  const [selectedSeed, setSelectedSeed] = useState(null); // For expanded seed details
   const [showMarket, setShowMarket] = useState(false);
   const [sellQuantity, setSellQuantity] = useState({});
   const [showTransfer, setShowTransfer] = useState(false);
