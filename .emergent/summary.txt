@@ -10,45 +10,52 @@
 -   **Automated Price Fluctuation:** An automated system for daily price fluctuations to simulate market changes.
 -   **Child Savings Goals:** Children should be able to set their own savings goals with a name, image, target amount, and deadline.
 -   **Store Experience:** The store should allow purchasing multiple quantities of an item and show a history of purchased items.
+-   **User Connections:** A seamless system for Parents, Children, and Teachers to connect with each other. Parents can manage multiple children, and children can have multiple parents.
+-   **Notifications & Social Features:** A notification center for important events (rewards, announcements, quests) and a My Classroom section for children to see classmates' progress and interact.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack FastAPI and React app with a functional MVP. It includes multi-role authentication and dashboards. The admin has full CRUD capabilities for content (including PDF, HTML, and MP4 uploads), store items (with categories and units), and investment instruments. A daily automated scheduler () adjusts investment prices and logs the history. Child-facing pages for the store and investments now dynamically display this admin-created content. The wallet page includes a Recent Activity section with corrected transaction displays and a UI for creating detailed savings goals. The store purchase flow has been improved with a quantity selector and a child-friendly purchase confirmation dialog.
+The application is a functional full-stack MVP. Core features include multi-role authentication, admin dashboards for content/store/investment management, and child-facing pages for the store, investments, and wallet. A scheduler automates investment price changes. A comprehensive user connection system (Parent-Child-Teacher) is in place, allowing users to link their accounts. This is supported by a notification system that alerts users to key events like teacher announcements, quest assignments, and rewards. Children have a My Classroom view to see classmates' progress and a separate page for full details. The UI has undergone several refinements, including bug fixes, icon updates, font size adjustments, and layout redesigns on the dashboard. A critical bug with the giving jar has been fixed by renaming it to gifting system-wide and implementing an on-startup database migration. Inline money transfers have been added to the store and gifting flows for better usability.
 
 **Last working item**:
-    - Last item agent was working: The agent was addressing a multi-part user request to fix and enhance the Savings Goal functionality. The user reported that the Set Goal button was redirecting incorrectly and requested several UI/UX and logic changes. The agent began by overwriting  to implement the requested layout changes and fix the button's behavior.
+    - Last item agent was working: The user requested to declutter the Wallet page by moving all savings-related functionality to a new, dedicated page. The agent started this refactoring by creating the new file . The next step is to move the logic and UI from  to this new page.
     - Status: IN PROGRESS
     - Agent Testing Done: N
     - Which testing method agent to use? both
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: Complete the Savings Goal feature enhancement. (PRIORITY: P0)
+  - Issue 1: Gifting jar is not visible for some users. (PRIORITY: P0)
 
   Issues Detail:
   - Issue 1: 
-     - Attempted fixes: The agent has already overwritten  to address some of the user's requests. The role-based restriction on creating goals in the backend was also removed.
-     - Next debug checklist:
-        1.  **Dashboard Integration:** Modify  to fetch and prominently display the child's active savings goal.
-        2.  **Allocation Logic:** When a child's savings account balance increases, implement logic to allocate those funds towards their goal(s). If multiple goals exist, create a UI modal asking the child which goal to contribute to and by how much. This will likely involve changes in  and .
-        3.  **Final Verification:** Test the entire flow: create a goal, see it on the dashboard, earn money, and verify the allocation logic works as expected.
-     - Why fix this issue and what will be achieved with the fix? This is a core gamification feature that helps keep the child engaged and focused on their financial goals. Completing this will fulfill a key user requirement.
+     - Attempted fixes: The agent implemented a comprehensive fix by renaming giving to gifting across the entire codebase (backend and frontend) and added a one-time startup migration script in  to update existing database records. While this should have resolved the issue, the last user screenshot indicated the Gifting jar was still missing. The problem is likely that wallet accounts are created on the first login, and existing test users may not have had their accounts properly updated or re-initialized.
+     - Next debug checklist: with file & method reference
+        1.  Verify the startup migration in  () is correctly identifying and updating all relevant documents in the  collection.
+        2.  Check the user creation logic in  (part of the Google login callback) to ensure the initial four wallet accounts (, , , ) are created correctly for new users.
+        3.  Manually inspect the database for a test child user to see if the gifting account exists after login.
+        4.  Confirm the frontend  is correctly fetching and rendering all four account types.
+     - Why fix this issue and what will be achieved with the fix? The gifting feature is a core social interaction mechanic. Fixing this ensures users can send and receive monetary gifts, which is crucial for engagement.
      - Status:  IN PROGRESS
-     - Is recurring issue? N
+     - Is recurring issue? Y
      - Should Test frontend/backend/both after fix? both
      - Blocked on other issue: None
 
 **In progress Task List**:
-  - Task 1: Complete the Savings Goal feature enhancement (PRIORITY: P0)
+  - Task 1: Create a dedicated Savings Goals page. (PRIORITY: P0)
 
  Task Detail:
   - Task 1: 
-     - Where to resume: The agent has just updated . The next step is to modify  to display the active saving goal. After that, implement the savings allocation logic on the backend and frontend.
-     - What will be achieved with this? A fully functional and user-friendly savings goal system that integrates with the dashboard and wallet.
+     - Where to resume: The file  has been created. The next steps are:
+        1.  Move all UI and logic related to savings goals (creating new goals, viewing active goals) from  into .
+        2.  Modify  to remove the savings goals section, leaving only the wallet balance, the four money jars, the transfer functionality, and the recent activity list.
+        3.  Update the navigation: Clicking the Savings jar card on  and the My Savings Goal card on  should now navigate the user to the new  page.
+        4.  Add a new route for  in .
+     - What will be achieved with this? This will declutter the main Wallet page, improving user experience and creating a focused space for children to manage their savings goals.
      - Status:  IN PROGRESS
      - Should Test frontend/backend/both after fix? both
-     - Blocked on something: None
+     - Blocked on something: The Gifting Jar visibility issue should be resolved first, as it also pertains to the Wallet page's functionality.
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
@@ -56,39 +63,39 @@ The application is a full-stack FastAPI and React app with a functional MVP. It 
     - **P1: Implement Safety Guardrails:** Add features like spending limits and parent approval for large transactions.
 
     Future Tasks:
-    - **P2: Teacher/Parent Collaboration:** Create a communication portal.
+    - **P2: Teacher/Parent Collaboration:** Create a dedicated communication portal.
     - **P2: Collaborative & Seasonal Events:** Introduce classroom-wide goals and themed challenges.
     - **P2: Avatar Customization.**
     - **P2: Email notifications.**
     - **P2: Develop a Tutorial System:** Create guided walkthroughs for new users.
+    - **P2: Refactor Backend:** Split the monolithic  into a modular structure (e.g., , , ) for better maintainability.
 
 **Completed work in this session**
-- **UI Bug Fix:** Resolved the critical white box bug where gradient banners were not rendering correctly.
-- **Admin Management UI:** Successfully implemented the frontend for Admin Store and Investment Management, linking them from the main admin page.
-- **Dynamic Content Integration:** Rewrote the child-facing Store and Investment pages to fetch data from the backend APIs instead of using hardcoded sample data.
-- **Store Item Units:** Added a  field (e.g., piece, kg, grams) to store items, including backend model changes and frontend UI in the admin form.
-- **Investment Page Fix:** Corrected multiple bugs on the child's Investment page related to data fetching, API payload mismatches ( vs. ), and portfolio display.
-- **Content Preview:** Added a Preview button for content items in the Admin Content Management view.
-- **Store UI Enhancement:** Replaced static category emojis with dynamic, uploaded category images on the Store page.
-- **Automated Price Fluctuation:** Implemented a daily scheduled job using  to simulate market changes for investments and added a status UI on the admin dashboard.
-- **Localization Fix:** Corrected the AI chatbot (Moneybuddy) and financial tip generator to use Indian Rupees (₹) instead of dollars.
-- **Expanded Content Uploads:** Added support for uploading standalone HTML files and MP4 videos as content types.
-- **Store Purchase Flow Fixes:**
-    - Fixed a bug preventing purchases by pointing the API to the correct  collection.
-    - Added a quantity selector to the purchase dialog.
-    - Removed the Owned state, allowing items to be purchased multiple times.
-    - Redesigned the purchase dialog to be more child-friendly.
-    - Added a My Purchases history view.
-- **Transaction Display Fix:** Corrected the Recent Activity display to show positive amounts for earnings (e.g., quest rewards) and neutral for transfers.
-- **Child Savings Goals:** Implemented the full UI for children to create their own savings goals, including image upload, name, target amount, and deadline.
+- **Savings Goal Feature:** Completed the savings goal functionality by integrating it into the Dashboard and implementing the contribution logic.
+- **User Connection System:** Implemented a full connection system allowing children, parents, and teachers to link accounts via email. Parents can add multiple children, and children can add multiple parents.
+- **Notification System:** Created a backend notification system and a frontend  component to alert users about teacher announcements, rewards, new chores, and completed chores.
+- **My Classroom Feature:** Implemented a dashboard section and a dedicated page () where children can see their classmates' progress (balance, lessons completed, goals) and send/request gifts.
+- **Dashboard Redesign:**
+    - Reorganized the layout into three compact, side-by-side cards: My Money Jars, My Savings Goal, and My Classroom.
+    - The My Savings Goal card now shows up to two goals; a link navigates to the wallet page for more.
+    - The My Classroom card shows up to five classmates; a link navigates to the full  page.
+- **UI/UX Enhancements:**
+    - Replaced the dollar-sign emoji (💰) with a styled Rupee symbol (₹) and wallet/coin icons across the app.
+    - Increased font sizes on the  and  for better readability based on user feedback.
+    - Removed a redundant welcome banner from the .
+    - Changed the My Purchases icon from a cart to a shopping bag for better semantics.
+- **Wallet Functionality Fixes:**
+    - **Gifting Jar Fix:** Renamed the giving jar to gifting across the entire application (backend models, API endpoints, frontend components) and added a database migration script to update existing user accounts on startup.
+    - **Inline Transfers:** Added modals to the Store and Gifting flows, allowing users to transfer money between jars directly without navigating back to the Wallet page if they have insufficient funds.
+    - **Transfer Bug Fix:** Fixed a bug preventing transfers by adding the required  to the API call.
 
 **Earlier issues found/mentioned but not fixed**
-   - None. All previously identified issues in this session have been resolved.
+   - None.
 
 **Known issue recurrence from previous fork**
   - **Issue:** Gradient banners rendering as white boxes.
   - **Recurrence count:** 1
-  - **Status:** RESOLVED
+  - **Status:** RESOLVED (in previous sessions)
 
 **Code Architecture**
 
@@ -98,50 +105,52 @@ The application is a full-stack FastAPI and React app with a functional MVP. It 
 - **Frontend:** React, React Router, Axios, Tailwind CSS
 - **Database:** MongoDB
 - **Authentication:** Emergent-managed Google Auth, Custom JWT for admin
-- **File Handling:** FastAPI  and .
+- **State Management:** React Hooks (, )
 - **Background Jobs:**  for daily automated tasks.
+- **Database Migration:** One-time migration script on application startup.
 
 **key DB schema**
-- **admin_store_items:** {..., : str}
-- **savings_goals:** {..., : str, : datetime}
-- **price_history:** {, , , }
-- **scheduler_logs:** {, , , }
+- **users:** {..., : [str], : [str], : str}
+- **classrooms:** {..., : [dict]}
+- **notifications:** {, , , , , , }
+- **wallet_accounts:** {..., : str} (now uses 'gifting' instead of 'giving')
 
 **changes in tech stack**
-- **Added:**  library for running scheduled background jobs on the backend.
+- None.
 
 **All files of reference**
-- : Heavily modified to add scheduler, fix purchase logic, add new models/endpoints for savings goals, and support new upload types (HTML, MP4).
-- : Updated with .
-- : Completely rewritten to fetch dynamic data and implement a new purchasing flow.
-- : Rewritten to fetch dynamic data and fix multiple display/API bugs.
-- : Heavily modified to fix transaction display and add the savings goal creation and display feature.
-- : Updated to include a 'unit' dropdown in the item creation form.
-- : Updated to show scheduler status and price change percentages.
-- : Updated to add links to the new management pages.
-- : Updated to add a Preview button and new upload options for HTML and MP4 files.
-- : Added routes for the new admin pages.
-- : Updated to reflect completed tasks and new features.
+- : Heavily modified to add a DB migration, new endpoints for user connections, notifications, classmates view, and updated existing endpoints to generate notifications.
+- : Major redesign of layout and integration of  and  components.
+- : Modified to fix transfer bug, rename giving to gifting, and is pending a major refactor.
+- : Modified to add inline money transfer modal.
+- : New component, modified to add inline money transfer modal.
+- : New page to display full classroom details.
+- : New (empty) file for the wallet page refactor.
+- : Updated to allow children to add parents and join classrooms.
+- : Updated to show child's classroom info and notification center.
+- : Updated to allow posting classroom announcements.
+- : New component to display user notifications.
+- : Updated with the new  route.
+- : Updated to reflect completed features.
 
 **Areas that need refactoring**:
--  is now extremely large and complex. It manages all models, API routes, and background scheduling logic in a single file. It urgently needs to be refactored into a modular structure (e.g., , , , ) to ensure maintainability.
+-  is critically oversized. It urgently needs to be broken down into a modular structure (e.g., separate files for routes, models, services, and scheduler) to improve maintainability and reduce complexity. This should be a high-priority task after the current user requests are fulfilled.
 
 **key api endpoints**
-- : GET scheduler status.
-- : POST to create a savings goal for a child.
-- : GET child's savings goals.
-- : POST to upload an image for a savings goal.
-- : POST to upload a standalone HTML file.
-- : POST to upload an MP4 video file.
-- : GET to fetch store items for the child view.
-- , : GET to fetch available investments for the child view.
+- : POST to allow a child to link a parent account.
+- : POST for a teacher to create an announcement.
+- : GET to fetch announcements for a child's classroom.
+- : GET for a parent to view their child's classroom details.
+- : GET to fetch notifications for the logged-in user.
+- : POST to mark a notification as read.
+- : GET to fetch details of a child's classmates.
+- : POST, bug fixed and now used for inline transfers.
+- : POST, updated to notify parent.
 
 **Critical Info for New Agent**
-- **Top Priority (P0):** The immediate task is to complete the Savings Goal feature as per the user's latest request. The agent has already started by updating the . You need to continue by:
-    1.  Showing the active goal on the .
-    2.  Implementing the logic for allocating earned/deposited savings to the goal(s).
-    3.  Thoroughly testing the end-to-end flow.
-- **Refactoring Needed:** The  file has grown to an unmanageable size. After completing the current P0 task, strongly recommend and plan the refactoring of the backend into a modular structure.
+- **Top Priority (P0):** Resolve the Gifting Jar visibility bug. This is a recurring pain point for the user and impacts core functionality. Follow the debug checklist provided in the All Pending/In progress Issue list.
+- **Next Task:** Complete the refactoring of the . Move all savings-related logic into the new  and clean up the  to only show core wallet functions.
+- **Backend Refactoring:** After the current frontend tasks are complete and verified by the user, you MUST propose and plan the refactoring of . This is a critical technical debt item that needs to be addressed.
 
 **documents and test reports created in this job**
 - 
@@ -150,17 +159,18 @@ The application is a full-stack FastAPI and React app with a functional MVP. It 
 -  (Updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **#547:** User requested multiple improvements for the store: quantity selection, removal of Owned state, a better purchase dialog design, and a My Purchases history section. - **Status: Completed**
-2.  **#564:** User reported that they are still unable to set a saving goal. - **Status: In Progress (Backend fix applied)**
-3.  **#574:** User provided detailed feedback on the savings goal flow:
-    - The Set Goal button redirects to Quests incorrectly.
-    - The My Savings Goal section should be moved higher on the Wallet page.
-    - The active savings goal should be visible on the main Dashboard.
-    - Logic is needed to allocate savings to goals. - **Status: In Progress**
+1.  **Refactor Dashboard Layout:** User requested to make the dashboard more compact by placing Money Jars, Savings Goal, and Classroom sections side-by-side. - **Status: Completed**
+2.  **Refine Savings Goal Card UI:** User requested several UI tweaks to the savings goal card on the dashboard for better clarity and design. - **Status: Completed**
+3.  **Implement Multi-Goal & Classmate View:** User asked to show up to 2 goals and 5 classmates on the dashboard, with a link to a full page for more. - **Status: Completed**
+4.  **Fix Transfer to Giving Jar:** User reported being unable to transfer money to the giving jar. - **Status: In Progress (Led to Gifting Jar issue)**
+5.  **Rename Giving to Gifting:** User requested to rename the jar for better terminology. - **Status: Completed**
+6.  **Add Inline Transfers:** User requested a better UX for insufficient funds, allowing transfers directly from the Store or Gifting modals. - **Status: Completed**
+7.  **Gifting Jar Missing:** User provided a screenshot showing the Gifting jar was not appearing in the UI after the rename. - **Status: In Progress**
+8.  **Create Dedicated Savings Page:** User requested to move all savings goal functionality out of the main  and into a separate, new page to reduce clutter. - **Status: In Progress**
 
 **Project Health Check:**
-- **Working:** Core application, all admin management features, automated price simulation, content uploads, and the improved store purchase flow.
-- **Broken:** The savings goal functionality is incomplete and does not fully meet user requirements. The Set Goal button behavior and allocation logic are the main broken pieces.
+- **Working:** Core application, user connections, notifications, classmates view, store/investment management, and automated price simulation.
+- **Broken:** The Gifting jar is not appearing correctly for users, despite code changes and a database migration. The Wallet page is in an incomplete, partially-refactored state.
 - **Mocked:** None.
 
 **3rd Party Integrations**
@@ -169,19 +179,19 @@ The application is a full-stack FastAPI and React app with a functional MVP. It 
 - **APScheduler:** For running daily background jobs on the backend.
 
 **Testing status**
-  - Testing agent used after significant changes: YES
+  - Testing agent used after significant changes: YES (multiple times)
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created:
     - 
     - 
     - 
-  - Known regressions: None.
+  - Known regressions: The Gifting Jar visibility issue can be considered a regression from the renaming task.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
 -   **Users:** Log in via the Google Social Login button.
 
 **What agent forgot to execute**
-The agent is currently in the middle of implementing the multi-part request from the user's last message (). The following parts are still pending:
--   Displaying the active savings goal on the main .
--   Implementing the backend and frontend logic to allocate funds from the savings account to the active goal(s).</analysis>
+The agent is in the middle of executing a multi-part user request. The main pending items are:
+-   Fully resolving the Gifting Jar visibility bug.
+-   Completing the refactoring of the  by moving all savings-related functionality to the new .</analysis>
