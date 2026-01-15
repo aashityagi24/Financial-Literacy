@@ -144,6 +144,32 @@ export default function MoneyGardenPage({ user }) {
     }
   };
   
+  const handleTransfer = async () => {
+    const amount = parseFloat(transferData.amount);
+    if (!amount || amount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    if (transferData.from_account === transferData.to_account) {
+      toast.error('Cannot transfer to the same account');
+      return;
+    }
+    
+    try {
+      await axios.post(`${API}/wallet/transfer`, {
+        from_account: transferData.from_account,
+        to_account: transferData.to_account,
+        amount: amount
+      });
+      toast.success(`Transferred ₹${amount} successfully! 💰`);
+      setShowTransfer(false);
+      setTransferData({ from_account: 'spending', to_account: 'investing', amount: '' });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Transfer failed');
+    }
+  };
+  
   const getMarketPrice = (plantId) => {
     const price = farm.market_prices.find(p => p.plant_id === plantId);
     return price?.current_price || 0;
