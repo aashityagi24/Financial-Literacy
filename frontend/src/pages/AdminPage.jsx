@@ -82,15 +82,25 @@ export default function AdminPage({ user }) {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to="/dashboard" className="p-2 hover:bg-gray-100 rounded-xl">
-                <ChevronLeft className="w-5 h-5 text-gray-600" />
-              </Link>
               <div className="flex items-center gap-2">
                 <div className="w-10 h-10 bg-[#1D3557] rounded-xl flex items-center justify-center">
                   <Shield className="w-6 h-6 text-white" />
                 </div>
                 <h1 className="text-xl font-bold text-gray-800">Admin Dashboard</h1>
               </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-xl">
+                <User className="w-4 h-4 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">{user?.email || 'Admin'}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-xl border border-gray-300 hover:bg-red-50 hover:border-red-300 transition-colors"
+                data-testid="admin-logout-btn"
+              >
+                <LogOut className="w-5 h-5 text-gray-600 hover:text-red-500" />
+              </button>
             </div>
           </div>
         </div>
