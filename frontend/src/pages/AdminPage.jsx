@@ -107,28 +107,48 @@ export default function AdminPage({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
-        {/* Content Management Card */}
-        <Link 
-          to="/admin/content" 
-          className="mb-6 block bg-gradient-to-r from-[#3D5A80] to-[#5A7BA0] rounded-xl p-5 hover:shadow-lg transition-shadow"
-          data-testid="content-management-link"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <Library className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">Content Management</h3>
-                <p className="text-white/80 text-sm">Manage topics, subtopics, and learning content</p>
-              </div>
-            </div>
-            <ChevronRight className="w-6 h-6 text-white" />
-          </div>
-        </Link>
-        
-        {/* Store & Investment Management Grid */}
+        {/* Management Cards Grid - 2x2 Layout */}
         <div className="grid md:grid-cols-2 gap-4 mb-6">
+          {/* Content Management Card */}
+          <Link 
+            to="/admin/content" 
+            className="block bg-gradient-to-r from-[#3D5A80] to-[#5A7BA0] rounded-xl p-5 hover:shadow-lg transition-shadow"
+            data-testid="content-management-link"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Library className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Content Management</h3>
+                  <p className="text-white/80 text-sm">Manage topics, subtopics & content</p>
+                </div>
+              </div>
+              <ChevronRight className="w-6 h-6 text-white" />
+            </div>
+          </Link>
+          
+          {/* Quest Management Card */}
+          <Link 
+            to="/admin/quests" 
+            className="block bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-xl p-5 hover:shadow-lg transition-shadow"
+            data-testid="quest-management-link"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-[#1D3557] rounded-xl flex items-center justify-center">
+                  <Target className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#1D3557]">Quest Management</h3>
+                  <p className="text-[#1D3557]/80 text-sm">Create Q&A quests with rewards</p>
+                </div>
+              </div>
+              <ChevronRight className="w-6 h-6 text-[#1D3557]" />
+            </div>
+          </Link>
+          
           {/* Store Management Card */}
           <Link 
             to="/admin/store" 
@@ -142,7 +162,7 @@ export default function AdminPage({ user }) {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Store Management</h3>
-                  <p className="text-white/80 text-sm">Manage store categories and items</p>
+                  <p className="text-white/80 text-sm">Manage store categories & items</p>
                 </div>
               </div>
               <ChevronRight className="w-6 h-6 text-white" />
@@ -162,30 +182,10 @@ export default function AdminPage({ user }) {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Investment Management</h3>
-                  <p className="text-white/80 text-sm">Manage plants (K-2) and stocks (3-5)</p>
+                  <p className="text-white/80 text-sm">Manage plants (K-2) & stocks (3-5)</p>
                 </div>
               </div>
               <ChevronRight className="w-6 h-6 text-white" />
-            </div>
-          </Link>
-          
-          {/* Quest Management Card */}
-          <Link 
-            to="/admin/quests" 
-            className="block bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-xl p-5 hover:shadow-lg transition-shadow md:col-span-2"
-            data-testid="quest-management-link"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-[#1D3557] rounded-xl flex items-center justify-center">
-                  <Target className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#1D3557]">Quest Management</h3>
-                  <p className="text-[#1D3557]/80 text-sm">Create Q&A quests with rewards for students</p>
-                </div>
-              </div>
-              <ChevronRight className="w-6 h-6 text-[#1D3557]" />
             </div>
           </Link>
         </div>
