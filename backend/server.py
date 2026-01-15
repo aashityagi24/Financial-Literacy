@@ -1729,6 +1729,176 @@ async def delete_parent_chore(chore_id: str, request: Request):
     })
     return {"message": "Chore deleted"}
 
+# ============== PARENT SHOPPING LIST ==============
+
+@api_router.post("/parent/shopping-list")
+async def add_to_shopping_list(item_data: ShoppingListItemCreate, request: Request):
+    """Parent adds item to shopping list for a child"""
+    user = await require_parent(request)
+    
+    # Verify parent-child relationship
+    link = await db.parent_child_links.find_one({
+        "parent_id": user["user_id"],
+        "child_id": item_data.child_id,
+        "status": "active"
+    })
+    if not link:
+        raise HTTPException(status_code=403, detail="Not authorized for this child")
+    
+    # Get item details
+    item = await db.admin_store_items.find_one({"item_id": item_data.item_id}, {"_id": 0})
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    list_id = f"shoplist_{uuid.uuid4().hex[:12]}"
+    
+    list_doc = {
+        "list_id": list_id,
+        "parent_id": user["user_id"],
+        "child_id": item_data.child_id,
+        "item_id": item["item_id"],
+        "item_name": item["name"],
+        "item_price": item["price"],
+        "quantity": item_data.quantity,
+        "image_url": item.get("image_url"),
+        "category": item.get("category"),
+        "status": "pending",
+        "chore_id": None,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.shopping_lists.insert_one(list_doc)
+    return {"list_id": list_id, "message": "Item added to shopping list"}
+
+@api_router.get("/parent/shopping-list")
+async def get_shopping_list(request: Request, child_id: str = None):
+    """Get parent's shopping list, optionally filtered by child"""
+    user = await require_parent(request)
+    
+    query = {"parent_id": user["user_id"]}
+    if child_id:
+        query["child_id"] = child_id
+    
+    items = await db.shopping_lists.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # Group by child
+    by_child = {}
+    for item in items:
+        cid = item["child_id"]
+        if cid not in by_child:
+            child = await db.users.find_one({"user_id": cid}, {"_id": 0, "name": 1, "picture": 1})
+            by_child[cid] = {
+                "child_id": cid,
+                "child_name": child.get("name", "Unknown") if child else "Unknown",
+                "child_picture": child.get("picture") if child else None,
+                "items": []
+            }
+        by_child[cid]["items"].append(item)
+    
+    return list(by_child.values())
+
+@api_router.delete("/parent/shopping-list/{list_id}")
+async def remove_from_shopping_list(list_id: str, request: Request):
+    """Remove item from shopping list"""
+    user = await require_parent(request)
+    
+    result = await db.shopping_lists.delete_one({
+        "list_id": list_id,
+        "parent_id": user["user_id"],
+        "status": "pending"  # Can only delete pending items
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Item not found or already assigned to a chore")
+    
+    return {"message": "Item removed from shopping list"}
+
+@api_router.post("/parent/shopping-list/create-chore")
+async def create_chore_from_shopping_list(chore_data: ShoppingListChoreCreate, request: Request):
+    """Create a chore from shopping list items - child completes chore to earn items"""
+    user = await require_parent(request)
+    
+    # Verify parent-child relationship
+    link = await db.parent_child_links.find_one({
+        "parent_id": user["user_id"],
+        "child_id": chore_data.child_id,
+        "status": "active"
+    })
+    if not link:
+        raise HTTPException(status_code=403, detail="Not authorized for this child")
+    
+    # Get selected shopping list items
+    items = await db.shopping_lists.find({
+        "list_id": {"$in": chore_data.list_item_ids},
+        "parent_id": user["user_id"],
+        "child_id": chore_data.child_id,
+        "status": "pending"
+    }, {"_id": 0}).to_list(50)
+    
+    if not items:
+        raise HTTPException(status_code=400, detail="No valid pending items found")
+    
+    # Calculate total value as reward
+    total_value = sum(item["item_price"] * item["quantity"] for item in items)
+    
+    # Build item list description
+    item_list = ", ".join([f"{item['item_name']} x{item['quantity']}" for item in items])
+    full_description = chore_data.description or ""
+    if full_description:
+        full_description += "\n\n"
+    full_description += f"🛒 Shopping List Items:\n{item_list}\nTotal Value: ₹{total_value:.2f}"
+    
+    # Create the chore
+    chore_id = f"chore_{uuid.uuid4().hex[:12]}"
+    
+    chore_doc = {
+        "chore_id": chore_id,
+        "quest_id": chore_id,
+        "creator_type": "parent",
+        "creator_id": user["user_id"],
+        "creator_name": user.get("name", "Parent"),
+        "child_id": chore_data.child_id,
+        "title": chore_data.title,
+        "description": full_description,
+        "reward_amount": total_value,
+        "total_points": total_value,
+        "frequency": "once",
+        "is_shopping_chore": True,
+        "shopping_items": [item["list_id"] for item in items],
+        "is_active": True,
+        "requires_validation": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.new_quests.insert_one(chore_doc)
+    
+    # Update shopping list items to assigned status
+    await db.shopping_lists.update_many(
+        {"list_id": {"$in": chore_data.list_item_ids}},
+        {"$set": {"status": "assigned", "chore_id": chore_id}}
+    )
+    
+    # Notify child
+    await db.notifications.insert_one({
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": chore_data.child_id,
+        "message": f"New shopping chore from {user.get('name', 'Parent')}: {chore_data.title}",
+        "type": "chore",
+        "link": "/quests",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "chore_id": chore_id,
+        "message": "Shopping chore created",
+        "total_reward": total_value,
+        "items_count": len(items)
+    }
+
 # Child Quest/Chore completion tracking
 @api_router.get("/child/quests-new")
 async def get_child_quests(request: Request, source: str = None, sort: str = "due_date"):
