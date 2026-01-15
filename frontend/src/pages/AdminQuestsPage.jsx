@@ -343,7 +343,7 @@ export default function AdminQuestsPage({ user }) {
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <label className="text-sm font-medium text-gray-700">
-                        Questions ({formData.questions.length}) - Total: ₹{getTotalPoints()}
+                        Questions ({formData.questions.length}) {formData.questions.length > 0 && `- Total: ₹${getTotalPoints()}`}
                       </label>
                       <button
                         type="button"
@@ -353,6 +353,12 @@ export default function AdminQuestsPage({ user }) {
                         <Plus className="w-4 h-4" /> Add Question
                       </button>
                     </div>
+                    
+                    {formData.questions.length === 0 && (
+                      <p className="text-sm text-gray-500 bg-gray-100 p-3 rounded-lg mb-4">
+                        No questions added. Students will complete the quest and earn the base reward.
+                      </p>
+                    )}
                     
                     <div className="space-y-4">
                       {formData.questions.map((q, qIndex) => (
