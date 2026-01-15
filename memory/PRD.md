@@ -278,6 +278,26 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
   - `GET /api/child/gift-requests` - Get pending requests
   - `POST /api/child/gift-requests/{id}/respond` - Accept/decline request
 
+### Phase 17: Wallet Refactor & Dedicated Savings Goals Page ✅ (January 15, 2026)
+- **Renamed "Giving" to "Gifting"**: Changed jar name across entire codebase for better terminology
+- **Database Migration**: Startup migration script converts all existing "giving" accounts to "gifting"
+- **Dedicated Savings Goals Page** (`/savings-goals`):
+  - New standalone page for managing savings goals
+  - Moved from WalletPage to dedicated route for better UX
+  - Features: New Goal creation, Add to Goal functionality, Quick Transfer to savings
+  - Shows active goals with progress bars and completed goals section
+- **Streamlined Wallet Page** (`/wallet`):
+  - Removed savings goals section (moved to /savings-goals)
+  - Shows 4 money jars (spending, savings, investing, gifting) with navigation actions
+  - Savings jar now links to /savings-goals instead of opening dialog
+  - Quick link card to "My Savings Goals" page
+  - Move Money (transfer) functionality between all 4 jars
+  - Transaction history
+- **Dashboard Navigation Updates**:
+  - "My Savings Goal" card now links to /savings-goals
+  - Goal cards are clickable and navigate to /savings-goals
+- **Route Addition**: Added `/savings-goals` route in App.js
+
 ## API Endpoints
 
 ### Admin Store Management (New - Phase 11)
