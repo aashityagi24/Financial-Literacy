@@ -541,16 +541,25 @@ export default function ParentDashboard({ user }) {
                       <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Create Savings Goal</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 mt-4">
-                      <Select value={goalForm.child_id} onValueChange={(v) => setGoalForm({...goalForm, child_id: v})}>
-                        <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Select Child" /></SelectTrigger>
-                        <SelectContent>
-                          {dashboard?.children?.map((c) => (
-                            <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input placeholder="Goal Title (e.g., New Bike)" value={goalForm.title} onChange={(e) => setGoalForm({...goalForm, title: e.target.value})} className="border-3 border-[#1D3557]" />
-                      <Input type="number" placeholder="Target Amount" value={goalForm.target_amount} onChange={(e) => setGoalForm({...goalForm, target_amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
+                        <Select value={goalForm.child_id} onValueChange={(v) => setGoalForm({...goalForm, child_id: v})}>
+                          <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Choose a child" /></SelectTrigger>
+                          <SelectContent>
+                            {dashboard?.children?.map((c) => (
+                              <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Goal Title *</label>
+                        <Input placeholder="e.g., New Bike, Video Game" value={goalForm.title} onChange={(e) => setGoalForm({...goalForm, title: e.target.value})} className="border-3 border-[#1D3557]" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Target Amount (₹) *</label>
+                        <Input type="number" placeholder="How much to save" value={goalForm.target_amount} onChange={(e) => setGoalForm({...goalForm, target_amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
+                      </div>
                       <button onClick={handleCreateGoal} className="btn-primary w-full py-3">Create Goal</button>
                     </div>
                   </DialogContent>
