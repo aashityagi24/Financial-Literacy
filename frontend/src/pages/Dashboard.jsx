@@ -109,12 +109,45 @@ export default function Dashboard({ user, setUser }) {
     { icon: MessageCircle, label: 'AI Buddy', path: '/chat', color: '#FFD23F' },
   ].filter(Boolean); // Remove null items
   
-  const accountColors = {
-    spending: { bg: 'bg-gradient-to-br from-[#EE6C4D] to-[#FF8A6C]', icon: '💳', description: 'Money to buy things' },
-    savings: { bg: 'bg-gradient-to-br from-[#06D6A0] to-[#42E8B3]', icon: '🐷', description: 'Money saved for later' },
-    investing: { bg: 'bg-gradient-to-br from-[#3D5A80] to-[#5A7BA0]', icon: '📈', description: 'Money that grows' },
-    gifting: { bg: 'bg-gradient-to-br from-[#9B5DE5] to-[#B47EE5]', icon: '❤️', description: 'Money to help others' },
+  // Grade-based account configuration
+  const getAccountColors = () => {
+    const baseAccounts = {
+      spending: { bg: 'bg-gradient-to-br from-[#EE6C4D] to-[#FF8A6C]', icon: '💳', description: 'Money to buy things' },
+      savings: { bg: 'bg-gradient-to-br from-[#06D6A0] to-[#42E8B3]', icon: '🐷', description: 'Money saved for later' },
+      gifting: { bg: 'bg-gradient-to-br from-[#9B5DE5] to-[#B47EE5]', icon: '❤️', description: 'Money to help others' },
+    };
+    
+    if (grade === 0) {
+      // Kindergarten: No investing jar
+      return baseAccounts;
+    } else if (grade <= 2) {
+      // Grade 1-2: Farming jar
+      return {
+        ...baseAccounts,
+        investing: { bg: 'bg-gradient-to-br from-[#228B22] to-[#32CD32]', icon: '🌱', label: 'Farming', description: 'Money to grow plants' },
+      };
+    } else {
+      // Grade 3+: Investing jar
+      return {
+        ...baseAccounts,
+        investing: { bg: 'bg-gradient-to-br from-[#3D5A80] to-[#5A7BA0]', icon: '📈', description: 'Money that grows' },
+      };
+    }
   };
+  
+  const accountColors = getAccountColors();
+  
+  // Filter accounts based on grade
+  const getFilteredAccounts = () => {
+    if (!wallet?.accounts) return [];
+    if (grade === 0) {
+      // Kindergarten: Remove investing account
+      return wallet.accounts.filter(acc => acc.account_type !== 'investing');
+    }
+    return wallet.accounts;
+  };
+  
+  const filteredAccounts = getFilteredAccounts();
   
   if (loading) {
     return (
