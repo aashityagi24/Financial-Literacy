@@ -2193,6 +2193,48 @@ async def create_announcement(classroom_id: str, announcement: AnnouncementCreat
     }
     
     await db.classroom_announcements.insert_one(announcement_doc)
+    
+    # Notify all students in classroom
+    students = await db.classroom_students.find(
+        {"classroom_id": classroom_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    for student in students:
+        # Notify student
+        await create_notification(
+            user_id=student["student_id"],
+            notification_type="announcement",
+            title=f"📢 {announcement.title}",
+            message=announcement.message,
+            from_user_id=teacher["user_id"],
+            from_user_name=teacher.get("name"),
+            related_id=classroom_id
+        )
+        
+        # Find and notify student's parents
+        parent_links = await db.parent_child_links.find(
+            {"child_id": student["student_id"], "status": "active"},
+            {"_id": 0}
+        ).to_list(5)
+        
+        for link in parent_links:
+            child_info = await db.users.find_one(
+                {"user_id": student["student_id"]},
+                {"_id": 0, "name": 1}
+            )
+            child_name = child_info.get("name", "Your child") if child_info else "Your child"
+            
+            await create_notification(
+                user_id=link["parent_id"],
+                notification_type="announcement",
+                title=f"📢 {child_name}'s Class: {announcement.title}",
+                message=announcement.message,
+                from_user_id=teacher["user_id"],
+                from_user_name=teacher.get("name"),
+                related_id=classroom_id
+            )
+    
     return {"message": "Announcement posted", "announcement_id": announcement_doc["announcement_id"]}
 
 @api_router.get("/teacher/classrooms/{classroom_id}/announcements")
