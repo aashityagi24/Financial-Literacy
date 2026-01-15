@@ -302,13 +302,13 @@ export default function Dashboard({ user, setUser }) {
                     )}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-[#1D3557] text-sm truncate">{savingsGoal.title}</h3>
-                      {savingsGoal.description && (
-                        <p className="text-xs text-[#3D5A80] truncate">{savingsGoal.description}</p>
-                      )}
                       <div className="mt-2">
                         <div className="flex justify-between text-xs mb-1">
-                          <span className="text-[#3D5A80]">₹{savingsGoal.current_amount?.toFixed(0) || 0}</span>
-                          <span className="font-bold text-[#1D3557]">₹{savingsGoal.target_amount?.toFixed(0)}</span>
+                          <span className="text-[#06D6A0] font-medium">₹{savingsGoal.current_amount?.toFixed(0) || 0} saved</span>
+                          <span className="font-bold text-[#1D3557] flex items-center gap-1">
+                            <Target className="w-3 h-3" />
+                            ₹{savingsGoal.target_amount?.toFixed(0)}
+                          </span>
                         </div>
                         <Progress value={Math.min((savingsGoal.current_amount / savingsGoal.target_amount) * 100, 100)} className="h-2" />
                         <p className="text-xs text-[#EE6C4D] mt-1 font-medium">
