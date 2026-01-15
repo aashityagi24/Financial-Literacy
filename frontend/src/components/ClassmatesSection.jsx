@@ -144,9 +144,9 @@ export default function ClassmatesSection({ givingBalance, compact = false }) {
               <Users className="w-5 h-5 inline mr-2" />
               My Classroom
             </h2>
-            <span className="text-xs text-[#3D5A80] bg-[#E0FBFC] px-2 py-1 rounded-full truncate max-w-[100px]">
-              {classroom.name}
-            </span>
+            <Link to="/classmates" className="text-sm text-[#3D5A80] hover:text-[#1D3557]">
+              <ChevronRight className="w-4 h-4" />
+            </Link>
           </div>
 
           {classmates.length === 0 ? (
