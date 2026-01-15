@@ -47,6 +47,16 @@ export default function AdminPage({ user }) {
     }
   };
   
+  const handleLogout = async () => {
+    try {
+      await axios.post(`${API}/auth/logout`);
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      navigate('/');
+    }
+  };
+  
   const handleRoleChange = async (userId, newRole) => {
     try {
       await axios.put(`${API}/admin/users/${userId}/role`, { role: newRole });
