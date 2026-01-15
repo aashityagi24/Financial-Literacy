@@ -1328,13 +1328,407 @@ async def mark_shopping_item_purchased(item_id: str, request: Request):
     
     return {"message": "Item marked as purchased"}
 
-# ============== INVESTMENT ROUTES ==============
+# ============== MONEY GARDEN ROUTES (Grade 1-2) ==============
+
+PLOT_COST = 20  # Cost to buy additional plots
+
+@api_router.get("/garden/farm")
+async def get_farm(request: Request):
+    """Get child's farm with all plots and their status"""
+    user = await get_current_user(request)
+    grade = user.get("grade", 3) or 3
+    
+    # Block Kindergarten and redirect Grade 3+ to stocks
+    if grade == 0:
+        raise HTTPException(status_code=403, detail="Investments not available for Kindergarten")
+    if grade >= 3:
+        raise HTTPException(status_code=400, detail="Use /investments for Grade 3+")
+    
+    # Get or create initial farm plots (2x2 = 4 plots)
+    plots = await db.farm_plots.find({"user_id": user["user_id"]}, {"_id": 0}).to_list(50)
+    
+    if not plots:
+        # Create initial 4 plots
+        initial_plots = []
+        for i in range(4):
+            plot = {
+                "plot_id": f"plot_{uuid.uuid4().hex[:8]}",
+                "user_id": user["user_id"],
+                "position": i,
+                "plant_id": None,
+                "plant_name": None,
+                "plant_emoji": None,
+                "planted_at": None,
+                "last_watered": None,
+                "growth_days_total": 0,
+                "growth_progress": 0,
+                "status": "empty",
+                "is_active": True
+            }
+            initial_plots.append(plot)
+        await db.farm_plots.insert_many(initial_plots)
+        plots = initial_plots
+    
+    # Update growth status for each plot
+    now = datetime.now(timezone.utc)
+    for plot in plots:
+        if plot.get("plant_id") and plot.get("status") not in ["empty", "dead", "ready"]:
+            # Get plant info
+            plant = await db.investment_plants.find_one({"plant_id": plot["plant_id"]}, {"_id": 0})
+            if plant:
+                # Check watering status
+                last_watered = plot.get("last_watered")
+                if last_watered:
+                    last_water_time = datetime.fromisoformat(last_watered.replace('Z', '+00:00'))
+                    hours_since_water = (now - last_water_time).total_seconds() / 3600
+                    water_freq = plant.get("water_frequency_hours", 24)
+                    
+                    if hours_since_water > water_freq * 2:
+                        # Plant dies after 2x water frequency without water
+                        plot["status"] = "dead"
+                        await db.farm_plots.update_one({"plot_id": plot["plot_id"]}, {"$set": {"status": "dead"}})
+                    elif hours_since_water > water_freq * 1.5:
+                        plot["status"] = "wilting"
+                    elif hours_since_water > water_freq:
+                        plot["status"] = "water_needed"
+                    else:
+                        # Calculate growth if watered
+                        planted_at = datetime.fromisoformat(plot["planted_at"].replace('Z', '+00:00'))
+                        days_growing = (now - planted_at).days
+                        growth_progress = min(100, (days_growing / plant["growth_days"]) * 100)
+                        plot["growth_progress"] = growth_progress
+                        
+                        if growth_progress >= 100:
+                            plot["status"] = "ready"
+                            await db.farm_plots.update_one({"plot_id": plot["plot_id"]}, {"$set": {"status": "ready", "growth_progress": 100}})
+                        else:
+                            plot["status"] = "growing"
+    
+    # Get available seeds
+    seeds = await db.investment_plants.find({"is_active": True}, {"_id": 0}).to_list(50)
+    
+    # Get inventory
+    inventory = await db.harvest_inventory.find({"user_id": user["user_id"]}, {"_id": 0}).to_list(100)
+    
+    # Get today's market prices
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    market_prices = await db.market_prices.find({"date": today}, {"_id": 0}).to_list(50)
+    
+    # Check if market is open (9 AM - 6 PM in user's assumed timezone)
+    current_hour = now.hour
+    is_market_open = 9 <= current_hour < 18
+    
+    return {
+        "plots": plots,
+        "seeds": seeds,
+        "inventory": inventory,
+        "market_prices": market_prices,
+        "is_market_open": is_market_open,
+        "plot_cost": PLOT_COST
+    }
+
+@api_router.post("/garden/buy-plot")
+async def buy_farm_plot(request: Request):
+    """Buy an additional plot for the farm"""
+    user = await get_current_user(request)
+    grade = user.get("grade", 3) or 3
+    
+    if grade == 0 or grade >= 3:
+        raise HTTPException(status_code=403, detail="Money Garden is for Grade 1-2 only")
+    
+    # Check spending balance
+    spending_acc = await db.wallet_accounts.find_one({"user_id": user["user_id"], "account_type": "spending"})
+    if not spending_acc or spending_acc.get("balance", 0) < PLOT_COST:
+        raise HTTPException(status_code=400, detail=f"Need ₹{PLOT_COST} in spending account to buy a plot")
+    
+    # Get current plot count
+    plot_count = await db.farm_plots.count_documents({"user_id": user["user_id"]})
+    
+    # Deduct balance
+    await db.wallet_accounts.update_one(
+        {"user_id": user["user_id"], "account_type": "spending"},
+        {"$inc": {"balance": -PLOT_COST}}
+    )
+    
+    # Create new plot
+    new_plot = {
+        "plot_id": f"plot_{uuid.uuid4().hex[:8]}",
+        "user_id": user["user_id"],
+        "position": plot_count,
+        "plant_id": None,
+        "plant_name": None,
+        "plant_emoji": None,
+        "planted_at": None,
+        "last_watered": None,
+        "growth_days_total": 0,
+        "growth_progress": 0,
+        "status": "empty",
+        "is_active": True
+    }
+    await db.farm_plots.insert_one(new_plot)
+    
+    return {"message": "New plot purchased!", "plot": {k: v for k, v in new_plot.items() if k != "_id"}}
+
+@api_router.post("/garden/plant")
+async def plant_seed(data: PlantSeedRequest, request: Request):
+    """Plant a seed in a plot"""
+    user = await get_current_user(request)
+    
+    # Get the plot
+    plot = await db.farm_plots.find_one({"plot_id": data.plot_id, "user_id": user["user_id"]})
+    if not plot:
+        raise HTTPException(status_code=404, detail="Plot not found")
+    if plot.get("status") != "empty":
+        raise HTTPException(status_code=400, detail="Plot is not empty")
+    
+    # Get seed info
+    seed = await db.investment_plants.find_one({"plant_id": data.plant_id, "is_active": True})
+    if not seed:
+        raise HTTPException(status_code=404, detail="Seed not found")
+    
+    # Check spending balance
+    spending_acc = await db.wallet_accounts.find_one({"user_id": user["user_id"], "account_type": "spending"})
+    if not spending_acc or spending_acc.get("balance", 0) < seed["seed_cost"]:
+        raise HTTPException(status_code=400, detail=f"Need ₹{seed['seed_cost']} to buy this seed")
+    
+    # Deduct balance
+    await db.wallet_accounts.update_one(
+        {"user_id": user["user_id"], "account_type": "spending"},
+        {"$inc": {"balance": -seed["seed_cost"]}}
+    )
+    
+    # Plant the seed
+    now = datetime.now(timezone.utc).isoformat()
+    await db.farm_plots.update_one(
+        {"plot_id": data.plot_id},
+        {"$set": {
+            "plant_id": seed["plant_id"],
+            "plant_name": seed["name"],
+            "plant_emoji": seed["emoji"],
+            "planted_at": now,
+            "last_watered": now,
+            "growth_days_total": seed["growth_days"],
+            "growth_progress": 0,
+            "status": "growing"
+        }}
+    )
+    
+    return {"message": f"{seed['name']} planted!", "seed_cost": seed["seed_cost"]}
+
+@api_router.post("/garden/water/{plot_id}")
+async def water_plant(plot_id: str, request: Request):
+    """Water a plant"""
+    user = await get_current_user(request)
+    
+    plot = await db.farm_plots.find_one({"plot_id": plot_id, "user_id": user["user_id"]})
+    if not plot:
+        raise HTTPException(status_code=404, detail="Plot not found")
+    if plot.get("status") in ["empty", "dead", "ready"]:
+        raise HTTPException(status_code=400, detail="Cannot water this plot")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    await db.farm_plots.update_one(
+        {"plot_id": plot_id},
+        {"$set": {"last_watered": now, "status": "growing"}}
+    )
+    
+    return {"message": "Plant watered! 💧"}
+
+@api_router.post("/garden/water-all")
+async def water_all_plants(request: Request):
+    """Water all plants that need watering"""
+    user = await get_current_user(request)
+    
+    now = datetime.now(timezone.utc).isoformat()
+    result = await db.farm_plots.update_many(
+        {"user_id": user["user_id"], "status": {"$in": ["growing", "water_needed", "wilting"]}},
+        {"$set": {"last_watered": now, "status": "growing"}}
+    )
+    
+    return {"message": f"Watered {result.modified_count} plants! 💧"}
+
+@api_router.post("/garden/harvest/{plot_id}")
+async def harvest_plant(plot_id: str, request: Request):
+    """Harvest a ready plant"""
+    user = await get_current_user(request)
+    
+    plot = await db.farm_plots.find_one({"plot_id": plot_id, "user_id": user["user_id"]})
+    if not plot:
+        raise HTTPException(status_code=404, detail="Plot not found")
+    if plot.get("status") != "ready":
+        raise HTTPException(status_code=400, detail="Plant is not ready for harvest")
+    
+    # Get plant info for harvest yield
+    plant = await db.investment_plants.find_one({"plant_id": plot["plant_id"]})
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant info not found")
+    
+    # Add to inventory
+    inventory_item = {
+        "inventory_id": f"inv_{uuid.uuid4().hex[:8]}",
+        "user_id": user["user_id"],
+        "plant_id": plant["plant_id"],
+        "plant_name": plant["name"],
+        "plant_emoji": plant["emoji"],
+        "quantity": plant["harvest_yield"],
+        "yield_unit": plant["yield_unit"],
+        "harvested_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.harvest_inventory.insert_one(inventory_item)
+    
+    # Clear the plot
+    await db.farm_plots.update_one(
+        {"plot_id": plot_id},
+        {"$set": {
+            "plant_id": None,
+            "plant_name": None,
+            "plant_emoji": None,
+            "planted_at": None,
+            "last_watered": None,
+            "growth_days_total": 0,
+            "growth_progress": 0,
+            "status": "empty"
+        }}
+    )
+    
+    return {
+        "message": f"Harvested {plant['harvest_yield']} {plant['yield_unit']} of {plant['name']}! 🎉",
+        "harvest": {"quantity": plant["harvest_yield"], "unit": plant["yield_unit"], "name": plant["name"]}
+    }
+
+@api_router.post("/garden/sell")
+async def sell_produce(request: Request, plant_id: str, quantity: int):
+    """Sell produce at market"""
+    user = await get_current_user(request)
+    
+    # Check if market is open
+    current_hour = datetime.now(timezone.utc).hour
+    if not (9 <= current_hour < 18):
+        raise HTTPException(status_code=400, detail="Market is closed! Open 9 AM - 6 PM")
+    
+    # Check inventory
+    inventory = await db.harvest_inventory.find_one({
+        "user_id": user["user_id"],
+        "plant_id": plant_id,
+        "quantity": {"$gte": quantity}
+    })
+    if not inventory:
+        raise HTTPException(status_code=400, detail="Not enough produce in inventory")
+    
+    # Get today's market price
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    market_price = await db.market_prices.find_one({"plant_id": plant_id, "date": today})
+    
+    if not market_price:
+        # Generate today's price
+        plant = await db.investment_plants.find_one({"plant_id": plant_id})
+        if plant:
+            fluctuation = plant.get("price_fluctuation_percent", 10) / 100
+            price_change = random.uniform(-fluctuation, fluctuation)
+            current_price = round(plant["base_sell_price"] * (1 + price_change), 2)
+            market_price = {
+                "price_id": f"price_{uuid.uuid4().hex[:8]}",
+                "plant_id": plant_id,
+                "current_price": current_price,
+                "base_price": plant["base_sell_price"],
+                "fluctuation_percent": plant["price_fluctuation_percent"],
+                "date": today
+            }
+            await db.market_prices.insert_one(market_price)
+    
+    # Calculate earnings
+    total_earnings = round(market_price["current_price"] * quantity, 2)
+    
+    # Update inventory
+    new_quantity = inventory["quantity"] - quantity
+    if new_quantity <= 0:
+        await db.harvest_inventory.delete_one({"inventory_id": inventory["inventory_id"]})
+    else:
+        await db.harvest_inventory.update_one(
+            {"inventory_id": inventory["inventory_id"]},
+            {"$set": {"quantity": new_quantity}}
+        )
+    
+    # Add to spending balance
+    await db.wallet_accounts.update_one(
+        {"user_id": user["user_id"], "account_type": "spending"},
+        {"$inc": {"balance": total_earnings}}
+    )
+    
+    return {
+        "message": f"Sold {quantity} for ₹{total_earnings}! 💰",
+        "earnings": total_earnings,
+        "price_per_unit": market_price["current_price"]
+    }
+
+# ============== ADMIN PLANT MANAGEMENT ==============
+
+@api_router.get("/admin/garden/plants")
+async def admin_get_plants(request: Request):
+    """Get all plant types for admin"""
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    plants = await db.investment_plants.find({}, {"_id": 0}).to_list(100)
+    return plants
+
+@api_router.post("/admin/garden/plants")
+async def admin_create_plant(plant: InvestmentPlantCreate, request: Request):
+    """Create a new plant type"""
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    plant_doc = {
+        "plant_id": f"plant_{uuid.uuid4().hex[:8]}",
+        **plant.model_dump(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.investment_plants.insert_one(plant_doc)
+    
+    return {"message": "Plant created!", "plant_id": plant_doc["plant_id"]}
+
+@api_router.put("/admin/garden/plants/{plant_id}")
+async def admin_update_plant(plant_id: str, plant: InvestmentPlantUpdate, request: Request):
+    """Update a plant type"""
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    update_data = {k: v for k, v in plant.model_dump().items() if v is not None}
+    if update_data:
+        await db.investment_plants.update_one({"plant_id": plant_id}, {"$set": update_data})
+    
+    return {"message": "Plant updated!"}
+
+@api_router.delete("/admin/garden/plants/{plant_id}")
+async def admin_delete_plant(plant_id: str, request: Request):
+    """Delete a plant type"""
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    await db.investment_plants.delete_one({"plant_id": plant_id})
+    return {"message": "Plant deleted!"}
+
+# ============== STOCK INVESTMENT ROUTES (Grade 3-5) ==============
 
 @api_router.get("/investments")
 async def get_investments(request: Request):
-    """Get user's investments"""
+    """Get user's investments - redirects to appropriate system based on grade"""
     user = await get_current_user(request)
+    grade = user.get("grade", 3) or 3
     
+    # Block Kindergarten
+    if grade == 0:
+        raise HTTPException(status_code=403, detail="Investments not available for Kindergarten")
+    
+    # Grade 1-2: Redirect to Money Garden
+    if grade <= 2:
+        raise HTTPException(status_code=400, detail="Use /garden/farm for Grade 1-2")
+    
+    # Grade 3+: Stock market
     investments = await db.investments.find(
         {"user_id": user["user_id"]},
         {"_id": 0}
