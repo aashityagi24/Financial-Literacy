@@ -55,7 +55,7 @@ export default function ClassmatesPage({ user }) {
     }
 
     if (parseFloat(giftForm.amount) > giftingBalance) {
-      toast.error('Not enough balance in your Giving jar');
+      toast.error('Not enough balance in your Gifting jar');
       return;
     }
 
@@ -162,7 +162,7 @@ export default function ClassmatesPage({ user }) {
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-[#06D6A0]">₹{giftingBalance.toFixed(0)}</p>
-                  <p className="text-sm text-[#3D5A80]">Your Giving Jar</p>
+                  <p className="text-sm text-[#3D5A80]">Your Gifting Jar</p>
                 </div>
               </div>
             </div>
@@ -266,7 +266,7 @@ export default function ClassmatesPage({ user }) {
           <div className="space-y-4 pt-2">
             <div className="bg-[#FFD23F]/20 rounded-xl p-3 border-2 border-[#FFD23F]">
               <p className="text-sm text-[#1D3557]">
-                Your Giving Jar: <strong>₹{giftingBalance?.toFixed(0) || 0}</strong>
+                Your Gifting Jar: <strong>₹{giftingBalance?.toFixed(0) || 0}</strong>
               </p>
             </div>
             
