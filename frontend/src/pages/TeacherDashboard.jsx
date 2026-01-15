@@ -5,7 +5,8 @@ import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
   GraduationCap, ChevronLeft, Plus, Users, Trophy, 
-  Copy, Trash2, Gift, Star, ChevronRight, Eye, Megaphone
+  Copy, Trash2, Gift, Star, ChevronRight, Eye, Megaphone,
+  BookOpen, LogOut, User
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
