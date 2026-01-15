@@ -278,7 +278,7 @@ export default function Dashboard({ user, setUser }) {
                 <Target className="w-5 h-5 text-[#06D6A0]" />
                 My Savings Goal
               </h2>
-              <Link to="/wallet" className="text-sm text-[#3D5A80] hover:text-[#1D3557]">
+              <Link to="/savings-goals" className="text-sm text-[#3D5A80] hover:text-[#1D3557]">
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
@@ -286,7 +286,7 @@ export default function Dashboard({ user, setUser }) {
             {savingsGoals.length > 0 ? (
               <div className="flex-1 space-y-2">
                 {savingsGoals.slice(0, 2).map((goal) => (
-                  <div key={goal.goal_id} className="bg-[#F8F9FA] rounded-xl p-3 border border-[#E0E0E0]">
+                  <Link key={goal.goal_id} to="/savings-goals" className="bg-[#F8F9FA] rounded-xl p-3 border border-[#E0E0E0] block hover:bg-[#E0FBFC] transition-colors">
                     <div className="flex gap-3 items-center mb-2">
                       {goal.image_url ? (
                         <img 
@@ -311,10 +311,10 @@ export default function Dashboard({ user, setUser }) {
                         <Target className="w-3 h-3" />₹{goal.target_amount?.toFixed(0)}
                       </span>
                     </div>
-                  </div>
+                  </Link>
                 ))}
                 {savingsGoals.length > 2 && (
-                  <Link to="/wallet" className="text-xs text-center text-[#3D5A80] hover:text-[#1D3557] block">
+                  <Link to="/savings-goals" className="text-xs text-center text-[#3D5A80] hover:text-[#1D3557] block">
                     +{savingsGoals.length - 2} more goals →
                   </Link>
                 )}
@@ -323,7 +323,7 @@ export default function Dashboard({ user, setUser }) {
               <div className="flex-1 flex flex-col items-center justify-center text-center py-4">
                 <Target className="w-10 h-10 text-[#98C1D9] mb-2" />
                 <p className="text-sm text-[#3D5A80]">No savings goal yet</p>
-                <Link to="/wallet" className="text-sm font-bold text-[#06D6A0] hover:underline mt-1">
+                <Link to="/savings-goals" className="text-sm font-bold text-[#06D6A0] hover:underline mt-1">
                   Set a Goal →
                 </Link>
               </div>
