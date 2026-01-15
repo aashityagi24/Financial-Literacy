@@ -48,6 +48,7 @@ export default function TeacherDashboard({ user }) {
   const [showChallenge, setShowChallenge] = useState(false);
   const [showCreateQuest, setShowCreateQuest] = useState(false);
   const [showAnnouncement, setShowAnnouncement] = useState(false);
+  const [showAnnouncement, setShowAnnouncement] = useState(false);
   const [showStudentProgress, setShowStudentProgress] = useState(null);
   
   const [classForm, setClassForm] = useState({ name: '', description: '', grade_level: 3 });
