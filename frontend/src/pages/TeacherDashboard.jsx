@@ -796,45 +796,6 @@ export default function TeacherDashboard({ user }) {
                     ))}
                   </div>
                 )}
-                
-                {/* Challenges */}
-                <h3 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
-                  Active Challenges ({classroomDetails.challenges.length})
-                </h3>
-                
-                {classroomDetails.challenges.length === 0 ? (
-                  <div className="card-playful p-6 text-center">
-                    <Trophy className="w-12 h-12 mx-auto text-[#98C1D9] mb-2" />
-                    <p className="text-[#3D5A80]">No challenges yet. Create one to motivate students!</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {classroomDetails.challenges.map((challenge) => (
-                      <div key={challenge.challenge_id} className="card-playful p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h4 className="font-bold text-[#1D3557]">{challenge.title}</h4>
-                            <p className="text-sm text-[#3D5A80]">{challenge.description}</p>
-                          </div>
-                          <span className="bg-[#FFD23F] px-3 py-1 rounded-lg font-bold text-[#1D3557]">
-                            +₹{challenge.reward_amount}
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {classroomDetails.students.map((student) => (
-                            <button
-                              key={student.user_id}
-                              onClick={() => handleCompleteChallenge(challenge.challenge_id, student.user_id)}
-                              className="px-3 py-1 text-sm rounded-full border-2 border-[#1D3557] bg-white hover:bg-[#06D6A0] hover:text-white transition-colors"
-                            >
-                              ✓ {student.name.split(' ')[0]}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </>
             )}
           </>
