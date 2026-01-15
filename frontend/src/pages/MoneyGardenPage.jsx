@@ -216,8 +216,8 @@ export default function MoneyGardenPage({ user }) {
     // Calculate for growing plants
     growingPlots.forEach(plot => {
       const seed = farm.seeds.find(s => s.plant_id === plot.plant_id);
-      const marketPrice = getMarketPrice(plot.plant_id);
-      if (seed && marketPrice) {
+      if (seed) {
+        const marketPrice = getMarketPrice(plot.plant_id) || seed.base_sell_price || 0;
         const projectedValue = seed.harvest_yield * marketPrice;
         totalProjectedEarnings += projectedValue;
         
@@ -245,8 +245,8 @@ export default function MoneyGardenPage({ user }) {
     // Add ready-to-harvest plants
     readyPlots.forEach(plot => {
       const seed = farm.seeds.find(s => s.plant_id === plot.plant_id);
-      const marketPrice = getMarketPrice(plot.plant_id);
-      if (seed && marketPrice) {
+      if (seed) {
+        const marketPrice = getMarketPrice(plot.plant_id) || seed.base_sell_price || 0;
         const projectedValue = seed.harvest_yield * marketPrice;
         totalProjectedEarnings += projectedValue;
         
