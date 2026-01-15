@@ -1628,9 +1628,18 @@ async def create_parent_chore(chore_data: ChoreCreate, request: Request):
     """Parent creates a chore for their child"""
     user = await require_parent(request)
     
-    # Verify child belongs to parent
+    # Verify child belongs to parent via parent_child_links collection
     child = await db.users.find_one({"user_id": chore_data.child_id})
-    if not child or user["user_id"] not in child.get("parent_ids", []):
+    if not child:
+        raise HTTPException(status_code=404, detail="Child not found")
+    
+    # Check parent_child_links for the relationship
+    link = await db.parent_child_links.find_one({
+        "parent_id": user["user_id"],
+        "child_id": chore_data.child_id,
+        "status": "active"
+    })
+    if not link:
         raise HTTPException(status_code=403, detail="Not authorized for this child")
     
     chore_id = f"chore_{uuid.uuid4().hex[:12]}"
