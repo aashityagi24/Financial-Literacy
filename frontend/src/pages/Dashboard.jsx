@@ -26,16 +26,20 @@ export default function Dashboard({ user, setUser }) {
   
   const gradeNames = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
   
-  // Redirect admin users to admin dashboard
+  // Redirect non-child users to their respective dashboards
   useEffect(() => {
     if (user?.role === 'admin') {
       navigate('/admin', { replace: true });
+    } else if (user?.role === 'teacher') {
+      navigate('/teacher-dashboard', { replace: true });
+    } else if (user?.role === 'parent') {
+      navigate('/parent-dashboard', { replace: true });
     }
   }, [user, navigate]);
   
   useEffect(() => {
-    // Don't fetch data if user is admin (will be redirected)
-    if (user?.role === 'admin') return;
+    // Don't fetch data if user is not a child (will be redirected)
+    if (user?.role && user.role !== 'child') return;
     fetchDashboardData();
     handleDailyCheckin();
   }, [user]);
