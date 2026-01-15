@@ -178,6 +178,19 @@ export default function Dashboard({ user, setUser }) {
                 <span className="font-bold text-[#1D3557]">₹{wallet?.total_balance?.toFixed(0) || 0}</span>
               </div>
               
+              {/* Notifications */}
+              <NotificationCenter 
+                onGiftRequestAction={async (requestId, action) => {
+                  try {
+                    await axios.post(`${API}/child/gift-requests/${requestId}/respond`, { action });
+                    toast.success(action === 'accept' ? 'Gift sent!' : 'Request declined');
+                    fetchDashboardData();
+                  } catch (error) {
+                    toast.error(error.response?.data?.detail || 'Failed to respond');
+                  }
+                }}
+              />
+              
               {/* Profile */}
               <Link to="/profile" className="flex items-center gap-2 hover:opacity-80">
                 <img 
