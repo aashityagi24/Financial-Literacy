@@ -47,10 +47,19 @@ export default function ParentDashboard({ user }) {
   
   // Forms
   const [linkEmail, setLinkEmail] = useState('');
-  const [choreForm, setChoreForm] = useState({ child_id: '', title: '', description: '', reward_amount: 5, frequency: 'once' });
+  const [choreForm, setChoreForm] = useState({ 
+    child_id: '', 
+    title: '', 
+    description: '', 
+    reward_amount: 5, 
+    frequency: 'one_time',
+    weekly_days: [],
+    monthly_date: 1
+  });
   const [giveMoneyForm, setGiveMoneyForm] = useState({ child_id: '', amount: 10, reason: '' });
   const [allowanceForm, setAllowanceForm] = useState({ child_id: '', amount: 10, frequency: 'weekly' });
   const [goalForm, setGoalForm] = useState({ child_id: '', title: '', target_amount: 50 });
+  const [choreRequests, setChoreRequests] = useState([]);
   
   useEffect(() => {
     if (user?.role !== 'parent') {
