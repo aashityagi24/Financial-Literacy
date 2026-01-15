@@ -153,12 +153,14 @@ export default function AdminQuestsPage({ user }) {
   
   const handleSubmit = async () => {
     if (!formData.title || !formData.due_date) {
-      toast.error('Please fill in required fields');
+      toast.error('Please fill in title and due date');
       return;
     }
     
-    if (formData.questions.length === 0) {
-      toast.error('Please add at least one question');
+    // Must have either questions or a base reward amount
+    const totalQuestPoints = formData.questions.reduce((sum, q) => sum + (parseFloat(q.points) || 0), 0);
+    if (formData.questions.length === 0 && (!formData.reward_amount || formData.reward_amount <= 0)) {
+      toast.error('Please add questions or set a base reward amount');
       return;
     }
     
