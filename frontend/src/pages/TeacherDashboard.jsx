@@ -599,6 +599,184 @@ export default function TeacherDashboard({ user }) {
                   </Dialog>
                 </div>
                 
+                {/* Create Quest Button - Full Width */}
+                <Dialog open={showCreateQuest} onOpenChange={setShowCreateQuest}>
+                  <DialogTrigger asChild>
+                    <button className="w-full mb-6 py-4 bg-gradient-to-r from-[#06D6A0] to-[#42E8B3] border-3 border-[#1D3557] rounded-xl font-bold text-white hover:shadow-lg flex items-center justify-center gap-2" data-testid="create-quest-btn">
+                      <Target className="w-5 h-5" /> Create Quest for Students
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-2xl max-h-[85vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Create Quest</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-4">
+                      <Input 
+                        placeholder="Quest Title" 
+                        value={questForm.title} 
+                        onChange={(e) => setQuestForm({...questForm, title: e.target.value})}
+                        className="border-3 border-[#1D3557]"
+                      />
+                      <Textarea 
+                        placeholder="Description (optional)" 
+                        value={questForm.description} 
+                        onChange={(e) => setQuestForm({...questForm, description: e.target.value})}
+                        className="border-3 border-[#1D3557]"
+                        rows={2}
+                      />
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-bold text-[#1D3557] mb-1 block">Min Grade</label>
+                          <Select value={String(questForm.min_grade)} onValueChange={(v) => setQuestForm({...questForm, min_grade: parseInt(v)})}>
+                            <SelectTrigger className="border-3 border-[#1D3557]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {gradeLabels.map((label, i) => (
+                                <SelectItem key={i} value={String(i)}>{label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-sm font-bold text-[#1D3557] mb-1 block">Max Grade</label>
+                          <Select value={String(questForm.max_grade)} onValueChange={(v) => setQuestForm({...questForm, max_grade: parseInt(v)})}>
+                            <SelectTrigger className="border-3 border-[#1D3557]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {gradeLabels.map((label, i) => (
+                                <SelectItem key={i} value={String(i)}>{label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-bold text-[#1D3557] mb-1 block">Due Date</label>
+                        <Input 
+                          type="date" 
+                          value={questForm.due_date} 
+                          onChange={(e) => setQuestForm({...questForm, due_date: e.target.value})}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="border-3 border-[#1D3557]"
+                        />
+                      </div>
+                      
+                      {/* Questions */}
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <label className="text-sm font-bold text-[#1D3557]">
+                            Questions ({questForm.questions.length}) - Total: ₹{questForm.questions.reduce((sum, q) => sum + (q.points || 0), 0)}
+                          </label>
+                          <button type="button" onClick={addQuestion} className="text-sm text-[#06D6A0] hover:underline font-bold">
+                            + Add Question
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-4 max-h-60 overflow-y-auto">
+                          {questForm.questions.map((q, qIndex) => (
+                            <div key={q.question_id} className="bg-[#E0FBFC] rounded-xl p-3 border-2 border-[#1D3557]/20">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-bold text-[#3D5A80]">Q{qIndex + 1}</span>
+                                <button onClick={() => removeQuestion(qIndex)} className="text-[#EE6C4D] text-sm">Remove</button>
+                              </div>
+                              
+                              <Input 
+                                placeholder="Question text" 
+                                value={q.question_text} 
+                                onChange={(e) => updateQuestion(qIndex, 'question_text', e.target.value)}
+                                className="border-2 border-[#1D3557]/30 mb-2"
+                              />
+                              
+                              <div className="grid grid-cols-2 gap-2 mb-2">
+                                <Select value={q.question_type} onValueChange={(v) => updateQuestion(qIndex, 'question_type', v)}>
+                                  <SelectTrigger className="border-2 border-[#1D3557]/30">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="mcq">Multiple Choice</SelectItem>
+                                    <SelectItem value="multi_select">Multi-Select</SelectItem>
+                                    <SelectItem value="true_false">True/False</SelectItem>
+                                    <SelectItem value="value">Number Entry</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <Input 
+                                  type="number" 
+                                  placeholder="Points (₹)" 
+                                  value={q.points} 
+                                  onChange={(e) => updateQuestion(qIndex, 'points', parseInt(e.target.value) || 0)}
+                                  className="border-2 border-[#1D3557]/30"
+                                />
+                              </div>
+                              
+                              {(q.question_type === 'mcq' || q.question_type === 'multi_select') && (
+                                <div className="space-y-1 mb-2">
+                                  {q.options.map((opt, oIndex) => (
+                                    <Input 
+                                      key={oIndex}
+                                      placeholder={`Option ${oIndex + 1}`}
+                                      value={opt}
+                                      onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
+                                      className="border-2 border-[#1D3557]/30 text-sm"
+                                    />
+                                  ))}
+                                </div>
+                              )}
+                              
+                              <Input 
+                                placeholder={q.question_type === 'multi_select' ? 'Correct answers (comma-separated)' : q.question_type === 'true_false' ? 'True or False' : 'Correct answer'}
+                                value={Array.isArray(q.correct_answer) ? q.correct_answer.join(', ') : q.correct_answer}
+                                onChange={(e) => updateQuestion(qIndex, 'correct_answer', 
+                                  q.question_type === 'multi_select' ? e.target.value.split(',').map(s => s.trim()) : e.target.value
+                                )}
+                                className="border-2 border-[#1D3557]/30"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <button onClick={handleCreateQuest} className="btn-primary w-full py-3">Create Quest</button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                
+                {/* My Quests Section */}
+                {teacherQuests.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
+                      <Target className="w-5 h-5 inline mr-2" />
+                      My Quests ({teacherQuests.length})
+                    </h3>
+                    <div className="space-y-3">
+                      {teacherQuests.map((quest) => (
+                        <div key={quest.quest_id} className="card-playful p-4 bg-[#06D6A0]/10">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="font-bold text-[#1D3557]">{quest.title}</h4>
+                              <p className="text-sm text-[#3D5A80] mt-1">{quest.description}</p>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-[#3D5A80]">
+                                <span>₹{quest.total_points} total</span>
+                                <span>{quest.questions?.length || 0} questions</span>
+                                <span>Due: {quest.due_date}</span>
+                              </div>
+                            </div>
+                            <button 
+                              onClick={() => handleDeleteQuest(quest.quest_id)}
+                              className="p-2 hover:bg-[#EE6C4D]/20 rounded-lg text-[#EE6C4D]"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
                 {/* Announcements Section */}
                 {announcements.length > 0 && (
                   <div className="mb-6">
