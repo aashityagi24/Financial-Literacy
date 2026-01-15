@@ -5,7 +5,8 @@ import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
   Users, ChevronLeft, Plus, Gift, Target, Wallet, 
-  Check, Clock, X, ChevronRight, Eye, Calendar, Trash2
+  Check, Clock, X, ChevronRight, Eye, Calendar, Trash2,
+  School, Megaphone
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,6 +32,7 @@ export default function ParentDashboard({ user }) {
   const [chores, setChores] = useState([]);
   const [allowances, setAllowances] = useState([]);
   const [savingsGoals, setSavingsGoals] = useState([]);
+  const [childClassrooms, setChildClassrooms] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedChild, setSelectedChild] = useState(null);
   const [childProgress, setChildProgress] = useState(null);
