@@ -208,6 +208,26 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
   - `GET /api/admin/investments/scheduler-status` - Returns scheduler running status, jobs, next run time
   - `GET /api/admin/investments/scheduler-logs` - Returns execution history with success/failure details
 
+### Phase 14: Child Savings Goals Enhancement ✅ (January 15, 2026)
+- **Dashboard Savings Goal Display**: Active savings goal prominently shown on child's dashboard
+  - Shows goal title, description, image, progress bar
+  - Displays remaining amount with encouraging message
+  - Links to Wallet page for management
+- **Wallet Page Savings Goals Section**: Moved "My Savings Goals" section above account cards for prominence
+  - Shows all savings goals with progress tracking
+  - "New Goal" button to create goals
+  - "Add to Goal" button to contribute from savings balance
+- **Goal Allocation Logic**: 
+  - Single goal auto-selection (no dropdown when only 1 active goal)
+  - Multiple goals show dropdown selector
+  - Contributes from savings account balance
+  - Goals auto-mark as completed when target reached
+- **Savings Goal APIs**:
+  - `GET /api/child/savings-goals` - Get all savings goals for user
+  - `POST /api/child/savings-goals` - Create new savings goal (title, description, image, target, deadline)
+  - `POST /api/child/savings-goals/{id}/contribute` - Contribute from savings to goal
+  - `POST /api/upload/goal-image` - Upload image for savings goal
+
 ## API Endpoints
 
 ### Admin Store Management (New - Phase 11)
