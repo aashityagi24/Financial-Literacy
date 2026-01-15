@@ -67,8 +67,12 @@ export default function TeacherDashboard({ user }) {
   
   const fetchClassroomDetails = async (classroomId) => {
     try {
-      const response = await axios.get(`${API}/teacher/classrooms/${classroomId}`);
-      setClassroomDetails(response.data);
+      const [classRes, annRes] = await Promise.all([
+        axios.get(`${API}/teacher/classrooms/${classroomId}`),
+        axios.get(`${API}/teacher/classrooms/${classroomId}/announcements`)
+      ]);
+      setClassroomDetails(classRes.data);
+      setAnnouncements(annRes.data || []);
       setSelectedClassroom(classroomId);
     } catch (error) {
       toast.error('Failed to load classroom');
