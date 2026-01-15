@@ -518,6 +518,66 @@ export default function MoneyGardenPage({ user }) {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Transfer Dialog */}
+      <Dialog open={showTransfer} onOpenChange={setShowTransfer}>
+        <DialogContent className="bg-white border-4 border-[#228B22] rounded-3xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#228B22]" style={{ fontFamily: 'Fredoka' }}>
+              💰 Transfer Money
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div>
+              <label className="block text-sm font-bold text-[#1D3557] mb-1">From Account</label>
+              <Select value={transferData.from_account} onValueChange={(v) => setTransferData({...transferData, from_account: v})}>
+                <SelectTrigger className="border-2 border-[#228B22]/30">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {accountOptions.map(acc => (
+                    <SelectItem key={acc.value} value={acc.value}>
+                      {acc.label} (₹{acc.balance.toFixed(0)})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-[#1D3557] mb-1">To Account</label>
+              <Select value={transferData.to_account} onValueChange={(v) => setTransferData({...transferData, to_account: v})}>
+                <SelectTrigger className="border-2 border-[#228B22]/30">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {accountOptions.map(acc => (
+                    <SelectItem key={acc.value} value={acc.value}>
+                      {acc.label} (₹{acc.balance.toFixed(0)})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-[#1D3557] mb-1">Amount (₹)</label>
+              <Input 
+                type="number"
+                min="1"
+                placeholder="Enter amount to transfer"
+                value={transferData.amount}
+                onChange={(e) => setTransferData({...transferData, amount: e.target.value})}
+                className="border-2 border-[#228B22]/30"
+              />
+            </div>
+            
+            <button onClick={handleTransfer} className="w-full py-3 bg-[#228B22] hover:bg-[#1D7A1D] text-white font-bold rounded-xl">
+              Transfer Money
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
