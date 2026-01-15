@@ -34,31 +34,70 @@ export default function WalletPage({ user }) {
     amount: ''
   });
   
-  const accountInfo = {
-    spending: { 
-      icon: '🛒', 
-      color: 'from-[#EE6C4D] to-[#FF8A6C]',
-      description: 'Use this to buy things!',
-      action: { label: 'Go Shopping', path: '/store' }
-    },
-    savings: { 
-      icon: '🐷', 
-      color: 'from-[#06D6A0] to-[#42E8B3]',
-      description: 'Save up for something special!',
-      action: { label: 'My Goals', path: '/savings-goals' }
-    },
-    investing: { 
-      icon: '📈', 
-      color: 'from-[#3D5A80] to-[#5A7BA0]',
-      description: 'Grow your money over time!',
-      action: { label: 'Go Invest', path: '/investments' }
-    },
-    gifting: { 
-      icon: '❤️', 
-      color: 'from-[#9B5DE5] to-[#B47EE5]',
-      description: 'Share with others who need it!',
-      action: { label: 'Give ₹', path: '/quests' }
-    },
+  const grade = user?.grade ?? 3;
+  
+  // Grade-based account configuration
+  const getAccountMeta = () => {
+    const baseMeta = {
+      spending: { 
+        icon: '🛒', 
+        color: 'from-[#EE6C4D] to-[#FF8A6C]',
+        description: 'Use this to buy things!',
+        action: { label: 'Go Shopping', path: '/store' }
+      },
+      savings: { 
+        icon: '🐷', 
+        color: 'from-[#06D6A0] to-[#42E8B3]',
+        description: 'Save up for something special!',
+        action: { label: 'My Goals', path: '/savings-goals' }
+      },
+      gifting: { 
+        icon: '❤️', 
+        color: 'from-[#9B5DE5] to-[#B47EE5]',
+        description: 'Share with others who need it!',
+        action: { label: 'Give ₹', path: '/quests' }
+      },
+    };
+    
+    if (grade === 0) {
+      // Kindergarten: No investing jar
+      return baseMeta;
+    } else if (grade <= 2) {
+      // Grade 1-2: Farming jar
+      return {
+        ...baseMeta,
+        investing: { 
+          icon: '🌱', 
+          label: 'Farming',
+          color: 'from-[#228B22] to-[#32CD32]',
+          description: 'Grow plants and harvest profits!',
+          action: { label: 'My Garden', path: '/garden' }
+        },
+      };
+    } else {
+      // Grade 3+: Investing jar
+      return {
+        ...baseMeta,
+        investing: { 
+          icon: '📈', 
+          color: 'from-[#3D5A80] to-[#5A7BA0]',
+          description: 'Grow your money over time!',
+          action: { label: 'Go Invest', path: '/investments' }
+        },
+      };
+    }
+  };
+  
+  const accountInfo = getAccountMeta();
+  
+  // Filter accounts based on grade
+  const getFilteredAccounts = () => {
+    if (!wallet?.accounts) return [];
+    if (grade === 0) {
+      // Kindergarten: Remove investing account
+      return wallet.accounts.filter(acc => acc.account_type !== 'investing');
+    }
+    return wallet.accounts;
   };
   
   useEffect(() => {
