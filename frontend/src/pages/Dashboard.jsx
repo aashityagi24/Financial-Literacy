@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { API } from '@/App';
+import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
   Coins, Wallet, Store, TrendingUp, Target, Trophy, 
