@@ -1112,6 +1112,10 @@ async def purchase_item(purchase: PurchaseCreate, request: Request):
     """Purchase an item from the store"""
     user = await get_current_user(request)
     
+    # Parents cannot purchase - they can only add to shopping list
+    if user.get("role") == "parent":
+        raise HTTPException(status_code=403, detail="Parents cannot purchase items directly. Please add items to your shopping list instead.")
+    
     # Check in admin_store_items (the new admin-created items)
     item = await db.admin_store_items.find_one({"item_id": purchase.item_id}, {"_id": 0})
     if not item:
