@@ -532,44 +532,153 @@ export default function TeacherDashboard({ user }) {
                     </DialogContent>
                   </Dialog>
                   
-                  <Dialog open={showChallenge} onOpenChange={setShowChallenge}>
+                  <Dialog open={showCreateQuest} onOpenChange={setShowCreateQuest}>
                     <DialogTrigger asChild>
-                      <button className="btn-secondary flex-1 py-3 flex items-center justify-center gap-2">
-                        <Trophy className="w-5 h-5" /> Create Challenge
+                      <button className="btn-secondary flex-1 py-3 flex items-center justify-center gap-2" data-testid="create-quest-btn">
+                        <Target className="w-5 h-5" /> Create Quest
                       </button>
                     </DialogTrigger>
-                    <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
+                    <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-2xl max-h-[85vh] overflow-y-auto">
                       <DialogHeader>
-                        <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Create Challenge</DialogTitle>
+                        <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Create Quest</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 mt-4">
                         <Input 
-                          placeholder="Challenge Title" 
-                          value={challengeForm.title} 
-                          onChange={(e) => setChallengeForm({...challengeForm, title: e.target.value})}
+                          placeholder="Quest Title" 
+                          value={questForm.title} 
+                          onChange={(e) => setQuestForm({...questForm, title: e.target.value})}
                           className="border-3 border-[#1D3557]"
                         />
                         <Textarea 
-                          placeholder="Description" 
-                          value={challengeForm.description} 
-                          onChange={(e) => setChallengeForm({...challengeForm, description: e.target.value})}
+                          placeholder="Description (optional)" 
+                          value={questForm.description} 
+                          onChange={(e) => setQuestForm({...questForm, description: e.target.value})}
                           className="border-3 border-[#1D3557]"
+                          rows={2}
                         />
-                        <Input 
-                          type="number"
-                          placeholder="Reward Amount" 
-                          value={challengeForm.reward_amount} 
-                          onChange={(e) => setChallengeForm({...challengeForm, reward_amount: parseFloat(e.target.value)})}
-                          className="border-3 border-[#1D3557]"
-                        />
-                        <button onClick={handleCreateChallenge} className="btn-primary w-full py-3">Create Challenge</button>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-bold text-[#1D3557] mb-1 block">Min Grade</label>
+                            <Select value={String(questForm.min_grade)} onValueChange={(v) => setQuestForm({...questForm, min_grade: parseInt(v)})}>
+                              <SelectTrigger className="border-3 border-[#1D3557]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {gradeLabels.map((label, i) => (
+                                  <SelectItem key={i} value={String(i)}>{label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <label className="text-sm font-bold text-[#1D3557] mb-1 block">Max Grade</label>
+                            <Select value={String(questForm.max_grade)} onValueChange={(v) => setQuestForm({...questForm, max_grade: parseInt(v)})}>
+                              <SelectTrigger className="border-3 border-[#1D3557]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {gradeLabels.map((label, i) => (
+                                  <SelectItem key={i} value={String(i)}>{label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-bold text-[#1D3557] mb-1 block">Due Date</label>
+                          <Input 
+                            type="date" 
+                            value={questForm.due_date} 
+                            onChange={(e) => setQuestForm({...questForm, due_date: e.target.value})}
+                            min={new Date().toISOString().split('T')[0]}
+                            className="border-3 border-[#1D3557]"
+                          />
+                        </div>
+                        
+                        {/* Questions */}
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <label className="text-sm font-bold text-[#1D3557]">
+                              Questions ({questForm.questions.length}) - Total: ₹{questForm.questions.reduce((sum, q) => sum + (q.points || 0), 0)}
+                            </label>
+                            <button type="button" onClick={addQuestion} className="text-sm text-[#06D6A0] hover:underline font-bold">
+                              + Add Question
+                            </button>
+                          </div>
+                          
+                          <div className="space-y-4 max-h-60 overflow-y-auto">
+                            {questForm.questions.map((q, qIndex) => (
+                              <div key={q.question_id} className="bg-[#E0FBFC] rounded-xl p-3 border-2 border-[#1D3557]/20">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm font-bold text-[#3D5A80]">Q{qIndex + 1}</span>
+                                  <button onClick={() => removeQuestion(qIndex)} className="text-[#EE6C4D] text-sm">Remove</button>
+                                </div>
+                                
+                                <Input 
+                                  placeholder="Question text" 
+                                  value={q.question_text} 
+                                  onChange={(e) => updateQuestion(qIndex, 'question_text', e.target.value)}
+                                  className="border-2 border-[#1D3557]/30 mb-2"
+                                />
+                                
+                                <div className="grid grid-cols-2 gap-2 mb-2">
+                                  <Select value={q.question_type} onValueChange={(v) => updateQuestion(qIndex, 'question_type', v)}>
+                                    <SelectTrigger className="border-2 border-[#1D3557]/30">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="mcq">Multiple Choice</SelectItem>
+                                      <SelectItem value="multi_select">Multi-Select</SelectItem>
+                                      <SelectItem value="true_false">True/False</SelectItem>
+                                      <SelectItem value="value">Number Entry</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <Input 
+                                    type="number" 
+                                    placeholder="Points (₹)" 
+                                    value={q.points} 
+                                    onChange={(e) => updateQuestion(qIndex, 'points', parseInt(e.target.value) || 0)}
+                                    className="border-2 border-[#1D3557]/30"
+                                  />
+                                </div>
+                                
+                                {(q.question_type === 'mcq' || q.question_type === 'multi_select') && (
+                                  <div className="space-y-1 mb-2">
+                                    {q.options.map((opt, oIndex) => (
+                                      <Input 
+                                        key={oIndex}
+                                        placeholder={`Option ${oIndex + 1}`}
+                                        value={opt}
+                                        onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
+                                        className="border-2 border-[#1D3557]/30 text-sm"
+                                      />
+                                    ))}
+                                  </div>
+                                )}
+                                
+                                <Input 
+                                  placeholder={q.question_type === 'multi_select' ? 'Correct answers (comma-separated)' : q.question_type === 'true_false' ? 'True or False' : 'Correct answer'}
+                                  value={Array.isArray(q.correct_answer) ? q.correct_answer.join(', ') : q.correct_answer}
+                                  onChange={(e) => updateQuestion(qIndex, 'correct_answer', 
+                                    q.question_type === 'multi_select' ? e.target.value.split(',').map(s => s.trim()) : e.target.value
+                                  )}
+                                  className="border-2 border-[#1D3557]/30"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <button onClick={handleCreateQuest} className="btn-primary w-full py-3">Create Quest</button>
                       </div>
                     </DialogContent>
                   </Dialog>
                   
                   <Dialog open={showAnnouncement} onOpenChange={setShowAnnouncement}>
                     <DialogTrigger asChild>
-                      <button className="bg-[#FFD23F] border-3 border-[#1D3557] rounded-xl font-bold text-[#1D3557] hover:bg-[#FFE066] flex-1 py-3 flex items-center justify-center gap-2">
+                      <button className="btn-secondary flex-1 py-3 flex items-center justify-center gap-2">
                         <Megaphone className="w-5 h-5" /> Announce
                       </button>
                     </DialogTrigger>
