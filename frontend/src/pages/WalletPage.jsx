@@ -409,7 +409,7 @@ export default function WalletPage({ user }) {
                           <div>
                             <h3 className="font-bold text-[#1D3557] text-lg">{goal.title}</h3>
                             {goal.description && (
-                              <p className="text-sm text-[#3D5A80] mt-0.5">{goal.description}</p>
+                              <p className="text-base text-[#3D5A80] mt-0.5">{goal.description}</p>
                             )}
                           </div>
                           {goal.completed && (
