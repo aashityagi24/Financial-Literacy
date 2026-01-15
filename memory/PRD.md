@@ -253,6 +253,31 @@ Create a financial literacy gamified learning activity for children (K-5, ages 5
   - `POST /api/teacher/classrooms/{id}/announcements` - Post announcement
   - `DELETE /api/teacher/announcements/{id}` - Delete announcement
 
+### Phase 16: Notification Center & Classmates ✅ (January 15, 2026)
+- **Notification Center** (Child & Parent Dashboards):
+  - Bell icon with unread count badge in header
+  - Notifications for: teacher rewards, announcements, chores, gifts, money received
+  - Mark all as read functionality
+  - Delete individual notifications
+  - Auto-polls for new notifications every 30 seconds
+- **My Classroom Section** (Child Dashboard):
+  - Shows all classmates with their info
+  - Displays each classmate's: balance, lessons completed, streak
+  - Shows classmates' public savings goals with progress
+  - **Gift Money**: Send money from Giving jar to classmate
+  - **Request Gift**: Ask classmate for gift money
+  - Accept/Decline gift requests with notifications
+- **Notification APIs**:
+  - `GET /api/notifications` - Get user's notifications with unread count
+  - `POST /api/notifications/mark-read` - Mark all as read
+  - `DELETE /api/notifications/{id}` - Delete notification
+- **Classmates/Gifting APIs**:
+  - `GET /api/child/classmates` - Get classmates with balances, lessons, savings goals
+  - `POST /api/child/gift-money` - Send gift from giving jar
+  - `POST /api/child/request-gift` - Create gift request
+  - `GET /api/child/gift-requests` - Get pending requests
+  - `POST /api/child/gift-requests/{id}/respond` - Accept/decline request
+
 ## API Endpoints
 
 ### Admin Store Management (New - Phase 11)
