@@ -566,6 +566,7 @@ class ShoppingListChoreCreate(BaseModel):
     list_item_ids: List[str]  # IDs of shopping list items to include
     title: str
     description: Optional[str] = None
+    reward_amount: float  # Custom reward amount set by parent
 
 class SavingsGoal(BaseModel):
     model_config = ConfigDict(extra="ignore")
