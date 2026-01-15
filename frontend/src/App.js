@@ -230,6 +230,11 @@ function AppRouter() {
           {({ user }) => <ParentShoppingList user={user} />}
         </ProtectedRoute>
       } />
+      <Route path="/admin/garden" element={
+        <ProtectedRoute>
+          {({ user }) => <AdminGardenManagement user={user} />}
+        </ProtectedRoute>
+      } />
     </Routes>
   );
 }
