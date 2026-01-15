@@ -46,7 +46,7 @@ export default function ClassmatesPage({ user }) {
     }
   };
 
-  const givingBalance = wallet?.accounts?.find(a => a.account_type === 'giving')?.balance || 0;
+  const giftingBalance = wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance || 0;
 
   const handleGiftMoney = async () => {
     if (!giftForm.amount || parseFloat(giftForm.amount) <= 0) {
@@ -54,7 +54,7 @@ export default function ClassmatesPage({ user }) {
       return;
     }
 
-    if (parseFloat(giftForm.amount) > givingBalance) {
+    if (parseFloat(giftForm.amount) > giftingBalance) {
       toast.error('Not enough balance in your Giving jar');
       return;
     }
@@ -161,7 +161,7 @@ export default function ClassmatesPage({ user }) {
                   <p className="text-sm text-[#3D5A80]">Classmates</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-[#06D6A0]">₹{givingBalance.toFixed(0)}</p>
+                  <p className="text-2xl font-bold text-[#06D6A0]">₹{giftingBalance.toFixed(0)}</p>
                   <p className="text-sm text-[#3D5A80]">Your Giving Jar</p>
                 </div>
               </div>
@@ -266,7 +266,7 @@ export default function ClassmatesPage({ user }) {
           <div className="space-y-4 pt-2">
             <div className="bg-[#FFD23F]/20 rounded-xl p-3 border-2 border-[#FFD23F]">
               <p className="text-sm text-[#1D3557]">
-                Your Giving Jar: <strong>₹{givingBalance?.toFixed(0) || 0}</strong>
+                Your Giving Jar: <strong>₹{giftingBalance?.toFixed(0) || 0}</strong>
               </p>
             </div>
             
