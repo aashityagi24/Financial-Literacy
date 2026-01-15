@@ -185,6 +185,11 @@ function AppRouter() {
           {({ user }) => <ParentDashboard user={user} />}
         </ProtectedRoute>
       } />
+      <Route path="/classmates" element={
+        <ProtectedRoute>
+          {({ user }) => <ClassmatesPage user={user} />}
+        </ProtectedRoute>
+      } />
       <Route path="/admin/content" element={
         <ProtectedRoute>
           {({ user }) => <ContentManagement user={user} />}
