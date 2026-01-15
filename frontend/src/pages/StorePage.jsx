@@ -172,6 +172,16 @@ export default function StorePage({ user }) {
   const balanceAfter = spendingBalance - totalCost;
   const canAfford = balanceAfter >= 0;
   
+  // Determine back link based on user role
+  const getBackLink = () => {
+    if (user?.role === 'parent') return '/parent-dashboard';
+    if (user?.role === 'teacher') return '/teacher-dashboard';
+    return '/dashboard';
+  };
+  
+  // Check if user is a parent (view-only mode)
+  const isParentViewMode = user?.role === 'parent';
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-[#E0FBFC] flex items-center justify-center">
