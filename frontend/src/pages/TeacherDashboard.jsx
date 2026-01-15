@@ -232,13 +232,18 @@ export default function TeacherDashboard({ user }) {
     }
     
     try {
-      await axios.post(`${API}/teacher/quests`, questForm);
-      toast.success('Quest created! Students will be notified.');
+      if (editingQuest) {
+        await axios.put(`${API}/teacher/quests/${editingQuest.quest_id}`, questForm);
+        toast.success('Quest updated!');
+      } else {
+        await axios.post(`${API}/teacher/quests`, questForm);
+        toast.success('Quest created! Students will be notified.');
+      }
       setShowCreateQuest(false);
-      setQuestForm({ title: '', description: '', image_url: '', pdf_url: '', reward_amount: 0, due_date: '', questions: [] });
+      resetQuestForm();
       fetchDashboard();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to create quest');
+      toast.error(error.response?.data?.detail || 'Failed to save quest');
     }
   };
   
