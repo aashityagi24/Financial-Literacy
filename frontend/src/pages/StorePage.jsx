@@ -370,6 +370,8 @@ export default function StorePage({ user }) {
                       categoryColor={cat?.color || '#3D5A80'}
                       onSelect={() => openPurchaseDialog(item)}
                       formatPrice={formatPrice}
+                      inShoppingList={!!isInShoppingList(item.item_id)}
+                      isPurchased={!!isItemPurchased(item.item_id)}
                     />
                   );
                 })}
