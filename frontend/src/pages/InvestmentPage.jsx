@@ -175,9 +175,35 @@ export default function InvestmentPage({ user }) {
               </div>
             </div>
             
-            <div className="flex items-center gap-2 bg-[#06D6A0] px-4 py-2 rounded-xl border-2 border-[#1D3557]">
-              <Wallet className="w-5 h-5 text-white" />
-              <span className="font-bold text-white">₹{investingBalance.toFixed(0)}</span>
+            <div className="flex items-center gap-3">
+              {/* Wallet Balances */}
+              <button 
+                onClick={() => setShowTransfer(true)}
+                className="flex items-center gap-2 bg-[#EE6C4D] px-3 py-2 rounded-xl border-2 border-[#1D3557] hover:bg-[#DD5B3C] transition-colors"
+              >
+                <span className="text-white">💳</span>
+                <div className="text-white text-left">
+                  <p className="text-xs opacity-80">Spending</p>
+                  <p className="font-bold text-sm">₹{spendingBalance.toFixed(0)}</p>
+                </div>
+              </button>
+              <button 
+                onClick={() => setShowTransfer(true)}
+                className="flex items-center gap-2 bg-[#06D6A0] px-3 py-2 rounded-xl border-2 border-[#1D3557] hover:bg-[#05C090] transition-colors"
+              >
+                <span className="text-white">📈</span>
+                <div className="text-white text-left">
+                  <p className="text-xs opacity-80">Investing</p>
+                  <p className="font-bold text-sm">₹{investingBalance.toFixed(0)}</p>
+                </div>
+              </button>
+              <button
+                onClick={() => setShowTransfer(true)}
+                className="bg-[#FFD23F] hover:bg-[#FFC000] text-[#1D3557] p-2 rounded-xl font-bold border-2 border-[#1D3557]"
+                title="Transfer Money"
+              >
+                <ArrowRightLeft className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
