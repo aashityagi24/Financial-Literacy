@@ -5853,8 +5853,25 @@ async def startup_scheduler():
         id="daily_market_simulation",
         replace_existing=True
     )
+    
+    # Run quest reminders at 00:30 IST (19:00 UTC previous day) - 1 day before due
+    scheduler.add_job(
+        send_quest_reminders,
+        CronTrigger(hour=19, minute=0),  # 19:00 UTC = 00:30 IST next day
+        id="quest_reminders",
+        replace_existing=True
+    )
+    
+    # Run chore reset at 00:30 IST (6 AM IST = 00:30 UTC)
+    scheduler.add_job(
+        reset_daily_chores,
+        CronTrigger(hour=0, minute=30),  # 00:30 UTC = 6:00 AM IST
+        id="daily_chore_reset",
+        replace_existing=True
+    )
+    
     scheduler.start()
-    logger.info("Daily price fluctuation scheduler started (runs at 6:00 AM UTC / 11:30 AM IST)")
+    logger.info("Schedulers started: market simulation (6 AM UTC), quest reminders (7 PM UTC), chore reset (00:30 UTC)")
     
     # Run immediately if it hasn't run today (useful for server restarts)
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -5862,6 +5879,96 @@ async def startup_scheduler():
     if not last_run:
         logger.info("Running initial market simulation on startup...")
         await daily_market_simulation()
+
+async def send_quest_reminders():
+    """Send reminders to children for quests due tomorrow"""
+    try:
+        tomorrow = (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d")
+        
+        # Find quests due tomorrow
+        quests_due = await db.new_quests.find({
+            "due_date": tomorrow,
+            "is_active": True,
+            "creator_type": {"$in": ["admin", "teacher"]}
+        }, {"_id": 0}).to_list(200)
+        
+        for quest in quests_due:
+            # Find children who haven't completed this quest
+            if quest["creator_type"] == "admin":
+                # Get all children in grade range
+                children = await db.users.find({
+                    "role": "child",
+                    "grade": {"$gte": quest["min_grade"], "$lte": quest["max_grade"]}
+                }, {"user_id": 1}).to_list(1000)
+            else:
+                # Teacher quest - get children in those classrooms
+                children = await db.users.find({
+                    "role": "child",
+                    "classroom_id": {"$in": quest.get("classroom_ids", [])}
+                }, {"user_id": 1}).to_list(1000)
+            
+            for child in children:
+                # Check if already completed
+                completion = await db.quest_completions.find_one({
+                    "user_id": child["user_id"],
+                    "quest_id": quest["quest_id"],
+                    "has_earned": True
+                })
+                
+                if not completion:
+                    await db.notifications.insert_one({
+                        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+                        "user_id": child["user_id"],
+                        "message": f"⏰ Reminder: '{quest['title']}' is due tomorrow! Complete it to earn ₹{quest['total_points']}",
+                        "type": "quest_reminder",
+                        "link": "/quests",
+                        "is_read": False,
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    })
+        
+        logger.info(f"Sent quest reminders for {len(quests_due)} quests due tomorrow")
+    except Exception as e:
+        logger.error(f"Error sending quest reminders: {e}")
+
+async def reset_daily_chores():
+    """Reset daily chores for children at 6 AM IST"""
+    try:
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        weekday = datetime.now(timezone.utc).weekday()  # 0=Mon, 6=Sun
+        day_of_month = datetime.now(timezone.utc).day
+        
+        # Find daily and weekly chores that need reset
+        daily_chores = await db.new_quests.find({
+            "creator_type": "parent",
+            "is_active": True,
+            "$or": [
+                {"frequency": "daily"},
+                {"frequency": "weekly", "weekly_days": weekday},
+                {"frequency": "monthly_date", "monthly_date": day_of_month}
+            ]
+        }, {"_id": 0}).to_list(500)
+        
+        for chore in daily_chores:
+            # Clear today's pending completion requests
+            await db.chore_requests.delete_many({
+                "chore_id": chore["chore_id"],
+                "status": "pending"
+            })
+            
+            # Notify child about recurring chore
+            await db.notifications.insert_one({
+                "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+                "user_id": chore["child_id"],
+                "message": f"🔄 Time for your chore: {chore['title']}",
+                "type": "chore_reminder",
+                "link": "/quests",
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+        
+        logger.info(f"Reset {len(daily_chores)} daily/weekly/monthly chores")
+    except Exception as e:
+        logger.error(f"Error resetting daily chores: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_scheduler():
