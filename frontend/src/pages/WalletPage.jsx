@@ -276,6 +276,7 @@ export default function WalletPage({ user }) {
         <div className="grid grid-cols-2 gap-4 mb-8" data-testid="money-jars-grid">
           {filteredAccounts.map((acc, index) => {
             const info = accountInfo[acc.account_type];
+            const displayLabel = info?.label || acc.account_type;
             return (
               <div 
                 key={acc.account_type} 
@@ -284,7 +285,7 @@ export default function WalletPage({ user }) {
                 data-testid={`jar-${acc.account_type}`}
               >
                 <div className="text-3xl mb-2">{info?.icon}</div>
-                <p className="capitalize text-lg font-bold">{acc.account_type}</p>
+                <p className="capitalize text-lg font-bold">{displayLabel}</p>
                 <p className="text-2xl font-bold" style={{ fontFamily: 'Fredoka' }}>₹{acc.balance?.toFixed(0)}</p>
                 <p className="text-base opacity-90 mt-1">{info?.description}</p>
                 {info?.action && (
