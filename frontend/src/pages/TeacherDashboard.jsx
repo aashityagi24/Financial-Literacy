@@ -235,16 +235,6 @@ export default function TeacherDashboard({ user }) {
     }
   };
   
-  const handleCompleteChallenge = async (challengeId, studentId) => {
-    try {
-      await axios.post(`${API}/teacher/challenges/${challengeId}/complete/${studentId}`);
-      toast.success('Challenge completed for student!');
-      fetchClassroomDetails(selectedClassroom);
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed');
-    }
-  };
-  
   const copyInviteCode = (code) => {
     navigator.clipboard.writeText(code);
     toast.success('Invite code copied!');
