@@ -157,11 +157,34 @@ export default function AdminQuestsPage({ user }) {
       return;
     }
     
-    // Must have either questions or a base reward amount
+    // Calculate total reward points
     const totalQuestPoints = formData.questions.reduce((sum, q) => sum + (parseFloat(q.points) || 0), 0);
+    
+    // If no questions, base reward is mandatory
     if (formData.questions.length === 0 && (!formData.reward_amount || formData.reward_amount <= 0)) {
       toast.error('Please add questions or set a base reward amount');
       return;
+    }
+    
+    // If there are questions, each must have reward points
+    if (formData.questions.length > 0) {
+      const missingPoints = formData.questions.some(q => !q.points || q.points <= 0);
+      if (missingPoints) {
+        toast.error('Each question must have reward points');
+        return;
+      }
+      
+      // Also check each question has correct answer set
+      const missingAnswer = formData.questions.some(q => {
+        if (q.question_type === 'multi_select') {
+          return !Array.isArray(q.correct_answer) || q.correct_answer.length === 0;
+        }
+        return !q.correct_answer || q.correct_answer === '';
+      });
+      if (missingAnswer) {
+        toast.error('Each question must have a correct answer selected');
+        return;
+      }
     }
     
     try {
