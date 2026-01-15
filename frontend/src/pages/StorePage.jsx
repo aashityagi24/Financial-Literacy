@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
-import { Store, ChevronLeft, Check, ShoppingBag, Package } from 'lucide-react';
+import { Store, ChevronLeft, ShoppingBag, Package, Minus, Plus, ShoppingCart, History } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -18,8 +18,10 @@ export default function StorePage({ user }) {
   const [wallet, setWallet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [quantity, setQuantity] = useState(1);
   const [purchasing, setPurchasing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showPurchases, setShowPurchases] = useState(false);
   
   useEffect(() => {
     fetchStoreData();
@@ -59,16 +61,26 @@ export default function StorePage({ user }) {
   };
   
   const handlePurchase = async () => {
-    if (!selectedItem) return;
+    if (!selectedItem || quantity < 1) return;
+    
+    const totalCost = selectedItem.price * quantity;
+    if (totalCost > spendingBalance) {
+      toast.error('Not enough money!');
+      return;
+    }
     
     setPurchasing(true);
     try {
-      await axios.post(`${API}/store/purchase`, {
-        item_id: selectedItem.item_id
-      });
+      // Make purchase for each quantity (or update backend to handle quantity)
+      for (let i = 0; i < quantity; i++) {
+        await axios.post(`${API}/store/purchase`, {
+          item_id: selectedItem.item_id
+        });
+      }
       
-      toast.success(`You bought ${selectedItem.name}! 🎉`);
+      toast.success(`You bought ${quantity}x ${selectedItem.name}! 🎉`);
       setSelectedItem(null);
+      setQuantity(1);
       fetchStoreData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Purchase failed');
@@ -77,7 +89,11 @@ export default function StorePage({ user }) {
     }
   };
   
-  const isOwned = (itemId) => purchases.some(p => p.item_id === itemId);
+  const openPurchaseDialog = (item) => {
+    setSelectedItem(item);
+    setQuantity(1);
+  };
+  
   const spendingBalance = wallet?.accounts?.find(a => a.account_type === 'spending')?.balance || 0;
   
   // Filter items by category
@@ -92,20 +108,28 @@ export default function StorePage({ user }) {
   }, {});
   
   // Format price with unit
-  const formatPrice = (item) => {
+  const formatPrice = (item, qty = 1) => {
     const unit = item.unit || 'piece';
     const unitLabels = {
-      piece: '/pc',
-      kg: '/kg',
-      gram: '/g',
-      litre: '/L',
-      ml: '/ml',
-      pack: '/pack',
-      dozen: '/dozen',
-      unit: '/unit'
+      piece: 'pc',
+      kg: 'kg',
+      gram: 'g',
+      litre: 'L',
+      ml: 'ml',
+      pack: 'pack',
+      dozen: 'dozen',
+      unit: 'unit'
     };
-    return `₹${item.price}${unitLabels[unit] || ''}`;
+    if (qty === 1) {
+      return `₹${item.price}/${unitLabels[unit] || 'pc'}`;
+    }
+    return `₹${item.price * qty}`;
   };
+  
+  // Calculate totals for purchase dialog
+  const totalCost = selectedItem ? selectedItem.price * quantity : 0;
+  const balanceAfter = spendingBalance - totalCost;
+  const canAfford = balanceAfter >= 0;
   
   if (loading) {
     return (
@@ -133,10 +157,18 @@ export default function StorePage({ user }) {
               </div>
             </div>
             
-            <div className="flex items-center gap-2 bg-[#FFD23F] px-4 py-2 rounded-xl border-2 border-[#1D3557]">
-              <span className="text-lg">💰</span>
-              <span className="font-bold text-[#1D3557]">₹{spendingBalance.toFixed(0)}</span>
-              <span className="text-xs text-[#1D3557]/70">to spend</span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowPurchases(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-[#E0FBFC] rounded-xl border-2 border-[#1D3557] hover:bg-[#98C1D9]"
+              >
+                <ShoppingCart className="w-5 h-5 text-[#1D3557]" />
+                <span className="font-bold text-[#1D3557]">{purchases.length}</span>
+              </button>
+              <div className="flex items-center gap-2 bg-[#FFD23F] px-4 py-2 rounded-xl border-2 border-[#1D3557]">
+                <span className="text-lg">💰</span>
+                <span className="font-bold text-[#1D3557]">₹{spendingBalance.toFixed(0)}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -159,7 +191,7 @@ export default function StorePage({ user }) {
           <h2 className="text-3xl font-bold mb-2" style={{ fontFamily: 'Fredoka' }}>
             Welcome to the Store! 🛍️
           </h2>
-          <p className="opacity-90">Your spending money: <strong>₹{spendingBalance.toFixed(0)}</strong> • Browse the shops below!</p>
+          <p className="opacity-90">Your spending money: <strong>₹{spendingBalance.toFixed(0)}</strong> • Click on items to buy them!</p>
         </div>
         
         {/* Check if store has items */}
@@ -241,10 +273,9 @@ export default function StorePage({ user }) {
                           key={item.item_id} 
                           item={item} 
                           index={index}
-                          isOwned={isOwned(item.item_id)}
                           canAfford={spendingBalance >= item.price}
                           categoryColor={cat.color}
-                          onSelect={() => setSelectedItem(item)}
+                          onSelect={() => openPurchaseDialog(item)}
                           formatPrice={formatPrice}
                         />
                       ))}
@@ -262,10 +293,9 @@ export default function StorePage({ user }) {
                       key={item.item_id} 
                       item={item} 
                       index={index}
-                      isOwned={isOwned(item.item_id)}
                       canAfford={spendingBalance >= item.price}
                       categoryColor={cat?.color || '#3D5A80'}
-                      onSelect={() => setSelectedItem(item)}
+                      onSelect={() => openPurchaseDialog(item)}
                       formatPrice={formatPrice}
                     />
                   );
@@ -293,9 +323,9 @@ export default function StorePage({ user }) {
         </div>
       </main>
       
-      {/* Purchase Dialog */}
-      <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
-        <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
+      {/* Purchase Dialog - Child-friendly subtraction view */}
+      <Dialog open={!!selectedItem} onOpenChange={() => { setSelectedItem(null); setQuantity(1); }}>
+        <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-sm">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
               Buy {selectedItem?.name}?
@@ -303,72 +333,183 @@ export default function StorePage({ user }) {
           </DialogHeader>
           
           {selectedItem && (
-            <div className="text-center py-4">
-              {selectedItem.image_url ? (
-                <img 
-                  src={getAssetUrl(selectedItem.image_url)} 
-                  alt={selectedItem.name}
-                  className="w-24 h-24 mx-auto rounded-2xl border-3 border-[#1D3557] object-contain bg-white mb-4"
-                />
-              ) : (
-                <div className="w-24 h-24 mx-auto rounded-2xl border-3 border-[#1D3557] flex items-center justify-center text-5xl mb-4 bg-[#E0FBFC]">
-                  {selectedItem.category_icon || '📦'}
-                </div>
-              )}
-              
-              <p className="text-[#3D5A80] mb-4">{selectedItem.description}</p>
-              
-              <div className="bg-[#E0FBFC] rounded-xl p-4 mb-4 border-2 border-[#1D3557]">
-                <div className="flex justify-between items-center">
-                  <span className="text-[#3D5A80]">Price:</span>
-                  <span className="font-bold text-[#1D3557] text-xl">{formatPrice(selectedItem)}</span>
-                </div>
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-[#3D5A80]">Your Balance:</span>
-                  <span className="font-bold text-[#1D3557]">₹{spendingBalance.toFixed(0)}</span>
-                </div>
-                <div className="border-t-2 border-[#1D3557]/20 my-2"></div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[#3D5A80]">After Purchase:</span>
-                  <span className={`font-bold ${spendingBalance - selectedItem.price >= 0 ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
-                    ₹{(spendingBalance - selectedItem.price).toFixed(0)}
-                  </span>
+            <div className="py-4">
+              {/* Item Preview */}
+              <div className="flex items-center gap-4 mb-6">
+                {selectedItem.image_url ? (
+                  <img 
+                    src={getAssetUrl(selectedItem.image_url)} 
+                    alt={selectedItem.name}
+                    className="w-20 h-20 rounded-2xl border-3 border-[#1D3557] object-contain bg-white"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-2xl border-3 border-[#1D3557] flex items-center justify-center text-4xl bg-[#E0FBFC]">
+                    {selectedItem.category_icon || '📦'}
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-bold text-[#1D3557] text-lg">{selectedItem.name}</h3>
+                  <p className="text-sm text-[#3D5A80]">{selectedItem.description}</p>
+                  <p className="text-lg font-bold text-[#EE6C4D]">{formatPrice(selectedItem)}</p>
                 </div>
               </div>
               
+              {/* Quantity Selector */}
+              <div className="bg-[#E0FBFC] rounded-xl p-4 mb-4 border-2 border-[#1D3557]">
+                <p className="text-sm font-bold text-[#1D3557] mb-3 text-center">How many do you want?</p>
+                <div className="flex items-center justify-center gap-4">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-12 h-12 rounded-xl border-3 border-[#1D3557] bg-white hover:bg-[#FFD23F] flex items-center justify-center text-2xl font-bold"
+                  >
+                    <Minus className="w-6 h-6" />
+                  </button>
+                  <span className="text-4xl font-bold text-[#1D3557] w-16 text-center" style={{ fontFamily: 'Fredoka' }}>
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    disabled={selectedItem.price * (quantity + 1) > spendingBalance}
+                    className="w-12 h-12 rounded-xl border-3 border-[#1D3557] bg-white hover:bg-[#FFD23F] flex items-center justify-center text-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Plus className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+              
+              {/* Math Breakdown - Child-friendly subtraction */}
+              <div className="bg-[#FFD23F]/20 rounded-xl p-4 mb-4 border-2 border-[#1D3557]">
+                <p className="text-sm font-bold text-[#1D3557] mb-3 text-center">Let&apos;s do the math! 🧮</p>
+                
+                {/* What you have */}
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-[#3D5A80] font-medium">💰 Money you have:</span>
+                  <span className="text-xl font-bold text-[#1D3557]">₹{spendingBalance.toFixed(0)}</span>
+                </div>
+                
+                {/* Minus sign and cost */}
+                <div className="flex justify-between items-center py-2 border-t border-[#1D3557]/20">
+                  <span className="text-[#EE6C4D] font-medium">➖ Cost ({quantity}x ₹{selectedItem.price}):</span>
+                  <span className="text-xl font-bold text-[#EE6C4D]">- ₹{totalCost.toFixed(0)}</span>
+                </div>
+                
+                {/* Equals and result */}
+                <div className="flex justify-between items-center py-2 border-t-2 border-[#1D3557]">
+                  <span className="font-bold text-[#1D3557]">= Money left over:</span>
+                  <span className={`text-2xl font-bold ${canAfford ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
+                    ₹{balanceAfter.toFixed(0)}
+                  </span>
+                </div>
+                
+                {!canAfford && (
+                  <p className="text-center text-[#EE6C4D] text-sm mt-2 font-bold">
+                    😢 Oh no! You don&apos;t have enough money!
+                  </p>
+                )}
+              </div>
+              
+              {/* Action Buttons */}
               <div className="flex gap-3">
                 <button
-                  onClick={() => setSelectedItem(null)}
+                  onClick={() => { setSelectedItem(null); setQuantity(1); }}
                   className="flex-1 py-3 font-bold rounded-xl border-3 border-[#1D3557] bg-white text-[#1D3557] hover:bg-[#E0FBFC]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handlePurchase}
-                  disabled={purchasing || spendingBalance < selectedItem.price}
+                  disabled={purchasing || !canAfford}
                   className={`flex-1 py-3 font-bold rounded-xl border-3 border-[#1D3557] ${
-                    spendingBalance >= selectedItem.price 
+                    canAfford 
                       ? 'btn-primary' 
                       : 'bg-[#98C1D9] text-[#1D3557] cursor-not-allowed'
                   }`}
                 >
-                  {purchasing ? 'Buying...' : spendingBalance >= selectedItem.price ? 'Buy Now! 🛒' : 'Not Enough ₹'}
+                  {purchasing ? 'Buying...' : canAfford ? `Buy ${quantity}! 🛒` : 'Need more ₹'}
                 </button>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
+      
+      {/* My Purchases Dialog */}
+      <Dialog open={showPurchases} onOpenChange={setShowPurchases}>
+        <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+              <ShoppingCart className="w-6 h-6 inline mr-2" />
+              My Purchases ({purchases.length})
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            {purchases.length === 0 ? (
+              <div className="text-center py-8">
+                <ShoppingBag className="w-16 h-16 mx-auto text-[#3D5A80]/50 mb-4" />
+                <p className="text-[#3D5A80]">You haven&apos;t bought anything yet!</p>
+                <p className="text-sm text-[#3D5A80]/70">Start shopping to see your purchases here.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {purchases.map((purchase, index) => {
+                  // Find the item details
+                  const item = items.find(i => i.item_id === purchase.item_id);
+                  
+                  return (
+                    <div 
+                      key={purchase.purchase_id || index}
+                      className="flex items-center gap-4 p-3 bg-[#E0FBFC] rounded-xl border-2 border-[#1D3557]/20"
+                    >
+                      {item?.image_url ? (
+                        <img 
+                          src={getAssetUrl(item.image_url)} 
+                          alt={purchase.item_name}
+                          className="w-14 h-14 rounded-xl border-2 border-[#1D3557] object-contain bg-white"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-xl border-2 border-[#1D3557] flex items-center justify-center text-2xl bg-white">
+                          {item?.category_icon || '📦'}
+                        </div>
+                      )}
+                      
+                      <div className="flex-1">
+                        <p className="font-bold text-[#1D3557]">{purchase.item_name}</p>
+                        <p className="text-sm text-[#3D5A80]">
+                          {new Date(purchase.purchased_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      
+                      <span className="font-bold text-[#EE6C4D]">₹{purchase.price}</span>
+                    </div>
+                  );
+                })}
+                
+                {/* Total Spent */}
+                <div className="border-t-2 border-[#1D3557] pt-3 mt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-[#1D3557]">Total Spent:</span>
+                    <span className="text-xl font-bold text-[#EE6C4D]">
+                      ₹{purchases.reduce((sum, p) => sum + (p.price || 0), 0).toFixed(0)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-// Item Card Component
-function ItemCard({ item, index, isOwned, canAfford, categoryColor, onSelect, formatPrice }) {
+// Item Card Component - No more "Owned" state
+function ItemCard({ item, index, canAfford, categoryColor, onSelect, formatPrice }) {
   return (
     <div
-      className={`card-playful p-4 ${isOwned ? 'opacity-70' : ''}`}
+      className="card-playful p-4 cursor-pointer hover:scale-105 transition-transform"
       style={{ animationDelay: `${index * 0.03}s` }}
+      onClick={onSelect}
     >
       {item.image_url ? (
         <img 
@@ -398,26 +539,15 @@ function ItemCard({ item, index, isOwned, canAfford, categoryColor, onSelect, fo
         <span className="font-bold text-[#1D3557] text-lg">{formatPrice(item)}</span>
       </div>
       
-      {isOwned ? (
-        <button 
-          disabled
-          className="w-full py-2 bg-[#06D6A0] text-white font-bold rounded-xl border-2 border-[#1D3557] flex items-center justify-center gap-2"
-        >
-          <Check className="w-4 h-4" /> Owned
-        </button>
-      ) : (
-        <button
-          onClick={onSelect}
-          disabled={!canAfford}
-          className={`w-full py-2 font-bold rounded-xl border-2 border-[#1D3557] transition-all ${
-            canAfford 
-              ? 'btn-primary hover:scale-105' 
-              : 'bg-[#98C1D9] text-[#1D3557] cursor-not-allowed'
-          }`}
-        >
-          {canAfford ? 'Buy Now' : 'Need more ₹'}
-        </button>
-      )}
+      <button
+        className={`w-full py-2 font-bold rounded-xl border-2 border-[#1D3557] transition-all ${
+          canAfford 
+            ? 'btn-primary hover:scale-105' 
+            : 'bg-[#98C1D9] text-[#1D3557]'
+        }`}
+      >
+        {canAfford ? 'Buy Now' : 'Need more ₹'}
+      </button>
     </div>
   );
 }
