@@ -2808,6 +2808,33 @@ async def get_child_savings_goals(request: Request):
     
     return goals
 
+@api_router.post("/child/savings-goals")
+async def create_child_savings_goal(goal: ChildSavingsGoalCreate, request: Request):
+    """Child creates their own savings goal"""
+    user = await get_current_user(request)
+    
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can create their own savings goals")
+    
+    goal_doc = {
+        "goal_id": f"goal_{uuid.uuid4().hex[:12]}",
+        "child_id": user["user_id"],
+        "parent_id": None,  # No parent for self-created goals
+        "title": goal.title,
+        "description": goal.description,
+        "image_url": goal.image_url,
+        "target_amount": goal.target_amount,
+        "current_amount": 0,
+        "deadline": goal.deadline,
+        "completed": False,
+        "created_by": "child",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.savings_goals.insert_one(goal_doc)
+    
+    return {"message": "Savings goal created", "goal_id": goal_doc["goal_id"]}
+
 @api_router.post("/child/savings-goals/{goal_id}/contribute")
 async def contribute_to_goal(goal_id: str, request: Request):
     """Contribute to a savings goal from savings account"""
