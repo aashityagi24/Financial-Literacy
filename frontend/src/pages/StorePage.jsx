@@ -236,11 +236,14 @@ export default function StorePage({ user }) {
         {/* Welcome Banner */}
         <div className="p-5 mb-6 bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-3xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557]">
           <h2 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
-            🛒 How Does the Store Work?
+            {isParentViewMode ? '📋 Shopping List Ideas' : '🛒 How Does the Store Work?'}
           </h2>
           <p className="text-[#1D3557]/90 text-base leading-relaxed">
-            This is your very own <strong>practice store</strong> where you can learn to shop wisely! Use the ₹ from your <strong>Spending jar</strong> to buy things. 
-            Look at the price tags, think about if you really need something, and make smart choices!
+            {isParentViewMode 
+              ? 'Browse items available in the store. You can use this to create shopping list chores for your child - ask them to "buy" specific items from this store using their Spending jar!'
+              : <>This is your very own <strong>practice store</strong> where you can learn to shop wisely! Use the ₹ from your <strong>Spending jar</strong> to buy things. 
+                Look at the price tags, think about if you really need something, and make smart choices!</>
+            }
           </p>
         </div>
         
