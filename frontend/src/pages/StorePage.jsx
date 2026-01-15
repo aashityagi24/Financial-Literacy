@@ -162,7 +162,7 @@ export default function StorePage({ user }) {
                 onClick={() => setShowPurchases(true)}
                 className="flex items-center gap-2 px-3 py-2 bg-[#E0FBFC] rounded-xl border-2 border-[#1D3557] hover:bg-[#98C1D9]"
               >
-                <ShoppingCart className="w-5 h-5 text-[#1D3557]" />
+                <ShoppingBag className="w-5 h-5 text-[#1D3557]" />
                 <span className="font-bold text-[#1D3557]">{purchases.length}</span>
               </button>
               <div className="flex items-center gap-2 bg-[#FFD23F] px-4 py-2 rounded-xl border-2 border-[#1D3557]">
