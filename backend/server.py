@@ -3194,6 +3194,19 @@ async def create_chore(chore: ChoreCreate, request: Request):
     }
     
     await db.chores.insert_one(chore_doc)
+    
+    # Notify child about new chore
+    await create_notification(
+        user_id=chore.child_id,
+        notification_type="quest_created",
+        title=f"📋 New Task: {chore.title}",
+        message=f"Your parent assigned you a task worth ₹{chore.reward_amount}!",
+        from_user_id=parent["user_id"],
+        from_user_name=parent.get("name"),
+        related_id=chore_doc["chore_id"],
+        amount=chore.reward_amount
+    )
+    
     return {"message": "Chore created", "chore_id": chore_doc["chore_id"]}
 
 @api_router.get("/parent/chores")
