@@ -55,8 +55,9 @@ export default function TeacherDashboard({ user }) {
   const [questForm, setQuestForm] = useState({
     title: '',
     description: '',
-    min_grade: 0,
-    max_grade: 5,
+    image_url: '',
+    pdf_url: '',
+    reward_amount: 0,
     due_date: '',
     questions: []
   });
