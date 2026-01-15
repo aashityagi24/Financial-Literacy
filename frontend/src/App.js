@@ -191,6 +191,11 @@ function AppRouter() {
           {({ user }) => <ClassmatesPage user={user} />}
         </ProtectedRoute>
       } />
+      <Route path="/savings-goals" element={
+        <ProtectedRoute>
+          {({ user }) => <SavingsGoalsPage user={user} />}
+        </ProtectedRoute>
+      } />
       <Route path="/admin/content" element={
         <ProtectedRoute>
           {({ user }) => <ContentManagement user={user} />}
