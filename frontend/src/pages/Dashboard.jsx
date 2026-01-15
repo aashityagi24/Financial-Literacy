@@ -332,7 +332,12 @@ export default function Dashboard({ user, setUser }) {
           
           {/* Classroom Card */}
           <div className="card-playful p-4 flex flex-col">
-            <ClassmatesSection giftingBalance={wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance || 0} compact={true} />
+            <ClassmatesSection 
+              giftingBalance={wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance || 0} 
+              compact={true} 
+              wallet={wallet}
+              onRefresh={fetchDashboardData}
+            />
           </div>
         </div>
         
