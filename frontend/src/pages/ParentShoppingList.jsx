@@ -113,18 +113,23 @@ export default function ParentShoppingList({ user }) {
       toast.error('Please select items for the chore');
       return;
     }
+    if (!choreForm.reward_amount || choreForm.reward_amount <= 0) {
+      toast.error('Please enter a reward amount');
+      return;
+    }
     
     try {
       const res = await axios.post(`${API}/parent/shopping-list/create-chore`, {
         child_id: selectedChild,
         list_item_ids: selectedItems,
         title: choreForm.title,
-        description: choreForm.description
+        description: choreForm.description,
+        reward_amount: parseFloat(choreForm.reward_amount)
       });
       toast.success(`Chore created! Reward: ₹${res.data.total_reward}`);
       setShowCreateChore(false);
       setSelectedItems([]);
-      setChoreForm({ title: '', description: '' });
+      setChoreForm({ title: '', description: '', reward_amount: '' });
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to create chore');
