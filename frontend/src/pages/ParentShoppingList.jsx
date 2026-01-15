@@ -34,7 +34,7 @@ export default function ParentShoppingList({ user }) {
   const [selectedChild, setSelectedChild] = useState('');
   const [showCreateChore, setShowCreateChore] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [choreForm, setChoreForm] = useState({ title: '', description: '' });
+  const [choreForm, setChoreForm] = useState({ title: '', description: '', reward_amount: '' });
   
   useEffect(() => {
     if (user?.role !== 'parent') {
