@@ -843,7 +843,7 @@ export default function TeacherDashboard({ user }) {
                           </div>
                         </div>
                         
-                        <button onClick={handleCreateQuest} className="btn-primary w-full py-3">Create Quest</button>
+                        <button onClick={handleCreateQuest} className="btn-primary w-full py-3">{editingQuest ? 'Update Quest' : 'Create Quest'}</button>
                       </div>
                     </DialogContent>
                   </Dialog>
