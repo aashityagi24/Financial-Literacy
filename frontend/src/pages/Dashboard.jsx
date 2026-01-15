@@ -19,7 +19,7 @@ export default function Dashboard({ user, setUser }) {
   const [streak, setStreak] = useState({ streak: 0, reward: 0 });
   const [quests, setQuests] = useState([]);
   const [achievements, setAchievements] = useState([]);
-  const [savingsGoal, setSavingsGoal] = useState(null);
+  const [savingsGoals, setSavingsGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showStreakModal, setShowStreakModal] = useState(false);
   const showAnimations = useFirstVisitAnimation('dashboard');
