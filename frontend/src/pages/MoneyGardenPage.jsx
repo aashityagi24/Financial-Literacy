@@ -550,34 +550,115 @@ export default function MoneyGardenPage({ user }) {
       </main>
       
       {/* Seed Selection Dialog */}
-      <Dialog open={showSeedDialog} onOpenChange={setShowSeedDialog}>
+      <Dialog open={showSeedDialog} onOpenChange={(open) => { setShowSeedDialog(open); if (!open) setSelectedSeed(null); }}>
         <DialogContent className="bg-[#F0FFF0] border-4 border-[#228B22] rounded-3xl max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-[#228B22]" style={{ fontFamily: 'Fredoka' }}>
-              🌱 Choose a Seed to Plant
+              {selectedSeed ? '🌱 Seed Details' : '🌱 Choose a Seed to Plant'}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 mt-4">
-            {farm.seeds.map((seed) => (
-              <button
-                key={seed.plant_id}
-                onClick={() => handlePlantSeed(seed.plant_id)}
-                className="w-full bg-white hover:bg-[#90EE90]/30 rounded-xl p-4 border-2 border-[#228B22]/30 flex items-center gap-4 transition-colors"
-              >
-                <span className="text-4xl">{seed.emoji}</span>
-                <div className="flex-1 text-left">
-                  <p className="font-bold text-[#1D3557]">{seed.name}</p>
-                  <p className="text-xs text-[#3D5A80]">
-                    {seed.growth_days} days • {seed.harvest_yield} {seed.yield_unit}
+          
+          {selectedSeed ? (
+            /* Expanded Seed Details View */
+            <div className="mt-4">
+              <div className="bg-white rounded-xl p-4 border-2 border-[#228B22]/30">
+                {/* Header with emoji and name */}
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="text-6xl">{selectedSeed.emoji}</span>
+                  <div>
+                    <h3 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{selectedSeed.name}</h3>
+                    <p className="text-sm text-[#3D5A80]">{selectedSeed.description || 'A wonderful plant for your garden!'}</p>
+                  </div>
+                </div>
+                
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-[#F0FFF0] rounded-lg p-3 text-center">
+                    <p className="text-xs text-[#3D5A80]">Seed Cost</p>
+                    <p className="text-lg font-bold text-[#E63946]">₹{selectedSeed.seed_cost}</p>
+                  </div>
+                  <div className="bg-[#F0FFF0] rounded-lg p-3 text-center">
+                    <p className="text-xs text-[#3D5A80]">Growth Time</p>
+                    <p className="text-lg font-bold text-[#1D3557]">{selectedSeed.growth_days} days</p>
+                  </div>
+                  <div className="bg-[#F0FFF0] rounded-lg p-3 text-center">
+                    <p className="text-xs text-[#3D5A80]">Harvest Yield</p>
+                    <p className="text-lg font-bold text-[#1D3557]">{selectedSeed.harvest_yield} {selectedSeed.yield_unit}</p>
+                  </div>
+                  <div className="bg-[#F0FFF0] rounded-lg p-3 text-center">
+                    <p className="text-xs text-[#3D5A80]">Sell Price</p>
+                    <p className="text-lg font-bold text-[#06D6A0]">₹{selectedSeed.base_sell_price}/{selectedSeed.yield_unit?.replace(/s$/, '')}</p>
+                  </div>
+                </div>
+                
+                {/* Watering Info */}
+                <div className="bg-[#E0FBFC] rounded-lg p-3 mb-4 flex items-center gap-2">
+                  <span className="text-2xl">💧</span>
+                  <div>
+                    <p className="text-sm font-bold text-[#00CED1]">Watering Schedule</p>
+                    <p className="text-xs text-[#3D5A80]">Water every {selectedSeed.water_frequency_hours} hours to keep your plant healthy</p>
+                  </div>
+                </div>
+                
+                {/* Profit Calculation */}
+                <div className="bg-[#FFD700]/20 rounded-lg p-3 mb-4">
+                  <p className="text-sm font-bold text-[#8B4513] flex items-center gap-1">
+                    <TrendingUp className="w-4 h-4" /> Potential Profit
                   </p>
-                  <p className="text-xs text-[#3D5A80]">Water every {seed.water_frequency_hours}h</p>
+                  <p className="text-xs text-[#3D5A80]">
+                    If you harvest {selectedSeed.harvest_yield} {selectedSeed.yield_unit} and sell at base price:
+                  </p>
+                  <p className="text-lg font-bold text-[#06D6A0]">
+                    ₹{(selectedSeed.harvest_yield * selectedSeed.base_sell_price).toFixed(0)} 
+                    <span className="text-sm text-[#3D5A80] font-normal ml-1">
+                      (profit: ₹{((selectedSeed.harvest_yield * selectedSeed.base_sell_price) - selectedSeed.seed_cost).toFixed(0)})
+                    </span>
+                  </p>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-[#06D6A0]">₹{seed.seed_cost}</p>
+                
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSelectedSeed(null)}
+                    className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-[#1D3557] font-bold rounded-xl"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    onClick={() => handlePlantSeed(selectedSeed.plant_id)}
+                    className="flex-1 py-3 bg-[#228B22] hover:bg-[#1D7A1D] text-white font-bold rounded-xl flex items-center justify-center gap-2"
+                  >
+                    🌱 Buy & Plant (₹{selectedSeed.seed_cost})
+                  </button>
                 </div>
-              </button>
-            ))}
-          </div>
+              </div>
+            </div>
+          ) : (
+            /* Seed List View */
+            <div className="space-y-3 mt-4">
+              <p className="text-sm text-[#3D5A80]">Tap a seed to see details before buying:</p>
+              {farm.seeds.map((seed) => (
+                <button
+                  key={seed.plant_id}
+                  onClick={() => setSelectedSeed(seed)}
+                  className="w-full bg-white hover:bg-[#90EE90]/30 rounded-xl p-4 border-2 border-[#228B22]/30 flex items-center gap-4 transition-colors"
+                >
+                  <span className="text-4xl">{seed.emoji}</span>
+                  <div className="flex-1 text-left">
+                    <p className="font-bold text-[#1D3557]">{seed.name}</p>
+                    <p className="text-xs text-[#3D5A80]">
+                      {seed.growth_days} days • {seed.harvest_yield} {seed.yield_unit}
+                    </p>
+                    <p className="text-xs text-[#06D6A0]">Potential: ₹{(seed.harvest_yield * seed.base_sell_price).toFixed(0)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-[#E63946]">₹{seed.seed_cost}</p>
+                    <p className="text-xs text-[#3D5A80]">Tap for details →</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
       
