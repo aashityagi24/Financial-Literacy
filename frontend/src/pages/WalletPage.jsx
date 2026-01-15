@@ -672,10 +672,17 @@ export default function WalletPage({ user }) {
             
             <button
               onClick={() => {
-                if (activeGoals.length === 1) {
-                  setAllocateData(prev => ({...prev, goal_id: activeGoals[0].goal_id}));
+                // For single goal, auto-select it before submitting
+                const goalId = activeGoals.length === 1 ? activeGoals[0].goal_id : allocateData.goal_id;
+                if (!goalId) {
+                  toast.error('Please select a goal');
+                  return;
                 }
-                handleAllocateToGoal();
+                // Set the goal_id and submit
+                const finalData = { ...allocateData, goal_id: goalId };
+                setAllocateData(finalData);
+                // Call with the correct goal_id
+                handleAllocateToGoalWithId(goalId, allocateData.amount);
               }}
               disabled={!allocateData.amount || parseFloat(allocateData.amount) > savingsBalance}
               className="btn-primary w-full py-3 text-lg disabled:opacity-50"
