@@ -153,8 +153,8 @@ export default function ClassmatesSection({ givingBalance, compact = false }) {
               <p className="text-sm text-[#3D5A80]">No classmates yet</p>
             </div>
           ) : (
-            <div className="space-y-2 flex-1 overflow-y-auto max-h-48">
-              {classmates.slice(0, 3).map((classmate) => (
+            <div className="space-y-2 flex-1 overflow-y-auto">
+              {classmates.slice(0, 5).map((classmate) => (
                 <div 
                   key={classmate.user_id}
                   className="bg-[#E0FBFC] rounded-lg p-2 border border-[#1D3557]/20"
@@ -187,8 +187,10 @@ export default function ClassmatesSection({ givingBalance, compact = false }) {
                   </div>
                 </div>
               ))}
-              {classmates.length > 3 && (
-                <p className="text-xs text-center text-[#3D5A80]">+{classmates.length - 3} more</p>
+              {classmates.length > 5 && (
+                <Link to="/classmates" className="text-xs text-center text-[#3D5A80] hover:text-[#1D3557] block">
+                  +{classmates.length - 5} more classmates →
+                </Link>
               )}
             </div>
           )}
