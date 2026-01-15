@@ -296,6 +296,17 @@ export default function AdminQuestsPage({ user }) {
                         data-testid="quest-due-date"
                       />
                     </div>
+                    
+                    <div className="col-span-2">
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Base Reward (₹) - For quests without questions</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        placeholder="0 if using questions"
+                        value={formData.reward_amount || ''}
+                        onChange={(e) => setFormData({ ...formData, reward_amount: parseFloat(e.target.value) || 0 })}
+                      />
+                    </div>
                   </div>
                   
                   {/* File Uploads */}
