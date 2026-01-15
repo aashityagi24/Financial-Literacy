@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { API } from '@/App';
+import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
   Wallet, ArrowLeftRight, ArrowDown, ArrowUp, 
-  Home, ChevronLeft, History
+  Home, ChevronLeft, History, Target, Plus, Upload, Calendar
 } from 'lucide-react';
 import {
   Dialog,
@@ -22,6 +22,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 
 export default function WalletPage({ user }) {
   const [wallet, setWallet] = useState(null);
