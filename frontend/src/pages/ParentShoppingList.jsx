@@ -360,34 +360,52 @@ export default function ParentShoppingList({ user }) {
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <p className="text-sm text-[#3D5A80]">
-              Create a chore for {selectedChildData?.name}. When they complete it, they'll earn the total value of selected items.
+              Create a chore for {selectedChildData?.name}. Set a custom reward amount they'll earn when completing it.
             </p>
             
             <div className="bg-[#E0FBFC] rounded-xl p-3">
               <p className="text-sm text-[#3D5A80] mb-2">Selected Items ({selectedItems.length}):</p>
               <ul className="text-sm text-[#1D3557]">
                 {childList.filter(i => selectedItems.includes(i.list_id)).map(item => (
-                  <li key={item.list_id}>• {item.item_name} - ₹{item.item_price * item.quantity}</li>
+                  <li key={item.list_id}>• {item.item_name} × {item.quantity}</li>
                 ))}
               </ul>
-              <p className="mt-2 font-bold text-[#06D6A0]">
-                Total Reward: ₹{childList.filter(i => selectedItems.includes(i.list_id)).reduce((sum, i) => sum + i.item_price * i.quantity, 0).toFixed(2)}
-              </p>
             </div>
             
-            <Input 
-              placeholder="Chore Title (e.g., 'Complete homework to earn toys')" 
-              value={choreForm.title} 
-              onChange={(e) => setChoreForm({...choreForm, title: e.target.value})}
-              className="border-3 border-[#1D3557]"
-            />
-            <Textarea 
-              placeholder="Description (optional)" 
-              value={choreForm.description} 
-              onChange={(e) => setChoreForm({...choreForm, description: e.target.value})}
-              className="border-3 border-[#1D3557]"
-              rows={3}
-            />
+            <div>
+              <label className="block text-sm font-bold text-[#1D3557] mb-1">Chore Title *</label>
+              <Input 
+                placeholder="e.g., Complete homework to earn toys" 
+                value={choreForm.title} 
+                onChange={(e) => setChoreForm({...choreForm, title: e.target.value})}
+                className="border-3 border-[#1D3557]"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-[#1D3557] mb-1">Reward Amount (₹) *</label>
+              <Input 
+                type="number"
+                min="1"
+                placeholder="Enter reward money in Rupees" 
+                value={choreForm.reward_amount} 
+                onChange={(e) => setChoreForm({...choreForm, reward_amount: e.target.value})}
+                className="border-3 border-[#1D3557]"
+              />
+              <p className="text-xs text-[#3D5A80] mt-1">This is the money your child will earn for completing this chore</p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-[#1D3557] mb-1">Description (Optional)</label>
+              <Textarea 
+                placeholder="Any additional instructions for your child" 
+                value={choreForm.description} 
+                onChange={(e) => setChoreForm({...choreForm, description: e.target.value})}
+                className="border-3 border-[#1D3557]"
+                rows={2}
+              />
+            </div>
+            
             <button onClick={handleCreateChore} className="btn-primary w-full py-3">
               Create Chore
             </button>
