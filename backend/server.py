@@ -143,6 +143,38 @@ class Quest(BaseModel):
     max_grade: int = 5
     requirements: Dict[str, Any] = {}
 
+# New Quest System Models
+class QuestQuestion(BaseModel):
+    """A single question in a quest"""
+    question_id: str
+    question_text: str
+    question_type: str  # 'mcq', 'multi_select', 'true_false', 'value'
+    image_url: Optional[str] = None
+    options: Optional[List[str]] = None  # For MCQ/multi-select
+    correct_answer: Any  # String for MCQ/TF, List for multi-select, number for value
+    points: float  # Rupees for this question
+
+class QuestCreate(BaseModel):
+    """Create a new quest (admin/teacher)"""
+    title: str
+    description: str
+    image_url: Optional[str] = None
+    pdf_url: Optional[str] = None
+    min_grade: int = 0
+    max_grade: int = 5
+    due_date: str  # ISO date string (YYYY-MM-DD)
+    questions: List[Dict[str, Any]]  # List of questions
+
+class ChoreCreate(BaseModel):
+    """Create a new chore (parent)"""
+    child_id: str
+    title: str
+    description: Optional[str] = None
+    reward_amount: float
+    frequency: str  # 'one_time', 'daily', 'weekly', 'monthly_date'
+    weekly_days: Optional[List[int]] = None  # 0=Mon, 6=Sun for weekly
+    monthly_date: Optional[int] = None  # Day of month for monthly_date
+
 class UserQuest(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
