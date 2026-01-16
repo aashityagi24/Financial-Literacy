@@ -789,7 +789,7 @@ class InvestmentStockCreate(BaseModel):
     name: str
     ticker: str
     description: str
-    category_id: str
+    category_id: Optional[str] = None  # Made optional
     logo_url: Optional[str] = None
     base_price: float
     volatility: float = 0.05
