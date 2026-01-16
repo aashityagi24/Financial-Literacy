@@ -6305,47 +6305,33 @@ async def admin_get_stock_history(stock_id: str, request: Request, days: int = 3
     
     return history
 
+@api_router.post("/admin/investments/simulate-fluctuation")
+async def admin_simulate_fluctuation(request: Request):
+    """Manually trigger stock price fluctuation (admin only)"""
+    await require_admin(request)
+    
+    # Run the fluctuation
+    await stock_price_fluctuation("manual")
+    
+    return {"message": "Stock fluctuation triggered successfully"}
+
 @api_router.post("/admin/investments/simulate-day")
 async def admin_simulate_market_day(request: Request):
-    """Simulate a day of market fluctuations (admin only)"""
-    import random
+    """Simulate a full day of market fluctuations - 3 sessions (admin only)"""
     await require_admin(request)
     
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     
-    # Update all active stocks
-    stocks = await db.investment_stocks.find({"is_active": True}).to_list(100)
-    updated_count = 0
+    # Run all 3 fluctuation sessions
+    await stock_price_fluctuation("opening_manual")
+    await stock_price_fluctuation("midday_manual")
+    await stock_price_fluctuation("closing_manual")
     
-    for stock in stocks:
-        # Random price change based on volatility
-        volatility = stock.get("volatility", 0.05)
-        change_percent = random.uniform(-volatility, volatility)
-        current_price = stock.get("current_price", stock.get("base_price", 10))
-        new_price = max(0.01, current_price * (1 + change_percent))  # Don't go below 0.01
-        new_price = round(new_price, 2)
-        
-        # Update stock price
-        await db.investment_stocks.update_one(
-            {"stock_id": stock["stock_id"]},
-            {"$set": {
-                "current_price": new_price,
-                "last_price_update": datetime.now(timezone.utc).isoformat()
-            }}
-        )
-        
-        # Record in history
-        await db.price_history.insert_one({
-            "history_id": f"hist_{uuid.uuid4().hex[:12]}",
-            "stock_id": stock["stock_id"],
-            "price": new_price,
-            "date": today,
-            "created_at": datetime.now(timezone.utc).isoformat()
-        })
-        
-        updated_count += 1
+    stocks_count = await db.investment_stocks.count_documents(
+        {"$or": [{"is_active": True}, {"is_active": {"$exists": False}}]}
+    )
     
-    return {"message": f"Simulated market day for {updated_count} stocks", "date": today}
+    return {"message": f"Simulated full market day for {stocks_count} stocks (3 sessions)", "date": today}
 
 @api_router.get("/admin/investments/scheduler-logs")
 async def admin_get_scheduler_logs(request: Request, limit: int = 30):
