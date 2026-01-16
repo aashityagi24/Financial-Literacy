@@ -27,6 +27,7 @@ const notificationIcons = {
 };
 
 export default function NotificationCenter({ onGiftRequestAction }) {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
