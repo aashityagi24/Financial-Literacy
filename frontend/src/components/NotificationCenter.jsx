@@ -197,7 +197,7 @@ export default function NotificationCenter({ onGiftRequestAction }) {
                           )}
                         </div>
                         <button
-                          onClick={() => handleDelete(notif.notification_id)}
+                          onClick={(e) => handleDelete(notif.notification_id, e)}
                           className="p-1 hover:bg-white/50 rounded text-[#3D5A80]/60 hover:text-[#EE6C4D]"
                         >
                           <Trash2 className="w-4 h-4" />
