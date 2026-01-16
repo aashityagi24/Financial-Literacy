@@ -63,7 +63,7 @@ export default function RoleSelection({ user, setUser }) {
           <h1 className="text-4xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
             Welcome, {user?.name?.split(' ')[0] || 'Friend'}! 
           </h1>
-          <p className="text-xl text-[#3D5A80]">Let's set up your PocketQuest profile</p>
+          <p className="text-xl text-[#3D5A80]">Let's set up your CoinQuest profile</p>
         </div>
         
         {step === 1 && (

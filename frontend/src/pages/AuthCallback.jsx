@@ -55,7 +55,7 @@ export default function AuthCallback() {
       <div className="text-center">
         <div className="w-20 h-20 mx-auto mb-6 border-4 border-[#1D3557] border-t-[#FFD23F] rounded-full animate-spin"></div>
         <h2 className="text-2xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
-          Welcome to PocketQuest!
+          Welcome to CoinQuest!
         </h2>
         <p className="text-[#3D5A80]">Setting up your account...</p>
       </div>

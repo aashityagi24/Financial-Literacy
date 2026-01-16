@@ -189,7 +189,7 @@ export default function Dashboard({ user, setUser }) {
               <div className="w-10 h-10 bg-[#FFD23F] rounded-xl border-3 border-[#1D3557] shadow-[2px_2px_0px_0px_#1D3557] flex items-center justify-center">
                 <Coins className="w-6 h-6 text-[#1D3557]" />
               </div>
-              <span className="text-xl font-bold text-[#1D3557] hidden sm:block" style={{ fontFamily: 'Fredoka' }}>PocketQuest</span>
+              <span className="text-xl font-bold text-[#1D3557] hidden sm:block" style={{ fontFamily: 'Fredoka' }}>CoinQuest</span>
             </div>
             
             <div className="flex items-center gap-4">

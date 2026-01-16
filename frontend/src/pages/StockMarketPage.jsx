@@ -199,7 +199,7 @@ export default function StockMarketPage({ user }) {
               </Link>
               <div className="flex items-center gap-3">
                 <BarChart3 className="w-8 h-8 text-[#10B981]" />
-                <h1 className="text-xl font-bold">PocketQuest Markets</h1>
+                <h1 className="text-xl font-bold">CoinQuest Markets</h1>
               </div>
             </div>
             
