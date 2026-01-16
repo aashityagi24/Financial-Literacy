@@ -33,20 +33,20 @@ export default function NotificationCenter({ onGiftRequestAction }) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const fetchNotifications = async () => {
-    try {
-      const res = await axios.get(`${API}/notifications`);
-      setNotifications(res.data.notifications || []);
-      setUnreadCount(res.data.unread_count || 0);
-    } catch (error) {
-      console.error('Failed to fetch notifications:', error);
-    }
-  };
-
   useEffect(() => {
-    fetchNotifications();
+    const loadNotifications = async () => {
+      try {
+        const res = await axios.get(`${API}/notifications`);
+        setNotifications(res.data.notifications || []);
+        setUnreadCount(res.data.unread_count || 0);
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+      }
+    };
+    
+    loadNotifications();
     // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
+    const interval = setInterval(loadNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
 
