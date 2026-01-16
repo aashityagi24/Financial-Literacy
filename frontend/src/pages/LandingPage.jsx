@@ -115,7 +115,7 @@ export default function LandingPage() {
         
         <div className="container mx-auto px-6 pb-6">
           <nav className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-3 -mt-4">
+            <div className="flex items-center gap-3 -mt-12">
               <img 
                 src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/ul81dgc9_Friendly%20%27Money%20Matter%27%20Logo%20Design%20%281%29.png" 
                 alt="CoinQuest Logo" 
