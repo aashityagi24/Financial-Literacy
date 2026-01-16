@@ -143,7 +143,8 @@ export default function AdminStockManagement() {
         base_price: parseFloat(stockForm.base_price),
         volatility: parseFloat(stockForm.volatility) / 100,
         min_lot_size: parseInt(stockForm.min_lot_size),
-        dividend_yield: parseFloat(stockForm.dividend_yield)
+        dividend_yield: parseFloat(stockForm.dividend_yield),
+        is_active: true  // Ensure stocks are active by default
       };
       
       if (editingStock) {
