@@ -95,7 +95,7 @@ export default function Dashboard({ user, setUser }) {
   const getInvestmentItem = () => {
     if (grade === 0) return null; // No investments for Kindergarten
     if (grade <= 2) return { icon: TrendingUp, label: 'Garden', path: '/garden', color: '#228B22', emoji: '🌻' };
-    return { icon: TrendingUp, label: 'Invest', path: '/investments', color: '#06D6A0' };
+    return { icon: TrendingUp, label: 'Stocks', path: '/stock-market', color: '#10B981', emoji: '📈' };
   };
   
   const investmentItem = getInvestmentItem();
