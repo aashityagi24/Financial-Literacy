@@ -74,6 +74,18 @@ export default function NotificationCenter({ onGiftRequestAction }) {
     }
   };
 
+  const handleMarkAllAsRead = async () => {
+    try {
+      await axios.post(`${API}/notifications/mark-all-read`);
+      // Update local state to mark all as read
+      setNotifications(notifications.map(n => ({ ...n, read: true })));
+      setUnreadCount(0);
+      toast.success('All notifications marked as read');
+    } catch (error) {
+      toast.error('Failed to mark notifications as read');
+    }
+  };
+
   const handleNotificationClick = (notif) => {
     const typeInfo = notificationIcons[notif.notification_type] || notificationIcons.announcement;
     
@@ -81,17 +93,15 @@ export default function NotificationCenter({ onGiftRequestAction }) {
     if (notif.notification_type === 'gift_request') return;
     
     // Get the navigation path
-    let path = typeInfo.path;
-    
-    // For quest/chore notifications, navigate to quests page
-    if (notif.notification_type === 'quest_created' || notif.notification_type === 'chore_created') {
-      path = '/quests';
-    }
+    const path = typeInfo.path;
     
     // Navigate and close dialog
     if (path) {
+      // Close dialog first, then navigate after a small delay
       setIsOpen(false);
-      navigate(path);
+      setTimeout(() => {
+        navigate(path);
+      }, 100);
     }
   };
 
