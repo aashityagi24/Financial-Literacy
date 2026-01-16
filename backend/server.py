@@ -771,10 +771,16 @@ class InvestmentStock(BaseModel):
     ticker: str  # Stock ticker symbol (e.g., "TCO" for TechCo)
     description: str
     logo_url: Optional[str] = None
+    category_id: str  # Industry category
     current_price: float  # Current price per share
     base_price: float  # Original/base price for reference
     volatility: float = 0.05  # Daily volatility (5% means ±5% daily change)
     min_lot_size: int = 1  # Minimum shares to buy (1, 3, 5, or 10)
+    # Educational fields
+    what_they_do: str = ""  # Simple explanation of what the company does
+    why_price_changes: str = ""  # Educational note about price factors
+    risk_level: str = "medium"  # low, medium, high
+    dividend_yield: float = 0.0  # Annual dividend percentage
     is_active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_price_update: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -783,22 +789,141 @@ class InvestmentStockCreate(BaseModel):
     name: str
     ticker: str
     description: str
+    category_id: str
     logo_url: Optional[str] = None
     base_price: float
     volatility: float = 0.05
     min_lot_size: int = 1
+    what_they_do: str = ""
+    why_price_changes: str = ""
+    risk_level: str = "medium"
+    dividend_yield: float = 0.0
     is_active: bool = True
 
 class InvestmentStockUpdate(BaseModel):
     name: Optional[str] = None
     ticker: Optional[str] = None
     description: Optional[str] = None
+    category_id: Optional[str] = None
     logo_url: Optional[str] = None
     base_price: Optional[float] = None
     current_price: Optional[float] = None
     volatility: Optional[float] = None
     min_lot_size: Optional[int] = None
+    what_they_do: Optional[str] = None
+    why_price_changes: Optional[str] = None
+    risk_level: Optional[str] = None
+    dividend_yield: Optional[float] = None
     is_active: Optional[bool] = None
+
+# ============== STOCK MARKET MODELS (Grade 3-5) ==============
+
+class StockCategory(BaseModel):
+    """Industry categories for stocks"""
+    model_config = ConfigDict(extra="ignore")
+    category_id: str
+    name: str  # e.g., "Technology", "Healthcare", "Food & Beverages"
+    emoji: str  # e.g., "💻", "🏥", "🍔"
+    description: str  # Educational description of the industry
+    color: str = "#3B82F6"  # Display color
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class StockCategoryCreate(BaseModel):
+    name: str
+    emoji: str = "📈"
+    description: str
+    color: str = "#3B82F6"
+
+class StockNews(BaseModel):
+    """News events that affect stock prices"""
+    model_config = ConfigDict(extra="ignore")
+    news_id: str
+    title: str  # News headline
+    description: str  # Full news story
+    category_id: Optional[str] = None  # Affects specific industry (None = affects all)
+    stock_id: Optional[str] = None  # Affects specific stock (overrides category)
+    impact_type: str  # 'positive', 'negative', 'neutral'
+    impact_percent: float  # How much it affects price (e.g., 5.0 = +5% or -5%)
+    is_prediction: bool = False  # If True, this is a prediction (may not come true)
+    prediction_accuracy: float = 0.7  # 70% chance of coming true
+    prediction_target_price: Optional[float] = None  # Target price for prediction
+    prediction_target_date: Optional[str] = None  # YYYY-MM-DD
+    effective_date: str  # YYYY-MM-DD - when news takes effect
+    expires_date: Optional[str] = None  # When the effect ends
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class StockNewsCreate(BaseModel):
+    title: str
+    description: str
+    category_id: Optional[str] = None
+    stock_id: Optional[str] = None
+    impact_type: str = "neutral"
+    impact_percent: float = 5.0
+    is_prediction: bool = False
+    prediction_accuracy: float = 0.7
+    prediction_target_price: Optional[float] = None
+    prediction_target_date: Optional[str] = None
+    effective_date: str
+    expires_date: Optional[str] = None
+
+class StockPriceHistory(BaseModel):
+    """Detailed price history for charts"""
+    model_config = ConfigDict(extra="ignore")
+    history_id: str
+    stock_id: str
+    open_price: float
+    close_price: float
+    high_price: float
+    low_price: float
+    volume: int = 0  # Trading volume
+    date: str  # YYYY-MM-DD format
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class UserStockHolding(BaseModel):
+    """User's stock holdings"""
+    model_config = ConfigDict(extra="ignore")
+    holding_id: str
+    user_id: str
+    stock_id: str
+    quantity: int
+    average_buy_price: float  # Weighted average purchase price
+    total_invested: float  # Total amount invested
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class StockTransaction(BaseModel):
+    """Stock buy/sell transactions"""
+    model_config = ConfigDict(extra="ignore")
+    transaction_id: str
+    user_id: str
+    stock_id: str
+    transaction_type: str  # 'buy' or 'sell'
+    quantity: int
+    price_per_share: float
+    total_amount: float
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class PortfolioSnapshot(BaseModel):
+    """Daily portfolio value snapshot for charts"""
+    model_config = ConfigDict(extra="ignore")
+    snapshot_id: str
+    user_id: str
+    total_value: float  # Total portfolio value
+    total_invested: float  # Total amount invested
+    profit_loss: float  # Current P/L
+    profit_loss_percent: float
+    date: str  # YYYY-MM-DD
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class BuyStockRequest(BaseModel):
+    stock_id: str
+    quantity: int
+
+class SellStockRequest(BaseModel):
+    stock_id: str
+    quantity: int
 
 class PriceHistory(BaseModel):
     """Track daily price history for stocks"""
