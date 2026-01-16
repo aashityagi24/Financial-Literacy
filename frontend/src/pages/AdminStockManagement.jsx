@@ -5,7 +5,7 @@ import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
   ChevronLeft, Plus, Pencil, Trash2, Building2, TrendingUp, 
-  Newspaper, AlertTriangle, CheckCircle2, Play, BarChart3
+  Newspaper, AlertTriangle, CheckCircle2, Play, BarChart3, RefreshCw
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
