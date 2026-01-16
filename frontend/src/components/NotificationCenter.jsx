@@ -97,11 +97,16 @@ export default function NotificationCenter({ onGiftRequestAction }) {
     
     // Navigate and close dialog
     if (path) {
-      // Close dialog first, then navigate after a small delay
+      // Store the path before closing
+      const targetPath = path;
+      // Close dialog first
       setIsOpen(false);
-      setTimeout(() => {
-        navigate(path);
-      }, 100);
+      // Use requestAnimationFrame to ensure dialog has closed before navigating
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          navigate(targetPath);
+        }, 50);
+      });
     }
   };
 
