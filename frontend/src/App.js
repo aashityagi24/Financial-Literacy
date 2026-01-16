@@ -237,6 +237,16 @@ function AppRouter() {
           {({ user }) => <AdminGardenManagement user={user} />}
         </ProtectedRoute>
       } />
+      <Route path="/stock-market" element={
+        <ProtectedRoute>
+          {({ user }) => <StockMarketPage user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/stocks" element={
+        <ProtectedRoute>
+          {({ user }) => <AdminStockManagement user={user} />}
+        </ProtectedRoute>
+      } />
     </Routes>
   );
 }
