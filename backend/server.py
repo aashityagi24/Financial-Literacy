@@ -6680,6 +6680,624 @@ async def get_store_items_by_category(request: Request):
     
     return result
 
+# ============== STOCK MARKET SYSTEM (Grade 3-5) ==============
+
+STOCK_MARKET_OPEN_HOUR = 7   # 7 AM
+STOCK_MARKET_CLOSE_HOUR = 17  # 5 PM
+
+def is_market_open():
+    """Check if stock market is open (7 AM - 5 PM)"""
+    current_hour = datetime.now(timezone.utc).hour
+    return STOCK_MARKET_OPEN_HOUR <= current_hour < STOCK_MARKET_CLOSE_HOUR
+
+# --- Admin Stock Category Endpoints ---
+
+@api_router.get("/admin/stock-categories")
+async def admin_get_stock_categories(request: Request):
+    """Get all stock categories (admin only)"""
+    await require_admin(request)
+    categories = await db.stock_categories.find({}, {"_id": 0}).to_list(100)
+    return categories
+
+@api_router.post("/admin/stock-categories")
+async def admin_create_stock_category(request: Request):
+    """Create a stock category (admin only)"""
+    await require_admin(request)
+    data = await request.json()
+    
+    category = {
+        "category_id": f"cat_{uuid.uuid4().hex[:12]}",
+        "name": data.get("name"),
+        "emoji": data.get("emoji", "📈"),
+        "description": data.get("description", ""),
+        "color": data.get("color", "#3B82F6"),
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.stock_categories.insert_one(category)
+    return {"message": "Category created", "category_id": category["category_id"]}
+
+@api_router.put("/admin/stock-categories/{category_id}")
+async def admin_update_stock_category(category_id: str, request: Request):
+    """Update a stock category (admin only)"""
+    await require_admin(request)
+    data = await request.json()
+    
+    update_data = {k: v for k, v in data.items() if v is not None and k != "category_id"}
+    
+    await db.stock_categories.update_one(
+        {"category_id": category_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Category updated"}
+
+@api_router.delete("/admin/stock-categories/{category_id}")
+async def admin_delete_stock_category(category_id: str, request: Request):
+    """Delete a stock category (admin only)"""
+    await require_admin(request)
+    
+    # Check if any stocks use this category
+    stocks_count = await db.investment_stocks.count_documents({"category_id": category_id})
+    if stocks_count > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete: {stocks_count} stocks use this category")
+    
+    await db.stock_categories.delete_one({"category_id": category_id})
+    return {"message": "Category deleted"}
+
+# --- Admin Stock News Endpoints ---
+
+@api_router.get("/admin/stock-news")
+async def admin_get_stock_news(request: Request):
+    """Get all stock news (admin only)"""
+    await require_admin(request)
+    news = await db.stock_news.find({}, {"_id": 0}).sort("effective_date", -1).to_list(100)
+    return news
+
+@api_router.post("/admin/stock-news")
+async def admin_create_stock_news(request: Request):
+    """Create stock news that affects prices (admin only)"""
+    await require_admin(request)
+    data = await request.json()
+    
+    news = {
+        "news_id": f"news_{uuid.uuid4().hex[:12]}",
+        "title": data.get("title"),
+        "description": data.get("description", ""),
+        "category_id": data.get("category_id"),  # Affects industry
+        "stock_id": data.get("stock_id"),  # Affects specific stock
+        "impact_type": data.get("impact_type", "neutral"),  # positive, negative, neutral
+        "impact_percent": data.get("impact_percent", 5.0),
+        "is_prediction": data.get("is_prediction", False),
+        "prediction_accuracy": data.get("prediction_accuracy", 0.7),
+        "prediction_target_price": data.get("prediction_target_price"),
+        "prediction_target_date": data.get("prediction_target_date"),
+        "effective_date": data.get("effective_date", datetime.now(timezone.utc).strftime("%Y-%m-%d")),
+        "expires_date": data.get("expires_date"),
+        "is_active": True,
+        "is_applied": False,  # Whether the effect has been applied
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.stock_news.insert_one(news)
+    return {"message": "News created", "news_id": news["news_id"]}
+
+@api_router.put("/admin/stock-news/{news_id}")
+async def admin_update_stock_news(news_id: str, request: Request):
+    """Update stock news (admin only)"""
+    await require_admin(request)
+    data = await request.json()
+    
+    update_data = {k: v for k, v in data.items() if v is not None and k != "news_id"}
+    
+    await db.stock_news.update_one(
+        {"news_id": news_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "News updated"}
+
+@api_router.delete("/admin/stock-news/{news_id}")
+async def admin_delete_stock_news(news_id: str, request: Request):
+    """Delete stock news (admin only)"""
+    await require_admin(request)
+    
+    await db.stock_news.delete_one({"news_id": news_id})
+    return {"message": "News deleted"}
+
+@api_router.post("/admin/stock-news/{news_id}/apply")
+async def admin_apply_stock_news(news_id: str, request: Request):
+    """Apply news effect to stock prices (admin only)"""
+    await require_admin(request)
+    
+    news = await db.stock_news.find_one({"news_id": news_id})
+    if not news:
+        raise HTTPException(status_code=404, detail="News not found")
+    
+    if news.get("is_applied"):
+        raise HTTPException(status_code=400, detail="News effect already applied")
+    
+    # Calculate impact multiplier
+    impact_percent = news.get("impact_percent", 0)
+    if news.get("impact_type") == "negative":
+        impact_percent = -impact_percent
+    elif news.get("impact_type") == "neutral":
+        impact_percent = 0
+    
+    multiplier = 1 + (impact_percent / 100)
+    affected_stocks = []
+    
+    # Apply to specific stock or category
+    if news.get("stock_id"):
+        stocks = await db.investment_stocks.find({"stock_id": news["stock_id"]}).to_list(1)
+    elif news.get("category_id"):
+        stocks = await db.investment_stocks.find({"category_id": news["category_id"]}).to_list(100)
+    else:
+        stocks = await db.investment_stocks.find({}).to_list(100)
+    
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    for stock in stocks:
+        new_price = round(stock["current_price"] * multiplier, 2)
+        new_price = max(1, new_price)  # Minimum price of ₹1
+        
+        await db.investment_stocks.update_one(
+            {"stock_id": stock["stock_id"]},
+            {"$set": {
+                "current_price": new_price,
+                "last_price_update": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        # Record in price history
+        await db.stock_price_history.insert_one({
+            "history_id": f"hist_{uuid.uuid4().hex[:12]}",
+            "stock_id": stock["stock_id"],
+            "open_price": stock["current_price"],
+            "close_price": new_price,
+            "high_price": max(stock["current_price"], new_price),
+            "low_price": min(stock["current_price"], new_price),
+            "volume": 0,
+            "date": today,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        affected_stocks.append({"ticker": stock["ticker"], "old_price": stock["current_price"], "new_price": new_price})
+    
+    # Mark news as applied
+    await db.stock_news.update_one(
+        {"news_id": news_id},
+        {"$set": {"is_applied": True}}
+    )
+    
+    return {"message": f"News applied to {len(affected_stocks)} stocks", "affected": affected_stocks}
+
+# --- Child Stock Market Endpoints ---
+
+@api_router.get("/stocks/market-status")
+async def get_market_status(request: Request):
+    """Get current market status and hours"""
+    user = await get_current_user(request)
+    
+    current_hour = datetime.now(timezone.utc).hour
+    is_open = is_market_open()
+    
+    return {
+        "is_open": is_open,
+        "open_hour": STOCK_MARKET_OPEN_HOUR,
+        "close_hour": STOCK_MARKET_CLOSE_HOUR,
+        "current_hour": current_hour,
+        "message": "Market is open for trading" if is_open else f"Market opens at {STOCK_MARKET_OPEN_HOUR}:00 AM"
+    }
+
+@api_router.get("/stocks/categories")
+async def get_stock_categories(request: Request):
+    """Get active stock categories"""
+    user = await get_current_user(request)
+    
+    categories = await db.stock_categories.find({"is_active": True}, {"_id": 0}).to_list(100)
+    return categories
+
+@api_router.get("/stocks/list")
+async def get_stocks_list(request: Request, category_id: Optional[str] = None):
+    """Get list of all available stocks with current prices"""
+    user = await get_current_user(request)
+    
+    query = {"is_active": True}
+    if category_id:
+        query["category_id"] = category_id
+    
+    stocks = await db.investment_stocks.find(query, {"_id": 0}).to_list(100)
+    
+    # Get categories for display
+    categories = {c["category_id"]: c for c in await db.stock_categories.find({}, {"_id": 0}).to_list(100)}
+    
+    # Enrich with category info and price change
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+    
+    enriched_stocks = []
+    for stock in stocks:
+        # Get yesterday's price for change calculation
+        yesterday_hist = await db.stock_price_history.find_one(
+            {"stock_id": stock["stock_id"], "date": yesterday},
+            {"_id": 0}
+        )
+        
+        yesterday_price = yesterday_hist["close_price"] if yesterday_hist else stock["base_price"]
+        price_change = stock["current_price"] - yesterday_price
+        price_change_percent = (price_change / yesterday_price * 100) if yesterday_price > 0 else 0
+        
+        category = categories.get(stock.get("category_id"), {})
+        
+        enriched_stocks.append({
+            **stock,
+            "category_name": category.get("name", "Uncategorized"),
+            "category_emoji": category.get("emoji", "📈"),
+            "category_color": category.get("color", "#3B82F6"),
+            "price_change": round(price_change, 2),
+            "price_change_percent": round(price_change_percent, 2)
+        })
+    
+    return enriched_stocks
+
+@api_router.get("/stocks/{stock_id}")
+async def get_stock_detail(stock_id: str, request: Request):
+    """Get detailed info about a specific stock"""
+    user = await get_current_user(request)
+    
+    stock = await db.investment_stocks.find_one({"stock_id": stock_id}, {"_id": 0})
+    if not stock:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    
+    # Get category
+    category = await db.stock_categories.find_one({"category_id": stock.get("category_id")}, {"_id": 0})
+    
+    # Get price history (30 days)
+    history = await db.stock_price_history.find(
+        {"stock_id": stock_id},
+        {"_id": 0}
+    ).sort("date", -1).limit(30).to_list(30)
+    history.reverse()
+    
+    # Get relevant news
+    news = await db.stock_news.find({
+        "$or": [
+            {"stock_id": stock_id},
+            {"category_id": stock.get("category_id")}
+        ],
+        "is_active": True
+    }, {"_id": 0}).sort("effective_date", -1).limit(5).to_list(5)
+    
+    # Get predictions
+    predictions = await db.stock_news.find({
+        "$or": [
+            {"stock_id": stock_id},
+            {"category_id": stock.get("category_id")}
+        ],
+        "is_prediction": True,
+        "is_active": True
+    }, {"_id": 0}).to_list(10)
+    
+    # Calculate today's change
+    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+    yesterday_hist = await db.stock_price_history.find_one({"stock_id": stock_id, "date": yesterday})
+    yesterday_price = yesterday_hist["close_price"] if yesterday_hist else stock["base_price"]
+    
+    return {
+        **stock,
+        "category": category,
+        "price_history": history,
+        "news": news,
+        "predictions": predictions,
+        "yesterday_price": yesterday_price,
+        "price_change": round(stock["current_price"] - yesterday_price, 2),
+        "price_change_percent": round((stock["current_price"] - yesterday_price) / yesterday_price * 100, 2) if yesterday_price > 0 else 0
+    }
+
+@api_router.get("/stocks/portfolio")
+async def get_stock_portfolio(request: Request):
+    """Get user's stock portfolio with P/L"""
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    holdings = await db.user_stock_holdings.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    portfolio = []
+    total_invested = 0
+    total_current_value = 0
+    
+    for holding in holdings:
+        stock = await db.investment_stocks.find_one(
+            {"stock_id": holding["stock_id"]},
+            {"_id": 0}
+        )
+        
+        if stock:
+            current_value = stock["current_price"] * holding["quantity"]
+            invested = holding["total_invested"]
+            profit_loss = current_value - invested
+            profit_loss_percent = (profit_loss / invested * 100) if invested > 0 else 0
+            
+            portfolio.append({
+                "holding_id": holding["holding_id"],
+                "stock": stock,
+                "quantity": holding["quantity"],
+                "average_buy_price": holding["average_buy_price"],
+                "total_invested": round(invested, 2),
+                "current_value": round(current_value, 2),
+                "profit_loss": round(profit_loss, 2),
+                "profit_loss_percent": round(profit_loss_percent, 2)
+            })
+            
+            total_invested += invested
+            total_current_value += current_value
+    
+    return {
+        "holdings": portfolio,
+        "summary": {
+            "total_invested": round(total_invested, 2),
+            "total_current_value": round(total_current_value, 2),
+            "total_profit_loss": round(total_current_value - total_invested, 2),
+            "total_profit_loss_percent": round((total_current_value - total_invested) / total_invested * 100, 2) if total_invested > 0 else 0
+        },
+        "is_market_open": is_market_open()
+    }
+
+@api_router.get("/stocks/portfolio/history")
+async def get_portfolio_history(request: Request, days: int = 30):
+    """Get portfolio value history for charts"""
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    history = await db.portfolio_snapshots.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("date", -1).limit(days).to_list(days)
+    
+    history.reverse()
+    return history
+
+@api_router.get("/stocks/transactions")
+async def get_stock_transactions(request: Request, limit: int = 50):
+    """Get user's stock transaction history"""
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    transactions = await db.stock_transactions.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    # Enrich with stock info
+    enriched = []
+    for trans in transactions:
+        stock = await db.investment_stocks.find_one(
+            {"stock_id": trans["stock_id"]},
+            {"_id": 0, "name": 1, "ticker": 1}
+        )
+        enriched.append({
+            **trans,
+            "stock_name": stock["name"] if stock else "Unknown",
+            "stock_ticker": stock["ticker"] if stock else "???"
+        })
+    
+    return enriched
+
+@api_router.post("/stocks/buy")
+async def buy_stock(data: BuyStockRequest, request: Request):
+    """Buy shares of a stock"""
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    # Check market hours
+    if not is_market_open():
+        raise HTTPException(status_code=400, detail=f"Market is closed. Trading hours are {STOCK_MARKET_OPEN_HOUR}:00 AM - {STOCK_MARKET_CLOSE_HOUR}:00 PM")
+    
+    # Get stock
+    stock = await db.investment_stocks.find_one({"stock_id": data.stock_id, "is_active": True})
+    if not stock:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    
+    # Validate quantity
+    if data.quantity < stock.get("min_lot_size", 1):
+        raise HTTPException(status_code=400, detail=f"Minimum purchase is {stock.get('min_lot_size', 1)} shares")
+    
+    total_cost = stock["current_price"] * data.quantity
+    
+    # Check wallet balance (use investing account)
+    wallet = await db.wallet_accounts.find_one({"user_id": user_id, "account_type": "investing"})
+    if not wallet or wallet["balance"] < total_cost:
+        raise HTTPException(status_code=400, detail=f"Insufficient funds. Need ₹{total_cost:.2f}")
+    
+    # Deduct from wallet
+    await db.wallet_accounts.update_one(
+        {"user_id": user_id, "account_type": "investing"},
+        {"$inc": {"balance": -total_cost}}
+    )
+    
+    # Check existing holding
+    existing_holding = await db.user_stock_holdings.find_one({
+        "user_id": user_id,
+        "stock_id": data.stock_id
+    })
+    
+    if existing_holding:
+        # Update existing holding with weighted average
+        new_quantity = existing_holding["quantity"] + data.quantity
+        new_total_invested = existing_holding["total_invested"] + total_cost
+        new_avg_price = new_total_invested / new_quantity
+        
+        await db.user_stock_holdings.update_one(
+            {"holding_id": existing_holding["holding_id"]},
+            {"$set": {
+                "quantity": new_quantity,
+                "average_buy_price": round(new_avg_price, 2),
+                "total_invested": round(new_total_invested, 2),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+    else:
+        # Create new holding
+        holding = {
+            "holding_id": f"hold_{uuid.uuid4().hex[:12]}",
+            "user_id": user_id,
+            "stock_id": data.stock_id,
+            "quantity": data.quantity,
+            "average_buy_price": stock["current_price"],
+            "total_invested": total_cost,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.user_stock_holdings.insert_one(holding)
+    
+    # Record transaction
+    transaction = {
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id,
+        "stock_id": data.stock_id,
+        "transaction_type": "buy",
+        "quantity": data.quantity,
+        "price_per_share": stock["current_price"],
+        "total_amount": total_cost,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.stock_transactions.insert_one(transaction)
+    
+    # Record wallet transaction
+    await db.transactions.insert_one({
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id,
+        "from_account": "investing",
+        "to_account": None,
+        "amount": total_cost,
+        "transaction_type": "stock_buy",
+        "description": f"Bought {data.quantity} shares of {stock['ticker']}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "message": f"Successfully bought {data.quantity} shares of {stock['ticker']}",
+        "stock": stock["ticker"],
+        "quantity": data.quantity,
+        "price_per_share": stock["current_price"],
+        "total_cost": round(total_cost, 2)
+    }
+
+@api_router.post("/stocks/sell")
+async def sell_stock(data: SellStockRequest, request: Request):
+    """Sell shares of a stock"""
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+    
+    # Check market hours
+    if not is_market_open():
+        raise HTTPException(status_code=400, detail=f"Market is closed. Trading hours are {STOCK_MARKET_OPEN_HOUR}:00 AM - {STOCK_MARKET_CLOSE_HOUR}:00 PM")
+    
+    # Get holding
+    holding = await db.user_stock_holdings.find_one({
+        "user_id": user_id,
+        "stock_id": data.stock_id
+    })
+    
+    if not holding:
+        raise HTTPException(status_code=404, detail="You don't own this stock")
+    
+    if data.quantity > holding["quantity"]:
+        raise HTTPException(status_code=400, detail=f"You only have {holding['quantity']} shares")
+    
+    # Get current stock price
+    stock = await db.investment_stocks.find_one({"stock_id": data.stock_id})
+    if not stock:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    
+    total_proceeds = stock["current_price"] * data.quantity
+    
+    # Add to wallet
+    await db.wallet_accounts.update_one(
+        {"user_id": user_id, "account_type": "investing"},
+        {"$inc": {"balance": total_proceeds}}
+    )
+    
+    # Update or remove holding
+    new_quantity = holding["quantity"] - data.quantity
+    if new_quantity <= 0:
+        await db.user_stock_holdings.delete_one({"holding_id": holding["holding_id"]})
+    else:
+        # Reduce total invested proportionally
+        sold_ratio = data.quantity / holding["quantity"]
+        remaining_invested = holding["total_invested"] * (1 - sold_ratio)
+        
+        await db.user_stock_holdings.update_one(
+            {"holding_id": holding["holding_id"]},
+            {"$set": {
+                "quantity": new_quantity,
+                "total_invested": round(remaining_invested, 2),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+    
+    # Calculate profit/loss for this sale
+    cost_basis = holding["average_buy_price"] * data.quantity
+    profit_loss = total_proceeds - cost_basis
+    
+    # Record transaction
+    transaction = {
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id,
+        "stock_id": data.stock_id,
+        "transaction_type": "sell",
+        "quantity": data.quantity,
+        "price_per_share": stock["current_price"],
+        "total_amount": total_proceeds,
+        "profit_loss": round(profit_loss, 2),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.stock_transactions.insert_one(transaction)
+    
+    # Record wallet transaction
+    await db.transactions.insert_one({
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id,
+        "from_account": None,
+        "to_account": "investing",
+        "amount": total_proceeds,
+        "transaction_type": "stock_sell",
+        "description": f"Sold {data.quantity} shares of {stock['ticker']} (P/L: ₹{profit_loss:.2f})",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "message": f"Successfully sold {data.quantity} shares of {stock['ticker']}",
+        "stock": stock["ticker"],
+        "quantity": data.quantity,
+        "price_per_share": stock["current_price"],
+        "total_proceeds": round(total_proceeds, 2),
+        "profit_loss": round(profit_loss, 2)
+    }
+
+@api_router.get("/stocks/news")
+async def get_stock_news(request: Request, stock_id: Optional[str] = None, category_id: Optional[str] = None):
+    """Get active news and predictions"""
+    user = await get_current_user(request)
+    
+    query = {"is_active": True}
+    if stock_id:
+        query["$or"] = [{"stock_id": stock_id}, {"stock_id": None}]
+    if category_id:
+        if "$or" in query:
+            query["$and"] = [{"$or": query.pop("$or")}, {"$or": [{"category_id": category_id}, {"category_id": None}]}]
+        else:
+            query["$or"] = [{"category_id": category_id}, {"category_id": None}]
+    
+    news = await db.stock_news.find(query, {"_id": 0}).sort("effective_date", -1).limit(20).to_list(20)
+    
+    return news
+
 # ============== ROOT ==============
 
 @api_router.get("/")
