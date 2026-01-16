@@ -109,8 +109,7 @@ export default function LandingPage() {
       
       {/* Hero Section */}
       <header className="relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-10 left-10 w-20 h-20 bg-[#FFD23F] rounded-full opacity-60 animate-float"></div>
+        {/* Decorative elements - positioned to avoid logo area */}
         <div className="absolute top-32 right-20 w-16 h-16 bg-[#EE6C4D] rounded-full opacity-60 animate-float stagger-2"></div>
         <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-[#06D6A0] rounded-full opacity-60 animate-float stagger-3"></div>
         
@@ -118,9 +117,9 @@ export default function LandingPage() {
           <nav className="flex justify-between items-center mb-16">
             <div className="flex items-center gap-3">
               <img 
-                src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/q9yl4l8a_Friendly%20%27Money%20Matter%27%20Logo%20Design.png" 
+                src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/ul81dgc9_Friendly%20%27Money%20Matter%27%20Logo%20Design%20%281%29.png" 
                 alt="CoinQuest Logo" 
-                className="h-12 w-auto"
+                className="h-24 w-auto"
               />
             </div>
             <div className="flex items-center gap-3">
@@ -315,9 +314,9 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-3 mb-6 md:mb-0">
               <img 
-                src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/q9yl4l8a_Friendly%20%27Money%20Matter%27%20Logo%20Design.png" 
+                src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/ul81dgc9_Friendly%20%27Money%20Matter%27%20Logo%20Design%20%281%29.png" 
                 alt="CoinQuest Logo" 
-                className="h-10 w-auto"
+                className="h-16 w-auto"
               />
             </div>
             <p className="text-[#98C1D9]">© Learners' Planet. Educating kids in fun and interactive ways to get them future-ready!</p>
