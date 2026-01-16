@@ -74,7 +74,21 @@ A gamified financial literacy learning application for children (K-5) with disti
 - **Admin:** admin@learnersplanet.com / finlit@2026
 - **Users:** Google Social Login
 
-## Recent Updates (January 15, 2026)
+## Recent Updates (January 16, 2026)
+
+### Money Garden Growth Fix ✅
+- **Bug Fixed:** Growth was stuck at 0% because calculation used `.days` (whole days only)
+- **Solution:** Changed to hour-based calculation using `total_seconds() / 3600`
+- **Result:** For 1-day plant, 12 hours now shows 50% (previously showed 0%)
+
+### Money Garden Plot UI Improvements ✅
+- **Plot Numbers:** Golden badge in top-left corner showing plot number (1, 2, 3, 4)
+- **Better Contrast:** Darker brown soil (#5D4037) with lighter inner soil (#8D6E63)
+- **Readable Text:** White text with drop-shadow for visibility
+- **Progress Bar:** Thicker (h-4) with green gradient, minimum 2% width shown
+- **Water Status:** Colored badge (green=well watered, yellow=needs water, red=wilting)
+
+### Previous Updates (January 15, 2026)
 
 ### Money Garden UI Refactor ✅
 - **Removed Seed Shop** from bottom of page
