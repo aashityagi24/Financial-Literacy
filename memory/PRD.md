@@ -76,6 +76,25 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ## Recent Updates (January 16, 2026)
 
+### Stock Market Simulation (Grade 3-5) ✅ NEW
+- **Complete trading system** with buy/sell during market hours (7am-5pm)
+- **Industry categories** - Admin can create (Tech, Healthcare, Food, etc.)
+- **Realistic stocks** with:
+  - Ticker symbols, prices, volatility settings
+  - Risk levels (low/medium/high)
+  - Educational info (what company does, why price changes)
+  - Dividend yields
+- **News & Events system** - Admin creates news that affects prices:
+  - Positive/negative/neutral impacts
+  - Industry-wide or stock-specific effects
+  - Price predictions (may or may not come true)
+- **Child features:**
+  - Dark broker-style UI with real-time prices
+  - Portfolio with P/L tracking
+  - Category filtering
+  - Transfer funds between accounts
+- **Admin management page** at `/admin/stocks`
+
 ### Money Garden Growth Fix ✅
 - **Bug Fixed:** Growth was stuck at 0% because calculation used `.days` (whole days only)
 - **Solution:** Changed to hour-based calculation using `total_seconds() / 3600`
