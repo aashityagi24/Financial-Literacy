@@ -382,16 +382,22 @@ export default function QuestsPage({ user }) {
               return (
                 <div 
                   key={quest.quest_id || quest.chore_id}
-                  onClick={() => openQuest(quest)}
-                  className={`card-playful p-4 cursor-pointer hover:shadow-lg transition-shadow ${
-                    hasEarned ? 'opacity-70' : ''
+                  onClick={() => !hasEarned && openQuest(quest)}
+                  className={`card-playful p-4 transition-all ${
+                    hasEarned 
+                      ? 'opacity-50 grayscale cursor-default bg-gray-100' 
+                      : 'cursor-pointer hover:shadow-lg'
                   }`}
                   data-testid={`quest-${quest.quest_id || quest.chore_id}`}
                 >
                   <div className="flex items-start gap-4">
                     {/* Quest Image or Icon */}
-                    <div className="w-16 h-16 bg-[#FFD23F] rounded-xl border-3 border-[#1D3557] flex items-center justify-center flex-shrink-0">
-                      {quest.image_url ? (
+                    <div className={`w-16 h-16 rounded-xl border-3 border-[#1D3557] flex items-center justify-center flex-shrink-0 ${
+                      hasEarned ? 'bg-gray-300' : 'bg-[#FFD23F]'
+                    }`}>
+                      {hasEarned ? (
+                        <CheckCircle className="w-8 h-8 text-[#06D6A0]" />
+                      ) : quest.image_url ? (
                         <img src={getAssetUrl(quest.image_url)} alt="" className="w-full h-full object-cover rounded-lg" />
                       ) : (
                         <Target className="w-8 h-8 text-[#1D3557]" />
@@ -405,18 +411,23 @@ export default function QuestsPage({ user }) {
                           {getSourceLabel(quest.creator_type)}
                         </span>
                         {hasEarned && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#06D6A0] text-white flex items-center gap-1">
-                            <CheckCircle className="w-3 h-3" /> Earned
+                          <span className="text-xs px-2 py-1 rounded-full bg-[#06D6A0] text-white flex items-center gap-1 font-bold">
+                            <CheckCircle className="w-3 h-3" /> COMPLETED
                           </span>
                         )}
                       </div>
                       
-                      <h3 className="font-bold text-[#1D3557] text-lg truncate">{quest.title}</h3>
-                      <p className="text-sm text-[#3D5A80] line-clamp-2">{quest.description}</p>
+                      <h3 className={`font-bold text-lg truncate ${hasEarned ? 'text-gray-500 line-through' : 'text-[#1D3557]'}`}>
+                        {quest.title}
+                      </h3>
+                      <p className={`text-sm line-clamp-2 ${hasEarned ? 'text-gray-400' : 'text-[#3D5A80]'}`}>
+                        {quest.description}
+                      </p>
                       
                       <div className="flex items-center gap-4 mt-2">
-                        <span className="text-sm font-bold text-[#FFD23F] flex items-center gap-1">
+                        <span className={`text-sm font-bold flex items-center gap-1 ${hasEarned ? 'text-gray-400' : 'text-[#FFD23F]'}`}>
                           <Star className="w-4 h-4" /> ₹{quest.total_points || quest.reward_amount}
+                          {hasEarned && <span className="text-[#06D6A0] ml-1">(Earned!)</span>}
                         </span>
                         
                         {!isChore && daysLeft !== null && (
