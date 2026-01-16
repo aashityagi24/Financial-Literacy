@@ -245,17 +245,37 @@ export default function AdminStockManagement() {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white border-b shadow-sm">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <Link to="/admin" className="p-2 hover:bg-gray-100 rounded-lg">
-              <ChevronLeft className="w-5 h-5" />
-            </Link>
-            <BarChart3 className="w-6 h-6 text-blue-600" />
-            <h1 className="text-xl font-bold">Stock Market Management</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Link to="/admin" className="p-2 hover:bg-gray-100 rounded-lg">
+                <ChevronLeft className="w-5 h-5" />
+              </Link>
+              <BarChart3 className="w-6 h-6 text-blue-600" />
+              <h1 className="text-xl font-bold">Stock Market Management</h1>
+            </div>
+            <button
+              onClick={handleTriggerFluctuation}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+            >
+              <RefreshCw className="w-4 h-4" /> Trigger Price Fluctuation
+            </button>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6">
+        {/* Fluctuation Schedule Info */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <h3 className="font-bold text-blue-800 mb-2">📅 Automatic Price Fluctuations</h3>
+          <p className="text-sm text-blue-700">
+            Stock prices automatically fluctuate 3 times daily at:
+            <span className="font-medium"> 7:15 AM IST</span> (opening),
+            <span className="font-medium"> 12:00 PM IST</span> (midday), and
+            <span className="font-medium"> 4:30 PM IST</span> (closing).
+            Use the button above to manually trigger a fluctuation.
+          </p>
+        </div>
+        
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="categories">
