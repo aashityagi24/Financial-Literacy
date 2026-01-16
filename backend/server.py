@@ -6224,11 +6224,16 @@ async def admin_create_stock(data: InvestmentStockCreate, request: Request):
         "name": data.name,
         "ticker": data.ticker.upper(),
         "description": data.description,
+        "category_id": data.category_id,
         "logo_url": data.logo_url,
         "current_price": data.base_price,  # Start at base price
         "base_price": data.base_price,
         "volatility": data.volatility,
         "min_lot_size": data.min_lot_size,
+        "what_they_do": data.what_they_do,
+        "why_price_changes": data.why_price_changes,
+        "risk_level": data.risk_level,
+        "dividend_yield": data.dividend_yield,
         "is_active": data.is_active,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "last_price_update": datetime.now(timezone.utc).isoformat()
@@ -6237,11 +6242,16 @@ async def admin_create_stock(data: InvestmentStockCreate, request: Request):
     await db.investment_stocks.insert_one(stock)
     
     # Add initial price to history
-    await db.price_history.insert_one({
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    await db.stock_price_history.insert_one({
         "history_id": f"hist_{uuid.uuid4().hex[:12]}",
         "stock_id": stock["stock_id"],
-        "price": data.base_price,
-        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "open_price": data.base_price,
+        "close_price": data.base_price,
+        "high_price": data.base_price,
+        "low_price": data.base_price,
+        "volume": 0,
+        "date": today,
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
