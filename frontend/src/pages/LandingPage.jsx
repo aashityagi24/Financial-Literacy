@@ -119,7 +119,7 @@ export default function LandingPage() {
               <img 
                 src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/ul81dgc9_Friendly%20%27Money%20Matter%27%20Logo%20Design%20%281%29.png" 
                 alt="CoinQuest Logo" 
-                className="h-48 w-auto"
+                className="h-72 w-auto"
               />
             </div>
             <div className="flex items-center gap-3">
@@ -316,7 +316,7 @@ export default function LandingPage() {
               <img 
                 src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/ul81dgc9_Friendly%20%27Money%20Matter%27%20Logo%20Design%20%281%29.png" 
                 alt="CoinQuest Logo" 
-                className="h-24 w-auto"
+                className="h-48 w-auto"
               />
             </div>
             <p className="text-[#98C1D9]">© Learners' Planet. Educating kids in fun and interactive ways to get them future-ready!</p>
