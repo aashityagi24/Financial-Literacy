@@ -7483,16 +7483,15 @@ async def daily_market_simulation():
             "date": today,
             "status": "success",
             "details": {
-                "stocks_updated": updated_stocks,
                 "plant_holdings_updated": updated_plants
             },
             "created_at": datetime.now(timezone.utc).isoformat()
         })
         
-        logger.info(f"Daily market simulation completed: {updated_stocks} stocks, {updated_plants} plant holdings updated")
+        logger.info(f"Daily plant update completed: {updated_plants} plant holdings updated")
         
     except Exception as e:
-        logger.error(f"Daily market simulation failed: {str(e)}")
+        logger.error(f"Daily plant update failed: {str(e)}")
         await db.scheduler_logs.insert_one({
             "log_id": f"log_{uuid.uuid4().hex[:12]}",
             "task": "daily_market",
@@ -7513,18 +7512,44 @@ async def startup_scheduler():
     if result.modified_count > 0:
         logger.info(f"Migrated {result.modified_count} 'giving' accounts to 'gifting'")
     
-    # Run daily at 6:00 AM UTC (11:30 AM IST)
+    # Stock Price Fluctuations - 3 times daily in IST
+    # IST = UTC + 5:30
+    # 7:15 AM IST = 1:45 AM UTC
+    scheduler.add_job(
+        lambda: asyncio.create_task(stock_price_fluctuation("opening")),
+        CronTrigger(hour=1, minute=45),
+        id="stock_fluctuation_opening",
+        replace_existing=True
+    )
+    
+    # 12:00 PM IST = 6:30 AM UTC
+    scheduler.add_job(
+        lambda: asyncio.create_task(stock_price_fluctuation("midday")),
+        CronTrigger(hour=6, minute=30),
+        id="stock_fluctuation_midday",
+        replace_existing=True
+    )
+    
+    # 4:30 PM IST = 11:00 AM UTC
+    scheduler.add_job(
+        lambda: asyncio.create_task(stock_price_fluctuation("closing")),
+        CronTrigger(hour=11, minute=0),
+        id="stock_fluctuation_closing",
+        replace_existing=True
+    )
+    
+    # Daily plant growth update at 6:00 AM UTC
     scheduler.add_job(
         daily_market_simulation,
         CronTrigger(hour=6, minute=0),
-        id="daily_market_simulation",
+        id="daily_plant_update",
         replace_existing=True
     )
     
     # Run quest reminders at 00:30 IST (19:00 UTC previous day) - 1 day before due
     scheduler.add_job(
         send_quest_reminders,
-        CronTrigger(hour=19, minute=0),  # 19:00 UTC = 00:30 IST next day
+        CronTrigger(hour=19, minute=0),
         id="quest_reminders",
         replace_existing=True
     )
@@ -7532,20 +7557,24 @@ async def startup_scheduler():
     # Run chore reset at 00:30 IST (6 AM IST = 00:30 UTC)
     scheduler.add_job(
         reset_daily_chores,
-        CronTrigger(hour=0, minute=30),  # 00:30 UTC = 6:00 AM IST
+        CronTrigger(hour=0, minute=30),
         id="daily_chore_reset",
         replace_existing=True
     )
     
     scheduler.start()
-    logger.info("Schedulers started: market simulation (6 AM UTC), quest reminders (7 PM UTC), chore reset (00:30 UTC)")
+    logger.info("Schedulers started: stock fluctuations (7:15 AM, 12:00 PM, 4:30 PM IST), plant update (6 AM UTC), quest reminders (7 PM UTC), chore reset (00:30 UTC)")
     
-    # Run immediately if it hasn't run today (useful for server restarts)
+    # Run opening fluctuation on startup if market just opened
+    current_ist_hour = get_ist_hour()
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    last_run = await db.scheduler_logs.find_one({"task": "daily_market", "date": today})
-    if not last_run:
-        logger.info("Running initial market simulation on startup...")
-        await daily_market_simulation()
+    
+    # If between 7 AM and 8 AM IST and opening hasn't run
+    if 7 <= current_ist_hour < 8:
+        last_opening = await db.scheduler_logs.find_one({"task": "stock_fluctuation_opening", "date": today})
+        if not last_opening:
+            logger.info("Running opening stock fluctuation on startup...")
+            await stock_price_fluctuation("opening")
 
 async def send_quest_reminders():
     """Send reminders to children for quests due tomorrow"""
