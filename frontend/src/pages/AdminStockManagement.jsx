@@ -70,10 +70,6 @@ export default function AdminStockManagement() {
     effective_date: new Date().toISOString().split('T')[0]
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
     try {
       const [catRes, stockRes, newsRes] = await Promise.all([
@@ -89,6 +85,10 @@ export default function AdminStockManagement() {
       toast.error('Failed to load data');
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   // Category handlers
   const handleSaveCategory = async () => {
