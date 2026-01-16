@@ -113,7 +113,7 @@ export default function LandingPage() {
         <div className="absolute top-32 right-20 w-16 h-16 bg-[#EE6C4D] rounded-full opacity-60 animate-float stagger-2"></div>
         <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-[#06D6A0] rounded-full opacity-60 animate-float stagger-3"></div>
         
-        <div className="container mx-auto px-6 pt-4 pb-6">
+        <div className="container mx-auto px-6 pb-6">
           <nav className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-3">
               <img 
