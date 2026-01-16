@@ -6692,13 +6692,20 @@ async def get_store_items_by_category(request: Request):
 
 # ============== STOCK MARKET SYSTEM (Grade 3-5) ==============
 
-STOCK_MARKET_OPEN_HOUR = 7   # 7 AM
-STOCK_MARKET_CLOSE_HOUR = 17  # 5 PM
+STOCK_MARKET_OPEN_HOUR = 7   # 7 AM IST
+STOCK_MARKET_CLOSE_HOUR = 17  # 5 PM IST
+IST_OFFSET_HOURS = 5.5  # IST is UTC+5:30
+
+def get_ist_hour():
+    """Get current hour in IST (Indian Standard Time)"""
+    utc_now = datetime.now(timezone.utc)
+    ist_hour = (utc_now.hour + IST_OFFSET_HOURS) % 24
+    return ist_hour
 
 def is_market_open():
-    """Check if stock market is open (7 AM - 5 PM)"""
-    current_hour = datetime.now(timezone.utc).hour
-    return STOCK_MARKET_OPEN_HOUR <= current_hour < STOCK_MARKET_CLOSE_HOUR
+    """Check if stock market is open (7 AM - 5 PM IST)"""
+    current_ist_hour = get_ist_hour()
+    return STOCK_MARKET_OPEN_HOUR <= current_ist_hour < STOCK_MARKET_CLOSE_HOUR
 
 # --- Admin Stock Category Endpoints ---
 
