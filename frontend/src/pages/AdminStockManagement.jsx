@@ -678,12 +678,12 @@ export default function AdminStockManagement() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">Affects Industry</label>
-                <Select value={newsForm.category_id} onValueChange={(v) => setNewsForm({...newsForm, category_id: v, stock_id: ''})}>
+                <Select value={newsForm.category_id || "all"} onValueChange={(v) => setNewsForm({...newsForm, category_id: v === "all" ? "" : v, stock_id: ''})}>
                   <SelectTrigger>
                     <SelectValue placeholder="All industries" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Industries</SelectItem>
+                    <SelectItem value="all">All Industries</SelectItem>
                     {categories.map(cat => (
                       <SelectItem key={cat.category_id} value={cat.category_id}>
                         {cat.emoji} {cat.name}
@@ -694,12 +694,12 @@ export default function AdminStockManagement() {
               </div>
               <div>
                 <label className="text-sm font-medium">Or Specific Stock</label>
-                <Select value={newsForm.stock_id} onValueChange={(v) => setNewsForm({...newsForm, stock_id: v, category_id: ''})}>
+                <Select value={newsForm.stock_id || "none"} onValueChange={(v) => setNewsForm({...newsForm, stock_id: v === "none" ? "" : v, category_id: ''})}>
                   <SelectTrigger>
                     <SelectValue placeholder="No specific stock" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Specific Stock</SelectItem>
+                    <SelectItem value="none">No Specific Stock</SelectItem>
                     {stocks.map(s => (
                       <SelectItem key={s.stock_id} value={s.stock_id}>{s.ticker} - {s.name}</SelectItem>
                     ))}
