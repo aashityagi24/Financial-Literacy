@@ -2614,6 +2614,8 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
         quest["completion_status"] = completion
         quest["has_earned"] = completion.get("has_earned", False) if completion else False
         quest["earned_amount"] = completion.get("earned_amount", 0) if completion else 0
+        # Mark as completed if quest was attempted (regardless of points earned)
+        quest["is_completed"] = completion.get("is_completed", False) if completion else False
     
     # Sort
     if sort == "due_date":
@@ -2712,13 +2714,15 @@ async def submit_quest_answers(quest_id: str, request: Request):
         completion_doc["completion_id"] = f"comp_{uuid.uuid4().hex[:12]}"
         completion_doc["has_earned"] = earned > 0
         completion_doc["earned_amount"] = earned
+        completion_doc["is_completed"] = True  # Mark as completed regardless of points earned
         completion_doc["first_attempt_at"] = datetime.now(timezone.utc).isoformat()
         await db.quest_completions.insert_one(completion_doc)
     else:
         update_data = {
             "last_attempt_at": completion_doc["last_attempt_at"],
             "last_results": results,
-            "last_earned": earned if not has_already_earned else 0
+            "last_earned": earned if not has_already_earned else 0,
+            "is_completed": True  # Mark as completed regardless of points earned
         }
         if not has_already_earned and earned > 0:
             update_data["has_earned"] = True
