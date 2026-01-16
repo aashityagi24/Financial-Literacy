@@ -46,6 +46,7 @@ export default function StockMarketPage({ user }) {
   const [buyQuantity, setBuyQuantity] = useState(1);
   const [sellQuantity, setSellQuantity] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedRisk, setSelectedRisk] = useState('all');
   const [wallet, setWallet] = useState(null);
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferData, setTransferData] = useState({ from_account: 'spending', to_account: 'investing', amount: '' });
