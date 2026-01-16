@@ -7347,33 +7347,40 @@ logger = logging.getLogger(__name__)
 # Initialize the scheduler
 scheduler = AsyncIOScheduler()
 
-async def daily_market_simulation():
+async def stock_price_fluctuation(session_name: str):
     """
-    Automated daily price fluctuation for stocks.
-    This simulates market changes by adjusting stock prices based on their volatility.
-    Also updates plant growth values.
+    Automated stock price fluctuation.
+    Runs 3 times daily at:
+    - 7:15 AM IST (opening)
+    - 12:00 PM IST (midday)
+    - 4:30 PM IST (near closing)
     """
-    logger.info("Running daily market simulation...")
+    logger.info(f"Running stock price fluctuation ({session_name})...")
     
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    task_id = f"stock_fluctuation_{session_name}"
     
-    # Check if already run today
-    last_run = await db.scheduler_logs.find_one({"task": "daily_market", "date": today})
+    # Check if already run this session today
+    last_run = await db.scheduler_logs.find_one({"task": task_id, "date": today})
     if last_run:
-        logger.info(f"Daily market simulation already ran today ({today}). Skipping.")
+        logger.info(f"Stock fluctuation ({session_name}) already ran today ({today}). Skipping.")
         return
     
     try:
         # Update all active stocks
-        stocks = await db.investment_stocks.find({"is_active": True}).to_list(100)
+        stocks = await db.investment_stocks.find(
+            {"$or": [{"is_active": True}, {"is_active": {"$exists": False}}]}
+        ).to_list(200)
         updated_stocks = 0
         
         for stock in stocks:
             # Random price change based on volatility
             volatility = stock.get("volatility", 0.05)
-            change_percent = random.uniform(-volatility, volatility)
+            # Divide volatility by 3 since we fluctuate 3 times a day
+            session_volatility = volatility / 3
+            change_percent = random.uniform(-session_volatility, session_volatility)
             current_price = stock.get("current_price", stock.get("base_price", 10))
-            new_price = max(0.01, current_price * (1 + change_percent))  # Don't go below 0.01
+            new_price = max(1.0, current_price * (1 + change_percent))  # Minimum price ₹1
             new_price = round(new_price, 2)
             
             # Update stock price
@@ -7385,19 +7392,71 @@ async def daily_market_simulation():
                 }}
             )
             
-            # Record in price history
-            await db.price_history.insert_one({
-                "history_id": f"hist_{uuid.uuid4().hex[:12]}",
-                "stock_id": stock["stock_id"],
-                "price": new_price,
-                "date": today,
-                "change_percent": round(change_percent * 100, 2),
-                "created_at": datetime.now(timezone.utc).isoformat()
-            })
+            # Record in detailed price history
+            await db.stock_price_history.update_one(
+                {"stock_id": stock["stock_id"], "date": today},
+                {
+                    "$set": {
+                        "close_price": new_price,
+                        "last_update": datetime.now(timezone.utc).isoformat()
+                    },
+                    "$max": {"high_price": new_price},
+                    "$min": {"low_price": new_price},
+                    "$setOnInsert": {
+                        "history_id": f"hist_{uuid.uuid4().hex[:12]}",
+                        "stock_id": stock["stock_id"],
+                        "open_price": current_price,
+                        "date": today,
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    }
+                },
+                upsert=True
+            )
             
             updated_stocks += 1
         
-        # Update plant growth values for user holdings
+        # Log successful run
+        await db.scheduler_logs.insert_one({
+            "log_id": f"log_{uuid.uuid4().hex[:12]}",
+            "task": task_id,
+            "date": today,
+            "status": "success",
+            "details": {
+                "session": session_name,
+                "stocks_updated": updated_stocks
+            },
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        logger.info(f"Stock fluctuation ({session_name}) completed: {updated_stocks} stocks updated")
+        
+    except Exception as e:
+        logger.error(f"Stock fluctuation ({session_name}) failed: {str(e)}")
+        await db.scheduler_logs.insert_one({
+            "log_id": f"log_{uuid.uuid4().hex[:12]}",
+            "task": task_id,
+            "date": today,
+            "status": "failed",
+            "error": str(e),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+
+async def daily_market_simulation():
+    """
+    Legacy daily simulation - now also updates plant growth values.
+    Stock fluctuations are handled separately by stock_price_fluctuation()
+    """
+    logger.info("Running daily plant growth update...")
+    
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    # Check if already run today
+    last_run = await db.scheduler_logs.find_one({"task": "daily_market", "date": today})
+    if last_run:
+        logger.info(f"Daily plant update already ran today ({today}). Skipping.")
+        return
+    
+    try:
         plant_holdings = await db.user_investment_holdings.find({"investment_type": "plant"}).to_list(1000)
         updated_plants = 0
         
