@@ -771,7 +771,7 @@ class InvestmentStock(BaseModel):
     ticker: str  # Stock ticker symbol (e.g., "TCO" for TechCo)
     description: str
     logo_url: Optional[str] = None
-    category_id: str  # Industry category
+    category_id: Optional[str] = None  # Industry category (optional)
     current_price: float  # Current price per share
     base_price: float  # Original/base price for reference
     volatility: float = 0.05  # Daily volatility (5% means ±5% daily change)
