@@ -117,10 +117,11 @@ export default function LandingPage() {
         <div className="container mx-auto px-6 py-12 lg:py-20">
           <nav className="flex justify-between items-center mb-16">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-[#FFD23F] rounded-2xl border-3 border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] flex items-center justify-center">
-                <Coins className="w-7 h-7 text-[#1D3557]" />
-              </div>
-              <span className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>PocketQuest</span>
+              <img 
+                src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/q9yl4l8a_Friendly%20%27Money%20Matter%27%20Logo%20Design.png" 
+                alt="CoinQuest Logo" 
+                className="h-12 w-auto"
+              />
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -147,7 +148,7 @@ export default function LandingPage() {
                 Learn Money Skills <span className="text-[#EE6C4D]">While Having Fun!</span>
               </h1>
               <p className="text-xl text-[#3D5A80] mb-8 leading-relaxed">
-                PocketQuest teaches K-5 kids about saving, spending, investing, and gifting through exciting games, quests, and real-world simulations!
+                CoinQuest teaches K-5 kids about saving, spending, investing, and gifting through exciting games, quests, and real-world simulations!
               </p>
               <div className="flex flex-wrap gap-4">
                 <button
@@ -313,10 +314,11 @@ export default function LandingPage() {
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-3 mb-6 md:mb-0">
-              <div className="w-10 h-10 bg-[#FFD23F] rounded-xl border-2 border-white flex items-center justify-center">
-                <Coins className="w-6 h-6 text-[#1D3557]" />
-              </div>
-              <span className="text-xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>PocketQuest</span>
+              <img 
+                src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/q9yl4l8a_Friendly%20%27Money%20Matter%27%20Logo%20Design.png" 
+                alt="CoinQuest Logo" 
+                className="h-10 w-auto"
+              />
             </div>
             <p className="text-[#98C1D9]">© Learners' Planet. Educating kids in fun and interactive ways to get them future-ready!</p>
           </div>
