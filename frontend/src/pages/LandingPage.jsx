@@ -113,8 +113,8 @@ export default function LandingPage() {
         <div className="absolute top-32 right-20 w-16 h-16 bg-[#EE6C4D] rounded-full opacity-60 animate-float stagger-2"></div>
         <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-[#06D6A0] rounded-full opacity-60 animate-float stagger-3"></div>
         
-        <div className="container mx-auto px-6 py-12 lg:py-20">
-          <nav className="flex justify-between items-center mb-16">
+        <div className="container mx-auto px-6 pt-4 pb-6">
+          <nav className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-3">
               <img 
                 src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/ul81dgc9_Friendly%20%27Money%20Matter%27%20Logo%20Design%20%281%29.png" 
