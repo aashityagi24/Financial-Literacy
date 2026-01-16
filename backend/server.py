@@ -4102,6 +4102,18 @@ async def mark_notifications_read(request: Request):
     
     return {"message": "Notifications marked as read"}
 
+@api_router.post("/notifications/mark-all-read")
+async def mark_all_notifications_read(request: Request):
+    """Mark all notifications as read (alias)"""
+    user = await get_current_user(request)
+    
+    result = await db.notifications.update_many(
+        {"user_id": user["user_id"], "read": False},
+        {"$set": {"read": True}}
+    )
+    
+    return {"message": "All notifications marked as read", "updated": result.modified_count}
+
 @api_router.delete("/notifications/{notification_id}")
 async def delete_notification(notification_id: str, request: Request):
     """Delete a notification"""
