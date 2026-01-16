@@ -226,6 +226,16 @@ export default function AdminStockManagement() {
     }
   };
 
+  const handleTriggerFluctuation = async () => {
+    try {
+      const res = await axios.post(`${API}/admin/investments/simulate-fluctuation`);
+      toast.success('Price fluctuation triggered! Prices updated.');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to trigger fluctuation');
+    }
+  };
+
   const getCategoryName = (categoryId) => {
     const cat = categories.find(c => c.category_id === categoryId);
     return cat ? `${cat.emoji} ${cat.name}` : 'Uncategorized';
