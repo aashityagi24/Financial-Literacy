@@ -341,18 +341,23 @@ export default function MoneyGardenPage({ user }) {
             return (
               <div
                 key={plot.plot_id}
-                className={`relative bg-[#8B4513]/30 rounded-2xl border-4 border-[#8B4513] p-4 min-h-[180px] flex flex-col items-center justify-center ${
-                  plot.status === 'ready' ? 'animate-pulse ring-4 ring-[#FFD700]' : ''
+                className={`relative bg-[#5D4037] rounded-2xl border-4 border-[#3E2723] p-4 min-h-[200px] flex flex-col items-center justify-center shadow-lg ${
+                  plot.status === 'ready' ? 'ring-4 ring-[#FFD700] animate-pulse' : ''
                 }`}
                 data-testid={`plot-${plot.position}`}
               >
-                {/* Soil texture */}
-                <div className="absolute inset-2 bg-[#654321]/20 rounded-xl" />
+                {/* Plot Number Badge */}
+                <div className="absolute top-2 left-2 z-20 bg-[#FFD700] text-[#3E2723] w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border-2 border-[#3E2723] shadow-md">
+                  {plot.position + 1}
+                </div>
+                
+                {/* Soil texture - lighter brown for better contrast */}
+                <div className="absolute inset-2 bg-[#8D6E63] rounded-xl" />
                 
                 {plot.status === 'empty' ? (
                   <button
                     onClick={() => { setSelectedPlot(plot.plot_id); setShowSeedDialog(true); }}
-                    className="relative z-10 bg-[#90EE90] hover:bg-[#7CCD7C] text-[#228B22] px-4 py-3 rounded-xl font-bold flex flex-col items-center gap-2 border-3 border-[#228B22]"
+                    className="relative z-10 bg-[#81C784] hover:bg-[#66BB6A] text-white px-4 py-3 rounded-xl font-bold flex flex-col items-center gap-2 border-3 border-[#388E3C] shadow-md"
                   >
                     <span className="text-3xl">🌱</span>
                     <span>Plant Seed</span>
