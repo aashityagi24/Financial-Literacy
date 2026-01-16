@@ -187,25 +187,25 @@ export default function StockMarketPage({ user }) {
     <div className="min-h-screen bg-[#0A0F1C] text-white" data-testid="stock-market-page">
       {/* Header - Broker Style */}
       <header className="bg-[#111827] border-b border-gray-800">
-        <div className="container mx-auto px-4 py-3">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <Link to="/dashboard" className="p-2 hover:bg-white/10 rounded-lg">
-                <ChevronLeft className="w-5 h-5 text-gray-400" />
+                <ChevronLeft className="w-6 h-6 text-gray-400" />
               </Link>
-              <div className="flex items-center gap-2">
-                <BarChart3 className="w-6 h-6 text-[#10B981]" />
-                <h1 className="text-lg font-bold">PocketQuest Markets</h1>
+              <div className="flex items-center gap-3">
+                <BarChart3 className="w-8 h-8 text-[#10B981]" />
+                <h1 className="text-xl font-bold">PocketQuest Markets</h1>
               </div>
             </div>
             
             {/* Market Status Badge */}
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-base font-medium ${
               marketStatus.is_open 
                 ? 'bg-[#10B981]/20 text-[#10B981]' 
                 : 'bg-red-500/20 text-red-400'
             }`}>
-              <div className={`w-2 h-2 rounded-full ${marketStatus.is_open ? 'bg-[#10B981] animate-pulse' : 'bg-red-500'}`} />
+              <div className={`w-3 h-3 rounded-full ${marketStatus.is_open ? 'bg-[#10B981] animate-pulse' : 'bg-red-500'}`} />
               {marketStatus.is_open ? 'Market Open' : 'Market Closed'}
             </div>
             
@@ -213,11 +213,11 @@ export default function StockMarketPage({ user }) {
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => setShowTransfer(true)}
-                className="flex items-center gap-2 bg-[#1F2937] rounded-lg px-3 py-2 hover:bg-[#374151] transition-colors"
+                className="flex items-center gap-3 bg-[#1F2937] rounded-xl px-4 py-3 hover:bg-[#374151] transition-colors"
               >
-                <Wallet className="w-4 h-4 text-[#10B981]" />
-                <span className="text-sm text-gray-400">Trading:</span>
-                <span className="font-bold text-[#10B981]">₹{investingBalance.toFixed(0)}</span>
+                <Wallet className="w-5 h-5 text-[#10B981]" />
+                <span className="text-base text-gray-400">Trading:</span>
+                <span className="text-lg font-bold text-[#10B981]">₹{investingBalance.toFixed(0)}</span>
               </button>
             </div>
           </div>
@@ -225,27 +225,27 @@ export default function StockMarketPage({ user }) {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-4">
+      <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="bg-[#1F2937] border border-gray-700 mb-4">
-            <TabsTrigger value="market" className="data-[state=active]:bg-[#10B981] data-[state=active]:text-white">
-              <TrendingUp className="w-4 h-4 mr-2" /> Market
+          <TabsList className="bg-[#1F2937] border border-gray-700 mb-6 p-1">
+            <TabsTrigger value="market" className="text-base px-6 py-3 data-[state=active]:bg-[#10B981] data-[state=active]:text-white">
+              <TrendingUp className="w-5 h-5 mr-2" /> Market
             </TabsTrigger>
-            <TabsTrigger value="portfolio" className="data-[state=active]:bg-[#10B981] data-[state=active]:text-white">
-              <BarChart3 className="w-4 h-4 mr-2" /> Portfolio
+            <TabsTrigger value="portfolio" className="text-base px-6 py-3 data-[state=active]:bg-[#10B981] data-[state=active]:text-white">
+              <BarChart3 className="w-5 h-5 mr-2" /> Portfolio
             </TabsTrigger>
-            <TabsTrigger value="news" className="data-[state=active]:bg-[#10B981] data-[state=active]:text-white">
-              <Newspaper className="w-4 h-4 mr-2" /> News
+            <TabsTrigger value="news" className="text-base px-6 py-3 data-[state=active]:bg-[#10B981] data-[state=active]:text-white">
+              <Newspaper className="w-5 h-5 mr-2" /> News
             </TabsTrigger>
           </TabsList>
 
           {/* Market Tab */}
           <TabsContent value="market">
             {/* Category Filter */}
-            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+            <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
               <button
                 onClick={() => setSelectedCategory('all')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`px-5 py-2.5 rounded-xl text-base font-medium whitespace-nowrap transition-colors ${
                   selectedCategory === 'all' 
                     ? 'bg-[#10B981] text-white' 
                     : 'bg-[#1F2937] text-gray-400 hover:bg-[#374151]'
@@ -257,14 +257,14 @@ export default function StockMarketPage({ user }) {
                 <button
                   key={cat.category_id}
                   onClick={() => setSelectedCategory(cat.category_id)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${
+                  className={`px-5 py-2.5 rounded-xl text-base font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${
                     selectedCategory === cat.category_id 
                       ? 'text-white' 
                       : 'bg-[#1F2937] text-gray-400 hover:bg-[#374151]'
                   }`}
                   style={{ backgroundColor: selectedCategory === cat.category_id ? cat.color : undefined }}
                 >
-                  <span>{cat.emoji}</span> {cat.name}
+                  <span className="text-lg">{cat.emoji}</span> {cat.name}
                 </button>
               ))}
             </div>
