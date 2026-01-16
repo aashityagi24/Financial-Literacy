@@ -143,18 +143,27 @@ export default function NotificationCenter({ onGiftRequestAction }) {
                 {notifications.map((notif) => {
                   const typeInfo = notificationIcons[notif.notification_type] || notificationIcons.announcement;
                   const IconComponent = typeInfo.icon;
+                  const isClickable = notif.notification_type !== 'gift_request' && typeInfo.path;
                   
                   return (
                     <div 
                       key={notif.notification_id}
-                      className={`p-3 rounded-xl border-2 border-[#1D3557]/20 ${typeInfo.bg} ${!notif.read ? 'border-[#1D3557]' : ''}`}
+                      onClick={() => isClickable && handleNotificationClick(notif)}
+                      className={`p-3 rounded-xl border-2 border-[#1D3557]/20 ${typeInfo.bg} ${!notif.read ? 'border-[#1D3557]' : ''} ${
+                        isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''
+                      }`}
                     >
                       <div className="flex items-start gap-3">
                         <div className={`p-2 rounded-lg bg-white ${typeInfo.color}`}>
                           <IconComponent className="w-4 h-4" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-[#1D3557] text-sm">{notif.title}</p>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-bold text-[#1D3557] text-sm">{notif.title}</p>
+                            {isClickable && (
+                              <ExternalLink className="w-3 h-3 text-[#3D5A80]/40 flex-shrink-0" />
+                            )}
+                          </div>
                           <p className="text-xs text-[#3D5A80] mt-0.5">{notif.message}</p>
                           {notif.from_user_name && (
                             <p className="text-xs text-[#3D5A80]/60 mt-1">From: {notif.from_user_name}</p>
@@ -165,18 +174,20 @@ export default function NotificationCenter({ onGiftRequestAction }) {
                           {notif.notification_type === 'gift_request' && notif.related_id && onGiftRequestAction && (
                             <div className="flex gap-2 mt-2">
                               <button
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   onGiftRequestAction(notif.related_id, 'accept');
-                                  handleDelete(notif.notification_id);
+                                  handleDelete(notif.notification_id, e);
                                 }}
                                 className="px-3 py-1 bg-[#06D6A0] text-white text-xs font-bold rounded-lg hover:bg-[#05b88a]"
                               >
                                 Accept
                               </button>
                               <button
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   onGiftRequestAction(notif.related_id, 'decline');
-                                  handleDelete(notif.notification_id);
+                                  handleDelete(notif.notification_id, e);
                                 }}
                                 className="px-3 py-1 bg-[#EE6C4D] text-white text-xs font-bold rounded-lg hover:bg-[#d85a3d]"
                               >
