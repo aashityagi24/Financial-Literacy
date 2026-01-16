@@ -164,9 +164,12 @@ export default function StockMarketPage({ user }) {
     }
   };
 
-  const filteredStocks = selectedCategory === 'all' 
-    ? stocks 
-    : stocks.filter(s => s.category_id === selectedCategory);
+  // Filter stocks by category and risk
+  const filteredStocks = stocks.filter(s => {
+    const categoryMatch = selectedCategory === 'all' || s.category_id === selectedCategory;
+    const riskMatch = selectedRisk === 'all' || s.risk_level === selectedRisk;
+    return categoryMatch && riskMatch;
+  });
 
   const investingBalance = wallet?.accounts?.find(a => a.account_type === 'investing')?.balance || 0;
   const spendingBalance = wallet?.accounts?.find(a => a.account_type === 'spending')?.balance || 0;
