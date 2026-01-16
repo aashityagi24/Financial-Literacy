@@ -189,6 +189,26 @@ export default function AdminPage({ user }) {
             </div>
           </Link>
           
+          {/* Stock Market Management Card */}
+          <Link 
+            to="/admin/stocks" 
+            className="block bg-gradient-to-r from-[#1E40AF] to-[#3B82F6] rounded-xl p-5 hover:shadow-lg transition-shadow"
+            data-testid="stock-management-link"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">📈</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Stock Market (G3-5)</h3>
+                  <p className="text-white/80 text-sm">Manage stocks, news & categories</p>
+                </div>
+              </div>
+              <ChevronRight className="w-6 h-6 text-white" />
+            </div>
+          </Link>
+          
           {/* Investment Management Card */}
           <Link 
             to="/admin/investments" 
