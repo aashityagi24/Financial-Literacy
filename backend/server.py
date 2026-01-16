@@ -1392,11 +1392,12 @@ async def get_farm(request: Request):
                     elif hours_since_water > water_freq:
                         plot["status"] = "water_needed"
                     else:
-                        # Calculate growth if watered
+                        # Calculate growth if watered - use hours for granular progress
                         planted_at = datetime.fromisoformat(plot["planted_at"].replace('Z', '+00:00'))
-                        days_growing = (now - planted_at).days
-                        growth_progress = min(100, (days_growing / plant["growth_days"]) * 100)
-                        plot["growth_progress"] = growth_progress
+                        hours_growing = (now - planted_at).total_seconds() / 3600
+                        total_growth_hours = plant["growth_days"] * 24
+                        growth_progress = min(100, (hours_growing / total_growth_hours) * 100)
+                        plot["growth_progress"] = round(growth_progress, 1)
                         
                         if growth_progress >= 100:
                             plot["status"] = "ready"
