@@ -365,41 +365,49 @@ export default function MoneyGardenPage({ user }) {
                 ) : plot.status === 'dead' ? (
                   <div className="relative z-10 text-center">
                     <span className="text-5xl">💀</span>
-                    <p className="text-red-600 font-bold mt-2">Plant died!</p>
+                    <p className="text-white font-bold mt-2 bg-red-600 px-2 py-1 rounded">Plant died!</p>
                     <button
                       onClick={() => { setSelectedPlot(plot.plot_id); setShowSeedDialog(true); }}
-                      className="mt-2 bg-[#90EE90] text-[#228B22] px-3 py-1 rounded-lg text-sm font-bold"
+                      className="mt-2 bg-[#81C784] hover:bg-[#66BB6A] text-white px-3 py-1 rounded-lg text-sm font-bold border-2 border-[#388E3C]"
                     >
                       Replant
                     </button>
                   </div>
                 ) : (
-                  <div className="relative z-10 text-center w-full">
+                  <div className="relative z-10 text-center w-full px-2">
                     {/* Plant Visual */}
                     <div className={`text-5xl mb-2 ${stage?.sparkle ? 'animate-bounce' : ''}`}>
                       {stage?.emoji || '🌱'}
                       {plot.status === 'ready' && <Sparkles className="inline w-6 h-6 text-yellow-400 ml-1" />}
                     </div>
                     
-                    {/* Plant Name */}
-                    <p className="font-bold text-[#1D3557] text-sm">{plot.plant_name}</p>
+                    {/* Plant Name - White text with shadow for readability */}
+                    <p className="font-bold text-white text-sm drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{plot.plant_name}</p>
                     
-                    {/* Growth Progress */}
+                    {/* Growth Progress Bar - Higher contrast */}
                     {plot.status !== 'ready' && (
-                      <div className="w-full bg-[#D2B48C] rounded-full h-3 mt-2 border border-[#8B4513]">
+                      <div className="w-full bg-[#3E2723] rounded-full h-4 mt-2 border-2 border-[#5D4037] overflow-hidden">
                         <div 
-                          className="bg-[#228B22] h-full rounded-full transition-all"
-                          style={{ width: `${plot.growth_progress}%` }}
+                          className="bg-gradient-to-r from-[#4CAF50] to-[#8BC34A] h-full rounded-full transition-all duration-500"
+                          style={{ width: `${Math.max(plot.growth_progress, 2)}%` }}
                         />
                       </div>
                     )}
-                    <p className="text-xs text-[#3D5A80] mt-1">{stage?.label} ({Math.round(plot.growth_progress)}%)</p>
                     
-                    {/* Water Status */}
+                    {/* Growth percentage - White text for visibility */}
+                    <p className="text-sm text-white font-bold mt-1 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                      {stage?.label} ({Math.round(plot.growth_progress)}%)
+                    </p>
+                    
+                    {/* Water Status - Higher contrast badges */}
                     {waterStatus && plot.status !== 'ready' && (
-                      <div className={`flex items-center justify-center gap-1 mt-2 ${waterStatus.color}`}>
+                      <div className={`inline-flex items-center gap-1 mt-2 px-2 py-1 rounded-full text-xs font-bold ${
+                        plot.status === 'wilting' ? 'bg-red-500 text-white' :
+                        plot.status === 'water_needed' ? 'bg-yellow-400 text-[#3E2723]' :
+                        'bg-[#4CAF50] text-white'
+                      }`}>
                         <span>{waterStatus.emoji}</span>
-                        <span className="text-xs font-medium">{waterStatus.label}</span>
+                        <span>{waterStatus.label}</span>
                       </div>
                     )}
                     
@@ -408,19 +416,19 @@ export default function MoneyGardenPage({ user }) {
                       {plot.status === 'ready' ? (
                         <button
                           onClick={() => handleHarvest(plot.plot_id)}
-                          className="bg-[#FFD700] hover:bg-[#FFC000] text-[#1D3557] px-4 py-2 rounded-xl font-bold flex items-center gap-1 border-2 border-[#1D3557]"
+                          className="bg-[#FFD700] hover:bg-[#FFC107] text-[#3E2723] px-4 py-2 rounded-xl font-bold flex items-center gap-1 border-2 border-[#FF8F00] shadow-md"
                         >
                           🎁 Harvest
                         </button>
                       ) : (
                         <button
                           onClick={() => handleWater(plot.plot_id)}
-                          className={`px-3 py-2 rounded-xl font-bold flex items-center gap-1 border-2 ${
+                          className={`px-3 py-2 rounded-xl font-bold flex items-center gap-1 border-2 shadow-md ${
                             plot.status === 'wilting' 
                               ? 'bg-red-500 text-white border-red-700 animate-pulse'
                               : plot.status === 'water_needed'
-                                ? 'bg-yellow-400 text-[#1D3557] border-yellow-600'
-                                : 'bg-[#00CED1] text-white border-[#008B8B]'
+                                ? 'bg-yellow-400 text-[#3E2723] border-yellow-600'
+                                : 'bg-[#00BCD4] text-white border-[#0097A7]'
                           }`}
                         >
                           💧 Water
