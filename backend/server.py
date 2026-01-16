@@ -6894,18 +6894,19 @@ async def admin_apply_stock_news(news_id: str, request: Request):
 
 @api_router.get("/stocks/market-status")
 async def get_market_status(request: Request):
-    """Get current market status and hours"""
+    """Get current market status and hours (IST)"""
     user = await get_current_user(request)
     
-    current_hour = datetime.now(timezone.utc).hour
+    current_ist_hour = get_ist_hour()
     is_open = is_market_open()
     
     return {
         "is_open": is_open,
         "open_hour": STOCK_MARKET_OPEN_HOUR,
         "close_hour": STOCK_MARKET_CLOSE_HOUR,
-        "current_hour": current_hour,
-        "message": "Market is open for trading" if is_open else f"Market opens at {STOCK_MARKET_OPEN_HOUR}:00 AM"
+        "current_hour_ist": current_ist_hour,
+        "timezone": "IST",
+        "message": "Market is open for trading" if is_open else f"Market opens at {STOCK_MARKET_OPEN_HOUR}:00 AM IST"
     }
 
 @api_router.get("/stocks/categories")
