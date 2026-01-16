@@ -70,6 +70,25 @@ export default function AdminStockManagement() {
     effective_date: new Date().toISOString().split('T')[0]
   });
 
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [catRes, stockRes, newsRes] = await Promise.all([
+          axios.get(`${API}/admin/stock-categories`),
+          axios.get(`${API}/admin/investments/stocks`),
+          axios.get(`${API}/admin/stock-news`)
+        ]);
+        setCategories(catRes.data);
+        setStocks(stockRes.data);
+        setNews(newsRes.data);
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+        toast.error('Failed to load data');
+      }
+    };
+    loadData();
+  }, []);
+
   const fetchData = async () => {
     try {
       const [catRes, stockRes, newsRes] = await Promise.all([
@@ -85,10 +104,6 @@ export default function AdminStockManagement() {
       toast.error('Failed to load data');
     }
   };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   // Category handlers
   const handleSaveCategory = async () => {
