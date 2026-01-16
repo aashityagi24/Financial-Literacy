@@ -245,32 +245,53 @@ export default function StockMarketPage({ user }) {
 
           {/* Market Tab */}
           <TabsContent value="market">
-            {/* Category Filter */}
-            <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
+            {/* Filters Row */}
+            <div className="flex items-center gap-4 mb-6">
               <button
-                onClick={() => setSelectedCategory('all')}
-                className={`px-5 py-2.5 rounded-xl text-base font-medium whitespace-nowrap transition-colors ${
-                  selectedCategory === 'all' 
+                onClick={() => { setSelectedCategory('all'); setSelectedRisk('all'); }}
+                className={`px-6 py-3 rounded-xl text-base font-medium transition-colors ${
+                  selectedCategory === 'all' && selectedRisk === 'all'
                     ? 'bg-[#10B981] text-white' 
                     : 'bg-[#1F2937] text-gray-400 hover:bg-[#374151]'
                 }`}
               >
-                All Stocks
+                All Stocks ({stocks.length})
               </button>
-              {categories.map(cat => (
-                <button
-                  key={cat.category_id}
-                  onClick={() => setSelectedCategory(cat.category_id)}
-                  className={`px-5 py-2.5 rounded-xl text-base font-medium whitespace-nowrap transition-colors flex items-center gap-2 ${
-                    selectedCategory === cat.category_id 
-                      ? 'text-white' 
-                      : 'bg-[#1F2937] text-gray-400 hover:bg-[#374151]'
-                  }`}
-                  style={{ backgroundColor: selectedCategory === cat.category_id ? cat.color : undefined }}
-                >
-                  <span className="text-lg">{cat.emoji}</span> {cat.name}
-                </button>
-              ))}
+              
+              {/* Industry Dropdown */}
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-[200px] bg-[#1F2937] border-gray-700 text-white text-base h-12">
+                  <SelectValue placeholder="Select Industry" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1F2937] border-gray-700">
+                  <SelectItem value="all" className="text-white">All Industries</SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat.category_id} value={cat.category_id} className="text-white">
+                      <span className="flex items-center gap-2">
+                        <span>{cat.emoji}</span> {cat.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {/* Risk Filter Dropdown */}
+              <Select value={selectedRisk} onValueChange={setSelectedRisk}>
+                <SelectTrigger className="w-[180px] bg-[#1F2937] border-gray-700 text-white text-base h-12">
+                  <SelectValue placeholder="Risk Level" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1F2937] border-gray-700">
+                  <SelectItem value="all" className="text-white">All Risk Levels</SelectItem>
+                  <SelectItem value="low" className="text-green-400">🟢 Low Risk</SelectItem>
+                  <SelectItem value="medium" className="text-yellow-400">🟡 Medium Risk</SelectItem>
+                  <SelectItem value="high" className="text-red-400">🔴 High Risk</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {/* Results Count */}
+              <span className="text-gray-400 text-base ml-auto">
+                Showing {filteredStocks.length} stocks
+              </span>
             </div>
 
             {/* Stocks Grid */}
