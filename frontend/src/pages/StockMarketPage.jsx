@@ -68,11 +68,13 @@ export default function StockMarketPage({ user }) {
       ]);
       
       setMarketStatus(statusRes.data);
-      setCategories(categoriesRes.data);
-      setStocks(stocksRes.data);
-      setPortfolio(portfolioRes.data);
-      setNews(newsRes.data);
+      setCategories(categoriesRes.data || []);
+      setStocks(stocksRes.data || []);
+      setPortfolio(portfolioRes.data || { holdings: [], summary: {} });
+      setNews(newsRes.data || []);
       setWallet(walletRes.data);
+      
+      console.log('Loaded stocks:', stocksRes.data?.length || 0);
     } catch (error) {
       console.error('Failed to fetch data:', error);
       toast.error('Failed to load stock market data');
