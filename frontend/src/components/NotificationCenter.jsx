@@ -63,13 +63,35 @@ export default function NotificationCenter({ onGiftRequestAction }) {
     }
   };
 
-  const handleDelete = async (notificationId) => {
+  const handleDelete = async (notificationId, e) => {
+    if (e) e.stopPropagation();
     try {
       await axios.delete(`${API}/notifications/${notificationId}`);
       setNotifications(notifications.filter(n => n.notification_id !== notificationId));
       toast.success('Notification removed');
     } catch (error) {
       toast.error('Failed to delete notification');
+    }
+  };
+
+  const handleNotificationClick = (notif) => {
+    const typeInfo = notificationIcons[notif.notification_type] || notificationIcons.announcement;
+    
+    // Don't navigate for gift requests (they have action buttons)
+    if (notif.notification_type === 'gift_request') return;
+    
+    // Get the navigation path
+    let path = typeInfo.path;
+    
+    // For quest/chore notifications, navigate to quests page
+    if (notif.notification_type === 'quest_created' || notif.notification_type === 'chore_created') {
+      path = '/quests';
+    }
+    
+    // Navigate and close dialog
+    if (path) {
+      setIsOpen(false);
+      navigate(path);
     }
   };
 
