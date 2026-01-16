@@ -43,7 +43,14 @@ export default function QuestsPage({ user }) {
       const res = await axios.get(`${API}/child/quests-new`, {
         params: { source, sort: sortBy }
       });
-      setQuests(res.data);
+      // Sort quests: incomplete first, completed at bottom
+      const sortedQuests = [...res.data].sort((a, b) => {
+        // Completed/earned quests go to the bottom
+        if (a.has_earned && !b.has_earned) return 1;
+        if (!a.has_earned && b.has_earned) return -1;
+        return 0; // Keep original sort order for same status
+      });
+      setQuests(sortedQuests);
     } catch (error) {
       // If new API fails, show empty state
       console.log('New quest system - no quests yet');
