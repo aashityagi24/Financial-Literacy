@@ -41,9 +41,9 @@ export default function LandingPage() {
   
   const features = [
     { icon: Coins, title: "Digital Wallet", description: "Learn to manage money with 4 account types: Spending, Savings, Investing & Gifting", color: "#FFD23F" },
-    { icon: TrendingUp, title: "Investment Zone", description: "Grow your money! Garden for K-2, Stock market for 3-5 graders", color: "#06D6A0" },
-    { icon: Gift, title: "Virtual Store", description: "Earn rewards and spend wisely on cool avatar items and privileges", color: "#EE6C4D" },
-    { icon: Trophy, title: "Quests & Achievements", description: "Complete fun financial challenges and earn badges", color: "#3D5A80" },
+    { icon: TrendingUp, title: "Investment Zone", description: "Grow your money! Gardening simulator for K-2, Stock market simulator for 3-5 graders", color: "#06D6A0" },
+    { icon: Gift, title: "Virtual Store", description: "Spend your money on your needs and wants and enhance your collection!", color: "#EE6C4D" },
+    { icon: Trophy, title: "Quests & Achievements", description: "Complete fun challenges and chores to earn money and badges", color: "#3D5A80" },
   ];
   
   const grades = ["Kindergarten", "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"];
@@ -265,7 +265,7 @@ export default function LandingPage() {
                 <span className="text-4xl">🧒</span>
               </div>
               <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Kids</h3>
-              <p className="text-[#3D5A80]">Play games, earn ₹, complete quests, and learn money skills through fun activities!</p>
+              <p className="text-[#3D5A80]">Learn money skills through games! Grow gardens, start businesses, earn rewards. No boring stuff—just fun!</p>
             </div>
             
             <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">
@@ -273,15 +273,15 @@ export default function LandingPage() {
                 <span className="text-4xl">👨‍👩‍👧</span>
               </div>
               <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Parents</h3>
-              <p className="text-[#3D5A80]">Track your child's progress, set up chores, and give digital rewards for real achievements!</p>
+              <p className="text-[#3D5A80]">Give your child a lifetime advantage with money skills learned early. Fun games, parent dashboard, setting-up chores and allowance and more!</p>
             </div>
             
             <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">
               <div className="w-20 h-20 mx-auto mb-4 bg-[#EE6C4D] rounded-full border-3 border-[#1D3557] flex items-center justify-center">
                 <span className="text-4xl">👩‍🏫</span>
               </div>
-              <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Teachers</h3>
-              <p className="text-[#3D5A80]">Set up classroom economies, track student progress, and reward financial learning!</p>
+              <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Schools</h3>
+              <p className="text-[#3D5A80]">Engage students with game-based financial lessons. Complete curriculum, automatic assessments, and detailed analytics. No preparation needed—just click and teach.</p>
             </div>
           </div>
         </div>
@@ -318,7 +318,7 @@ export default function LandingPage() {
               </div>
               <span className="text-xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>PocketQuest</span>
             </div>
-            <p className="text-[#98C1D9]">© 2025 PocketQuest. Teaching kids financial literacy through fun.</p>
+            <p className="text-[#98C1D9]">© Learners' Planet. Educating kids in fun and interactive ways to get them future-ready!</p>
           </div>
         </div>
       </footer>
