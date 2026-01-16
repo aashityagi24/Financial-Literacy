@@ -45,9 +45,11 @@ export default function QuestsPage({ user }) {
       });
       // Sort quests: incomplete first, completed at bottom
       const sortedQuests = [...res.data].sort((a, b) => {
-        // Completed/earned quests go to the bottom
-        if (a.has_earned && !b.has_earned) return 1;
-        if (!a.has_earned && b.has_earned) return -1;
+        // Completed quests (attempted, regardless of earning) go to the bottom
+        const aCompleted = a.is_completed || a.has_earned;
+        const bCompleted = b.is_completed || b.has_earned;
+        if (aCompleted && !bCompleted) return 1;
+        if (!aCompleted && bCompleted) return -1;
         return 0; // Keep original sort order for same status
       });
       setQuests(sortedQuests);
@@ -377,14 +379,16 @@ export default function QuestsPage({ user }) {
             {quests.map((quest) => {
               const daysLeft = getDaysUntilDue(quest.due_date);
               const isChore = quest.creator_type === 'parent';
+              // Quest is completed if attempted (is_completed) OR if earned points (has_earned)
+              const isCompleted = quest.is_completed || quest.has_earned;
               const hasEarned = quest.has_earned;
               
               return (
                 <div 
                   key={quest.quest_id || quest.chore_id}
-                  onClick={() => !hasEarned && openQuest(quest)}
+                  onClick={() => !isCompleted && openQuest(quest)}
                   className={`card-playful p-4 transition-all ${
-                    hasEarned 
+                    isCompleted 
                       ? 'opacity-50 grayscale cursor-default bg-gray-100' 
                       : 'cursor-pointer hover:shadow-lg'
                   }`}
@@ -393,9 +397,9 @@ export default function QuestsPage({ user }) {
                   <div className="flex items-start gap-4">
                     {/* Quest Image or Icon */}
                     <div className={`w-16 h-16 rounded-xl border-3 border-[#1D3557] flex items-center justify-center flex-shrink-0 ${
-                      hasEarned ? 'bg-gray-300' : 'bg-[#FFD23F]'
+                      isCompleted ? 'bg-gray-300' : 'bg-[#FFD23F]'
                     }`}>
-                      {hasEarned ? (
+                      {isCompleted ? (
                         <CheckCircle className="w-8 h-8 text-[#06D6A0]" />
                       ) : quest.image_url ? (
                         <img src={getAssetUrl(quest.image_url)} alt="" className="w-full h-full object-cover rounded-lg" />
@@ -410,24 +414,25 @@ export default function QuestsPage({ user }) {
                           {getSourceIcon(quest.creator_type)}
                           {getSourceLabel(quest.creator_type)}
                         </span>
-                        {hasEarned && (
-                          <span className="text-xs px-2 py-1 rounded-full bg-[#06D6A0] text-white flex items-center gap-1 font-bold">
-                            <CheckCircle className="w-3 h-3" /> COMPLETED
+                        {isCompleted && (
+                          <span className={`text-xs px-2 py-1 rounded-full text-white flex items-center gap-1 font-bold ${hasEarned ? 'bg-[#06D6A0]' : 'bg-[#EE6C4D]'}`}>
+                            <CheckCircle className="w-3 h-3" /> {hasEarned ? 'COMPLETED' : 'ATTEMPTED'}
                           </span>
                         )}
                       </div>
                       
-                      <h3 className={`font-bold text-lg truncate ${hasEarned ? 'text-gray-500 line-through' : 'text-[#1D3557]'}`}>
+                      <h3 className={`font-bold text-lg truncate ${isCompleted ? 'text-gray-500 line-through' : 'text-[#1D3557]'}`}>
                         {quest.title}
                       </h3>
-                      <p className={`text-sm line-clamp-2 ${hasEarned ? 'text-gray-400' : 'text-[#3D5A80]'}`}>
+                      <p className={`text-sm line-clamp-2 ${isCompleted ? 'text-gray-400' : 'text-[#3D5A80]'}`}>
                         {quest.description}
                       </p>
                       
                       <div className="flex items-center gap-4 mt-2">
-                        <span className={`text-sm font-bold flex items-center gap-1 ${hasEarned ? 'text-gray-400' : 'text-[#FFD23F]'}`}>
+                        <span className={`text-sm font-bold flex items-center gap-1 ${isCompleted ? 'text-gray-400' : 'text-[#FFD23F]'}`}>
                           <Star className="w-4 h-4" /> ₹{quest.total_points || quest.reward_amount}
                           {hasEarned && <span className="text-[#06D6A0] ml-1">(Earned!)</span>}
+                          {isCompleted && !hasEarned && <span className="text-[#EE6C4D] ml-1">(Tried)</span>}
                         </span>
                         
                         {!isChore && daysLeft !== null && (
