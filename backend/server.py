@@ -7263,6 +7263,61 @@ async def get_stock_news(request: Request, stock_id: Optional[str] = None, categ
     
     return news
 
+# NOTE: This route must be AFTER all other /stocks/* routes because {stock_id} is a catch-all
+@api_router.get("/stocks/{stock_id}")
+async def get_stock_detail(stock_id: str, request: Request):
+    """Get detailed info about a specific stock"""
+    user = await get_current_user(request)
+    
+    stock = await db.investment_stocks.find_one({"stock_id": stock_id}, {"_id": 0})
+    if not stock:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    
+    # Get category
+    category = await db.stock_categories.find_one({"category_id": stock.get("category_id")}, {"_id": 0})
+    
+    # Get price history (30 days)
+    history = await db.stock_price_history.find(
+        {"stock_id": stock_id},
+        {"_id": 0}
+    ).sort("date", -1).limit(30).to_list(30)
+    history.reverse()
+    
+    # Get relevant news
+    news = await db.stock_news.find({
+        "$or": [
+            {"stock_id": stock_id},
+            {"category_id": stock.get("category_id")}
+        ],
+        "is_active": True
+    }, {"_id": 0}).sort("effective_date", -1).limit(5).to_list(5)
+    
+    # Get predictions
+    predictions = await db.stock_news.find({
+        "$or": [
+            {"stock_id": stock_id},
+            {"category_id": stock.get("category_id")}
+        ],
+        "is_prediction": True,
+        "is_active": True
+    }, {"_id": 0}).to_list(10)
+    
+    # Calculate today's change
+    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+    yesterday_hist = await db.stock_price_history.find_one({"stock_id": stock_id, "date": yesterday})
+    yesterday_price = yesterday_hist["close_price"] if yesterday_hist else stock["base_price"]
+    
+    return {
+        **stock,
+        "category": category,
+        "price_history": history,
+        "news": news,
+        "predictions": predictions,
+        "yesterday_price": yesterday_price,
+        "price_change": round(stock["current_price"] - yesterday_price, 2),
+        "price_change_percent": round((stock["current_price"] - yesterday_price) / yesterday_price * 100, 2) if yesterday_price > 0 else 0
+    }
+
 # ============== ROOT ==============
 
 @api_router.get("/")
