@@ -6922,7 +6922,8 @@ async def get_stocks_list(request: Request, category_id: Optional[str] = None):
     """Get list of all available stocks with current prices"""
     user = await get_current_user(request)
     
-    query = {"is_active": True}
+    # Query stocks - handle both is_active: true and missing is_active field
+    query = {"$or": [{"is_active": True}, {"is_active": {"$exists": False}}]}
     if category_id:
         query["category_id"] = category_id
     
