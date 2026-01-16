@@ -31,6 +31,8 @@ import AdminQuestsPage from "@/pages/AdminQuestsPage";
 import ParentShoppingList from "@/pages/ParentShoppingList";
 import MoneyGardenPage from "@/pages/MoneyGardenPage";
 import AdminGardenManagement from "@/pages/AdminGardenManagement";
+import StockMarketPage from "@/pages/StockMarketPage";
+import AdminStockManagement from "@/pages/AdminStockManagement";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
