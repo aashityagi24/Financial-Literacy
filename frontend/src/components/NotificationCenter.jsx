@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
-import { Bell, X, Gift, Megaphone, Trophy, Check, Trash2, ExternalLink } from 'lucide-react';
+import { Bell, X, Gift, Megaphone, Trophy, Check, Trash2, ExternalLink, CheckCheck } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
