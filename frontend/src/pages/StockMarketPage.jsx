@@ -294,8 +294,8 @@ export default function StockMarketPage({ user }) {
               </span>
             </div>
 
-            {/* Stocks Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {/* Stocks Grid - 4 per row on large screens */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {filteredStocks.map(stock => {
                 const holding = getHolding(stock.stock_id);
                 const isUp = stock.price_change >= 0;
@@ -303,70 +303,67 @@ export default function StockMarketPage({ user }) {
                 return (
                   <div 
                     key={stock.stock_id}
-                    className="bg-[#1F2937] rounded-2xl p-6 border border-gray-700 hover:border-[#10B981]/50 transition-colors cursor-pointer"
+                    className="bg-[#1F2937] rounded-2xl p-5 border border-gray-700 hover:border-[#10B981]/50 transition-colors cursor-pointer"
                     onClick={() => openStockDetail(stock)}
                     data-testid={`stock-card-${stock.ticker}`}
                   >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
                         <div 
-                          className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
+                          className="w-12 h-12 rounded-xl flex items-center justify-center text-xl"
                           style={{ backgroundColor: stock.category_color + '30' }}
                         >
                           {stock.category_emoji}
                         </div>
                         <div>
-                          <p className="text-xl font-bold text-white">{stock.ticker}</p>
-                          <p className="text-sm text-gray-400 truncate max-w-[180px]">{stock.name}</p>
+                          <p className="text-lg font-bold text-white">{stock.ticker}</p>
+                          <p className="text-sm text-gray-400 truncate max-w-[120px]">{stock.name}</p>
                         </div>
                       </div>
                       {holding && (
-                        <span className="text-sm bg-[#10B981]/20 text-[#10B981] px-3 py-1.5 rounded-lg font-medium">
-                          {holding.quantity} shares
+                        <span className="text-xs bg-[#10B981]/20 text-[#10B981] px-2 py-1 rounded-lg font-medium">
+                          {holding.quantity}
                         </span>
                       )}
                     </div>
                     
-                    <div className="flex items-end justify-between mb-4">
-                      <div>
-                        <p className="text-3xl font-bold text-white">₹{stock.current_price.toFixed(2)}</p>
-                        <div className={`flex items-center gap-2 text-base mt-1 ${isUp ? 'text-[#10B981]' : 'text-red-400'}`}>
-                          {isUp ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
-                          <span className="font-medium">{isUp ? '+' : ''}{stock.price_change.toFixed(2)} ({stock.price_change_percent.toFixed(1)}%)</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-3">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setSelectedStock(stock); setShowBuyDialog(true); }}
-                          disabled={!marketStatus.is_open}
-                          className="px-5 py-2.5 bg-[#10B981] hover:bg-[#059669] disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-base font-bold rounded-xl transition-colors"
-                        >
-                          Buy
-                        </button>
-                        {holding && (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setSelectedStock(stock); setSellQuantity(1); setShowSellDialog(true); }}
-                            disabled={!marketStatus.is_open}
-                            className="px-5 py-2.5 bg-red-500 hover:bg-red-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-base font-bold rounded-xl transition-colors"
-                          >
-                            Sell
-                          </button>
-                        )}
+                    <div className="mb-3">
+                      <p className="text-2xl font-bold text-white">₹{stock.current_price.toFixed(2)}</p>
+                      <div className={`flex items-center gap-1 text-sm mt-1 ${isUp ? 'text-[#10B981]' : 'text-red-400'}`}>
+                        {isUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                        <span className="font-medium">{isUp ? '+' : ''}{stock.price_change_percent.toFixed(1)}%</span>
                       </div>
                     </div>
                     
-                    {/* Risk Level & Category Badge */}
-                    <div className="flex items-center gap-3 pt-3 border-t border-gray-700">
-                      <span className={`text-sm px-3 py-1 rounded-lg font-medium ${
+                    <div className="flex gap-2 mb-3">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedStock(stock); setShowBuyDialog(true); }}
+                        disabled={!marketStatus.is_open}
+                        className="flex-1 py-2 bg-[#10B981] hover:bg-[#059669] disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm font-bold rounded-lg transition-colors"
+                      >
+                        Buy
+                      </button>
+                      {holding && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setSelectedStock(stock); setSellQuantity(1); setShowSellDialog(true); }}
+                          disabled={!marketStatus.is_open}
+                          className="flex-1 py-2 bg-red-500 hover:bg-red-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm font-bold rounded-lg transition-colors"
+                        >
+                          Sell
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* Risk Level & Category */}
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-700">
+                      <span className={`text-xs px-2 py-1 rounded-lg font-medium ${
                         stock.risk_level === 'low' ? 'bg-green-500/20 text-green-400' :
                         stock.risk_level === 'high' ? 'bg-red-500/20 text-red-400' :
                         'bg-yellow-500/20 text-yellow-400'
                       }`}>
-                        {stock.risk_level?.toUpperCase()} RISK
+                        {stock.risk_level?.toUpperCase()}
                       </span>
-                      <span className="text-sm text-gray-400">Min: {stock.min_lot_size} shares</span>
-                      <span className="text-sm text-gray-500 ml-auto">{stock.category_name}</span>
+                      <span className="text-xs text-gray-500">{stock.category_name}</span>
                     </div>
                   </div>
                 );
