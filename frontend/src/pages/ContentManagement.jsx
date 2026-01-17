@@ -744,7 +744,8 @@ export default function ContentManagement({ user }) {
       max_grade: content.max_grade,
       reward_coins: content.reward_coins,
       is_published: content.is_published || false,
-      content_data: content.content_data || {}
+      content_data: content.content_data || {},
+      visible_to: content.visible_to || ['child']
     });
     setShowContentDialog(true);
   };
