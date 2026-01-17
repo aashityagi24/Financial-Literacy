@@ -7,7 +7,7 @@ import {
   Shield, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   Plus, Trash2, Edit2, Save, X, FolderOpen, FileText, BookOpen,
   FileSpreadsheet, Gamepad2, Upload, Image, Eye, EyeOff,
-  Video, Book, Layers, ListOrdered, Library, Settings, Info
+  Video, Book, Layers, ListOrdered, Library, Settings, Info, GripVertical
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +27,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const CONTENT_TYPES = [
   { value: 'worksheet', label: 'Worksheet', icon: FileSpreadsheet, color: 'bg-orange-100 text-orange-600', description: 'Practice sheets' },
