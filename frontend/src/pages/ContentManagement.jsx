@@ -505,8 +505,8 @@ export default function ContentManagement({ user }) {
                   <p>No topics yet. Create your first topic to get started!</p>
                 </div>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {topics.map((topic) => (
+                <div className="space-y-3">
+                  {topics.sort((a, b) => (a.order || 0) - (b.order || 0)).map((topic, index) => (
                     <div 
                       key={topic.topic_id} 
                       className={`border rounded-xl p-4 cursor-pointer transition-all hover:shadow-md ${
@@ -514,7 +514,31 @@ export default function ContentManagement({ user }) {
                       }`}
                       onClick={() => { setSelectedTopic(topic); setSelectedSubtopic(null); }}
                     >
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-center gap-4">
+                        {/* Order Controls */}
+                        <div className="flex flex-col gap-1">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-6 w-6 p-0"
+                            disabled={index === 0}
+                            onClick={(e) => { e.stopPropagation(); moveTopic(topic.topic_id, -1); }}
+                          >
+                            <ChevronUp className="w-4 h-4" />
+                          </Button>
+                          <span className="text-xs font-bold text-gray-400 text-center">{index + 1}</span>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-6 w-6 p-0"
+                            disabled={index === topics.length - 1}
+                            onClick={(e) => { e.stopPropagation(); moveTopic(topic.topic_id, 1); }}
+                          >
+                            <ChevronDown className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        
+                        {/* Thumbnail */}
                         {topic.thumbnail ? (
                           <img src={getAssetUrl(topic.thumbnail)} alt="" className="w-16 h-12 rounded-lg object-contain bg-white border border-gray-200" />
                         ) : (
@@ -522,21 +546,25 @@ export default function ContentManagement({ user }) {
                             <FolderOpen className="w-6 h-6 text-blue-500" />
                           </div>
                         )}
+                        
+                        {/* Content */}
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-gray-800 truncate">{topic.title}</h3>
-                          <p className="text-sm text-gray-500 line-clamp-2">{topic.description}</p>
+                          <p className="text-sm text-gray-500 line-clamp-1">{topic.description}</p>
                           <p className="text-xs text-gray-400 mt-1">
                             {topic.subtopics?.length || 0} subtopics • Grades {topic.min_grade === 0 ? 'K' : topic.min_grade}-{topic.max_grade}
                           </p>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t">
-                        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEditTopic(topic); }}>
-                          <Edit2 className="w-3 h-3 mr-1" /> Edit
-                        </Button>
-                        <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={(e) => { e.stopPropagation(); deleteTopic(topic.topic_id); }}>
-                          <Trash2 className="w-3 h-3 mr-1" /> Delete
-                        </Button>
+                        
+                        {/* Actions */}
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEditTopic(topic); }}>
+                            <Edit2 className="w-3 h-3 mr-1" /> Edit
+                          </Button>
+                          <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={(e) => { e.stopPropagation(); deleteTopic(topic.topic_id); }}>
+                            <Trash2 className="w-3 h-3 mr-1" /> Delete
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
