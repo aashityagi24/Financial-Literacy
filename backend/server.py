@@ -1629,6 +1629,18 @@ async def plant_seed(data: PlantSeedRequest, request: Request):
         {"$inc": {"balance": -seed["seed_cost"]}}
     )
     
+    # Record wallet transaction
+    await db.transactions.insert_one({
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "from_account": "spending",
+        "to_account": None,
+        "amount": seed["seed_cost"],
+        "transaction_type": "garden_buy",
+        "description": f"Planted {seed['name']} seed 🌱",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
     # Plant the seed
     now = datetime.now(timezone.utc).isoformat()
     await db.farm_plots.update_one(
