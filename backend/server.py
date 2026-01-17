@@ -5771,6 +5771,84 @@ async def admin_reorder_topics(reorder: ReorderRequest, request: Request):
     
     return {"message": "Topics reordered"}
 
+@api_router.post("/admin/content/subtopics/{subtopic_id}/move")
+async def admin_move_subtopic(subtopic_id: str, request: Request):
+    """Move a subtopic to a different parent topic"""
+    await require_admin(request)
+    
+    body = await request.json()
+    new_parent_id = body.get("new_parent_id")
+    
+    if not new_parent_id:
+        raise HTTPException(status_code=400, detail="new_parent_id is required")
+    
+    # Verify subtopic exists and is indeed a subtopic
+    subtopic = await db.content_topics.find_one({"topic_id": subtopic_id})
+    if not subtopic:
+        raise HTTPException(status_code=404, detail="Subtopic not found")
+    
+    if not subtopic.get("parent_id"):
+        raise HTTPException(status_code=400, detail="Cannot move a parent topic. This is only for subtopics.")
+    
+    # Verify new parent exists and is a parent topic
+    new_parent = await db.content_topics.find_one({"topic_id": new_parent_id})
+    if not new_parent:
+        raise HTTPException(status_code=404, detail="Target topic not found")
+    
+    if new_parent.get("parent_id"):
+        raise HTTPException(status_code=400, detail="Cannot move subtopic to another subtopic. Target must be a parent topic.")
+    
+    # Get max order in the new parent
+    max_order_doc = await db.content_topics.find_one(
+        {"parent_id": new_parent_id},
+        sort=[("order", -1)]
+    )
+    new_order = (max_order_doc.get("order", 0) + 1) if max_order_doc else 0
+    
+    # Update the subtopic's parent
+    await db.content_topics.update_one(
+        {"topic_id": subtopic_id},
+        {"$set": {"parent_id": new_parent_id, "order": new_order}}
+    )
+    
+    return {"message": f"Subtopic moved to {new_parent['title']}", "new_parent_id": new_parent_id}
+
+@api_router.post("/admin/content/items/{content_id}/move")
+async def admin_move_content(content_id: str, request: Request):
+    """Move a content item to a different topic/subtopic"""
+    await require_admin(request)
+    
+    body = await request.json()
+    new_topic_id = body.get("new_topic_id")
+    
+    if not new_topic_id:
+        raise HTTPException(status_code=400, detail="new_topic_id is required")
+    
+    # Verify content exists
+    content = await db.content_items.find_one({"content_id": content_id})
+    if not content:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    # Verify new topic exists
+    new_topic = await db.content_topics.find_one({"topic_id": new_topic_id})
+    if not new_topic:
+        raise HTTPException(status_code=404, detail="Target topic/subtopic not found")
+    
+    # Get max order in the new topic
+    max_order_doc = await db.content_items.find_one(
+        {"topic_id": new_topic_id},
+        sort=[("order", -1)]
+    )
+    new_order = (max_order_doc.get("order", 0) + 1) if max_order_doc else 0
+    
+    # Update the content's topic
+    await db.content_items.update_one(
+        {"content_id": content_id},
+        {"$set": {"topic_id": new_topic_id, "order": new_order}}
+    )
+    
+    return {"message": f"Content moved to {new_topic['title']}", "new_topic_id": new_topic_id}
+
 @api_router.get("/admin/content/items")
 async def admin_get_all_content_items(request: Request, topic_id: Optional[str] = None):
     """Get all content items, optionally filtered by topic"""
