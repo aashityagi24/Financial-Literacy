@@ -286,6 +286,7 @@ class ContentItemCreate(BaseModel):
     reward_coins: int = 5
     is_published: bool = False
     content_data: Dict[str, Any] = {}
+    visible_to: List[str] = ["child"]  # ['child', 'parent', 'teacher']
 
 class ContentItemUpdate(BaseModel):
     topic_id: Optional[str] = None
@@ -299,6 +300,7 @@ class ContentItemUpdate(BaseModel):
     reward_coins: Optional[int] = None
     is_published: Optional[bool] = None
     content_data: Optional[Dict[str, Any]] = None
+    visible_to: Optional[List[str]] = None
 
 class UserContentProgress(BaseModel):
     """Track user progress on any content item"""
