@@ -236,7 +236,7 @@ function SortableSubtopicItem({ subtopic, isSelected, onSelect, onEdit, onDelete
 }
 
 // Sortable Content Item Component for Lesson Plan
-function SortableContentItem({ content, onEdit, onDelete, typeConfig }) {
+function SortableContentItem({ content, onEdit, onDelete, onMove, typeConfig }) {
   const {
     attributes,
     listeners,
@@ -302,6 +302,9 @@ function SortableContentItem({ content, onEdit, onDelete, typeConfig }) {
       </div>
       
       <div className="flex items-center gap-2">
+        <Button size="sm" variant="ghost" className="text-blue-500 hover:text-blue-600" onClick={onMove}>
+          <MoveRight className="w-3 h-3 mr-1" /> Move
+        </Button>
         <Button size="sm" variant="ghost" onClick={onEdit}>
           <Edit2 className="w-3 h-3 mr-1" /> Edit
         </Button>
