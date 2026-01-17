@@ -5332,9 +5332,11 @@ async def upload_goal_image(file: UploadFile = File(...)):
 
 @api_router.get("/content/topics")
 async def get_all_topics(request: Request):
-    """Get all topics with hierarchy (for users)"""
+    """Get all topics with hierarchy and unlock status (for users)"""
     user = await get_current_user(request)
     user_grade = user.get("grade") if user else None
+    user_id = user.get("user_id") if user else None
+    is_child = user.get("role") == "child" if user else False
     
     # Build query - if user has no grade or is admin, show all topics
     if user_grade is None or (user and user.get("role") == "admin"):
@@ -5345,8 +5347,20 @@ async def get_all_topics(request: Request):
     # Get parent topics (no parent_id)
     parent_topics = await db.content_topics.find(query, {"_id": 0}).sort("order", 1).to_list(100)
     
+    # Get user's completed content if child
+    completed_content_ids = set()
+    if is_child and user_id:
+        completed_docs = await db.user_content_progress.find(
+            {"user_id": user_id, "completed": True},
+            {"content_id": 1}
+        ).to_list(1000)
+        completed_content_ids = {doc["content_id"] for doc in completed_docs}
+    
+    # Track if previous topic is completed (for sequential unlocking)
+    previous_topic_completed = True  # First topic is always unlocked
+    
     # For each parent, get subtopics
-    for topic in parent_topics:
+    for topic_idx, topic in enumerate(parent_topics):
         if user_grade is None or (user and user.get("role") == "admin"):
             subtopic_query = {"parent_id": topic["topic_id"]}
         else:
@@ -5356,10 +5370,49 @@ async def get_all_topics(request: Request):
         topic["subtopics"] = subtopics
         
         # Get content count for the topic
-        topic["content_count"] = await db.content_items.count_documents({"topic_id": topic["topic_id"]})
+        topic["content_count"] = await db.content_items.count_documents({"topic_id": topic["topic_id"], "is_published": True})
         
-        for subtopic in subtopics:
-            subtopic["content_count"] = await db.content_items.count_documents({"topic_id": subtopic["topic_id"]})
+        # For children, calculate unlock status
+        if is_child:
+            topic["is_unlocked"] = previous_topic_completed
+            topic["completed_count"] = 0
+            topic["total_content"] = topic["content_count"]
+            
+            # Track subtopic completion for this topic
+            all_subtopics_completed = True
+            previous_subtopic_completed = previous_topic_completed  # First subtopic unlocked if topic is unlocked
+            
+            for subtopic_idx, subtopic in enumerate(subtopics):
+                subtopic["content_count"] = await db.content_items.count_documents({"topic_id": subtopic["topic_id"], "is_published": True})
+                topic["total_content"] += subtopic["content_count"]
+                
+                # Get content items to check completion
+                subtopic_content = await db.content_items.find(
+                    {"topic_id": subtopic["topic_id"], "is_published": True},
+                    {"content_id": 1}
+                ).sort("order", 1).to_list(100)
+                
+                subtopic_completed_count = sum(1 for c in subtopic_content if c["content_id"] in completed_content_ids)
+                subtopic["completed_count"] = subtopic_completed_count
+                subtopic["is_completed"] = subtopic_completed_count == len(subtopic_content) and len(subtopic_content) > 0
+                subtopic["is_unlocked"] = previous_subtopic_completed
+                
+                topic["completed_count"] += subtopic_completed_count
+                
+                if not subtopic["is_completed"]:
+                    all_subtopics_completed = False
+                
+                # Next subtopic unlocked only if current is completed
+                previous_subtopic_completed = subtopic["is_completed"]
+            
+            # Topic is completed if all subtopics are completed
+            topic["is_completed"] = all_subtopics_completed and len(subtopics) > 0
+            
+            # Next topic unlocked only if current is completed
+            previous_topic_completed = topic["is_completed"]
+        else:
+            for subtopic in subtopics:
+                subtopic["content_count"] = await db.content_items.count_documents({"topic_id": subtopic["topic_id"], "is_published": True})
     
     return parent_topics
 
