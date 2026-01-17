@@ -649,32 +649,6 @@ export default function ContentManagement({ user }) {
     ? allContent.filter(c => c.topic_id === selectedSubtopic.topic_id).sort((a, b) => a.order - b.order)
     : [];
   
-  // Thumbnail upload component with dimension info
-  const ThumbnailUpload = ({ value, onChange, dimensions, inputRef }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail</label>
-      <div className="flex items-start gap-3">
-        {value ? (
-          <img src={getAssetUrl(value)} alt="" className="w-20 h-16 rounded-lg object-cover border border-gray-200" />
-        ) : (
-          <div className="w-20 h-16 rounded-lg bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center">
-            <Image className="w-6 h-6 text-gray-400" />
-          </div>
-        )}
-        <div className="flex-1">
-          <input type="file" ref={inputRef} className="hidden" accept="image/*" onChange={onChange} />
-          <Button variant="outline" size="sm" onClick={() => inputRef.current?.click()} className="mb-2">
-            <Upload className="w-4 h-4 mr-2" /> Upload Image
-          </Button>
-          <p className="text-xs text-gray-500 flex items-center gap-1">
-            <Info className="w-3 h-3" />
-            Recommended: {dimensions.label}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-  
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
