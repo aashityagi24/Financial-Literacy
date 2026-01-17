@@ -713,6 +713,74 @@ export default function ContentManagement({ user }) {
       fetchData(); // Revert on error
     }
   };
+
+  // Open move subtopic dialog
+  const openMoveSubtopic = (subtopic) => {
+    setItemToMove(subtopic);
+    setMoveTargetId('');
+    setShowMoveSubtopicDialog(true);
+  };
+
+  // Move subtopic to another topic
+  const moveSubtopicToTopic = async () => {
+    if (!itemToMove || !moveTargetId) return;
+    
+    try {
+      await axios.post(`${API}/admin/content/subtopics/${itemToMove.topic_id}/move`, {
+        new_parent_id: moveTargetId
+      });
+      toast.success('Subtopic moved successfully');
+      setShowMoveSubtopicDialog(false);
+      setItemToMove(null);
+      setMoveTargetId('');
+      setSelectedTopic(null);
+      setSelectedSubtopic(null);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to move subtopic');
+    }
+  };
+
+  // Open move content dialog
+  const openMoveContent = (content) => {
+    setItemToMove(content);
+    setMoveTargetId('');
+    setShowMoveContentDialog(true);
+  };
+
+  // Move content to another topic/subtopic
+  const moveContentToTopic = async () => {
+    if (!itemToMove || !moveTargetId) return;
+    
+    try {
+      await axios.post(`${API}/admin/content/items/${itemToMove.content_id}/move`, {
+        new_topic_id: moveTargetId
+      });
+      toast.success('Content moved successfully');
+      setShowMoveContentDialog(false);
+      setItemToMove(null);
+      setMoveTargetId('');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to move content');
+    }
+  };
+
+  // Get all subtopics for content move dropdown
+  const getAllSubtopics = () => {
+    const subtopics = [];
+    topics.forEach(topic => {
+      if (topic.subtopics) {
+        topic.subtopics.forEach(sub => {
+          subtopics.push({
+            ...sub,
+            parentTitle: topic.title
+          });
+        });
+      }
+    });
+    return subtopics;
+  };
   
   const openEditTopic = (topic) => {
     setEditingItem(topic);
