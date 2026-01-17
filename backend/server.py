@@ -1541,9 +1541,11 @@ async def get_farm(request: Request):
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     market_prices = await db.market_prices.find({"date": today}, {"_id": 0}).to_list(50)
     
-    # Check if market is open (9 AM - 6 PM in user's assumed timezone)
-    current_hour = now.hour
-    is_market_open = 9 <= current_hour < 18
+    # Check if market is open (7 AM - 5 PM IST)
+    ist = pytz.timezone('Asia/Kolkata')
+    ist_now = datetime.now(ist)
+    current_hour_ist = ist_now.hour
+    is_market_open = 7 <= current_hour_ist < 17
     
     return {
         "plots": plots,
