@@ -820,7 +820,7 @@ export default function ContentManagement({ user }) {
                 <div className="mt-6 p-4 bg-green-50 rounded-lg flex items-center justify-between">
                   <div>
                     <p className="text-sm text-green-600">Selected: <strong>{selectedSubtopic.title}</strong></p>
-                    <p className="text-xs text-green-500">Click "Lesson Plan" tab to manage content order</p>
+                    <p className="text-xs text-green-500">Click Lesson Plan tab to manage content order</p>
                   </div>
                   <Button onClick={() => setActiveTab('lesson-plan')} className="bg-green-600 hover:bg-green-700">
                     Next: Lesson Plan <ChevronRight className="w-4 h-4 ml-1" />
