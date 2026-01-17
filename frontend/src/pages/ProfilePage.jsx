@@ -398,7 +398,7 @@ export default function ProfilePage({ user, setUser }) {
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <p className="text-[#3D5A80]">
-              Enter your parent's email address. They need to have signed up as a parent first!
+              Enter your parent email address. They need to have signed up as a parent first!
             </p>
             <Input
               type="email"
