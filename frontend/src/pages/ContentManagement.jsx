@@ -1447,6 +1447,66 @@ export default function ContentManagement({ user }) {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Move Subtopic Dialog */}
+      <Dialog open={showMoveSubtopicDialog} onOpenChange={setShowMoveSubtopicDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Move Subtopic</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <p className="text-sm text-gray-600">
+              Move <strong>{itemToMove?.title}</strong> to a different topic:
+            </p>
+            <Select value={moveTargetId} onValueChange={setMoveTargetId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select target topic" />
+              </SelectTrigger>
+              <SelectContent>
+                {topics.filter(t => t.topic_id !== selectedTopic?.topic_id).map(topic => (
+                  <SelectItem key={topic.topic_id} value={topic.topic_id}>
+                    {topic.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowMoveSubtopicDialog(false)}>Cancel</Button>
+              <Button onClick={moveSubtopicToTopic} disabled={!moveTargetId}>Move Subtopic</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Move Content Dialog */}
+      <Dialog open={showMoveContentDialog} onOpenChange={setShowMoveContentDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Move Content</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <p className="text-sm text-gray-600">
+              Move <strong>{itemToMove?.title}</strong> to a different subtopic:
+            </p>
+            <Select value={moveTargetId} onValueChange={setMoveTargetId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select target subtopic" />
+              </SelectTrigger>
+              <SelectContent>
+                {getAllSubtopics().filter(s => s.topic_id !== selectedSubtopic?.topic_id).map(subtopic => (
+                  <SelectItem key={subtopic.topic_id} value={subtopic.topic_id}>
+                    {subtopic.parentTitle} → {subtopic.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowMoveContentDialog(false)}>Cancel</Button>
+              <Button onClick={moveContentToTopic} disabled={!moveTargetId}>Move Content</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
