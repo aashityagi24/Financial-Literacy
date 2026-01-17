@@ -5,7 +5,7 @@ import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
   BookOpen, ChevronLeft, ChevronRight, Trophy, FolderOpen,
-  FileText, FileSpreadsheet, Gamepad2, Video, Book
+  FileText, FileSpreadsheet, Gamepad2, Video, Book, Lock, CheckCircle
 } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
