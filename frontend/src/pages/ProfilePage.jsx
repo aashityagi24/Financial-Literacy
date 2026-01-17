@@ -195,7 +195,8 @@ export default function ProfilePage({ user, setUser }) {
               <GraduationCap className="w-6 h-6 text-[#3D5A80]" />
               <h3 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Grade Level</h3>
             </div>
-            {!editing && (
+            {/* Only non-child users can edit grade */}
+            {!editing && user?.role !== 'child' && (
               <button
                 onClick={() => setEditing(true)}
                 className="flex items-center gap-1 text-[#3D5A80] hover:text-[#1D3557]"
@@ -205,7 +206,7 @@ export default function ProfilePage({ user, setUser }) {
             )}
           </div>
           
-          {editing ? (
+          {editing && user?.role !== 'child' ? (
             <div className="space-y-4">
               <Select value={grade} onValueChange={setGrade}>
                 <SelectTrigger className="border-3 border-[#1D3557] rounded-xl">
