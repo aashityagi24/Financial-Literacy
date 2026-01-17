@@ -340,9 +340,9 @@ export default function WalletPage({ user }) {
                 let isPositive = false;
                 let isNeutral = false;
                 
-                if (trans.transaction_type === 'reward' || trans.transaction_type === 'earning' || trans.transaction_type === 'deposit') {
+                if (trans.transaction_type === 'reward' || trans.transaction_type === 'earning' || trans.transaction_type === 'deposit' || trans.transaction_type === 'stock_sell' || trans.transaction_type === 'garden_sell') {
                   isPositive = true;
-                } else if (trans.transaction_type === 'purchase' || trans.transaction_type === 'withdrawal') {
+                } else if (trans.transaction_type === 'purchase' || trans.transaction_type === 'withdrawal' || trans.transaction_type === 'stock_buy' || trans.transaction_type === 'garden_buy') {
                   isPositive = false;
                 } else if (trans.transaction_type === 'transfer') {
                   isNeutral = true;
