@@ -1733,10 +1733,12 @@ async def sell_produce(request: Request, plant_id: str, quantity: int):
     """Sell produce at market"""
     user = await get_current_user(request)
     
-    # Check if market is open
-    current_hour = datetime.now(timezone.utc).hour
-    if not (9 <= current_hour < 18):
-        raise HTTPException(status_code=400, detail="Market is closed! Open 9 AM - 6 PM")
+    # Check if market is open (7 AM - 5 PM IST)
+    ist = pytz.timezone('Asia/Kolkata')
+    ist_now = datetime.now(ist)
+    current_hour_ist = ist_now.hour
+    if not (7 <= current_hour_ist < 17):
+        raise HTTPException(status_code=400, detail="Market is closed! Open 7 AM - 5 PM IST")
     
     # Check inventory
     inventory = await db.harvest_inventory.find_one({
