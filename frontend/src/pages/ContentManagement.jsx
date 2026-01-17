@@ -68,6 +68,144 @@ const THUMBNAIL_DIMENSIONS = {
   content: { width: 320, height: 180, label: '320×180 pixels (16:9 ratio)' },
 };
 
+// Sortable Topic Item Component
+function SortableTopicItem({ topic, isSelected, onSelect, onEdit, onDelete }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: topic.topic_id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`border rounded-xl p-4 cursor-pointer transition-all hover:shadow-md bg-white ${
+        isSelected ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'
+      } ${isDragging ? 'shadow-lg' : ''}`}
+      onClick={onSelect}
+    >
+      <div className="flex items-center gap-4">
+        {/* Drag Handle */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <GripVertical className="w-5 h-5 text-gray-400" />
+        </div>
+        
+        {/* Thumbnail */}
+        {topic.thumbnail ? (
+          <img src={getAssetUrl(topic.thumbnail)} alt="" className="w-16 h-12 rounded-lg object-contain bg-white border border-gray-200" />
+        ) : (
+          <div className="w-16 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+            <FolderOpen className="w-6 h-6 text-blue-500" />
+          </div>
+        )}
+        
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-gray-800 truncate">{topic.title}</h3>
+          <p className="text-sm text-gray-500 line-clamp-1">{topic.description}</p>
+          <p className="text-xs text-gray-400 mt-1">
+            {topic.subtopics?.length || 0} subtopics • Grades {topic.min_grade === 0 ? 'K' : topic.min_grade}-{topic.max_grade}
+          </p>
+        </div>
+        
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
+            <Edit2 className="w-3 h-3 mr-1" /> Edit
+          </Button>
+          <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
+            <Trash2 className="w-3 h-3 mr-1" /> Delete
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Sortable Subtopic Item Component
+function SortableSubtopicItem({ subtopic, isSelected, onSelect, onEdit, onDelete, contentCount }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: subtopic.topic_id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`border rounded-xl p-4 cursor-pointer transition-all hover:shadow-md bg-white ${
+        isSelected ? 'border-green-500 bg-green-50' : 'hover:border-gray-300'
+      } ${isDragging ? 'shadow-lg' : ''}`}
+      onClick={onSelect}
+    >
+      <div className="flex items-center gap-4">
+        {/* Drag Handle */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 rounded"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <GripVertical className="w-5 h-5 text-gray-400" />
+        </div>
+        
+        {/* Thumbnail */}
+        {subtopic.thumbnail ? (
+          <img src={getAssetUrl(subtopic.thumbnail)} alt="" className="w-12 h-9 rounded-lg object-contain bg-white border border-gray-200" />
+        ) : (
+          <div className="w-12 h-9 rounded-lg bg-green-100 flex items-center justify-center">
+            <Layers className="w-5 h-5 text-green-500" />
+          </div>
+        )}
+        
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-gray-800 truncate">{subtopic.title}</h3>
+          <p className="text-sm text-gray-500 line-clamp-1">{subtopic.description}</p>
+          <p className="text-xs text-gray-400 mt-1">{contentCount} content items</p>
+        </div>
+        
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
+            <Edit2 className="w-3 h-3 mr-1" /> Edit
+          </Button>
+          <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
+            <Trash2 className="w-3 h-3 mr-1" /> Delete
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ContentManagement({ user }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('topics');
