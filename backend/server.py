@@ -5563,6 +5563,7 @@ async def admin_create_content_item(item: ContentItemCreate, request: Request):
         "max_grade": item.max_grade,
         "reward_coins": item.reward_coins,
         "content_data": item.content_data,
+        "visible_to": item.visible_to,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "created_by": admin["user_id"]
     }
