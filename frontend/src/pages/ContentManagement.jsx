@@ -680,6 +680,33 @@ export default function ContentManagement({ user }) {
       fetchData(); // Revert on error
     }
   };
+
+  // Handle content drag end for lesson plan
+  const handleContentDragEnd = async (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const sortedContent = [...subtopicContent];
+    const oldIndex = sortedContent.findIndex(c => c.content_id === active.id);
+    const newIndex = sortedContent.findIndex(c => c.content_id === over.id);
+
+    const newItems = arrayMove(sortedContent, oldIndex, newIndex);
+    
+    // Optimistically update UI
+    setAllContent(prev => {
+      const otherContent = prev.filter(c => c.topic_id !== selectedSubtopic?.topic_id);
+      return [...otherContent, ...newItems.map((item, i) => ({ ...item, order: i }))];
+    });
+
+    const reorderData = newItems.map((item, i) => ({ id: item.content_id, order: i }));
+    try {
+      await axios.post(`${API}/admin/content/items/reorder`, { items: reorderData });
+      toast.success('Content reordered');
+    } catch (error) {
+      toast.error('Failed to reorder content');
+      fetchData(); // Revert on error
+    }
+  };
   
   const openEditTopic = (topic) => {
     setEditingItem(topic);
