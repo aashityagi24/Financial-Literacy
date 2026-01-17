@@ -508,7 +508,8 @@ export default function ContentManagement({ user }) {
       setEditingItem(null);
       setContentForm({
         title: '', description: '', content_type: 'worksheet', thumbnail: '',
-        min_grade: 0, max_grade: 5, reward_coins: 5, is_published: false, content_data: {}
+        min_grade: 0, max_grade: 5, reward_coins: 5, is_published: false, content_data: {},
+        visible_to: ['child']
       });
       fetchData();
     } catch (error) {
