@@ -165,7 +165,7 @@ function SortableTopicItem({ topic, isSelected, onSelect, onEdit, onDelete }) {
 }
 
 // Sortable Subtopic Item Component
-function SortableSubtopicItem({ subtopic, isSelected, onSelect, onEdit, onDelete, contentCount }) {
+function SortableSubtopicItem({ subtopic, isSelected, onSelect, onEdit, onDelete, onMove, contentCount }) {
   const {
     attributes,
     listeners,
@@ -220,6 +220,9 @@ function SortableSubtopicItem({ subtopic, isSelected, onSelect, onEdit, onDelete
         
         {/* Actions */}
         <div className="flex items-center gap-2">
+          <Button size="sm" variant="ghost" className="text-blue-500 hover:text-blue-600" onClick={(e) => { e.stopPropagation(); onMove(); }}>
+            <MoveRight className="w-3 h-3 mr-1" /> Move
+          </Button>
           <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
             <Edit2 className="w-3 h-3 mr-1" /> Edit
           </Button>
