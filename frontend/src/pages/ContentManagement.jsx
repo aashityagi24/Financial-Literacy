@@ -1076,6 +1076,7 @@ export default function ContentManagement({ user }) {
                             typeConfig={typeConfig}
                             onEdit={() => openEditContent(content)}
                             onDelete={() => deleteContent(content.content_id)}
+                            onMove={() => openMoveContent(content)}
                           />
                         );
                       })}
