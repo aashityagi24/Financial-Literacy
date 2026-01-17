@@ -6,9 +6,10 @@ import { toast } from 'sonner';
 import { 
   BookOpen, ChevronLeft, ChevronRight, Check, Download,
   FileText, FileSpreadsheet, Gamepad2, FolderOpen, ExternalLink, X,
-  Video, Book, Play
+  Video, Book, Play, Lock, CheckCircle
 } from 'lucide-react';
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
+import { Progress } from "@/components/ui/progress";
 
 const CONTENT_TYPE_CONFIG = {
   worksheet: { icon: FileSpreadsheet, color: 'text-orange-600', bg: 'bg-orange-100', label: 'Worksheet' },
