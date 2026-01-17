@@ -277,7 +277,7 @@ export default function ProfilePage({ user, setUser }) {
                     onClick={() => setShowAddParent(true)}
                     className="mt-2 text-sm font-bold text-[#FFD23F] hover:underline"
                   >
-                    + Add your parent's email
+                    + Add your parent email
                   </button>
                 </div>
               ) : (
