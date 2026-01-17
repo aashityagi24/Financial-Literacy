@@ -136,8 +136,6 @@ export default function ProfilePage({ user, setUser }) {
     }
   };
   
-  const avatarItems = user?.avatar || { body: 'default', hair: 'default', clothes: 'default', accessories: [] };
-  
   return (
     <div className="min-h-screen bg-[#E0FBFC]" data-testid="profile-page">
       {/* Header */}
