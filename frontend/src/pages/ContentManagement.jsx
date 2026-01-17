@@ -1332,6 +1332,34 @@ export default function ContentManagement({ user }) {
               </div>
             </div>
             
+            {/* Visible To - Multi-select */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Visible To (User Roles)</label>
+              <p className="text-xs text-gray-500 mb-2">Select which user types can see this content</p>
+              <div className="flex flex-wrap gap-3">
+                {['child', 'parent', 'teacher'].map((role) => (
+                  <label key={role} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={contentForm.visible_to?.includes(role) || false}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setContentForm(p => ({ ...p, visible_to: [...(p.visible_to || []), role] }));
+                        } else {
+                          setContentForm(p => ({ ...p, visible_to: (p.visible_to || []).filter(r => r !== role) }));
+                        }
+                      }}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="capitalize text-sm text-gray-700">{role}</span>
+                  </label>
+                ))}
+              </div>
+              {contentForm.visible_to?.length === 0 && (
+                <p className="text-xs text-orange-500 mt-1">Warning: No roles selected. Content will not be visible to anyone.</p>
+              )}
+            </div>
+            
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowContentDialog(false)}>Cancel</Button>
               <Button onClick={saveContent} disabled={!contentForm.title}>{editingItem ? 'Update' : 'Create'}</Button>
