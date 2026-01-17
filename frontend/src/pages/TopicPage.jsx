@@ -161,6 +161,21 @@ export default function TopicPage({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
+        {/* Topic locked message for children */}
+        {user?.role === 'child' && topic.is_unlocked === false && (
+          <div className="card-playful p-6 mb-6 bg-gray-100 border-gray-400">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center">
+                <Lock className="w-8 h-8 text-gray-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-600">Topic Locked</h3>
+                <p className="text-gray-500">Complete the previous topics to unlock this one!</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Subtopics */}
         {topic.subtopics?.length > 0 && (
           <div className="mb-8">
@@ -168,26 +183,71 @@ export default function TopicPage({ user }) {
               📂 Subtopics
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {topic.subtopics.map((subtopic, index) => (
+              {topic.subtopics.map((subtopic, index) => {
+                const isChild = user?.role === 'child';
+                const isLocked = isChild && subtopic.is_unlocked === false;
+                const isCompleted = isChild && subtopic.is_completed;
+                
+                if (isLocked) {
+                  return (
+                    <div
+                      key={subtopic.topic_id}
+                      className={`card-playful p-4 opacity-60 cursor-not-allowed ${showAnimations ? 'animate-bounce-in' : ''}`}
+                      style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
+                      onClick={() => toast.info('Complete the previous subtopic first!')}
+                    >
+                      <div className="relative">
+                        {subtopic.thumbnail ? (
+                          <img src={getAssetUrl(subtopic.thumbnail)} alt="" className="w-full aspect-video rounded-xl border-3 border-gray-400 object-contain bg-white mb-3 grayscale" />
+                        ) : (
+                          <div className="w-full aspect-video rounded-xl border-3 border-gray-400 bg-gray-200 flex items-center justify-center mb-3">
+                            <FolderOpen className="w-10 h-10 text-gray-400" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 mb-3 flex items-center justify-center bg-black/30 rounded-xl">
+                          <Lock className="w-8 h-8 text-white" />
+                        </div>
+                      </div>
+                      <h3 className="font-bold text-gray-500 text-sm line-clamp-2">{subtopic.title}</h3>
+                      <p className="text-xs text-gray-400 font-medium mt-1">🔒 Locked</p>
+                    </div>
+                  );
+                }
+                
+                return (
                 <Link
                   key={subtopic.topic_id}
                   to={`/learn/topic/${subtopic.topic_id}`}
-                  className={`card-playful p-4 hover:scale-[1.02] transition-transform ${showAnimations ? 'animate-bounce-in' : ''}`}
+                  className={`card-playful p-4 hover:scale-[1.02] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0]' : ''}`}
                   style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
                 >
-                  {subtopic.thumbnail ? (
-                    <img src={getAssetUrl(subtopic.thumbnail)} alt="" className="w-full aspect-video rounded-xl border-3 border-[#1D3557] object-contain bg-white mb-3" />
-                  ) : (
-                    <div className="w-full aspect-video rounded-xl border-3 border-[#1D3557] bg-[#FFD23F]/30 flex items-center justify-center mb-3">
-                      <FolderOpen className="w-10 h-10 text-[#1D3557]" />
-                    </div>
-                  )}
-                  <h3 className="font-bold text-[#1D3557] text-sm line-clamp-2">{subtopic.title}</h3>
+                  <div className="relative">
+                    {subtopic.thumbnail ? (
+                      <img src={getAssetUrl(subtopic.thumbnail)} alt="" className={`w-full aspect-video rounded-xl border-3 ${isCompleted ? 'border-[#06D6A0]' : 'border-[#1D3557]'} object-contain bg-white mb-3`} />
+                    ) : (
+                      <div className={`w-full aspect-video rounded-xl border-3 ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/20' : 'border-[#1D3557] bg-[#FFD23F]/30'} flex items-center justify-center mb-3`}>
+                        {isCompleted ? (
+                          <CheckCircle className="w-10 h-10 text-[#06D6A0]" />
+                        ) : (
+                          <FolderOpen className="w-10 h-10 text-[#1D3557]" />
+                        )}
+                      </div>
+                    )}
+                    {isCompleted && (
+                      <div className="absolute top-2 right-2 w-8 h-8 bg-[#06D6A0] rounded-full flex items-center justify-center border-2 border-white">
+                        <CheckCircle className="w-5 h-5 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <h3 className={`font-bold text-sm line-clamp-2 ${isCompleted ? 'text-[#06D6A0]' : 'text-[#1D3557]'}`}>{subtopic.title}</h3>
                   {subtopic.content_count > 0 && (
-                    <p className="text-xs text-[#06D6A0] font-medium mt-1">{subtopic.content_count} items</p>
+                    <p className={`text-xs font-medium mt-1 ${isCompleted ? 'text-[#06D6A0]' : 'text-[#06D6A0]'}`}>
+                      {isChild && subtopic.completed_count !== undefined ? `${subtopic.completed_count}/` : ''}{subtopic.content_count} items
+                      {isCompleted && ' ✓'}
+                    </p>
                   )}
                 </Link>
-              ))}
+              )})}
             </div>
           </div>
         )}
@@ -202,37 +262,106 @@ export default function TopicPage({ user }) {
               {topic.content_items.map((content, index) => {
                 const config = CONTENT_TYPE_CONFIG[content.content_type] || CONTENT_TYPE_CONFIG.worksheet;
                 const Icon = config.icon;
+                const isChild = user?.role === 'child';
+                const isLocked = isChild && content.is_unlocked === false;
+                const isCompleted = isChild && content.is_completed;
+                
+                if (isLocked) {
+                  return (
+                    <div
+                      key={content.content_id}
+                      className={`card-playful p-5 opacity-60 cursor-not-allowed bg-gray-50 ${showAnimations ? 'animate-bounce-in' : ''}`}
+                      style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
+                      onClick={() => toast.info('Complete the previous content first!')}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="relative">
+                          {content.thumbnail ? (
+                            <img src={getAssetUrl(content.thumbnail)} alt="" className="w-20 h-20 rounded-xl border-3 border-gray-400 object-contain bg-white flex-shrink-0 grayscale" />
+                          ) : (
+                            <div className="w-20 h-20 rounded-xl border-3 border-gray-400 bg-gray-200 flex items-center justify-center flex-shrink-0">
+                              <Icon className="w-10 h-10 text-gray-400" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-xl">
+                            <Lock className="w-6 h-6 text-white" />
+                          </div>
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs px-3 py-1 rounded-full font-medium bg-gray-200 text-gray-500">
+                              {config.label}
+                            </span>
+                            <Lock className="w-4 h-4 text-gray-400" />
+                          </div>
+                          <h3 className="text-lg font-bold text-gray-500" style={{ fontFamily: 'Fredoka' }}>{content.title}</h3>
+                          <p className="text-base text-gray-400 line-clamp-1">{content.description}</p>
+                          <p className="text-base text-gray-400 font-bold mt-1">+₹{content.reward_coins}</p>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          <div className="w-12 h-12 rounded-full bg-gray-300 border-3 border-gray-400 flex items-center justify-center">
+                            <Lock className="w-5 h-5 text-gray-500" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
                 
                 return (
                   <div
                     key={content.content_id}
-                    className={`card-playful p-5 cursor-pointer hover:scale-[1.01] transition-transform ${showAnimations ? 'animate-bounce-in' : ''}`}
+                    className={`card-playful p-5 cursor-pointer hover:scale-[1.01] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/5' : ''}`}
                     style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
                     onClick={() => openContent(content)}
                   >
                     <div className="flex items-center gap-4">
-                      {content.thumbnail ? (
-                        <img src={getAssetUrl(content.thumbnail)} alt="" className="w-20 h-20 rounded-xl border-3 border-[#1D3557] object-contain bg-white flex-shrink-0" />
-                      ) : (
-                        <div className={`w-20 h-20 rounded-xl border-3 border-[#1D3557] ${config.bg} flex items-center justify-center flex-shrink-0`}>
-                          <Icon className={`w-10 h-10 ${config.color}`} />
-                        </div>
-                      )}
+                      <div className="relative">
+                        {content.thumbnail ? (
+                          <img src={getAssetUrl(content.thumbnail)} alt="" className={`w-20 h-20 rounded-xl border-3 ${isCompleted ? 'border-[#06D6A0]' : 'border-[#1D3557]'} object-contain bg-white flex-shrink-0`} />
+                        ) : (
+                          <div className={`w-20 h-20 rounded-xl border-3 ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/20' : 'border-[#1D3557]'} ${config.bg} flex items-center justify-center flex-shrink-0`}>
+                            {isCompleted ? (
+                              <CheckCircle className={`w-10 h-10 text-[#06D6A0]`} />
+                            ) : (
+                              <Icon className={`w-10 h-10 ${config.color}`} />
+                            )}
+                          </div>
+                        )}
+                        {isCompleted && content.thumbnail && (
+                          <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#06D6A0] rounded-full flex items-center justify-center border-2 border-white">
+                            <CheckCircle className="w-5 h-5 text-white" />
+                          </div>
+                        )}
+                      </div>
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`text-xs px-3 py-1 rounded-full font-medium ${config.bg} ${config.color}`}>
+                          <span className={`text-xs px-3 py-1 rounded-full font-medium ${isCompleted ? 'bg-[#06D6A0]/20 text-[#06D6A0]' : config.bg + ' ' + config.color}`}>
                             {config.label}
                           </span>
+                          {isCompleted && (
+                            <span className="text-xs px-2 py-1 rounded-full font-bold bg-[#06D6A0] text-white">
+                              ✓ DONE
+                            </span>
+                          )}
                         </div>
-                        <h3 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{content.title}</h3>
+                        <h3 className={`text-lg font-bold ${isCompleted ? 'text-[#06D6A0]' : 'text-[#1D3557]'}`} style={{ fontFamily: 'Fredoka' }}>{content.title}</h3>
                         <p className="text-base text-[#3D5A80] line-clamp-1">{content.description}</p>
-                        <p className="text-base text-[#06D6A0] font-bold mt-1">+₹{content.reward_coins}</p>
+                        <p className={`text-base font-bold mt-1 ${isCompleted ? 'text-[#06D6A0]' : 'text-[#06D6A0]'}`}>
+                          {isCompleted ? '✓ Earned' : '+'} ₹{content.reward_coins}
+                        </p>
                       </div>
                       
                       <div className="flex items-center">
-                        <div className="w-12 h-12 rounded-full bg-[#FFD23F] border-3 border-[#1D3557] flex items-center justify-center">
-                          <Play className="w-5 h-5 text-[#1D3557] ml-0.5" />
+                        <div className={`w-12 h-12 rounded-full ${isCompleted ? 'bg-[#06D6A0]' : 'bg-[#FFD23F]'} border-3 border-[#1D3557] flex items-center justify-center`}>
+                          {isCompleted ? (
+                            <Check className="w-6 h-6 text-white" />
+                          ) : (
+                            <Play className="w-5 h-5 text-[#1D3557] ml-0.5" />
+                          )}
                         </div>
                       </div>
                     </div>
