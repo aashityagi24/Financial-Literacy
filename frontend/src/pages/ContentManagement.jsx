@@ -748,7 +748,7 @@ export default function ContentManagement({ user }) {
                 <div className="mt-6 p-4 bg-blue-50 rounded-lg flex items-center justify-between">
                   <div>
                     <p className="text-sm text-blue-600">Selected: <strong>{selectedTopic.title}</strong></p>
-                    <p className="text-xs text-blue-500">Click "Subtopics" tab to manage subtopics</p>
+                    <p className="text-xs text-blue-500">Click Subtopics tab to manage subtopics</p>
                   </div>
                   <Button onClick={() => setActiveTab('subtopics')}>
                     Next: Subtopics <ChevronRight className="w-4 h-4 ml-1" />
