@@ -516,6 +516,66 @@ export default function ContentManagement({ user }) {
       toast.error('Failed to reorder subtopics');
     }
   };
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle topic drag end
+  const handleTopicDragEnd = async (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const sortedTopics = [...topics].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const oldIndex = sortedTopics.findIndex(t => t.topic_id === active.id);
+    const newIndex = sortedTopics.findIndex(t => t.topic_id === over.id);
+
+    const newItems = arrayMove(sortedTopics, oldIndex, newIndex);
+    
+    // Optimistically update UI
+    setTopics(newItems.map((item, i) => ({ ...item, order: i })));
+
+    const reorderData = newItems.map((item, i) => ({ id: item.topic_id, order: i }));
+    try {
+      await axios.post(`${API}/admin/content/topics/reorder`, { items: reorderData });
+      toast.success('Topics reordered');
+    } catch (error) {
+      toast.error('Failed to reorder topics');
+      fetchData(); // Revert on error
+    }
+  };
+
+  // Handle subtopic drag end
+  const handleSubtopicDragEnd = async (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !selectedTopic?.subtopics) return;
+
+    const sortedSubtopics = [...selectedTopic.subtopics].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const oldIndex = sortedSubtopics.findIndex(s => s.topic_id === active.id);
+    const newIndex = sortedSubtopics.findIndex(s => s.topic_id === over.id);
+
+    const newItems = arrayMove(sortedSubtopics, oldIndex, newIndex);
+    
+    // Optimistically update UI
+    setSelectedTopic(prev => ({
+      ...prev,
+      subtopics: newItems.map((item, i) => ({ ...item, order: i }))
+    }));
+
+    const reorderData = newItems.map((item, i) => ({ id: item.topic_id, order: i }));
+    try {
+      await axios.post(`${API}/admin/content/topics/reorder`, { items: reorderData });
+      toast.success('Subtopics reordered');
+      fetchData(); // Refresh to sync
+    } catch (error) {
+      toast.error('Failed to reorder subtopics');
+      fetchData(); // Revert on error
+    }
+  };
   
   const openEditTopic = (topic) => {
     setEditingItem(topic);
