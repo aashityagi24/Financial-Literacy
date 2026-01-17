@@ -317,6 +317,52 @@ export default function ContentManagement({ user }) {
     }
   };
   
+  // Move topic up or down
+  const moveTopic = async (topicId, direction) => {
+    const parentTopics = topics.sort((a, b) => (a.order || 0) - (b.order || 0));
+    const index = parentTopics.findIndex(t => t.topic_id === topicId);
+    const newIndex = index + direction;
+    
+    if (newIndex < 0 || newIndex >= parentTopics.length) return;
+    
+    const newItems = [...parentTopics];
+    [newItems[index], newItems[newIndex]] = [newItems[newIndex], newItems[index]];
+    
+    const reorderData = newItems.map((item, i) => ({ id: item.topic_id, order: i }));
+    
+    try {
+      await axios.post(`${API}/admin/content/topics/reorder`, { items: reorderData });
+      toast.success('Topics reordered');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to reorder topics');
+    }
+  };
+  
+  // Move subtopic up or down
+  const moveSubtopic = async (subtopicId, direction) => {
+    if (!selectedTopic?.subtopics) return;
+    
+    const subtopics = [...selectedTopic.subtopics].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const index = subtopics.findIndex(s => s.topic_id === subtopicId);
+    const newIndex = index + direction;
+    
+    if (newIndex < 0 || newIndex >= subtopics.length) return;
+    
+    const newItems = [...subtopics];
+    [newItems[index], newItems[newIndex]] = [newItems[newIndex], newItems[index]];
+    
+    const reorderData = newItems.map((item, i) => ({ id: item.topic_id, order: i }));
+    
+    try {
+      await axios.post(`${API}/admin/content/topics/reorder`, { items: reorderData });
+      toast.success('Subtopics reordered');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to reorder subtopics');
+    }
+  };
+  
   const openEditTopic = (topic) => {
     setEditingItem(topic);
     setTopicForm({
