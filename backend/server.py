@@ -1582,6 +1582,18 @@ async def buy_farm_plot(request: Request):
         {"$inc": {"balance": -PLOT_COST}}
     )
     
+    # Record wallet transaction
+    await db.transactions.insert_one({
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "from_account": "spending",
+        "to_account": None,
+        "amount": PLOT_COST,
+        "transaction_type": "garden_buy",
+        "description": f"Purchased new garden plot 🌾",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
     # Create new plot
     new_plot = {
         "plot_id": f"plot_{uuid.uuid4().hex[:8]}",
