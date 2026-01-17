@@ -7,7 +7,7 @@ import {
   Shield, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   Plus, Trash2, Edit2, Save, X, FolderOpen, FileText, BookOpen,
   FileSpreadsheet, Gamepad2, Upload, Image, Eye, EyeOff,
-  Video, Book, Layers, ListOrdered, Library, Settings, Info, GripVertical
+  Video, Book, Layers, ListOrdered, Library, Settings, Info, GripVertical, MoveRight
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
