@@ -1789,6 +1789,22 @@ async def sell_produce(request: Request, plant_id: str, quantity: int):
         {"$inc": {"balance": total_earnings}}
     )
     
+    # Get plant name for description
+    plant = await db.investment_plants.find_one({"plant_id": plant_id})
+    plant_name = plant["name"] if plant else "produce"
+    
+    # Record wallet transaction
+    await db.transactions.insert_one({
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "from_account": None,
+        "to_account": "spending",
+        "amount": total_earnings,
+        "transaction_type": "garden_sell",
+        "description": f"Sold {quantity} {plant_name} at market",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
     return {
         "message": f"Sold {quantity} for ₹{total_earnings}! 💰",
         "earnings": total_earnings,
