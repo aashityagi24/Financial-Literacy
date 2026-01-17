@@ -325,7 +325,11 @@ export default function ContentManagement({ user }) {
   const [showTopicDialog, setShowTopicDialog] = useState(false);
   const [showSubtopicDialog, setShowSubtopicDialog] = useState(false);
   const [showContentDialog, setShowContentDialog] = useState(false);
+  const [showMoveSubtopicDialog, setShowMoveSubtopicDialog] = useState(false);
+  const [showMoveContentDialog, setShowMoveContentDialog] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [itemToMove, setItemToMove] = useState(null);
+  const [moveTargetId, setMoveTargetId] = useState('');
   
   // Form states
   const [topicForm, setTopicForm] = useState({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5 });
