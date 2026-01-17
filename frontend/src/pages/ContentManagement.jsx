@@ -232,6 +232,84 @@ function SortableSubtopicItem({ subtopic, isSelected, onSelect, onEdit, onDelete
   );
 }
 
+// Sortable Content Item Component for Lesson Plan
+function SortableContentItem({ content, onEdit, onDelete, typeConfig }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: content.content_id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
+  };
+
+  const Icon = typeConfig.icon;
+
+  return (
+    <div 
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 p-4 border rounded-xl bg-gray-50 ${isDragging ? 'shadow-lg bg-white' : ''}`}
+    >
+      {/* Drag Handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-200 rounded"
+      >
+        <GripVertical className="w-5 h-5 text-gray-400" />
+      </div>
+      
+      {content.thumbnail ? (
+        <img src={getAssetUrl(content.thumbnail)} alt="" className="w-14 h-10 rounded-lg object-contain bg-white border border-gray-200" />
+      ) : (
+        <div className={`w-14 h-10 rounded-lg flex items-center justify-center ${typeConfig.color}`}>
+          <Icon className="w-5 h-5" />
+        </div>
+      )}
+      
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h4 className="font-medium text-gray-800">{content.title}</h4>
+          <span className={`text-xs px-2 py-0.5 rounded ${typeConfig.color}`}>{typeConfig.label}</span>
+          {content.is_published ? (
+            <span className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-600 flex items-center gap-1">
+              <Eye className="w-3 h-3" /> Live
+            </span>
+          ) : (
+            <span className="text-xs px-2 py-0.5 rounded bg-gray-200 text-gray-600 flex items-center gap-1">
+              <EyeOff className="w-3 h-3" /> Draft
+            </span>
+          )}
+          {content.visible_to && content.visible_to.length > 0 && (
+            <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-600">
+              {content.visible_to.join(', ')}
+            </span>
+          )}
+        </div>
+        <p className="text-sm text-gray-500 truncate">{content.description}</p>
+        <p className="text-xs text-green-600 font-medium">₹{content.reward_coins} reward</p>
+      </div>
+      
+      <div className="flex items-center gap-2">
+        <Button size="sm" variant="ghost" onClick={onEdit}>
+          <Edit2 className="w-3 h-3 mr-1" /> Edit
+        </Button>
+        <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={onDelete}>
+          <Trash2 className="w-3 h-3 mr-1" /> Delete
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function ContentManagement({ user }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('topics');
