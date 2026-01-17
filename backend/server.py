@@ -5570,6 +5570,57 @@ async def complete_content_item(content_id: str, request: Request):
     if not item:
         raise HTTPException(status_code=404, detail="Content not found")
     
+    # For children, verify the content is unlocked
+    if user.get("role") == "child":
+        user_id = user["user_id"]
+        topic_id = item.get("topic_id")
+        
+        # Get all completed content for this user
+        completed_docs = await db.user_content_progress.find(
+            {"user_id": user_id, "completed": True},
+            {"content_id": 1}
+        ).to_list(1000)
+        completed_content_ids = {doc["content_id"] for doc in completed_docs}
+        
+        # Get all content in this topic/subtopic in order
+        topic_content = await db.content_items.find(
+            {"topic_id": topic_id, "is_published": True},
+            {"content_id": 1}
+        ).sort("order", 1).to_list(100)
+        
+        # Find if this content is unlocked
+        content_is_unlocked = True  # First content is unlocked by default
+        for idx, content in enumerate(topic_content):
+            if content["content_id"] == content_id:
+                break
+            # Previous content must be completed for this to be unlocked
+            if content["content_id"] not in completed_content_ids:
+                content_is_unlocked = False
+                break
+        
+        # Also check if the topic/subtopic itself is unlocked
+        topic = await db.content_topics.find_one({"topic_id": topic_id}, {"_id": 0})
+        if topic and topic.get("parent_id"):
+            # This is a subtopic - check if previous subtopics are completed
+            sibling_subtopics = await db.content_topics.find(
+                {"parent_id": topic["parent_id"]},
+                {"_id": 0}
+            ).sort("order", 1).to_list(100)
+            
+            for sibling in sibling_subtopics:
+                if sibling["topic_id"] == topic_id:
+                    break
+                sibling_content = await db.content_items.find(
+                    {"topic_id": sibling["topic_id"], "is_published": True},
+                    {"content_id": 1}
+                ).to_list(100)
+                if not (all(c["content_id"] in completed_content_ids for c in sibling_content) and len(sibling_content) > 0):
+                    content_is_unlocked = False
+                    break
+        
+        if not content_is_unlocked:
+            raise HTTPException(status_code=403, detail="This content is locked. Complete the previous content first!")
+    
     # Check if already completed
     existing = await db.user_content_progress.find_one({
         "user_id": user["user_id"],
