@@ -332,7 +332,8 @@ export default function ContentManagement({ user }) {
   const [subtopicForm, setSubtopicForm] = useState({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5 });
   const [contentForm, setContentForm] = useState({
     title: '', description: '', content_type: 'worksheet', thumbnail: '',
-    min_grade: 0, max_grade: 5, reward_coins: 5, is_published: false, content_data: {}
+    min_grade: 0, max_grade: 5, reward_coins: 5, is_published: false, content_data: {},
+    visible_to: ['child'] // Default visibility to child
   });
   
   // File refs
