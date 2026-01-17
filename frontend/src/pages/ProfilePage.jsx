@@ -358,36 +358,6 @@ export default function ProfilePage({ user, setUser }) {
           </div>
         )}
         
-        {/* Avatar Section */}
-        <div className="card-playful p-6 mb-6 animate-bounce-in stagger-2">
-          <h3 className="text-lg font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
-            My Avatar Items
-          </h3>
-          
-          <div className="grid grid-cols-4 gap-3">
-            {Object.entries(avatarItems).map(([key, value]) => {
-              if (Array.isArray(value)) return null;
-              return (
-                <div key={key} className="text-center">
-                  <div className="w-14 h-14 mx-auto bg-[#FFD23F]/20 rounded-xl border-2 border-[#1D3557] flex items-center justify-center mb-1">
-                    <span className="text-2xl">
-                      {key === 'body' ? '🧍' : key === 'hair' ? '💇' : key === 'clothes' ? '👕' : '✨'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#3D5A80] capitalize">{key}</p>
-                </div>
-              );
-            })}
-          </div>
-          
-          <Link 
-            to="/store"
-            className="btn-secondary w-full py-3 mt-4 flex items-center justify-center gap-2"
-          >
-            Get More Items
-          </Link>
-        </div>
-        
         {/* Account Info */}
         <div className="card-playful p-6 mb-6 animate-bounce-in stagger-3">
           <h3 className="text-lg font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
