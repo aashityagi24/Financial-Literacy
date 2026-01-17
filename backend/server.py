@@ -5418,9 +5418,11 @@ async def get_all_topics(request: Request):
 
 @api_router.get("/content/topics/{topic_id}")
 async def get_topic_detail(topic_id: str, request: Request):
-    """Get topic details with content items (only published for non-admin)"""
+    """Get topic details with content items and unlock status (only published for non-admin)"""
     user = await get_current_user(request)
     is_admin = user and user.get("role") == "admin"
+    is_child = user and user.get("role") == "child"
+    user_id = user.get("user_id") if user else None
     
     topic = await db.content_topics.find_one({"topic_id": topic_id}, {"_id": 0})
     if not topic:
@@ -5441,6 +5443,99 @@ async def get_topic_detail(topic_id: str, request: Request):
         content_query,
         {"_id": 0}
     ).sort("order", 1).to_list(100)
+    
+    # For children, calculate unlock status for content and subtopics
+    if is_child and user_id:
+        # Get completed content IDs for this user
+        completed_docs = await db.user_content_progress.find(
+            {"user_id": user_id, "completed": True},
+            {"content_id": 1}
+        ).to_list(1000)
+        completed_content_ids = {doc["content_id"] for doc in completed_docs}
+        
+        # Check if this topic/subtopic is unlocked by checking previous ones
+        parent_topic = await db.content_topics.find_one({"topic_id": topic.get("parent_id")}, {"_id": 0}) if topic.get("parent_id") else None
+        
+        # Determine if this topic is unlocked
+        topic_is_unlocked = True  # Default to unlocked, will verify below
+        
+        if topic.get("parent_id"):
+            # This is a subtopic - check if previous subtopics are completed
+            sibling_subtopics = await db.content_topics.find(
+                {"parent_id": topic["parent_id"]},
+                {"_id": 0}
+            ).sort("order", 1).to_list(100)
+            
+            for sibling in sibling_subtopics:
+                if sibling["topic_id"] == topic_id:
+                    break  # We've reached the current subtopic
+                
+                # Check if this sibling is completed
+                sibling_content = await db.content_items.find(
+                    {"topic_id": sibling["topic_id"], "is_published": True},
+                    {"content_id": 1}
+                ).to_list(100)
+                
+                sibling_completed = all(c["content_id"] in completed_content_ids for c in sibling_content) and len(sibling_content) > 0
+                if not sibling_completed:
+                    topic_is_unlocked = False
+                    break
+        else:
+            # This is a parent topic - check if previous topics are completed
+            all_parent_topics = await db.content_topics.find(
+                {"parent_id": None},
+                {"_id": 0}
+            ).sort("order", 1).to_list(100)
+            
+            for prev_topic in all_parent_topics:
+                if prev_topic["topic_id"] == topic_id:
+                    break  # We've reached the current topic
+                
+                # Check if this previous topic is completed (all its subtopics completed)
+                prev_subtopics = await db.content_topics.find(
+                    {"parent_id": prev_topic["topic_id"]},
+                    {"_id": 0}
+                ).to_list(100)
+                
+                prev_topic_completed = True
+                for prev_sub in prev_subtopics:
+                    prev_sub_content = await db.content_items.find(
+                        {"topic_id": prev_sub["topic_id"], "is_published": True},
+                        {"content_id": 1}
+                    ).to_list(100)
+                    
+                    if not (all(c["content_id"] in completed_content_ids for c in prev_sub_content) and len(prev_sub_content) > 0):
+                        prev_topic_completed = False
+                        break
+                
+                if not prev_topic_completed:
+                    topic_is_unlocked = False
+                    break
+        
+        topic["is_unlocked"] = topic_is_unlocked
+        
+        # Add unlock status to content items (sequential within this topic/subtopic)
+        previous_content_completed = topic_is_unlocked  # First content unlocked if topic is unlocked
+        for content in content_items:
+            content["is_completed"] = content["content_id"] in completed_content_ids
+            content["is_unlocked"] = previous_content_completed
+            previous_content_completed = content["is_completed"]
+        
+        # Add unlock status to subtopics
+        previous_subtopic_completed = topic_is_unlocked
+        for subtopic in subtopics:
+            subtopic_content = await db.content_items.find(
+                {"topic_id": subtopic["topic_id"], "is_published": True},
+                {"content_id": 1}
+            ).sort("order", 1).to_list(100)
+            
+            subtopic_completed_count = sum(1 for c in subtopic_content if c["content_id"] in completed_content_ids)
+            subtopic["completed_count"] = subtopic_completed_count
+            subtopic["content_count"] = len(subtopic_content)
+            subtopic["is_completed"] = subtopic_completed_count == len(subtopic_content) and len(subtopic_content) > 0
+            subtopic["is_unlocked"] = previous_subtopic_completed
+            
+            previous_subtopic_completed = subtopic["is_completed"]
     
     return {
         **topic,
