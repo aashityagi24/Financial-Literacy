@@ -765,7 +765,7 @@ export default function ContentManagement({ user }) {
                 <div>
                   <h2 className="text-lg font-semibold text-gray-800">Step 2: Manage Subtopics</h2>
                   <p className="text-sm text-gray-500">
-                    {selectedTopic ? `Drag and drop to reorder subtopics under "${selectedTopic.title}"` : 'Select a topic first'}
+                    {selectedTopic ? `Drag and drop to reorder subtopics under ${selectedTopic.title}` : 'Select a topic first'}
                   </p>
                 </div>
                 <Button 
