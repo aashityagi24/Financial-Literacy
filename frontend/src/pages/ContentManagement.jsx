@@ -971,90 +971,35 @@ export default function ContentManagement({ user }) {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-gray-500 mb-4">
-                    Use arrows to reorder content. Students will see content in this order.
-                  </p>
-                  {subtopicContent.map((content, index) => {
-                    const typeConfig = getContentTypeConfig(content.content_type);
-                    const Icon = typeConfig.icon;
-                    
-                    return (
-                      <div key={content.content_id} className="flex items-center gap-3 p-4 border rounded-xl bg-gray-50">
-                        <div className="flex flex-col gap-1">
-                          <button 
-                            onClick={() => moveContent(content.content_id, -1)} 
-                            className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
-                            disabled={index === 0}
-                          >
-                            <ChevronUp className="w-4 h-4" />
-                          </button>
-                          <span className="text-center text-sm font-medium text-gray-400">{index + 1}</span>
-                          <button 
-                            onClick={() => moveContent(content.content_id, 1)} 
-                            className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
-                            disabled={index === subtopicContent.length - 1}
-                          >
-                            <ChevronDown className="w-4 h-4" />
-                          </button>
-                        </div>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleContentDragEnd}
+                >
+                  <SortableContext
+                    items={subtopicContent.map(c => c.content_id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-500 mb-4">
+                        Drag and drop to reorder content. Students will see content in this order.
+                      </p>
+                      {subtopicContent.map((content) => {
+                        const typeConfig = getContentTypeConfig(content.content_type);
                         
-                        {content.thumbnail ? (
-                          <img src={getAssetUrl(content.thumbnail)} alt="" className="w-14 h-10 rounded-lg object-contain bg-white border border-gray-200" />
-                        ) : (
-                          <div className={`w-14 h-10 rounded-lg flex items-center justify-center ${typeConfig.color}`}>
-                            <Icon className="w-5 h-5" />
-                          </div>
-                        )}
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-medium text-gray-800">{content.title}</h4>
-                            <span className={`text-xs px-2 py-0.5 rounded ${typeConfig.color}`}>{typeConfig.label}</span>
-                            {content.is_published ? (
-                              <span className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-600 flex items-center gap-1">
-                                <Eye className="w-3 h-3" /> Live
-                              </span>
-                            ) : (
-                              <span className="text-xs px-2 py-0.5 rounded bg-gray-200 text-gray-600 flex items-center gap-1">
-                                <EyeOff className="w-3 h-3" /> Draft
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-500 truncate">{content.description}</p>
-                          <p className="text-xs text-green-600 font-medium">₹{content.reward_coins} reward</p>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          {/* Preview Button */}
-                          {(content.content_data?.pdf_url || content.content_data?.html_url || content.content_data?.content_url) && (
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                              onClick={() => {
-                                const url = content.content_data?.html_url || content.content_data?.pdf_url || content.content_data?.content_url;
-                                if (url) window.open(getAssetUrl(url), '_blank');
-                              }}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          )}
-                          <Switch 
-                            checked={content.is_published} 
-                            onCheckedChange={() => togglePublish(content.content_id)}
+                        return (
+                          <SortableContentItem
+                            key={content.content_id}
+                            content={content}
+                            typeConfig={typeConfig}
+                            onEdit={() => openEditContent(content)}
+                            onDelete={() => deleteContent(content.content_id)}
                           />
-                          <Button size="sm" variant="ghost" onClick={() => openEditContent(content)}>
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" className="text-red-500" onClick={() => deleteContent(content.content_id)}>
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                        );
+                      })}
+                    </div>
+                  </SortableContext>
+                </DndContext>
               )}
             </div>
           </TabsContent>
