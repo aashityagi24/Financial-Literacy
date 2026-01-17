@@ -994,6 +994,7 @@ export default function ContentManagement({ user }) {
                           onSelect={() => setSelectedSubtopic(subtopic)}
                           onEdit={() => openEditSubtopic(subtopic)}
                           onDelete={() => deleteTopic(subtopic.topic_id, true)}
+                          onMove={() => openMoveSubtopic(subtopic)}
                           contentCount={allContent.filter(c => c.topic_id === subtopic.topic_id).length}
                         />
                       ))}
