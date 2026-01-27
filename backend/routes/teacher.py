@@ -82,7 +82,8 @@ async def create_classroom(classroom: ClassroomCreate, request: Request):
         "name": classroom.name,
         "description": classroom.description,
         "grade_level": classroom.grade_level,
-        "invite_code": generate_invite_code(),
+        "grade": classroom.grade_level,  # Also set grade for student join
+        "join_code": generate_invite_code(),  # Use join_code consistently
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
