@@ -67,10 +67,9 @@ auth_service.init_db(db)
 auth_routes.init_db(db)
 school_routes.init_db(db)
 
-# Include modular routers (these will override duplicate routes in server.py)
-# Note: We're NOT including them yet to avoid conflicts. They're ready to use.
-# api_router.include_router(auth_routes.router)
-# api_router.include_router(school_routes.router)
+# Include modular routers
+api_router.include_router(auth_routes.router)
+api_router.include_router(school_routes.router)
 
 # ============== MODELS ==============
 
