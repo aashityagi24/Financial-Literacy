@@ -33,6 +33,8 @@ import MoneyGardenPage from "@/pages/MoneyGardenPage";
 import AdminGardenManagement from "@/pages/AdminGardenManagement";
 import StockMarketPage from "@/pages/StockMarketPage";
 import AdminStockManagement from "@/pages/AdminStockManagement";
+import SchoolLogin from "@/pages/SchoolLogin";
+import SchoolDashboard from "@/pages/SchoolDashboard";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
@@ -117,6 +119,8 @@ function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/school-login" element={<SchoolLogin />} />
+      <Route path="/school-dashboard" element={<SchoolDashboard />} />
       <Route path="/role-selection" element={
         <ProtectedRoute>
           {({ user, setUser }) => <RoleSelection user={user} setUser={setUser} />}
