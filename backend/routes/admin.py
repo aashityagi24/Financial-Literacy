@@ -159,28 +159,46 @@ async def delete_user(user_id: str, request: Request):
 # Stats
 @router.get("/stats")
 async def get_admin_stats(request: Request):
-    """Get admin dashboard stats"""
+    """Get platform statistics (admin only)"""
     from services.auth import require_admin
     db = get_db()
     await require_admin(request)
     
-    total_users = await db.users.count_documents({})
-    total_children = await db.users.count_documents({"role": "child"})
-    total_teachers = await db.users.count_documents({"role": "teacher"})
-    total_parents = await db.users.count_documents({"role": "parent"})
-    total_quests = await db.new_quests.count_documents({"creator_type": "admin"})
-    total_topics = await db.content_topics.count_documents({})
-    total_content = await db.content_items.count_documents({})
-    
-    return {
-        "total_users": total_users,
-        "total_children": total_children,
-        "total_teachers": total_teachers,
-        "total_parents": total_parents,
-        "total_quests": total_quests,
-        "total_topics": total_topics,
-        "total_content": total_content
+    stats = {
+        "users": {
+            "total": await db.users.count_documents({}),
+            "children": await db.users.count_documents({"role": "child"}),
+            "parents": await db.users.count_documents({"role": "parent"}),
+            "teachers": await db.users.count_documents({"role": "teacher"}),
+            "admins": await db.users.count_documents({"role": "admin"}),
+            "schools": await db.users.count_documents({"role": "school"})
+        },
+        "content": {
+            "topics": await db.content_topics.count_documents({"parent_id": None}),
+            "subtopics": await db.content_topics.count_documents({"parent_id": {"$ne": None}}),
+            "total_content": await db.content_items.count_documents({})
+        },
+        "legacy_content": {
+            "topics": await db.learning_topics.count_documents({}),
+            "lessons": await db.learning_lessons.count_documents({}),
+            "books": await db.books.count_documents({}),
+            "activities": await db.activities.count_documents({}),
+            "quizzes": await db.quizzes.count_documents({})
+        },
+        "store": {
+            "items": await db.store_items.count_documents({}),
+            "purchases": await db.purchases.count_documents({})
+        },
+        "investments": {
+            "plants": await db.investment_plants.count_documents({}),
+            "stocks": await db.investment_stocks.count_documents({}),
+            "farms": await db.farms.count_documents({})
+        },
+        "quests": await db.new_quests.count_documents({"creator_type": "admin"}),
+        "classrooms": await db.classrooms.count_documents({})
     }
+    
+    return stats
 
 # Topics Management
 @router.post("/topics")
