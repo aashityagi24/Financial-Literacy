@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
 import NotificationCenter from '@/components/NotificationCenter';
 import ClassmatesSection from '@/components/ClassmatesSection';
+import { getDefaultAvatar } from '@/utils/avatars';
 
 export default function Dashboard({ user, setUser }) {
   const navigate = useNavigate();
