@@ -379,9 +379,9 @@ export default function QuestsPage({ user }) {
             {quests.map((quest) => {
               const daysLeft = getDaysUntilDue(quest.due_date);
               const isChore = quest.creator_type === 'parent';
-              // Quest is completed if attempted (is_completed) OR if earned points (has_earned)
-              const isCompleted = quest.is_completed || quest.has_earned;
-              const hasEarned = quest.has_earned;
+              // Quest is completed if user_status is 'completed', or is_completed, or has_earned
+              const isCompleted = quest.user_status === 'completed' || quest.is_completed || quest.has_earned;
+              const hasEarned = quest.has_earned || quest.user_status === 'completed';
               
               return (
                 <div 
