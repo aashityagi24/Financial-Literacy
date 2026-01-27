@@ -60,11 +60,10 @@ A gamified financial literacy learning application for children (K-5) with disti
    - Shows correct answer in green, user's wrong answer in light red
    - MCQ shows radio buttons, multi-select shows checkboxes with highlighting
 
-4. **Quest & Announcement Notifications** ✅ (NEW)
-   - Admin quest creation sends `new_quest` notifications to all children in grade range
-   - Teacher quest creation sends `new_quest` notifications to classroom students
-   - Teacher announcements send `announcement` notifications to classroom students
-   - NotificationCenter handles `new_quest` type with Trophy icon → /quests
+4. **Quest Filter Tabs Fixed** ✅ (NEW)
+   - All, Admin, Teacher, Chores tabs now work
+   - Backend filters by `creator_type` (admin/teacher/parent)
+   - Source parameter in GET /api/child/quests-new
 
 5. **Teacher Name Display** ✅
    - Profile page shows "Teacher: [name]" for each enrolled classroom
