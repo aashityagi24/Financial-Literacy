@@ -1215,8 +1215,8 @@ async def require_school(request: Request):
     """Require school authentication"""
     return await get_current_school(request)
 
-@api_router.post("/auth/session")
-async def create_session(request: Request, response: Response):
+# @api_router.post("/auth/session")  # MOVED TO routes/auth.py
+async def _legacy_create_session(request: Request, response: Response):
     """Exchange session_id from Google OAuth for session data"""
     body = await request.json()
     session_id = body.get("session_id")
