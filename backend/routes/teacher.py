@@ -644,19 +644,77 @@ async def create_teacher_quest(request: Request):
     body = await request.json()
     
     quest_id = f"quest_{uuid.uuid4().hex[:12]}"
-    await db.new_quests.insert_one({
+    
+    # Process questions if provided
+    processed_questions = []
+    questions = body.get("questions", [])
+    for q in questions:
+        points = q.get("points", 0) or 5
+        processed_questions.append({
+            "question_id": f"q_{uuid.uuid4().hex[:8]}",
+            "question_text": q.get("question_text", ""),
+            "question_type": q.get("question_type", "mcq"),
+            "image_url": q.get("image_url"),
+            "options": q.get("options"),
+            "correct_answer": q.get("correct_answer"),
+            "points": points
+        })
+    
+    questions_points = sum(q["points"] for q in processed_questions)
+    base_reward = body.get("reward_coins", 10) or body.get("reward_amount", 10)
+    
+    if len(processed_questions) > 0:
+        total_points = questions_points
+    else:
+        total_points = base_reward
+    
+    quest_doc = {
         "quest_id": quest_id,
         "title": body.get("title"),
         "description": body.get("description", ""),
-        "reward_coins": body.get("reward_coins", 10),
+        "image_url": body.get("image_url"),
+        "reward_amount": base_reward,
+        "reward_coins": base_reward,
+        "total_points": total_points,
+        "questions": processed_questions,
         "creator_type": "teacher",
         "creator_id": teacher["user_id"],
+        "creator_name": teacher.get("name", "Teacher"),
         "classroom_id": body.get("classroom_id"),
         "quest_type": body.get("quest_type", "task"),
         "deadline": body.get("deadline"),
+        "min_grade": body.get("min_grade"),
+        "max_grade": body.get("max_grade"),
         "is_active": True,
         "created_at": datetime.now(timezone.utc).isoformat()
-})
+    }
+    
+    await db.new_quests.insert_one(quest_doc)
+    
+    # Send notifications to students in the classroom
+    classroom_id = body.get("classroom_id")
+    if classroom_id:
+        enrollments = await db.classroom_students.find(
+            {"classroom_id": classroom_id, "status": "active"},
+            {"_id": 0, "student_id": 1}
+        ).to_list(500)
+        
+        notifications = []
+        for enrollment in enrollments:
+            notifications.append({
+                "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+                "user_id": enrollment["student_id"],
+                "type": "new_quest",
+                "title": f"New Quest from {teacher.get('name', 'Teacher')}",
+                "message": f"Your teacher assigned a new quest: '{body.get('title')}'. Earn ₹{total_points}!",
+                "quest_id": quest_id,
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+        
+        if notifications:
+            await db.notifications.insert_many(notifications)
+    
     return {"message": "Quest created", "quest_id": quest_id}
 
 @router.get("/quests")
