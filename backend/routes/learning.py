@@ -35,6 +35,25 @@ async def get_learning_topics(request: Request):
             {"_id": 0}
         ).sort("order", 1).to_list(100)
     
+    # Add progress tracking for each topic
+    for topic in topics:
+        topic_id = topic.get("topic_id")
+        if topic_id:
+            lessons = await db.learning_lessons.find(
+                {"topic_id": topic_id},
+                {"_id": 0, "lesson_id": 1}
+            ).to_list(100)
+            
+            lesson_ids = [l["lesson_id"] for l in lessons]
+            completed = await db.user_lesson_progress.count_documents({
+                "user_id": user["user_id"],
+                "lesson_id": {"$in": lesson_ids},
+                "completed": True
+            })
+            
+            topic["total_lessons"] = len(lessons)
+            topic["completed_lessons"] = completed
+    
     return topics
 
 @router.get("/topics/{topic_id}")
