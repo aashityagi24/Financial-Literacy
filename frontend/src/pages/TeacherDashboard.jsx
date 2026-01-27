@@ -1074,7 +1074,7 @@ export default function TeacherDashboard({ user }) {
                 <div className="grid grid-cols-4 gap-3">
                   <div className="bg-[#FFD23F]/20 rounded-xl p-3 text-center">
                     <p className="text-2xl font-bold text-[#1D3557]">₹{studentInsights.wallet?.total_balance?.toFixed(0)}</p>
-                    <p className="text-xs text-[#3D5A80]">Total Balance</p>
+                    <p className="text-xs text-[#3D5A80]">Available Balance</p>
                   </div>
                   <div className="bg-[#06D6A0]/20 rounded-xl p-3 text-center">
                     <p className="text-2xl font-bold text-[#1D3557]">{studentInsights.learning?.lessons_completed}</p>
@@ -1090,28 +1090,51 @@ export default function TeacherDashboard({ user }) {
                   </div>
                 </div>
 
-                {/* Money Jars */}
+                {/* Money Jars - Now showing Balance & Spent */}
                 <div className="bg-gradient-to-r from-[#FFD23F]/10 to-[#FFEB99]/10 rounded-xl p-4 border-2 border-[#FFD23F]/30">
                   <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
-                    <Wallet className="w-5 h-5" /> Money Jars
+                    <Wallet className="w-5 h-5" /> Money Jars (Balance / Spent)
                   </h4>
                   <div className="grid grid-cols-4 gap-3">
-                    {studentInsights.wallet?.accounts?.map((acc) => (
-                      <div key={acc.account_type} className="bg-white rounded-lg p-3 text-center border border-[#1D3557]/10">
-                        <p className="text-lg font-bold text-[#1D3557]">₹{acc.balance?.toFixed(0)}</p>
-                        <p className="text-xs text-[#3D5A80] capitalize">{acc.account_type}</p>
-                      </div>
-                    ))}
+                    {studentInsights.wallet?.accounts?.map((acc) => {
+                      // Special handling for savings - show savings in goals
+                      const isSavings = acc.account_type === 'savings';
+                      const savedInGoals = studentInsights.wallet?.savings_in_goals || 0;
+                      
+                      return (
+                        <div key={acc.account_type} className="bg-white rounded-lg p-3 border border-[#1D3557]/10">
+                          <p className="text-xs text-[#3D5A80] capitalize mb-1">{acc.account_type}</p>
+                          <p className="text-lg font-bold text-[#1D3557]">₹{acc.balance?.toFixed(0)}</p>
+                          <p className="text-xs text-[#3D5A80]">available</p>
+                          {isSavings ? (
+                            <p className="text-xs mt-1">
+                              <span className="text-green-600 font-medium">₹{savedInGoals?.toFixed(0)}</span>
+                              <span className="text-[#3D5A80]"> in goals</span>
+                            </p>
+                          ) : (
+                            <p className="text-xs mt-1">
+                              <span className="text-red-500 font-medium">₹{acc.spent?.toFixed(0) || 0}</span>
+                              <span className="text-[#3D5A80]"> spent</span>
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
+                  {studentInsights.wallet?.savings_goals_count > 0 && (
+                    <p className="text-xs text-[#3D5A80] mt-2 text-center">
+                      {studentInsights.wallet.savings_goals_count} savings goal(s) active
+                    </p>
+                  )}
                   <div className="mt-3 pt-3 border-t border-[#1D3557]/10 grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-green-500" />
-                      <span className="text-[#3D5A80]">Earned: </span>
+                      <span className="text-[#3D5A80]">Total Earned: </span>
                       <span className="font-bold text-green-600">₹{studentInsights.transactions?.total_earned?.toFixed(0)}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <TrendingDown className="w-4 h-4 text-red-500" />
-                      <span className="text-[#3D5A80]">Spent: </span>
+                      <span className="text-[#3D5A80]">Total Spent: </span>
                       <span className="font-bold text-red-600">₹{studentInsights.transactions?.total_spent?.toFixed(0)}</span>
                     </div>
                   </div>
