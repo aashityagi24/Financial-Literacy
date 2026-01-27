@@ -136,7 +136,7 @@ export default function NotificationCenter({ onGiftRequestAction }) {
       </button>
 
       {/* Notification Dialog */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={handleDialogChange}>
         <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <div className="flex items-center justify-between">
