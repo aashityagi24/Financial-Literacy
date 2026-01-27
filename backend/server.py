@@ -6387,8 +6387,8 @@ async def _legacy_get_all_topics(request: Request, grade: Optional[int] = None):
     
     return parent_topics
 
-@api_router.get("/content/topics/{topic_id}")
-async def get_topic_detail(topic_id: str, request: Request):
+# @api_router.get("/content/topics/{topic_id}")  # MOVED
+async def _legacy_get_topic_detail(topic_id: str, request: Request):
     """Get topic details with content items and unlock status (only published for non-admin)"""
     user = await get_current_user(request)
     is_admin = user and user.get("role") == "admin"
@@ -6514,8 +6514,8 @@ async def get_topic_detail(topic_id: str, request: Request):
         "content_items": content_items
     }
 
-@api_router.get("/content/items/{content_id}")
-async def get_content_item(content_id: str, request: Request):
+# @api_router.get("/content/items/{content_id}")  # MOVED
+async def _legacy_get_content_item(content_id: str, request: Request):
     """Get a single content item"""
     user = await get_current_user(request)
     is_admin = user and user.get("role") == "admin"
@@ -6530,8 +6530,8 @@ async def get_content_item(content_id: str, request: Request):
     
     return item
 
-@api_router.post("/content/items/{content_id}/complete")
-async def complete_content_item(content_id: str, request: Request):
+# @api_router.post("/content/items/{content_id}/complete")  # MOVED
+async def _legacy_complete_content_item(content_id: str, request: Request):
     """Mark content item as completed and award coins"""
     user = await get_current_user(request)
     if not user:
@@ -6640,8 +6640,8 @@ async def complete_content_item(content_id: str, request: Request):
 
 # ============== ADMIN CONTENT MANAGEMENT ROUTES ==============
 
-@api_router.get("/admin/content/topics")
-async def admin_get_all_topics(request: Request):
+# @api_router.get("/admin/content/topics")  # MOVED
+async def _legacy_admin_get_all_topics(request: Request):
     """Get all topics for admin (including hidden ones)"""
     await require_admin(request)
     
@@ -6710,8 +6710,8 @@ async def admin_update_topic(topic_id: str, topic: TopicUpdate, request: Request
     updated = await db.content_topics.find_one({"topic_id": topic_id}, {"_id": 0})
     return {"message": "Topic updated", "topic": updated}
 
-@api_router.delete("/admin/content/topics/{topic_id}")
-async def admin_delete_topic(topic_id: str, request: Request):
+# @api_router.delete("/admin/content/topics/{topic_id}")  # MOVED
+async def _legacy_admin_delete_topic(topic_id: str, request: Request):
     """Delete a topic and all its content"""
     await require_admin(request)
     
