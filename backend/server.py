@@ -1358,9 +1358,10 @@ async def _legacy_update_profile(update: UserUpdate, request: Request):
     return updated_user
 
 # ============== WALLET ROUTES ==============
+# NOTE: These routes have been moved to /routes/wallet.py
 
-@api_router.get("/wallet")
-async def get_wallet(request: Request):
+# @api_router.get("/wallet")  # MOVED TO routes/wallet.py
+async def _legacy_get_wallet(request: Request):
     """Get all wallet accounts for current user"""
     user = await get_current_user(request)
     accounts = await db.wallet_accounts.find(
