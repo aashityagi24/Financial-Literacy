@@ -388,7 +388,9 @@ async def school_create_child(request: Request):
                 "enrolled_at": datetime.now(timezone.utc).isoformat()
             })
     
-    return {"message": "Child created successfully", "user_id": user_id, "user": user_doc}
+    # Fetch the clean user without _id
+    created_user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    return {"message": "Child created successfully", "user_id": user_id, "user": created_user}
 
 @router.get("/school/users")
 async def school_get_users(request: Request):
