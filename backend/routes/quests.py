@@ -350,12 +350,6 @@ async def submit_quest(quest_id: str, request: Request):
         upsert=True
     )
     
-    await db.quest_completions.update_one(
-        {"user_id": user["user_id"], "quest_id": quest_id},
-        {"$set": completion_doc},
-        upsert=True
-    )
-    
     # Award coins
     if earned_points > 0:
         await db.wallet_accounts.update_one(
@@ -373,12 +367,19 @@ async def submit_quest(quest_id: str, request: Request):
             "created_at": datetime.now(timezone.utc).isoformat()
         })
     
-    return {
+    # For quests with questions, include correct answers so child can see them
+    response = {
         "message": "Quest submitted!",
         "score": earned_points,
         "total_points": total_points,
         "coins_earned": earned_points
     }
+    
+    if has_questions:
+        response["correct_answers"] = correct_answers
+        response["passed"] = earned_points >= (total_points * 0.6)  # 60% to pass
+    
+    return response
 
 # Parent Chore Management
 @router.post("/parent/chores-new")
