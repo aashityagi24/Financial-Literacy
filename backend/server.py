@@ -1376,8 +1376,8 @@ async def _legacy_get_wallet(request: Request):
         "total_balance": total_balance
     }
 
-@api_router.post("/wallet/transfer")
-async def transfer_money(transaction: TransactionCreate, request: Request):
+# @api_router.post("/wallet/transfer")  # MOVED TO routes/wallet.py
+async def _legacy_transfer_money(transaction: TransactionCreate, request: Request):
     """Transfer money between accounts"""
     user = await get_current_user(request)
     
