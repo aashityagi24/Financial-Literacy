@@ -413,7 +413,20 @@ async def get_classmates(request: Request):
     # Sort by lessons completed
     classmates.sort(key=lambda x: x["lessons_completed"], reverse=True)
     
-    return classmates
+    # Get classroom info
+    classroom_info = None
+    if classroom_ids:
+        classroom = await db.classrooms.find_one(
+            {"classroom_id": classroom_ids[0]},
+            {"_id": 0, "classroom_id": 1, "name": 1, "teacher_name": 1}
+        )
+        if classroom:
+            classroom_info = classroom
+    
+    return {
+        "classmates": classmates,
+        "classroom": classroom_info
+    }
 
 @router.post("/gift-money")
 async def gift_money(data: GiftRequest, request: Request):
