@@ -42,6 +42,14 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Recent Updates (January 27, 2026)
 
+**Session 4 Bug Fixes (Latest):**
+
+1. **Stock Market Page Fixed for Grade 3+ Users** ✅ (P0 BUG FIX)
+   - Root Cause: Frontend data structure mismatch - StockMarketPage.jsx expected `portfolio.summary.total_invested` but API returns `portfolio.total_invested`
+   - Fixed portfolio state initialization and data access in StockMarketPage.jsx
+   - Stock Market now loads correctly showing 20 stocks with trading balance, risk levels, and buy buttons
+   - Grade 3-5 users can now access the full stock market experience
+
 **Session 3 Bug Fixes & Feature Enhancements:**
 
 1. **Join Classroom Fixed** ✅
