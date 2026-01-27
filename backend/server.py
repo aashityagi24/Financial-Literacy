@@ -6294,10 +6294,10 @@ async def _legacy_upload_goal_image(file: UploadFile = File(...)):
     
     return {"url": f"/api/uploads/thumbnails/{filename}"}
 
-# ============== CONTENT MANAGEMENT ROUTES (NEW HIERARCHICAL SYSTEM) ==============
+# ============== CONTENT MANAGEMENT ROUTES (MIGRATED TO routes/content.py) ==============
 
-@api_router.get("/content/topics")
-async def get_all_topics(request: Request, grade: Optional[int] = None):
+# @api_router.get("/content/topics")  # MOVED
+async def _legacy_get_all_topics(request: Request, grade: Optional[int] = None):
     """Get all topics with hierarchy and unlock status (for users)"""
     user = await get_current_user(request)
     user_grade = user.get("grade") if user else None
