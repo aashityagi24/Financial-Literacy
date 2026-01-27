@@ -380,3 +380,378 @@ async def trigger_allowances(request: Request):
         processed += 1
     
     return {"message": f"Processed {processed} allowances"}
+
+
+# ============== ADMIN STORE MANAGEMENT ==============
+
+@router.get("/store/categories")
+async def admin_get_store_categories(request: Request):
+    """Get all store categories"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    return await db.admin_store_categories.find({}, {"_id": 0}).sort("order", 1).to_list(100)
+
+@router.post("/store/categories")
+async def admin_create_store_category(request: Request):
+    """Create a store category"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    category_id = f"cat_{uuid.uuid4().hex[:12]}"
+    max_order = await db.admin_store_categories.find_one(sort=[("order", -1)])
+    new_order = (max_order["order"] + 1) if max_order else 0
+    
+    await db.admin_store_categories.insert_one({
+        "category_id": category_id,
+        "name": body.get("name", "New Category"),
+        "icon": body.get("icon", "🏷️"),
+        "order": new_order
+    })
+    return {"message": "Category created", "category_id": category_id}
+
+@router.put("/store/categories/{category_id}")
+async def admin_update_store_category(category_id: str, request: Request):
+    """Update a store category"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    update = {k: v for k, v in body.items() if k in ["name", "icon", "order"]}
+    await db.admin_store_categories.update_one({"category_id": category_id}, {"$set": update})
+    return {"message": "Category updated"}
+
+@router.delete("/store/categories/{category_id}")
+async def admin_delete_store_category(category_id: str, request: Request):
+    """Delete a store category"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    await db.admin_store_categories.delete_one({"category_id": category_id})
+    return {"message": "Category deleted"}
+
+@router.get("/store/items")
+async def admin_get_store_items(request: Request):
+    """Get all store items"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    items = await db.store_items.find({}, {"_id": 0}).to_list(500)
+    return items
+
+@router.post("/store/items")
+async def admin_create_store_item(request: Request):
+    """Create a store item"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    item_id = f"item_{uuid.uuid4().hex[:12]}"
+    await db.store_items.insert_one({
+        "item_id": item_id,
+        "name": body.get("name", "New Item"),
+        "description": body.get("description", ""),
+        "price": body.get("price", 10),
+        "category_id": body.get("category_id"),
+        "image_url": body.get("image_url"),
+        "stock": body.get("stock", -1),
+        "is_available": body.get("is_available", True),
+        "min_grade": body.get("min_grade", 0),
+        "max_grade": body.get("max_grade", 5),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": "Item created", "item_id": item_id}
+
+@router.put("/store/items/{item_id}")
+async def admin_update_store_item(item_id: str, request: Request):
+    """Update a store item"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    fields = ["name", "description", "price", "category_id", "image_url", "stock", "is_available", "min_grade", "max_grade"]
+    update = {k: v for k, v in body.items() if k in fields}
+    await db.store_items.update_one({"item_id": item_id}, {"$set": update})
+    return {"message": "Item updated"}
+
+@router.delete("/store/items/{item_id}")
+async def admin_delete_store_item(item_id: str, request: Request):
+    """Delete a store item"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    await db.store_items.delete_one({"item_id": item_id})
+    return {"message": "Item deleted"}
+
+# ============== ADMIN GARDEN MANAGEMENT ==============
+
+@router.get("/garden/plants")
+async def admin_get_garden_plants(request: Request):
+    """Get all garden plants"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    return await db.investment_plants.find({}, {"_id": 0}).to_list(100)
+
+@router.post("/garden/plants")
+async def admin_create_garden_plant(request: Request):
+    """Create a garden plant type"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    plant_id = f"plant_{uuid.uuid4().hex[:12]}"
+    await db.investment_plants.insert_one({
+        "plant_id": plant_id,
+        "name": body.get("name", "New Plant"),
+        "description": body.get("description", ""),
+        "seed_cost": body.get("seed_cost", 10),
+        "growth_days": body.get("growth_days", 7),
+        "harvest_value": body.get("harvest_value", 20),
+        "image_url": body.get("image_url"),
+        "min_grade": body.get("min_grade", 0),
+        "max_grade": body.get("max_grade", 2)
+    })
+    return {"message": "Plant created", "plant_id": plant_id}
+
+@router.put("/garden/plants/{plant_id}")
+async def admin_update_garden_plant(plant_id: str, request: Request):
+    """Update a garden plant type"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    fields = ["name", "description", "seed_cost", "growth_days", "harvest_value", "image_url", "min_grade", "max_grade"]
+    update = {k: v for k, v in body.items() if k in fields}
+    await db.investment_plants.update_one({"plant_id": plant_id}, {"$set": update})
+    return {"message": "Plant updated"}
+
+@router.delete("/garden/plants/{plant_id}")
+async def admin_delete_garden_plant(plant_id: str, request: Request):
+    """Delete a garden plant type"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    await db.investment_plants.delete_one({"plant_id": plant_id})
+    return {"message": "Plant deleted"}
+
+# ============== ADMIN INVESTMENT MANAGEMENT ==============
+
+@router.get("/investments/plants")
+async def admin_get_investment_plants(request: Request):
+    """Get all investment plant types"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    return await db.investment_plants.find({}, {"_id": 0}).to_list(100)
+
+@router.post("/investments/plants")
+async def admin_create_investment_plant(request: Request):
+    """Create an investment plant type"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    plant_id = f"plant_{uuid.uuid4().hex[:12]}"
+    await db.investment_plants.insert_one({
+        "plant_id": plant_id,
+        "name": body.get("name"),
+        "description": body.get("description", ""),
+        "seed_cost": body.get("seed_cost", 10),
+        "growth_days": body.get("growth_days", 7),
+        "harvest_min": body.get("harvest_min", 15),
+        "harvest_max": body.get("harvest_max", 25),
+        "image_url": body.get("image_url"),
+        "growth_stages": body.get("growth_stages", 4),
+        "min_grade": body.get("min_grade", 0),
+        "max_grade": body.get("max_grade", 2)
+    })
+    return {"message": "Plant type created", "plant_id": plant_id}
+
+@router.put("/investments/plants/{plant_id}")
+async def admin_update_investment_plant(plant_id: str, request: Request):
+    """Update an investment plant type"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    fields = ["name", "description", "seed_cost", "growth_days", "harvest_min", "harvest_max", "image_url", "growth_stages", "min_grade", "max_grade"]
+    update = {k: v for k, v in body.items() if k in fields}
+    await db.investment_plants.update_one({"plant_id": plant_id}, {"$set": update})
+    return {"message": "Plant type updated"}
+
+@router.delete("/investments/plants/{plant_id}")
+async def admin_delete_investment_plant(plant_id: str, request: Request):
+    """Delete an investment plant type"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    await db.investment_plants.delete_one({"plant_id": plant_id})
+    return {"message": "Plant type deleted"}
+
+@router.get("/investments/stocks")
+async def admin_get_investment_stocks(request: Request):
+    """Get all investment stocks"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    return await db.investment_stocks.find({}, {"_id": 0}).to_list(100)
+
+@router.post("/investments/stocks")
+async def admin_create_investment_stock(request: Request):
+    """Create an investment stock"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    stock_id = f"stock_{uuid.uuid4().hex[:12]}"
+    await db.investment_stocks.insert_one({
+        "stock_id": stock_id,
+        "name": body.get("name"),
+        "symbol": body.get("symbol"),
+        "description": body.get("description", ""),
+        "category_id": body.get("category_id"),
+        "current_price": body.get("current_price", 100),
+        "min_price": body.get("min_price", 50),
+        "max_price": body.get("max_price", 200),
+        "volatility": body.get("volatility", 0.1),
+        "trend": body.get("trend", 0),
+        "logo_url": body.get("logo_url"),
+        "min_grade": body.get("min_grade", 3),
+        "max_grade": body.get("max_grade", 5),
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": "Stock created", "stock_id": stock_id}
+
+@router.put("/investments/stocks/{stock_id}")
+async def admin_update_investment_stock(stock_id: str, request: Request):
+    """Update an investment stock"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    fields = ["name", "symbol", "description", "category_id", "current_price", "min_price", "max_price", 
+              "volatility", "trend", "logo_url", "min_grade", "max_grade", "is_active"]
+    update = {k: v for k, v in body.items() if k in fields}
+    await db.investment_stocks.update_one({"stock_id": stock_id}, {"$set": update})
+    return {"message": "Stock updated"}
+
+@router.delete("/investments/stocks/{stock_id}")
+async def admin_delete_investment_stock(stock_id: str, request: Request):
+    """Delete an investment stock"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    await db.investment_stocks.delete_one({"stock_id": stock_id})
+    return {"message": "Stock deleted"}
+
+# ============== ADMIN STOCK CATEGORIES & NEWS ==============
+
+@router.get("/stock-categories")
+async def admin_get_stock_categories(request: Request):
+    """Get all stock categories"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    return await db.stock_categories.find({}, {"_id": 0}).to_list(100)
+
+@router.post("/stock-categories")
+async def admin_create_stock_category(request: Request):
+    """Create a stock category"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    category_id = f"scat_{uuid.uuid4().hex[:12]}"
+    await db.stock_categories.insert_one({
+        "category_id": category_id,
+        "name": body.get("name"),
+        "description": body.get("description", ""),
+        "icon": body.get("icon", "📈"),
+        "color": body.get("color", "#3B82F6")
+    })
+    return {"message": "Stock category created", "category_id": category_id}
+
+@router.put("/stock-categories/{category_id}")
+async def admin_update_stock_category(category_id: str, request: Request):
+    """Update a stock category"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    update = {k: v for k, v in body.items() if k in ["name", "description", "icon", "color"]}
+    await db.stock_categories.update_one({"category_id": category_id}, {"$set": update})
+    return {"message": "Stock category updated"}
+
+@router.delete("/stock-categories/{category_id}")
+async def admin_delete_stock_category(category_id: str, request: Request):
+    """Delete a stock category"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    await db.stock_categories.delete_one({"category_id": category_id})
+    return {"message": "Stock category deleted"}
+
+@router.get("/stock-news")
+async def admin_get_stock_news(request: Request):
+    """Get all stock news"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    return await db.stock_news.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+
+@router.post("/stock-news")
+async def admin_create_stock_news(request: Request):
+    """Create stock news"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    news_id = f"news_{uuid.uuid4().hex[:12]}"
+    await db.stock_news.insert_one({
+        "news_id": news_id,
+        "title": body.get("title"),
+        "content": body.get("content", ""),
+        "stock_id": body.get("stock_id"),
+        "category_id": body.get("category_id"),
+        "impact": body.get("impact", 0),
+        "is_active": body.get("is_active", True),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": "News created", "news_id": news_id}
+
+@router.put("/stock-news/{news_id}")
+async def admin_update_stock_news(news_id: str, request: Request):
+    """Update stock news"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    update = {k: v for k, v in body.items() if k in ["title", "content", "stock_id", "category_id", "impact", "is_active"]}
+    await db.stock_news.update_one({"news_id": news_id}, {"$set": update})
+    return {"message": "News updated"}
+
+@router.delete("/stock-news/{news_id}")
+async def admin_delete_stock_news(news_id: str, request: Request):
+    """Delete stock news"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    await db.stock_news.delete_one({"news_id": news_id})
+    return {"message": "News deleted"}
