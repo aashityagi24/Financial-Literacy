@@ -126,7 +126,7 @@ async def claim_streak_bonus(request: Request):
     return {"message": "No unclaimed streak bonuses"}
 
 
-@router.post("/checkin")
+@router.post("/streak/checkin")
 async def streak_checkin(request: Request):
     """Daily streak check-in"""
     from services.auth import get_current_user
