@@ -1019,10 +1019,10 @@ export default function ContentManagement({ user }) {
                     <ChevronLeft className="w-4 h-4 mr-1" /> Go to Topics
                   </Button>
                 </div>
-              ) : selectedTopic.subtopics?.length === 0 ? (
+              ) : selectedTopic.subtopics?.filter(matchesGradeFilter).length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
                   <Layers className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p>No subtopics yet. Create subtopics to organize your content!</p>
+                  <p>{gradeFilter === 'all' ? 'No subtopics yet. Create subtopics to organize your content!' : `No subtopics found for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label || 'selected grade'}.`}</p>
                 </div>
               ) : (
                 <DndContext
@@ -1031,11 +1031,11 @@ export default function ContentManagement({ user }) {
                   onDragEnd={handleSubtopicDragEnd}
                 >
                   <SortableContext
-                    items={[...selectedTopic.subtopics].sort((a, b) => (a.order || 0) - (b.order || 0)).map(s => s.topic_id)}
+                    items={[...selectedTopic.subtopics].filter(matchesGradeFilter).sort((a, b) => (a.order || 0) - (b.order || 0)).map(s => s.topic_id)}
                     strategy={verticalListSortingStrategy}
                   >
                     <div className="space-y-3">
-                      {[...selectedTopic.subtopics].sort((a, b) => (a.order || 0) - (b.order || 0)).map((subtopic) => (
+                      {[...selectedTopic.subtopics].filter(matchesGradeFilter).sort((a, b) => (a.order || 0) - (b.order || 0)).map((subtopic) => (
                         <SortableSubtopicItem
                           key={subtopic.topic_id}
                           subtopic={subtopic}
@@ -1044,7 +1044,7 @@ export default function ContentManagement({ user }) {
                           onEdit={() => openEditSubtopic(subtopic)}
                           onDelete={() => deleteTopic(subtopic.topic_id, true)}
                           onMove={() => openMoveSubtopic(subtopic)}
-                          contentCount={allContent.filter(c => c.topic_id === subtopic.topic_id).length}
+                          contentCount={filteredContent.filter(c => c.topic_id === subtopic.topic_id).length}
                         />
                       ))}
                     </div>
