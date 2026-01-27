@@ -102,11 +102,13 @@ export default function NotificationCenter({ onGiftRequestAction }) {
     const path = typeInfo.path;
     
     if (path) {
-      // Store path in ref and close dialog - navigation happens in handleDialogChange
-      pendingNavigationRef.current = path;
+      // Close dialog first, then navigate after a small delay for animation
       setIsOpen(false);
+      setTimeout(() => {
+        navigate(path);
+      }, 150);
     }
-  }, []);
+  }, [navigate]);
 
   const formatTime = (dateString) => {
     const date = new Date(dateString);
