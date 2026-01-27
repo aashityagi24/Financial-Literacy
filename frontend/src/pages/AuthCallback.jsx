@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
+import { toast } from 'sonner';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -18,11 +19,15 @@ export default function AuthCallback() {
       const sessionIdMatch = hash.match(/session_id=([^&]+)/);
       
       if (!sessionIdMatch) {
+        console.log('No session_id found in URL');
+        toast.error('No session found. Please try signing in again.');
         navigate('/');
         return;
       }
       
       const sessionId = sessionIdMatch[1];
+      
+      console.log('Processing session_id:', sessionId.substring(0, 10) + '...');
       
       try {
         // Exchange session_id for session data
@@ -30,10 +35,14 @@ export default function AuthCallback() {
           session_id: sessionId
         });
         
+        console.log('Session response:', response.data);
+        
         const { user } = response.data;
         
         // Clear the hash from URL
         window.history.replaceState(null, '', window.location.pathname);
+        
+        toast.success(`Welcome${user.name ? ', ' + user.name : ''}!`);
         
         // Navigate based on user role
         if (!user.role) {
@@ -42,7 +51,10 @@ export default function AuthCallback() {
           navigate('/dashboard', { state: { user } });
         }
       } catch (error) {
-        console.error('Auth error:', error);
+        console.error('Auth error:', error.response?.data || error.message);
+        toast.error(error.response?.data?.detail || 'Sign in failed. Please try again.');
+        // Clear the hash and redirect to landing
+        window.history.replaceState(null, '', '/');
         navigate('/');
       }
     };
