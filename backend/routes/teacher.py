@@ -114,7 +114,6 @@ async def get_classroom_details(classroom_id: str, request: Request):
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
-    }, {"_id": 0}
     }, {"_id": 0})
     
     if not classroom:
