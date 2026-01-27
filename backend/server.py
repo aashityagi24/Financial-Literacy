@@ -76,6 +76,7 @@ from routes import learning as learning_routes
 from routes import uploads as upload_routes
 from routes import stocks as stocks_routes
 from routes import content as content_routes
+from routes import student as student_routes
 
 # Initialize database in modules
 auth_service.init_db(db)
@@ -95,6 +96,7 @@ child_routes.init_db(db)
 learning_routes.init_db(db)
 stocks_routes.init_db(db)
 content_routes.init_db(db)
+student_routes.init_db(db)
 
 # Include modular routers
 api_router.include_router(auth_routes.router)
@@ -114,6 +116,7 @@ api_router.include_router(learning_routes.router)
 api_router.include_router(upload_routes.router)
 api_router.include_router(stocks_routes.router)
 api_router.include_router(content_routes.router)
+api_router.include_router(student_routes.router)
 
 # ============== MODELS ==============
 
