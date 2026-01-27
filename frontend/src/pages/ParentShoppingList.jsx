@@ -51,14 +51,12 @@ export default function ParentShoppingList({ user }) {
         axios.get(`${API}/parent/dashboard`),
         axios.get(`${API}/parent/shopping-list`),
         axios.get(`${API}/store/categories`).catch(() => ({ data: [] })),
-        axios.get(`${API}/store/items-by-category`).catch(() => ({ data: [] }))
+        axios.get(`${API}/store/items-by-category`).catch(() => ({ data: {} }))
       ]);
       
-      // Extract all items from the grouped response
-      const allItems = [];
-      for (const catData of itemsRes.data || []) {
-        allItems.push(...(catData.items || []));
-      }
+      // Extract all items from the grouped response - API returns {category_id: [items]}
+      const itemsByCategory = itemsRes.data || {};
+      const allItems = Object.values(itemsByCategory).flat();
       
       setChildren(dashRes.data.children || []);
       setShoppingList(listRes.data || []);
