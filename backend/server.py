@@ -2000,7 +2000,7 @@ async def _legacy_sell_produce(request: Request, plant_id: str, quantity: int):
 
 # ============== ADMIN PLANT MANAGEMENT ==============
 
-@api_router.get("/admin/garden/plants")
+# @api_router.get("/admin/garden/plants")  # MOVED
 async def admin_get_plants(request: Request):
     """Get all plant types for admin"""
     user = await get_current_user(request)
@@ -2010,7 +2010,7 @@ async def admin_get_plants(request: Request):
     plants = await db.investment_plants.find({}, {"_id": 0}).to_list(100)
     return plants
 
-@api_router.post("/admin/garden/plants")
+# @api_router.post("/admin/garden/plants")  # MOVED
 async def admin_create_plant(plant: InvestmentPlantCreate, request: Request):
     """Create a new plant type"""
     user = await get_current_user(request)
@@ -2026,7 +2026,7 @@ async def admin_create_plant(plant: InvestmentPlantCreate, request: Request):
     
     return {"message": "Plant created!", "plant_id": plant_doc["plant_id"]}
 
-@api_router.put("/admin/garden/plants/{plant_id}")
+# @api_router.put("/admin/garden/plants/{plant_id}")  # MOVED
 async def admin_update_plant(plant_id: str, plant: InvestmentPlantUpdate, request: Request):
     """Update a plant type"""
     user = await get_current_user(request)
@@ -2039,7 +2039,7 @@ async def admin_update_plant(plant_id: str, plant: InvestmentPlantUpdate, reques
     
     return {"message": "Plant updated!"}
 
-@api_router.delete("/admin/garden/plants/{plant_id}")
+# @api_router.delete("/admin/garden/plants/{plant_id}")  # MOVED
 async def admin_delete_plant(plant_id: str, request: Request):
     """Delete a plant type"""
     user = await get_current_user(request)
