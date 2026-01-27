@@ -146,13 +146,17 @@ A gamified financial literacy learning application for children (K-5) with disti
 - **Users:** Google Social Login
 
 ## Key Files
-- `/app/backend/server.py` - Monolithic FastAPI backend (9200+ lines - needs refactoring)
+- `/app/backend/server.py` - FastAPI backend (9600+ lines - Phase 1 refactoring complete)
+- `/app/backend/core/` - Database & config modules
+- `/app/backend/models/` - All Pydantic models (9 files extracted)
+- `/app/backend/services/auth.py` - Authentication helpers
+- `/app/backend/routes/` - Modular route files (auth, school ready)
 - `/app/frontend/src/pages/Dashboard.jsx` - Child dashboard
 - `/app/frontend/src/pages/StockMarketPage.jsx` - Stock trading UI
 - `/app/frontend/src/pages/MoneyGardenPage.jsx` - Garden/farm UI
 - `/app/frontend/src/pages/ContentManagement.jsx` - Admin content management
-- `/app/frontend/src/pages/SchoolLogin.jsx` - School login page (NEW)
-- `/app/frontend/src/pages/SchoolDashboard.jsx` - School dashboard (NEW)
+- `/app/frontend/src/pages/SchoolLogin.jsx` - School login page
+- `/app/frontend/src/pages/SchoolDashboard.jsx` - School dashboard
 - `/app/frontend/src/pages/AdminPage.jsx` - Admin dashboard with Schools tab
 - `/app/frontend/src/components/NotificationCenter.jsx` - Notification dialog
 
@@ -172,7 +176,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 - [ ] Tutorial system
 
 ### Technical Debt
-- `/app/backend/server.py` - **CRITICAL**: Over 9200 lines, needs modular refactoring (routes, models, services)
+- `/app/backend/server.py` - **PHASE 1 COMPLETE**: Models, services, and route structure created. Phase 2 pending: integrate modular routes
 - `/app/frontend/src/pages/ContentManagement.jsx` - Over 1500 lines, needs component decomposition
 - `/app/frontend/src/pages/TeacherDashboard.jsx` - Large file, student insights modal should be extracted
 - `/app/frontend/src/pages/ParentDashboard.jsx` - Growing file, consider component extraction
