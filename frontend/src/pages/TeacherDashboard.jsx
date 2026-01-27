@@ -49,6 +49,11 @@ export default function TeacherDashboard({ user }) {
   const [showCreateQuest, setShowCreateQuest] = useState(false);
   const [showAnnouncement, setShowAnnouncement] = useState(false);
   const [showStudentProgress, setShowStudentProgress] = useState(null);
+  const [studentInsights, setStudentInsights] = useState(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
+  const [comparisonData, setComparisonData] = useState(null);
+  const [comparisonLoading, setComparisonLoading] = useState(false);
   
   const [classForm, setClassForm] = useState({ name: '', description: '', grade_level: 3 });
   const [rewardForm, setRewardForm] = useState({ student_ids: [], amount: 10, reason: '' });
