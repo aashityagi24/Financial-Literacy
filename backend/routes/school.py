@@ -554,8 +554,12 @@ async def school_get_users(request: Request):
 
 @router.post("/school/upload/teachers")
 async def school_upload_teachers(request: Request):
-    """Bulk upload teachers via CSV data"""
+    """Bulk upload teachers via CSV data with classroom creation
+    CSV columns: name, email, grade, class_name
+    """
     from services.auth import require_school
+    import random
+    import string
     db = get_db()
     school = await require_school(request)
     school_id = school["school_id"]
@@ -564,45 +568,83 @@ async def school_upload_teachers(request: Request):
     csv_data = body.get("data", [])
     
     created = 0
+    classrooms_created = 0
     errors = []
     
     for row in csv_data:
         name = row.get("name", "").strip()
         email = row.get("email", "").strip().lower()
+        grade = row.get("grade")
+        class_name = row.get("class_name", "").strip()
+        
+        if isinstance(grade, str):
+            try:
+                grade = int(grade)
+            except:
+                grade = None
         
         if not name or not email:
             errors.append(f"Missing name or email: {row}")
             continue
         
         existing = await db.users.find_one({"email": email})
+        user_id = None
+        
         if existing:
             if not existing.get("school_id"):
                 await db.users.update_one(
                     {"email": email},
                     {"$set": {"school_id": school_id, "role": "teacher"}}
                 )
+                user_id = existing["user_id"]
                 created += 1
+            elif existing.get("school_id") == school_id:
+                user_id = existing["user_id"]  # Already in school, just create classroom
             else:
                 errors.append(f"User {email} already belongs to another school")
-            continue
+                continue
+        else:
+            user_id = f"user_{uuid.uuid4().hex[:12]}"
+            user_doc = {
+                "user_id": user_id,
+                "email": email,
+                "name": name,
+                "role": "teacher",
+                "school_id": school_id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_by_school": True
+            }
+            await db.users.insert_one(user_doc)
+            created += 1
         
-        user_doc = {
-            "user_id": f"user_{uuid.uuid4().hex[:12]}",
-            "email": email,
-            "name": name,
-            "role": "teacher",
-            "school_id": school_id,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "created_by_school": True
-        }
-        await db.users.insert_one(user_doc)
-        created += 1
+        # Create classroom if class_name provided
+        if class_name and user_id:
+            # Check if classroom already exists
+            existing_classroom = await db.classrooms.find_one({
+                "teacher_id": user_id,
+                "name": class_name
+            })
+            if not existing_classroom:
+                join_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+                classroom_doc = {
+                    "classroom_id": f"class_{uuid.uuid4().hex[:12]}",
+                    "teacher_id": user_id,
+                    "name": class_name,
+                    "grade_level": grade,
+                    "grade": grade,
+                    "join_code": join_code,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.classrooms.insert_one(classroom_doc)
+                classrooms_created += 1
     
-    return {"created": created, "errors": errors}
+    return {"created": created, "classrooms_created": classrooms_created, "errors": errors}
 
 @router.post("/school/upload/students")
 async def school_upload_students(request: Request):
-    """Bulk upload students via CSV data"""
+    """Bulk upload students via CSV data with teacher/classroom linking
+    CSV columns: name, email, grade, teacher_email
+    """
     from services.auth import require_school
     db = get_db()
     school = await require_school(request)
@@ -612,12 +654,14 @@ async def school_upload_students(request: Request):
     csv_data = body.get("data", [])
     
     created = 0
+    linked_to_classroom = 0
     errors = []
     
     for row in csv_data:
         name = row.get("name", "").strip()
         email = row.get("email", "").strip().lower()
         grade = row.get("grade", 0)
+        teacher_email = row.get("teacher_email", "").strip().lower()
         
         if isinstance(grade, str):
             try:
@@ -630,41 +674,76 @@ async def school_upload_students(request: Request):
             continue
         
         existing = await db.users.find_one({"email": email})
+        user_id = None
+        
         if existing:
-            errors.append(f"User {email} already exists")
-            continue
-        
-        user_id = f"user_{uuid.uuid4().hex[:12]}"
-        user_doc = {
-            "user_id": user_id,
-            "email": email,
-            "name": name,
-            "role": "child",
-            "grade": grade,
-            "school_id": school_id,
-            "streak_count": 0,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "created_by_school": True
-        }
-        await db.users.insert_one(user_doc)
-        
-        for account_type in ["spending", "savings", "investing", "gifting"]:
-            wallet_doc = {
-                "account_id": f"acc_{uuid.uuid4().hex[:12]}",
+            if not existing.get("school_id"):
+                await db.users.update_one(
+                    {"email": email},
+                    {"$set": {"school_id": school_id, "role": "child", "grade": grade}}
+                )
+                user_id = existing["user_id"]
+                created += 1
+            elif existing.get("school_id") == school_id:
+                user_id = existing["user_id"]  # Already in school
+            else:
+                errors.append(f"User {email} already belongs to another school")
+                continue
+        else:
+            user_id = f"user_{uuid.uuid4().hex[:12]}"
+            user_doc = {
                 "user_id": user_id,
-                "account_type": account_type,
-                "balance": 100.0 if account_type == "spending" else 0.0,
-                "created_at": datetime.now(timezone.utc).isoformat()
+                "email": email,
+                "name": name,
+                "role": "child",
+                "grade": grade,
+                "school_id": school_id,
+                "streak_count": 0,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_by_school": True
             }
-            await db.wallet_accounts.insert_one(wallet_doc)
+            await db.users.insert_one(user_doc)
+            
+            # Create wallet accounts
+            for account_type in ["spending", "savings", "investing", "gifting"]:
+                wallet_doc = {
+                    "account_id": f"acc_{uuid.uuid4().hex[:12]}",
+                    "user_id": user_id,
+                    "account_type": account_type,
+                    "balance": 100.0 if account_type == "spending" else 0.0,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.wallet_accounts.insert_one(wallet_doc)
+            
+            created += 1
         
-        created += 1
+        # Link to teacher's classroom if teacher_email provided
+        if teacher_email and user_id:
+            teacher = await db.users.find_one({"email": teacher_email, "role": "teacher"})
+            if teacher:
+                classroom = await db.classrooms.find_one({"teacher_id": teacher["user_id"]})
+                if classroom:
+                    existing_enrollment = await db.classroom_students.find_one({
+                        "classroom_id": classroom["classroom_id"],
+                        "student_id": user_id
+                    })
+                    if not existing_enrollment:
+                        await db.classroom_students.insert_one({
+                            "enrollment_id": f"enroll_{uuid.uuid4().hex[:12]}",
+                            "classroom_id": classroom["classroom_id"],
+                            "student_id": user_id,
+                            "status": "active",
+                            "enrolled_at": datetime.now(timezone.utc).isoformat()
+                        })
+                        linked_to_classroom += 1
     
-    return {"created": created, "errors": errors}
+    return {"created": created, "linked_to_classroom": linked_to_classroom, "errors": errors}
 
 @router.post("/school/upload/parents")
 async def school_upload_parents(request: Request):
-    """Bulk upload parents via CSV data"""
+    """Bulk upload parents via CSV data with child linking
+    CSV columns: name, email, child_email
+    """
     from services.auth import require_school
     db = get_db()
     school = await require_school(request)
@@ -674,36 +753,64 @@ async def school_upload_parents(request: Request):
     csv_data = body.get("data", [])
     
     created = 0
+    linked_to_child = 0
     errors = []
     
     for row in csv_data:
         name = row.get("name", "").strip()
         email = row.get("email", "").strip().lower()
+        child_email = row.get("child_email", "").strip().lower()
         
         if not name or not email:
             errors.append(f"Missing name or email: {row}")
             continue
         
         existing = await db.users.find_one({"email": email})
+        user_id = None
+        
         if existing:
             if not existing.get("school_id"):
                 await db.users.update_one(
                     {"email": email},
-                    {"$set": {"school_id": school_id}}
+                    {"$set": {"school_id": school_id, "role": "parent"}}
                 )
+                user_id = existing["user_id"]
                 created += 1
-            continue
+            elif existing.get("school_id") == school_id:
+                user_id = existing["user_id"]  # Already in school
+            else:
+                errors.append(f"User {email} already belongs to another school")
+                continue
+        else:
+            user_id = f"user_{uuid.uuid4().hex[:12]}"
+            user_doc = {
+                "user_id": user_id,
+                "email": email,
+                "name": name,
+                "role": "parent",
+                "school_id": school_id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_by_school": True
+            }
+            await db.users.insert_one(user_doc)
+            created += 1
         
-        user_doc = {
-            "user_id": f"user_{uuid.uuid4().hex[:12]}",
-            "email": email,
-            "name": name,
-            "role": "parent",
-            "school_id": school_id,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "created_by_school": True
-        }
-        await db.users.insert_one(user_doc)
-        created += 1
+        # Link to child if child_email provided
+        if child_email and user_id:
+            child = await db.users.find_one({"email": child_email, "role": "child"})
+            if child:
+                existing_link = await db.parent_child_links.find_one({
+                    "parent_id": user_id,
+                    "child_id": child["user_id"]
+                })
+                if not existing_link:
+                    await db.parent_child_links.insert_one({
+                        "link_id": f"link_{uuid.uuid4().hex[:12]}",
+                        "parent_id": user_id,
+                        "child_id": child["user_id"],
+                        "status": "active",
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    })
+                    linked_to_child += 1
     
-    return {"created": created, "errors": errors}
+    return {"created": created, "linked_to_child": linked_to_child, "errors": errors}
