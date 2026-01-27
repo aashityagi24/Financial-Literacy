@@ -609,43 +609,43 @@ export default function SchoolDashboard() {
                       className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-100"
                       onClick={() => toggleSort('name')}
                     >
-                      Student <SortIcon field="name" />
+                      Student {renderSortIcon("name")}
                     </th>
                     <th 
                       className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-100"
                       onClick={() => toggleSort('grade')}
                     >
-                      Grade <SortIcon field="grade" />
+                      Grade {renderSortIcon("grade")}
                     </th>
                     <th 
                       className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-100"
                       onClick={() => toggleSort('teacher_name')}
                     >
-                      Teacher <SortIcon field="teacher_name" />
+                      Teacher {renderSortIcon("teacher_name")}
                     </th>
                     <th 
                       className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-100"
                       onClick={() => toggleSort('total_balance')}
                     >
-                      Balance <SortIcon field="total_balance" />
+                      Balance {renderSortIcon("total_balance")}
                     </th>
                     <th 
                       className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-100"
                       onClick={() => toggleSort('lessons_completed')}
                     >
-                      Lessons <SortIcon field="lessons_completed" />
+                      Lessons {renderSortIcon("lessons_completed")}
                     </th>
                     <th 
                       className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-100"
                       onClick={() => toggleSort('quests_completed')}
                     >
-                      Quests <SortIcon field="quests_completed" />
+                      Quests {renderSortIcon("quests_completed")}
                     </th>
                     <th 
                       className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-100"
                       onClick={() => toggleSort('streak')}
                     >
-                      Streak <SortIcon field="streak" />
+                      Streak {renderSortIcon("streak")}
                     </th>
                   </tr>
                 </thead>
