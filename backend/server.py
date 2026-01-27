@@ -3073,8 +3073,8 @@ async def submit_quest_answers(quest_id: str, request: Request):
     }
 
 # Parent validates chore completion
-@api_router.post("/child/chores/{chore_id}/request-complete")
-async def request_chore_completion(chore_id: str, request: Request):
+# @api_router.post("/child/chores/{chore_id}/request-complete")  # MOVED to routes/child.py
+async def _legacy_request_chore_completion(chore_id: str, request: Request):
     """Child requests chore completion validation from parent"""
     user = await get_current_user(request)
     if user.get("role") != "child":
