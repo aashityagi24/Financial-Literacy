@@ -1062,13 +1062,15 @@ def generate_invite_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
 # ============== AUTH ROUTES ==============
+# NOTE: These routes have been moved to /routes/auth.py
+# The decorators below are commented out to avoid duplicate route registration
 
 class AdminLoginRequest(BaseModel):
     email: str
     password: str
 
-@api_router.post("/auth/admin-login")
-async def admin_login(login_data: AdminLoginRequest, response: Response):
+# @api_router.post("/auth/admin-login")  # MOVED TO routes/auth.py
+async def _legacy_admin_login(login_data: AdminLoginRequest, response: Response):
     """Admin login with email and password"""
     # Fixed admin credentials
     ADMIN_EMAIL = "admin@learnersplanet.com"
