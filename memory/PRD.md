@@ -146,20 +146,21 @@ A gamified financial literacy learning application for children (K-5) with disti
 - **Users:** Google Social Login
 
 ## Key Files
-- `/app/backend/server.py` - FastAPI backend (modularized, routes integrated)
+- `/app/backend/server.py` - FastAPI backend (modularized - Phase 3 in progress)
 - `/app/backend/core/` - Database & config modules
 - `/app/backend/models/` - All Pydantic models (9 files)
 - `/app/backend/services/auth.py` - Authentication helpers
-- `/app/backend/routes/auth.py` - Auth routes (INTEGRATED)
-- `/app/backend/routes/school.py` - School routes (INTEGRATED)
+- `/app/backend/routes/` - Modular route files:
+  - `auth.py` - 6 endpoints (login, session, profile)
+  - `school.py` - 8 endpoints (school CRUD, dashboard, upload)
+  - `wallet.py` - 3 endpoints (balance, transfer, transactions)
+  - `store.py` - 4 endpoints (items, purchase, shopping list)
+  - `garden.py` - 7 endpoints (farm, plant, water, harvest, sell)
+  - `investments.py` - 3 endpoints (stocks buy/sell)
 - `/app/frontend/src/pages/Dashboard.jsx` - Child dashboard
-- `/app/frontend/src/pages/StockMarketPage.jsx` - Stock trading UI
-- `/app/frontend/src/pages/MoneyGardenPage.jsx` - Garden/farm UI
-- `/app/frontend/src/pages/ContentManagement.jsx` - Admin content management
 - `/app/frontend/src/pages/SchoolLogin.jsx` - School login page
 - `/app/frontend/src/pages/SchoolDashboard.jsx` - School dashboard
-- `/app/frontend/src/pages/AdminPage.jsx` - Admin dashboard with Schools tab
-- `/app/frontend/src/components/NotificationCenter.jsx` - Notification dialog
+- `/app/frontend/src/pages/AdminPage.jsx` - Admin dashboard
 
 ## Pending/Backlog
 
@@ -177,7 +178,6 @@ A gamified financial literacy learning application for children (K-5) with disti
 - [ ] Tutorial system
 
 ### Technical Debt
-- `/app/backend/server.py` - **PHASE 2 COMPLETE**: Auth & School routes migrated. Remaining routes pending.
+- `/app/backend/server.py` - **PHASE 3 IN PROGRESS**: 31 endpoints migrated (~15%). Remaining: quest, teacher, parent, admin, learning, notifications
 - `/app/frontend/src/pages/ContentManagement.jsx` - Over 1500 lines, needs component decomposition
 - `/app/frontend/src/pages/TeacherDashboard.jsx` - Large file, student insights modal should be extracted
-- `/app/frontend/src/pages/ParentDashboard.jsx` - Growing file, consider component extraction
