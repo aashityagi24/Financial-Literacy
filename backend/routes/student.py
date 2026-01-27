@@ -18,7 +18,7 @@ router = APIRouter(prefix="/student", tags=["student"])
 
 @router.post("/join-classroom")
 async def join_classroom(request: Request):
-    """Student joins a classroom with code"""
+    """Student joins a classroom with code - Only 1 classroom allowed"""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
@@ -37,13 +37,29 @@ async def join_classroom(request: Request):
     )
     classroom["teacher"] = teacher
     
-    # Check if already enrolled
+    # Check if already enrolled in this classroom
     existing = await db.classroom_students.find_one({
         "student_id": user["user_id"],
         "classroom_id": classroom["classroom_id"]
     })
     if existing:
         return {"message": "Already enrolled in this classroom", "classroom": classroom}
+    
+    # Check if already enrolled in ANY classroom - only 1 allowed
+    any_enrollment = await db.classroom_students.find_one({
+        "student_id": user["user_id"],
+        "status": "active"
+    })
+    if any_enrollment:
+        # Get existing classroom details
+        existing_classroom = await db.classrooms.find_one(
+            {"classroom_id": any_enrollment["classroom_id"]},
+            {"_id": 0, "name": 1}
+        )
+        raise HTTPException(
+            status_code=400, 
+            detail=f"You are already enrolled in '{existing_classroom.get('name', 'a classroom')}'. Students can only be in one classroom."
+        )
     
     await db.classroom_students.insert_one({
         "enrollment_id": f"enroll_{uuid.uuid4().hex[:12]}",
