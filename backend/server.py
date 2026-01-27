@@ -3535,8 +3535,8 @@ async def _legacy_complete_lesson(lesson_id: str, request: Request):
     
     return {"message": "Lesson completed!", "reward": reward}
 
-@api_router.post("/learn/quiz/submit")
-async def submit_quiz(submission: QuizSubmission, request: Request):
+# @api_router.post("/learn/quiz/submit")  # MOVED
+async def _legacy_submit_quiz(submission: QuizSubmission, request: Request):
     """Submit quiz answers and get results"""
     user = await get_current_user(request)
     
@@ -3588,8 +3588,8 @@ async def submit_quiz(submission: QuizSubmission, request: Request):
         "bonus_coins": bonus
     }
 
-@api_router.get("/learn/books")
-async def get_books(request: Request):
+# @api_router.get("/learn/books")  # MOVED
+async def _legacy_get_books(request: Request):
     """Get books for user's grade"""
     user = await get_current_user(request)
     grade = user.get("grade", 3) or 3
@@ -3601,8 +3601,8 @@ async def get_books(request: Request):
     
     return books
 
-@api_router.get("/learn/activities")
-async def get_activities(request: Request):
+# @api_router.get("/learn/activities")  # MOVED
+async def _legacy_get_activities(request: Request):
     """Get activities for user's grade"""
     user = await get_current_user(request)
     grade = user.get("grade", 3) or 3
@@ -3624,8 +3624,8 @@ async def get_activities(request: Request):
     
     return activities
 
-@api_router.post("/learn/activities/{activity_id}/complete")
-async def complete_activity(activity_id: str, request: Request):
+# @api_router.post("/learn/activities/{activity_id}/complete")  # MOVED
+async def _legacy_complete_activity(activity_id: str, request: Request):
     """Mark an activity as completed"""
     user = await get_current_user(request)
     
@@ -3666,8 +3666,8 @@ async def complete_activity(activity_id: str, request: Request):
     
     return {"message": "Activity completed!", "reward": reward}
 
-@api_router.get("/learn/progress")
-async def get_learning_progress(request: Request):
+# @api_router.get("/learn/progress")  # MOVED
+async def _legacy_get_learning_progress(request: Request):
     """Get overall learning progress for user"""
     user = await get_current_user(request)
     
