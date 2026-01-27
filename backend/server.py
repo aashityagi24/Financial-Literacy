@@ -7632,7 +7632,7 @@ async def _legacy_admin_delete_lesson(lesson_id: str, request: Request):
     
     return {"message": "Lesson deleted"}
 
-@api_router.post("/admin/quizzes")
+# @api_router.post("/admin/quizzes")  # MOVED
 async def admin_create_quiz(quiz: QuizCreate, request: Request):
     """Create a quiz for a lesson (admin only)"""
     admin = await require_admin(request)
@@ -7650,7 +7650,7 @@ async def admin_create_quiz(quiz: QuizCreate, request: Request):
     await db.quizzes.insert_one(quiz_doc)
     return {"message": "Quiz created", "quiz_id": quiz_doc["quiz_id"]}
 
-@api_router.post("/admin/books")
+# @api_router.post("/admin/books")  # MOVED
 async def admin_create_book(book: BookCreate, request: Request):
     """Create a book (admin only)"""
     admin = await require_admin(request)
@@ -7672,7 +7672,7 @@ async def admin_create_book(book: BookCreate, request: Request):
     await db.books.insert_one(book_doc)
     return {"message": "Book created", "book_id": book_doc["book_id"]}
 
-@api_router.delete("/admin/books/{book_id}")
+# @api_router.delete("/admin/books/{book_id}")  # MOVED
 async def admin_delete_book(book_id: str, request: Request):
     """Delete a book (admin only)"""
     await require_admin(request)
@@ -7680,7 +7680,7 @@ async def admin_delete_book(book_id: str, request: Request):
     await db.books.delete_one({"book_id": book_id})
     return {"message": "Book deleted"}
 
-@api_router.post("/admin/activities")
+# @api_router.post("/admin/activities")  # MOVED
 async def admin_create_activity(activity: ActivityCreate, request: Request):
     """Create an activity (admin only)"""
     admin = await require_admin(request)
@@ -7703,7 +7703,7 @@ async def admin_create_activity(activity: ActivityCreate, request: Request):
     await db.activities.insert_one(activity_doc)
     return {"message": "Activity created", "activity_id": activity_doc["activity_id"]}
 
-@api_router.delete("/admin/activities/{activity_id}")
+# @api_router.delete("/admin/activities/{activity_id}")  # MOVED
 async def admin_delete_activity(activity_id: str, request: Request):
     """Delete an activity (admin only)"""
     await require_admin(request)
@@ -8175,7 +8175,7 @@ async def admin_delete_stock(stock_id: str, request: Request):
     
     return {"message": "Stock deleted"}
 
-@api_router.get("/admin/investments/stocks/{stock_id}/history")
+# @api_router.get("/admin/investments/stocks/{stock_id}/history")  # MOVED
 async def admin_get_stock_history(stock_id: str, request: Request, days: int = 30):
     """Get price history for a stock (admin only)"""
     await require_admin(request)
@@ -8187,7 +8187,7 @@ async def admin_get_stock_history(stock_id: str, request: Request, days: int = 3
     
     return history
 
-@api_router.post("/admin/investments/simulate-fluctuation")
+# @api_router.post("/admin/investments/simulate-fluctuation")  # MOVED
 async def admin_simulate_fluctuation(request: Request):
     """Manually trigger stock price fluctuation (admin only)"""
     await require_admin(request)
@@ -8197,7 +8197,7 @@ async def admin_simulate_fluctuation(request: Request):
     
     return {"message": "Stock fluctuation triggered successfully"}
 
-@api_router.post("/admin/investments/simulate-day")
+# @api_router.post("/admin/investments/simulate-day")  # MOVED
 async def admin_simulate_market_day(request: Request):
     """Simulate a full day of market fluctuations - 3 sessions (admin only)"""
     await require_admin(request)
@@ -8215,7 +8215,7 @@ async def admin_simulate_market_day(request: Request):
     
     return {"message": f"Simulated full market day for {stocks_count} stocks (3 sessions)", "date": today}
 
-@api_router.get("/admin/investments/scheduler-logs")
+# @api_router.get("/admin/investments/scheduler-logs")  # MOVED
 async def admin_get_scheduler_logs(request: Request, limit: int = 30):
     """Get scheduler execution logs (admin only)"""
     await require_admin(request)
@@ -8227,7 +8227,7 @@ async def admin_get_scheduler_logs(request: Request, limit: int = 30):
     
     return logs
 
-@api_router.get("/admin/investments/scheduler-status")
+# @api_router.get("/admin/investments/scheduler-status")  # MOVED
 async def admin_get_scheduler_status(request: Request):
     """Get scheduler status and next run time (admin only)"""
     await require_admin(request)
@@ -8692,7 +8692,7 @@ async def admin_delete_stock_news(news_id: str, request: Request):
     await db.stock_news.delete_one({"news_id": news_id})
     return {"message": "News deleted"}
 
-@api_router.post("/admin/stock-news/{news_id}/apply")
+# @api_router.post("/admin/stock-news/{news_id}/apply")  # MOVED
 async def admin_apply_stock_news(news_id: str, request: Request):
     """Apply news effect to stock prices (admin only)"""
     await require_admin(request)
