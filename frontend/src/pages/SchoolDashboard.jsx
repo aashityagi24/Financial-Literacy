@@ -6,7 +6,8 @@ import { API } from '@/App';
 import {
   School, Users, GraduationCap, BookOpen, LogOut, BarChart3, 
   Upload, ChevronDown, ChevronUp, Search, Download, FileText,
-  TrendingUp, Wallet, Target, Award, RefreshCw, X, Check, AlertCircle
+  TrendingUp, Wallet, Target, Award, RefreshCw, X, Check, AlertCircle,
+  UserPlus, Baby
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
