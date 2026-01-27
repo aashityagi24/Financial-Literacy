@@ -133,7 +133,6 @@ async def streak_checkin(request: Request):
     db = get_db()
     user = await get_current_user(request)
     
-    from datetime import date
     today = date.today().isoformat()
     
     last_checkin = user.get("last_checkin_date")
