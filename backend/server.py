@@ -74,6 +74,7 @@ from routes import admin as admin_routes
 from routes import child as child_routes
 from routes import learning as learning_routes
 from routes import uploads as upload_routes
+from routes import stocks as stocks_routes
 
 # Initialize database in modules
 auth_service.init_db(db)
@@ -91,6 +92,7 @@ parent_routes.init_db(db)
 admin_routes.init_db(db)
 child_routes.init_db(db)
 learning_routes.init_db(db)
+stocks_routes.init_db(db)
 
 # Include modular routers
 api_router.include_router(auth_routes.router)
@@ -108,6 +110,7 @@ api_router.include_router(admin_routes.router)
 api_router.include_router(child_routes.router)
 api_router.include_router(learning_routes.router)
 api_router.include_router(upload_routes.router)
+api_router.include_router(stocks_routes.router)
 
 # ============== MODELS ==============
 
