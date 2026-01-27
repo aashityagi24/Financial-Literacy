@@ -58,7 +58,7 @@ async def get_learning_topics(request: Request):
 
 @router.get("/topics/{topic_id}")
 async def get_topic_details(topic_id: str, request: Request):
-    """Get topic with lessons"""
+    """Get topic with lessons and progress"""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
@@ -82,15 +82,15 @@ async def get_topic_details(topic_id: str, request: Request):
             {"_id": 0}
         ).sort("order", 1).to_list(100)
     
-    progress = await db.user_lesson_progress.find(
-        {"user_id": user["user_id"]},
-        {"_id": 0}
-    ).to_list(500)
-    completed_ids = {p["lesson_id"] for p in progress if p.get("completed")}
-    
+    # Add progress info for each lesson
     for lesson in lessons:
         lesson_id = lesson.get("lesson_id") or lesson.get("content_id")
-        lesson["completed"] = lesson_id in completed_ids
+        progress = await db.user_lesson_progress.find_one({
+            "user_id": user["user_id"],
+            "lesson_id": lesson_id
+        }, {"_id": 0})
+        lesson["completed"] = progress["completed"] if progress else False
+        lesson["score"] = progress.get("score") if progress else None
     
     return {"topic": topic, "lessons": lessons}
 
