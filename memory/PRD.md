@@ -71,7 +71,7 @@ A gamified financial literacy learning application for children (K-5) with disti
    - Profile page shows "Teacher: [name]" for each enrolled classroom
    - GET /api/student/classrooms now returns teacher object with name
 
-5. **Default Avatars** ✅
+6. **Default Avatars** ✅
    - Created `/app/frontend/src/utils/avatars.js` with `getDefaultAvatar` utility
    - Generates SVG data URLs with role-based colors:
      - Child: Yellow (#FFD23F)
@@ -79,20 +79,11 @@ A gamified financial literacy learning application for children (K-5) with disti
      - Teacher: Blue (#3D5A80)
      - Admin: Orange (#EE6C4D)
      - School: Dark Blue (#1D3557)
-   - Applied to Dashboard and ProfilePage
 
-6. **School User Creation Enhanced** ✅
+7. **School User Creation Enhanced** ✅
    - Schools can add existing users (without school_id) to their school
-   - Individual user creation with automatic relationships:
-     - Teachers: Optional grade and class_name (creates classroom automatically)
-     - Children: Optional teacher_email or classroom_code (enrolls automatically)
-     - Parents: Optional child_email (links to child automatically)
-
-7. **Bulk Upload Enhanced** ✅
-   - Teachers CSV: name, email, grade (optional), class_name (optional)
-   - Students CSV: name, email, grade, teacher_email (optional - links to teacher's classroom)
-   - Parents CSV: name, email, child_email (optional - links to child)
-   - Returns created count + relationship links count
+   - Individual user creation with automatic relationships
+   - Bulk upload with relationship columns
 
 **Session 2 Bug Fixes & Feature Enhancements:**
 
