@@ -2570,7 +2570,7 @@ async def _legacy_delete_parent_chore(chore_id: str, request: Request):
 # ============== PARENT REWARDS & PENALTIES ==============
 
 @api_router.post("/parent/reward-penalty")
-async def create_reward_penalty(data: RewardPenaltyCreate, request: Request):
+async def _legacy_create_reward_penalty(data: RewardPenaltyCreate, request: Request):
     """Parent gives instant reward or penalty to child"""
     user = await require_parent(request)
     
@@ -5199,8 +5199,8 @@ async def respond_to_gift_request(request_id: str, request: Request):
 
 # ============== PARENT ROUTES ==============
 
-@api_router.get("/parent/dashboard")
-async def parent_dashboard(request: Request):
+# @api_router.get("/parent/dashboard")  # MOVED
+async def _legacy_parent_dashboard(request: Request):
     """Get parent dashboard data"""
     parent = await require_parent(request)
     
@@ -5251,8 +5251,8 @@ async def parent_dashboard(request: Request):
         "pending_links": len(pending_links)
     }
 
-@api_router.post("/parent/link-child")
-async def link_child(link_request: LinkChildRequest, request: Request):
+# @api_router.post("/parent/link-child")  # MOVED
+async def _legacy_link_child(link_request: LinkChildRequest, request: Request):
     """Send a link request to a child account"""
     parent = await require_parent(request)
     
@@ -5365,8 +5365,8 @@ async def get_child_progress(child_id: str, request: Request):
         "streak": child.get("streak_count", 0)
     }
 
-@api_router.get("/parent/children/{child_id}/insights")
-async def get_child_insights(child_id: str, request: Request):
+# @api_router.get("/parent/children/{child_id}/insights")  # MOVED
+async def _legacy_get_child_insights(child_id: str, request: Request):
     """Get comprehensive insights for a child (similar to teacher insights)"""
     parent = await require_parent(request)
     
@@ -5821,7 +5821,7 @@ async def delete_chore(chore_id: str, request: Request):
     return {"message": "Chore deleted"}
 
 @api_router.post("/parent/allowance")
-async def create_allowance(allowance: AllowanceCreate, request: Request):
+async def _legacy_create_allowance(allowance: AllowanceCreate, request: Request):
     """Set up recurring allowance for a child"""
     parent = await require_parent(request)
     
@@ -5873,8 +5873,8 @@ async def create_allowance(allowance: AllowanceCreate, request: Request):
     await db.allowances.insert_one(allowance_doc)
     return {"message": "Allowance set up", "allowance_id": allowance_doc["allowance_id"]}
 
-@api_router.get("/parent/allowances")
-async def get_allowances(request: Request):
+# @api_router.get("/parent/allowances")  # MOVED
+async def _legacy_get_allowances(request: Request):
     """Get parent's allowance settings"""
     parent = await require_parent(request)
     
@@ -5892,8 +5892,8 @@ async def get_allowances(request: Request):
     
     return allowances
 
-@api_router.delete("/parent/allowances/{allowance_id}")
-async def delete_allowance(allowance_id: str, request: Request):
+# @api_router.delete("/parent/allowances/{allowance_id}")  # MOVED
+async def _legacy_delete_allowance(allowance_id: str, request: Request):
     """Cancel an allowance"""
     parent = await require_parent(request)
     
@@ -5962,8 +5962,8 @@ async def give_money_to_child(request: Request):
     
     return {"message": f"Gave ₹{amount} to child"}
 
-@api_router.post("/parent/savings-goals")
-async def create_savings_goal(goal: SavingsGoalCreate, request: Request):
+# @api_router.post("/parent/savings-goals")  # MOVED
+async def _legacy_create_savings_goal(goal: SavingsGoalCreate, request: Request):
     """Create a savings goal for a child"""
     parent = await require_parent(request)
     
