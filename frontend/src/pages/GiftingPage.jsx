@@ -270,14 +270,39 @@ export default function GiftingPage({ user }) {
           )}
         </div>
 
+        {/* Quick Actions */}
+        <div className="flex gap-3 mb-6">
+          <Link 
+            to="/classmates" 
+            className="flex-1 card-playful p-4 flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform"
+          >
+            <div className="w-12 h-12 bg-[#EE6C4D]/20 rounded-xl flex items-center justify-center">
+              <Send className="w-6 h-6 text-[#EE6C4D]" />
+            </div>
+            <div>
+              <p className="font-bold text-[#1D3557]">Send Gift</p>
+              <p className="text-xs text-[#3D5A80]">Send money to classmates</p>
+            </div>
+          </Link>
+          <button 
+            onClick={() => setShowTransferDialog(true)}
+            className="flex-1 card-playful p-4 flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform"
+          >
+            <div className="w-12 h-12 bg-[#06D6A0]/20 rounded-xl flex items-center justify-center">
+              <ArrowRightLeft className="w-6 h-6 text-[#06D6A0]" />
+            </div>
+            <div>
+              <p className="font-bold text-[#1D3557]">Add Funds</p>
+              <p className="text-xs text-[#3D5A80]">Transfer to gifting jar</p>
+            </div>
+          </button>
+        </div>
+
         {/* Content */}
         {activeTab === 'history' && (
           <div className="card-playful p-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-[#1D3557]">Gift Transactions</h2>
-              <Link to="/classmates" className="text-sm text-[#9B5DE5] hover:underline flex items-center gap-1">
-                Send Gift <ChevronRight className="w-4 h-4" />
-              </Link>
             </div>
             
             {giftHistory?.transactions?.length > 0 ? (
