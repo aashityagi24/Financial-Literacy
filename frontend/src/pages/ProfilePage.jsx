@@ -181,9 +181,9 @@ export default function ProfilePage({ user, setUser }) {
         <div className="card-playful p-8 text-center mb-6 animate-bounce-in">
           <div className="relative inline-block">
             <img 
-              src={user?.picture || 'https://via.placeholder.com/120'} 
+              src={user?.picture || getDefaultAvatar(user?.role, user?.name)} 
               alt={user?.name}
-              className="w-24 h-24 rounded-full border-4 border-[#1D3557] mx-auto"
+              className="w-24 h-24 rounded-full border-4 border-[#1D3557] mx-auto object-cover"
             />
             <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#06D6A0] rounded-full border-2 border-[#1D3557] flex items-center justify-center">
               <span className="text-lg">
