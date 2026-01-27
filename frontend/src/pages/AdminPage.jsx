@@ -5,7 +5,7 @@ import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
   Shield, ChevronLeft, ChevronRight, Users, BookOpen, BarChart3,
-  Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus
+  Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus, School
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,14 +28,23 @@ export default function AdminPage({ user }) {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
+  const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showCreateUser, setShowCreateUser] = useState(false);
+  const [showCreateSchool, setShowCreateSchool] = useState(false);
   const [newUserForm, setNewUserForm] = useState({
     name: '',
     email: '',
     role: 'child',
     grade: 0
+  });
+  const [newSchoolForm, setNewSchoolForm] = useState({
+    name: '',
+    username: '',
+    password: '',
+    address: '',
+    contact_email: ''
   });
   
   useEffect(() => {
@@ -49,12 +58,14 @@ export default function AdminPage({ user }) {
   
   const fetchData = async () => {
     try {
-      const [statsRes, usersRes] = await Promise.all([
+      const [statsRes, usersRes, schoolsRes] = await Promise.all([
         axios.get(`${API}/admin/stats`),
-        axios.get(`${API}/admin/users`)
+        axios.get(`${API}/admin/users`),
+        axios.get(`${API}/admin/schools`)
       ]);
       setStats(statsRes.data);
       setUsers(usersRes.data);
+      setSchools(schoolsRes.data);
     } catch (error) {
       toast.error('Failed to load admin data');
     } finally {
@@ -110,6 +121,37 @@ export default function AdminPage({ user }) {
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to create user');
+    }
+  };
+  
+  const handleCreateSchool = async () => {
+    if (!newSchoolForm.name || !newSchoolForm.username || !newSchoolForm.password) {
+      toast.error('Name, username and password are required');
+      return;
+    }
+    
+    try {
+      await axios.post(`${API}/admin/schools`, newSchoolForm);
+      toast.success(`School ${newSchoolForm.name} created`);
+      setShowCreateSchool(false);
+      setNewSchoolForm({ name: '', username: '', password: '', address: '', contact_email: '' });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create school');
+    }
+  };
+  
+  const handleDeleteSchool = async (schoolId, schoolName) => {
+    if (!confirm(`Are you sure you want to delete ${schoolName}? This will unlink all associated users.`)) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API}/admin/schools/${schoolId}`);
+      toast.success(`School ${schoolName} deleted`);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete school');
     }
   };
   
