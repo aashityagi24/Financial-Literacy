@@ -45,10 +45,9 @@ A gamified financial literacy learning application for children (K-5) with disti
 **Session 3 Bug Fixes & Feature Enhancements:**
 
 1. **Join Classroom Fixed** ✅
-   - Fixed ObjectId serialization error by adding `{'_id': 0}` projection
-   - Fixed join_code/invite_code mismatch (backend now uses `join_code` consistently)
-   - Returns teacher info (name, email, picture) in response
-   - Updated existing classrooms via migration script to have join_code
+   - Fixed ObjectId serialization error
+   - Fixed join_code/invite_code mismatch
+   - Returns teacher info in response
 
 2. **Single Classroom Constraint** ✅ (NEW)
    - Children can only be enrolled in ONE classroom
