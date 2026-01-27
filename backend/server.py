@@ -6661,8 +6661,8 @@ async def _legacy_admin_get_all_topics(request: Request):
     
     return parent_topics
 
-@api_router.post("/admin/content/topics")
-async def admin_create_topic(topic: TopicCreate, request: Request):
+# @api_router.post("/admin/content/topics")  # MOVED
+async def _legacy_admin_create_topic(topic: TopicCreate, request: Request):
     """Create a topic or subtopic"""
     admin = await require_admin(request)
     
@@ -6689,8 +6689,8 @@ async def admin_create_topic(topic: TopicCreate, request: Request):
     topic_doc.pop("_id", None)
     return {"message": "Topic created", "topic": topic_doc}
 
-@api_router.put("/admin/content/topics/{topic_id}")
-async def admin_update_topic(topic_id: str, topic: TopicUpdate, request: Request):
+# @api_router.put("/admin/content/topics/{topic_id}")  # MOVED
+async def _legacy_admin_update_topic(topic_id: str, topic: TopicUpdate, request: Request):
     """Update a topic"""
     await require_admin(request)
     
@@ -6742,8 +6742,8 @@ async def admin_reorder_topics(reorder: ReorderRequest, request: Request):
     
     return {"message": "Topics reordered"}
 
-@api_router.post("/admin/content/subtopics/{subtopic_id}/move")
-async def admin_move_subtopic(subtopic_id: str, request: Request):
+# @api_router.post("/admin/content/subtopics/{subtopic_id}/move")  # MOVED
+async def _legacy_admin_move_subtopic(subtopic_id: str, request: Request):
     """Move a subtopic to a different parent topic"""
     await require_admin(request)
     
@@ -6832,8 +6832,8 @@ async def admin_get_all_content_items(request: Request, topic_id: Optional[str] 
     items = await db.content_items.find(query, {"_id": 0}).sort("order", 1).to_list(500)
     return items
 
-@api_router.post("/admin/content/items")
-async def admin_create_content_item(item: ContentItemCreate, request: Request):
+# @api_router.post("/admin/content/items")  # MOVED
+async def _legacy_admin_create_content_item(item: ContentItemCreate, request: Request):
     """Create a content item"""
     admin = await require_admin(request)
     
@@ -6863,8 +6863,8 @@ async def admin_create_content_item(item: ContentItemCreate, request: Request):
     content_doc.pop("_id", None)
     return {"message": "Content created", "content": content_doc}
 
-@api_router.put("/admin/content/items/{content_id}")
-async def admin_update_content_item(content_id: str, item: ContentItemUpdate, request: Request):
+# @api_router.put("/admin/content/items/{content_id}")  # MOVED
+async def _legacy_admin_update_content_item(content_id: str, item: ContentItemUpdate, request: Request):
     """Update a content item"""
     await require_admin(request)
     
@@ -6884,8 +6884,8 @@ async def admin_update_content_item(content_id: str, item: ContentItemUpdate, re
     updated = await db.content_items.find_one({"content_id": content_id}, {"_id": 0})
     return {"message": "Content updated", "content": updated}
 
-@api_router.delete("/admin/content/items/{content_id}")
-async def admin_delete_content_item(content_id: str, request: Request):
+# @api_router.delete("/admin/content/items/{content_id}")  # MOVED
+async def _legacy_admin_delete_content_item(content_id: str, request: Request):
     """Delete a content item"""
     await require_admin(request)
     
@@ -6921,8 +6921,8 @@ async def admin_reorder_content_items(reorder: ReorderRequest, request: Request)
     
     return {"message": "Content items reordered"}
 
-@api_router.post("/admin/content/items/{content_id}/toggle-publish")
-async def admin_toggle_publish(content_id: str, request: Request):
+# @api_router.post("/admin/content/items/{content_id}/toggle-publish")  # MOVED
+async def _legacy_admin_toggle_publish(content_id: str, request: Request):
     """Toggle the publish status of a content item"""
     await require_admin(request)
     
