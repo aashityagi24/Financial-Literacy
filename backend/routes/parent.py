@@ -254,6 +254,8 @@ async def get_child_insights(child_id: str, request: Request):
     if not child:
         raise HTTPException(status_code=404, detail="Child not found")
     
+    grade = child.get("grade", 0) or 0
+    
     # Get wallet data
     wallets = await db.wallet_accounts.find(
         {"user_id": child_id},
