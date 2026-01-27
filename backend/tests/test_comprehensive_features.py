@@ -481,7 +481,7 @@ class TestTeacherStudentInsights:
     def test_01_teacher_gets_student_insights(self, teacher_session):
         """Teacher can get detailed student insights"""
         response = teacher_session.get(
-            f"{BASE_URL}/api/teacher/classrooms/{CLASSROOM_ID}/students/{CHILD_ID}/insights"
+            f"{BASE_URL}/api/teacher/classrooms/{CLASSROOM_ID}/student-insights/{CHILD_ID}"
         )
         assert response.status_code == 200, f"Failed to get insights: {response.text}"
         data = response.json()
