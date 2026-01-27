@@ -254,7 +254,7 @@ async def get_books(request: Request):
 
 @router.get("/activities")
 async def get_activities(request: Request):
-    """Get available activities"""
+    """Get available activities with completion status"""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
@@ -264,6 +264,16 @@ async def get_activities(request: Request):
         {"min_grade": {"$lte": grade}, "max_grade": {"$gte": grade}},
         {"_id": 0}
     ).to_list(100)
+    
+    # Get completed activities
+    completed = await db.user_activity_progress.find(
+        {"user_id": user["user_id"], "completed": True},
+        {"_id": 0}
+    ).to_list(100)
+    completed_ids = {c["activity_id"] for c in completed}
+    
+    for activity in activities:
+        activity["completed"] = activity.get("activity_id") in completed_ids
     
     return activities
 
@@ -278,22 +288,29 @@ async def complete_activity(activity_id: str, request: Request):
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
     
-    existing = await db.activity_completions.find_one({
+    existing = await db.user_activity_progress.find_one({
         "user_id": user["user_id"],
         "activity_id": activity_id
     })
     
-    if existing:
-        return {"message": "Already completed", "coins_earned": 0}
+    if existing and existing.get("completed"):
+        return {"message": "Activity already completed", "coins_earned": 0}
     
     reward_coins = activity.get("reward_coins", 10)
     
-    await db.activity_completions.insert_one({
-        "completion_id": f"comp_{uuid.uuid4().hex[:12]}",
-        "user_id": user["user_id"],
-        "activity_id": activity_id,
-        "completed_at": datetime.now(timezone.utc).isoformat()
-    })
+    if existing:
+        await db.user_activity_progress.update_one(
+            {"user_id": user["user_id"], "activity_id": activity_id},
+            {"$set": {"completed": True, "completed_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    else:
+        await db.user_activity_progress.insert_one({
+            "id": f"uap_{uuid.uuid4().hex[:12]}",
+            "user_id": user["user_id"],
+            "activity_id": activity_id,
+            "completed": True,
+            "completed_at": datetime.now(timezone.utc).isoformat()
+        })
     
     await db.wallet_accounts.update_one(
         {"user_id": user["user_id"], "account_type": "spending"},
