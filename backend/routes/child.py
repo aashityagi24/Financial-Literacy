@@ -319,7 +319,7 @@ async def get_child_announcements(request: Request):
 # Classmates & Gifting
 @router.get("/classmates")
 async def get_classmates(request: Request):
-    """Get classmates list"""
+    """Get classmates list with their stats"""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
@@ -339,13 +339,79 @@ async def get_classmates(request: Request):
     ).to_list(100)
     
     classmates = []
+    seen_ids = set()
+    
     for link in classmate_links:
+        student_id = link["student_id"]
+        if student_id in seen_ids:
+            continue
+        seen_ids.add(student_id)
+        
         student = await db.users.find_one(
-            {"user_id": link["student_id"]},
-            {"_id": 0, "user_id": 1, "name": 1, "avatar": 1}
+            {"user_id": student_id},
+            {"_id": 0}
         )
-        if student and student["user_id"] not in [c["user_id"] for c in classmates]:
-            classmates.append(student)
+        if not student:
+            continue
+        
+        # Get wallet balances
+        wallets = await db.wallet_accounts.find(
+            {"user_id": student_id},
+            {"_id": 0}
+        ).to_list(10)
+        total_balance = sum(w.get("balance", 0) for w in wallets)
+        
+        # Get lessons completed
+        lessons = await db.user_content_progress.count_documents({
+            "user_id": student_id,
+            "completed": True
+        })
+        
+        # Get badges/achievements
+        badges = await db.user_achievements.count_documents({"user_id": student_id})
+        
+        # Get investment performance based on grade
+        grade = student.get("grade", 0) or 0
+        investment_performance = 0
+        
+        if 1 <= grade <= 2:
+            # Garden performance
+            garden_plots = await db.user_garden_plots.find(
+                {"user_id": student_id},
+                {"purchase_price": 1, "total_harvested": 1}
+            ).to_list(50)
+            garden_invested = sum(p.get("purchase_price", 0) for p in garden_plots)
+            garden_earned = sum(p.get("total_harvested", 0) for p in garden_plots)
+            investment_performance = garden_earned - garden_invested
+        elif 3 <= grade <= 5:
+            # Stock performance
+            stock_holdings = await db.user_stock_holdings.find(
+                {"user_id": student_id},
+                {"_id": 0}
+            ).to_list(50)
+            portfolio_value = 0
+            total_cost = 0
+            for holding in stock_holdings:
+                stock = await db.stocks.find_one({"stock_id": holding.get("stock_id")})
+                if stock:
+                    portfolio_value += holding.get("shares", 0) * stock.get("current_price", 0)
+                total_cost += holding.get("total_cost", 0)
+            investment_performance = portfolio_value - total_cost
+        
+        classmates.append({
+            "user_id": student_id,
+            "name": student.get("name", "Unknown"),
+            "avatar": student.get("avatar"),
+            "grade": grade,
+            "streak_count": student.get("streak_count", 0),
+            "total_balance": round(total_balance, 2),
+            "lessons_completed": lessons,
+            "badges": badges,
+            "investment_performance": round(investment_performance, 2)
+        })
+    
+    # Sort by lessons completed
+    classmates.sort(key=lambda x: x["lessons_completed"], reverse=True)
     
     return classmates
 
