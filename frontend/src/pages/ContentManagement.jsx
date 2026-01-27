@@ -376,6 +376,21 @@ export default function ContentManagement({ user }) {
     }
   };
   
+  // Filter helper function - checks if item includes the selected grade
+  const matchesGradeFilter = (item) => {
+    if (gradeFilter === 'all') return true;
+    const grade = parseInt(gradeFilter);
+    return item.min_grade <= grade && item.max_grade >= grade;
+  };
+  
+  // Filtered data based on grade filter
+  const filteredTopics = topics.filter(matchesGradeFilter).map(topic => ({
+    ...topic,
+    subtopics: topic.subtopics?.filter(matchesGradeFilter) || []
+  }));
+  
+  const filteredContent = allContent.filter(matchesGradeFilter);
+  
   // File upload handlers
   const uploadThumbnail = async (file, setForm) => {
     const formData = new FormData();
