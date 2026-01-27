@@ -15,7 +15,8 @@ export default function LandingPage() {
   
   // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
   const handleLogin = () => {
-    const redirectUrl = window.location.origin + '/dashboard';
+    // Use /auth/callback as the redirect target to ensure proper session handling
+    const redirectUrl = window.location.origin + '/auth/callback';
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   };
   
