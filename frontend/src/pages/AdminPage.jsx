@@ -636,6 +636,13 @@ export default function AdminPage({ user }) {
                           <span className="text-gray-400">-</span>
                         )}
                       </td>
+                      <td className="py-3 px-4 text-gray-600 text-sm">
+                        {u.created_at ? new Date(u.created_at).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        }) : '-'}
+                      </td>
                       <td className="py-3 px-4">
                         <button
                           onClick={() => handleDeleteUser(u.user_id, u.name)}
