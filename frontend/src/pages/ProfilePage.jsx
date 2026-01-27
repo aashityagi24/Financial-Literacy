@@ -98,7 +98,7 @@ export default function ProfilePage({ user, setUser }) {
     setSubmitting(true);
     try {
       const res = await axios.post(`${API}/student/join-classroom`, {
-        invite_code: inviteCode.trim().toUpperCase()
+        code: inviteCode.trim().toUpperCase()
       });
       toast.success(res.data.message);
       setShowJoinClass(false);
