@@ -4975,8 +4975,8 @@ class GiftMoneyRequest(BaseModel):
     amount: float
     message: Optional[str] = ""
 
-@api_router.post("/child/gift-money")
-async def gift_money_to_classmate(gift: GiftMoneyRequest, request: Request):
+# @api_router.post("/child/gift-money")  # MOVED to routes/child.py
+async def _legacy_gift_money_to_classmate(gift: GiftMoneyRequest, request: Request):
     """Send money as a gift to a classmate"""
     user = await get_current_user(request)
     
@@ -5051,8 +5051,8 @@ class GiftRequestCreate(BaseModel):
     amount: float
     reason: Optional[str] = ""
 
-@api_router.post("/child/request-gift")
-async def request_gift(req: GiftRequestCreate, request: Request):
+# @api_router.post("/child/request-gift")  # MOVED to routes/child.py
+async def _legacy_request_gift(req: GiftRequestCreate, request: Request):
     """Request money from a classmate"""
     user = await get_current_user(request)
     
