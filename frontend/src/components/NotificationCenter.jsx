@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
@@ -32,7 +32,7 @@ export default function NotificationCenter({ onGiftRequestAction }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnreadOnOpen, setHasUnreadOnOpen] = useState(false);
-  const [pendingNavigation, setPendingNavigation] = useState(null);
+  const pendingNavigationRef = useRef(null);
 
   useEffect(() => {
     const loadNotifications = async () => {
@@ -51,14 +51,16 @@ export default function NotificationCenter({ onGiftRequestAction }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Handle navigation after dialog closes
-  useEffect(() => {
-    if (!isOpen && pendingNavigation) {
-      const path = pendingNavigation;
-      setPendingNavigation(null);
-      navigate(path);
+  // Handle navigation after dialog closes using onOpenChange callback
+  const handleDialogChange = (open) => {
+    setIsOpen(open);
+    if (!open && pendingNavigationRef.current) {
+      const path = pendingNavigationRef.current;
+      pendingNavigationRef.current = null;
+      // Small delay to ensure dialog animation completes
+      setTimeout(() => navigate(path), 100);
     }
-  }, [isOpen, pendingNavigation, navigate]);
+  };
 
   const handleOpen = () => {
     // Track if there are unread notifications when opening
@@ -100,8 +102,8 @@ export default function NotificationCenter({ onGiftRequestAction }) {
     const path = typeInfo.path;
     
     if (path) {
-      // Set pending navigation and close dialog - navigation happens in useEffect
-      setPendingNavigation(path);
+      // Store path in ref and close dialog - navigation happens in handleDialogChange
+      pendingNavigationRef.current = path;
       setIsOpen(false);
     }
   }, []);
