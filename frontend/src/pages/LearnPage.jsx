@@ -72,6 +72,15 @@ export default function LearnPage({ user }) {
     return '/dashboard';
   };
   
+  // Get grade-specific subtitle for teachers
+  const getSubtitle = () => {
+    if (user?.role === 'teacher' && gradeFilter !== null) {
+      return `Viewing ${gradeLabels[parseInt(gradeFilter)] || 'all'} content`;
+    }
+    if (user?.role === 'teacher') return 'Preview learning content';
+    return 'Explore fun money lessons!';
+  };
+  
   return (
     <div className="min-h-screen bg-[#E0FBFC]" data-testid="learn-page">
       {/* Header */}
