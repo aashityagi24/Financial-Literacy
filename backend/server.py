@@ -8575,14 +8575,14 @@ def is_market_open():
 
 # --- Admin Stock Category Endpoints ---
 
-@api_router.get("/admin/stock-categories")
+# @api_router.get("/admin/stock-categories")  # MOVED
 async def admin_get_stock_categories(request: Request):
     """Get all stock categories (admin only)"""
     await require_admin(request)
     categories = await db.stock_categories.find({}, {"_id": 0}).to_list(100)
     return categories
 
-@api_router.post("/admin/stock-categories")
+# @api_router.post("/admin/stock-categories")  # MOVED
 async def admin_create_stock_category(request: Request):
     """Create a stock category (admin only)"""
     await require_admin(request)
@@ -8601,7 +8601,7 @@ async def admin_create_stock_category(request: Request):
     await db.stock_categories.insert_one(category)
     return {"message": "Category created", "category_id": category["category_id"]}
 
-@api_router.put("/admin/stock-categories/{category_id}")
+# @api_router.put("/admin/stock-categories/{category_id}")  # MOVED
 async def admin_update_stock_category(category_id: str, request: Request):
     """Update a stock category (admin only)"""
     await require_admin(request)
@@ -8616,7 +8616,7 @@ async def admin_update_stock_category(category_id: str, request: Request):
     
     return {"message": "Category updated"}
 
-@api_router.delete("/admin/stock-categories/{category_id}")
+# @api_router.delete("/admin/stock-categories/{category_id}")  # MOVED
 async def admin_delete_stock_category(category_id: str, request: Request):
     """Delete a stock category (admin only)"""
     await require_admin(request)
@@ -8631,14 +8631,14 @@ async def admin_delete_stock_category(category_id: str, request: Request):
 
 # --- Admin Stock News Endpoints ---
 
-@api_router.get("/admin/stock-news")
+# @api_router.get("/admin/stock-news")  # MOVED
 async def admin_get_stock_news(request: Request):
     """Get all stock news (admin only)"""
     await require_admin(request)
     news = await db.stock_news.find({}, {"_id": 0}).sort("effective_date", -1).to_list(100)
     return news
 
-@api_router.post("/admin/stock-news")
+# @api_router.post("/admin/stock-news")  # MOVED
 async def admin_create_stock_news(request: Request):
     """Create stock news that affects prices (admin only)"""
     await require_admin(request)
@@ -8666,7 +8666,7 @@ async def admin_create_stock_news(request: Request):
     await db.stock_news.insert_one(news)
     return {"message": "News created", "news_id": news["news_id"]}
 
-@api_router.put("/admin/stock-news/{news_id}")
+# @api_router.put("/admin/stock-news/{news_id}")  # MOVED
 async def admin_update_stock_news(news_id: str, request: Request):
     """Update stock news (admin only)"""
     await require_admin(request)
@@ -8681,7 +8681,7 @@ async def admin_update_stock_news(news_id: str, request: Request):
     
     return {"message": "News updated"}
 
-@api_router.delete("/admin/stock-news/{news_id}")
+# @api_router.delete("/admin/stock-news/{news_id}")  # MOVED
 async def admin_delete_stock_news(news_id: str, request: Request):
     """Delete stock news (admin only)"""
     await require_admin(request)
