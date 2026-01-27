@@ -7052,8 +7052,8 @@ async def _legacy_admin_create_school(data: SchoolCreate, request: Request):
         "message": f"School '{data.name}' created successfully"
     }
 
-@api_router.get("/admin/schools")
-async def admin_get_schools(request: Request):
+# @api_router.get("/admin/schools")  # MOVED TO routes/school.py
+async def _legacy_admin_get_schools(request: Request):
     """Get all schools (admin only)"""
     await require_admin(request)
     
@@ -7072,8 +7072,8 @@ async def admin_get_schools(request: Request):
     
     return schools
 
-@api_router.delete("/admin/schools/{school_id}")
-async def admin_delete_school(school_id: str, request: Request):
+# @api_router.delete("/admin/schools/{school_id}")  # MOVED TO routes/school.py
+async def _legacy_admin_delete_school(school_id: str, request: Request):
     """Delete a school (admin only)"""
     await require_admin(request)
     
@@ -7093,9 +7093,10 @@ async def admin_delete_school(school_id: str, request: Request):
     return {"message": f"School '{school['name']}' deleted"}
 
 # ============== SCHOOL DASHBOARD ==============
+# NOTE: These routes have been moved to /routes/school.py
 
-@api_router.get("/school/dashboard")
-async def get_school_dashboard(request: Request):
+# @api_router.get("/school/dashboard")  # MOVED TO routes/school.py
+async def _legacy_get_school_dashboard(request: Request):
     """Get school dashboard overview"""
     school = await require_school(request)
     school_id = school["school_id"]
