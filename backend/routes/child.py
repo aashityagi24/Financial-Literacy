@@ -271,13 +271,10 @@ async def add_parent(request: Request):
 
 @router.get("/parents")
 async def get_child_parents(request: Request):
-    """Get linked parents"""
+    """Get child's linked parents"""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
-    
-    if user.get("role") != "child":
-        raise HTTPException(status_code=403, detail="Only children can access this")
     
     links = await db.parent_child_links.find(
         {"child_id": user["user_id"], "status": "active"},
@@ -288,7 +285,7 @@ async def get_child_parents(request: Request):
     for link in links:
         parent = await db.users.find_one(
             {"user_id": link["parent_id"]},
-            {"_id": 0, "user_id": 1, "name": 1, "email": 1}
+            {"_id": 0, "user_id": 1, "name": 1, "email": 1, "picture": 1}
         )
         if parent:
             parents.append(parent)
