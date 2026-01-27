@@ -251,22 +251,43 @@ async def submit_quest(quest_id: str, request: Request):
     
     # Check if this is a parent chore (requires approval)
     is_parent_chore = quest.get("creator_type") == "parent"
+    has_questions = len(quest.get("questions", [])) > 0
+    
+    # Check for existing completion
+    existing_completion = await db.quest_completions.find_one({
+        "user_id": user["user_id"],
+        "quest_id": quest_id
+    })
+    
+    # For quests with questions: can only attempt once
+    if has_questions and existing_completion and existing_completion.get("is_completed"):
+        raise HTTPException(status_code=400, detail="Quest already completed. You can only attempt once.")
+    
+    # For parent chores: allow resubmission only if rejected
+    if is_parent_chore and existing_completion:
+        status = existing_completion.get("status")
+        if status == "pending_approval":
+            raise HTTPException(status_code=400, detail="Chore already submitted. Waiting for parent approval.")
+        if status == "approved":
+            raise HTTPException(status_code=400, detail="Chore already approved.")
     
     # Calculate score for quests with questions
     total_points = 0
     earned_points = 0
+    correct_answers = {}
     
     for q in quest.get("questions", []):
         q_id = q.get("question_id")
         points = q.get("points", 0)
         total_points += points
+        correct_answers[q_id] = q.get("correct_answer")
         
         if q_id in answers:
             if answers[q_id] == q.get("correct_answer"):
                 earned_points += points
     
     # For chores/quests with no questions, use the reward amount
-    if not quest.get("questions"):
+    if not has_questions:
         earned_points = quest.get("total_points", quest.get("reward_amount", 0))
         total_points = earned_points
     
