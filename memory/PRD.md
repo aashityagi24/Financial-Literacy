@@ -54,13 +54,20 @@ A gamified financial literacy learning application for children (K-5) with disti
    - Children can only be enrolled in ONE classroom
    - Attempting to join second classroom returns error: "You are already enrolled in '[classroom]'. Students can only be in one classroom."
 
-3. **Quest Display Fixed** ✅ (NEW)
-   - Questions, images, rewards now show properly in quest cards
+3. **Quest Questions Display Fixed** ✅ (NEW)
+   - MCQ, multi-select, true/false, numeric question types now display properly
+   - Questions show: question_text, options, points, image_url
+   - MCQ shows radio buttons, multi-select shows checkboxes with "Select all that apply"
    - Default 5 points per question if not explicitly set
    - Backend calculates total_points on-the-fly for legacy quests
-   - Empty descriptions show "No description provided" gracefully
 
-4. **Teacher Name Display** ✅
+4. **Quest & Announcement Notifications** ✅ (NEW)
+   - Admin quest creation sends `new_quest` notifications to all children in grade range
+   - Teacher quest creation sends `new_quest` notifications to classroom students
+   - Teacher announcements send `announcement` notifications to classroom students
+   - NotificationCenter handles `new_quest` type with Trophy icon → /quests
+
+5. **Teacher Name Display** ✅
    - Profile page shows "Teacher: [name]" for each enrolled classroom
    - GET /api/student/classrooms now returns teacher object with name
 
