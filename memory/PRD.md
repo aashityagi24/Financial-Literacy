@@ -43,8 +43,9 @@ A gamified financial literacy learning application for children (K-5) with disti
 ### Recent Bug Fixes (January 27, 2026)
 - **Fixed:** Dashboard "Active Quests" now correctly hides completed quests
 - **Fixed:** Notification center navigation now works properly (clicking notification closes dialog and navigates)
-- **Fixed:** "Mark all as read" button now visible and functional
+- **Fixed:** "Mark all as read" button now visible, functional, AND persists after page reload
 - **Fixed:** Chore completion now properly sets `is_completed: true` in database
+- **Fixed:** Backend normalizes notification data (handles both old and new field patterns)
 
 ## API Endpoints
 
