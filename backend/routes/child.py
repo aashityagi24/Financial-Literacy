@@ -553,12 +553,12 @@ async def get_child_quests(request: Request):
     # Get user's quest completions
     completions = await db.quest_completions.find(
         {"user_id": user["user_id"]},
-        {"quest_id": 1, "status": 1}
+        {"_id": 0}
     ).to_list(200)
-    completion_map = {c["quest_id"]: c["status"] for c in completions}
+    completion_map = {c["quest_id"]: c.get("status", "completed") for c in completions if c.get("quest_id")}
     
     for quest in quests:
-        quest["user_status"] = completion_map.get(quest["quest_id"], "available")
+        quest["user_status"] = completion_map.get(quest.get("quest_id"), "available")
     
     return quests
 
