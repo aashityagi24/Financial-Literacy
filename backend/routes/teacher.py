@@ -140,12 +140,12 @@ async def get_classroom_details(classroom_id: str, request: Request):
             lessons_completed = await db.user_lesson_progress.count_documents({
                 "user_id": student["user_id"],
                 "completed": True
-            })
+        })
             
             quests_completed = await db.user_quests.count_documents({
                 "user_id": student["user_id"],
                 "completed": True
-            })
+        })
             
             students.append({
                 **student,
@@ -153,7 +153,7 @@ async def get_classroom_details(classroom_id: str, request: Request):
                 "lessons_completed": lessons_completed,
                 "quests_completed": quests_completed,
                 "joined_at": link.get("joined_at")
-            })
+        })
     
     challenges = await db.classroom_challenges.find(
         {"classroom_id": classroom_id},
@@ -176,8 +176,8 @@ async def delete_classroom(classroom_id: str, request: Request):
     result = await db.classrooms.delete_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
-    }, {"_id": 0}
-    })
+    
+})
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Classroom not found")
@@ -197,8 +197,8 @@ async def reward_students(classroom_id: str, reward: ClassroomReward, request: R
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
-    }, {"_id": 0}
-    })
+    
+})
     if not classroom:
         raise HTTPException(status_code=404, detail="Classroom not found")
     
@@ -217,7 +217,7 @@ async def reward_students(classroom_id: str, reward: ClassroomReward, request: R
             "transaction_type": "teacher_reward",
             "description": f"Reward from {teacher.get('name', 'Teacher')}: {reward.reason}",
             "created_at": datetime.now(timezone.utc).isoformat()
-        })
+    })
         
         await db.notifications.insert_one({
             "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
@@ -226,7 +226,7 @@ async def reward_students(classroom_id: str, reward: ClassroomReward, request: R
             "message": f"You received ₹{reward.amount} from {teacher.get('name', 'Teacher')}!",
             "is_read": False,
             "created_at": datetime.now(timezone.utc).isoformat()
-        })
+    })
         
         rewarded.append(student_id)
     
@@ -248,8 +248,8 @@ async def create_challenge(challenge: ChallengeCreate, request: Request):
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
-    }, {"_id": 0}
-    })
+    
+})
     if not classroom:
         raise HTTPException(status_code=404, detail="Classroom not found")
     
@@ -293,8 +293,8 @@ async def delete_challenge(challenge_id: str, request: Request):
     result = await db.classroom_challenges.delete_one({
         "challenge_id": challenge_id,
         "teacher_id": teacher["user_id"]
-    }, {"_id": 0}
-    })
+    
+})
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Challenge not found")
@@ -311,8 +311,8 @@ async def get_student_insights(classroom_id: str, student_id: str, request: Requ
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
-    }, {"_id": 0}
-    })
+    
+})
     if not classroom:
         raise HTTPException(status_code=404, detail="Classroom not found")
     
@@ -352,7 +352,7 @@ async def get_student_insights(classroom_id: str, student_id: str, request: Requ
     lessons_completed = await db.user_content_progress.count_documents({
         "user_id": student_id,
         "completed": True
-    })
+})
     
     # Get chore stats
     all_chores = await db.new_quests.find({
@@ -383,7 +383,7 @@ async def get_student_insights(classroom_id: str, student_id: str, request: Requ
         "is_active": True,
         "min_grade": {"$lte": grade},
         "max_grade": {"$gte": grade}
-    })
+})
     
     # Get achievements
     achievements = await db.user_achievements.find(
@@ -395,11 +395,11 @@ async def get_student_insights(classroom_id: str, student_id: str, request: Requ
     gifts_received = await db.transactions.count_documents({
         "user_id": student_id,
         "transaction_type": "gift_received"
-    })
+})
     gifts_sent = await db.transactions.count_documents({
         "user_id": student_id,
         "transaction_type": "gift_sent"
-    })
+})
     
     gifts_received_total = sum(t.get("amount", 0) for t in transactions if t.get("transaction_type") == "gift_received")
     gifts_sent_total = sum(t.get("amount", 0) for t in transactions if t.get("transaction_type") == "gift_sent")
@@ -550,20 +550,20 @@ async def get_classroom_comparison(classroom_id: str, request: Request):
         lessons = await db.user_content_progress.count_documents({
             "user_id": student_id,
             "completed": True
-        })
+    })
         
         # Get completed quests (admin/teacher)
         quests = await db.quest_completions.count_documents({
             "user_id": student_id,
             "is_completed": True
-        })
+    })
         
         # Get completed chores
         chores = await db.quest_completions.count_documents({
             "user_id": student_id,
             "is_completed": True,
             "status": "approved"
-        })
+    })
         
         # Get garden data
         garden_plots = await db.user_garden_plots.find(
@@ -621,7 +621,7 @@ async def get_classroom_comparison(classroom_id: str, request: Request):
             "gifts_received": gifts_received,
             "gifts_sent": gifts_sent,
             "badges": badges
-        })
+    })
     
     comparison_data.sort(key=lambda x: x["lessons_completed"], reverse=True)
     
@@ -655,7 +655,7 @@ async def create_teacher_quest(request: Request):
         "deadline": body.get("deadline"),
         "is_active": True,
         "created_at": datetime.now(timezone.utc).isoformat()
-    })
+})
     return {"message": "Quest created", "quest_id": quest_id}
 
 @router.get("/quests")
@@ -681,7 +681,7 @@ async def get_teacher_quest(quest_id: str, request: Request):
     quest = await db.new_quests.find_one({
         "quest_id": quest_id,
         "creator_id": teacher["user_id"]
-    }, {"_id": 0}
+    
     }, {"_id": 0})
     if not quest:
         raise HTTPException(status_code=404, detail="Quest not found")
@@ -714,8 +714,8 @@ async def delete_teacher_quest(quest_id: str, request: Request):
     await db.new_quests.delete_one({
         "quest_id": quest_id,
         "creator_id": teacher["user_id"]
-    }, {"_id": 0}
-    })
+    
+})
     return {"message": "Quest deleted"}
 
 # ============== ADDITIONAL TEACHER ROUTES ==============
@@ -736,8 +736,8 @@ async def create_classroom_challenge(classroom_id: str, request: Request):
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
-    }, {"_id": 0}
-    })
+    
+})
     if not classroom:
         raise HTTPException(status_code=404, detail="Classroom not found")
     
@@ -752,7 +752,7 @@ async def create_classroom_challenge(classroom_id: str, request: Request):
         "deadline": body.get("deadline"),
         "is_active": True,
         "created_at": datetime.now(timezone.utc).isoformat()
-    })
+})
     return {"message": "Challenge created", "challenge_id": challenge_id}
 
 @router.post("/challenges/{challenge_id}/complete/{student_id}")
@@ -765,8 +765,8 @@ async def complete_challenge_for_student(challenge_id: str, student_id: str, req
     challenge = await db.classroom_challenges.find_one({
         "challenge_id": challenge_id,
         "teacher_id": teacher["user_id"]
-    }, {"_id": 0}
-    })
+    
+})
     if not challenge:
         raise HTTPException(status_code=404, detail="Challenge not found")
     
@@ -783,7 +783,7 @@ async def complete_challenge_for_student(challenge_id: str, student_id: str, req
         "challenge_id": challenge_id,
         "student_id": student_id,
         "completed_at": datetime.now(timezone.utc).isoformat()
-    })
+})
     
     return {"message": f"Challenge completed, awarded {reward} coins"}
 
@@ -798,8 +798,8 @@ async def create_announcement(classroom_id: str, request: Request):
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
-    }, {"_id": 0}
-    })
+    
+})
     if not classroom:
         raise HTTPException(status_code=404, detail="Classroom not found")
     
@@ -811,7 +811,7 @@ async def create_announcement(classroom_id: str, request: Request):
         "title": body.get("title"),
         "content": body.get("content", ""),
         "created_at": datetime.now(timezone.utc).isoformat()
-    })
+})
     return {"message": "Announcement created", "announcement_id": announcement_id}
 
 @router.get("/classrooms/{classroom_id}/announcements")
@@ -824,8 +824,8 @@ async def get_announcements(classroom_id: str, request: Request):
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
-    }, {"_id": 0}
-    })
+    
+})
     if not classroom:
         raise HTTPException(status_code=404, detail="Classroom not found")
     
@@ -845,8 +845,8 @@ async def delete_announcement(announcement_id: str, request: Request):
     await db.announcements.delete_one({
         "announcement_id": announcement_id,
         "teacher_id": teacher["user_id"]
-    }, {"_id": 0}
-    })
+    
+})
     return {"message": "Announcement deleted"}
 
 @router.get("/students/{student_id}/progress")
@@ -867,7 +867,7 @@ async def get_student_progress(student_id: str, request: Request):
         "student_id": student_id,
         "classroom_id": {"$in": classroom_ids},
         "status": "active"
-    })
+})
     if not enrollment:
         raise HTTPException(status_code=403, detail="Student not in your classroom")
     
@@ -876,10 +876,10 @@ async def get_student_progress(student_id: str, request: Request):
     
     lessons = await db.user_content_progress.count_documents({
         "user_id": student_id, "completed": True
-    })
+})
     quests = await db.quest_completions.count_documents({
         "user_id": student_id, "is_completed": True
-    })
+})
     
     return {
         "student": student,
