@@ -100,9 +100,12 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Parent Dashboard
 - GET /api/parent/dashboard - Get parent overview with linked children
-- GET /api/parent/children/{id}/insights - **NEW** Comprehensive child insights (same as teacher view)
+- GET /api/parent/children/{id}/insights - Comprehensive child insights
 - GET /api/parent/children/{id}/progress - Basic child progress
 - POST /api/parent/chores-new - Create chore for child
+- POST /api/parent/reward-penalty - **NEW** Give instant reward or apply penalty
+- GET /api/parent/reward-penalty - **NEW** Get reward/penalty history
+- DELETE /api/parent/reward-penalty/{id} - **NEW** Delete record
 
 ### Teacher Dashboard
 - GET /api/teacher/dashboard - Get teacher overview
