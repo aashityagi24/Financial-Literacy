@@ -8656,7 +8656,7 @@ async def process_recurring_allowances():
     
     try:
         # Get all active allowances
-        allowances = await db.allowances.find({"is_active": True}).to_list(500)
+        allowances = await db.allowances.find({"active": True}).to_list(500)
         
         processed_count = 0
         total_distributed = 0
