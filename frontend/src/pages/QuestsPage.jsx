@@ -143,15 +143,17 @@ export default function QuestsPage({ user }) {
     // For Q&A quests
     try {
       setSubmitting(true);
-      const res = await axios.post(`${API}/child/quests-new/${selectedQuest.quest_id}/submit`, {
+      const res = await axios.post(`${API}/child/quests/${selectedQuest.quest_id}/submit`, {
         answers
       });
+      
+      // Store results with per-question details
       setResults(res.data);
       
-      if (res.data.earned > 0) {
-        toast.success(`Great job! You earned ₹${res.data.earned}!`);
-      } else if (res.data.already_earned) {
-        toast.info('You already earned from this quest');
+      if (res.data.coins_earned > 0) {
+        toast.success(`Great job! You earned ₹${res.data.coins_earned}!`);
+      } else if (res.data.score === 0 && res.data.total_points > 0) {
+        toast.info('Keep learning! You can try similar quests in the future.');
       }
       
       fetchQuests();
