@@ -114,6 +114,7 @@ async def get_classroom_details(classroom_id: str, request: Request):
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
+    }, {"_id": 0}
     }, {"_id": 0})
     
     if not classroom:
@@ -176,6 +177,7 @@ async def delete_classroom(classroom_id: str, request: Request):
     result = await db.classrooms.delete_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
+    }, {"_id": 0}
     })
     
     if result.deleted_count == 0:
@@ -196,6 +198,7 @@ async def reward_students(classroom_id: str, reward: ClassroomReward, request: R
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
+    }, {"_id": 0}
     })
     if not classroom:
         raise HTTPException(status_code=404, detail="Classroom not found")
@@ -246,6 +249,7 @@ async def create_challenge(challenge: ChallengeCreate, request: Request):
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
+    }, {"_id": 0}
     })
     if not classroom:
         raise HTTPException(status_code=404, detail="Classroom not found")
@@ -290,6 +294,7 @@ async def delete_challenge(challenge_id: str, request: Request):
     result = await db.classroom_challenges.delete_one({
         "challenge_id": challenge_id,
         "teacher_id": teacher["user_id"]
+    }, {"_id": 0}
     })
     
     if result.deleted_count == 0:
@@ -307,6 +312,7 @@ async def get_student_insights(classroom_id: str, student_id: str, request: Requ
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
+    }, {"_id": 0}
     })
     if not classroom:
         raise HTTPException(status_code=404, detail="Classroom not found")
@@ -492,6 +498,7 @@ async def get_classroom_comparison(classroom_id: str, request: Request):
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
+    }, {"_id": 0}
     })
     if not classroom:
         raise HTTPException(status_code=404, detail="Classroom not found")
@@ -676,6 +683,7 @@ async def get_teacher_quest(quest_id: str, request: Request):
     quest = await db.new_quests.find_one({
         "quest_id": quest_id,
         "creator_id": teacher["user_id"]
+    }, {"_id": 0}
     }, {"_id": 0})
     if not quest:
         raise HTTPException(status_code=404, detail="Quest not found")
@@ -708,6 +716,7 @@ async def delete_teacher_quest(quest_id: str, request: Request):
     await db.new_quests.delete_one({
         "quest_id": quest_id,
         "creator_id": teacher["user_id"]
+    }, {"_id": 0}
     })
     return {"message": "Quest deleted"}
 
@@ -729,6 +738,7 @@ async def create_classroom_challenge(classroom_id: str, request: Request):
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
+    }, {"_id": 0}
     })
     if not classroom:
         raise HTTPException(status_code=404, detail="Classroom not found")
@@ -757,6 +767,7 @@ async def complete_challenge_for_student(challenge_id: str, student_id: str, req
     challenge = await db.classroom_challenges.find_one({
         "challenge_id": challenge_id,
         "teacher_id": teacher["user_id"]
+    }, {"_id": 0}
     })
     if not challenge:
         raise HTTPException(status_code=404, detail="Challenge not found")
@@ -789,6 +800,7 @@ async def create_announcement(classroom_id: str, request: Request):
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
+    }, {"_id": 0}
     })
     if not classroom:
         raise HTTPException(status_code=404, detail="Classroom not found")
@@ -814,6 +826,7 @@ async def get_announcements(classroom_id: str, request: Request):
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
+    }, {"_id": 0}
     })
     if not classroom:
         raise HTTPException(status_code=404, detail="Classroom not found")
@@ -834,6 +847,7 @@ async def delete_announcement(announcement_id: str, request: Request):
     await db.announcements.delete_one({
         "announcement_id": announcement_id,
         "teacher_id": teacher["user_id"]
+    }, {"_id": 0}
     })
     return {"message": "Announcement deleted"}
 
