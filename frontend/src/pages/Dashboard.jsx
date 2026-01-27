@@ -336,7 +336,7 @@ export default function Dashboard({ user, setUser }) {
                   switch(type) {
                     case 'spending': return '/store';
                     case 'savings': return '/savings-goals';
-                    case 'gifting': return '/classmates';
+                    case 'gifting': return '/gifting';
                     case 'investing': return grade <= 2 ? '/garden' : '/stock-market';
                     default: return '/wallet';
                   }
