@@ -793,6 +793,253 @@ export default function ParentDashboard({ user }) {
             )}
           </>
         )}
+        
+        {/* Child Insights Modal */}
+        <Dialog open={!!showChildInsights} onOpenChange={() => { setShowChildInsights(null); setChildInsights(null); }}>
+          <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-[#1D3557] flex items-center gap-3" style={{ fontFamily: 'Fredoka' }}>
+                <img 
+                  src={showChildInsights?.picture || `https://api.dicebear.com/7.x/thumbs/svg?seed=${showChildInsights?.name}`} 
+                  alt="" 
+                  className="w-10 h-10 rounded-full border-2 border-[#1D3557]"
+                />
+                {showChildInsights?.name}&apos;s Insights
+              </DialogTitle>
+            </DialogHeader>
+            
+            {insightsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1D3557]"></div>
+                <span className="ml-3 text-[#3D5A80]">Loading insights...</span>
+              </div>
+            ) : childInsights ? (
+              <div className="space-y-6 mt-4">
+                {/* Quick Stats Row */}
+                <div className="grid grid-cols-4 gap-3">
+                  <div className="bg-[#FFD23F]/20 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-[#1D3557]">₹{childInsights.wallet?.total_balance?.toFixed(0)}</p>
+                    <p className="text-xs text-[#3D5A80]">Available Balance</p>
+                  </div>
+                  <div className="bg-[#06D6A0]/20 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-[#1D3557]">{childInsights.learning?.lessons_completed}</p>
+                    <p className="text-xs text-[#3D5A80]">Lessons Done</p>
+                  </div>
+                  <div className="bg-[#EE6C4D]/20 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-[#1D3557]">{childInsights.child?.streak_count || 0}</p>
+                    <p className="text-xs text-[#3D5A80]">Day Streak</p>
+                  </div>
+                  <div className="bg-[#3D5A80]/20 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-[#1D3557]">{childInsights.achievements?.badges_earned || 0}</p>
+                    <p className="text-xs text-[#3D5A80]">Badges</p>
+                  </div>
+                </div>
+
+                {/* Grade & Investment Info */}
+                <div className="bg-[#98C1D9]/20 rounded-xl p-3 flex items-center justify-between">
+                  <span className="text-[#1D3557] font-medium">Grade: {gradeLabels[childInsights.child?.grade] || 'Unknown'}</span>
+                  <span className="text-[#3D5A80] text-sm">
+                    {childInsights.investment_type === 'garden' && '🌱 Money Garden available'}
+                    {childInsights.investment_type === 'stocks' && '📈 Stock Market available'}
+                    {!childInsights.investment_type && '📚 Learning focus (no investments yet)'}
+                  </span>
+                </div>
+
+                {/* Money Jars - Balance & Spent */}
+                <div className="bg-gradient-to-r from-[#FFD23F]/10 to-[#FFEB99]/10 rounded-xl p-4 border-2 border-[#FFD23F]/30">
+                  <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
+                    <Wallet className="w-5 h-5" /> Money Jars (Balance / Spent)
+                  </h4>
+                  <div className="grid grid-cols-4 gap-3">
+                    {childInsights.wallet?.accounts?.map((acc) => {
+                      const isSavings = acc.account_type === 'savings';
+                      const savedInGoals = childInsights.wallet?.savings_in_goals || 0;
+                      
+                      return (
+                        <div key={acc.account_type} className="bg-white rounded-lg p-3 border border-[#1D3557]/10">
+                          <p className="text-xs text-[#3D5A80] capitalize mb-1">{acc.account_type}</p>
+                          <p className="text-lg font-bold text-[#1D3557]">₹{acc.balance?.toFixed(0)}</p>
+                          <p className="text-xs text-[#3D5A80]">available</p>
+                          {isSavings ? (
+                            <p className="text-xs mt-1">
+                              <span className="text-green-600 font-medium">₹{savedInGoals?.toFixed(0)}</span>
+                              <span className="text-[#3D5A80]"> in goals</span>
+                            </p>
+                          ) : (
+                            <p className="text-xs mt-1">
+                              <span className="text-red-500 font-medium">₹{acc.spent?.toFixed(0) || 0}</span>
+                              <span className="text-[#3D5A80]"> spent</span>
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Savings Goals Detail */}
+                  {childInsights.wallet?.savings_goals?.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-[#1D3557]/10">
+                      <p className="text-sm font-medium text-[#1D3557] mb-2">Savings Goals:</p>
+                      <div className="space-y-2">
+                        {childInsights.wallet.savings_goals.map((goal, i) => (
+                          <div key={i} className="flex items-center justify-between text-sm bg-white rounded-lg p-2">
+                            <span className="text-[#3D5A80]">{goal.title}</span>
+                            <span className={goal.completed ? 'text-green-600' : 'text-[#1D3557]'}>
+                              ₹{goal.current} / ₹{goal.target} {goal.completed && '✓'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="mt-3 pt-3 border-t border-[#1D3557]/10 grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-green-500" />
+                      <span className="text-[#3D5A80]">Total Earned: </span>
+                      <span className="font-bold text-green-600">₹{childInsights.transactions?.total_earned?.toFixed(0)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <TrendingDown className="w-4 h-4 text-red-500" />
+                      <span className="text-[#3D5A80]">Total Spent: </span>
+                      <span className="font-bold text-red-600">₹{childInsights.transactions?.total_spent?.toFixed(0)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Chores & Quests */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-[#06D6A0]/10 rounded-xl p-4 border-2 border-[#06D6A0]/30">
+                    <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
+                      <Target className="w-5 h-5" /> Chores (From You)
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80]">Assigned:</span>
+                        <span className="font-bold text-[#1D3557]">{childInsights.chores?.total_assigned}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80] flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-500" /> Completed:</span>
+                        <span className="font-bold text-green-600">{childInsights.chores?.completed}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80] flex items-center gap-1"><Clock className="w-3 h-3 text-yellow-500" /> Pending:</span>
+                        <span className="font-bold text-yellow-600">{childInsights.chores?.pending}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80] flex items-center gap-1"><XCircle className="w-3 h-3 text-red-500" /> Rejected:</span>
+                        <span className="font-bold text-red-600">{childInsights.chores?.rejected}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-[#EE6C4D]/10 rounded-xl p-4 border-2 border-[#EE6C4D]/30">
+                    <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
+                      <Gift className="w-5 h-5" /> Gift Activity
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80]">Gifts Received:</span>
+                        <span className="font-bold text-green-600">{childInsights.gifts?.received_count} (₹{childInsights.gifts?.received_total?.toFixed(0)})</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80]">Gifts Sent:</span>
+                        <span className="font-bold text-[#EE6C4D]">{childInsights.gifts?.sent_count} (₹{childInsights.gifts?.sent_total?.toFixed(0)})</span>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t">
+                        <span className="text-[#3D5A80]">Quests Completed:</span>
+                        <span className="font-bold text-[#1D3557]">{childInsights.quests?.completed}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Investments - Based on Grade */}
+                {childInsights.investment_type === 'garden' && childInsights.garden && (
+                  <div className="bg-green-50 rounded-xl p-4 border-2 border-green-200">
+                    <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
+                      <Sprout className="w-5 h-5 text-green-600" /> Money Garden
+                    </h4>
+                    <div className="grid grid-cols-4 gap-3 text-sm">
+                      <div className="bg-white rounded-lg p-2 text-center">
+                        <p className="text-lg font-bold text-[#1D3557]">{childInsights.garden.plots_owned}</p>
+                        <p className="text-xs text-[#3D5A80]">Plots</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-2 text-center">
+                        <p className="text-lg font-bold text-[#1D3557]">₹{childInsights.garden.total_invested?.toFixed(0)}</p>
+                        <p className="text-xs text-[#3D5A80]">Invested</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-2 text-center">
+                        <p className="text-lg font-bold text-green-600">₹{childInsights.garden.total_earned?.toFixed(0)}</p>
+                        <p className="text-xs text-[#3D5A80]">Earned</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-2 text-center">
+                        <p className={`text-lg font-bold ${childInsights.garden.profit_loss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {childInsights.garden.profit_loss >= 0 ? '+' : ''}₹{childInsights.garden.profit_loss?.toFixed(0)}
+                        </p>
+                        <p className="text-xs text-[#3D5A80]">P/L</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {childInsights.investment_type === 'stocks' && childInsights.stocks && (
+                  <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                    <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
+                      <LineChart className="w-5 h-5 text-blue-600" /> Stock Market
+                    </h4>
+                    <div className="grid grid-cols-4 gap-3 text-sm">
+                      <div className="bg-white rounded-lg p-2 text-center">
+                        <p className="text-lg font-bold text-[#1D3557]">{childInsights.stocks.holdings_count}</p>
+                        <p className="text-xs text-[#3D5A80]">Holdings</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-2 text-center">
+                        <p className="text-lg font-bold text-[#1D3557]">₹{childInsights.stocks.portfolio_value?.toFixed(0)}</p>
+                        <p className="text-xs text-[#3D5A80]">Portfolio</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-2 text-center">
+                        <p className={`text-lg font-bold ${childInsights.stocks.realized_gains >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {childInsights.stocks.realized_gains >= 0 ? '+' : ''}₹{childInsights.stocks.realized_gains?.toFixed(0)}
+                        </p>
+                        <p className="text-xs text-[#3D5A80]">Realized</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-2 text-center">
+                        <p className={`text-lg font-bold ${childInsights.stocks.unrealized_gains >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {childInsights.stocks.unrealized_gains >= 0 ? '+' : ''}₹{childInsights.stocks.unrealized_gains?.toFixed(0)}
+                        </p>
+                        <p className="text-xs text-[#3D5A80]">Unrealized</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Learning Progress */}
+                <div className="bg-[#3D5A80]/10 rounded-xl p-4 border-2 border-[#3D5A80]/30">
+                  <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" /> Learning Progress
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-[#3D5A80]">Lessons Completed:</span>
+                      <span className="font-bold">{childInsights.learning?.lessons_completed} / {childInsights.learning?.total_lessons}</span>
+                    </div>
+                    <Progress 
+                      value={childInsights.learning?.completion_percentage} 
+                      className="h-3"
+                    />
+                    <p className="text-center text-sm font-bold text-[#1D3557]">
+                      {childInsights.learning?.completion_percentage}% Complete
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-[#3D5A80]">
+                No insights available
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
