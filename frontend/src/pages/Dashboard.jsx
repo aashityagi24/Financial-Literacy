@@ -48,7 +48,7 @@ export default function Dashboard({ user, setUser }) {
     try {
       const [walletRes, questsRes, achievementsRes, goalsRes] = await Promise.all([
         axios.get(`${API}/wallet`),
-        axios.get(`${API}/quests`),
+        axios.get(`${API}/child/quests`),
         axios.get(`${API}/achievements`),
         axios.get(`${API}/child/savings-goals`)
       ]);
