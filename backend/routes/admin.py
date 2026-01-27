@@ -114,10 +114,14 @@ async def update_user_role(user_id: str, request: Request):
 
 @router.delete("/users/{user_id}")
 async def delete_user(user_id: str, request: Request):
-    """Delete a user"""
+    """Delete a user and all related data"""
     from services.auth import require_admin
     db = get_db()
-    await require_admin(request)
+    admin = await require_admin(request)
+    
+    # Don't allow deleting yourself
+    if user_id == admin["user_id"]:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
     
     user = await db.users.find_one({"user_id": user_id})
     if not user:
@@ -126,11 +130,31 @@ async def delete_user(user_id: str, request: Request):
     if user.get("role") == "admin":
         raise HTTPException(status_code=403, detail="Cannot delete admin users")
     
+    # Cascading delete - remove all user data
     await db.users.delete_one({"user_id": user_id})
     await db.wallet_accounts.delete_many({"user_id": user_id})
     await db.transactions.delete_many({"user_id": user_id})
+    await db.notifications.delete_many({"user_id": user_id})
+    await db.quest_completions.delete_many({"user_id": user_id})
+    await db.user_content_progress.delete_many({"user_id": user_id})
+    await db.user_achievements.delete_many({"user_id": user_id})
+    await db.farms.delete_many({"user_id": user_id})
+    await db.stock_portfolios.delete_many({"user_id": user_id})
+    await db.savings_goals.delete_many({"child_id": user_id})
+    await db.parent_child_links.delete_many({"$or": [{"parent_id": user_id}, {"child_id": user_id}]})
+    await db.classroom_students.delete_many({"student_id": user_id})
     
-    return {"message": "User deleted"}
+    # If teacher, delete their classrooms
+    if user.get("role") == "teacher":
+        await db.classrooms.delete_many({"teacher_id": user_id})
+    
+    # If parent, delete their chores/allowances
+    if user.get("role") == "parent":
+        await db.parent_chores.delete_many({"parent_id": user_id})
+        await db.allowances.delete_many({"parent_id": user_id})
+        await db.reward_penalties.delete_many({"parent_id": user_id})
+    
+    return {"message": f"User {user.get('name', user_id)} deleted successfully"}
 
 # Stats
 @router.get("/stats")
