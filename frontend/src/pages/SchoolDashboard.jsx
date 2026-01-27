@@ -1030,7 +1030,7 @@ export default function SchoolDashboard() {
                 variant="outline"
                 onClick={() => {
                   setShowAddUserModal(false);
-                  setAddUserForm({ name: '', email: '', grade: '3', parent_email: '', classroom_code: '' });
+                  setAddUserForm({ name: '', email: '', grade: '3', parent_email: '', classroom_code: '', teacher_email: '' });
                 }}
               >
                 Cancel
