@@ -537,6 +537,135 @@ export default function AdminPage({ user }) {
             </div>
           </div>
         )}
+        
+        {/* Schools Tab */}
+        {activeTab === 'schools' && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-800">School Management</h2>
+              <Dialog open={showCreateSchool} onOpenChange={setShowCreateSchool}>
+                <DialogTrigger asChild>
+                  <button 
+                    className="flex items-center gap-2 px-4 py-2 bg-[#1D3557] text-white rounded-lg hover:bg-[#2A4A6B] transition-colors"
+                    data-testid="add-school-btn"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add School
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="bg-white border-2 border-gray-200 rounded-xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-lg font-bold text-gray-800">Create New School</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">School Name *</label>
+                      <Input 
+                        placeholder="e.g., Springfield Elementary" 
+                        value={newSchoolForm.name}
+                        onChange={(e) => setNewSchoolForm({...newSchoolForm, name: e.target.value})}
+                        data-testid="school-name-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+                      <Input 
+                        placeholder="Login username" 
+                        value={newSchoolForm.username}
+                        onChange={(e) => setNewSchoolForm({...newSchoolForm, username: e.target.value})}
+                        data-testid="school-username-input"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">This will be used to login to the school portal</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                      <Input 
+                        type="password"
+                        placeholder="Set a secure password" 
+                        value={newSchoolForm.password}
+                        onChange={(e) => setNewSchoolForm({...newSchoolForm, password: e.target.value})}
+                        data-testid="school-password-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                      <Input 
+                        placeholder="School address (optional)" 
+                        value={newSchoolForm.address}
+                        onChange={(e) => setNewSchoolForm({...newSchoolForm, address: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
+                      <Input 
+                        type="email"
+                        placeholder="admin@school.edu (optional)" 
+                        value={newSchoolForm.contact_email}
+                        onChange={(e) => setNewSchoolForm({...newSchoolForm, contact_email: e.target.value})}
+                      />
+                    </div>
+                    <button
+                      onClick={handleCreateSchool}
+                      className="w-full py-2 bg-[#1D3557] text-white rounded-lg hover:bg-[#2A4A6B] font-medium"
+                      data-testid="create-school-submit"
+                    >
+                      Create School
+                    </button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            
+            {schools.length === 0 ? (
+              <div className="text-center py-12">
+                <School className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium text-gray-600 mb-2">No Schools Yet</h3>
+                <p className="text-gray-500 mb-4">Create your first school to start managing educational institutions</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {schools.map((school) => (
+                  <div 
+                    key={school.school_id} 
+                    className="bg-gradient-to-br from-[#1D3557] to-[#3D5A80] rounded-xl p-5 text-white relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mt-12"></div>
+                    <div className="relative z-10">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                          <School className="w-6 h-6" />
+                        </div>
+                        <button
+                          onClick={() => handleDeleteSchool(school.school_id, school.name)}
+                          className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                          title="Delete school"
+                          data-testid={`delete-school-${school.school_id}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <h3 className="text-lg font-bold mb-1">{school.name}</h3>
+                      <p className="text-white/70 text-sm mb-3">@{school.username}</p>
+                      <div className="flex gap-4 text-sm">
+                        <div className="flex items-center gap-1">
+                          <Users className="w-4 h-4 text-white/70" />
+                          <span>{school.teacher_count || 0} Teachers</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Users className="w-4 h-4 text-white/70" />
+                          <span>{school.student_count || 0} Students</span>
+                        </div>
+                      </div>
+                      {school.contact_email && (
+                        <p className="text-white/60 text-xs mt-2 truncate">{school.contact_email}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </div>
   );
