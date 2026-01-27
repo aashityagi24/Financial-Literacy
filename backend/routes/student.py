@@ -26,9 +26,16 @@ async def join_classroom(request: Request):
     
     classroom_code = body.get("code", "").upper()
     
-    classroom = await db.classrooms.find_one({"join_code": classroom_code})
+    classroom = await db.classrooms.find_one({"join_code": classroom_code}, {"_id": 0})
     if not classroom:
         raise HTTPException(status_code=404, detail="Invalid classroom code")
+    
+    # Get teacher info
+    teacher = await db.users.find_one(
+        {"user_id": classroom.get("teacher_id")},
+        {"_id": 0, "name": 1, "email": 1, "picture": 1}
+    )
+    classroom["teacher"] = teacher
     
     # Check if already enrolled
     existing = await db.classroom_students.find_one({
