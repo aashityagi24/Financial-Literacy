@@ -123,37 +123,40 @@ async def school_login(login_data: SchoolLoginRequest, response: Response):
 @router.post("/session")
 async def create_session(request: Request, response: Response):
     """Exchange session_id from Google OAuth for session data"""
-    import logging
-    logger = logging.getLogger(__name__)
+    print("=" * 50)
+    print("SESSION ENDPOINT CALLED")
+    print("=" * 50)
     
     db = get_db()
     body = await request.json()
     session_id = body.get("session_id")
     
-    logger.info(f"Session validation request received, session_id prefix: {session_id[:20] if session_id else 'None'}...")
+    print(f"Received session_id: {session_id[:30] if session_id else 'None'}...")
     
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id required")
     
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         try:
-            logger.info("Calling Emergent auth validation...")
+            print("Calling Emergent auth validation endpoint...")
             # Use the correct Emergent auth endpoint with X-Session-ID header
             auth_response = await client.get(
                 "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
                 headers={"X-Session-ID": session_id}
             )
-            logger.info(f"Auth validation response: status={auth_response.status_code}, body={auth_response.text[:200] if auth_response.text else 'empty'}")
+            print(f"Auth response status: {auth_response.status_code}")
+            print(f"Auth response body: {auth_response.text[:500] if auth_response.text else 'empty'}")
             
             if auth_response.status_code != 200:
+                print(f"AUTH FAILED: {auth_response.text}")
                 raise HTTPException(status_code=401, detail=f"Invalid session: {auth_response.text}")
             
             user_data = auth_response.json()
-            logger.info(f"User data from auth: email={user_data.get('email')}")
+            print(f"User data received: email={user_data.get('email')}, name={user_data.get('name')}")
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"Auth validation exception: {str(e)}")
+            print(f"AUTH EXCEPTION: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Auth validation failed: {str(e)}")
     
     email = user_data.get("email")
