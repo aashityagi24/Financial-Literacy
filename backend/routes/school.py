@@ -243,6 +243,172 @@ async def get_school_students_comparison(request: Request):
         "count": len(comparison_data)
     }
 
+# ============== SCHOOL INDIVIDUAL USER CREATION ==============
+
+@router.post("/school/users/teacher")
+async def school_create_teacher(request: Request):
+    """Create a single teacher for the school"""
+    from services.auth import require_school
+    db = get_db()
+    school = await require_school(request)
+    school_id = school["school_id"]
+    
+    body = await request.json()
+    name = body.get("name", "").strip()
+    email = body.get("email", "").strip().lower()
+    
+    if not name or not email:
+        raise HTTPException(status_code=400, detail="Name and email are required")
+    
+    existing = await db.users.find_one({"email": email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    user_id = f"user_{uuid.uuid4().hex[:12]}"
+    
+    user_doc = {
+        "user_id": user_id,
+        "email": email,
+        "name": name,
+        "role": "teacher",
+        "school_id": school_id,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    return {"message": "Teacher created successfully", "user_id": user_id, "user": user_doc}
+
+@router.post("/school/users/parent")
+async def school_create_parent(request: Request):
+    """Create a single parent for the school"""
+    from services.auth import require_school
+    db = get_db()
+    school = await require_school(request)
+    school_id = school["school_id"]
+    
+    body = await request.json()
+    name = body.get("name", "").strip()
+    email = body.get("email", "").strip().lower()
+    
+    if not name or not email:
+        raise HTTPException(status_code=400, detail="Name and email are required")
+    
+    existing = await db.users.find_one({"email": email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    user_id = f"user_{uuid.uuid4().hex[:12]}"
+    
+    user_doc = {
+        "user_id": user_id,
+        "email": email,
+        "name": name,
+        "role": "parent",
+        "school_id": school_id,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    return {"message": "Parent created successfully", "user_id": user_id, "user": user_doc}
+
+@router.post("/school/users/child")
+async def school_create_child(request: Request):
+    """Create a single child/student for the school"""
+    from services.auth import require_school
+    db = get_db()
+    school = await require_school(request)
+    school_id = school["school_id"]
+    
+    body = await request.json()
+    name = body.get("name", "").strip()
+    email = body.get("email", "").strip().lower()
+    grade = body.get("grade", 3)
+    parent_email = body.get("parent_email", "").strip().lower()
+    classroom_code = body.get("classroom_code", "").strip().upper()
+    
+    if not name or not email:
+        raise HTTPException(status_code=400, detail="Name and email are required")
+    
+    existing = await db.users.find_one({"email": email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    user_id = f"user_{uuid.uuid4().hex[:12]}"
+    
+    user_doc = {
+        "user_id": user_id,
+        "email": email,
+        "name": name,
+        "role": "child",
+        "grade": grade,
+        "school_id": school_id,
+        "streak_count": 0,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    # Create wallet accounts
+    for account_type in ["spending", "savings", "gifting", "investing"]:
+        await db.wallet_accounts.insert_one({
+            "account_id": f"acc_{uuid.uuid4().hex[:12]}",
+            "user_id": user_id,
+            "account_type": account_type,
+            "balance": 100 if account_type == "spending" else 0,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    # Link to parent if provided
+    if parent_email:
+        parent = await db.users.find_one({"email": parent_email, "role": "parent"})
+        if parent:
+            await db.parent_child_links.insert_one({
+                "link_id": f"link_{uuid.uuid4().hex[:12]}",
+                "parent_id": parent["user_id"],
+                "child_id": user_id,
+                "status": "active",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+    
+    # Join classroom if code provided
+    if classroom_code:
+        classroom = await db.classrooms.find_one({"join_code": classroom_code})
+        if classroom:
+            await db.classroom_students.insert_one({
+                "enrollment_id": f"enroll_{uuid.uuid4().hex[:12]}",
+                "classroom_id": classroom["classroom_id"],
+                "student_id": user_id,
+                "status": "active",
+                "enrolled_at": datetime.now(timezone.utc).isoformat()
+            })
+    
+    return {"message": "Child created successfully", "user_id": user_id, "user": user_doc}
+
+@router.get("/school/users")
+async def school_get_users(request: Request):
+    """Get all users associated with the school"""
+    from services.auth import require_school
+    db = get_db()
+    school = await require_school(request)
+    school_id = school["school_id"]
+    
+    users = await db.users.find(
+        {"school_id": school_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(1000)
+    
+    return {
+        "users": users,
+        "count": len(users),
+        "by_role": {
+            "teachers": sum(1 for u in users if u.get("role") == "teacher"),
+            "parents": sum(1 for u in users if u.get("role") == "parent"),
+            "children": sum(1 for u in users if u.get("role") == "child")
+        }
+    }
+
 # ============== SCHOOL BULK UPLOAD ==============
 
 @router.post("/school/upload/teachers")
