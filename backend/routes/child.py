@@ -220,38 +220,54 @@ async def contribute_to_goal(goal_id: str, request: Request):
 # Parents
 @router.post("/add-parent")
 async def add_parent(request: Request):
-    """Send parent link request"""
+    """Child adds a parent by email (max 2 parents)"""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
     
     if user.get("role") != "child":
-        raise HTTPException(status_code=403, detail="Only children can add parents")
+        raise HTTPException(status_code=400, detail="Only children can add parents")
     
     body = await request.json()
     parent_email = body.get("parent_email", "").lower()
     
-    parent = await db.users.find_one({"email": parent_email, "role": "parent"})
-    if not parent:
-        raise HTTPException(status_code=404, detail="Parent not found")
+    # Check if child already has 2 parents
+    existing_links = await db.parent_child_links.find(
+        {"child_id": user["user_id"], "status": "active"}
+    ).to_list(10)
     
+    if len(existing_links) >= 2:
+        raise HTTPException(status_code=400, detail="You can only have up to 2 parents linked")
+    
+    # Find parent by email
+    parent = await db.users.find_one(
+        {"email": parent_email, "role": "parent"},
+        {"_id": 0}
+    )
+    
+    if not parent:
+        raise HTTPException(status_code=404, detail="Parent account not found. Make sure they signed up as a parent.")
+    
+    # Check if link already exists
     existing = await db.parent_child_links.find_one({
         "parent_id": parent["user_id"],
         "child_id": user["user_id"]
     })
-    if existing:
-        raise HTTPException(status_code=400, detail="Already linked")
     
-    link_doc = {
+    if existing:
+        return {"message": "Already connected to this parent", "parent_name": parent.get("name")}
+    
+    # Create link
+    await db.parent_child_links.insert_one({
         "link_id": f"link_{uuid.uuid4().hex[:12]}",
         "parent_id": parent["user_id"],
         "child_id": user["user_id"],
         "status": "active",
+        "initiated_by": "child",
         "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    await db.parent_child_links.insert_one(link_doc)
+    })
     
-    return {"message": "Parent linked successfully"}
+    return {"message": "Parent added successfully!", "parent_name": parent.get("name")}
 
 @router.get("/parents")
 async def get_child_parents(request: Request):
