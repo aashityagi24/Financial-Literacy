@@ -71,7 +71,10 @@ async def get_stocks_list(request: Request, category_id: str = None):
     if category_id:
         query["category_id"] = category_id
     
-    stocks = await db.admin_stocks.find(query, {"_id": 0}).to_list(100)
+    # Try investment_stocks first, then admin_stocks
+    stocks = await db.investment_stocks.find(query, {"_id": 0}).to_list(100)
+    if not stocks:
+        stocks = await db.admin_stocks.find(query, {"_id": 0}).to_list(100)
     
     for stock in stocks:
         history = stock.get("price_history", [])[-10:]
