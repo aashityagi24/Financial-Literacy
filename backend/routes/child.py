@@ -30,6 +30,14 @@ class GiftRequest(BaseModel):
     amount: float
     message: Optional[str] = None
 
+class CharitableGivingCreate(BaseModel):
+    recipient_name: str  # Organization or person name
+    recipient_type: str  # "organization" or "person"
+    giving_type: str  # "money" or "items"
+    amount: Optional[float] = None  # For money gifts
+    items: Optional[List[dict]] = None  # [{name: "clothes", value: 100}, ...]
+    description: Optional[str] = None
+
 # Chores
 @router.get("/chores")
 async def get_child_chores(request: Request):
