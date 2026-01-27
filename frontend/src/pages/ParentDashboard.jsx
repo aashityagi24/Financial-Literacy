@@ -6,7 +6,8 @@ import { toast } from 'sonner';
 import { 
   Users, ChevronLeft, Plus, Gift, Target, Wallet, 
   Check, Clock, X, ChevronRight, Eye, Calendar, Trash2,
-  School, Megaphone, Store, LogOut, User
+  School, Megaphone, Store, LogOut, User, TrendingUp, TrendingDown,
+  Sprout, LineChart, BookOpen, Award, CheckCircle, XCircle
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import NotificationCenter from '@/components/NotificationCenter';
+
+const gradeLabels = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
 
 export default function ParentDashboard({ user }) {
   const navigate = useNavigate();
