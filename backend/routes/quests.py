@@ -113,7 +113,37 @@ async def create_admin_quest(quest_data: QuestCreate, request: Request):
     }
     
     await db.new_quests.insert_one(quest_doc)
-    return {"quest_id": quest_id, "message": "Quest created successfully"}
+    
+    # Create notifications for all children in the target grade range
+    grade_filter = {}
+    if quest_data.min_grade is not None:
+        grade_filter["grade"] = {"$gte": quest_data.min_grade}
+    if quest_data.max_grade is not None:
+        if "grade" in grade_filter:
+            grade_filter["grade"]["$lte"] = quest_data.max_grade
+        else:
+            grade_filter["grade"] = {"$lte": quest_data.max_grade}
+    
+    grade_filter["role"] = "child"
+    children = await db.users.find(grade_filter, {"_id": 0, "user_id": 1}).to_list(1000)
+    
+    notifications = []
+    for child in children:
+        notifications.append({
+            "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+            "user_id": child["user_id"],
+            "type": "new_quest",
+            "title": f"New Quest: {quest_data.title}",
+            "message": f"A new quest '{quest_data.title}' is available! Earn ₹{total_points} by completing it.",
+            "quest_id": quest_id,
+            "is_read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    if notifications:
+        await db.notifications.insert_many(notifications)
+    
+    return {"quest_id": quest_id, "message": "Quest created successfully", "notifications_sent": len(notifications)}
 
 @router.get("/admin/quests")
 async def get_admin_quests(request: Request):
