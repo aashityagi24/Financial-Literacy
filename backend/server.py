@@ -1420,8 +1420,8 @@ async def _legacy_transfer_money(transaction: TransactionCreate, request: Reques
     
     return {"message": "Transfer successful", "transaction_id": trans_doc["transaction_id"]}
 
-@api_router.get("/wallet/transactions")
-async def get_transactions(request: Request, limit: int = 20):
+# @api_router.get("/wallet/transactions")  # MOVED TO routes/wallet.py
+async def _legacy_get_transactions(request: Request, limit: int = 20):
     """Get recent transactions for current user"""
     user = await get_current_user(request)
     
@@ -1433,9 +1433,10 @@ async def get_transactions(request: Request, limit: int = 20):
     return transactions
 
 # ============== STORE ROUTES ==============
+# NOTE: These routes have been moved to /routes/store.py
 
-@api_router.get("/store/items")
-async def get_store_items(request: Request):
+# @api_router.get("/store/items")  # MOVED TO routes/store.py
+async def _legacy_get_store_items(request: Request):
     """Get available store items for current user's grade"""
     user = await get_current_user(request)
     grade = user.get("grade", 3) or 3
