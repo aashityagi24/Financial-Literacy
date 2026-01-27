@@ -321,17 +321,27 @@ async def get_student_insights(classroom_id: str, student_id: str, request: Requ
         {"_id": 0}
     ).to_list(10)
     
+    total_balance = sum(w.get("balance", 0) for w in wallets)
+    
     # Get savings goals
     savings_goals = await db.savings_goals.find(
         {"child_id": student_id},
         {"_id": 0}
     ).to_list(20)
     
-    # Get recent transactions
+    savings_in_goals = sum(g.get("current_amount", 0) for g in savings_goals)
+    active_goals = [g for g in savings_goals if not g.get("completed")]
+    
+    # Get recent transactions and calculate totals
     transactions = await db.transactions.find(
         {"user_id": student_id},
         {"_id": 0}
-    ).sort("created_at", -1).to_list(20)
+    ).sort("created_at", -1).to_list(100)
+    
+    total_earned = sum(t.get("amount", 0) for t in transactions 
+                      if t.get("transaction_type") in ["reward", "allowance", "gift_received", "chore_reward", "quest_reward", "initial_deposit"])
+    total_spent = sum(t.get("amount", 0) for t in transactions 
+                     if t.get("transaction_type") in ["purchase", "gift_sent"])
     
     # Get learning progress
     lessons_completed = await db.user_content_progress.count_documents({
@@ -339,10 +349,35 @@ async def get_student_insights(classroom_id: str, student_id: str, request: Requ
         "completed": True
     })
     
-    # Get quest completions
-    quests_completed = await db.quest_completions.count_documents({
+    # Get chore stats
+    all_chores = await db.new_quests.find({
+        "child_id": student_id,
+        "creator_type": "parent"
+    }).to_list(100)
+    
+    chore_completions = await db.quest_completions.find({
+        "user_id": student_id
+    }).to_list(200)
+    chore_completion_map = {c.get("quest_id"): c for c in chore_completions}
+    
+    chores_completed = sum(1 for c in all_chores if chore_completion_map.get(c.get("quest_id") or c.get("chore_id"), {}).get("is_completed"))
+    chores_pending = sum(1 for c in all_chores if chore_completion_map.get(c.get("quest_id") or c.get("chore_id"), {}).get("status") == "pending")
+    chores_rejected = sum(1 for c in all_chores if chore_completion_map.get(c.get("quest_id") or c.get("chore_id"), {}).get("status") == "rejected")
+    
+    # Get quest stats (admin/teacher quests)
+    quest_completions = await db.quest_completions.find({
         "user_id": student_id,
         "is_completed": True
+    }).to_list(100)
+    quests_completed = len(quest_completions)
+    
+    # Count all available quests for this student
+    grade = student.get("grade", 3) or 3
+    all_quests = await db.new_quests.count_documents({
+        "creator_type": {"$in": ["admin", "teacher"]},
+        "is_active": True,
+        "min_grade": {"$lte": grade},
+        "max_grade": {"$gte": grade}
     })
     
     # Get achievements
@@ -351,14 +386,71 @@ async def get_student_insights(classroom_id: str, student_id: str, request: Requ
         {"_id": 0}
     ).to_list(50)
     
+    # Get gift stats
+    gifts_received = await db.transactions.count_documents({
+        "user_id": student_id,
+        "transaction_type": "gift_received"
+    })
+    gifts_sent = await db.transactions.count_documents({
+        "user_id": student_id,
+        "transaction_type": "gift_sent"
+    })
+    
+    gifts_received_total = sum(t.get("amount", 0) for t in transactions if t.get("transaction_type") == "gift_received")
+    gifts_sent_total = sum(t.get("amount", 0) for t in transactions if t.get("transaction_type") == "gift_sent")
+    
+    # Get garden/investment data
+    garden_plots = await db.user_garden_plots.find(
+        {"user_id": student_id},
+        {"_id": 0}
+    ).to_list(50)
+    
+    garden_invested = sum(p.get("purchase_price", 0) for p in garden_plots)
+    garden_earned = sum(p.get("total_harvested", 0) for p in garden_plots)
+    
     return {
         "student": student,
-        "wallets": wallets,
-        "savings_goals": savings_goals,
-        "recent_transactions": transactions,
-        "lessons_completed": lessons_completed,
-        "quests_completed": quests_completed,
-        "achievements": achievements
+        "wallet": {
+            "total_balance": total_balance,
+            "accounts": wallets,
+            "savings_in_goals": savings_in_goals,
+            "savings_goals_count": len(active_goals)
+        },
+        "learning": {
+            "lessons_completed": lessons_completed
+        },
+        "transactions": {
+            "total_earned": total_earned,
+            "total_spent": total_spent,
+            "recent": transactions[:20]
+        },
+        "chores": {
+            "total_assigned": len(all_chores),
+            "completed": chores_completed,
+            "pending": chores_pending,
+            "rejected": chores_rejected
+        },
+        "quests": {
+            "total_assigned": all_quests,
+            "completed": quests_completed,
+            "completion_rate": round((quests_completed / all_quests * 100) if all_quests > 0 else 0)
+        },
+        "achievements": {
+            "badges_earned": len(achievements),
+            "list": achievements
+        },
+        "gifts": {
+            "received_count": gifts_received,
+            "received_total": gifts_received_total,
+            "sent_count": gifts_sent,
+            "sent_total": gifts_sent_total
+        },
+        "garden": {
+            "plots_owned": len(garden_plots),
+            "total_invested": garden_invested,
+            "total_earned": garden_earned,
+            "profit_loss": garden_earned - garden_invested
+        }
     }
 
 @router.get("/classrooms/{classroom_id}/comparison")
