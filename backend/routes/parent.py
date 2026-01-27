@@ -413,6 +413,12 @@ async def get_child_insights(child_id: str, request: Request):
             "total_earned": garden_earned,
             "profit_loss": garden_earned - garden_invested
         },
+        "stocks": {
+            "holdings_count": len(stock_holdings),
+            "portfolio_value": portfolio_value,
+            "realized_gains": realized_gains,
+            "unrealized_gains": unrealized_gains
+        },
         "savings_goals": savings_goals
     }
 
