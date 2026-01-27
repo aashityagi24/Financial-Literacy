@@ -64,7 +64,7 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
     setSubmitting(true);
     try {
       await axios.post(`${API}/child/gift-money`, {
-        recipient_id: selectedClassmate.user_id,
+        to_user_id: selectedClassmate.user_id,
         amount: parseFloat(giftForm.amount),
         message: giftForm.message
       });
