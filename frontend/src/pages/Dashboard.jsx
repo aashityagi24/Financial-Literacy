@@ -263,9 +263,9 @@ export default function Dashboard({ user, setUser }) {
               {/* Profile */}
               <Link to="/profile" className="flex items-center gap-2 hover:opacity-80">
                 <img 
-                  src={user?.picture || 'https://via.placeholder.com/40'} 
+                  src={user?.picture || getDefaultAvatar(user?.role, user?.name)} 
                   alt={user?.name} 
-                  className="w-10 h-10 rounded-full border-2 border-[#1D3557]"
+                  className="w-10 h-10 rounded-full border-2 border-[#1D3557] object-cover"
                 />
               </Link>
               
