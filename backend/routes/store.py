@@ -188,8 +188,9 @@ async def get_store_categories(request: Request):
     db = get_db()
     await get_current_user(request)
     
+    # Only return active categories
     categories = await db.admin_store_categories.find(
-        {},
+        {"is_active": True},
         {"_id": 0}
     ).sort("order", 1).to_list(100)
     return categories
@@ -202,21 +203,30 @@ async def get_items_by_category(request: Request, category_id: str = None):
     user = await get_current_user(request)
     grade = user.get("grade", 3) or 3
     
-    # Only filter by grade - is_available defaults to true if not set
+    # Get active categories first
+    active_categories = await db.admin_store_categories.find(
+        {"is_active": True},
+        {"category_id": 1}
+    ).to_list(100)
+    active_category_ids = [c["category_id"] for c in active_categories]
+    
+    # Filter items by grade, availability, and active categories
     query = {
         "min_grade": {"$lte": grade}, 
         "max_grade": {"$gte": grade},
-        "$or": [{"is_available": True}, {"is_available": {"$exists": False}}]
+        "category_id": {"$in": active_category_ids},
+        "$or": [{"is_active": True}, {"is_active": {"$exists": False}}]
     }
     if category_id:
         query["category_id"] = category_id
     
-    items = await db.store_items.find(query, {"_id": 0}).to_list(500)
+    # Use admin_store_items collection which has the actual items
+    items = await db.admin_store_items.find(query, {"_id": 0}).to_list(500)
     
     # Group by category
     by_category = {}
     for item in items:
-        cat_id = item.get("category_id") or item.get("category", "uncategorized")
+        cat_id = item.get("category_id", "uncategorized")
         if cat_id not in by_category:
             by_category[cat_id] = []
         by_category[cat_id].append(item)
