@@ -6158,10 +6158,10 @@ async def _legacy_contribute_to_goal(goal_id: str, request: Request):
         "completed": completed
     }
 
-# ============== FILE UPLOAD ROUTES ==============
+# ============== FILE UPLOAD ROUTES (MIGRATED TO routes/uploads.py) ==============
 
-@api_router.post("/upload/thumbnail")
-async def upload_thumbnail(file: UploadFile = File(...)):
+# @api_router.post("/upload/thumbnail")  # MOVED
+async def _legacy_upload_thumbnail(file: UploadFile = File(...)):
     """Upload a thumbnail image"""
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
@@ -6175,8 +6175,8 @@ async def upload_thumbnail(file: UploadFile = File(...)):
     
     return {"url": f"/api/uploads/thumbnails/{filename}"}
 
-@api_router.post("/upload/pdf")
-async def upload_pdf(file: UploadFile = File(...)):
+# @api_router.post("/upload/pdf")  # MOVED
+async def _legacy_upload_pdf(file: UploadFile = File(...)):
     """Upload a PDF worksheet"""
     if not file.content_type == "application/pdf":
         raise HTTPException(status_code=400, detail="File must be a PDF")
@@ -6189,8 +6189,8 @@ async def upload_pdf(file: UploadFile = File(...)):
     
     return {"url": f"/api/uploads/pdfs/{filename}"}
 
-@api_router.post("/upload/activity")
-async def upload_activity_html(file: UploadFile = File(...)):
+# @api_router.post("/upload/activity")  # MOVED
+async def _legacy_upload_activity_html(file: UploadFile = File(...)):
     """Upload an HTML activity (zip file with index.html and assets)"""
     if not file.filename.endswith(".zip"):
         raise HTTPException(status_code=400, detail="File must be a ZIP archive")
@@ -6234,8 +6234,8 @@ async def upload_activity_html(file: UploadFile = File(...)):
     
     return {"url": f"/api/uploads/activities/{folder_name}/index.html", "folder": folder_name}
 
-@api_router.post("/upload/html")
-async def upload_html_file(file: UploadFile = File(...)):
+# @api_router.post("/upload/html")  # MOVED
+async def _legacy_upload_html_file(file: UploadFile = File(...)):
     """Upload a standalone HTML file (not zipped)"""
     if not file.filename.endswith(".html") and not file.filename.endswith(".htm"):
         raise HTTPException(status_code=400, detail="File must be an HTML file (.html or .htm)")
@@ -6252,8 +6252,8 @@ async def upload_html_file(file: UploadFile = File(...)):
     
     return {"url": f"/api/uploads/activities/{folder_name}/index.html", "folder": folder_name}
 
-@api_router.post("/upload/video")
-async def upload_video_file(file: UploadFile = File(...)):
+# @api_router.post("/upload/video")  # MOVED
+async def _legacy_upload_video_file(file: UploadFile = File(...)):
     """Upload an MP4 video file"""
     allowed_extensions = [".mp4", ".webm", ".mov"]
     file_ext = os.path.splitext(file.filename)[1].lower()
@@ -6271,8 +6271,8 @@ async def upload_video_file(file: UploadFile = File(...)):
     
     return {"url": f"/api/uploads/videos/{filename}"}
 
-@api_router.post("/upload/goal-image")
-async def upload_goal_image(file: UploadFile = File(...)):
+# @api_router.post("/upload/goal-image")  # MOVED
+async def _legacy_upload_goal_image(file: UploadFile = File(...)):
     """Upload an image for a savings goal"""
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
@@ -7884,8 +7884,8 @@ async def seed_learning_content():
 
 # ============== ADMIN STORE MANAGEMENT ==============
 
-@api_router.post("/upload/store-image")
-async def upload_store_image(file: UploadFile = File(...)):
+# @api_router.post("/upload/store-image")  # MOVED
+async def _legacy_upload_store_image(file: UploadFile = File(...)):
     """Upload an image for store items"""
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
@@ -8011,8 +8011,8 @@ async def admin_delete_store_item(item_id: str, request: Request):
 
 # ============== ADMIN INVESTMENT MANAGEMENT ==============
 
-@api_router.post("/upload/investment-image")
-async def upload_investment_image(file: UploadFile = File(...)):
+# @api_router.post("/upload/investment-image")  # MOVED
+async def _legacy_upload_investment_image(file: UploadFile = File(...)):
     """Upload an image for investments (plant images or stock logos)"""
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
