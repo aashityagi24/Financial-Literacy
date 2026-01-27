@@ -56,13 +56,16 @@ export default function StorePage({ user }) {
       
       setCategories(categoriesRes.data || []);
       
-      // Flatten items from all categories
-      const allItems = (itemsRes.data || []).reduce((acc, cat) => {
-        const itemsWithCategory = (cat.items || []).map(item => ({
+      // Flatten items from all categories - API returns {category_id: [items]}
+      const itemsByCategory = itemsRes.data || {};
+      const allItems = Object.entries(itemsByCategory).reduce((acc, [categoryId, categoryItems]) => {
+        // Find category info
+        const category = (categoriesRes.data || []).find(c => c.category_id === categoryId);
+        const itemsWithCategory = (categoryItems || []).map(item => ({
           ...item,
-          category_name: cat.name,
-          category_icon: cat.icon,
-          category_color: cat.color
+          category_name: category?.name || categoryId,
+          category_icon: category?.icon || '📦',
+          category_color: category?.color || '#3D5A80'
         }));
         return [...acc, ...itemsWithCategory];
       }, []);
