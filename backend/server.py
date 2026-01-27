@@ -61,15 +61,27 @@ sys.path.insert(0, str(ROOT_DIR))
 from services import auth as auth_service
 from routes import auth as auth_routes
 from routes import school as school_routes
+from routes import wallet as wallet_routes
+from routes import store as store_routes
+from routes import garden as garden_routes
+from routes import investments as investment_routes
 
 # Initialize database in modules
 auth_service.init_db(db)
 auth_routes.init_db(db)
 school_routes.init_db(db)
+wallet_routes.init_db(db)
+store_routes.init_db(db)
+garden_routes.init_db(db)
+investment_routes.init_db(db)
 
 # Include modular routers
 api_router.include_router(auth_routes.router)
 api_router.include_router(school_routes.router)
+api_router.include_router(wallet_routes.router)
+api_router.include_router(store_routes.router)
+api_router.include_router(garden_routes.router)
+api_router.include_router(investment_routes.router)
 
 # ============== MODELS ==============
 
