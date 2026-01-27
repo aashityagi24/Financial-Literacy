@@ -8753,10 +8753,10 @@ async def admin_apply_stock_news(news_id: str, request: Request):
     
     return {"message": f"News applied to {len(affected_stocks)} stocks", "affected": affected_stocks}
 
-# --- Child Stock Market Endpoints ---
+# --- Child Stock Market Endpoints (MIGRATED TO routes/stocks.py) ---
 
-@api_router.get("/stocks/market-status")
-async def get_market_status(request: Request):
+# @api_router.get("/stocks/market-status")  # MOVED
+async def _legacy_get_market_status(request: Request):
     """Get current market status and hours (IST)"""
     user = await get_current_user(request)
     
