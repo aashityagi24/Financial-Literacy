@@ -353,10 +353,7 @@ export default function ParentDashboard({ user }) {
                       className="card-playful p-5"
                       style={{ animationDelay: `${index * 0.05}s` }}
                     >
-                      <div 
-                        className="flex items-center gap-4 cursor-pointer hover:opacity-90"
-                        onClick={() => fetchChildProgress(child.user_id)}
-                      >
+                      <div className="flex items-center gap-4">
                         <img 
                           src={child.picture || 'https://via.placeholder.com/50'} 
                           alt={child.name}
@@ -364,7 +361,8 @@ export default function ParentDashboard({ user }) {
                         />
                         <div className="flex-1">
                           <h3 className="font-bold text-[#1D3557] text-lg">{child.name}</h3>
-                          <div className="flex items-center gap-4 text-sm text-[#3D5A80]">
+                          <p className="text-xs text-[#3D5A80]">{gradeLabels[child.grade] || 'Unknown Grade'}</p>
+                          <div className="flex items-center gap-4 text-sm text-[#3D5A80] mt-1">
                             <span>💰 ₹{child.total_balance?.toFixed(0)}</span>
                             <span>📚 {child.lessons_completed}/{child.total_lessons}</span>
                             {child.pending_chores > 0 && (
@@ -375,7 +373,14 @@ export default function ParentDashboard({ user }) {
                           </div>
                           <Progress value={(child.lessons_completed / (child.total_lessons || 1)) * 100} className="h-2 mt-2" />
                         </div>
-                        <ChevronRight className="w-5 h-5 text-[#3D5A80]" />
+                        <button
+                          onClick={() => fetchChildInsights(child)}
+                          className="p-2 rounded-lg hover:bg-[#E0FBFC] transition-colors"
+                          data-testid={`view-child-insights-${child.user_id}`}
+                          title="View detailed insights"
+                        >
+                          <Eye className="w-5 h-5 text-[#3D5A80]" />
+                        </button>
                       </div>
                       
                       {/* Child's Classroom Section */}
