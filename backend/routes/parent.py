@@ -338,7 +338,7 @@ async def get_child_insights(child_id: str, request: Request):
     gifts_received_total = sum(t.get("amount", 0) for t in transactions if t.get("transaction_type") == "gift_received")
     gifts_sent_total = sum(t.get("amount", 0) for t in transactions if t.get("transaction_type") == "gift_sent")
     
-    # Get garden/investment data
+    # Get garden/investment data (for grades 1-2)
     garden_plots = await db.user_garden_plots.find(
         {"user_id": child_id},
         {"_id": 0}
@@ -346,6 +346,29 @@ async def get_child_insights(child_id: str, request: Request):
     
     garden_invested = sum(p.get("purchase_price", 0) for p in garden_plots)
     garden_earned = sum(p.get("total_harvested", 0) for p in garden_plots)
+    
+    # Get stock holdings (for grades 3-5)
+    stock_holdings = await db.user_stock_holdings.find(
+        {"user_id": child_id},
+        {"_id": 0}
+    ).to_list(50)
+    
+    # Calculate portfolio value and gains
+    portfolio_value = 0
+    total_cost_basis = 0
+    for holding in stock_holdings:
+        # Get current stock price
+        stock = await db.stocks.find_one({"stock_id": holding.get("stock_id")})
+        current_price = stock.get("current_price", 0) if stock else 0
+        shares = holding.get("shares", 0)
+        portfolio_value += shares * current_price
+        total_cost_basis += holding.get("total_cost", 0)
+    
+    # Get realized gains from stock sale transactions
+    stock_sales = [t for t in transactions if t.get("transaction_type") == "stock_sale"]
+    realized_gains = sum(t.get("profit", 0) for t in stock_sales)
+    
+    unrealized_gains = portfolio_value - total_cost_basis
     
     return {
         "child": child,
