@@ -1304,14 +1304,14 @@ async def _legacy_create_session(request: Request, response: Response):
     
     return {"user": user, "session_token": session_token}
 
-@api_router.get("/auth/me")
-async def get_me(request: Request):
+# @api_router.get("/auth/me")  # MOVED TO routes/auth.py
+async def _legacy_get_me(request: Request):
     """Get current authenticated user"""
     user = await get_current_user(request)
     return user
 
-@api_router.post("/auth/logout")
-async def logout(request: Request, response: Response):
+# @api_router.post("/auth/logout")  # MOVED TO routes/auth.py
+async def _legacy_logout(request: Request, response: Response):
     """Logout current user"""
     session_token = await get_session_from_cookie(request)
     if not session_token:
@@ -1323,8 +1323,8 @@ async def logout(request: Request, response: Response):
     response.delete_cookie(key="session_token", path="/")
     return {"message": "Logged out successfully"}
 
-@api_router.put("/auth/profile")
-async def update_profile(update: UserUpdate, request: Request):
+# @api_router.put("/auth/profile")  # MOVED TO routes/auth.py
+async def _legacy_update_profile(update: UserUpdate, request: Request):
     """Update user profile (role, grade, avatar)"""
     user = await get_current_user(request)
     
