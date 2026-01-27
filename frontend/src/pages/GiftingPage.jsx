@@ -326,7 +326,9 @@ export default function GiftingPage({ user }) {
                         </div>
                         <div>
                           <p className="font-bold text-[#1D3557]">
-                            {trans.transaction_type === 'gift_sent' ? 'Sent' : 'Received'}
+                            {trans.transaction_type === 'gift_sent' 
+                              ? `Sent to ${trans.to_user_name || 'Friend'}` 
+                              : `From ${trans.from_user_name || 'Friend'}`}
                           </p>
                           <p className="text-xs text-[#3D5A80]">{trans.description}</p>
                         </div>
