@@ -6998,6 +6998,470 @@ async def admin_create_user(request: Request):
         "message": f"User {name} created successfully"
     }
 
+# ============== ADMIN SCHOOL MANAGEMENT ==============
+
+@api_router.post("/admin/schools")
+async def admin_create_school(data: SchoolCreate, request: Request):
+    """Create a new school (admin only)"""
+    import hashlib
+    await require_admin(request)
+    
+    # Check if username already exists
+    existing = await db.schools.find_one({"username": data.username})
+    if existing:
+        raise HTTPException(status_code=400, detail="Username already taken")
+    
+    school_id = f"school_{uuid.uuid4().hex[:12]}"
+    password_hash = hashlib.sha256(data.password.encode()).hexdigest()
+    
+    school_doc = {
+        "school_id": school_id,
+        "name": data.name,
+        "username": data.username,
+        "password_hash": password_hash,
+        "address": data.address,
+        "contact_email": data.contact_email,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.schools.insert_one(school_doc)
+    
+    return {
+        "school_id": school_id,
+        "message": f"School '{data.name}' created successfully"
+    }
+
+@api_router.get("/admin/schools")
+async def admin_get_schools(request: Request):
+    """Get all schools (admin only)"""
+    await require_admin(request)
+    
+    schools = await db.schools.find({}, {"_id": 0, "password_hash": 0}).to_list(100)
+    
+    # Add stats for each school
+    for school in schools:
+        school["teacher_count"] = await db.users.count_documents({
+            "school_id": school["school_id"],
+            "role": "teacher"
+        })
+        school["student_count"] = await db.users.count_documents({
+            "school_id": school["school_id"],
+            "role": "child"
+        })
+    
+    return schools
+
+@api_router.delete("/admin/schools/{school_id}")
+async def admin_delete_school(school_id: str, request: Request):
+    """Delete a school (admin only)"""
+    await require_admin(request)
+    
+    school = await db.schools.find_one({"school_id": school_id})
+    if not school:
+        raise HTTPException(status_code=404, detail="School not found")
+    
+    # Remove school_id from all users
+    await db.users.update_many(
+        {"school_id": school_id},
+        {"$unset": {"school_id": ""}}
+    )
+    
+    # Delete school
+    await db.schools.delete_one({"school_id": school_id})
+    
+    return {"message": f"School '{school['name']}' deleted"}
+
+# ============== SCHOOL DASHBOARD ==============
+
+@api_router.get("/school/dashboard")
+async def get_school_dashboard(request: Request):
+    """Get school dashboard overview"""
+    school = await require_school(request)
+    school_id = school["school_id"]
+    
+    # Get teachers
+    teachers = await db.users.find(
+        {"school_id": school_id, "role": "teacher"},
+        {"_id": 0, "password": 0}
+    ).to_list(500)
+    
+    # Get students
+    students = await db.users.find(
+        {"school_id": school_id, "role": "child"},
+        {"_id": 0, "password": 0}
+    ).to_list(1000)
+    
+    # Get classrooms for this school's teachers
+    teacher_ids = [t["user_id"] for t in teachers]
+    classrooms = await db.classrooms.find(
+        {"teacher_id": {"$in": teacher_ids}},
+        {"_id": 0}
+    ).to_list(500)
+    
+    # Build teacher info with classrooms
+    teacher_classroom_map = {}
+    for classroom in classrooms:
+        tid = classroom["teacher_id"]
+        if tid not in teacher_classroom_map:
+            teacher_classroom_map[tid] = []
+        teacher_classroom_map[tid].append(classroom)
+    
+    for teacher in teachers:
+        teacher["classrooms"] = teacher_classroom_map.get(teacher["user_id"], [])
+        teacher["student_count"] = sum(len(c.get("students", [])) for c in teacher["classrooms"])
+    
+    # Get student stats
+    student_ids = [s["user_id"] for s in students]
+    
+    # Get wallet balances
+    wallets = await db.wallet_accounts.find(
+        {"user_id": {"$in": student_ids}},
+        {"_id": 0}
+    ).to_list(5000)
+    
+    wallet_map = {}
+    for w in wallets:
+        uid = w["user_id"]
+        if uid not in wallet_map:
+            wallet_map[uid] = 0
+        wallet_map[uid] += w.get("balance", 0)
+    
+    # Get lesson completions
+    progress = await db.user_content_progress.find(
+        {"user_id": {"$in": student_ids}, "completed": True},
+        {"_id": 0, "user_id": 1}
+    ).to_list(10000)
+    
+    lesson_map = {}
+    for p in progress:
+        uid = p["user_id"]
+        lesson_map[uid] = lesson_map.get(uid, 0) + 1
+    
+    # Build student list with stats
+    for student in students:
+        student["total_balance"] = round(wallet_map.get(student["user_id"], 0), 2)
+        student["lessons_completed"] = lesson_map.get(student["user_id"], 0)
+        # Find teacher
+        for classroom in classrooms:
+            if student["user_id"] in [s.get("student_id") for s in await db.classroom_students.find({"classroom_id": classroom["classroom_id"]}).to_list(100)]:
+                student["teacher_name"] = next((t["name"] for t in teachers if t["user_id"] == classroom["teacher_id"]), "Unknown")
+                student["classroom_name"] = classroom["name"]
+                break
+    
+    return {
+        "school": {
+            "school_id": school["school_id"],
+            "name": school["name"]
+        },
+        "stats": {
+            "total_teachers": len(teachers),
+            "total_students": len(students),
+            "total_classrooms": len(classrooms)
+        },
+        "teachers": teachers,
+        "students": students
+    }
+
+@api_router.get("/school/students/comparison")
+async def get_school_students_comparison(request: Request):
+    """Get comparison data for all students in the school"""
+    school = await require_school(request)
+    school_id = school["school_id"]
+    
+    # Get all students
+    students = await db.users.find(
+        {"school_id": school_id, "role": "child"},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    if not students:
+        return {"students": [], "count": 0}
+    
+    # Get teachers for mapping
+    teachers = await db.users.find(
+        {"school_id": school_id, "role": "teacher"},
+        {"_id": 0, "user_id": 1, "name": 1}
+    ).to_list(500)
+    teacher_map = {t["user_id"]: t["name"] for t in teachers}
+    
+    # Get classrooms
+    classrooms = await db.classrooms.find(
+        {"teacher_id": {"$in": list(teacher_map.keys())}},
+        {"_id": 0}
+    ).to_list(500)
+    
+    # Build student-teacher mapping via classroom_students
+    student_teacher_map = {}
+    for classroom in classrooms:
+        links = await db.classroom_students.find(
+            {"classroom_id": classroom["classroom_id"]},
+            {"_id": 0}
+        ).to_list(100)
+        for link in links:
+            student_teacher_map[link["student_id"]] = {
+                "teacher_name": teacher_map.get(classroom["teacher_id"], "Unknown"),
+                "classroom_name": classroom["name"]
+            }
+    
+    comparison_data = []
+    
+    for student in students:
+        student_id = student["user_id"]
+        
+        # Wallet balance
+        wallets = await db.wallet_accounts.find(
+            {"user_id": student_id},
+            {"_id": 0}
+        ).to_list(10)
+        total_balance = sum(w.get("balance", 0) for w in wallets)
+        
+        # Lessons completed
+        lessons = await db.user_content_progress.count_documents({
+            "user_id": student_id,
+            "completed": True
+        })
+        
+        # Quests completed
+        quests = await db.quest_completions.count_documents({
+            "user_id": student_id,
+            "is_completed": True
+        })
+        
+        # Get teacher info
+        teacher_info = student_teacher_map.get(student_id, {"teacher_name": "Unassigned", "classroom_name": "-"})
+        
+        comparison_data.append({
+            "student_id": student_id,
+            "name": student.get("name", "Unknown"),
+            "email": student.get("email"),
+            "grade": student.get("grade"),
+            "streak": student.get("streak_count", 0),
+            "total_balance": round(total_balance, 2),
+            "lessons_completed": lessons,
+            "quests_completed": quests,
+            "teacher_name": teacher_info["teacher_name"],
+            "classroom_name": teacher_info["classroom_name"]
+        })
+    
+    # Sort by lessons completed descending
+    comparison_data.sort(key=lambda x: x["lessons_completed"], reverse=True)
+    
+    return {
+        "students": comparison_data,
+        "count": len(comparison_data)
+    }
+
+# ============== SCHOOL BULK UPLOAD ==============
+
+@api_router.post("/school/upload/teachers")
+async def school_upload_teachers(request: Request):
+    """Bulk upload teachers via CSV data"""
+    school = await require_school(request)
+    school_id = school["school_id"]
+    
+    body = await request.json()
+    csv_data = body.get("data", [])  # List of {name, email}
+    
+    created = 0
+    errors = []
+    
+    for row in csv_data:
+        name = row.get("name", "").strip()
+        email = row.get("email", "").strip().lower()
+        
+        if not name or not email:
+            errors.append(f"Missing name or email: {row}")
+            continue
+        
+        # Check if user exists
+        existing = await db.users.find_one({"email": email})
+        if existing:
+            # Update school_id if not set
+            if not existing.get("school_id"):
+                await db.users.update_one(
+                    {"email": email},
+                    {"$set": {"school_id": school_id, "role": "teacher"}}
+                )
+                created += 1
+            else:
+                errors.append(f"User already exists: {email}")
+            continue
+        
+        # Create user
+        user_id = f"user_{uuid.uuid4().hex[:12]}"
+        await db.users.insert_one({
+            "user_id": user_id,
+            "email": email,
+            "name": name,
+            "role": "teacher",
+            "school_id": school_id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by_school": True
+        })
+        created += 1
+    
+    return {
+        "created": created,
+        "errors": errors,
+        "message": f"Created {created} teachers"
+    }
+
+@api_router.post("/school/upload/students")
+async def school_upload_students(request: Request):
+    """Bulk upload students via CSV data"""
+    school = await require_school(request)
+    school_id = school["school_id"]
+    
+    body = await request.json()
+    csv_data = body.get("data", [])  # List of {name, email, grade, teacher_email}
+    
+    created = 0
+    errors = []
+    
+    for row in csv_data:
+        name = row.get("name", "").strip()
+        email = row.get("email", "").strip().lower()
+        grade = row.get("grade")
+        teacher_email = row.get("teacher_email", "").strip().lower()
+        
+        if not name or not email:
+            errors.append(f"Missing name or email: {row}")
+            continue
+        
+        try:
+            grade = int(grade) if grade is not None else 0
+        except:
+            grade = 0
+        
+        # Check if user exists
+        existing = await db.users.find_one({"email": email})
+        if existing:
+            errors.append(f"User already exists: {email}")
+            continue
+        
+        # Create student
+        user_id = f"user_{uuid.uuid4().hex[:12]}"
+        await db.users.insert_one({
+            "user_id": user_id,
+            "email": email,
+            "name": name,
+            "role": "child",
+            "grade": grade,
+            "school_id": school_id,
+            "streak_count": 0,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by_school": True
+        })
+        
+        # Create wallet accounts
+        account_types = ["spending", "savings", "gifting"]
+        if grade >= 1:
+            account_types.append("investing")
+        
+        for acc_type in account_types:
+            await db.wallet_accounts.insert_one({
+                "account_id": f"acc_{uuid.uuid4().hex[:12]}",
+                "user_id": user_id,
+                "account_type": acc_type,
+                "balance": 100.0 if acc_type == "spending" else 0.0,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+        
+        # Link to teacher's classroom if teacher_email provided
+        if teacher_email:
+            teacher = await db.users.find_one({"email": teacher_email, "role": "teacher"})
+            if teacher:
+                # Find or create classroom
+                classroom = await db.classrooms.find_one({"teacher_id": teacher["user_id"]})
+                if classroom:
+                    await db.classroom_students.insert_one({
+                        "classroom_id": classroom["classroom_id"],
+                        "student_id": user_id,
+                        "joined_at": datetime.now(timezone.utc).isoformat()
+                    })
+        
+        created += 1
+    
+    return {
+        "created": created,
+        "errors": errors,
+        "message": f"Created {created} students"
+    }
+
+@api_router.post("/school/upload/parents")
+async def school_upload_parents(request: Request):
+    """Bulk upload parents via CSV data"""
+    school = await require_school(request)
+    school_id = school["school_id"]
+    
+    body = await request.json()
+    csv_data = body.get("data", [])  # List of {name, email, child_email}
+    
+    created = 0
+    linked = 0
+    errors = []
+    
+    for row in csv_data:
+        name = row.get("name", "").strip()
+        email = row.get("email", "").strip().lower()
+        child_email = row.get("child_email", "").strip().lower()
+        
+        if not name or not email:
+            errors.append(f"Missing name or email: {row}")
+            continue
+        
+        # Check if parent exists
+        existing = await db.users.find_one({"email": email})
+        if existing:
+            parent_id = existing["user_id"]
+            # Update school_id
+            if not existing.get("school_id"):
+                await db.users.update_one(
+                    {"email": email},
+                    {"$set": {"school_id": school_id}}
+                )
+        else:
+            # Create parent
+            parent_id = f"user_{uuid.uuid4().hex[:12]}"
+            await db.users.insert_one({
+                "user_id": parent_id,
+                "email": email,
+                "name": name,
+                "role": "parent",
+                "school_id": school_id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_by_school": True
+            })
+            created += 1
+        
+        # Link to child if child_email provided
+        if child_email:
+            child = await db.users.find_one({"email": child_email, "role": "child"})
+            if child:
+                # Check if link exists
+                existing_link = await db.parent_child_links.find_one({
+                    "parent_id": parent_id,
+                    "child_id": child["user_id"]
+                })
+                if not existing_link:
+                    await db.parent_child_links.insert_one({
+                        "link_id": f"link_{uuid.uuid4().hex[:12]}",
+                        "parent_id": parent_id,
+                        "child_id": child["user_id"],
+                        "status": "active",
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    })
+                    linked += 1
+            else:
+                errors.append(f"Child not found: {child_email}")
+    
+    return {
+        "created": created,
+        "linked": linked,
+        "errors": errors,
+        "message": f"Created {created} parents, linked {linked} to children"
+    }
+
 @api_router.post("/admin/topics")
 async def admin_create_topic(request: Request):
     """Create a learning topic (admin only)"""
