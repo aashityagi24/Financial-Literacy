@@ -39,6 +39,7 @@ const notificationIcons = {
   // Parent Rewards & Penalties
   parent_reward: { icon: Trophy, color: 'text-[#06D6A0]', bg: 'bg-[#06D6A0]/20', path: '/wallet' },
   parent_penalty: { icon: X, color: 'text-[#EE6C4D]', bg: 'bg-[#EE6C4D]/20', path: '/wallet' },
+  allowance: { icon: Gift, color: 'text-[#06D6A0]', bg: 'bg-[#06D6A0]/20', path: '/wallet' },
   
   // Investment related
   stock_update: { icon: Trophy, color: 'text-[#10B981]', bg: 'bg-[#10B981]/20', path: '/stock-market' },
