@@ -498,8 +498,7 @@ async def get_classroom_comparison(classroom_id: str, request: Request):
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
-    }, {"_id": 0}
-    })
+    }, {"_id": 0})
     if not classroom:
         raise HTTPException(status_code=404, detail="Classroom not found")
     
