@@ -580,7 +580,7 @@ async def school_upload_teachers(request: Request):
         if isinstance(grade, str):
             try:
                 grade = int(grade)
-            except:
+            except ValueError:
                 grade = None
         
         if not name or not email:
@@ -666,7 +666,7 @@ async def school_upload_students(request: Request):
         if isinstance(grade, str):
             try:
                 grade = int(grade)
-            except:
+            except ValueError:
                 grade = 0
         
         if not name or not email:
