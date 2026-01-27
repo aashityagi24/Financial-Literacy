@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { 
   Heart, Gift, Users, Building2, User, ArrowLeft, Plus, 
   Send, TrendingUp, Package, DollarSign, X, ChevronRight,
-  HandHeart, Sparkles
+  HandHeart, Sparkles, ArrowRightLeft, Wallet
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +31,11 @@ export default function GiftingPage({ user }) {
   const [charitableGiving, setCharitableGiving] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showTransferDialog, setShowTransferDialog] = useState(false);
+  const [wallet, setWallet] = useState(null);
+  const [transferAmount, setTransferAmount] = useState('');
+  const [transferFrom, setTransferFrom] = useState('spending');
+  const [transferring, setTransferring] = useState(false);
   
   const [newGiving, setNewGiving] = useState({
     recipient_name: '',
