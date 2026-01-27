@@ -6931,18 +6931,18 @@ async def admin_toggle_publish(content_id: str, request: Request):
     
     return {"message": f"Content {'published' if new_status else 'unpublished'}", "is_published": new_status}
 
-# ============== ADMIN ROUTES ==============
+# ============== ADMIN ROUTES (Partially migrated to routes/admin.py) ==============
 
-@api_router.get("/admin/users")
-async def admin_get_users(request: Request):
+# @api_router.get("/admin/users")  # MOVED
+async def _legacy_admin_get_users(request: Request):
     """Get all users (admin only)"""
     await require_admin(request)
     
     users = await db.users.find({}, {"_id": 0}).to_list(1000)
     return users
 
-@api_router.put("/admin/users/{user_id}/role")
-async def admin_update_user_role(user_id: str, request: Request):
+# @api_router.put("/admin/users/{user_id}/role")  # MOVED
+async def _legacy_admin_update_user_role(user_id: str, request: Request):
     """Update user role (admin only)"""
     await require_admin(request)
     
@@ -6959,8 +6959,8 @@ async def admin_update_user_role(user_id: str, request: Request):
     
     return {"message": "Role updated"}
 
-@api_router.delete("/admin/users/{user_id}")
-async def admin_delete_user(user_id: str, request: Request):
+# @api_router.delete("/admin/users/{user_id}")  # MOVED
+async def _legacy_admin_delete_user(user_id: str, request: Request):
     """Delete a user and all related data (admin only)"""
     admin = await require_admin(request)
     
@@ -7000,8 +7000,8 @@ async def admin_delete_user(user_id: str, request: Request):
     
     return {"message": f"User {user.get('name', user_id)} deleted successfully"}
 
-@api_router.post("/admin/users")
-async def admin_create_user(request: Request):
+# @api_router.post("/admin/users")  # MOVED
+async def _legacy_admin_create_user(request: Request):
     """Create a new user (admin only)"""
     await require_admin(request)
     
