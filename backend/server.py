@@ -70,6 +70,9 @@ from routes import quests as quest_routes
 from routes import notifications as notification_routes
 from routes import teacher as teacher_routes
 from routes import parent as parent_routes
+from routes import admin as admin_routes
+from routes import child as child_routes
+from routes import learning as learning_routes
 
 # Initialize database in modules
 auth_service.init_db(db)
@@ -84,6 +87,9 @@ quest_routes.init_db(db)
 notification_routes.init_db(db)
 teacher_routes.init_db(db)
 parent_routes.init_db(db)
+admin_routes.init_db(db)
+child_routes.init_db(db)
+learning_routes.init_db(db)
 
 # Include modular routers
 api_router.include_router(auth_routes.router)
@@ -97,6 +103,9 @@ api_router.include_router(quest_routes.router)
 api_router.include_router(notification_routes.router)
 api_router.include_router(teacher_routes.router)
 api_router.include_router(parent_routes.router)
+api_router.include_router(admin_routes.router)
+api_router.include_router(child_routes.router)
+api_router.include_router(learning_routes.router)
 
 # ============== MODELS ==============
 
