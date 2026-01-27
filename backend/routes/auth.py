@@ -6,8 +6,19 @@ import uuid
 import hashlib
 import httpx
 
-from core.database import db
-from services.auth import get_current_user
+# Database will be injected
+_db = None
+
+def init_db(database):
+    """Initialize database reference"""
+    global _db
+    _db = database
+
+def get_db():
+    """Get database instance"""
+    if _db is None:
+        raise RuntimeError("Database not initialized")
+    return _db
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -22,7 +33,7 @@ class SchoolLoginRequest(BaseModel):
 @router.post("/admin-login")
 async def admin_login(login_data: AdminLoginRequest, response: Response):
     """Admin login with email and password"""
-    # Fixed admin credentials
+    db = get_db()
     ADMIN_EMAIL = "admin@learnersplanet.com"
     ADMIN_PASSWORD = "finlit@2026"
     
@@ -53,7 +64,6 @@ async def admin_login(login_data: AdminLoginRequest, response: Response):
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    # Set cookie
     response.set_cookie(
         key="session_token",
         value=session_token,
@@ -69,18 +79,16 @@ async def admin_login(login_data: AdminLoginRequest, response: Response):
 @router.post("/school-login")
 async def school_login(login_data: SchoolLoginRequest, response: Response):
     """School login with username and password"""
-    # Find school by username
+    db = get_db()
     school = await db.schools.find_one({"username": login_data.username}, {"_id": 0})
     
     if not school:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Verify password (hashed)
     password_hash = hashlib.sha256(login_data.password.encode()).hexdigest()
     if school.get("password_hash") != password_hash:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Create session
     session_token = f"school_sess_{uuid.uuid4().hex}"
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     
@@ -92,7 +100,6 @@ async def school_login(login_data: SchoolLoginRequest, response: Response):
         "user_type": "school"
     })
     
-    # Set cookie
     response.set_cookie(
         key="session_token",
         value=session_token,
@@ -116,13 +123,13 @@ async def school_login(login_data: SchoolLoginRequest, response: Response):
 @router.post("/session")
 async def create_session(request: Request, response: Response):
     """Exchange session_id from Google OAuth for session data"""
+    db = get_db()
     body = await request.json()
     session_id = body.get("session_id")
     
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id required")
     
-    # Exchange with Emergent Auth
     async with httpx.AsyncClient() as client:
         try:
             auth_response = await client.post(
@@ -136,7 +143,6 @@ async def create_session(request: Request, response: Response):
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Auth validation failed: {str(e)}")
     
-    # Find or create user
     email = user_data.get("email")
     user = await db.users.find_one({"email": email}, {"_id": 0})
     
@@ -147,7 +153,7 @@ async def create_session(request: Request, response: Response):
             "email": email,
             "name": user_data.get("name", "User"),
             "picture": user_data.get("picture"),
-            "role": None,  # Needs to select role
+            "role": None,
             "grade": None,
             "avatar": None,
             "streak_count": 0,
@@ -157,7 +163,6 @@ async def create_session(request: Request, response: Response):
         await db.users.insert_one(user)
         user = await db.users.find_one({"email": email}, {"_id": 0})
     else:
-        # Update login streak
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         last_login = user.get("last_login_date")
         
@@ -178,14 +183,10 @@ async def create_session(request: Request, response: Response):
             
             await db.users.update_one(
                 {"user_id": user["user_id"]},
-                {"$set": {
-                    "last_login_date": today,
-                    "streak_count": new_streak
-                }}
+                {"$set": {"last_login_date": today, "streak_count": new_streak}}
             )
             user = await db.users.find_one({"email": email}, {"_id": 0})
     
-    # Create internal session
     session_token = f"sess_{uuid.uuid4().hex}"
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     
@@ -196,7 +197,6 @@ async def create_session(request: Request, response: Response):
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    # Set cookie
     response.set_cookie(
         key="session_token",
         value=session_token,
@@ -212,12 +212,14 @@ async def create_session(request: Request, response: Response):
 @router.get("/me")
 async def get_me(request: Request):
     """Get current authenticated user"""
+    from services.auth import get_current_user
     user = await get_current_user(request)
     return user
 
 @router.post("/logout")
 async def logout(request: Request, response: Response):
     """Logout current user"""
+    db = get_db()
     session_token = request.cookies.get("session_token")
     if session_token:
         await db.user_sessions.delete_many({"session_token": session_token})
@@ -235,6 +237,8 @@ async def logout(request: Request, response: Response):
 @router.put("/profile")
 async def update_profile(request: Request):
     """Update user profile (role, grade, avatar)"""
+    from services.auth import get_current_user
+    db = get_db()
     user = await get_current_user(request)
     body = await request.json()
     
@@ -252,11 +256,9 @@ async def update_profile(request: Request):
             {"$set": update_data}
         )
         
-        # Initialize wallet if child role and not already initialized
         if body.get("role") == "child":
             existing_wallet = await db.wallet_accounts.find_one({"user_id": user["user_id"]})
             if not existing_wallet:
-                # Create 4 wallet accounts
                 for account_type in ["spending", "savings", "investing", "gifting"]:
                     wallet_doc = {
                         "account_id": f"acc_{uuid.uuid4().hex[:12]}",
@@ -267,7 +269,6 @@ async def update_profile(request: Request):
                     }
                     await db.wallet_accounts.insert_one(wallet_doc)
                 
-                # Record initial deposit
                 await db.transactions.insert_one({
                     "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
                     "user_id": user["user_id"],
