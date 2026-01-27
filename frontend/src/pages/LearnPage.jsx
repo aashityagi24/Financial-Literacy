@@ -97,7 +97,7 @@ export default function LearnPage({ user }) {
               <div>
                 <h1 className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Learn</h1>
                 <p className="text-base text-[#3D5A80]">
-                  {user?.role === 'teacher' ? 'Preview learning content' : 'Explore fun money lessons!'}
+                  {getSubtitle()}
                 </p>
               </div>
             </div>
