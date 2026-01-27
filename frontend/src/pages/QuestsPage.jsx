@@ -645,22 +645,22 @@ export default function QuestsPage({ user }) {
                 
                 {/* Results Summary */}
                 {results && (
-                  <div className={`rounded-xl p-4 border-2 ${results.earned > 0 ? 'bg-[#06D6A0]/20 border-[#06D6A0]' : 'bg-[#E0FBFC] border-[#3D5A80]'}`}>
+                  <div className={`rounded-xl p-4 border-2 ${
+                    (results.coins_earned > 0 || results.score > 0) 
+                      ? 'bg-[#06D6A0]/20 border-[#06D6A0]' 
+                      : 'bg-[#E0FBFC] border-[#3D5A80]'
+                  }`}>
                     <div className="flex items-center gap-3">
-                      {results.earned > 0 ? (
+                      {(results.coins_earned > 0 || results.score > 0) ? (
                         <Trophy className="w-8 h-8 text-[#06D6A0]" />
-                      ) : results.already_earned ? (
-                        <CheckCircle className="w-8 h-8 text-[#3D5A80]" />
                       ) : (
                         <Target className="w-8 h-8 text-[#EE6C4D]" />
                       )}
                       <div>
                         <p className="font-bold text-[#1D3557]">
-                          {results.earned > 0 
-                            ? `Great job! You earned ₹${results.earned}!`
-                            : results.already_earned
-                              ? "You've already earned from this quest"
-                              : "Keep practicing! Try again."}
+                          {(results.coins_earned > 0 || results.score > 0)
+                            ? `🎉 Quest Complete! You earned ₹${results.coins_earned || results.score}!`
+                            : "Keep learning! You'll do better next time 📚"}
                         </p>
                         <p className="text-sm text-[#3D5A80]">
                           {results.results?.filter(r => r.is_correct).length || 0} / {results.results?.length || 0} correct
