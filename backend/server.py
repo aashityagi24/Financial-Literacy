@@ -3862,6 +3862,13 @@ async def get_classroom_comparison(classroom_id: str, request: Request):
         wallet_by_type = {w.get("account_type"): w.get("balance", 0) for w in wallet_accounts}
         total_balance = sum(w.get("balance", 0) for w in wallet_accounts)
         
+        # Get savings goals total
+        savings_goals = await db.savings_goals.find(
+            {"child_id": student_id},
+            {"_id": 0, "current_amount": 1}
+        ).to_list(100)
+        total_saved_in_goals = sum(g.get("current_amount", 0) for g in savings_goals)
+        
         # Transactions summary
         transactions = await db.transactions.find(
             {"user_id": student_id},
@@ -3870,6 +3877,18 @@ async def get_classroom_comparison(classroom_id: str, request: Request):
         
         total_earned = sum(t.get("amount", 0) for t in transactions if t.get("amount", 0) > 0)
         total_spent = abs(sum(t.get("amount", 0) for t in transactions if t.get("amount", 0) < 0))
+        
+        # Calculate spent per jar
+        spent_per_jar = {"spending": 0, "savings": 0, "gifting": 0, "investing": 0}
+        for t in transactions:
+            txn_type = t.get("transaction_type", "")
+            amount = t.get("amount", 0)
+            if txn_type == "purchase" and amount < 0:
+                spent_per_jar["spending"] += abs(amount)
+            elif txn_type == "gift_sent" and amount < 0:
+                spent_per_jar["gifting"] += abs(amount)
+            elif txn_type in ["garden_buy", "stock_buy"] and amount < 0:
+                spent_per_jar["investing"] += abs(amount)
         
         # Chores completed
         chore_requests = await db.chore_requests.find(
