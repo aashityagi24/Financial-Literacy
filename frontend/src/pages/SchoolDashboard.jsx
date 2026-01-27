@@ -744,15 +744,29 @@ export default function SchoolDashboard() {
                 <FileText className="w-4 h-4" />
                 CSV Format
               </h4>
-              <p className="text-sm text-blue-700">
-                {uploadType === 'students' ? (
-                  <>Required columns: <code className="bg-blue-100 px-1 rounded">name</code>, <code className="bg-blue-100 px-1 rounded">email</code>, <code className="bg-blue-100 px-1 rounded">grade</code> (0-5)</>
+              <div className="text-sm text-blue-700">
+                {uploadType === 'teachers' ? (
+                  <>
+                    <p><strong>Required:</strong> <code className="bg-blue-100 px-1 rounded">name</code>, <code className="bg-blue-100 px-1 rounded">email</code></p>
+                    <p className="mt-1"><strong>Optional:</strong> <code className="bg-blue-100 px-1 rounded">grade</code> (0-5), <code className="bg-blue-100 px-1 rounded">class_name</code></p>
+                    <p className="text-xs text-blue-600 mt-1">If class_name is provided, a classroom will be created automatically</p>
+                  </>
+                ) : uploadType === 'students' ? (
+                  <>
+                    <p><strong>Required:</strong> <code className="bg-blue-100 px-1 rounded">name</code>, <code className="bg-blue-100 px-1 rounded">email</code>, <code className="bg-blue-100 px-1 rounded">grade</code> (0-5)</p>
+                    <p className="mt-1"><strong>Optional:</strong> <code className="bg-blue-100 px-1 rounded">teacher_email</code></p>
+                    <p className="text-xs text-blue-600 mt-1">If teacher_email is provided, student will be enrolled in teacher&apos;s classroom</p>
+                  </>
                 ) : (
-                  <>Required columns: <code className="bg-blue-100 px-1 rounded">name</code>, <code className="bg-blue-100 px-1 rounded">email</code></>
+                  <>
+                    <p><strong>Required:</strong> <code className="bg-blue-100 px-1 rounded">name</code>, <code className="bg-blue-100 px-1 rounded">email</code></p>
+                    <p className="mt-1"><strong>Optional:</strong> <code className="bg-blue-100 px-1 rounded">child_email</code></p>
+                    <p className="text-xs text-blue-600 mt-1">If child_email is provided, parent will be linked to that child</p>
+                  </>
                 )}
-              </p>
-              <p className="text-xs text-blue-600 mt-1">
-                First row should contain headers
+              </div>
+              <p className="text-xs text-blue-600 mt-2 pt-2 border-t border-blue-200">
+                First row should contain headers. Existing users without a school will be added to your school.
               </p>
             </div>
 
