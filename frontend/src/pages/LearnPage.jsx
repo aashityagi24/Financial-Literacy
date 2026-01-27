@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
@@ -18,19 +18,30 @@ const CONTENT_TYPE_ICONS = {
   video: { icon: Video, color: 'text-red-500', bg: 'bg-red-100' },
 };
 
+const gradeLabels = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
+
 export default function LearnPage({ user }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(true);
   const showAnimations = useFirstVisitAnimation('learn');
   
+  // Get grade filter from URL (for teacher view)
+  const gradeFilter = searchParams.get('grade');
+  
   useEffect(() => {
     fetchTopics();
-  }, []);
+  }, [gradeFilter]);
   
   const fetchTopics = async () => {
     try {
-      const res = await axios.get(`${API}/content/topics`);
+      // Build API URL with grade filter if present
+      let url = `${API}/content/topics`;
+      if (gradeFilter !== null && gradeFilter !== undefined) {
+        url += `?grade=${gradeFilter}`;
+      }
+      const res = await axios.get(url);
       setTopics(res.data);
     } catch (error) {
       console.error('Failed to fetch topics:', error);
