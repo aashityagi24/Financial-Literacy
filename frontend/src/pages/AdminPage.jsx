@@ -95,7 +95,8 @@ export default function AdminPage({ user }) {
   
   const handleGradeChange = async (userId, newGrade) => {
     try {
-      await axios.put(`${API}/admin/users/${userId}/grade`, { grade: newGrade === '' ? null : parseInt(newGrade) });
+      const gradeValue = newGrade === null ? null : parseInt(newGrade);
+      await axios.put(`${API}/admin/users/${userId}/grade`, { grade: gradeValue });
       toast.success('User grade updated');
       fetchData();
     } catch (error) {
