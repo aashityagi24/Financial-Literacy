@@ -377,22 +377,22 @@ export default function StockMarketPage({ user }) {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <div className="bg-[#1F2937] rounded-xl p-4 border border-gray-700">
                 <p className="text-gray-400 text-sm mb-1">Total Invested</p>
-                <p className="text-2xl font-bold">₹{portfolio.summary.total_invested?.toFixed(0) || 0}</p>
+                <p className="text-2xl font-bold">₹{portfolio.total_invested?.toFixed(0) || 0}</p>
               </div>
               <div className="bg-[#1F2937] rounded-xl p-4 border border-gray-700">
                 <p className="text-gray-400 text-sm mb-1">Current Value</p>
-                <p className="text-2xl font-bold">₹{portfolio.summary.total_current_value?.toFixed(0) || 0}</p>
+                <p className="text-2xl font-bold">₹{portfolio.total_current_value?.toFixed(0) || 0}</p>
               </div>
               <div className="bg-[#1F2937] rounded-xl p-4 border border-gray-700">
                 <p className="text-gray-400 text-sm mb-1">Total P/L</p>
-                <p className={`text-2xl font-bold ${(portfolio.summary.total_profit_loss || 0) >= 0 ? 'text-[#10B981]' : 'text-red-400'}`}>
-                  {(portfolio.summary.total_profit_loss || 0) >= 0 ? '+' : ''}₹{portfolio.summary.total_profit_loss?.toFixed(0) || 0}
+                <p className={`text-2xl font-bold ${(portfolio.total_profit_loss || 0) >= 0 ? 'text-[#10B981]' : 'text-red-400'}`}>
+                  {(portfolio.total_profit_loss || 0) >= 0 ? '+' : ''}₹{portfolio.total_profit_loss?.toFixed(0) || 0}
                 </p>
               </div>
               <div className="bg-[#1F2937] rounded-xl p-4 border border-gray-700">
                 <p className="text-gray-400 text-sm mb-1">Returns</p>
-                <p className={`text-2xl font-bold ${(portfolio.summary.total_profit_loss_percent || 0) >= 0 ? 'text-[#10B981]' : 'text-red-400'}`}>
-                  {(portfolio.summary.total_profit_loss_percent || 0) >= 0 ? '+' : ''}{portfolio.summary.total_profit_loss_percent?.toFixed(1) || 0}%
+                <p className={`text-2xl font-bold ${(portfolio.total_profit_loss_percent || 0) >= 0 ? 'text-[#10B981]' : 'text-red-400'}`}>
+                  {(portfolio.total_profit_loss_percent || 0) >= 0 ? '+' : ''}{portfolio.total_profit_loss_percent?.toFixed(1) || 0}%
                 </p>
               </div>
             </div>
