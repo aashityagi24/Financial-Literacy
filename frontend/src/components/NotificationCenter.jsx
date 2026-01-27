@@ -24,6 +24,7 @@ const notificationIcons = {
   
   // Quest related
   quest: { icon: Trophy, color: 'text-[#FFD23F]', bg: 'bg-[#FFD23F]/20', path: '/quests' },
+  new_quest: { icon: Trophy, color: 'text-[#FFD23F]', bg: 'bg-[#FFD23F]/20', path: '/quests' },
   quest_created: { icon: Trophy, color: 'text-[#FFD23F]', bg: 'bg-[#FFD23F]/20', path: '/quests' },
   quest_completed: { icon: Check, color: 'text-[#06D6A0]', bg: 'bg-[#06D6A0]/20', path: '/quests' },
   quest_reminder: { icon: Trophy, color: 'text-[#FFD23F]', bg: 'bg-[#FFD23F]/20', path: '/quests' },
