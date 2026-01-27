@@ -247,7 +247,7 @@ async def get_school_students_comparison(request: Request):
 
 @router.post("/school/users/teacher")
 async def school_create_teacher(request: Request):
-    """Create a single teacher for the school"""
+    """Create or add a teacher to the school"""
     from services.auth import require_school
     db = get_db()
     school = await require_school(request)
@@ -256,13 +256,31 @@ async def school_create_teacher(request: Request):
     body = await request.json()
     name = body.get("name", "").strip()
     email = body.get("email", "").strip().lower()
+    grade = body.get("grade")
+    class_name = body.get("class_name", "").strip()
     
     if not name or not email:
         raise HTTPException(status_code=400, detail="Name and email are required")
     
     existing = await db.users.find_one({"email": email})
     if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        # If user exists but has no school, add them to this school
+        if not existing.get("school_id"):
+            await db.users.update_one(
+                {"email": email},
+                {"$set": {"school_id": school_id, "role": "teacher"}}
+            )
+            updated_user = await db.users.find_one({"email": email}, {"_id": 0})
+            
+            # Create classroom if class_name provided
+            if class_name:
+                await _create_classroom_for_teacher(db, updated_user["user_id"], class_name, grade)
+            
+            return {"message": "Existing user added to school as teacher", "user_id": updated_user["user_id"], "user": updated_user}
+        elif existing.get("school_id") == school_id:
+            return {"message": "User already belongs to this school", "user_id": existing["user_id"]}
+        else:
+            raise HTTPException(status_code=400, detail="User already belongs to another school")
     
     user_id = f"user_{uuid.uuid4().hex[:12]}"
     
@@ -277,13 +295,37 @@ async def school_create_teacher(request: Request):
     
     await db.users.insert_one(user_doc)
     
+    # Create classroom if class_name provided
+    if class_name:
+        await _create_classroom_for_teacher(db, user_id, class_name, grade)
+    
     # Fetch the clean user without _id
     created_user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
     return {"message": "Teacher created successfully", "user_id": user_id, "user": created_user}
 
+
+async def _create_classroom_for_teacher(db, teacher_id: str, class_name: str, grade: int = None):
+    """Helper to create a classroom for a teacher"""
+    import random
+    import string
+    
+    join_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    classroom_doc = {
+        "classroom_id": f"class_{uuid.uuid4().hex[:12]}",
+        "teacher_id": teacher_id,
+        "name": class_name,
+        "grade_level": grade,
+        "grade": grade,
+        "join_code": join_code,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.classrooms.insert_one(classroom_doc)
+    return classroom_doc["classroom_id"], join_code
+
+
 @router.post("/school/users/parent")
 async def school_create_parent(request: Request):
-    """Create a single parent for the school"""
+    """Create or add a parent to the school"""
     from services.auth import require_school
     db = get_db()
     school = await require_school(request)
@@ -292,13 +334,33 @@ async def school_create_parent(request: Request):
     body = await request.json()
     name = body.get("name", "").strip()
     email = body.get("email", "").strip().lower()
+    child_email = body.get("child_email", "").strip().lower()
     
     if not name or not email:
         raise HTTPException(status_code=400, detail="Name and email are required")
     
     existing = await db.users.find_one({"email": email})
     if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        # If user exists but has no school, add them to this school
+        if not existing.get("school_id"):
+            await db.users.update_one(
+                {"email": email},
+                {"$set": {"school_id": school_id, "role": "parent"}}
+            )
+            updated_user = await db.users.find_one({"email": email}, {"_id": 0})
+            
+            # Link to child if provided
+            if child_email:
+                await _link_parent_to_child(db, updated_user["user_id"], child_email)
+            
+            return {"message": "Existing user added to school as parent", "user_id": updated_user["user_id"], "user": updated_user}
+        elif existing.get("school_id") == school_id:
+            # Already in school, just link to child if provided
+            if child_email:
+                await _link_parent_to_child(db, existing["user_id"], child_email)
+            return {"message": "User already belongs to this school", "user_id": existing["user_id"]}
+        else:
+            raise HTTPException(status_code=400, detail="User already belongs to another school")
     
     user_id = f"user_{uuid.uuid4().hex[:12]}"
     
@@ -313,9 +375,31 @@ async def school_create_parent(request: Request):
     
     await db.users.insert_one(user_doc)
     
+    # Link to child if provided
+    if child_email:
+        await _link_parent_to_child(db, user_id, child_email)
+    
     # Fetch the clean user without _id
     created_user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
     return {"message": "Parent created successfully", "user_id": user_id, "user": created_user}
+
+
+async def _link_parent_to_child(db, parent_id: str, child_email: str):
+    """Helper to link a parent to a child by email"""
+    child = await db.users.find_one({"email": child_email, "role": "child"})
+    if child:
+        existing_link = await db.parent_child_links.find_one({
+            "parent_id": parent_id,
+            "child_id": child["user_id"]
+        })
+        if not existing_link:
+            await db.parent_child_links.insert_one({
+                "link_id": f"link_{uuid.uuid4().hex[:12]}",
+                "parent_id": parent_id,
+                "child_id": child["user_id"],
+                "status": "active",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
 
 @router.post("/school/users/child")
 async def school_create_child(request: Request):
