@@ -45,9 +45,9 @@ export default function QuestsPage({ user }) {
       });
       // Sort quests: incomplete first, completed at bottom
       const sortedQuests = [...res.data].sort((a, b) => {
-        // Completed quests (attempted, regardless of earning) go to the bottom
-        const aCompleted = a.is_completed || a.has_earned;
-        const bCompleted = b.is_completed || b.has_earned;
+        // Completed quests go to the bottom - check user_status or is_completed/has_earned
+        const aCompleted = a.user_status === 'completed' || a.is_completed || a.has_earned;
+        const bCompleted = b.user_status === 'completed' || b.is_completed || b.has_earned;
         if (aCompleted && !bCompleted) return 1;
         if (!aCompleted && bCompleted) return -1;
         return 0; // Keep original sort order for same status
