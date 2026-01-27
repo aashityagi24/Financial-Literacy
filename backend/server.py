@@ -7906,14 +7906,14 @@ async def _legacy_upload_store_image(file: UploadFile = File(...)):
     
     return {"url": f"/api/uploads/store/{filename}"}
 
-@api_router.get("/admin/store/categories")
+# @api_router.get("/admin/store/categories")  # MOVED
 async def admin_get_store_categories(request: Request):
     """Get all store categories (admin only)"""
     await require_admin(request)
     categories = await db.admin_store_categories.find({}, {"_id": 0}).sort("order", 1).to_list(100)
     return categories
 
-@api_router.post("/admin/store/categories")
+# @api_router.post("/admin/store/categories")  # MOVED
 async def admin_create_store_category(data: StoreCategoryCreate, request: Request):
     """Create a store category (admin only)"""
     await require_admin(request)
@@ -7933,7 +7933,7 @@ async def admin_create_store_category(data: StoreCategoryCreate, request: Reques
     await db.admin_store_categories.insert_one(category)
     return {"message": "Category created", "category_id": category["category_id"]}
 
-@api_router.put("/admin/store/categories/{category_id}")
+# @api_router.put("/admin/store/categories/{category_id}")  # MOVED
 async def admin_update_store_category(category_id: str, data: StoreCategoryUpdate, request: Request):
     """Update a store category (admin only)"""
     await require_admin(request)
@@ -7947,7 +7947,7 @@ async def admin_update_store_category(category_id: str, data: StoreCategoryUpdat
     
     return {"message": "Category updated"}
 
-@api_router.delete("/admin/store/categories/{category_id}")
+# @api_router.delete("/admin/store/categories/{category_id}")  # MOVED
 async def admin_delete_store_category(category_id: str, request: Request):
     """Delete a store category and its items (admin only)"""
     await require_admin(request)
@@ -7957,7 +7957,7 @@ async def admin_delete_store_category(category_id: str, request: Request):
     
     return {"message": "Category and items deleted"}
 
-@api_router.get("/admin/store/items")
+# @api_router.get("/admin/store/items")  # MOVED
 async def admin_get_store_items(request: Request, category_id: Optional[str] = None):
     """Get all store items (admin only)"""
     await require_admin(request)
@@ -7969,7 +7969,7 @@ async def admin_get_store_items(request: Request, category_id: Optional[str] = N
     items = await db.admin_store_items.find(query, {"_id": 0}).to_list(500)
     return items
 
-@api_router.post("/admin/store/items")
+# @api_router.post("/admin/store/items")  # MOVED
 async def admin_create_store_item(data: StoreItemCreate, request: Request):
     """Create a store item (admin only)"""
     await require_admin(request)
@@ -7992,7 +7992,7 @@ async def admin_create_store_item(data: StoreItemCreate, request: Request):
     await db.admin_store_items.insert_one(item)
     return {"message": "Item created", "item_id": item["item_id"]}
 
-@api_router.put("/admin/store/items/{item_id}")
+# @api_router.put("/admin/store/items/{item_id}")  # MOVED
 async def admin_update_store_item(item_id: str, data: StoreItemUpdate, request: Request):
     """Update a store item (admin only)"""
     await require_admin(request)
@@ -8006,7 +8006,7 @@ async def admin_update_store_item(item_id: str, data: StoreItemUpdate, request: 
     
     return {"message": "Item updated"}
 
-@api_router.delete("/admin/store/items/{item_id}")
+# @api_router.delete("/admin/store/items/{item_id}")  # MOVED
 async def admin_delete_store_item(item_id: str, request: Request):
     """Delete a store item (admin only)"""
     await require_admin(request)
