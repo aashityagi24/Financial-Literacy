@@ -618,81 +618,280 @@ export default function ParentDashboard({ user }) {
               </div>
             )}
             
-            {/* All Chores - Single unified section */}
-            {chores.length > 0 && (
-              <>
-                <h2 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>Chores</h2>
-                <div className="space-y-3 mb-6">
-                  {chores.map((chore) => {
-                    const pendingRequest = choreRequests.find(r => r.chore_id === chore.chore_id && r.status === 'pending');
-                    
-                    return (
-                      <div key={chore.chore_id} className={`card-playful p-4 ${pendingRequest ? 'border-2 border-[#FFD23F] bg-[#FFD23F]/10' : ''}`}>
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="font-bold text-[#1D3557]">{chore.title}</h4>
-                              {pendingRequest ? (
-                                <span className="bg-[#06D6A0] text-white text-xs px-2 py-1 rounded-full font-bold">
-                                  ✓ {chore.child_name} marked complete
-                                </span>
-                              ) : chore.status === 'pending' || chore.is_active ? (
-                                <span className="bg-[#FFD23F]/30 text-[#1D3557] text-xs px-2 py-1 rounded-full font-bold">
-                                  ⏳ Pending
-                                </span>
-                              ) : (
-                                <span className="bg-[#06D6A0]/20 text-[#06D6A0] text-xs px-2 py-1 rounded-full font-bold">
-                                  ✓ Completed
-                                </span>
+            {/* Rewards & Penalties Section */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                  Rewards & Penalties
+                </h2>
+                <Dialog open={showRewardPenalty} onOpenChange={setShowRewardPenalty}>
+                  <DialogTrigger asChild>
+                    <button className="btn-secondary flex items-center gap-2" data-testid="add-reward-penalty-btn">
+                      <Plus className="w-4 h-4" />
+                      Quick Reward/Penalty
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                        {rpForm.category === 'reward' ? '🌟 Give Reward' : '⚠️ Apply Penalty'}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-4">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setRpForm({...rpForm, category: 'reward'})}
+                          className={`flex-1 py-2 rounded-xl font-bold transition-colors ${
+                            rpForm.category === 'reward' 
+                              ? 'bg-[#06D6A0] text-white' 
+                              : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
+                          }`}
+                        >
+                          🌟 Reward
+                        </button>
+                        <button
+                          onClick={() => setRpForm({...rpForm, category: 'penalty'})}
+                          className={`flex-1 py-2 rounded-xl font-bold transition-colors ${
+                            rpForm.category === 'penalty' 
+                              ? 'bg-[#EE6C4D] text-white' 
+                              : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
+                          }`}
+                        >
+                          ⚠️ Penalty
+                        </button>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
+                        <Select value={rpForm.child_id} onValueChange={(v) => setRpForm({...rpForm, child_id: v})}>
+                          <SelectTrigger className="border-3 border-[#1D3557]">
+                            <SelectValue placeholder="Choose child" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {dashboard?.children?.map(c => (
+                              <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">
+                          {rpForm.category === 'reward' ? 'Reason for Reward *' : 'Reason for Penalty *'}
+                        </label>
+                        <Input 
+                          placeholder={rpForm.category === 'reward' ? 'e.g., Reading a chapter' : 'e.g., Slamming the door'}
+                          value={rpForm.title} 
+                          onChange={(e) => setRpForm({...rpForm, title: e.target.value})} 
+                          className="border-3 border-[#1D3557]" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Description (optional)</label>
+                        <Textarea 
+                          placeholder="Add more details..." 
+                          value={rpForm.description} 
+                          onChange={(e) => setRpForm({...rpForm, description: e.target.value})} 
+                          className="border-3 border-[#1D3557]" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Amount (₹) *</label>
+                        <Input 
+                          type="number" 
+                          min="1"
+                          placeholder="Amount" 
+                          value={rpForm.amount} 
+                          onChange={(e) => setRpForm({...rpForm, amount: parseFloat(e.target.value) || 0})} 
+                          className="border-3 border-[#1D3557]" 
+                        />
+                      </div>
+                      <p className={`text-sm ${rpForm.category === 'reward' ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
+                        {rpForm.category === 'reward' 
+                          ? `🌟 This will ADD ₹${rpForm.amount || 0} to their spending wallet` 
+                          : `⚠️ This will DEDUCT ₹${rpForm.amount || 0} from their spending wallet (can go negative)`
+                        }
+                      </p>
+                      <button 
+                        onClick={handleCreateRewardPenalty} 
+                        className={`w-full py-3 rounded-xl font-bold text-white transition-colors ${
+                          rpForm.category === 'reward' 
+                            ? 'bg-[#06D6A0] hover:bg-[#05C090]' 
+                            : 'bg-[#EE6C4D] hover:bg-[#DD5B3C]'
+                        }`}
+                        data-testid="submit-reward-penalty"
+                      >
+                        {rpForm.category === 'reward' ? '🌟 Give Reward' : '⚠️ Apply Penalty'}
+                      </button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              
+              {/* Tabs */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setActiveRPTab('chores')}
+                  className={`px-4 py-2 rounded-xl font-bold transition-colors ${
+                    activeRPTab === 'chores' 
+                      ? 'bg-[#3D5A80] text-white' 
+                      : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
+                  }`}
+                >
+                  📋 Chores ({chores.length})
+                </button>
+                <button
+                  onClick={() => setActiveRPTab('rewards')}
+                  className={`px-4 py-2 rounded-xl font-bold transition-colors ${
+                    activeRPTab === 'rewards' 
+                      ? 'bg-[#06D6A0] text-white' 
+                      : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
+                  }`}
+                >
+                  🌟 Rewards ({rewardPenalties.filter(r => r.category === 'reward').length})
+                </button>
+                <button
+                  onClick={() => setActiveRPTab('penalties')}
+                  className={`px-4 py-2 rounded-xl font-bold transition-colors ${
+                    activeRPTab === 'penalties' 
+                      ? 'bg-[#EE6C4D] text-white' 
+                      : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
+                  }`}
+                >
+                  ⚠️ Penalties ({rewardPenalties.filter(r => r.category === 'penalty').length})
+                </button>
+              </div>
+              
+              {/* Chores Tab */}
+              {activeRPTab === 'chores' && (
+                <div className="space-y-3">
+                  {chores.length === 0 ? (
+                    <p className="text-center text-[#3D5A80] py-4">No chores created yet. Create one using the button above!</p>
+                  ) : (
+                    chores.map((chore) => {
+                      const pendingRequest = choreRequests.find(r => r.chore_id === chore.chore_id && r.status === 'pending');
+                      
+                      return (
+                        <div key={chore.chore_id} className={`card-playful p-4 ${pendingRequest ? 'border-2 border-[#FFD23F] bg-[#FFD23F]/10' : ''}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="font-bold text-[#1D3557]">{chore.title}</h4>
+                                {pendingRequest ? (
+                                  <span className="bg-[#06D6A0] text-white text-xs px-2 py-1 rounded-full font-bold">
+                                    ✓ {chore.child_name} marked complete
+                                  </span>
+                                ) : chore.status === 'pending' || chore.is_active ? (
+                                  <span className="bg-[#FFD23F]/30 text-[#1D3557] text-xs px-2 py-1 rounded-full font-bold">
+                                    ⏳ Pending
+                                  </span>
+                                ) : (
+                                  <span className="bg-[#06D6A0]/20 text-[#06D6A0] text-xs px-2 py-1 rounded-full font-bold">
+                                    ✓ Completed
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-[#3D5A80]">{chore.child_name} • +₹{chore.reward_amount} • {chore.frequency}</p>
+                              
+                              {chore.shopping_item_details && chore.shopping_item_details.length > 0 && (
+                                <div className="mt-2 bg-[#E0FBFC] rounded-lg p-2">
+                                  <p className="text-xs font-bold text-[#3D5A80] mb-1">🛒 Shopping List:</p>
+                                  <ul className="text-xs text-[#1D3557] space-y-0.5">
+                                    {chore.shopping_item_details.map((item, idx) => (
+                                      <li key={idx} className={item.purchased ? 'line-through text-[#06D6A0]' : ''}>
+                                        • {item.item_name} × {item.quantity} {item.purchased && '✓'}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
                               )}
                             </div>
-                            <p className="text-sm text-[#3D5A80]">{chore.child_name} • +₹{chore.reward_amount} • {chore.frequency}</p>
-                            
-                            {/* Shopping list items */}
-                            {chore.shopping_item_details && chore.shopping_item_details.length > 0 && (
-                              <div className="mt-2 bg-[#E0FBFC] rounded-lg p-2">
-                                <p className="text-xs font-bold text-[#3D5A80] mb-1">🛒 Shopping List:</p>
-                                <ul className="text-xs text-[#1D3557] space-y-0.5">
-                                  {chore.shopping_item_details.map((item, idx) => (
-                                    <li key={idx} className={item.purchased ? 'line-through text-[#06D6A0]' : ''}>
-                                      • {item.item_name} × {item.quantity} {item.purchased && '✓'}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
+                            <div className="flex items-center gap-2">
+                              {pendingRequest ? (
+                                <>
+                                  <button 
+                                    onClick={() => handleValidateChore(pendingRequest.request_id, 'approve')}
+                                    className="p-2 bg-[#06D6A0] hover:bg-[#05C090] rounded-lg text-white"
+                                    title="Approve - Money will be credited"
+                                  >
+                                    <Check className="w-5 h-5" />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleValidateChore(pendingRequest.request_id, 'reject')}
+                                    className="p-2 bg-[#EE6C4D] hover:bg-[#DD5B3C] rounded-lg text-white"
+                                    title="Reject - Ask to try again"
+                                  >
+                                    <X className="w-5 h-5" />
+                                  </button>
+                                </>
+                              ) : (
+                                <button onClick={() => handleDeleteChore(chore.chore_id)} className="p-2 hover:bg-[#EE6C4D]/20 rounded-lg">
+                                  <Trash2 className="w-4 h-4 text-[#EE6C4D]" />
+                                </button>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            {pendingRequest ? (
-                              <>
-                                <button 
-                                  onClick={() => handleValidateChore(pendingRequest.request_id, 'approve')}
-                                  className="p-2 bg-[#06D6A0] hover:bg-[#05C090] rounded-lg text-white"
-                                  title="Approve - Money will be credited"
-                                >
-                                  <Check className="w-5 h-5" />
-                                </button>
-                                <button 
-                                  onClick={() => handleValidateChore(pendingRequest.request_id, 'reject')}
-                                  className="p-2 bg-[#EE6C4D] hover:bg-[#DD5B3C] rounded-lg text-white"
-                                  title="Reject - Ask to try again"
-                                >
-                                  <X className="w-5 h-5" />
-                                </button>
-                              </>
-                            ) : (
-                              <button onClick={() => handleDeleteChore(chore.chore_id)} className="p-2 hover:bg-[#EE6C4D]/20 rounded-lg">
-                                <Trash2 className="w-4 h-4 text-[#EE6C4D]" />
-                              </button>
-                            )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+              
+              {/* Rewards Tab */}
+              {activeRPTab === 'rewards' && (
+                <div className="space-y-3">
+                  {rewardPenalties.filter(r => r.category === 'reward').length === 0 ? (
+                    <p className="text-center text-[#3D5A80] py-4">No rewards given yet. Use &quot;Quick Reward/Penalty&quot; to give one!</p>
+                  ) : (
+                    rewardPenalties.filter(r => r.category === 'reward').map((record) => (
+                      <div key={record.record_id} className="card-playful p-4 border-l-4 border-[#06D6A0]">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">🌟</span>
+                              <h4 className="font-bold text-[#1D3557]">{record.title}</h4>
+                            </div>
+                            <p className="text-sm text-[#3D5A80]">
+                              {dashboard?.children?.find(c => c.user_id === record.child_id)?.name || 'Child'} • 
+                              <span className="text-[#06D6A0] font-bold"> +₹{Math.abs(record.amount)}</span>
+                            </p>
+                            {record.description && <p className="text-xs text-[#3D5A80] mt-1">{record.description}</p>}
+                            <p className="text-xs text-[#98C1D9] mt-1">{new Date(record.created_at).toLocaleDateString()}</p>
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
+                    ))
+                  )}
                 </div>
-              </>
-            )}
+              )}
+              
+              {/* Penalties Tab */}
+              {activeRPTab === 'penalties' && (
+                <div className="space-y-3">
+                  {rewardPenalties.filter(r => r.category === 'penalty').length === 0 ? (
+                    <p className="text-center text-[#3D5A80] py-4">No penalties applied yet.</p>
+                  ) : (
+                    rewardPenalties.filter(r => r.category === 'penalty').map((record) => (
+                      <div key={record.record_id} className="card-playful p-4 border-l-4 border-[#EE6C4D]">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">⚠️</span>
+                              <h4 className="font-bold text-[#1D3557]">{record.title}</h4>
+                            </div>
+                            <p className="text-sm text-[#3D5A80]">
+                              {dashboard?.children?.find(c => c.user_id === record.child_id)?.name || 'Child'} • 
+                              <span className="text-[#EE6C4D] font-bold"> -₹{Math.abs(record.amount)}</span>
+                            </p>
+                            {record.description && <p className="text-xs text-[#3D5A80] mt-1">{record.description}</p>}
+                            <p className="text-xs text-[#98C1D9] mt-1">{new Date(record.created_at).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
             
             {/* Allowances */}
             {allowances.length > 0 && (
