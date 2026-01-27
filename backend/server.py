@@ -4158,9 +4158,15 @@ async def mark_notifications_read(request: Request):
     """Mark all notifications as read"""
     user = await get_current_user(request)
     
+    # Update notifications with read: False
     await db.notifications.update_many(
         {"user_id": user["user_id"], "read": False},
         {"$set": {"read": True}}
+    )
+    # Also update notifications with is_read: False (legacy field)
+    await db.notifications.update_many(
+        {"user_id": user["user_id"], "is_read": False},
+        {"$set": {"is_read": True, "read": True}}
     )
     
     return {"message": "Notifications marked as read"}
@@ -4170,12 +4176,19 @@ async def mark_all_notifications_read(request: Request):
     """Mark all notifications as read (alias)"""
     user = await get_current_user(request)
     
-    result = await db.notifications.update_many(
+    # Update notifications with read: False
+    result1 = await db.notifications.update_many(
         {"user_id": user["user_id"], "read": False},
         {"$set": {"read": True}}
     )
+    # Also update notifications with is_read: False (legacy field)
+    result2 = await db.notifications.update_many(
+        {"user_id": user["user_id"], "is_read": False},
+        {"$set": {"is_read": True, "read": True}}
+    )
     
-    return {"message": "All notifications marked as read", "updated": result.modified_count}
+    total_updated = result1.modified_count + result2.modified_count
+    return {"message": "All notifications marked as read", "updated": total_updated}
 
 @api_router.delete("/notifications/{notification_id}")
 async def delete_notification(notification_id: str, request: Request):
