@@ -1208,62 +1208,71 @@ export default function TeacherDashboard({ user }) {
                   </div>
                 </div>
 
-                {/* Investments */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-green-50 rounded-xl p-4 border-2 border-green-200">
-                    <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
-                      <Sprout className="w-5 h-5 text-green-600" /> Money Garden
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-[#3D5A80]">Plots Owned:</span>
-                        <span className="font-bold">{studentInsights.garden?.plots_owned}</span>
+                {/* Investments - Grade-based display */}
+                {/* K (grade 0): No investments, 1-2: Garden only, 3-5: Stocks only */}
+                {studentInsights.student?.grade >= 1 && (
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* Money Garden - Show for grades 1-2 only */}
+                    {studentInsights.student?.grade >= 1 && studentInsights.student?.grade <= 2 && (
+                      <div className="bg-green-50 rounded-xl p-4 border-2 border-green-200">
+                        <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
+                          <Sprout className="w-5 h-5 text-green-600" /> Money Garden
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="text-center">
+                            <span className="text-[#3D5A80] block">Plots Owned</span>
+                            <span className="font-bold text-lg">{studentInsights.garden?.plots_owned || 0}</span>
+                          </div>
+                          <div className="text-center">
+                            <span className="text-[#3D5A80] block">Total Invested</span>
+                            <span className="font-bold text-lg">₹{studentInsights.garden?.total_invested?.toFixed(0) || 0}</span>
+                          </div>
+                          <div className="text-center">
+                            <span className="text-[#3D5A80] block">Total Earned</span>
+                            <span className="font-bold text-lg text-green-600">₹{studentInsights.garden?.total_earned?.toFixed(0) || 0}</span>
+                          </div>
+                          <div className="text-center">
+                            <span className="text-[#3D5A80] block">Profit/Loss</span>
+                            <span className={`font-bold text-lg ${(studentInsights.garden?.profit_loss || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {(studentInsights.garden?.profit_loss || 0) >= 0 ? '+' : ''}₹{studentInsights.garden?.profit_loss?.toFixed(0) || 0}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-[#3D5A80]">Total Invested:</span>
-                        <span className="font-bold">₹{studentInsights.garden?.total_invested?.toFixed(0)}</span>
+                    )}
+                    
+                    {/* Stock Market - Show for grades 3-5 only */}
+                    {studentInsights.student?.grade >= 3 && studentInsights.student?.grade <= 5 && (
+                      <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                        <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
+                          <LineChart className="w-5 h-5 text-blue-600" /> Stock Market
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="text-center">
+                            <span className="text-[#3D5A80] block">Holdings</span>
+                            <span className="font-bold text-lg">{studentInsights.stocks?.holdings_count || 0}</span>
+                          </div>
+                          <div className="text-center">
+                            <span className="text-[#3D5A80] block">Portfolio Value</span>
+                            <span className="font-bold text-lg">₹{studentInsights.stocks?.portfolio_value?.toFixed(0) || 0}</span>
+                          </div>
+                          <div className="text-center">
+                            <span className="text-[#3D5A80] block">Realized Gains</span>
+                            <span className={`font-bold text-lg ${(studentInsights.stocks?.realized_gains || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {(studentInsights.stocks?.realized_gains || 0) >= 0 ? '+' : ''}₹{studentInsights.stocks?.realized_gains?.toFixed(0) || 0}
+                            </span>
+                          </div>
+                          <div className="text-center">
+                            <span className="text-[#3D5A80] block">Unrealized P/L</span>
+                            <span className={`font-bold text-lg ${(studentInsights.stocks?.unrealized_gains || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {(studentInsights.stocks?.unrealized_gains || 0) >= 0 ? '+' : ''}₹{studentInsights.stocks?.unrealized_gains?.toFixed(0) || 0}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-[#3D5A80]">Total Earned:</span>
-                        <span className="font-bold text-green-600">₹{studentInsights.garden?.total_earned?.toFixed(0)}</span>
-                      </div>
-                      <div className="flex justify-between pt-2 border-t">
-                        <span className="text-[#3D5A80] font-medium">Profit/Loss:</span>
-                        <span className={`font-bold ${studentInsights.garden?.profit_loss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {studentInsights.garden?.profit_loss >= 0 ? '+' : ''}₹{studentInsights.garden?.profit_loss?.toFixed(0)}
-                        </span>
-                      </div>
-                    </div>
+                    )}
                   </div>
-                  
-                  <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
-                    <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
-                      <LineChart className="w-5 h-5 text-blue-600" /> Stock Market
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-[#3D5A80]">Holdings:</span>
-                        <span className="font-bold">{studentInsights.stocks?.holdings_count}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-[#3D5A80]">Portfolio Value:</span>
-                        <span className="font-bold">₹{studentInsights.stocks?.portfolio_value?.toFixed(0)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-[#3D5A80]">Realized Gains:</span>
-                        <span className={`font-bold ${studentInsights.stocks?.realized_gains >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {studentInsights.stocks?.realized_gains >= 0 ? '+' : ''}₹{studentInsights.stocks?.realized_gains?.toFixed(0)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between pt-2 border-t">
-                        <span className="text-[#3D5A80] font-medium">Unrealized P/L:</span>
-                        <span className={`font-bold ${studentInsights.stocks?.unrealized_gains >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {studentInsights.stocks?.unrealized_gains >= 0 ? '+' : ''}₹{studentInsights.stocks?.unrealized_gains?.toFixed(0)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                )}
 
                 {/* Learning Progress */}
                 <div className="bg-[#3D5A80]/10 rounded-xl p-4 border-2 border-[#3D5A80]/30">
