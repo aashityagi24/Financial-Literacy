@@ -34,6 +34,7 @@ export default function ParentDashboard({ user }) {
   const navigate = useNavigate();
   const [dashboard, setDashboard] = useState(null);
   const [chores, setChores] = useState([]);
+  const [rewardPenalties, setRewardPenalties] = useState([]);
   const [allowances, setAllowances] = useState([]);
   const [savingsGoals, setSavingsGoals] = useState([]);
   const [childClassrooms, setChildClassrooms] = useState({});
@@ -47,9 +48,11 @@ export default function ParentDashboard({ user }) {
   // Dialogs
   const [showLinkChild, setShowLinkChild] = useState(false);
   const [showCreateChore, setShowCreateChore] = useState(false);
+  const [showRewardPenalty, setShowRewardPenalty] = useState(false);
   const [showGiveMoney, setShowGiveMoney] = useState(false);
   const [showAllowance, setShowAllowance] = useState(false);
   const [showSavingsGoal, setShowSavingsGoal] = useState(false);
+  const [activeRPTab, setActiveRPTab] = useState('chores'); // 'chores', 'rewards', 'penalties'
   
   // Forms
   const [linkEmail, setLinkEmail] = useState('');
@@ -61,6 +64,13 @@ export default function ParentDashboard({ user }) {
     frequency: 'one_time',
     weekly_days: [],
     monthly_date: 1
+  });
+  const [rpForm, setRpForm] = useState({
+    child_id: '',
+    title: '',
+    description: '',
+    amount: 5,
+    category: 'reward'
   });
   const [giveMoneyForm, setGiveMoneyForm] = useState({ child_id: '', amount: 10, reason: '' });
   const [allowanceForm, setAllowanceForm] = useState({ child_id: '', amount: 10, frequency: 'weekly' });
