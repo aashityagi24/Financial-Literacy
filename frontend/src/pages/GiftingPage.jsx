@@ -56,10 +56,12 @@ export default function GiftingPage({ user }) {
 
   const fetchData = async () => {
     try {
-      const [historyRes] = await Promise.all([
-        axios.get(`${API}/child/gift-history`)
+      const [historyRes, walletRes] = await Promise.all([
+        axios.get(`${API}/child/gift-history`),
+        axios.get(`${API}/wallet`)
       ]);
       setGiftHistory(historyRes.data);
+      setWallet(walletRes.data);
       
       if (canUseCharitableGiving) {
         const charityRes = await axios.get(`${API}/child/charitable-giving`);
@@ -70,6 +72,41 @@ export default function GiftingPage({ user }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTransfer = async () => {
+    const amount = parseFloat(transferAmount);
+    if (!amount || amount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    
+    const fromAccount = wallet?.accounts?.find(a => a.account_type === transferFrom);
+    if (!fromAccount || fromAccount.balance < amount) {
+      toast.error(`Not enough balance in ${transferFrom} jar`);
+      return;
+    }
+    
+    setTransferring(true);
+    try {
+      await axios.post(`${API}/wallet/transfer`, {
+        from_account: transferFrom,
+        to_account: 'gifting',
+        amount: amount
+      });
+      toast.success(`₹${amount} transferred to Gifting Jar! 🎉`);
+      setShowTransferDialog(false);
+      setTransferAmount('');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Transfer failed');
+    } finally {
+      setTransferring(false);
+    }
+  };
+
+  const getAccountBalance = (type) => {
+    return wallet?.accounts?.find(a => a.account_type === type)?.balance || 0;
   };
 
   const handleAddItem = () => {
