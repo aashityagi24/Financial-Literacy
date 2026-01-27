@@ -1310,25 +1310,43 @@ export default function TeacherDashboard({ user }) {
               </div>
             ) : comparisonData?.students?.length > 0 ? (
               <div className="overflow-auto flex-1">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs">
                   <thead className="bg-[#3D5A80] text-white sticky top-0">
                     <tr>
-                      <th className="px-3 py-2 text-left">Student</th>
-                      <th className="px-3 py-2 text-right">Balance</th>
-                      <th className="px-3 py-2 text-right">Spending</th>
-                      <th className="px-3 py-2 text-right">Savings</th>
-                      <th className="px-3 py-2 text-right">Gifting</th>
-                      <th className="px-3 py-2 text-right">Investing</th>
-                      <th className="px-3 py-2 text-right">Earned</th>
-                      <th className="px-3 py-2 text-right">Spent</th>
-                      <th className="px-3 py-2 text-center">Chores</th>
-                      <th className="px-3 py-2 text-center">Quests</th>
-                      <th className="px-3 py-2 text-center">Lessons</th>
-                      <th className="px-3 py-2 text-right">Garden P/L</th>
-                      <th className="px-3 py-2 text-right">Stock P/L</th>
-                      <th className="px-3 py-2 text-center">Gifts</th>
-                      <th className="px-3 py-2 text-center">Badges</th>
-                      <th className="px-3 py-2 text-center">Streak</th>
+                      <th className="px-2 py-2 text-left whitespace-nowrap">Student</th>
+                      <th className="px-2 py-2 text-right whitespace-nowrap">Total Balance</th>
+                      <th className="px-2 py-2 text-center whitespace-nowrap" colSpan="2">Spending</th>
+                      <th className="px-2 py-2 text-center whitespace-nowrap" colSpan="2">Savings</th>
+                      <th className="px-2 py-2 text-center whitespace-nowrap" colSpan="2">Gifting</th>
+                      <th className="px-2 py-2 text-center whitespace-nowrap" colSpan="2">Investing</th>
+                      <th className="px-2 py-2 text-center whitespace-nowrap">Chores</th>
+                      <th className="px-2 py-2 text-center whitespace-nowrap">Quests</th>
+                      <th className="px-2 py-2 text-center whitespace-nowrap">Lessons</th>
+                      <th className="px-2 py-2 text-right whitespace-nowrap">Garden P/L</th>
+                      <th className="px-2 py-2 text-right whitespace-nowrap">Stock P/L</th>
+                      <th className="px-2 py-2 text-center whitespace-nowrap">Gifts</th>
+                      <th className="px-2 py-2 text-center whitespace-nowrap">Badges</th>
+                      <th className="px-2 py-2 text-center whitespace-nowrap">Streak</th>
+                    </tr>
+                    <tr className="bg-[#3D5A80]/80 text-white/80 text-[10px]">
+                      <th className="px-2 py-1"></th>
+                      <th className="px-2 py-1"></th>
+                      <th className="px-2 py-1 text-center">Avail</th>
+                      <th className="px-2 py-1 text-center">Spent</th>
+                      <th className="px-2 py-1 text-center">Avail</th>
+                      <th className="px-2 py-1 text-center">Goals</th>
+                      <th className="px-2 py-1 text-center">Avail</th>
+                      <th className="px-2 py-1 text-center">Sent</th>
+                      <th className="px-2 py-1 text-center">Avail</th>
+                      <th className="px-2 py-1 text-center">Spent</th>
+                      <th className="px-2 py-1"></th>
+                      <th className="px-2 py-1"></th>
+                      <th className="px-2 py-1"></th>
+                      <th className="px-2 py-1"></th>
+                      <th className="px-2 py-1"></th>
+                      <th className="px-2 py-1"></th>
+                      <th className="px-2 py-1"></th>
+                      <th className="px-2 py-1"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1337,38 +1355,40 @@ export default function TeacherDashboard({ user }) {
                         key={student.student_id} 
                         className={`border-b hover:bg-[#E0FBFC] ${idx === 0 ? 'bg-[#FFD23F]/20' : ''}`}
                       >
-                        <td className="px-3 py-2 flex items-center gap-2">
+                        <td className="px-2 py-2 flex items-center gap-1">
                           <img 
                             src={student.avatar || `https://api.dicebear.com/7.x/thumbs/svg?seed=${student.name}`}
                             alt=""
-                            className="w-6 h-6 rounded-full"
+                            className="w-5 h-5 rounded-full"
                           />
-                          <span className="font-medium truncate max-w-[100px]">{student.name}</span>
+                          <span className="font-medium truncate max-w-[80px]">{student.name}</span>
                           {idx === 0 && <span className="text-yellow-500">👑</span>}
                         </td>
-                        <td className="px-3 py-2 text-right font-bold">₹{student.total_balance}</td>
-                        <td className="px-3 py-2 text-right">₹{student.spending_balance}</td>
-                        <td className="px-3 py-2 text-right">₹{student.savings_balance}</td>
-                        <td className="px-3 py-2 text-right">₹{student.gifting_balance}</td>
-                        <td className="px-3 py-2 text-right">₹{student.investing_balance}</td>
-                        <td className="px-3 py-2 text-right text-green-600">₹{student.total_earned}</td>
-                        <td className="px-3 py-2 text-right text-red-600">₹{student.total_spent}</td>
-                        <td className="px-3 py-2 text-center">{student.chores_completed}</td>
-                        <td className="px-3 py-2 text-center">{student.quests_completed}</td>
-                        <td className="px-3 py-2 text-center">{student.lessons_completed}</td>
-                        <td className={`px-3 py-2 text-right ${student.garden_pl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        <td className="px-2 py-2 text-right font-bold">₹{student.total_balance}</td>
+                        <td className="px-2 py-2 text-right">₹{student.spending_balance}</td>
+                        <td className="px-2 py-2 text-right text-red-500">₹{student.spending_spent || 0}</td>
+                        <td className="px-2 py-2 text-right">₹{student.savings_balance}</td>
+                        <td className="px-2 py-2 text-right text-green-600">₹{student.savings_in_goals || 0}</td>
+                        <td className="px-2 py-2 text-right">₹{student.gifting_balance}</td>
+                        <td className="px-2 py-2 text-right text-red-500">₹{student.gifting_spent || 0}</td>
+                        <td className="px-2 py-2 text-right">₹{student.investing_balance}</td>
+                        <td className="px-2 py-2 text-right text-red-500">₹{student.investing_spent || 0}</td>
+                        <td className="px-2 py-2 text-center">{student.chores_completed}</td>
+                        <td className="px-2 py-2 text-center">{student.quests_completed}</td>
+                        <td className="px-2 py-2 text-center">{student.lessons_completed}</td>
+                        <td className={`px-2 py-2 text-right ${student.garden_pl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {student.garden_pl >= 0 ? '+' : ''}₹{student.garden_pl}
                         </td>
-                        <td className={`px-3 py-2 text-right ${student.stock_pl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        <td className={`px-2 py-2 text-right ${student.stock_pl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {student.stock_pl >= 0 ? '+' : ''}₹{student.stock_pl}
                         </td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-2 py-2 text-center">
                           <span className="text-green-600">{student.gifts_received}↓</span>
-                          <span className="mx-1">/</span>
+                          <span className="mx-0.5">/</span>
                           <span className="text-red-600">{student.gifts_sent}↑</span>
                         </td>
-                        <td className="px-3 py-2 text-center">{student.badges}</td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-2 py-2 text-center">{student.badges}</td>
+                        <td className="px-2 py-2 text-center">
                           {student.streak > 0 && <span className="text-orange-500">🔥</span>}
                           {student.streak}
                         </td>
