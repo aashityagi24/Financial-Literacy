@@ -330,7 +330,7 @@ export default function ProfilePage({ user, setUser }) {
                   {classrooms.map((classroom) => (
                     <div key={classroom.classroom_id} className="bg-[#06D6A0]/10 rounded-xl p-3 border-2 border-[#06D6A0]">
                       <p className="font-bold text-[#1D3557]">{classroom.name}</p>
-                      <p className="text-sm text-[#3D5A80]">Teacher: {classroom.teacher_name}</p>
+                      <p className="text-sm text-[#3D5A80]">Teacher: {classroom.teacher?.name || classroom.teacher_name || 'Unknown'}</p>
                     </div>
                   ))}
                 </div>
