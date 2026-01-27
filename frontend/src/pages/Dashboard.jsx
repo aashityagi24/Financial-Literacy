@@ -327,10 +327,23 @@ export default function Dashboard({ user, setUser }) {
               {filteredAccounts.map((account) => {
                 const config = accountColors[account.account_type];
                 const displayLabel = config?.label || account.account_type;
+                
+                // Define navigation path for each account type
+                const getAccountPath = (type) => {
+                  switch(type) {
+                    case 'spending': return '/store';
+                    case 'savings': return '/savings-goals';
+                    case 'gifting': return '/classmates';
+                    case 'investing': return grade <= 2 ? '/garden' : '/stock-market';
+                    default: return '/wallet';
+                  }
+                };
+                
                 return (
                   <Link
-                    to={account.account_type === 'investing' && grade <= 2 ? '/garden' : '/wallet'}
+                    to={getAccountPath(account.account_type)}
                     key={account.account_type}
+                    data-testid={`jar-${account.account_type}`}
                     className={`${config?.bg || 'bg-gray-400'} rounded-xl border-2 border-[#1D3557] p-3 text-white hover:scale-[1.02] transition-transform cursor-pointer`}
                   >
                     <div className="text-xl mb-1">{config?.icon}</div>
