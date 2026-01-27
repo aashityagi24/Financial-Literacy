@@ -363,12 +363,30 @@ export default function Dashboard({ user, setUser }) {
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-bold text-[#1D3557] flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
                 <Target className="w-5 h-5 text-[#06D6A0]" />
-                My Savings Goal
+                My Savings Goals
               </h2>
               <Link to="/savings-goals" className="text-sm text-[#3D5A80] hover:text-[#1D3557]">
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
+            
+            {/* Total Savings Summary */}
+            {savingsGoals.length > 0 && (
+              <div className="bg-gradient-to-r from-[#06D6A0]/10 to-[#42E8B3]/10 rounded-xl p-3 mb-3 border border-[#06D6A0]/30">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-[#3D5A80]">Total Saved</span>
+                  <span className="text-lg font-bold text-[#06D6A0]">
+                    ₹{savingsGoals.reduce((sum, g) => sum + (g.current_amount || 0), 0).toFixed(0)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-xs text-[#3D5A80]">Across {savingsGoals.length} goal{savingsGoals.length > 1 ? 's' : ''}</span>
+                  <span className="text-xs text-[#EE6C4D]">
+                    ₹{savingsGoals.reduce((sum, g) => sum + (g.target_amount || 0), 0).toFixed(0)} total target
+                  </span>
+                </div>
+              </div>
+            )}
             
             {savingsGoals.length > 0 ? (
               <div className="flex-1 space-y-2">
