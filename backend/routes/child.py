@@ -479,6 +479,8 @@ async def gift_money(data: GiftRequest, request: Request):
         "amount": -data.amount,
         "transaction_type": "gift_sent",
         "description": f"Gift to {recipient.get('name', 'Friend')}: {data.message or ''}",
+        "to_user_id": data.to_user_id,
+        "to_user_name": recipient.get('name', 'Friend'),
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
@@ -489,6 +491,8 @@ async def gift_money(data: GiftRequest, request: Request):
         "amount": data.amount,
         "transaction_type": "gift_received",
         "description": f"Gift from {user.get('name', 'Friend')}: {data.message or ''}",
+        "from_user_id": user["user_id"],
+        "from_user_name": user.get('name', 'Friend'),
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
