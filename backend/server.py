@@ -1561,8 +1561,8 @@ async def _legacy_get_child_shopping_list(request: Request):
     
     return items
 
-@api_router.post("/child/shopping-list/{item_id}/mark-purchased")
-async def mark_shopping_item_purchased(item_id: str, request: Request):
+# @api_router.post("/child/shopping-list/{item_id}/mark-purchased")  # MOVED TO routes/store.py
+async def _legacy_mark_shopping_item_purchased(item_id: str, request: Request):
     """Mark a shopping list item as purchased after buying from store"""
     user = await get_current_user(request)
     if user.get("role") != "child":
@@ -1588,11 +1588,12 @@ async def mark_shopping_item_purchased(item_id: str, request: Request):
     return {"message": "Item marked as purchased"}
 
 # ============== MONEY GARDEN ROUTES (Grade 1-2) ==============
+# NOTE: These routes have been moved to /routes/garden.py
 
 PLOT_COST = 20  # Cost to buy additional plots
 
-@api_router.get("/garden/farm")
-async def get_farm(request: Request):
+# @api_router.get("/garden/farm")  # MOVED TO routes/garden.py
+async def _legacy_get_farm(request: Request):
     """Get child's farm with all plots and their status"""
     user = await get_current_user(request)
     grade = user.get("grade", 3) or 3
