@@ -93,10 +93,12 @@ A gamified financial literacy learning application for children (K-5) with disti
 - POST /api/admin/content/items/{id}/move - Move content item
 - PUT /api/admin/content/topics/reorder - Reorder topics/subtopics
 
-### Notifications
-- GET /api/notifications - Get user notifications
-- POST /api/notifications/mark-all-read - Mark all as read
-- DELETE /api/notifications/{id} - Delete notification
+### Teacher Dashboard
+- GET /api/teacher/dashboard - Get teacher overview
+- GET /api/teacher/classrooms/{id} - Get classroom details
+- GET /api/teacher/classrooms/{id}/student/{student_id}/insights - **NEW** Comprehensive student insights
+- GET /api/teacher/classrooms/{id}/comparison - **NEW** Compare all students in classroom
+- POST /api/teacher/classrooms/{id}/reward - Give rewards to students
 
 ## Credentials
 - **Admin:** admin@learnersplanet.com / finlit@2026
