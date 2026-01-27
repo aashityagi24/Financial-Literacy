@@ -214,36 +214,64 @@ export default function GiftingPage({ user }) {
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="card-playful p-4 text-center">
-            <Send className="w-8 h-8 mx-auto mb-2 text-[#EE6C4D]" />
-            <p className="text-2xl font-bold text-[#1D3557]">₹{giftHistory?.total_sent?.toFixed(0) || 0}</p>
-            <p className="text-xs text-[#3D5A80]">Sent to Friends</p>
-          </div>
-          <div className="card-playful p-4 text-center">
-            <Gift className="w-8 h-8 mx-auto mb-2 text-[#06D6A0]" />
-            <p className="text-2xl font-bold text-[#1D3557]">₹{giftHistory?.total_received?.toFixed(0) || 0}</p>
-            <p className="text-xs text-[#3D5A80]">Received</p>
-          </div>
-          {canUseCharitableGiving && (
-            <>
-              <div className="card-playful p-4 text-center">
-                <Heart className="w-8 h-8 mx-auto mb-2 text-[#9B5DE5]" />
-                <p className="text-2xl font-bold text-[#1D3557]">₹{charitableGiving?.total_value?.toFixed(0) || 0}</p>
-                <p className="text-xs text-[#3D5A80]">Charitable Giving</p>
+        {/* Summary Stats + Quick Actions Row */}
+        <div className="card-playful p-4 mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            {/* Stats */}
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 bg-[#EE6C4D]/20 rounded-xl flex items-center justify-center">
+                  <Send className="w-5 h-5 text-[#EE6C4D]" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-[#1D3557]">₹{giftHistory?.total_sent?.toFixed(0) || 0}</p>
+                  <p className="text-xs text-[#3D5A80]">Sent</p>
+                </div>
               </div>
-              <div className="card-playful p-4 text-center">
-                <Building2 className="w-8 h-8 mx-auto mb-2 text-[#3D5A80]" />
-                <p className="text-2xl font-bold text-[#1D3557]">{(charitableGiving?.organizations_helped || 0) + (charitableGiving?.people_helped || 0)}</p>
-                <p className="text-xs text-[#3D5A80]">People/Orgs Helped</p>
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 bg-[#06D6A0]/20 rounded-xl flex items-center justify-center">
+                  <Gift className="w-5 h-5 text-[#06D6A0]" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-[#1D3557]">₹{giftHistory?.total_received?.toFixed(0) || 0}</p>
+                  <p className="text-xs text-[#3D5A80]">Received</p>
+                </div>
               </div>
-            </>
-          )}
+              {canUseCharitableGiving && (
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 bg-[#9B5DE5]/20 rounded-xl flex items-center justify-center">
+                    <Heart className="w-5 h-5 text-[#9B5DE5]" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-[#1D3557]">₹{charitableGiving?.total_value?.toFixed(0) || 0}</p>
+                    <p className="text-xs text-[#3D5A80]">Donated</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Quick Action Buttons */}
+            <div className="flex items-center gap-2">
+              <Link 
+                to="/classmates" 
+                className="px-4 py-2 bg-[#EE6C4D] text-white rounded-xl font-bold flex items-center gap-2 hover:bg-[#D55A3D] transition-colors"
+              >
+                <Send className="w-4 h-4" />
+                Send Gift
+              </Link>
+              <button 
+                onClick={() => setShowTransferDialog(true)}
+                className="px-4 py-2 bg-[#06D6A0] text-white rounded-xl font-bold flex items-center gap-2 hover:bg-[#05C090] transition-colors"
+              >
+                <ArrowRightLeft className="w-4 h-4" />
+                Add Funds
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-4">
           <button
             onClick={() => setActiveTab('history')}
             className={`px-4 py-2 rounded-xl font-bold transition-all ${
@@ -268,34 +296,6 @@ export default function GiftingPage({ user }) {
               Charitable Giving
             </button>
           )}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="flex gap-3 mb-6">
-          <Link 
-            to="/classmates" 
-            className="flex-1 card-playful p-4 flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform"
-          >
-            <div className="w-12 h-12 bg-[#EE6C4D]/20 rounded-xl flex items-center justify-center">
-              <Send className="w-6 h-6 text-[#EE6C4D]" />
-            </div>
-            <div>
-              <p className="font-bold text-[#1D3557]">Send Gift</p>
-              <p className="text-xs text-[#3D5A80]">Send money to classmates</p>
-            </div>
-          </Link>
-          <button 
-            onClick={() => setShowTransferDialog(true)}
-            className="flex-1 card-playful p-4 flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform"
-          >
-            <div className="w-12 h-12 bg-[#06D6A0]/20 rounded-xl flex items-center justify-center">
-              <ArrowRightLeft className="w-6 h-6 text-[#06D6A0]" />
-            </div>
-            <div>
-              <p className="font-bold text-[#1D3557]">Add Funds</p>
-              <p className="text-xs text-[#3D5A80]">Transfer to gifting jar</p>
-            </div>
-          </button>
         </div>
 
         {/* Content */}
