@@ -2018,9 +2018,10 @@ async def admin_delete_plant(plant_id: str, request: Request):
     return {"message": "Plant deleted!"}
 
 # ============== STOCK INVESTMENT ROUTES (Grade 3-5) ==============
+# NOTE: These routes have been moved to /routes/investments.py
 
-@api_router.get("/investments")
-async def get_investments(request: Request):
+# @api_router.get("/investments")  # MOVED TO routes/investments.py
+async def _legacy_get_investments(request: Request):
     """Get user's investments - redirects to appropriate system based on grade"""
     user = await get_current_user(request)
     grade = user.get("grade", 3) or 3
@@ -2050,8 +2051,8 @@ async def get_investments(request: Request):
     
     return investments
 
-@api_router.post("/investments")
-async def create_investment(investment: InvestmentCreate, request: Request):
+# @api_router.post("/investments")  # MOVED TO routes/investments.py
+async def _legacy_create_investment(investment: InvestmentCreate, request: Request):
     """Create a new investment"""
     user = await get_current_user(request)
     
@@ -2099,8 +2100,8 @@ async def create_investment(investment: InvestmentCreate, request: Request):
     
     return {"message": "Investment created", "investment_id": inv_doc["investment_id"]}
 
-@api_router.post("/investments/{investment_id}/sell")
-async def sell_investment(investment_id: str, request: Request):
+# @api_router.post("/investments/{investment_id}/sell")  # MOVED TO routes/investments.py
+async def _legacy_sell_investment(investment_id: str, request: Request):
     """Sell an investment and get returns"""
     user = await get_current_user(request)
     
@@ -8401,7 +8402,7 @@ async def buy_investment(data: BuyInvestmentRequest, request: Request):
     }
 
 @api_router.post("/investments/sell")
-async def sell_investment(data: SellInvestmentRequest, request: Request):
+async def _legacy_sell_investment(data: SellInvestmentRequest, request: Request):
     """Sell plants or stocks"""
     user = await get_current_user(request)
     user_id = user["user_id"]
