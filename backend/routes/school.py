@@ -277,7 +277,9 @@ async def school_create_teacher(request: Request):
     
     await db.users.insert_one(user_doc)
     
-    return {"message": "Teacher created successfully", "user_id": user_id, "user": user_doc}
+    # Fetch the clean user without _id
+    created_user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    return {"message": "Teacher created successfully", "user_id": user_id, "user": created_user}
 
 @router.post("/school/users/parent")
 async def school_create_parent(request: Request):
