@@ -176,6 +176,46 @@ export default function SchoolDashboard() {
     setShowUploadModal(false);
   };
 
+  const handleAddUser = async () => {
+    if (!addUserForm.name.trim() || !addUserForm.email.trim()) {
+      toast.error('Name and email are required');
+      return;
+    }
+    
+    setAddUserLoading(true);
+    try {
+      const payload = { 
+        name: addUserForm.name.trim(), 
+        email: addUserForm.email.trim().toLowerCase() 
+      };
+      
+      if (addUserType === 'child') {
+        payload.grade = parseInt(addUserForm.grade);
+        if (addUserForm.parent_email.trim()) {
+          payload.parent_email = addUserForm.parent_email.trim().toLowerCase();
+        }
+        if (addUserForm.classroom_code.trim()) {
+          payload.classroom_code = addUserForm.classroom_code.trim().toUpperCase();
+        }
+      }
+      
+      const response = await axios.post(
+        `${API}/school/users/${addUserType}`,
+        payload,
+        { withCredentials: true }
+      );
+      
+      toast.success(response.data.message);
+      setShowAddUserModal(false);
+      setAddUserForm({ name: '', email: '', grade: '3', parent_email: '', classroom_code: '' });
+      fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create user');
+    } finally {
+      setAddUserLoading(false);
+    }
+  };
+
   const getGradeLabel = (grade) => {
     if (grade === 0) return 'K';
     return `G${grade}`;
