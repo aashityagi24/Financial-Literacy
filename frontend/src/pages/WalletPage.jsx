@@ -157,6 +157,7 @@ export default function WalletPage({ user }) {
       case 'purchase': return <span className="text-sm">🛒</span>;
       case 'reward': return <span className="text-sm">⭐</span>;
       case 'earning': return <span className="text-sm">💰</span>;
+      case 'allowance': return <span className="text-sm">💵</span>;
       case 'stock_buy': return <span className="text-sm">📈</span>;
       case 'stock_sell': return <span className="text-sm">📊</span>;
       case 'garden_buy': return <span className="text-sm">🌱</span>;
