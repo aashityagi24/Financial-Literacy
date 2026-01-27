@@ -44,6 +44,12 @@ export default function SchoolDashboard() {
   const [csvPreview, setCsvPreview] = useState([]);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
+  
+  // Individual User Creation State
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [addUserType, setAddUserType] = useState('teacher');
+  const [addUserForm, setAddUserForm] = useState({ name: '', email: '', grade: '3', parent_email: '', classroom_code: '' });
+  const [addUserLoading, setAddUserLoading] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
