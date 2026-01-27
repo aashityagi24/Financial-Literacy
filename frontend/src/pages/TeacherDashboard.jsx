@@ -993,9 +993,21 @@ export default function TeacherDashboard({ user }) {
                 )}
                 
                 {/* Students List */}
-                <h3 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
-                  Students ({classroomDetails.students.length})
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                    Students ({classroomDetails.students.length})
+                  </h3>
+                  {classroomDetails.students.length > 0 && (
+                    <button
+                      onClick={fetchComparisonData}
+                      className="flex items-center gap-2 px-4 py-2 bg-[#3D5A80] text-white rounded-xl hover:bg-[#1D3557] transition-colors"
+                      data-testid="compare-students-btn"
+                    >
+                      <BarChart3 className="w-4 h-4" />
+                      Compare All
+                    </button>
+                  )}
+                </div>
                 
                 {classroomDetails.students.length === 0 ? (
                   <div className="card-playful p-6 text-center mb-6">
