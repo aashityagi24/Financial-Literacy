@@ -36,6 +36,10 @@ const notificationIcons = {
   chore_validation: { icon: Check, color: 'text-[#FFD23F]', bg: 'bg-[#FFD23F]/20', path: '/parent-dashboard' },
   chore_reminder: { icon: Trophy, color: 'text-[#FFD23F]', bg: 'bg-[#FFD23F]/20', path: '/quests' },
   
+  // Parent Rewards & Penalties
+  parent_reward: { icon: Trophy, color: 'text-[#06D6A0]', bg: 'bg-[#06D6A0]/20', path: '/wallet' },
+  parent_penalty: { icon: X, color: 'text-[#EE6C4D]', bg: 'bg-[#EE6C4D]/20', path: '/wallet' },
+  
   // Investment related
   stock_update: { icon: Trophy, color: 'text-[#10B981]', bg: 'bg-[#10B981]/20', path: '/stock-market' },
   garden_update: { icon: Trophy, color: 'text-[#228B22]', bg: 'bg-[#228B22]/20', path: '/garden' },
