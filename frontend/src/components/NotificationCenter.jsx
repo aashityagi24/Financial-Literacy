@@ -142,10 +142,11 @@ export default function NotificationCenter({ onGiftRequestAction }) {
                 <Bell className="w-5 h-5 inline mr-2" />
                 Notifications
               </DialogTitle>
-              {unreadCount > 0 && (
+              {hasUnreadOnOpen && (
                 <button
                   onClick={handleMarkAllAsRead}
                   className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-[#06D6A0] hover:bg-[#06D6A0]/10 rounded-lg transition-colors"
+                  data-testid="mark-all-read-btn"
                 >
                   <CheckCheck className="w-4 h-4" />
                   Mark all read
