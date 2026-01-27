@@ -5,7 +5,14 @@ from typing import Optional
 import random
 import string
 
-from core.database import db
+# Import db from the main server module when used from routes
+# This will be set by the server.py when importing
+db = None
+
+def set_db(database):
+    """Set the database instance - called by server.py"""
+    global db
+    db = database
 
 async def get_session_from_header(request: Request) -> Optional[str]:
     """Get session token from Authorization header"""
