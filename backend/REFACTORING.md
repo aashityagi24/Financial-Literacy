@@ -1,12 +1,12 @@
 # CoinQuest Backend - Refactored Structure
 # ==========================================
 # 
-# The monolithic server.py (9600+ lines) has been broken down into modules.
-# This is Phase 1 of the refactoring - creating the modular structure.
+# PHASE 2 COMPLETE - The monolithic server.py (9600+ lines) has been modularized.
+# Auth and School routes are now served from separate modules.
 #
 # Directory Structure:
 # /app/backend/
-# ├── server.py              # Main FastAPI app (legacy, still working)
+# ├── server.py              # Main FastAPI app (orchestrator, routes integrated)
 # ├── core/
 # │   ├── __init__.py        # Core exports
 # │   ├── config.py          # Application settings & directories
@@ -27,16 +27,16 @@
 # │   └── auth.py            # Auth helpers: get_current_user, require_admin/teacher/parent/child/school
 # └── routes/
 #     ├── __init__.py
-#     ├── auth.py            # Auth routes (ready, not yet integrated)
-#     └── school.py          # School routes (ready, not yet integrated)
+#     ├── auth.py            # Auth routes ✅ INTEGRATED
+#     └── school.py          # School routes ✅ INTEGRATED
 #
 # Migration Status:
 # ================
 # [x] Core config & database modules created and tested
 # [x] All Pydantic models extracted to /models/ (9 files)
 # [x] Auth service helpers extracted to /services/auth.py
-# [x] Auth routes extracted to /routes/auth.py
-# [x] School routes extracted to /routes/school.py
+# [x] Auth routes extracted and integrated from /routes/auth.py
+# [x] School routes extracted and integrated from /routes/school.py
 # [ ] Wallet routes migration
 # [ ] Store routes migration
 # [ ] Garden routes migration  
@@ -44,35 +44,56 @@
 # [ ] Quest routes migration
 # [ ] Teacher routes migration
 # [ ] Parent routes migration
-# [ ] Admin routes migration
+# [ ] Admin routes migration (remaining)
 # [ ] Learning content routes migration
 #
-# How to use new models in new code:
-# ==================================
-# import sys
-# sys.path.insert(0, '/app/backend')
+# Routes Migrated (12 endpoints):
+# ==============================
+# Auth Routes (6):
+#   - POST /api/auth/admin-login
+#   - POST /api/auth/school-login
+#   - POST /api/auth/session
+#   - GET /api/auth/me
+#   - POST /api/auth/logout
+#   - PUT /api/auth/profile
 #
-# from models import UserBase, WalletAccount, StoreItem
-# from models.investment import Stock, GardenPlant
-# from services.auth import get_current_user, require_admin
-# from core.database import db
-# from core.config import settings
+# School Routes (6):
+#   - POST /api/admin/schools
+#   - GET /api/admin/schools
+#   - DELETE /api/admin/schools/{school_id}
+#   - GET /api/school/dashboard
+#   - GET /api/school/students/comparison
+#   - POST /api/school/upload/teachers
+#   - POST /api/school/upload/students
+#   - POST /api/school/upload/parents
 #
-# Benefits of new structure:
-# =========================
-# 1. Models are reusable across different route files
-# 2. Auth services are centralized - changes apply everywhere
-# 3. Database connection is managed in one place
-# 4. Each route file is focused and maintainable
+# How to use new modules in server.py:
+# ===================================
+# # At top of server.py, after db initialization:
+# from services import auth as auth_service
+# from routes import auth as auth_routes
+# from routes import school as school_routes
+# 
+# auth_service.init_db(db)
+# auth_routes.init_db(db)
+# school_routes.init_db(db)
+# 
+# api_router.include_router(auth_routes.router)
+# api_router.include_router(school_routes.router)
+#
+# Benefits Achieved:
+# =================
+# 1. Routes are modular and reusable
+# 2. Auth services are centralized
+# 3. Database connection is managed via injection
+# 4. Each route file is focused (~300 lines vs 9600+)
 # 5. Easier to test individual components
 # 6. New developers can understand the codebase faster
+# 7. Legacy code preserved with _legacy_ prefix for reference
 #
-# Phase 2 (Future):
+# Phase 3 (Future):
 # ================
-# - Integrate modular routes into server.py via include_router()
-# - Remove duplicate code from server.py
+# - Migrate remaining routes (wallet, store, garden, stock, quest, teacher, parent, admin)
 # - Add unit tests for services
 # - Add API documentation per module
-#
-# Note: Current server.py still works! The refactoring is additive.
-# No breaking changes have been introduced.
+# - Eventually remove legacy code from server.py
