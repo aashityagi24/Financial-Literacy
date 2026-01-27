@@ -488,11 +488,11 @@ export default function QuestsPage({ user }) {
               <div className="space-y-4 mt-4">
                 {/* Quest Info */}
                 <div className="bg-[#FFD23F]/20 rounded-xl p-4 border-2 border-[#FFD23F]">
-                  <p className="text-[#1D3557]">{selectedQuest.description}</p>
+                  <p className="text-[#1D3557]">{selectedQuest.description || <span className="italic text-gray-500">No description provided</span>}</p>
                   <div className="flex items-center gap-4 mt-3">
                     <span className="font-bold text-[#1D3557] flex items-center gap-1">
                       <Star className="w-5 h-5 text-[#FFD23F]" /> 
-                      Total: ₹{selectedQuest.total_points || selectedQuest.reward_amount}
+                      Total: ₹{selectedQuest.total_points || selectedQuest.reward_amount || 0}
                     </span>
                     {selectedQuest.due_date && (
                       <span className="text-[#3D5A80] flex items-center gap-1">
