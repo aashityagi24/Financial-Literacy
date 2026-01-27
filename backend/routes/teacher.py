@@ -857,8 +857,7 @@ async def create_announcement(classroom_id: str, request: Request):
     classroom = await db.classrooms.find_one({
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"]
-    
-})
+    })
     if not classroom:
         raise HTTPException(status_code=404, detail="Classroom not found")
     
@@ -867,11 +866,36 @@ async def create_announcement(classroom_id: str, request: Request):
         "announcement_id": announcement_id,
         "classroom_id": classroom_id,
         "teacher_id": teacher["user_id"],
+        "teacher_name": teacher.get("name", "Teacher"),
         "title": body.get("title"),
         "content": body.get("content", ""),
         "created_at": datetime.now(timezone.utc).isoformat()
-})
-    return {"message": "Announcement created", "announcement_id": announcement_id}
+    })
+    
+    # Send notifications to all students in the classroom
+    enrollments = await db.classroom_students.find(
+        {"classroom_id": classroom_id, "status": "active"},
+        {"_id": 0, "student_id": 1}
+    ).to_list(500)
+    
+    notifications = []
+    for enrollment in enrollments:
+        notifications.append({
+            "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+            "user_id": enrollment["student_id"],
+            "type": "announcement",
+            "title": f"Announcement from {teacher.get('name', 'Teacher')}",
+            "message": body.get("title", "New announcement from your teacher"),
+            "announcement_id": announcement_id,
+            "classroom_id": classroom_id,
+            "is_read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    if notifications:
+        await db.notifications.insert_many(notifications)
+    
+    return {"message": "Announcement created", "announcement_id": announcement_id, "notifications_sent": len(notifications)}
 
 @router.get("/classrooms/{classroom_id}/announcements")
 async def get_announcements(classroom_id: str, request: Request):
