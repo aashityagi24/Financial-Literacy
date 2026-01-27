@@ -130,8 +130,10 @@ export default function ProfilePage({ user, setUser }) {
   const handleLogout = async () => {
     try {
       await axios.post(`${API}/auth/logout`);
+      localStorage.removeItem('session_token');
       navigate('/');
     } catch (error) {
+      localStorage.removeItem('session_token');
       navigate('/');
     }
   };
