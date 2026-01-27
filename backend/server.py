@@ -8256,7 +8256,7 @@ async def admin_get_scheduler_status(request: Request):
 
 # ============== USER INVESTMENT ENDPOINTS (Updated) ==============
 
-@api_router.get("/investments/plants")
+# @api_router.get("/investments/plants")
 async def get_available_plants(request: Request):
     """Get available plants for investment (K-2 grades)"""
     user = await get_current_user(request)
@@ -8264,7 +8264,7 @@ async def get_available_plants(request: Request):
     plants = await db.investment_plants.find({"is_active": True}, {"_id": 0}).to_list(100)
     return plants
 
-@api_router.get("/investments/stocks")
+# @api_router.get("/investments/stocks")
 async def get_available_stocks(request: Request):
     """Get available stocks for investment (grades 3-5)"""
     user = await get_current_user(request)
@@ -8272,7 +8272,7 @@ async def get_available_stocks(request: Request):
     stocks = await db.investment_stocks.find({"is_active": True}, {"_id": 0}).to_list(100)
     return stocks
 
-@api_router.get("/investments/stocks/{stock_id}/chart")
+# @api_router.get("/investments/stocks/{stock_id}/chart")
 async def get_stock_chart(stock_id: str, request: Request, period: str = "7d"):
     """Get stock price chart data"""
     await get_current_user(request)
@@ -8291,7 +8291,7 @@ async def get_stock_chart(stock_id: str, request: Request, period: str = "7d"):
     
     return {"stock_id": stock_id, "period": period, "data": history}
 
-@api_router.get("/investments/portfolio")
+# @api_router.get("/investments/portfolio")
 async def get_user_portfolio(request: Request):
     """Get user's investment portfolio with current values"""
     user = await get_current_user(request)
@@ -8364,7 +8364,7 @@ async def get_user_portfolio(request: Request):
         "total_profit_loss": round(total_current_value - total_invested, 2)
     }
 
-@api_router.post("/investments/buy")
+# @api_router.post("/investments/buy")
 async def buy_investment(data: BuyInvestmentRequest, request: Request):
     """Buy plants or stocks"""
     user = await get_current_user(request)
@@ -8437,7 +8437,7 @@ async def buy_investment(data: BuyInvestmentRequest, request: Request):
         "total_cost": total_cost
     }
 
-@api_router.post("/investments/sell")
+# @api_router.post("/investments/sell")
 async def _legacy_sell_investment(data: SellInvestmentRequest, request: Request):
     """Sell plants or stocks"""
     user = await get_current_user(request)
@@ -8505,7 +8505,7 @@ async def _legacy_sell_investment(data: SellInvestmentRequest, request: Request)
 
 # ============== USER STORE ENDPOINTS (Updated) ==============
 
-@api_router.get("/store/categories")
+# @api_router.get("/store/categories")
 async def get_store_categories(request: Request):
     """Get active store categories for users"""
     user = await get_current_user(request)
@@ -8517,7 +8517,7 @@ async def get_store_categories(request: Request):
     
     return categories
 
-@api_router.get("/store/items-by-category")
+# @api_router.get("/store/items-by-category")
 async def get_store_items_by_category(request: Request):
     """Get store items grouped by category for users"""
     user = await get_current_user(request)
