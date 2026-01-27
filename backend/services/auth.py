@@ -89,6 +89,7 @@ async def require_child(request: Request) -> dict:
 
 async def get_current_school(request: Request):
     """Get current school from session"""
+    db = get_db()
     session_token = request.cookies.get("session_token")
     if not session_token or not session_token.startswith("school_sess_"):
         raise HTTPException(status_code=401, detail="Not authenticated as school")
