@@ -54,9 +54,12 @@ export default function Dashboard({ user, setUser }) {
       ]);
       
       setWallet(walletRes.data);
-      // Filter out completed/attempted quests for active quests display
-      const activeQuests = (questsRes.data || []).filter(q => !q.is_completed && !q.has_earned);
-      setQuests(activeQuests.slice(0, 3));
+      // Filter out completed quests - check user_status, is_completed, and has_earned
+      const activeQuests = (questsRes.data || []).filter(q => 
+        q.user_status !== 'completed' && !q.is_completed && !q.has_earned
+      );
+      // Cap to 2 active quests on dashboard
+      setQuests(activeQuests.slice(0, 2));
       setAchievements(achievementsRes.data.filter(a => a.earned).slice(0, 4));
       
       // Set active savings goals (up to 2 for dashboard display)
