@@ -572,6 +572,95 @@ export default function GiftingPage({ user }) {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Transfer to Gifting Jar Dialog */}
+        <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-[#1D3557]">
+                <ArrowRightLeft className="w-5 h-5 text-[#9B5DE5]" />
+                Add Money to Gifting Jar
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {/* Current Balances */}
+              <div className="bg-gray-50 rounded-xl p-3 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-[#3D5A80]">🛒 Spending Jar</span>
+                  <span className="font-bold text-[#1D3557]">₹{getAccountBalance('spending').toFixed(0)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-[#3D5A80]">🏦 Savings Jar</span>
+                  <span className="font-bold text-[#1D3557]">₹{getAccountBalance('savings').toFixed(0)}</span>
+                </div>
+                <div className="flex justify-between items-center border-t pt-2">
+                  <span className="text-sm text-[#9B5DE5] font-bold">💝 Gifting Jar</span>
+                  <span className="font-bold text-[#9B5DE5]">₹{getAccountBalance('gifting').toFixed(0)}</span>
+                </div>
+              </div>
+              
+              {/* Transfer From */}
+              <div>
+                <label className="text-sm font-medium text-[#1D3557] block mb-2">Transfer From</label>
+                <Select value={transferFrom} onValueChange={setTransferFrom}>
+                  <SelectTrigger className="border-2 border-[#1D3557]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="spending">🛒 Spending Jar (₹{getAccountBalance('spending').toFixed(0)})</SelectItem>
+                    <SelectItem value="savings">🏦 Savings Jar (₹{getAccountBalance('savings').toFixed(0)})</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Amount */}
+              <div>
+                <label className="text-sm font-medium text-[#1D3557] block mb-2">Amount to Transfer</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#3D5A80]">₹</span>
+                  <Input
+                    type="number"
+                    value={transferAmount}
+                    onChange={(e) => setTransferAmount(e.target.value)}
+                    placeholder="Enter amount"
+                    className="border-2 border-[#1D3557] pl-8"
+                  />
+                </div>
+                {/* Quick amount buttons */}
+                <div className="flex gap-2 mt-2">
+                  {[10, 25, 50, 100].map(amt => (
+                    <button
+                      key={amt}
+                      onClick={() => setTransferAmount(String(amt))}
+                      className="flex-1 py-1 px-2 text-sm rounded-lg border-2 border-[#9B5DE5] text-[#9B5DE5] hover:bg-[#9B5DE5] hover:text-white transition-colors"
+                    >
+                      ₹{amt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <Button 
+                onClick={handleTransfer}
+                disabled={transferring || !transferAmount}
+                className="w-full bg-[#9B5DE5] hover:bg-[#8B4DD5] text-white"
+              >
+                {transferring ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Transferring...
+                  </span>
+                ) : (
+                  <>
+                    <ArrowRightLeft className="w-4 h-4 mr-2" />
+                    Transfer to Gifting Jar
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
