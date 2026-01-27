@@ -123,26 +123,36 @@ async def school_login(login_data: SchoolLoginRequest, response: Response):
 @router.post("/session")
 async def create_session(request: Request, response: Response):
     """Exchange session_id from Google OAuth for session data"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     db = get_db()
     body = await request.json()
     session_id = body.get("session_id")
+    
+    logger.info(f"Session validation request received, session_id prefix: {session_id[:20] if session_id else 'None'}...")
     
     if not session_id:
         raise HTTPException(status_code=400, detail="session_id required")
     
     async with httpx.AsyncClient() as client:
         try:
+            logger.info("Calling Emergent auth validation...")
             auth_response = await client.post(
                 "https://auth.emergentagent.com/validate",
                 json={"session_id": session_id}
             )
+            logger.info(f"Auth validation response: status={auth_response.status_code}, body={auth_response.text[:200] if auth_response.text else 'empty'}")
+            
             if auth_response.status_code != 200:
                 raise HTTPException(status_code=401, detail=f"Invalid session: {auth_response.text}")
             
             user_data = auth_response.json()
+            logger.info(f"User data from auth: email={user_data.get('email')}")
         except HTTPException:
             raise
         except Exception as e:
+            logger.error(f"Auth validation exception: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Auth validation failed: {str(e)}")
     
     email = user_data.get("email")
