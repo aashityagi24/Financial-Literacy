@@ -175,7 +175,10 @@ async def buy_stock(request: Request):
     if quantity <= 0:
         raise HTTPException(status_code=400, detail="Quantity must be positive")
     
-    stock = await db.admin_stocks.find_one({"stock_id": stock_id, "is_active": True}, {"_id": 0})
+    # Try investment_stocks first, then admin_stocks
+    stock = await db.investment_stocks.find_one({"stock_id": stock_id, "is_active": True}, {"_id": 0})
+    if not stock:
+        stock = await db.admin_stocks.find_one({"stock_id": stock_id, "is_active": True}, {"_id": 0})
     if not stock:
         raise HTTPException(status_code=404, detail="Stock not found")
     
@@ -232,6 +235,16 @@ async def buy_stock(request: Request):
         "quantity": quantity,
         "price": stock["current_price"],
         "total": total_cost,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Record in transactions for wallet history
+    await db.transactions.insert_one({
+        "transaction_id": f"tx_{uuid.uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "transaction_type": "stock_buy",
+        "amount": -total_cost,
+        "description": f"Bought {quantity} shares of {stock['name']}",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
