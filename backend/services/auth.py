@@ -32,6 +32,7 @@ async def get_session_from_cookie(request: Request) -> Optional[str]:
 
 async def get_current_user(request: Request) -> dict:
     """Get current user from session token (cookie first, then header)"""
+    db = get_db()
     session_token = await get_session_from_cookie(request)
     if not session_token:
         session_token = await get_session_from_header(request)
