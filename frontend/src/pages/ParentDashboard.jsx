@@ -123,6 +123,25 @@ export default function ParentDashboard({ user }) {
     }
   };
   
+  const fetchChildInsights = async (child) => {
+    if (!child?.user_id) return;
+    setShowChildInsights(child);
+    setInsightsLoading(true);
+    try {
+      const res = await axios.get(`${API}/parent/children/${child.user_id}/insights`);
+      setChildInsights(res.data);
+    } catch (error) {
+      toast.error('Failed to load child insights');
+      console.error(error);
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
+    } catch (error) {
+      toast.error('Failed to load child progress');
+    }
+  };
+  
   const handleLinkChild = async () => {
     try {
       await axios.post(`${API}/parent/link-child`, { child_email: linkEmail });
