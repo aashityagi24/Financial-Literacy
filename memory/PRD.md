@@ -156,13 +156,12 @@ A gamified financial literacy learning application for children (K-5) with disti
 - **Users:** Google Social Login
 
 ## Key Files
-- `/app/backend/server.py` - FastAPI backend (Phase 4 complete - 50% migrated)
-- `/app/backend/routes/` - 16 modular route files:
-  - `auth.py` (6), `school.py` (8), `wallet.py` (3), `store.py` (5)
-  - `garden.py` (7), `investments.py` (3), `achievements.py` (4)
-  - `quests.py` (10), `notifications.py` (4), `teacher.py` (11), `parent.py` (10)
-  - `admin.py` (12), `child.py` (14), `learning.py` (9)
-  - `uploads.py` (8), `stocks.py` (10)
+- `/app/backend/server.py` - FastAPI backend (REFACTORING COMPLETE - 98% migrated)
+- `/app/backend/routes/` - 19 modular route files:
+  - `auth.py`, `school.py`, `wallet.py`, `store.py`, `garden.py`
+  - `investments.py`, `achievements.py`, `quests.py`, `notifications.py`
+  - `teacher.py`, `parent.py`, `admin.py`, `child.py`, `learning.py`
+  - `uploads.py`, `stocks.py`, `content.py`, `student.py`
 - `/app/backend/models/` - 9 Pydantic model files
 - `/app/backend/services/auth.py` - Authentication helpers
 - `/app/frontend/src/pages/` - React page components
