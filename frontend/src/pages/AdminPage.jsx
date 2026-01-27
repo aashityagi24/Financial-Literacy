@@ -524,11 +524,24 @@ export default function AdminPage({ user }) {
                           </SelectContent>
                         </Select>
                       </td>
-                      <td className="py-3 px-4 text-gray-600">
-                        {u.grade !== null && u.grade !== undefined 
-                          ? (u.grade === 0 ? 'K' : `Grade ${u.grade}`)
-                          : '-'
-                        }
+                      <td className="py-3 px-4">
+                        <Select 
+                          value={u.grade !== null && u.grade !== undefined ? String(u.grade) : ''} 
+                          onValueChange={(value) => handleGradeChange(u.user_id, value)}
+                        >
+                          <SelectTrigger className="w-28">
+                            <SelectValue placeholder="-" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="0">K</SelectItem>
+                            <SelectItem value="1">Grade 1</SelectItem>
+                            <SelectItem value="2">Grade 2</SelectItem>
+                            <SelectItem value="3">Grade 3</SelectItem>
+                            <SelectItem value="4">Grade 4</SelectItem>
+                            <SelectItem value="5">Grade 5</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </td>
                       <td className="py-3 px-4">
                         <button
