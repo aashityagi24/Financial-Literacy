@@ -187,7 +187,8 @@ export default function NotificationCenter({ onGiftRequestAction }) {
                 {notifications.map((notif) => {
                   const typeInfo = notificationIcons[notif.notification_type] || notificationIcons.announcement;
                   const IconComponent = typeInfo.icon;
-                  const isClickable = notif.notification_type !== 'gift_request' && typeInfo.path;
+                  // Clickable if not a gift request AND has either link or path
+                  const isClickable = notif.notification_type !== 'gift_request' && (notif.link || typeInfo.path);
                   
                   return (
                     <div 
