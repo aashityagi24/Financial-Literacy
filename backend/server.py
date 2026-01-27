@@ -2915,6 +2915,7 @@ async def validate_chore_completion(request_id: str, request: Request):
             "completion_id": f"comp_{uuid.uuid4().hex[:12]}",
             "user_id": chore_req["child_id"],
             "quest_id": chore_req["chore_id"],
+            "is_completed": True,
             "has_earned": True,
             "earned_amount": reward,
             "completed_at": datetime.now(timezone.utc).isoformat()
