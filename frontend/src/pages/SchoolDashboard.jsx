@@ -990,7 +990,23 @@ export default function SchoolDashboard() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Classroom Code (optional)
+                    Teacher Email (optional)
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="Link to teacher's classroom"
+                    value={addUserForm.teacher_email}
+                    onChange={(e) => setAddUserForm({ ...addUserForm, teacher_email: e.target.value })}
+                    data-testid="teacher-email-input"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter teacher&apos;s email to enroll in their classroom
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    OR Classroom Code (optional)
                   </label>
                   <Input
                     placeholder="Enter classroom join code"
