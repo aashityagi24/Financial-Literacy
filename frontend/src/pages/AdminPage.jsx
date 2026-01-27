@@ -111,6 +111,20 @@ export default function AdminPage({ user }) {
     }
   };
   
+  // Filter users based on selected filters
+  const filteredUsers = users.filter(u => {
+    if (filters.role !== 'all' && u.role !== filters.role) return false;
+    if (filters.grade !== 'all') {
+      if (filters.grade === 'none' && u.grade !== null && u.grade !== undefined) return false;
+      if (filters.grade !== 'none' && String(u.grade) !== filters.grade) return false;
+    }
+    if (filters.school !== 'all') {
+      if (filters.school === 'none' && u.school_id) return false;
+      if (filters.school !== 'none' && u.school_id !== filters.school) return false;
+    }
+    return true;
+  });
+  
   const handleDeleteUser = async (userId, userName) => {
     if (!confirm(`Are you sure you want to delete ${userName}? This will delete ALL their data permanently.`)) {
       return;
