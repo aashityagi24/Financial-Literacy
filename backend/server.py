@@ -179,6 +179,14 @@ class ChoreCreate(BaseModel):
     weekly_days: Optional[List[int]] = None  # 0=Mon, 6=Sun for weekly
     monthly_date: Optional[int] = None  # Day of month for monthly_date
 
+class RewardPenaltyCreate(BaseModel):
+    """Create instant reward or penalty for a child"""
+    child_id: str
+    title: str
+    description: Optional[str] = None
+    amount: float  # Positive for reward, negative for penalty
+    category: str  # 'reward' or 'penalty'
+
 class UserQuest(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
