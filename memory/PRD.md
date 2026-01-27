@@ -49,9 +49,8 @@ A gamified financial literacy learning application for children (K-5) with disti
    - Fixed join_code/invite_code mismatch
    - Returns teacher info in response
 
-2. **Single Classroom Constraint** ✅ (NEW)
+2. **Single Classroom Constraint** ✅
    - Children can only be enrolled in ONE classroom
-   - Attempting to join second classroom returns error: "You are already enrolled in '[classroom]'. Students can only be in one classroom."
 
 3. **Quest Answer Feedback** ✅ (NEW)
    - Correct answers: Green checkmark with "Amazing! +₹X" and "Great job! 🎉"
