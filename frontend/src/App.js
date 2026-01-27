@@ -59,33 +59,47 @@ export const ProtectedRoute = ({ children }) => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const hasChecked = useRef(false);
   
-  // If user data was passed from AuthCallback, use it directly
   useEffect(() => {
-    if (location.state?.user) {
+    // If user data was passed from AuthCallback, use it directly
+    if (location.state?.user && !hasChecked.current) {
+      console.log('Using user from location state:', location.state.user.email);
       setUser(location.state.user);
       setIsAuthenticated(true);
+      hasChecked.current = true;
+      return;
+    }
+    
+    // Skip if we already have a valid user
+    if (isAuthenticated === true && user) {
       return;
     }
     
     const checkAuth = async () => {
       try {
+        console.log('Checking auth via /api/auth/me...');
         const response = await axios.get(`${API}/auth/me`);
+        console.log('Auth check success:', response.data.email);
         setUser(response.data);
         setIsAuthenticated(true);
+        hasChecked.current = true;
         
         // If user has no role, redirect to role selection
         if (!response.data.role && location.pathname !== '/role-selection') {
           navigate('/role-selection', { state: { user: response.data } });
         }
       } catch (error) {
+        console.log('Auth check failed:', error.response?.status, error.response?.data?.detail);
         setIsAuthenticated(false);
         navigate('/');
       }
     };
     
-    checkAuth();
-  }, [navigate, location.state, location.pathname]);
+    if (!hasChecked.current) {
+      checkAuth();
+    }
+  }, [navigate, location.state, location.pathname, isAuthenticated, user]);
   
   if (isAuthenticated === null) {
     return (
