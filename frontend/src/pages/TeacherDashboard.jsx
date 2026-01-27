@@ -495,8 +495,8 @@ export default function TeacherDashboard({ user }) {
                       <div className="flex items-center gap-3">
                         <div className="bg-[#FFD23F]/20 px-3 py-1 rounded-lg flex items-center gap-2">
                           <span className="text-xs text-[#3D5A80]">Code:</span>
-                          <span className="font-bold text-[#1D3557]">{classroom.invite_code}</span>
-                          <button onClick={(e) => { e.stopPropagation(); copyInviteCode(classroom.invite_code); }}>
+                          <span className="font-bold text-[#1D3557]">{classroom.join_code || classroom.invite_code}</span>
+                          <button onClick={(e) => { e.stopPropagation(); copyInviteCode(classroom.join_code || classroom.invite_code); }}>
                             <Copy className="w-4 h-4 text-[#3D5A80]" />
                           </button>
                         </div>
@@ -534,8 +534,8 @@ export default function TeacherDashboard({ user }) {
                       <div className="bg-white/20 px-3 py-2 rounded-lg mb-2">
                         <p className="text-xs opacity-80">Invite Code</p>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-lg">{classroomDetails.classroom.invite_code}</span>
-                          <button onClick={() => copyInviteCode(classroomDetails.classroom.invite_code)}>
+                          <span className="font-bold text-lg">{classroomDetails.classroom.join_code || classroomDetails.classroom.invite_code}</span>
+                          <button onClick={() => copyInviteCode(classroomDetails.classroom.join_code || classroomDetails.classroom.invite_code)}>
                             <Copy className="w-4 h-4" />
                           </button>
                         </div>
