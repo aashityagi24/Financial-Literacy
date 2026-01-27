@@ -189,6 +189,9 @@ function SortableSubtopicItem({ subtopic, isSelected, onSelect, onEdit, onDelete
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 1000 : 1,
   };
+  
+  const gradeLabel = subtopic.min_grade === 0 ? 'K' : subtopic.min_grade;
+  const maxGradeLabel = subtopic.max_grade;
 
   return (
     <div
@@ -221,7 +224,12 @@ function SortableSubtopicItem({ subtopic, isSelected, onSelect, onEdit, onDelete
         
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-800 truncate">{subtopic.title}</h3>
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-medium text-gray-800 truncate">{subtopic.title}</h3>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-medium">
+              Grade {gradeLabel}-{maxGradeLabel}
+            </span>
+          </div>
           <p className="text-sm text-gray-500 line-clamp-1">{subtopic.description}</p>
           <p className="text-xs text-gray-400 mt-1">{contentCount} content items</p>
         </div>
