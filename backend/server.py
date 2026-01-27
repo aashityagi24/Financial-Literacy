@@ -6729,8 +6729,8 @@ async def _legacy_admin_delete_topic(topic_id: str, request: Request):
     
     return {"message": "Topic and all associated content deleted"}
 
-@api_router.post("/admin/content/topics/reorder")
-async def admin_reorder_topics(reorder: ReorderRequest, request: Request):
+# @api_router.post("/admin/content/topics/reorder")  # MOVED
+async def _legacy_admin_reorder_topics(reorder: ReorderRequest, request: Request):
     """Reorder topics"""
     await require_admin(request)
     
@@ -6784,8 +6784,8 @@ async def _legacy_admin_move_subtopic(subtopic_id: str, request: Request):
     
     return {"message": f"Subtopic moved to {new_parent['title']}", "new_parent_id": new_parent_id}
 
-@api_router.post("/admin/content/items/{content_id}/move")
-async def admin_move_content(content_id: str, request: Request):
+# @api_router.post("/admin/content/items/{content_id}/move")  # MOVED
+async def _legacy_admin_move_content(content_id: str, request: Request):
     """Move a content item to a different topic/subtopic"""
     await require_admin(request)
     
@@ -6820,8 +6820,8 @@ async def admin_move_content(content_id: str, request: Request):
     
     return {"message": f"Content moved to {new_topic['title']}", "new_topic_id": new_topic_id}
 
-@api_router.get("/admin/content/items")
-async def admin_get_all_content_items(request: Request, topic_id: Optional[str] = None):
+# @api_router.get("/admin/content/items")  # MOVED
+async def _legacy_admin_get_all_content_items(request: Request, topic_id: Optional[str] = None):
     """Get all content items, optionally filtered by topic"""
     await require_admin(request)
     
@@ -6908,8 +6908,8 @@ async def _legacy_admin_delete_content_item(content_id: str, request: Request):
     
     return {"message": "Content deleted"}
 
-@api_router.post("/admin/content/items/reorder")
-async def admin_reorder_content_items(reorder: ReorderRequest, request: Request):
+# @api_router.post("/admin/content/items/reorder")  # MOVED
+async def _legacy_admin_reorder_content_items(reorder: ReorderRequest, request: Request):
     """Reorder content items within a topic"""
     await require_admin(request)
     
