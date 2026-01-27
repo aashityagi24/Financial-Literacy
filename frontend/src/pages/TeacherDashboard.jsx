@@ -1049,33 +1049,314 @@ export default function TeacherDashboard({ user }) {
           </>
         )}
         
-        {/* Student Progress Modal */}
-        <Dialog open={!!showStudentProgress} onOpenChange={() => setShowStudentProgress(null)}>
-          <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-lg max-h-[80vh] overflow-y-auto">
+        {/* Student Insights Modal */}
+        <Dialog open={!!showStudentProgress} onOpenChange={() => { setShowStudentProgress(null); setStudentInsights(null); }}>
+          <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                {showStudentProgress?.name}&apos;s Progress
+              <DialogTitle className="text-xl font-bold text-[#1D3557] flex items-center gap-3" style={{ fontFamily: 'Fredoka' }}>
+                <img 
+                  src={showStudentProgress?.avatar || `https://api.dicebear.com/7.x/thumbs/svg?seed=${showStudentProgress?.name}`} 
+                  alt="" 
+                  className="w-10 h-10 rounded-full border-2 border-[#1D3557]"
+                />
+                {showStudentProgress?.name}&apos;s Insights
               </DialogTitle>
             </DialogHeader>
-            {showStudentProgress && (
-              <div className="space-y-4 mt-4">
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="bg-[#FFD23F]/20 rounded-xl p-3">
-                    <p className="text-2xl font-bold text-[#1D3557]">₹{showStudentProgress.total_balance?.toFixed(0)}</p>
-                    <p className="text-xs text-[#3D5A80]">Balance</p>
+            
+            {insightsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1D3557]"></div>
+                <span className="ml-3 text-[#3D5A80]">Loading insights...</span>
+              </div>
+            ) : studentInsights ? (
+              <div className="space-y-6 mt-4">
+                {/* Quick Stats Row */}
+                <div className="grid grid-cols-4 gap-3">
+                  <div className="bg-[#FFD23F]/20 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-[#1D3557]">₹{studentInsights.wallet?.total_balance?.toFixed(0)}</p>
+                    <p className="text-xs text-[#3D5A80]">Total Balance</p>
                   </div>
-                  <div className="bg-[#06D6A0]/20 rounded-xl p-3">
-                    <p className="text-2xl font-bold text-[#1D3557]">{showStudentProgress.lessons_completed}</p>
-                    <p className="text-xs text-[#3D5A80]">Lessons</p>
+                  <div className="bg-[#06D6A0]/20 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-[#1D3557]">{studentInsights.learning?.lessons_completed}</p>
+                    <p className="text-xs text-[#3D5A80]">Lessons Done</p>
                   </div>
-                  <div className="bg-[#EE6C4D]/20 rounded-xl p-3">
-                    <p className="text-2xl font-bold text-[#1D3557]">{showStudentProgress.streak_count || 0}</p>
-                    <p className="text-xs text-[#3D5A80]">Streak</p>
+                  <div className="bg-[#EE6C4D]/20 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-[#1D3557]">{studentInsights.student?.streak_count || 0}</p>
+                    <p className="text-xs text-[#3D5A80]">Day Streak</p>
+                  </div>
+                  <div className="bg-[#3D5A80]/20 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-[#1D3557]">{studentInsights.achievements?.badges_earned || 0}</p>
+                    <p className="text-xs text-[#3D5A80]">Badges</p>
                   </div>
                 </div>
-                <p className="text-sm text-[#3D5A80]">
-                  Email: {showStudentProgress.email}
-                </p>
+
+                {/* Money Jars */}
+                <div className="bg-gradient-to-r from-[#FFD23F]/10 to-[#FFEB99]/10 rounded-xl p-4 border-2 border-[#FFD23F]/30">
+                  <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
+                    <Wallet className="w-5 h-5" /> Money Jars
+                  </h4>
+                  <div className="grid grid-cols-4 gap-3">
+                    {studentInsights.wallet?.accounts?.map((acc) => (
+                      <div key={acc.account_type} className="bg-white rounded-lg p-3 text-center border border-[#1D3557]/10">
+                        <p className="text-lg font-bold text-[#1D3557]">₹{acc.balance?.toFixed(0)}</p>
+                        <p className="text-xs text-[#3D5A80] capitalize">{acc.account_type}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-[#1D3557]/10 grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-green-500" />
+                      <span className="text-[#3D5A80]">Earned: </span>
+                      <span className="font-bold text-green-600">₹{studentInsights.transactions?.total_earned?.toFixed(0)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <TrendingDown className="w-4 h-4 text-red-500" />
+                      <span className="text-[#3D5A80]">Spent: </span>
+                      <span className="font-bold text-red-600">₹{studentInsights.transactions?.total_spent?.toFixed(0)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Chores & Quests */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-[#06D6A0]/10 rounded-xl p-4 border-2 border-[#06D6A0]/30">
+                    <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
+                      <Target className="w-5 h-5" /> Parent Chores
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80]">Assigned:</span>
+                        <span className="font-bold text-[#1D3557]">{studentInsights.chores?.total_assigned}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80] flex items-center gap-1"><CheckCircle className="w-3 h-3 text-green-500" /> Completed:</span>
+                        <span className="font-bold text-green-600">{studentInsights.chores?.completed}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80] flex items-center gap-1"><Clock className="w-3 h-3 text-yellow-500" /> Pending:</span>
+                        <span className="font-bold text-yellow-600">{studentInsights.chores?.pending}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80] flex items-center gap-1"><XCircle className="w-3 h-3 text-red-500" /> Rejected:</span>
+                        <span className="font-bold text-red-600">{studentInsights.chores?.rejected}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-[#EE6C4D]/10 rounded-xl p-4 border-2 border-[#EE6C4D]/30">
+                    <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
+                      <Star className="w-5 h-5" /> Teacher Quests
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80]">Assigned:</span>
+                        <span className="font-bold text-[#1D3557]">{studentInsights.quests?.total_assigned}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80]">Completed:</span>
+                        <span className="font-bold text-green-600">{studentInsights.quests?.completed}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80]">Completion Rate:</span>
+                        <span className="font-bold text-[#1D3557]">{studentInsights.quests?.completion_rate}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gift Activity */}
+                <div className="bg-[#EE6C4D]/10 rounded-xl p-4 border-2 border-[#EE6C4D]/30">
+                  <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
+                    <Gift className="w-5 h-5" /> Gift Activity
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="bg-white rounded-lg p-3">
+                      <p className="text-[#3D5A80]">Gifts Received</p>
+                      <p className="text-lg font-bold text-green-600">
+                        {studentInsights.gifts?.received_count} (₹{studentInsights.gifts?.received_total?.toFixed(0)})
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3">
+                      <p className="text-[#3D5A80]">Gifts Sent</p>
+                      <p className="text-lg font-bold text-[#EE6C4D]">
+                        {studentInsights.gifts?.sent_count} (₹{studentInsights.gifts?.sent_total?.toFixed(0)})
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Investments */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-green-50 rounded-xl p-4 border-2 border-green-200">
+                    <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
+                      <Sprout className="w-5 h-5 text-green-600" /> Money Garden
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80]">Plots Owned:</span>
+                        <span className="font-bold">{studentInsights.garden?.plots_owned}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80]">Total Invested:</span>
+                        <span className="font-bold">₹{studentInsights.garden?.total_invested?.toFixed(0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80]">Total Earned:</span>
+                        <span className="font-bold text-green-600">₹{studentInsights.garden?.total_earned?.toFixed(0)}</span>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t">
+                        <span className="text-[#3D5A80] font-medium">Profit/Loss:</span>
+                        <span className={`font-bold ${studentInsights.garden?.profit_loss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {studentInsights.garden?.profit_loss >= 0 ? '+' : ''}₹{studentInsights.garden?.profit_loss?.toFixed(0)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                    <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
+                      <LineChart className="w-5 h-5 text-blue-600" /> Stock Market
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80]">Holdings:</span>
+                        <span className="font-bold">{studentInsights.stocks?.holdings_count}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80]">Portfolio Value:</span>
+                        <span className="font-bold">₹{studentInsights.stocks?.portfolio_value?.toFixed(0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#3D5A80]">Realized Gains:</span>
+                        <span className={`font-bold ${studentInsights.stocks?.realized_gains >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {studentInsights.stocks?.realized_gains >= 0 ? '+' : ''}₹{studentInsights.stocks?.realized_gains?.toFixed(0)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t">
+                        <span className="text-[#3D5A80] font-medium">Unrealized P/L:</span>
+                        <span className={`font-bold ${studentInsights.stocks?.unrealized_gains >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {studentInsights.stocks?.unrealized_gains >= 0 ? '+' : ''}₹{studentInsights.stocks?.unrealized_gains?.toFixed(0)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Learning Progress */}
+                <div className="bg-[#3D5A80]/10 rounded-xl p-4 border-2 border-[#3D5A80]/30">
+                  <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" /> Learning Progress
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-[#3D5A80]">Lessons Completed:</span>
+                      <span className="font-bold">{studentInsights.learning?.lessons_completed} / {studentInsights.learning?.total_lessons}</span>
+                    </div>
+                    <Progress 
+                      value={studentInsights.learning?.completion_percentage} 
+                      className="h-3"
+                    />
+                    <p className="text-center text-sm font-bold text-[#1D3557]">
+                      {studentInsights.learning?.completion_percentage}% Complete
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-[#3D5A80]">
+                No insights available
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Comparison Table Modal */}
+        <Dialog open={showComparison} onOpenChange={setShowComparison}>
+          <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-[#1D3557] flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+                <BarChart3 className="w-6 h-6" />
+                Student Comparison - {comparisonData?.classroom?.name}
+              </DialogTitle>
+            </DialogHeader>
+            
+            {comparisonLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1D3557]"></div>
+                <span className="ml-3 text-[#3D5A80]">Loading comparison data...</span>
+              </div>
+            ) : comparisonData?.students?.length > 0 ? (
+              <div className="overflow-auto flex-1">
+                <table className="w-full text-sm">
+                  <thead className="bg-[#3D5A80] text-white sticky top-0">
+                    <tr>
+                      <th className="px-3 py-2 text-left">Student</th>
+                      <th className="px-3 py-2 text-right">Balance</th>
+                      <th className="px-3 py-2 text-right">Spending</th>
+                      <th className="px-3 py-2 text-right">Savings</th>
+                      <th className="px-3 py-2 text-right">Gifting</th>
+                      <th className="px-3 py-2 text-right">Investing</th>
+                      <th className="px-3 py-2 text-right">Earned</th>
+                      <th className="px-3 py-2 text-right">Spent</th>
+                      <th className="px-3 py-2 text-center">Chores</th>
+                      <th className="px-3 py-2 text-center">Quests</th>
+                      <th className="px-3 py-2 text-center">Lessons</th>
+                      <th className="px-3 py-2 text-right">Garden P/L</th>
+                      <th className="px-3 py-2 text-right">Stock P/L</th>
+                      <th className="px-3 py-2 text-center">Gifts</th>
+                      <th className="px-3 py-2 text-center">Badges</th>
+                      <th className="px-3 py-2 text-center">Streak</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {comparisonData.students.map((student, idx) => (
+                      <tr 
+                        key={student.student_id} 
+                        className={`border-b hover:bg-[#E0FBFC] ${idx === 0 ? 'bg-[#FFD23F]/20' : ''}`}
+                      >
+                        <td className="px-3 py-2 flex items-center gap-2">
+                          <img 
+                            src={student.avatar || `https://api.dicebear.com/7.x/thumbs/svg?seed=${student.name}`}
+                            alt=""
+                            className="w-6 h-6 rounded-full"
+                          />
+                          <span className="font-medium truncate max-w-[100px]">{student.name}</span>
+                          {idx === 0 && <span className="text-yellow-500">👑</span>}
+                        </td>
+                        <td className="px-3 py-2 text-right font-bold">₹{student.total_balance}</td>
+                        <td className="px-3 py-2 text-right">₹{student.spending_balance}</td>
+                        <td className="px-3 py-2 text-right">₹{student.savings_balance}</td>
+                        <td className="px-3 py-2 text-right">₹{student.gifting_balance}</td>
+                        <td className="px-3 py-2 text-right">₹{student.investing_balance}</td>
+                        <td className="px-3 py-2 text-right text-green-600">₹{student.total_earned}</td>
+                        <td className="px-3 py-2 text-right text-red-600">₹{student.total_spent}</td>
+                        <td className="px-3 py-2 text-center">{student.chores_completed}</td>
+                        <td className="px-3 py-2 text-center">{student.quests_completed}</td>
+                        <td className="px-3 py-2 text-center">{student.lessons_completed}</td>
+                        <td className={`px-3 py-2 text-right ${student.garden_pl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {student.garden_pl >= 0 ? '+' : ''}₹{student.garden_pl}
+                        </td>
+                        <td className={`px-3 py-2 text-right ${student.stock_pl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {student.stock_pl >= 0 ? '+' : ''}₹{student.stock_pl}
+                        </td>
+                        <td className="px-3 py-2 text-center">
+                          <span className="text-green-600">{student.gifts_received}↓</span>
+                          <span className="mx-1">/</span>
+                          <span className="text-red-600">{student.gifts_sent}↑</span>
+                        </td>
+                        <td className="px-3 py-2 text-center">{student.badges}</td>
+                        <td className="px-3 py-2 text-center">
+                          {student.streak > 0 && <span className="text-orange-500">🔥</span>}
+                          {student.streak}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-[#3D5A80]">
+                No students to compare
               </div>
             )}
           </DialogContent>
