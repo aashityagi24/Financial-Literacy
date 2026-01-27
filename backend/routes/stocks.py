@@ -106,10 +106,16 @@ async def get_portfolio(request: Request):
     total_current = 0
     
     for holding in holdings:
-        stock = await db.admin_stocks.find_one(
+        # Try investment_stocks first, then admin_stocks
+        stock = await db.investment_stocks.find_one(
             {"stock_id": holding["stock_id"]},
             {"_id": 0}
         )
+        if not stock:
+            stock = await db.admin_stocks.find_one(
+                {"stock_id": holding["stock_id"]},
+                {"_id": 0}
+            )
         if stock:
             holding["stock_name"] = stock.get("name")
             holding["ticker"] = stock.get("ticker")
