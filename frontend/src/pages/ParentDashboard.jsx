@@ -40,6 +40,9 @@ export default function ParentDashboard({ user }) {
   const [loading, setLoading] = useState(true);
   const [selectedChild, setSelectedChild] = useState(null);
   const [childProgress, setChildProgress] = useState(null);
+  const [showChildInsights, setShowChildInsights] = useState(null);
+  const [childInsights, setChildInsights] = useState(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
   
   // Dialogs
   const [showLinkChild, setShowLinkChild] = useState(false);
