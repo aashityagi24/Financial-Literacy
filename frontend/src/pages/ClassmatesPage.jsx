@@ -62,7 +62,7 @@ export default function ClassmatesPage({ user }) {
     setSubmitting(true);
     try {
       await axios.post(`${API}/child/gift-money`, {
-        recipient_id: selectedClassmate.user_id,
+        to_user_id: selectedClassmate.user_id,
         amount: parseFloat(giftForm.amount),
         message: giftForm.message
       });
@@ -87,7 +87,7 @@ export default function ClassmatesPage({ user }) {
     setSubmitting(true);
     try {
       await axios.post(`${API}/child/request-gift`, {
-        recipient_id: selectedClassmate.user_id,
+        to_user_id: selectedClassmate.user_id,
         amount: parseFloat(requestForm.amount),
         reason: requestForm.reason
       });
