@@ -29,10 +29,23 @@ async def get_store_items(request: Request):
     user = await get_current_user(request)
     grade = user.get("grade", 3) or 3
     
-    items = await db.store_items.find(
-        {"min_grade": {"$lte": grade}, "max_grade": {"$gte": grade}},
-        {"_id": 0}
+    # Get active categories
+    active_categories = await db.admin_store_categories.find(
+        {"is_active": True},
+        {"category_id": 1}
     ).to_list(100)
+    active_category_ids = [c["category_id"] for c in active_categories]
+    
+    # Use admin_store_items and filter by active categories
+    items = await db.admin_store_items.find(
+        {
+            "min_grade": {"$lte": grade}, 
+            "max_grade": {"$gte": grade},
+            "category_id": {"$in": active_category_ids},
+            "$or": [{"is_active": True}, {"is_active": {"$exists": False}}]
+        },
+        {"_id": 0}
+    ).to_list(500)
     
     return items
 
