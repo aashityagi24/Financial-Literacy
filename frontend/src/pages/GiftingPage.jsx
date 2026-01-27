@@ -190,6 +190,28 @@ export default function GiftingPage({ user }) {
           </div>
         </div>
 
+        {/* Gifting Jar Balance Card */}
+        <div className="card-playful p-4 mb-6 bg-gradient-to-r from-[#9B5DE5] to-[#B47EE5] text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
+                <span className="text-3xl">💝</span>
+              </div>
+              <div>
+                <p className="text-sm opacity-80">Gifting Jar Balance</p>
+                <p className="text-3xl font-bold">₹{getAccountBalance('gifting').toFixed(0)}</p>
+              </div>
+            </div>
+            <Button 
+              onClick={() => setShowTransferDialog(true)}
+              className="bg-white text-[#9B5DE5] hover:bg-white/90 font-bold"
+            >
+              <ArrowRightLeft className="w-4 h-4 mr-2" />
+              Add Money
+            </Button>
+          </div>
+        </div>
+
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="card-playful p-4 text-center">
