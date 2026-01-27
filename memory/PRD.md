@@ -50,11 +50,21 @@ A gamified financial literacy learning application for children (K-5) with disti
    - Returns teacher info (name, email, picture) in response
    - Updated existing classrooms via migration script to have join_code
 
-2. **Teacher Name Display** ✅
+2. **Single Classroom Constraint** ✅ (NEW)
+   - Children can only be enrolled in ONE classroom
+   - Attempting to join second classroom returns error: "You are already enrolled in '[classroom]'. Students can only be in one classroom."
+
+3. **Quest Display Fixed** ✅ (NEW)
+   - Questions, images, rewards now show properly in quest cards
+   - Default 5 points per question if not explicitly set
+   - Backend calculates total_points on-the-fly for legacy quests
+   - Empty descriptions show "No description provided" gracefully
+
+4. **Teacher Name Display** ✅
    - Profile page shows "Teacher: [name]" for each enrolled classroom
    - GET /api/student/classrooms now returns teacher object with name
 
-3. **Default Avatars** ✅
+5. **Default Avatars** ✅
    - Created `/app/frontend/src/utils/avatars.js` with `getDefaultAvatar` utility
    - Generates SVG data URLs with role-based colors:
      - Child: Yellow (#FFD23F)
@@ -64,14 +74,14 @@ A gamified financial literacy learning application for children (K-5) with disti
      - School: Dark Blue (#1D3557)
    - Applied to Dashboard and ProfilePage
 
-4. **School User Creation Enhanced** ✅
+6. **School User Creation Enhanced** ✅
    - Schools can add existing users (without school_id) to their school
    - Individual user creation with automatic relationships:
      - Teachers: Optional grade and class_name (creates classroom automatically)
      - Children: Optional teacher_email or classroom_code (enrolls automatically)
      - Parents: Optional child_email (links to child automatically)
 
-5. **Bulk Upload Enhanced** ✅
+7. **Bulk Upload Enhanced** ✅
    - Teachers CSV: name, email, grade (optional), class_name (optional)
    - Students CSV: name, email, grade, teacher_email (optional - links to teacher's classroom)
    - Parents CSV: name, email, child_email (optional - links to child)
