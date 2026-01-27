@@ -787,6 +787,18 @@ async def get_child_quests(request: Request):
     
     for quest in quests:
         quest["user_status"] = completion_map.get(quest.get("quest_id"), "available")
+        
+        # Calculate total_points if questions exist but total is 0
+        questions = quest.get("questions", [])
+        if questions and (quest.get("total_points") or 0) == 0:
+            question_points = sum(q.get("points", 0) for q in questions)
+            if question_points > 0:
+                quest["total_points"] = question_points
+            elif quest.get("reward_amount", 0) > 0:
+                quest["total_points"] = quest["reward_amount"]
+            else:
+                # Default reward if nothing specified
+                quest["total_points"] = len(questions) * 5  # 5 points per question as default
     
     return quests
 
