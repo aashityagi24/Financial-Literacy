@@ -263,7 +263,7 @@ export default function SchoolDashboard() {
     }
   };
 
-  const SortIcon = ({ field }) => {
+  const renderSortIcon = (field) => {
     if (sortField !== field) return null;
     return sortDirection === 'asc' ? 
       <ChevronUp className="w-4 h-4 inline ml-1" /> : 
@@ -970,7 +970,7 @@ export default function SchoolDashboard() {
                     data-testid="parent-email-input"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Enter parent's email to link accounts automatically
+                    Enter parent&apos;s email to link accounts automatically
                   </p>
                 </div>
 
