@@ -197,6 +197,9 @@ export default function SchoolDashboard() {
         if (addUserForm.classroom_code.trim()) {
           payload.classroom_code = addUserForm.classroom_code.trim().toUpperCase();
         }
+        if (addUserForm.teacher_email.trim()) {
+          payload.teacher_email = addUserForm.teacher_email.trim().toLowerCase();
+        }
       }
       
       const response = await axios.post(
