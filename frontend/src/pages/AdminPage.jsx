@@ -323,6 +323,7 @@ export default function AdminPage({ user }) {
           {[
             { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
             { id: 'users', label: 'Users', icon: Users },
+            { id: 'schools', label: 'Schools', icon: School },
           ].map((tab) => (
             <button
               key={tab.id}
