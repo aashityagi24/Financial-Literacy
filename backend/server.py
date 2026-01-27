@@ -6027,8 +6027,8 @@ async def get_savings_goals(request: Request):
     
     return goals
 
-@api_router.get("/child/chores")
-async def get_child_chores(request: Request):
+# @api_router.get("/child/chores")  # MOVED to routes/child.py
+async def _legacy_get_child_chores(request: Request):
     """Get chores assigned to the child"""
     user = await get_current_user(request)
     
@@ -6039,8 +6039,8 @@ async def get_child_chores(request: Request):
     
     return chores
 
-@api_router.post("/child/chores/{chore_id}/complete")
-async def complete_chore(chore_id: str, request: Request):
+# @api_router.post("/child/chores/{chore_id}/complete")  # MOVED to routes/child.py
+async def _legacy_complete_chore(chore_id: str, request: Request):
     """Mark a chore as completed (awaiting parent approval)"""
     user = await get_current_user(request)
     
@@ -6074,8 +6074,8 @@ async def complete_chore(chore_id: str, request: Request):
     
     return {"message": "Chore marked as completed, waiting for parent approval"}
 
-@api_router.get("/child/savings-goals")
-async def get_child_savings_goals(request: Request):
+# @api_router.get("/child/savings-goals")  # MOVED to routes/child.py
+async def _legacy_get_child_savings_goals(request: Request):
     """Get savings goals for the child"""
     user = await get_current_user(request)
     
@@ -6086,8 +6086,8 @@ async def get_child_savings_goals(request: Request):
     
     return goals
 
-@api_router.post("/child/savings-goals")
-async def create_child_savings_goal(goal: ChildSavingsGoalCreate, request: Request):
+# @api_router.post("/child/savings-goals")  # MOVED to routes/child.py
+async def _legacy_create_child_savings_goal(goal: ChildSavingsGoalCreate, request: Request):
     """User creates their own savings goal"""
     user = await get_current_user(request)
     
@@ -6110,8 +6110,8 @@ async def create_child_savings_goal(goal: ChildSavingsGoalCreate, request: Reque
     
     return {"message": "Savings goal created", "goal_id": goal_doc["goal_id"]}
 
-@api_router.post("/child/savings-goals/{goal_id}/contribute")
-async def contribute_to_goal(goal_id: str, request: Request):
+# @api_router.post("/child/savings-goals/{goal_id}/contribute")  # MOVED to routes/child.py
+async def _legacy_contribute_to_goal(goal_id: str, request: Request):
     """Contribute to a savings goal from savings account"""
     user = await get_current_user(request)
     
