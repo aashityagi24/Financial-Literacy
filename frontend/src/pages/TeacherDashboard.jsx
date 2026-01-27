@@ -1021,8 +1021,9 @@ export default function TeacherDashboard({ user }) {
                             </div>
                           </div>
                           <button 
-                            onClick={() => setShowStudentProgress(student)}
+                            onClick={() => fetchStudentInsights(student)}
                             className="p-2 rounded-lg hover:bg-[#E0FBFC]"
+                            data-testid={`view-student-${student.user_id}`}
                           >
                             <Eye className="w-5 h-5 text-[#3D5A80]" />
                           </button>
