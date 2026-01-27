@@ -186,16 +186,118 @@ export default function QuestsPage({ user }) {
         <p className="text-[#1D3557] font-medium mb-3">{question_text}</p>
         
         {result && (
-          <div className={`mb-3 p-2 rounded-lg flex items-center gap-2 ${result.is_correct ? 'bg-[#06D6A0]/20' : 'bg-[#EE6C4D]/20'}`}>
+          <div className={`mb-3 p-3 rounded-lg ${result.is_correct ? 'bg-[#06D6A0]/20 border-2 border-[#06D6A0]' : 'bg-[#EE6C4D]/10 border-2 border-[#EE6C4D]/50'}`}>
             {result.is_correct ? (
-              <><CheckCircle className="w-5 h-5 text-[#06D6A0]" /> <span className="text-[#06D6A0] font-bold">Correct! +₹{result.points_earned}</span></>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-6 h-6 text-[#06D6A0]" />
+                <div>
+                  <span className="text-[#06D6A0] font-bold text-lg">Amazing! +₹{result.points_earned}</span>
+                  <p className="text-[#06D6A0]/80 text-sm">Great job! You got it right! 🎉</p>
+                </div>
+              </div>
             ) : (
-              <><XCircle className="w-5 h-5 text-[#EE6C4D]" /> <span className="text-[#EE6C4D] font-bold">Incorrect</span></>
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <XCircle className="w-6 h-6 text-[#EE6C4D]" />
+                  <div>
+                    <span className="text-[#EE6C4D] font-bold">Not quite right</span>
+                    <p className="text-[#3D5A80] text-sm">Keep learning! You'll get it next time! 📚</p>
+                  </div>
+                </div>
+                {result.correct_answer && (
+                  <div className="mt-2 p-2 bg-[#06D6A0]/20 rounded-lg border border-[#06D6A0]">
+                    <p className="text-sm text-[#1D3557]">
+                      <span className="font-bold text-[#06D6A0]">✓ Correct answer:</span>{' '}
+                      {Array.isArray(result.correct_answer) ? result.correct_answer.join(', ') : result.correct_answer}
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )}
         
-        {!results && (
+        {/* Show options with result highlighting */}
+        {results ? (
+          <>
+            {(question_type === 'mcq' || question_type === 'true_false') && (
+              <div className="space-y-2">
+                {(question_type === 'true_false' ? ['True', 'False'] : options)?.map((option, i) => {
+                  const isCorrect = result?.correct_answer === option || 
+                    (Array.isArray(result?.correct_answer) && result.correct_answer.includes(option));
+                  const wasSelected = result?.user_answer === option ||
+                    (Array.isArray(result?.user_answer) && result.user_answer.includes(option));
+                  const isWrongSelection = wasSelected && !isCorrect;
+                  
+                  return (
+                    <div 
+                      key={i}
+                      className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-colors ${
+                        isCorrect 
+                          ? 'border-[#06D6A0] bg-[#06D6A0]/20' 
+                          : isWrongSelection
+                            ? 'border-[#EE6C4D] bg-[#EE6C4D]/10'
+                            : 'border-[#1D3557]/20 bg-gray-50'
+                      }`}
+                    >
+                      {isCorrect && <CheckCircle className="w-5 h-5 text-[#06D6A0]" />}
+                      {isWrongSelection && <XCircle className="w-5 h-5 text-[#EE6C4D]" />}
+                      {!isCorrect && !isWrongSelection && <div className="w-5 h-5" />}
+                      <span className={`${isCorrect ? 'text-[#06D6A0] font-bold' : isWrongSelection ? 'text-[#EE6C4D]' : 'text-[#3D5A80]'}`}>
+                        {option}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            
+            {question_type === 'multi_select' && (
+              <div className="space-y-2">
+                {options?.map((option, i) => {
+                  const correctAnswers = Array.isArray(result?.correct_answer) ? result.correct_answer : [result?.correct_answer];
+                  const userAnswers = Array.isArray(result?.user_answer) ? result.user_answer : [result?.user_answer];
+                  const isCorrect = correctAnswers.includes(option);
+                  const wasSelected = userAnswers.includes(option);
+                  const isWrongSelection = wasSelected && !isCorrect;
+                  const isMissed = isCorrect && !wasSelected;
+                  
+                  return (
+                    <div 
+                      key={i}
+                      className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-colors ${
+                        isCorrect && wasSelected
+                          ? 'border-[#06D6A0] bg-[#06D6A0]/20' 
+                          : isWrongSelection
+                            ? 'border-[#EE6C4D] bg-[#EE6C4D]/10'
+                            : isMissed
+                              ? 'border-[#FFD23F] bg-[#FFD23F]/10'
+                              : 'border-[#1D3557]/20 bg-gray-50'
+                      }`}
+                    >
+                      {isCorrect && wasSelected && <CheckCircle className="w-5 h-5 text-[#06D6A0]" />}
+                      {isWrongSelection && <XCircle className="w-5 h-5 text-[#EE6C4D]" />}
+                      {isMissed && <span className="text-[#FFD23F] text-xs font-bold">MISSED</span>}
+                      {!isCorrect && !isWrongSelection && !isMissed && <div className="w-5 h-5" />}
+                      <span className={`${isCorrect ? 'text-[#06D6A0] font-bold' : isWrongSelection ? 'text-[#EE6C4D]' : 'text-[#3D5A80]'}`}>
+                        {option}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            
+            {question_type === 'numeric' && (
+              <div className={`p-3 rounded-xl border-2 ${result?.is_correct ? 'border-[#06D6A0] bg-[#06D6A0]/20' : 'border-[#EE6C4D] bg-[#EE6C4D]/10'}`}>
+                <p className="text-sm text-[#3D5A80]">Your answer: <span className={result?.is_correct ? 'text-[#06D6A0] font-bold' : 'text-[#EE6C4D]'}>{result?.user_answer}</span></p>
+                {!result?.is_correct && (
+                  <p className="text-sm text-[#06D6A0] font-bold mt-1">Correct answer: {result?.correct_answer}</p>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
           <>
             {question_type === 'mcq' && (
               <div className="space-y-2">
