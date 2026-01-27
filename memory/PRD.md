@@ -1,143 +1,105 @@
-# MoneyHeros - Financial Literacy Learning App for Children
+# CoinQuest - Financial Literacy Learning App for Children
 
 ## Original Problem Statement
-A gamified financial literacy learning application for children (K-5) with distinct user roles (Teacher, Parent, Child, Admin).
+A gamified financial literacy learning application for children (K-5) with distinct user roles (Teacher, Parent, Child, Admin). Features include a digital wallet, virtual store, gamified investment modules (Money Garden & Stock Market), dynamic quests, achievements, and hierarchical content system. Currency: Indian Rupees (₹).
 
 ## What's Been Implemented
 
 ### Core MVP ✅
 - User authentication (Google OAuth + Admin login)
 - Role-based dashboards (Admin, Teacher, Parent, Child)
-- Content management system
+- Content management system with drag-and-drop reordering
 - Virtual store with categories and items
 - Wallet system (Spending, Savings, Gifting jars)
 - User connections (Parent-Child, Teacher-Classroom)
 - Dynamic quest system (Admin, Teacher, Parent chores)
 - Shopping list system for parents
+- Notification center with navigation
 
-### Money Garden System (Grade 1-2) ✅ (January 15, 2026)
-**New visual farm-based investment system for younger children:**
+### Money Garden System (Grade 1-2) ✅
+- Farm-based investment simulation for younger children
+- 2x2 starting grid (expandable at ₹20/plot)
+- Plant seeds, watering system, growth stages
+- Market system with daily price fluctuations
+- Market hours: 7 AM - 5 PM IST
+- Harvest and sell produce at market
 
-- **Grade Restrictions:**
-  - Kindergarten: No investments
-  - Grade 1-2: Money Garden only
-  - Grade 3-5: Stock Market (existing)
+### Stock Market System (Grade 3-5) ✅
+- Complete trading system with buy/sell during market hours
+- Industry categories (Tech, Healthcare, Food, etc.)
+- Stocks with ticker symbols, volatility, risk levels
+- News & Events system affecting prices
+- Portfolio with P/L tracking
+- Transfer funds between accounts
 
-- **Farm Features:**
-  - 2x2 starting grid (expandable at ₹20/plot)
-  - Plant seeds purchased from seed shop
-  - Visual growth stages: 🌱 → 🌿 → 🌿🌼 → 🍅
-  - Watering system (free, must water on schedule or plant dies)
-  - Water status indicators (green/yellow/red droplet)
-  - Harvest ready state with sparkle animation
-  - Inventory basket for harvested produce
+### Content Management ✅
+- Hierarchical content (Topics → Subtopics → Content Items)
+- Drag-and-drop reordering using @dnd-kit
+- Move subtopics/content between categories
+- Grade-level filtering
+- Role-based visibility (Child, Parent, Teacher)
+- Progressive unlock system for children
 
-- **Market System:**
-  - Daily price fluctuations (±% set by admin)
-  - Market hours: 9 AM - 6 PM
-  - Sell produce from inventory
+### Recent Bug Fixes (January 27, 2026)
+- **Fixed:** Dashboard "Active Quests" now correctly hides completed quests
+- **Fixed:** Notification center navigation now works properly (clicking notification closes dialog and navigates)
+- **Fixed:** "Mark all as read" button now visible and functional
+- **Fixed:** Chore completion now properly sets `is_completed: true` in database
 
-- **Admin Plant Management:**
-  - Seed cost
-  - Growth time (days)
-  - Harvest yield (quantity + unit)
-  - Base sell price
-  - Price fluctuation percentage
-  - Watering frequency (hours)
+## API Endpoints
 
-### API Endpoints
-
-#### Money Garden (Child)
+### Money Garden (Child)
 - GET /api/garden/farm - Get farm with plots, seeds, inventory
 - POST /api/garden/buy-plot - Buy additional plot (₹20)
 - POST /api/garden/plant - Plant a seed
 - POST /api/garden/water/{plot_id} - Water plant
-- POST /api/garden/water-all - Water all plants
-- POST /api/garden/harvest/{plot_id} - Harvest ready plant
 - POST /api/garden/sell - Sell produce at market
 
-#### Admin Garden
-- GET /api/admin/garden/plants - List all plants
-- POST /api/admin/garden/plants - Create plant
-- PUT /api/admin/garden/plants/{id} - Update plant
-- DELETE /api/admin/garden/plants/{id} - Delete plant
+### Stock Market (Child)
+- GET /api/stocks - Get all stocks with market info
+- GET /api/stocks/market-info - Get market status (open/closed)
+- POST /api/stocks/buy - Buy stocks
+- POST /api/stocks/sell - Sell stocks
+- GET /api/stocks/portfolio - Get user's portfolio
 
-### Files Created/Modified
-- `/app/backend/server.py` - Money Garden models & endpoints
-- `/app/frontend/src/pages/MoneyGardenPage.jsx` - Farm UI for children
-- `/app/frontend/src/pages/AdminGardenManagement.jsx` - Admin plant config
-- `/app/frontend/src/pages/Dashboard.jsx` - Grade-based nav items
-- `/app/frontend/src/pages/AdminPage.jsx` - Garden management link
-- `/app/frontend/src/App.js` - Routes for /garden, /admin/garden
+### Content Management (Admin)
+- GET /api/content/topics - Get all topics
+- POST /api/admin/content/topics - Create topic
+- POST /api/admin/content/subtopics/{id}/move - Move subtopic
+- POST /api/admin/content/items/{id}/move - Move content item
+- PUT /api/admin/content/topics/reorder - Reorder topics/subtopics
+
+### Notifications
+- GET /api/notifications - Get user notifications
+- POST /api/notifications/mark-all-read - Mark all as read
+- DELETE /api/notifications/{id} - Delete notification
 
 ## Credentials
 - **Admin:** admin@learnersplanet.com / finlit@2026
 - **Users:** Google Social Login
 
-## Recent Updates (January 16, 2026)
-
-### Stock Market Simulation (Grade 3-5) ✅ NEW
-- **Complete trading system** with buy/sell during market hours (7am-5pm)
-- **Industry categories** - Admin can create (Tech, Healthcare, Food, etc.)
-- **Realistic stocks** with:
-  - Ticker symbols, prices, volatility settings
-  - Risk levels (low/medium/high)
-  - Educational info (what company does, why price changes)
-  - Dividend yields
-- **News & Events system** - Admin creates news that affects prices:
-  - Positive/negative/neutral impacts
-  - Industry-wide or stock-specific effects
-  - Price predictions (may or may not come true)
-- **Child features:**
-  - Dark broker-style UI with real-time prices
-  - Portfolio with P/L tracking
-  - Category filtering
-  - Transfer funds between accounts
-- **Admin management page** at `/admin/stocks`
-
-### Money Garden Growth Fix ✅
-- **Bug Fixed:** Growth was stuck at 0% because calculation used `.days` (whole days only)
-- **Solution:** Changed to hour-based calculation using `total_seconds() / 3600`
-- **Result:** For 1-day plant, 12 hours now shows 50% (previously showed 0%)
-
-### Money Garden Plot UI Improvements ✅
-- **Plot Numbers:** Golden badge in top-left corner showing plot number (1, 2, 3, 4)
-- **Better Contrast:** Darker brown soil (#5D4037) with lighter inner soil (#8D6E63)
-- **Readable Text:** White text with drop-shadow for visibility
-- **Progress Bar:** Thicker (h-4) with green gradient, minimum 2% width shown
-- **Water Status:** Colored badge (green=well watered, yellow=needs water, red=wilting)
-
-### Previous Updates (January 15, 2026)
-
-### Money Garden UI Refactor ✅
-- **Removed Seed Shop** from bottom of page
-- **Action buttons relocated** (Water All, Market, Buy Plot) to row below garden plots
-- **New Reports Section** added with:
-  - Total projected earnings from all plants
-  - Time-to-harvest countdown for each plant
-  - Projected value per plant
-- **Enhanced Seed Selection Dialog:**
-  - Two-view system: List view → Detail view
-  - Shows description, cost, growth time, yield, sell price
-  - Watering schedule information
-  - Profit calculation preview
-  - "Buy & Plant" button
-
-### Welcome Bonus & Daily Rewards ✅
-- **₹100 Welcome Bonus** for all new users (in Spending account)
-- **₹5 Daily Login Reward** for children (flat rate)
-- Streak-based rewards for other users (2x streak, max ₹20)
+## Key Files
+- `/app/backend/server.py` - Monolithic FastAPI backend
+- `/app/frontend/src/pages/Dashboard.jsx` - Child dashboard
+- `/app/frontend/src/pages/StockMarketPage.jsx` - Stock trading UI
+- `/app/frontend/src/pages/MoneyGardenPage.jsx` - Garden/farm UI
+- `/app/frontend/src/pages/ContentManagement.jsx` - Admin content management
+- `/app/frontend/src/components/NotificationCenter.jsx` - Notification dialog
 
 ## Pending/Backlog
 
 ### P1 - High Priority
-- [x] Daily Login Rewards & Streak Bonuses ✅
+- [ ] Streak Bonuses (7-day, 30-day milestones)
 - [ ] Leaderboards
-- [ ] Spending limits & parent approval
+- [ ] Spending limits & parent approval for large transactions
 
 ### P2 - Medium Priority
+- [ ] Backend refactor (split server.py into modules)
 - [ ] Teacher/Parent collaboration portal
 - [ ] Collaborative & seasonal events
-- [ ] Avatar customization
 - [ ] Email notifications
-- [ ] Backend refactor
+- [ ] Tutorial system
+
+### Technical Debt
+- `/app/backend/server.py` - Over 8000 lines, needs modular refactoring
+- `/app/frontend/src/pages/ContentManagement.jsx` - Over 1500 lines, needs component decomposition
