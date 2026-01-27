@@ -146,21 +146,14 @@ A gamified financial literacy learning application for children (K-5) with disti
 - **Users:** Google Social Login
 
 ## Key Files
-- `/app/backend/server.py` - FastAPI backend (modularized - Phase 3 in progress)
-- `/app/backend/core/` - Database & config modules
-- `/app/backend/models/` - All Pydantic models (9 files)
+- `/app/backend/server.py` - FastAPI backend (Phase 3 complete - 30% migrated)
+- `/app/backend/routes/` - 11 modular route files:
+  - `auth.py` (6), `school.py` (8), `wallet.py` (3), `store.py` (5)
+  - `garden.py` (7), `investments.py` (3), `achievements.py` (4)
+  - `quests.py` (10), `notifications.py` (4), `teacher.py` (11), `parent.py` (10)
+- `/app/backend/models/` - 9 Pydantic model files
 - `/app/backend/services/auth.py` - Authentication helpers
-- `/app/backend/routes/` - Modular route files:
-  - `auth.py` - 6 endpoints (login, session, profile)
-  - `school.py` - 8 endpoints (school CRUD, dashboard, upload)
-  - `wallet.py` - 3 endpoints (balance, transfer, transactions)
-  - `store.py` - 4 endpoints (items, purchase, shopping list)
-  - `garden.py` - 7 endpoints (farm, plant, water, harvest, sell)
-  - `investments.py` - 3 endpoints (stocks buy/sell)
-- `/app/frontend/src/pages/Dashboard.jsx` - Child dashboard
-- `/app/frontend/src/pages/SchoolLogin.jsx` - School login page
-- `/app/frontend/src/pages/SchoolDashboard.jsx` - School dashboard
-- `/app/frontend/src/pages/AdminPage.jsx` - Admin dashboard
+- `/app/frontend/src/pages/` - React page components
 
 ## Pending/Backlog
 
@@ -178,6 +171,5 @@ A gamified financial literacy learning application for children (K-5) with disti
 - [ ] Tutorial system
 
 ### Technical Debt
-- `/app/backend/server.py` - **PHASE 3 IN PROGRESS**: 31 endpoints migrated (~15%). Remaining: quest, teacher, parent, admin, learning, notifications
+- `/app/backend/server.py` - **PHASE 3 COMPLETE**: 71 endpoints (30%) migrated to 11 modular files. ~163 routes remaining (admin, learning, child).
 - `/app/frontend/src/pages/ContentManagement.jsx` - Over 1500 lines, needs component decomposition
-- `/app/frontend/src/pages/TeacherDashboard.jsx` - Large file, student insights modal should be extracted
