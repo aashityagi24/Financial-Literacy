@@ -3387,10 +3387,10 @@ async def get_financial_tip(tip_request: FinancialTipRequest, request: Request):
         logger.error(f"AI tip error: {e}")
         return {"tip": "Save a little bit every day and watch your money grow! 🌱", "suggested_topics": suggested_topics}
 
-# ============== LEARNING CONTENT ROUTES ==============
+# ============== LEARNING CONTENT ROUTES (MIGRATED TO routes/learning.py) ==============
 
-@api_router.get("/learn/topics")
-async def get_learning_topics(request: Request):
+# @api_router.get("/learn/topics")  # MOVED
+async def _legacy_get_learning_topics(request: Request):
     """Get all learning topics for user's grade"""
     user = await get_current_user(request)
     grade = user.get("grade", 3) or 3
@@ -3418,8 +3418,8 @@ async def get_learning_topics(request: Request):
     
     return topics
 
-@api_router.get("/learn/topics/{topic_id}")
-async def get_topic_details(topic_id: str, request: Request):
+# @api_router.get("/learn/topics/{topic_id}")  # MOVED
+async def _legacy_get_topic_details(topic_id: str, request: Request):
     """Get a specific topic with its lessons"""
     user = await get_current_user(request)
     
@@ -3448,8 +3448,8 @@ async def get_topic_details(topic_id: str, request: Request):
     
     return {"topic": topic, "lessons": lessons}
 
-@api_router.get("/learn/lessons/{lesson_id}")
-async def get_lesson(lesson_id: str, request: Request):
+# @api_router.get("/learn/lessons/{lesson_id}")  # MOVED
+async def _legacy_get_lesson(lesson_id: str, request: Request):
     """Get a specific lesson"""
     user = await get_current_user(request)
     
@@ -3479,8 +3479,8 @@ async def get_lesson(lesson_id: str, request: Request):
     
     return {"lesson": lesson, "quiz": quiz}
 
-@api_router.post("/learn/lessons/{lesson_id}/complete")
-async def complete_lesson(lesson_id: str, request: Request):
+# @api_router.post("/learn/lessons/{lesson_id}/complete")  # MOVED
+async def _legacy_complete_lesson(lesson_id: str, request: Request):
     """Mark a lesson as completed and earn reward"""
     user = await get_current_user(request)
     
