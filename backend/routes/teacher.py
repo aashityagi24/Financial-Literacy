@@ -537,7 +537,7 @@ async def get_classroom_comparison(classroom_id: str, request: Request):
         # Get savings in goals
         savings_goals = await db.savings_goals.find(
             {"child_id": student_id},
-            {"current_amount": 1}
+            {"_id": 0, "current_amount": 1}
         ).to_list(50)
         savings_in_goals = sum(g.get("current_amount", 0) for g in savings_goals)
         
