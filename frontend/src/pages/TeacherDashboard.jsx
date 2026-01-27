@@ -859,6 +859,28 @@ export default function TeacherDashboard({ user }) {
                   </Dialog>
                 </div>
                 
+                {/* Learning Content Link - Grade specific */}
+                <Link 
+                  to={`/learn?grade=${classroomDetails.classroom.grade_level}`}
+                  className="mb-6 block bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-xl p-5 hover:shadow-lg transition-shadow border-3 border-[#1D3557]"
+                  data-testid="teacher-learn-link"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white rounded-xl border-3 border-[#1D3557] flex items-center justify-center">
+                        <BookOpen className="w-6 h-6 text-[#1D3557]" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-[#1D3557]">Learning Content</h3>
+                        <p className="text-[#1D3557]/80 text-sm">
+                          View {gradeLabels[classroomDetails.classroom.grade_level]} lessons and content
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-6 h-6 text-[#1D3557]" />
+                  </div>
+                </Link>
+                
                 {/* My Quests Section */}
                 {teacherQuests.length > 0 && (
                   <div className="mb-6">
