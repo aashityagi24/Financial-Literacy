@@ -179,3 +179,41 @@ async def mark_shopping_item_purchased(item_id: str, request: Request):
     )
     
     return {"message": "Item marked as purchased"}
+
+
+@router.get("/store/categories")
+async def get_store_categories(request: Request):
+    """Get store categories for users"""
+    from services.auth import get_current_user
+    db = get_db()
+    await get_current_user(request)
+    
+    categories = await db.admin_store_categories.find(
+        {},
+        {"_id": 0}
+    ).sort("order", 1).to_list(100)
+    return categories
+
+@router.get("/store/items-by-category")
+async def get_items_by_category(request: Request, category_id: str = None):
+    """Get store items grouped by category"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    grade = user.get("grade", 3) or 3
+    
+    query = {"is_available": True, "min_grade": {"$lte": grade}, "max_grade": {"$gte": grade}}
+    if category_id:
+        query["category_id"] = category_id
+    
+    items = await db.store_items.find(query, {"_id": 0}).to_list(500)
+    
+    # Group by category
+    by_category = {}
+    for item in items:
+        cat_id = item.get("category_id", "uncategorized")
+        if cat_id not in by_category:
+            by_category[cat_id] = []
+        by_category[cat_id].append(item)
+    
+    return by_category
