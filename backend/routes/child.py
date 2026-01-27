@@ -763,8 +763,8 @@ async def respond_to_gift_request(request_id: str, request: Request):
 # ============== CHILD QUEST ROUTES ==============
 
 @router.get("/quests-new")
-async def get_child_quests(request: Request):
-    """Get available quests for child"""
+async def get_child_quests(request: Request, source: str = None, sort: str = "due_date"):
+    """Get available quests for child, optionally filtered by source"""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
@@ -772,9 +772,14 @@ async def get_child_quests(request: Request):
     if user.get("role") != "child":
         raise HTTPException(status_code=403, detail="Only children can access quests")
     
+    # Build filter based on source
+    filter_query = {"is_active": True}
+    if source and source != 'all':
+        filter_query["creator_type"] = source
+    
     # Get quests from admin, teachers, and parents
     quests = await db.new_quests.find(
-        {"is_active": True},
+        filter_query,
         {"_id": 0}
     ).sort("created_at", -1).to_list(100)
     
@@ -799,6 +804,12 @@ async def get_child_quests(request: Request):
             else:
                 # Default reward if nothing specified
                 quest["total_points"] = len(questions) * 5  # 5 points per question as default
+    
+    # Sort quests
+    if sort == "reward":
+        quests.sort(key=lambda x: x.get("total_points", 0), reverse=True)
+    else:
+        quests.sort(key=lambda x: x.get("due_date") or "9999-99-99")
     
     return quests
 
