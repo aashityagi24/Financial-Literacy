@@ -93,6 +93,16 @@ export default function AdminPage({ user }) {
     }
   };
   
+  const handleGradeChange = async (userId, newGrade) => {
+    try {
+      await axios.put(`${API}/admin/users/${userId}/grade`, { grade: newGrade === '' ? null : parseInt(newGrade) });
+      toast.success('User grade updated');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to update grade');
+    }
+  };
+  
   const handleDeleteUser = async (userId, userName) => {
     if (!confirm(`Are you sure you want to delete ${userName}? This will delete ALL their data permanently.`)) {
       return;
