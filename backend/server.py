@@ -5107,6 +5107,246 @@ async def get_child_progress(child_id: str, request: Request):
         "streak": child.get("streak_count", 0)
     }
 
+@api_router.get("/parent/children/{child_id}/insights")
+async def get_child_insights(child_id: str, request: Request):
+    """Get comprehensive insights for a child (similar to teacher insights)"""
+    parent = await require_parent(request)
+    
+    # Verify parent-child link
+    link = await db.parent_child_links.find_one({
+        "parent_id": parent["user_id"],
+        "child_id": child_id,
+        "status": "active"
+    })
+    
+    if not link:
+        raise HTTPException(status_code=403, detail="Child not linked to your account")
+    
+    # Get child basic info
+    child = await db.users.find_one({"user_id": child_id}, {"_id": 0, "password": 0})
+    if not child:
+        raise HTTPException(status_code=404, detail="Child not found")
+    
+    child_grade = child.get("grade", 0)
+    
+    # 1. WALLET - Get all account balances
+    wallet_accounts = await db.wallet_accounts.find(
+        {"user_id": child_id},
+        {"_id": 0}
+    ).to_list(10)
+    
+    # Get savings goals total
+    savings_goals = await db.savings_goals.find(
+        {"child_id": child_id},
+        {"_id": 0}
+    ).to_list(100)
+    total_saved_in_goals = sum(g.get("current_amount", 0) for g in savings_goals)
+    
+    # Get all transactions
+    all_transactions = await db.transactions.find(
+        {"user_id": child_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(500)
+    
+    # Calculate spent per account type
+    spent_per_jar = {"spending": 0, "savings": 0, "gifting": 0, "investing": 0}
+    for t in all_transactions:
+        txn_type = t.get("transaction_type", "")
+        amount = t.get("amount", 0)
+        if txn_type == "purchase" and amount < 0:
+            spent_per_jar["spending"] += abs(amount)
+        elif txn_type == "gift_sent" and amount < 0:
+            spent_per_jar["gifting"] += abs(amount)
+        elif txn_type in ["garden_buy", "stock_buy"] and amount < 0:
+            spent_per_jar["investing"] += abs(amount)
+    
+    wallet_summary = {
+        "accounts": [
+            {
+                "account_type": acc.get("account_type"),
+                "balance": acc.get("balance", 0),
+                "spent": spent_per_jar.get(acc.get("account_type"), 0)
+            }
+            for acc in wallet_accounts
+        ],
+        "total_balance": sum(w.get("balance", 0) for w in wallet_accounts),
+        "savings_in_goals": total_saved_in_goals,
+        "savings_goals_count": len(savings_goals),
+        "savings_goals": [
+            {
+                "title": g.get("title"),
+                "target": g.get("target_amount", 0),
+                "current": g.get("current_amount", 0),
+                "completed": g.get("completed", False)
+            }
+            for g in savings_goals
+        ]
+    }
+    
+    # 2. TRANSACTIONS summary
+    total_earned = sum(t.get("amount", 0) for t in all_transactions if t.get("amount", 0) > 0)
+    total_spent = abs(sum(t.get("amount", 0) for t in all_transactions if t.get("amount", 0) < 0))
+    
+    transaction_summary = {
+        "recent": all_transactions[:10],
+        "total_earned": total_earned,
+        "total_spent": total_spent,
+        "transaction_count": len(all_transactions)
+    }
+    
+    # 3. CHORES - From this parent
+    parent_chores = await db.parent_chores.find(
+        {"child_id": child_id, "parent_id": parent["user_id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    chore_requests = await db.chore_requests.find(
+        {"child_id": child_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    chores_summary = {
+        "total_assigned": len(parent_chores),
+        "completed": len([c for c in chore_requests if c.get("status") == "approved"]),
+        "pending": len([c for c in chore_requests if c.get("status") == "pending"]),
+        "rejected": len([c for c in chore_requests if c.get("status") == "rejected"]),
+        "recent_chores": parent_chores[:5]
+    }
+    
+    # 4. QUESTS completed
+    quest_completions = await db.quest_completions.find(
+        {"user_id": child_id, "is_completed": True},
+        {"_id": 0}
+    ).to_list(100)
+    
+    quests_summary = {
+        "completed": len(quest_completions)
+    }
+    
+    # 5. GIFTS
+    gifts_received = await db.transactions.find(
+        {"user_id": child_id, "transaction_type": "gift_received"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    gifts_sent = await db.transactions.find(
+        {"user_id": child_id, "transaction_type": "gift_sent"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    gifts_summary = {
+        "received_count": len(gifts_received),
+        "received_total": sum(g.get("amount", 0) for g in gifts_received),
+        "sent_count": len(gifts_sent),
+        "sent_total": abs(sum(g.get("amount", 0) for g in gifts_sent))
+    }
+    
+    # 6. INVESTMENTS - Based on grade
+    # Kindergarten (0): No investments
+    # Grade 1-2: Garden only
+    # Grade 3-5: Stocks only
+    
+    garden_summary = None
+    stocks_summary = None
+    
+    if child_grade >= 1 and child_grade <= 2:
+        # Garden for Grade 1-2
+        farm = await db.farms.find_one({"user_id": child_id}, {"_id": 0})
+        garden_transactions = await db.transactions.find(
+            {"user_id": child_id, "transaction_type": {"$in": ["garden_buy", "garden_sell"]}},
+            {"_id": 0}
+        ).to_list(100)
+        
+        garden_invested = sum(abs(t.get("amount", 0)) for t in garden_transactions if t.get("transaction_type") == "garden_buy")
+        garden_earned = sum(t.get("amount", 0) for t in garden_transactions if t.get("transaction_type") == "garden_sell")
+        
+        garden_summary = {
+            "plots_owned": len(farm.get("plots", [])) if farm else 0,
+            "total_invested": garden_invested,
+            "total_earned": garden_earned,
+            "profit_loss": garden_earned - garden_invested,
+            "inventory_count": len(farm.get("inventory", [])) if farm else 0
+        }
+    elif child_grade >= 3:
+        # Stocks for Grade 3-5
+        portfolio = await db.stock_portfolios.find(
+            {"user_id": child_id},
+            {"_id": 0}
+        ).to_list(100)
+        
+        stock_transactions = await db.transactions.find(
+            {"user_id": child_id, "transaction_type": {"$in": ["stock_buy", "stock_sell"]}},
+            {"_id": 0}
+        ).to_list(100)
+        
+        stock_invested = sum(abs(t.get("amount", 0)) for t in stock_transactions if t.get("transaction_type") == "stock_buy")
+        stock_earned = sum(t.get("amount", 0) for t in stock_transactions if t.get("transaction_type") == "stock_sell")
+        
+        portfolio_value = 0
+        total_cost = 0
+        for holding in portfolio:
+            stock = await db.stocks.find_one({"stock_id": holding.get("stock_id")})
+            if stock:
+                portfolio_value += holding.get("quantity", 0) * stock.get("current_price", 0)
+                total_cost += holding.get("total_cost", 0)
+        
+        stocks_summary = {
+            "holdings_count": len(portfolio),
+            "portfolio_value": round(portfolio_value, 2),
+            "total_invested": stock_invested,
+            "realized_gains": stock_earned - stock_invested,
+            "unrealized_gains": round(portfolio_value - total_cost, 2)
+        }
+    
+    # 7. LEARNING PROGRESS
+    content_progress = await db.user_content_progress.find(
+        {"user_id": child_id, "completed": True},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    total_content = await db.content_items.count_documents({
+        "is_published": True
+    })
+    
+    learning_summary = {
+        "lessons_completed": len(content_progress),
+        "total_lessons": total_content,
+        "completion_percentage": round(len(content_progress) / total_content * 100, 1) if total_content > 0 else 0
+    }
+    
+    # 8. ACHIEVEMENTS
+    achievements = await db.user_achievements.find(
+        {"user_id": child_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    achievements_summary = {
+        "badges_earned": len(achievements),
+        "recent_badges": achievements[:5]
+    }
+    
+    return {
+        "child": {
+            "user_id": child.get("user_id"),
+            "name": child.get("name"),
+            "email": child.get("email"),
+            "grade": child_grade,
+            "avatar": child.get("avatar"),
+            "streak_count": child.get("streak_count", 0),
+            "last_activity": child.get("last_activity_date")
+        },
+        "wallet": wallet_summary,
+        "transactions": transaction_summary,
+        "chores": chores_summary,
+        "quests": quests_summary,
+        "gifts": gifts_summary,
+        "garden": garden_summary,
+        "stocks": stocks_summary,
+        "learning": learning_summary,
+        "achievements": achievements_summary,
+        "investment_type": "garden" if child_grade >= 1 and child_grade <= 2 else ("stocks" if child_grade >= 3 else None)
+    }
+
 @api_router.get("/parent/children/{child_id}/classroom")
 async def get_child_classroom(child_id: str, request: Request):
     """Get child's classroom info and announcements for parent view"""
