@@ -8833,8 +8833,16 @@ async def startup_scheduler():
         replace_existing=True
     )
     
+    # Process recurring allowances at 6:00 AM IST (00:30 UTC)
+    scheduler.add_job(
+        process_recurring_allowances,
+        CronTrigger(hour=0, minute=30),
+        id="process_allowances",
+        replace_existing=True
+    )
+    
     scheduler.start()
-    logger.info("Schedulers started: stock fluctuations (7:15 AM, 12:00 PM, 4:30 PM IST), plant update (6 AM UTC), quest reminders (7 PM UTC), chore reset (00:30 UTC)")
+    logger.info("Schedulers started: stock fluctuations (7:15 AM, 12:00 PM, 4:30 PM IST), plant update (6 AM UTC), quest reminders (7 PM UTC), chore reset (00:30 UTC), allowances (00:30 UTC)")
     
     # Run opening fluctuation on startup if market just opened
     current_ist_hour = get_ist_hour()
