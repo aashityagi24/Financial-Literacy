@@ -234,6 +234,11 @@ function AppRouter() {
           {({ user }) => <ClassmatesPage user={user} />}
         </ProtectedRoute>
       } />
+      <Route path="/gifting" element={
+        <ProtectedRoute>
+          {({ user }) => <GiftingPage user={user} />}
+        </ProtectedRoute>
+      } />
       <Route path="/savings-goals" element={
         <ProtectedRoute>
           {({ user }) => <SavingsGoalsPage user={user} />}
