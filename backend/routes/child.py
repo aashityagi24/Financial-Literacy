@@ -530,3 +530,85 @@ async def respond_to_gift_request(request_id: str, request: Request):
     )
     
     return {"message": "Request " + ("accepted" if accept else "declined")}
+
+
+# ============== CHILD QUEST ROUTES ==============
+
+@router.get("/quests-new")
+async def get_child_quests(request: Request):
+    """Get available quests for child"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can access quests")
+    
+    # Get quests from admin, teachers, and parents
+    quests = await db.new_quests.find(
+        {"is_active": True},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # Get user's quest completions
+    completions = await db.quest_completions.find(
+        {"user_id": user["user_id"]},
+        {"quest_id": 1, "status": 1}
+    ).to_list(200)
+    completion_map = {c["quest_id"]: c["status"] for c in completions}
+    
+    for quest in quests:
+        quest["user_status"] = completion_map.get(quest["quest_id"], "available")
+    
+    return quests
+
+@router.post("/quests-new/{quest_id}/submit")
+async def submit_quest(quest_id: str, request: Request):
+    """Submit a quest for completion"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can submit quests")
+    
+    quest = await db.new_quests.find_one({"quest_id": quest_id})
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    existing = await db.quest_completions.find_one({
+        "user_id": user["user_id"],
+        "quest_id": quest_id
+    })
+    
+    if existing and existing.get("status") == "completed":
+        return {"message": "Quest already completed"}
+    
+    # For auto-approve quests, complete immediately
+    auto_approve = quest.get("auto_approve", True)
+    status = "completed" if auto_approve else "pending"
+    
+    if existing:
+        await db.quest_completions.update_one(
+            {"user_id": user["user_id"], "quest_id": quest_id},
+            {"$set": {"status": status, "submitted_at": datetime.now(timezone.utc).isoformat()}}
+        )
+    else:
+        await db.quest_completions.insert_one({
+            "completion_id": f"qc_{uuid.uuid4().hex[:12]}",
+            "user_id": user["user_id"],
+            "quest_id": quest_id,
+            "status": status,
+            "is_completed": status == "completed",
+            "submitted_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    if status == "completed":
+        reward = quest.get("reward_coins", 10)
+        await db.wallet_accounts.update_one(
+            {"user_id": user["user_id"], "account_type": "spending"},
+            {"$inc": {"balance": reward}}
+        )
+        return {"message": "Quest completed!", "coins_earned": reward}
+    
+    return {"message": "Quest submitted for review"}
