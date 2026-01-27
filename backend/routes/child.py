@@ -503,6 +503,143 @@ async def gift_money(data: GiftRequest, request: Request):
     
     return {"message": "Gift sent successfully"}
 
+@router.get("/gift-history")
+async def get_gift_history(request: Request):
+    """Get history of all gifts sent and received"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can access this")
+    
+    # Get all gift transactions
+    transactions = await db.transactions.find({
+        "user_id": user["user_id"],
+        "transaction_type": {"$in": ["gift_sent", "gift_received"]}
+    }, {"_id": 0}).sort("created_at", -1).to_list(100)
+    
+    # Calculate totals
+    total_sent = sum(abs(t.get("amount", 0)) for t in transactions if t.get("transaction_type") == "gift_sent")
+    total_received = sum(t.get("amount", 0) for t in transactions if t.get("transaction_type") == "gift_received")
+    
+    return {
+        "transactions": transactions,
+        "total_sent": total_sent,
+        "total_received": total_received,
+        "gift_count_sent": sum(1 for t in transactions if t.get("transaction_type") == "gift_sent"),
+        "gift_count_received": sum(1 for t in transactions if t.get("transaction_type") == "gift_received")
+    }
+
+@router.get("/charitable-giving")
+async def get_charitable_giving(request: Request):
+    """Get charitable giving records (Grade 2+)"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can access this")
+    
+    grade = user.get("grade", 0) or 0
+    if grade < 2:
+        raise HTTPException(status_code=403, detail="Charitable giving is available from Grade 2")
+    
+    records = await db.charitable_giving.find(
+        {"user_id": user["user_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # Calculate totals
+    total_money = sum(r.get("amount", 0) for r in records if r.get("giving_type") == "money")
+    total_items_value = sum(
+        sum(item.get("value", 0) for item in r.get("items", []))
+        for r in records if r.get("giving_type") == "items"
+    )
+    
+    return {
+        "records": records,
+        "total_money_given": total_money,
+        "total_items_value": total_items_value,
+        "total_value": total_money + total_items_value,
+        "organizations_helped": len(set(r.get("recipient_name") for r in records if r.get("recipient_type") == "organization")),
+        "people_helped": len(set(r.get("recipient_name") for r in records if r.get("recipient_type") == "person"))
+    }
+
+@router.post("/charitable-giving")
+async def create_charitable_giving(data: CharitableGivingCreate, request: Request):
+    """Record a charitable giving (Grade 2+)"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can access this")
+    
+    grade = user.get("grade", 0) or 0
+    if grade < 2:
+        raise HTTPException(status_code=403, detail="Charitable giving is available from Grade 2")
+    
+    # Validate data
+    if data.giving_type == "money":
+        if not data.amount or data.amount <= 0:
+            raise HTTPException(status_code=400, detail="Please enter a valid amount")
+        total_value = data.amount
+    else:
+        if not data.items or len(data.items) == 0:
+            raise HTTPException(status_code=400, detail="Please add at least one item")
+        total_value = sum(item.get("value", 0) for item in data.items)
+    
+    record_id = f"charity_{uuid.uuid4().hex[:12]}"
+    record = {
+        "record_id": record_id,
+        "user_id": user["user_id"],
+        "recipient_name": data.recipient_name,
+        "recipient_type": data.recipient_type,
+        "giving_type": data.giving_type,
+        "amount": data.amount if data.giving_type == "money" else None,
+        "items": data.items if data.giving_type == "items" else None,
+        "total_value": total_value,
+        "description": data.description,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.charitable_giving.insert_one(record)
+    
+    # Award achievement for first charitable giving
+    existing_count = await db.charitable_giving.count_documents({"user_id": user["user_id"]})
+    if existing_count == 1:
+        await db.user_achievements.insert_one({
+            "achievement_id": f"achieve_{uuid.uuid4().hex[:12]}",
+            "user_id": user["user_id"],
+            "badge_id": "generous_heart",
+            "name": "Generous Heart",
+            "description": "Made your first charitable contribution!",
+            "earned_at": datetime.now(timezone.utc).isoformat()
+        })
+    
+    return {"message": "Charitable giving recorded!", "record_id": record_id, "total_value": total_value}
+
+@router.delete("/charitable-giving/{record_id}")
+async def delete_charitable_giving(record_id: str, request: Request):
+    """Delete a charitable giving record"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can access this")
+    
+    result = await db.charitable_giving.delete_one({
+        "record_id": record_id,
+        "user_id": user["user_id"]
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    return {"message": "Record deleted"}
+
 @router.post("/request-gift")
 async def request_gift(request: Request):
     """Request gift from classmate"""
