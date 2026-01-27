@@ -249,7 +249,10 @@ async def submit_quest(quest_id: str, request: Request):
     if not quest:
         raise HTTPException(status_code=404, detail="Quest not found")
     
-    # Calculate score
+    # Check if this is a parent chore (requires approval)
+    is_parent_chore = quest.get("creator_type") == "parent"
+    
+    # Calculate score for quests with questions
     total_points = 0
     earned_points = 0
     
@@ -262,12 +265,52 @@ async def submit_quest(quest_id: str, request: Request):
             if answers[q_id] == q.get("correct_answer"):
                 earned_points += points
     
-    # For chores with no questions, award full points on completion
+    # For chores/quests with no questions, use the reward amount
     if not quest.get("questions"):
         earned_points = quest.get("total_points", quest.get("reward_amount", 0))
         total_points = earned_points
     
-    # Save completion
+    # For parent chores: set to pending approval, don't award coins yet
+    if is_parent_chore:
+        completion_doc = {
+            "completion_id": f"comp_{uuid.uuid4().hex[:12]}",
+            "user_id": user["user_id"],
+            "quest_id": quest_id,
+            "chore_id": quest_id,
+            "answers": answers,
+            "score": earned_points,
+            "total_points": total_points,
+            "status": "pending_approval",  # Pending parent approval
+            "is_completed": False,  # Not completed until approved
+            "submitted_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.quest_completions.update_one(
+            {"user_id": user["user_id"], "quest_id": quest_id},
+            {"$set": completion_doc},
+            upsert=True
+        )
+        
+        # Notify parent
+        await db.notifications.insert_one({
+            "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+            "user_id": quest.get("creator_id"),  # Parent
+            "message": f"{user.get('name', 'Your child')} completed chore: {quest.get('title')}. Please review.",
+            "type": "chore_pending",
+            "link": "/parent/chores",
+            "related_id": quest_id,
+            "is_read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return {
+            "message": "Chore submitted for parent approval!",
+            "status": "pending_approval",
+            "score": earned_points,
+            "total_points": total_points
+        }
+    
+    # For admin/teacher quests: complete immediately
     completion_doc = {
         "completion_id": f"comp_{uuid.uuid4().hex[:12]}",
         "user_id": user["user_id"],
@@ -275,9 +318,16 @@ async def submit_quest(quest_id: str, request: Request):
         "answers": answers,
         "score": earned_points,
         "total_points": total_points,
+        "status": "completed",
         "is_completed": True,
         "completed_at": datetime.now(timezone.utc).isoformat()
     }
+    
+    await db.quest_completions.update_one(
+        {"user_id": user["user_id"], "quest_id": quest_id},
+        {"$set": completion_doc},
+        upsert=True
+    )
     
     await db.quest_completions.update_one(
         {"user_id": user["user_id"], "quest_id": quest_id},
