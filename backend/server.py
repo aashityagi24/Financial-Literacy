@@ -3565,6 +3565,353 @@ async def get_classroom_details(classroom_id: str, request: Request):
         "challenges": challenges
     }
 
+@api_router.get("/teacher/classrooms/{classroom_id}/student/{student_id}/insights")
+async def get_student_insights(classroom_id: str, student_id: str, request: Request):
+    """Get comprehensive insights for a student in a classroom"""
+    teacher = await require_teacher(request)
+    
+    # Verify classroom belongs to teacher
+    classroom = await db.classrooms.find_one({
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["user_id"]
+    }, {"_id": 0})
+    
+    if not classroom:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+    
+    # Verify student is in classroom
+    student_link = await db.classroom_students.find_one({
+        "classroom_id": classroom_id,
+        "student_id": student_id
+    })
+    
+    if not student_link:
+        raise HTTPException(status_code=404, detail="Student not in this classroom")
+    
+    # Get student basic info
+    student = await db.users.find_one({"user_id": student_id}, {"_id": 0, "password": 0})
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    # 1. WALLET - Get all account balances
+    wallet_accounts = await db.wallet_accounts.find(
+        {"user_id": student_id},
+        {"_id": 0}
+    ).to_list(10)
+    wallet_summary = {
+        "accounts": wallet_accounts,
+        "total_balance": sum(w.get("balance", 0) for w in wallet_accounts)
+    }
+    
+    # 2. TRANSACTIONS - Get recent transactions and summaries
+    transactions = await db.transactions.find(
+        {"user_id": student_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    total_earned = sum(t.get("amount", 0) for t in transactions if t.get("amount", 0) > 0)
+    total_spent = abs(sum(t.get("amount", 0) for t in transactions if t.get("amount", 0) < 0))
+    
+    transaction_summary = {
+        "recent": transactions[:10],
+        "total_earned": total_earned,
+        "total_spent": total_spent,
+        "transaction_count": len(transactions)
+    }
+    
+    # 3. CHORES - Parent chores
+    parent_chores = await db.parent_chores.find(
+        {"child_id": student_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    chore_requests = await db.chore_requests.find(
+        {"child_id": student_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    chores_summary = {
+        "total_assigned": len(parent_chores),
+        "completed": len([c for c in chore_requests if c.get("status") == "approved"]),
+        "pending": len([c for c in chore_requests if c.get("status") == "pending"]),
+        "rejected": len([c for c in chore_requests if c.get("status") == "rejected"]),
+        "recent_chores": parent_chores[:5]
+    }
+    
+    # 4. TEACHER QUESTS - Quests from this teacher
+    teacher_quests = await db.quests.find(
+        {"creator_id": teacher["user_id"], "target_grades": classroom.get("grade_level")},
+        {"_id": 0}
+    ).to_list(100)
+    
+    quest_completions = await db.quest_completions.find(
+        {"user_id": student_id},
+        {"_id": 0}
+    ).to_list(100)
+    completed_quest_ids = {qc.get("quest_id") for qc in quest_completions if qc.get("is_completed")}
+    
+    quests_summary = {
+        "total_assigned": len(teacher_quests),
+        "completed": len([q for q in teacher_quests if q.get("quest_id") in completed_quest_ids]),
+        "completion_rate": round(len([q for q in teacher_quests if q.get("quest_id") in completed_quest_ids]) / len(teacher_quests) * 100, 1) if teacher_quests else 0
+    }
+    
+    # 5. GIFTS - Given and received
+    gifts_received = await db.transactions.find(
+        {"user_id": student_id, "transaction_type": "gift_received"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    gifts_sent = await db.transactions.find(
+        {"user_id": student_id, "transaction_type": "gift_sent"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    gifts_summary = {
+        "received_count": len(gifts_received),
+        "received_total": sum(g.get("amount", 0) for g in gifts_received),
+        "sent_count": len(gifts_sent),
+        "sent_total": abs(sum(g.get("amount", 0) for g in gifts_sent)),
+        "recent_gifts": (gifts_received + gifts_sent)[:5]
+    }
+    
+    # 6. INVESTMENTS - Garden
+    farm = await db.farms.find_one({"user_id": student_id}, {"_id": 0})
+    garden_transactions = await db.transactions.find(
+        {"user_id": student_id, "transaction_type": {"$in": ["garden_buy", "garden_sell"]}},
+        {"_id": 0}
+    ).to_list(100)
+    
+    garden_invested = sum(abs(t.get("amount", 0)) for t in garden_transactions if t.get("transaction_type") == "garden_buy")
+    garden_earned = sum(t.get("amount", 0) for t in garden_transactions if t.get("transaction_type") == "garden_sell")
+    
+    garden_summary = {
+        "plots_owned": len(farm.get("plots", [])) if farm else 0,
+        "total_invested": garden_invested,
+        "total_earned": garden_earned,
+        "profit_loss": garden_earned - garden_invested,
+        "inventory_count": len(farm.get("inventory", [])) if farm else 0
+    }
+    
+    # 7. INVESTMENTS - Stocks
+    portfolio = await db.stock_portfolios.find(
+        {"user_id": student_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    stock_transactions = await db.transactions.find(
+        {"user_id": student_id, "transaction_type": {"$in": ["stock_buy", "stock_sell"]}},
+        {"_id": 0}
+    ).to_list(100)
+    
+    stock_invested = sum(abs(t.get("amount", 0)) for t in stock_transactions if t.get("transaction_type") == "stock_buy")
+    stock_earned = sum(t.get("amount", 0) for t in stock_transactions if t.get("transaction_type") == "stock_sell")
+    
+    # Calculate current portfolio value
+    portfolio_value = 0
+    for holding in portfolio:
+        stock = await db.stocks.find_one({"stock_id": holding.get("stock_id")})
+        if stock:
+            portfolio_value += holding.get("quantity", 0) * stock.get("current_price", 0)
+    
+    stocks_summary = {
+        "holdings_count": len(portfolio),
+        "portfolio_value": round(portfolio_value, 2),
+        "total_invested": stock_invested,
+        "realized_gains": stock_earned - stock_invested,
+        "unrealized_gains": round(portfolio_value - sum(h.get("total_cost", 0) for h in portfolio), 2)
+    }
+    
+    # 8. LEARNING PROGRESS
+    content_progress = await db.user_content_progress.find(
+        {"user_id": student_id, "completed": True},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    total_topics = await db.content_topics.count_documents({
+        "parent_id": None,
+        "min_grade": {"$lte": student.get("grade", 0)},
+        "max_grade": {"$gte": student.get("grade", 0)}
+    })
+    
+    total_content = await db.content_items.count_documents({
+        "is_published": True
+    })
+    
+    learning_summary = {
+        "lessons_completed": len(content_progress),
+        "total_lessons": total_content,
+        "topics_available": total_topics,
+        "completion_percentage": round(len(content_progress) / total_content * 100, 1) if total_content > 0 else 0
+    }
+    
+    # 9. ACHIEVEMENTS/BADGES
+    achievements = await db.user_achievements.find(
+        {"user_id": student_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    achievements_summary = {
+        "badges_earned": len(achievements),
+        "recent_badges": achievements[:5]
+    }
+    
+    # 10. STREAK
+    streak_data = student.get("streak_count", 0)
+    last_activity = student.get("last_activity_date")
+    
+    return {
+        "student": {
+            "user_id": student.get("user_id"),
+            "name": student.get("name"),
+            "email": student.get("email"),
+            "grade": student.get("grade"),
+            "avatar": student.get("avatar"),
+            "streak_count": streak_data,
+            "last_activity": last_activity
+        },
+        "wallet": wallet_summary,
+        "transactions": transaction_summary,
+        "chores": chores_summary,
+        "quests": quests_summary,
+        "gifts": gifts_summary,
+        "garden": garden_summary,
+        "stocks": stocks_summary,
+        "learning": learning_summary,
+        "achievements": achievements_summary
+    }
+
+@api_router.get("/teacher/classrooms/{classroom_id}/comparison")
+async def get_classroom_comparison(classroom_id: str, request: Request):
+    """Get comparison data for all students in a classroom"""
+    teacher = await require_teacher(request)
+    
+    # Verify classroom belongs to teacher
+    classroom = await db.classrooms.find_one({
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["user_id"]
+    }, {"_id": 0})
+    
+    if not classroom:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+    
+    # Get all students in classroom
+    student_links = await db.classroom_students.find(
+        {"classroom_id": classroom_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    comparison_data = []
+    
+    for link in student_links:
+        student_id = link["student_id"]
+        student = await db.users.find_one({"user_id": student_id}, {"_id": 0})
+        if not student:
+            continue
+        
+        # Wallet balances
+        wallet_accounts = await db.wallet_accounts.find(
+            {"user_id": student_id},
+            {"_id": 0}
+        ).to_list(10)
+        
+        wallet_by_type = {w.get("account_type"): w.get("balance", 0) for w in wallet_accounts}
+        total_balance = sum(w.get("balance", 0) for w in wallet_accounts)
+        
+        # Transactions summary
+        transactions = await db.transactions.find(
+            {"user_id": student_id},
+            {"_id": 0}
+        ).to_list(500)
+        
+        total_earned = sum(t.get("amount", 0) for t in transactions if t.get("amount", 0) > 0)
+        total_spent = abs(sum(t.get("amount", 0) for t in transactions if t.get("amount", 0) < 0))
+        
+        # Chores completed
+        chore_requests = await db.chore_requests.find(
+            {"child_id": student_id, "status": "approved"},
+            {"_id": 0}
+        ).to_list(100)
+        
+        # Quests completed
+        quest_completions = await db.quest_completions.find(
+            {"user_id": student_id, "is_completed": True},
+            {"_id": 0}
+        ).to_list(100)
+        
+        # Learning progress
+        content_progress = await db.user_content_progress.count_documents({
+            "user_id": student_id,
+            "completed": True
+        })
+        
+        # Garden profit/loss
+        garden_transactions = await db.transactions.find(
+            {"user_id": student_id, "transaction_type": {"$in": ["garden_buy", "garden_sell"]}},
+            {"_id": 0}
+        ).to_list(100)
+        garden_invested = sum(abs(t.get("amount", 0)) for t in garden_transactions if t.get("transaction_type") == "garden_buy")
+        garden_earned = sum(t.get("amount", 0) for t in garden_transactions if t.get("transaction_type") == "garden_sell")
+        garden_pl = garden_earned - garden_invested
+        
+        # Stock profit/loss
+        portfolio = await db.stock_portfolios.find(
+            {"user_id": student_id},
+            {"_id": 0}
+        ).to_list(100)
+        
+        portfolio_value = 0
+        total_cost = 0
+        for holding in portfolio:
+            stock = await db.stocks.find_one({"stock_id": holding.get("stock_id")})
+            if stock:
+                portfolio_value += holding.get("quantity", 0) * stock.get("current_price", 0)
+                total_cost += holding.get("total_cost", 0)
+        
+        stock_pl = round(portfolio_value - total_cost, 2)
+        
+        # Gifts
+        gifts_received = await db.transactions.count_documents(
+            {"user_id": student_id, "transaction_type": "gift_received"}
+        )
+        gifts_sent = await db.transactions.count_documents(
+            {"user_id": student_id, "transaction_type": "gift_sent"}
+        )
+        
+        # Badges
+        badges_count = await db.user_achievements.count_documents({"user_id": student_id})
+        
+        comparison_data.append({
+            "student_id": student_id,
+            "name": student.get("name"),
+            "avatar": student.get("avatar"),
+            "streak": student.get("streak_count", 0),
+            "total_balance": round(total_balance, 2),
+            "spending_balance": round(wallet_by_type.get("spending", 0), 2),
+            "savings_balance": round(wallet_by_type.get("savings", 0), 2),
+            "gifting_balance": round(wallet_by_type.get("gifting", 0), 2),
+            "investing_balance": round(wallet_by_type.get("investing", 0), 2),
+            "total_earned": round(total_earned, 2),
+            "total_spent": round(total_spent, 2),
+            "chores_completed": len(chore_requests),
+            "quests_completed": len(quest_completions),
+            "lessons_completed": content_progress,
+            "garden_pl": round(garden_pl, 2),
+            "stock_pl": stock_pl,
+            "gifts_received": gifts_received,
+            "gifts_sent": gifts_sent,
+            "badges": badges_count
+        })
+    
+    # Sort by total balance descending
+    comparison_data.sort(key=lambda x: x["total_balance"], reverse=True)
+    
+    return {
+        "classroom": classroom,
+        "students": comparison_data,
+        "count": len(comparison_data)
+    }
+
 @api_router.delete("/teacher/classrooms/{classroom_id}")
 async def delete_classroom(classroom_id: str, request: Request):
     """Delete a classroom"""
