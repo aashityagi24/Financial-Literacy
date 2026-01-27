@@ -1690,8 +1690,8 @@ async def _legacy_get_farm(request: Request):
         "plot_cost": PLOT_COST
     }
 
-@api_router.post("/garden/buy-plot")
-async def buy_farm_plot(request: Request):
+# @api_router.post("/garden/buy-plot")  # MOVED TO routes/garden.py
+async def _legacy_buy_farm_plot(request: Request):
     """Buy an additional plot for the farm"""
     user = await get_current_user(request)
     grade = user.get("grade", 3) or 3
@@ -1744,8 +1744,8 @@ async def buy_farm_plot(request: Request):
     
     return {"message": "New plot purchased!", "plot": {k: v for k, v in new_plot.items() if k != "_id"}}
 
-@api_router.post("/garden/plant")
-async def plant_seed(data: PlantSeedRequest, request: Request):
+# @api_router.post("/garden/plant")  # MOVED TO routes/garden.py
+async def _legacy_plant_seed(data: PlantSeedRequest, request: Request):
     """Plant a seed in a plot"""
     user = await get_current_user(request)
     
@@ -1802,8 +1802,8 @@ async def plant_seed(data: PlantSeedRequest, request: Request):
     
     return {"message": f"{seed['name']} planted!", "seed_cost": seed["seed_cost"]}
 
-@api_router.post("/garden/water/{plot_id}")
-async def water_plant(plot_id: str, request: Request):
+# @api_router.post("/garden/water/{plot_id}")  # MOVED TO routes/garden.py
+async def _legacy_water_plant(plot_id: str, request: Request):
     """Water a plant"""
     user = await get_current_user(request)
     
@@ -1821,8 +1821,8 @@ async def water_plant(plot_id: str, request: Request):
     
     return {"message": "Plant watered! 💧"}
 
-@api_router.post("/garden/water-all")
-async def water_all_plants(request: Request):
+# @api_router.post("/garden/water-all")  # MOVED TO routes/garden.py
+async def _legacy_water_all_plants(request: Request):
     """Water all plants that need watering"""
     user = await get_current_user(request)
     
@@ -1834,8 +1834,8 @@ async def water_all_plants(request: Request):
     
     return {"message": f"Watered {result.modified_count} plants! 💧"}
 
-@api_router.post("/garden/harvest/{plot_id}")
-async def harvest_plant(plot_id: str, request: Request):
+# @api_router.post("/garden/harvest/{plot_id}")  # MOVED TO routes/garden.py
+async def _legacy_harvest_plant(plot_id: str, request: Request):
     """Harvest a ready plant"""
     user = await get_current_user(request)
     
@@ -1883,8 +1883,8 @@ async def harvest_plant(plot_id: str, request: Request):
         "harvest": {"quantity": plant["harvest_yield"], "unit": plant["yield_unit"], "name": plant["name"]}
     }
 
-@api_router.post("/garden/sell")
-async def sell_produce(request: Request, plant_id: str, quantity: int):
+# @api_router.post("/garden/sell")  # MOVED TO routes/garden.py
+async def _legacy_sell_produce(request: Request, plant_id: str, quantity: int):
     """Sell produce at market"""
     user = await get_current_user(request)
     
