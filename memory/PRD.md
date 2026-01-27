@@ -42,6 +42,51 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Recent Updates (January 27, 2026)
 
+**Session 2 Bug Fixes & Feature Enhancements:**
+
+1. **Google OAuth Sign-In Fixed** ✅
+   - Corrected Emergent auth validation endpoint (was using wrong URL)
+   - Now uses `GET https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data` with `X-Session-ID` header
+   - Session token stored in localStorage as backup
+
+2. **Parent Chore Approval Workflow** ✅
+   - When child marks chore as completed, it goes to "pending_approval" status
+   - Parent sees pending chores in dashboard
+   - Parent can approve (coins awarded to child) or reject (with reason)
+   - Rejected chores remain active for resubmission
+   - Notifications sent to both parent and child at each step
+
+3. **Store Items Fixed** ✅
+   - Changed to use `admin_store_items` collection instead of `store_items`
+   - Filters by active categories only (`is_active: true`)
+   - Fixed frontend to parse object response format
+
+4. **Teacher Compare All Enhanced** ✅
+   - Returns all fields: spending/savings/gifting/investing (balance + spent)
+   - Includes lessons, quests, chores completed
+   - Shows garden P/L (grades 1-2) and stock P/L (grades 3-5)
+   - Displays gifts received/sent, badges, streak
+
+5. **Student Insights Fixed** ✅
+   - Restructured backend response to match frontend expectations
+   - Nested structure: wallet, learning, transactions, chores, quests, achievements, gifts, garden, stocks
+   - Grade-based investment display (K=none, 1-2=garden, 3-5=stocks)
+
+6. **Child Classmates Enhanced** ✅
+   - Returns streak, balance, investment performance, lessons completed, badges
+   - Sorted by lessons completed
+   - Includes classroom info
+
+7. **Quest Submission Improved** ✅
+   - Prevents re-attempts (returns 400 if already completed)
+   - Returns correct answers after submission for review
+   - Shows if passed (60% threshold)
+
+8. **Parent Shopping List Fixed** ✅
+   - Correctly parses store items from object response format
+
+---
+
 **School User Role System (NEW):**
 - **School Login Page** (`/school-login`): Dedicated login for schools with username/password authentication
 - **School Dashboard** (`/school-dashboard`): Comprehensive dashboard for school administrators:
