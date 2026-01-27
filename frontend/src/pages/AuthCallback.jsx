@@ -33,22 +33,27 @@ export default function AuthCallback() {
         // Exchange session_id for session data
         const response = await axios.post(`${API}/auth/session`, {
           session_id: sessionId
-        });
+        }, { withCredentials: true });
         
         console.log('Session response:', response.data);
         
-        const { user } = response.data;
+        const { user, session_token } = response.data;
+        
+        // Store session token in localStorage as backup for cookie
+        if (session_token) {
+          localStorage.setItem('session_token', session_token);
+        }
         
         // Clear the hash from URL
         window.history.replaceState(null, '', window.location.pathname);
         
         toast.success(`Welcome${user.name ? ', ' + user.name : ''}!`);
         
-        // Navigate based on user role
+        // Navigate based on user role - use replace to avoid back-button issues
         if (!user.role) {
-          navigate('/role-selection', { state: { user } });
+          navigate('/role-selection', { state: { user }, replace: true });
         } else {
-          navigate('/dashboard', { state: { user } });
+          navigate('/dashboard', { state: { user }, replace: true });
         }
       } catch (error) {
         console.error('Auth error:', error.response?.data || error.message);
