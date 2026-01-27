@@ -82,6 +82,37 @@ export default function AdminPage({ user }) {
     }
   };
   
+  const handleDeleteUser = async (userId, userName) => {
+    if (!confirm(`Are you sure you want to delete ${userName}? This will delete ALL their data permanently.`)) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API}/admin/users/${userId}`);
+      toast.success(`User ${userName} deleted`);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete user');
+    }
+  };
+  
+  const handleCreateUser = async () => {
+    if (!newUserForm.name || !newUserForm.email) {
+      toast.error('Name and email are required');
+      return;
+    }
+    
+    try {
+      await axios.post(`${API}/admin/users`, newUserForm);
+      toast.success(`User ${newUserForm.name} created`);
+      setShowCreateUser(false);
+      setNewUserForm({ name: '', email: '', role: 'child', grade: 0 });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create user');
+    }
+  };
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
