@@ -8824,8 +8824,8 @@ async def _legacy_get_stocks_list(request: Request, category_id: Optional[str] =
     
     return enriched_stocks
 
-@api_router.get("/stocks/portfolio")
-async def get_stock_portfolio(request: Request):
+# @api_router.get("/stocks/portfolio")  # MOVED
+async def _legacy_get_stock_portfolio(request: Request):
     """Get user's stock portfolio with P/L"""
     user = await get_current_user(request)
     user_id = user["user_id"]
@@ -8876,8 +8876,8 @@ async def get_stock_portfolio(request: Request):
         "is_market_open": is_market_open()
     }
 
-@api_router.get("/stocks/portfolio/history")
-async def get_portfolio_history(request: Request, days: int = 30):
+# @api_router.get("/stocks/portfolio/history")  # MOVED
+async def _legacy_get_portfolio_history(request: Request, days: int = 30):
     """Get portfolio value history for charts"""
     user = await get_current_user(request)
     user_id = user["user_id"]
@@ -8890,8 +8890,8 @@ async def get_portfolio_history(request: Request, days: int = 30):
     history.reverse()
     return history
 
-@api_router.get("/stocks/transactions")
-async def get_stock_transactions(request: Request, limit: int = 50):
+# @api_router.get("/stocks/transactions")  # MOVED
+async def _legacy_get_stock_transactions(request: Request, limit: int = 50):
     """Get user's stock transaction history"""
     user = await get_current_user(request)
     user_id = user["user_id"]
@@ -8916,8 +8916,8 @@ async def get_stock_transactions(request: Request, limit: int = 50):
     
     return enriched
 
-@api_router.post("/stocks/buy")
-async def buy_stock(data: BuyStockRequest, request: Request):
+# @api_router.post("/stocks/buy")  # MOVED
+async def _legacy_buy_stock(data: BuyStockRequest, request: Request):
     """Buy shares of a stock"""
     user = await get_current_user(request)
     user_id = user["user_id"]
