@@ -2874,7 +2874,7 @@ async def create_chore_from_shopping_list(chore_data: ShoppingListChoreCreate, r
     }
 
 # Child Quest/Chore completion tracking
-@api_router.get("/child/quests-new")
+# @api_router.get("/child/quests-new")
 async def get_child_quests(request: Request, source: str = None, sort: str = "due_date"):
     """Get all quests for a child (admin, teacher, parent chores)"""
     user = await get_current_user(request)
@@ -2950,7 +2950,7 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
     
     return quests
 
-@api_router.post("/child/quests-new/{quest_id}/submit")
+# @api_router.post("/child/quests-new/{quest_id}/submit")
 async def submit_quest_answers(quest_id: str, request: Request):
     """Child submits answers for a quest (Q&A type) or marks quest as complete"""
     user = await get_current_user(request)
@@ -3243,17 +3243,17 @@ async def validate_chore_completion(request_id: str, request: Request):
     return {"message": f"Chore {action}d"}
 
 # Legacy quest routes (for backward compatibility during transition)
-@api_router.get("/quests")
+# @api_router.get("/quests")
 async def get_quests(request: Request):
     """Get available quests - redirects to new system"""
     return await get_child_quests(request)
 
-@api_router.post("/quests/{quest_id}/accept")
+# @api_router.post("/quests/{quest_id}/accept")
 async def accept_quest(quest_id: str, request: Request):
     """Legacy - quests no longer need acceptance"""
     return {"message": "Quest system updated - quests are automatically available"}
 
-@api_router.post("/quests/{quest_id}/complete")
+# @api_router.post("/quests/{quest_id}/complete")
 async def complete_quest(quest_id: str, request: Request):
     """Legacy - redirect to new submission"""
     return {"message": "Please use the new quest submission system"}
@@ -3262,7 +3262,7 @@ async def complete_quest(quest_id: str, request: Request):
 
 # ============== STREAK ROUTES ==============
 
-@api_router.post("/streak/checkin")
+# @api_router.post("/streak/checkin")
 async def daily_checkin(request: Request):
     """Record daily login and update streak - Children get ₹5 daily reward"""
     user = await get_current_user(request)
@@ -4589,7 +4589,7 @@ async def get_student_progress(student_id: str, request: Request):
         "streak": student.get("streak_count", 0)
     }
 
-@api_router.post("/student/join-classroom")
+# @api_router.post("/student/join-classroom")
 async def join_classroom(request: Request):
     """Join a classroom using invite code"""
     user = await get_current_user(request)
@@ -4621,7 +4621,7 @@ async def join_classroom(request: Request):
     
     return {"message": "Joined classroom successfully", "classroom": classroom}
 
-@api_router.get("/student/classrooms")
+# @api_router.get("/student/classrooms")
 async def get_student_classrooms(request: Request):
     """Get classrooms the student is in"""
     user = await get_current_user(request)
@@ -4647,7 +4647,7 @@ async def get_student_classrooms(request: Request):
     
     return classrooms
 
-@api_router.get("/student/challenges")
+# @api_router.get("/student/challenges")
 async def get_student_challenges(request: Request):
     """Get challenges available to the student"""
     user = await get_current_user(request)
