@@ -862,6 +862,168 @@ export default function SchoolDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Add User Modal */}
+      <Dialog open={showAddUserModal} onOpenChange={setShowAddUserModal}>
+        <DialogContent className="bg-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-[#3D5A80]" />
+              Add New User
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            {/* User Type Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                User Type
+              </label>
+              <Select value={addUserType} onValueChange={setAddUserType}>
+                <SelectTrigger data-testid="user-type-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="teacher">
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4" />
+                      Teacher
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="parent">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      Parent
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="child">
+                    <div className="flex items-center gap-2">
+                      <Baby className="w-4 h-4" />
+                      Child/Student
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Full Name *
+              </label>
+              <Input
+                placeholder="Enter full name"
+                value={addUserForm.name}
+                onChange={(e) => setAddUserForm({ ...addUserForm, name: e.target.value })}
+                data-testid="user-name-input"
+              />
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email Address *
+              </label>
+              <Input
+                type="email"
+                placeholder="Enter email address"
+                value={addUserForm.email}
+                onChange={(e) => setAddUserForm({ ...addUserForm, email: e.target.value })}
+                data-testid="user-email-input"
+              />
+            </div>
+
+            {/* Grade (only for child) */}
+            {addUserType === 'child' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Grade Level *
+                  </label>
+                  <Select 
+                    value={addUserForm.grade} 
+                    onValueChange={(val) => setAddUserForm({ ...addUserForm, grade: val })}
+                  >
+                    <SelectTrigger data-testid="grade-select">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Kindergarten</SelectItem>
+                      <SelectItem value="1">1st Grade</SelectItem>
+                      <SelectItem value="2">2nd Grade</SelectItem>
+                      <SelectItem value="3">3rd Grade</SelectItem>
+                      <SelectItem value="4">4th Grade</SelectItem>
+                      <SelectItem value="5">5th Grade</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Parent Email (optional)
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="Link to existing parent"
+                    value={addUserForm.parent_email}
+                    onChange={(e) => setAddUserForm({ ...addUserForm, parent_email: e.target.value })}
+                    data-testid="parent-email-input"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter parent's email to link accounts automatically
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Classroom Code (optional)
+                  </label>
+                  <Input
+                    placeholder="Enter classroom join code"
+                    value={addUserForm.classroom_code}
+                    onChange={(e) => setAddUserForm({ ...addUserForm, classroom_code: e.target.value })}
+                    data-testid="classroom-code-input"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter classroom code to enroll student automatically
+                  </p>
+                </div>
+              </>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowAddUserModal(false);
+                  setAddUserForm({ name: '', email: '', grade: '3', parent_email: '', classroom_code: '' });
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddUser}
+                disabled={addUserLoading || !addUserForm.name.trim() || !addUserForm.email.trim()}
+                className="bg-[#3D5A80] hover:bg-[#2D4A70]"
+                data-testid="confirm-add-user-btn"
+              >
+                {addUserLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Creating...
+                  </div>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Create {addUserType.charAt(0).toUpperCase() + addUserType.slice(1)}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
