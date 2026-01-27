@@ -526,14 +526,14 @@ export default function AdminPage({ user }) {
                       </td>
                       <td className="py-3 px-4">
                         <Select 
-                          value={u.grade !== null && u.grade !== undefined ? String(u.grade) : ''} 
-                          onValueChange={(value) => handleGradeChange(u.user_id, value)}
+                          value={u.grade !== null && u.grade !== undefined ? String(u.grade) : 'none'} 
+                          onValueChange={(value) => handleGradeChange(u.user_id, value === 'none' ? null : value)}
                         >
                           <SelectTrigger className="w-28">
                             <SelectValue placeholder="-" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="none">-</SelectItem>
                             <SelectItem value="0">K</SelectItem>
                             <SelectItem value="1">Grade 1</SelectItem>
                             <SelectItem value="2">Grade 2</SelectItem>
