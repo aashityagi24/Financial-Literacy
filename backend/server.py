@@ -4144,6 +4144,10 @@ async def get_notifications(request: Request):
             notif["read"] = notif["is_read"]
         elif "read" not in notif:
             notif["read"] = False
+        # Ensure title exists (fallback to first part of message)
+        if "title" not in notif or not notif["title"]:
+            message = notif.get("message", "Notification")
+            notif["title"] = message[:50] + "..." if len(message) > 50 else message
     
     # Count unread
     unread_count = sum(1 for n in notifications if not n.get("read", False))
