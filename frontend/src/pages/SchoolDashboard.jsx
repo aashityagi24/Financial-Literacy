@@ -210,7 +210,7 @@ export default function SchoolDashboard() {
       
       toast.success(response.data.message);
       setShowAddUserModal(false);
-      setAddUserForm({ name: '', email: '', grade: '3', parent_email: '', classroom_code: '' });
+      setAddUserForm({ name: '', email: '', grade: '3', parent_email: '', classroom_code: '', teacher_email: '' });
       fetchDashboardData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to create user');
