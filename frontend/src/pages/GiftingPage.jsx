@@ -92,7 +92,9 @@ export default function GiftingPage({ user }) {
       await axios.post(`${API}/wallet/transfer`, {
         from_account: transferFrom,
         to_account: 'gifting',
-        amount: amount
+        amount: amount,
+        transaction_type: 'transfer',
+        description: `Transfer to Gifting Jar from ${transferFrom}`
       });
       toast.success(`₹${amount} transferred to Gifting Jar! 🎉`);
       setShowTransferDialog(false);
