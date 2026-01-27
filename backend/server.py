@@ -3598,16 +3598,60 @@ async def get_student_insights(classroom_id: str, student_id: str, request: Requ
         {"user_id": student_id},
         {"_id": 0}
     ).to_list(10)
+    
+    # Get savings goals total (money saved towards goals)
+    savings_goals = await db.savings_goals.find(
+        {"child_id": student_id},
+        {"_id": 0}
+    ).to_list(100)
+    total_saved_in_goals = sum(g.get("current_amount", 0) for g in savings_goals)
+    
+    # Get all transactions for spending calculation per jar
+    all_transactions = await db.transactions.find(
+        {"user_id": student_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(500)
+    
+    # Calculate spent per account type (negative transactions from each account)
+    spent_per_jar = {"spending": 0, "savings": 0, "gifting": 0, "investing": 0}
+    for t in all_transactions:
+        from_acc = t.get("from_account")
+        amount = t.get("amount", 0)
+        # Spending is tracked by negative amounts or explicit from_account
+        if from_acc and from_acc in spent_per_jar:
+            if amount < 0:
+                spent_per_jar[from_acc] += abs(amount)
+            # Also check transaction_type for specific spending patterns
+        # Store purchases, gifts sent, etc.
+        txn_type = t.get("transaction_type", "")
+        if txn_type == "purchase" and amount < 0:
+            spent_per_jar["spending"] += abs(amount)
+        elif txn_type == "gift_sent" and amount < 0:
+            spent_per_jar["gifting"] += abs(amount)
+        elif txn_type in ["garden_buy", "stock_buy"] and amount < 0:
+            spent_per_jar["investing"] += abs(amount)
+        elif txn_type == "savings_deposit" and amount < 0:
+            spent_per_jar["savings"] += abs(amount)
+    
+    # Build wallet summary with available balance and spent amounts
+    wallet_by_type = {w.get("account_type"): w.get("balance", 0) for w in wallet_accounts}
+    
     wallet_summary = {
-        "accounts": wallet_accounts,
-        "total_balance": sum(w.get("balance", 0) for w in wallet_accounts)
+        "accounts": [
+            {
+                "account_type": acc.get("account_type"),
+                "balance": acc.get("balance", 0),
+                "spent": spent_per_jar.get(acc.get("account_type"), 0)
+            }
+            for acc in wallet_accounts
+        ],
+        "total_balance": sum(w.get("balance", 0) for w in wallet_accounts),
+        "savings_in_goals": total_saved_in_goals,
+        "savings_goals_count": len(savings_goals)
     }
     
     # 2. TRANSACTIONS - Get recent transactions and summaries
-    transactions = await db.transactions.find(
-        {"user_id": student_id},
-        {"_id": 0}
-    ).sort("created_at", -1).to_list(50)
+    transactions = all_transactions  # Reuse already fetched transactions
     
     total_earned = sum(t.get("amount", 0) for t in transactions if t.get("amount", 0) > 0)
     total_spent = abs(sum(t.get("amount", 0) for t in transactions if t.get("amount", 0) < 0))
