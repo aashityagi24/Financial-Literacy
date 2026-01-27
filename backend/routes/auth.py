@@ -137,9 +137,11 @@ async def create_session(request: Request, response: Response):
                 json={"session_id": session_id}
             )
             if auth_response.status_code != 200:
-                raise HTTPException(status_code=401, detail="Invalid session")
+                raise HTTPException(status_code=401, detail=f"Invalid session: {auth_response.text}")
             
             user_data = auth_response.json()
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Auth validation failed: {str(e)}")
     
