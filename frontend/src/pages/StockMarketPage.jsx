@@ -35,7 +35,7 @@ export default function StockMarketPage({ user }) {
   const [marketStatus, setMarketStatus] = useState({ is_open: false });
   const [categories, setCategories] = useState([]);
   const [stocks, setStocks] = useState([]);
-  const [portfolio, setPortfolio] = useState({ holdings: [], summary: {} });
+  const [portfolio, setPortfolio] = useState({ holdings: [], total_invested: 0, total_current_value: 0, total_profit_loss: 0, total_profit_loss_percent: 0 });
   const [transactions, setTransactions] = useState([]);
   const [portfolioHistory, setPortfolioHistory] = useState([]);
   const [news, setNews] = useState([]);
@@ -71,7 +71,7 @@ export default function StockMarketPage({ user }) {
       setMarketStatus(statusRes.data);
       setCategories(categoriesRes.data || []);
       setStocks(stocksRes.data || []);
-      setPortfolio(portfolioRes.data || { holdings: [], summary: {} });
+      setPortfolio(portfolioRes.data || { holdings: [], total_invested: 0, total_current_value: 0, total_profit_loss: 0 });
       setNews(newsRes.data || []);
       setWallet(walletRes.data);
       
