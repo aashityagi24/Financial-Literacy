@@ -403,7 +403,7 @@ async def _link_parent_to_child(db, parent_id: str, child_email: str):
 
 @router.post("/school/users/child")
 async def school_create_child(request: Request):
-    """Create a single child/student for the school"""
+    """Create or add a child/student to the school"""
     from services.auth import require_school
     db = get_db()
     school = await require_school(request)
@@ -415,13 +415,29 @@ async def school_create_child(request: Request):
     grade = body.get("grade", 3)
     parent_email = body.get("parent_email", "").strip().lower()
     classroom_code = body.get("classroom_code", "").strip().upper()
+    teacher_email = body.get("teacher_email", "").strip().lower()
     
     if not name or not email:
         raise HTTPException(status_code=400, detail="Name and email are required")
     
     existing = await db.users.find_one({"email": email})
     if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        # If user exists but has no school, add them to this school
+        if not existing.get("school_id"):
+            await db.users.update_one(
+                {"email": email},
+                {"$set": {"school_id": school_id, "role": "child", "grade": grade}}
+            )
+            updated_user = await db.users.find_one({"email": email}, {"_id": 0})
+            
+            # Link to parent and classroom
+            await _link_child_to_relationships(db, updated_user["user_id"], parent_email, classroom_code, teacher_email)
+            
+            return {"message": "Existing user added to school as child", "user_id": updated_user["user_id"], "user": updated_user}
+        elif existing.get("school_id") == school_id:
+            return {"message": "User already belongs to this school", "user_id": existing["user_id"]}
+        else:
+            raise HTTPException(status_code=400, detail="User already belongs to another school")
     
     user_id = f"user_{uuid.uuid4().hex[:12]}"
     
@@ -448,33 +464,68 @@ async def school_create_child(request: Request):
             "created_at": datetime.now(timezone.utc).isoformat()
         })
     
-    # Link to parent if provided
-    if parent_email:
-        parent = await db.users.find_one({"email": parent_email, "role": "parent"})
-        if parent:
-            await db.parent_child_links.insert_one({
-                "link_id": f"link_{uuid.uuid4().hex[:12]}",
-                "parent_id": parent["user_id"],
-                "child_id": user_id,
-                "status": "active",
-                "created_at": datetime.now(timezone.utc).isoformat()
-            })
-    
-    # Join classroom if code provided
-    if classroom_code:
-        classroom = await db.classrooms.find_one({"join_code": classroom_code})
-        if classroom:
-            await db.classroom_students.insert_one({
-                "enrollment_id": f"enroll_{uuid.uuid4().hex[:12]}",
-                "classroom_id": classroom["classroom_id"],
-                "student_id": user_id,
-                "status": "active",
-                "enrolled_at": datetime.now(timezone.utc).isoformat()
-            })
+    # Link to parent and classroom
+    await _link_child_to_relationships(db, user_id, parent_email, classroom_code, teacher_email)
     
     # Fetch the clean user without _id
     created_user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
     return {"message": "Child created successfully", "user_id": user_id, "user": created_user}
+
+
+async def _link_child_to_relationships(db, child_id: str, parent_email: str, classroom_code: str, teacher_email: str):
+    """Helper to link a child to parent and classroom"""
+    # Link to parent if provided
+    if parent_email:
+        parent = await db.users.find_one({"email": parent_email, "role": "parent"})
+        if parent:
+            existing_link = await db.parent_child_links.find_one({
+                "parent_id": parent["user_id"],
+                "child_id": child_id
+            })
+            if not existing_link:
+                await db.parent_child_links.insert_one({
+                    "link_id": f"link_{uuid.uuid4().hex[:12]}",
+                    "parent_id": parent["user_id"],
+                    "child_id": child_id,
+                    "status": "active",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                })
+    
+    # Join classroom by code
+    if classroom_code:
+        classroom = await db.classrooms.find_one({"join_code": classroom_code})
+        if classroom:
+            existing_enrollment = await db.classroom_students.find_one({
+                "classroom_id": classroom["classroom_id"],
+                "student_id": child_id
+            })
+            if not existing_enrollment:
+                await db.classroom_students.insert_one({
+                    "enrollment_id": f"enroll_{uuid.uuid4().hex[:12]}",
+                    "classroom_id": classroom["classroom_id"],
+                    "student_id": child_id,
+                    "status": "active",
+                    "enrolled_at": datetime.now(timezone.utc).isoformat()
+                })
+    # Or join classroom by teacher email
+    elif teacher_email:
+        teacher = await db.users.find_one({"email": teacher_email, "role": "teacher"})
+        if teacher:
+            # Find teacher's first classroom
+            classroom = await db.classrooms.find_one({"teacher_id": teacher["user_id"]})
+            if classroom:
+                existing_enrollment = await db.classroom_students.find_one({
+                    "classroom_id": classroom["classroom_id"],
+                    "student_id": child_id
+                })
+                if not existing_enrollment:
+                    await db.classroom_students.insert_one({
+                        "enrollment_id": f"enroll_{uuid.uuid4().hex[:12]}",
+                        "classroom_id": classroom["classroom_id"],
+                        "student_id": child_id,
+                        "status": "active",
+                        "enrolled_at": datetime.now(timezone.utc).isoformat()
+                    })
 
 @router.get("/school/users")
 async def school_get_users(request: Request):
