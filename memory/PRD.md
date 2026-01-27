@@ -146,11 +146,13 @@ A gamified financial literacy learning application for children (K-5) with disti
 - **Users:** Google Social Login
 
 ## Key Files
-- `/app/backend/server.py` - FastAPI backend (Phase 3 complete - 30% migrated)
-- `/app/backend/routes/` - 11 modular route files:
+- `/app/backend/server.py` - FastAPI backend (Phase 4 complete - 50% migrated)
+- `/app/backend/routes/` - 16 modular route files:
   - `auth.py` (6), `school.py` (8), `wallet.py` (3), `store.py` (5)
   - `garden.py` (7), `investments.py` (3), `achievements.py` (4)
   - `quests.py` (10), `notifications.py` (4), `teacher.py` (11), `parent.py` (10)
+  - `admin.py` (12), `child.py` (14), `learning.py` (9)
+  - `uploads.py` (8), `stocks.py` (10)
 - `/app/backend/models/` - 9 Pydantic model files
 - `/app/backend/services/auth.py` - Authentication helpers
 - `/app/frontend/src/pages/` - React page components
@@ -164,12 +166,12 @@ A gamified financial literacy learning application for children (K-5) with disti
 - [ ] Spending limits & parent approval for large transactions
 
 ### P2 - Medium Priority
-- [ ] Backend refactor (split server.py into modules)
+- [x] Backend refactor Phase 4 (50% complete)
 - [ ] Teacher/Parent collaboration portal
 - [ ] Collaborative & seasonal events
 - [ ] Email notifications
 - [ ] Tutorial system
 
 ### Technical Debt
-- `/app/backend/server.py` - **PHASE 3 COMPLETE**: 71 endpoints (30%) migrated to 11 modular files. ~163 routes remaining (admin, learning, child).
+- `/app/backend/server.py` - **PHASE 4 COMPLETE**: 111 endpoints (50%) migrated to 16 modular files. ~111 routes remaining (admin store, admin investments, content, teacher quests).
 - `/app/frontend/src/pages/ContentManagement.jsx` - Over 1500 lines, needs component decomposition
