@@ -124,3 +124,49 @@ async def claim_streak_bonus(request: Request):
             return {"message": f"Claimed {milestone}-day streak bonus!", "bonus": bonus}
     
     return {"message": "No unclaimed streak bonuses"}
+
+
+@router.post("/checkin")
+async def streak_checkin(request: Request):
+    """Daily streak check-in"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    
+    from datetime import date
+    today = date.today().isoformat()
+    
+    last_checkin = user.get("last_checkin_date")
+    current_streak = user.get("streak_count", 0)
+    
+    if last_checkin == today:
+        return {"message": "Already checked in today", "streak": current_streak, "bonus": 0}
+    
+    yesterday = (date.today() - timedelta(days=1)).isoformat()
+    
+    if last_checkin == yesterday:
+        current_streak += 1
+    else:
+        current_streak = 1
+    
+    # Calculate bonus
+    bonus_coins = min(5 + current_streak, 20)
+    
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {
+            "streak_count": current_streak,
+            "last_checkin_date": today
+        }}
+    )
+    
+    await db.wallet_accounts.update_one(
+        {"user_id": user["user_id"], "account_type": "spending"},
+        {"$inc": {"balance": bonus_coins}}
+    )
+    
+    return {
+        "message": f"Check-in successful! {current_streak} day streak!",
+        "streak": current_streak,
+        "bonus": bonus_coins
+    }
