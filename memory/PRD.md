@@ -93,6 +93,17 @@ A gamified financial literacy learning application for children (K-5) with disti
 - POST /api/admin/content/items/{id}/move - Move content item
 - PUT /api/admin/content/topics/reorder - Reorder topics/subtopics
 
+### Investment Access by Grade
+- **Kindergarten (Grade 0):** No investments - focus on learning basics
+- **Grade 1-2:** Money Garden only (farm-based simulation)
+- **Grade 3-5:** Stock Market only (trading simulation)
+
+### Parent Dashboard
+- GET /api/parent/dashboard - Get parent overview with linked children
+- GET /api/parent/children/{id}/insights - **NEW** Comprehensive child insights (same as teacher view)
+- GET /api/parent/children/{id}/progress - Basic child progress
+- POST /api/parent/chores-new - Create chore for child
+
 ### Teacher Dashboard
 - GET /api/teacher/dashboard - Get teacher overview
 - GET /api/teacher/classrooms/{id} - Get classroom details
