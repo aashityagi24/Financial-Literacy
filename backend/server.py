@@ -5917,8 +5917,9 @@ async def _legacy_delete_allowance(allowance_id: str, request: Request):
     return {"message": "Allowance cancelled"}
 
 @api_router.post("/admin/trigger-allowances")
-async def trigger_allowances(request: Request):
-    """Admin endpoint to manually trigger allowance processing"""
+async def _legacy_trigger_allowances(request: Request):
+    """Admin endpoint to manually trigger allowance processing - MOVED"""
+    # Now handled by routes/admin.py
     await require_admin(request)
     await process_recurring_allowances()
     return {"message": "Allowance processing triggered"}
