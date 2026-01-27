@@ -55,7 +55,7 @@ export default function WalletPage({ user }) {
         icon: '❤️', 
         color: 'from-[#9B5DE5] to-[#B47EE5]',
         description: 'Share with others who need it!',
-        action: { label: 'Give ₹', path: '/quests' }
+        action: { label: 'Give ₹', path: '/gifting' }
       },
     };
     
