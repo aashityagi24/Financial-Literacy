@@ -321,28 +321,58 @@ async def complete_activity(activity_id: str, request: Request):
 
 @router.get("/progress")
 async def get_learning_progress(request: Request):
-    """Get user's learning progress"""
+    """Get overall learning progress for user"""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
     
-    lessons_completed = await db.user_lesson_progress.count_documents({
+    # Get total and completed lessons
+    total_lessons = await db.learning_lessons.count_documents({})
+    completed_lessons = await db.user_lesson_progress.count_documents({
         "user_id": user["user_id"],
         "completed": True
     })
     
+    # Get completed activities
+    total_activities = await db.activities.count_documents({})
+    completed_activities = await db.user_activity_progress.count_documents({
+        "user_id": user["user_id"],
+        "completed": True
+    })
+    
+    # Get quiz stats
     quizzes_passed = await db.quiz_attempts.count_documents({
         "user_id": user["user_id"],
         "passed": True
     })
     
-    activities_completed = await db.activity_completions.count_documents({
-        "user_id": user["user_id"]
-    })
+    # Get topic progress
+    topics = await db.learning_topics.find({}, {"_id": 0}).to_list(100)
+    topic_progress = []
+    
+    for topic in topics:
+        lessons = await db.learning_lessons.find({"topic_id": topic["topic_id"]}).to_list(100)
+        lesson_ids = [l["lesson_id"] for l in lessons]
+        completed = await db.user_lesson_progress.count_documents({
+            "user_id": user["user_id"],
+            "lesson_id": {"$in": lesson_ids},
+            "completed": True
+        })
+        topic_progress.append({
+            "topic_id": topic["topic_id"],
+            "title": topic.get("title", ""),
+            "total_lessons": len(lessons),
+            "completed_lessons": completed,
+            "progress_percent": round((completed / len(lessons)) * 100) if lessons else 0
+        })
     
     return {
-        "lessons_completed": lessons_completed,
+        "total_lessons": total_lessons,
+        "completed_lessons": completed_lessons,
+        "lessons_progress_percent": round((completed_lessons / total_lessons) * 100) if total_lessons else 0,
+        "total_activities": total_activities,
+        "completed_activities": completed_activities,
         "quizzes_passed": quizzes_passed,
-        "activities_completed": activities_completed,
-        "total_progress": lessons_completed + quizzes_passed + activities_completed
+        "topic_progress": topic_progress,
+        "total_progress": completed_lessons + completed_activities + quizzes_passed
     }
