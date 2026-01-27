@@ -146,11 +146,12 @@ A gamified financial literacy learning application for children (K-5) with disti
 - **Users:** Google Social Login
 
 ## Key Files
-- `/app/backend/server.py` - FastAPI backend (9600+ lines - Phase 1 refactoring complete)
+- `/app/backend/server.py` - FastAPI backend (modularized, routes integrated)
 - `/app/backend/core/` - Database & config modules
-- `/app/backend/models/` - All Pydantic models (9 files extracted)
+- `/app/backend/models/` - All Pydantic models (9 files)
 - `/app/backend/services/auth.py` - Authentication helpers
-- `/app/backend/routes/` - Modular route files (auth, school ready)
+- `/app/backend/routes/auth.py` - Auth routes (INTEGRATED)
+- `/app/backend/routes/school.py` - School routes (INTEGRATED)
 - `/app/frontend/src/pages/Dashboard.jsx` - Child dashboard
 - `/app/frontend/src/pages/StockMarketPage.jsx` - Stock trading UI
 - `/app/frontend/src/pages/MoneyGardenPage.jsx` - Garden/farm UI
@@ -176,7 +177,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 - [ ] Tutorial system
 
 ### Technical Debt
-- `/app/backend/server.py` - **PHASE 1 COMPLETE**: Models, services, and route structure created. Phase 2 pending: integrate modular routes
+- `/app/backend/server.py` - **PHASE 2 COMPLETE**: Auth & School routes migrated. Remaining routes pending.
 - `/app/frontend/src/pages/ContentManagement.jsx` - Over 1500 lines, needs component decomposition
 - `/app/frontend/src/pages/TeacherDashboard.jsx` - Large file, student insights modal should be extracted
 - `/app/frontend/src/pages/ParentDashboard.jsx` - Growing file, consider component extraction
