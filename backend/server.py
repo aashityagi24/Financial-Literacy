@@ -187,6 +187,14 @@ class RewardPenaltyCreate(BaseModel):
     amount: float  # Positive for reward, negative for penalty
     category: str  # 'reward' or 'penalty'
 
+class SchoolCreate(BaseModel):
+    """Create a new school"""
+    name: str
+    username: str
+    password: str
+    address: Optional[str] = None
+    contact_email: Optional[str] = None
+
 class UserQuest(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
