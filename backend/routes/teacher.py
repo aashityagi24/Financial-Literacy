@@ -510,40 +510,112 @@ async def get_classroom_comparison(classroom_id: str, request: Request):
         if not student:
             continue
         
+        student_id = student["user_id"]
+        
+        # Get all wallet accounts
         wallets = await db.wallet_accounts.find(
-            {"user_id": student["user_id"]},
+            {"user_id": student_id},
             {"_id": 0}
         ).to_list(10)
         
-        total_balance = sum(w.get("balance", 0) for w in wallets)
-        spent = sum(
-            abs(t.get("amount", 0)) 
-            for t in await db.transactions.find({
-                "user_id": student["user_id"],
-                "transaction_type": {"$in": ["purchase", "garden_buy"]}
-            }, {"amount": 1}).to_list(1000)
-        )
+        wallet_by_type = {w.get("account_type"): w.get("balance", 0) for w in wallets}
+        total_balance = sum(wallet_by_type.values())
         
+        # Get all transactions for spending analysis
+        transactions = await db.transactions.find(
+            {"user_id": student_id},
+            {"_id": 0}
+        ).to_list(1000)
+        
+        spending_spent = sum(abs(t.get("amount", 0)) for t in transactions 
+                           if t.get("transaction_type") in ["purchase"])
+        gifting_spent = sum(abs(t.get("amount", 0)) for t in transactions 
+                          if t.get("transaction_type") == "gift_sent")
+        investing_spent = sum(abs(t.get("amount", 0)) for t in transactions 
+                            if t.get("transaction_type") in ["garden_buy", "stock_buy"])
+        
+        # Get savings in goals
+        savings_goals = await db.savings_goals.find(
+            {"child_id": student_id},
+            {"current_amount": 1}
+        ).to_list(50)
+        savings_in_goals = sum(g.get("current_amount", 0) for g in savings_goals)
+        
+        # Get completed lessons
         lessons = await db.user_content_progress.count_documents({
-            "user_id": student["user_id"],
+            "user_id": student_id,
             "completed": True
         })
         
+        # Get completed quests (admin/teacher)
         quests = await db.quest_completions.count_documents({
-            "user_id": student["user_id"],
+            "user_id": student_id,
             "is_completed": True
         })
         
+        # Get completed chores
+        chores = await db.quest_completions.count_documents({
+            "user_id": student_id,
+            "is_completed": True,
+            "status": "approved"
+        })
+        
+        # Get garden data
+        garden_plots = await db.user_garden_plots.find(
+            {"user_id": student_id},
+            {"_id": 0}
+        ).to_list(50)
+        garden_invested = sum(p.get("purchase_price", 0) for p in garden_plots)
+        garden_earned = sum(p.get("total_harvested", 0) for p in garden_plots)
+        garden_pl = garden_earned - garden_invested
+        
+        # Get stock data
+        stock_holdings = await db.user_stock_holdings.find(
+            {"user_id": student_id},
+            {"_id": 0}
+        ).to_list(50)
+        
+        portfolio_value = 0
+        total_cost_basis = 0
+        for holding in stock_holdings:
+            stock = await db.stocks.find_one({"stock_id": holding.get("stock_id")})
+            current_price = stock.get("current_price", 0) if stock else 0
+            shares = holding.get("shares", 0)
+            portfolio_value += shares * current_price
+            total_cost_basis += holding.get("total_cost", 0)
+        stock_pl = portfolio_value - total_cost_basis
+        
+        # Get gift stats
+        gifts_received = sum(1 for t in transactions if t.get("transaction_type") == "gift_received")
+        gifts_sent = sum(1 for t in transactions if t.get("transaction_type") == "gift_sent")
+        
+        # Get badges
+        badges = await db.user_achievements.count_documents({"user_id": student_id})
+        
         comparison_data.append({
-            "student_id": student["user_id"],
+            "student_id": student_id,
             "name": student.get("name", "Unknown"),
+            "avatar": student.get("avatar"),
             "email": student.get("email"),
             "grade": student.get("grade"),
             "streak": student.get("streak_count", 0),
             "total_balance": round(total_balance, 2),
-            "total_spent": round(spent, 2),
+            "spending_balance": round(wallet_by_type.get("spending", 0), 2),
+            "spending_spent": round(spending_spent, 2),
+            "savings_balance": round(wallet_by_type.get("savings", 0), 2),
+            "savings_in_goals": round(savings_in_goals, 2),
+            "gifting_balance": round(wallet_by_type.get("gifting", 0), 2),
+            "gifting_spent": round(gifting_spent, 2),
+            "investing_balance": round(wallet_by_type.get("investing", 0), 2),
+            "investing_spent": round(investing_spent, 2),
             "lessons_completed": lessons,
-            "quests_completed": quests
+            "quests_completed": quests,
+            "chores_completed": chores,
+            "garden_pl": round(garden_pl, 2),
+            "stock_pl": round(stock_pl, 2),
+            "gifts_received": gifts_received,
+            "gifts_sent": gifts_sent,
+            "badges": badges
         })
     
     comparison_data.sort(key=lambda x: x["lessons_completed"], reverse=True)
