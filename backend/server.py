@@ -5768,6 +5768,13 @@ async def delete_allowance(allowance_id: str, request: Request):
     
     return {"message": "Allowance cancelled"}
 
+@api_router.post("/admin/trigger-allowances")
+async def trigger_allowances(request: Request):
+    """Admin endpoint to manually trigger allowance processing"""
+    await require_admin(request)
+    await process_recurring_allowances()
+    return {"message": "Allowance processing triggered"}
+
 @api_router.post("/parent/give-money")
 async def give_money_to_child(request: Request):
     """Give money directly to a child"""
