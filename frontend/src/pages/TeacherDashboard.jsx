@@ -133,6 +133,36 @@ export default function TeacherDashboard({ user }) {
     }
   };
   
+  const fetchStudentInsights = async (student) => {
+    if (!selectedClassroom || !student?.user_id) return;
+    setShowStudentProgress(student);
+    setInsightsLoading(true);
+    try {
+      const res = await axios.get(`${API}/teacher/classrooms/${selectedClassroom}/student/${student.user_id}/insights`);
+      setStudentInsights(res.data);
+    } catch (error) {
+      toast.error('Failed to load student insights');
+      console.error(error);
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
+  
+  const fetchComparisonData = async () => {
+    if (!selectedClassroom) return;
+    setShowComparison(true);
+    setComparisonLoading(true);
+    try {
+      const res = await axios.get(`${API}/teacher/classrooms/${selectedClassroom}/comparison`);
+      setComparisonData(res.data);
+    } catch (error) {
+      toast.error('Failed to load comparison data');
+      console.error(error);
+    } finally {
+      setComparisonLoading(false);
+    }
+  };
+  
   const handleCreateClassroom = async () => {
     try {
       await axios.post(`${API}/teacher/classrooms`, classForm);
