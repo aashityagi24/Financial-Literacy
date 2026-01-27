@@ -416,6 +416,28 @@ async def submit_quest(quest_id: str, request: Request):
     if has_questions:
         response["correct_answers"] = correct_answers
         response["passed"] = earned_points >= (total_points * 0.6)  # 60% to pass
+        
+        # Include detailed per-question results
+        question_results = []
+        for q in quest.get("questions", []):
+            q_id = q.get("question_id")
+            user_answer = answers.get(q_id)
+            correct_answer = q.get("correct_answer")
+            is_correct = user_answer == correct_answer
+            
+            question_results.append({
+                "question_id": q_id,
+                "question_text": q.get("question_text"),
+                "question_type": q.get("question_type"),
+                "options": q.get("options"),
+                "user_answer": user_answer,
+                "correct_answer": correct_answer,
+                "is_correct": is_correct,
+                "points_earned": q.get("points", 0) if is_correct else 0,
+                "max_points": q.get("points", 0)
+            })
+        
+        response["results"] = question_results
     
     return response
 
