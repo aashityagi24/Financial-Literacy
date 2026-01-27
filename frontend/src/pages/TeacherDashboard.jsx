@@ -1003,7 +1003,7 @@ export default function TeacherDashboard({ user }) {
           <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-lg max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                {showStudentProgress?.name}'s Progress
+                {showStudentProgress?.name}&apos;s Progress
               </DialogTitle>
             </DialogHeader>
             {showStudentProgress && (
