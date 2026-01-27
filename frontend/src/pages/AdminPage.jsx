@@ -570,11 +570,12 @@ export default function AdminPage({ user }) {
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Email</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Role</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Grade</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">School</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
+                  {filteredUsers.map((u) => (
                     <tr key={u.user_id} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
@@ -623,6 +624,16 @@ export default function AdminPage({ user }) {
                             <SelectItem value="5">Grade 5</SelectItem>
                           </SelectContent>
                         </Select>
+                      </td>
+                      <td className="py-3 px-4">
+                        {u.school_name ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded text-sm">
+                            <School className="w-3 h-3" />
+                            {u.school_name}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </td>
                       <td className="py-3 px-4">
                         <button
