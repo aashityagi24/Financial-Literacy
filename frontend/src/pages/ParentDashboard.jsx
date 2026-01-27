@@ -194,6 +194,19 @@ export default function ParentDashboard({ user }) {
     }
   };
   
+  const handleCreateRewardPenalty = async () => {
+    try {
+      const response = await axios.post(`${API}/parent/reward-penalty`, rpForm);
+      const isReward = rpForm.category === 'reward';
+      toast.success(`${isReward ? 'Reward' : 'Penalty'} applied! New balance: ₹${response.data.new_balance}`);
+      setShowRewardPenalty(false);
+      setRpForm({ child_id: '', title: '', description: '', amount: 5, category: 'reward' });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to apply reward/penalty');
+    }
+  };
+  
   const handleGiveMoney = async () => {
     try {
       await axios.post(`${API}/parent/give-money`, giveMoneyForm);
