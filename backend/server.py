@@ -7411,8 +7411,8 @@ async def _legacy_school_upload_students(request: Request):
         "message": f"Created {created} students"
     }
 
-@api_router.post("/school/upload/parents")
-async def school_upload_parents(request: Request):
+# @api_router.post("/school/upload/parents")  # MOVED TO routes/school.py
+async def _legacy_school_upload_parents(request: Request):
     """Bulk upload parents via CSV data"""
     school = await require_school(request)
     school_id = school["school_id"]
