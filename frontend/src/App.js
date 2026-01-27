@@ -35,6 +35,7 @@ import StockMarketPage from "@/pages/StockMarketPage";
 import AdminStockManagement from "@/pages/AdminStockManagement";
 import SchoolLogin from "@/pages/SchoolLogin";
 import SchoolDashboard from "@/pages/SchoolDashboard";
+import GiftingPage from "@/pages/GiftingPage";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
