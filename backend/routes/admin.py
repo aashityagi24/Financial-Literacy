@@ -147,7 +147,7 @@ async def update_user_grade(user_id: str, request: Request):
 
 @router.delete("/users/{user_id}")
 async def delete_user(user_id: str, request: Request):
-    """Delete a user and all related data"""
+    """Delete a user and all related data completely"""
     from services.auth import require_admin
     db = get_db()
     admin = await require_admin(request)
@@ -163,10 +163,12 @@ async def delete_user(user_id: str, request: Request):
     if user.get("role") == "admin":
         raise HTTPException(status_code=403, detail="Cannot delete admin users")
     
-    # Cascading delete - remove all user data
+    # Cascading delete - remove ALL user data
     await db.users.delete_one({"user_id": user_id})
     await db.wallet_accounts.delete_many({"user_id": user_id})
     await db.transactions.delete_many({"user_id": user_id})
+    await db.transactions.delete_many({"from_user_id": user_id})
+    await db.transactions.delete_many({"to_user_id": user_id})
     await db.notifications.delete_many({"user_id": user_id})
     await db.quest_completions.delete_many({"user_id": user_id})
     await db.user_content_progress.delete_many({"user_id": user_id})
@@ -176,18 +178,31 @@ async def delete_user(user_id: str, request: Request):
     await db.savings_goals.delete_many({"child_id": user_id})
     await db.parent_child_links.delete_many({"$or": [{"parent_id": user_id}, {"child_id": user_id}]})
     await db.classroom_students.delete_many({"student_id": user_id})
+    await db.user_sessions.delete_many({"user_id": user_id})
+    await db.gift_requests.delete_many({"$or": [{"from_user_id": user_id}, {"to_user_id": user_id}]})
+    await db.charitable_donations.delete_many({"user_id": user_id})
+    await db.daily_rewards.delete_many({"user_id": user_id})
+    await db.avatars.delete_many({"user_id": user_id})
+    await db.store_purchases.delete_many({"user_id": user_id})
     
-    # If teacher, delete their classrooms
+    # If teacher, delete their classrooms and related data
     if user.get("role") == "teacher":
+        classrooms = await db.classrooms.find({"teacher_id": user_id}).to_list(100)
+        for classroom in classrooms:
+            await db.classroom_students.delete_many({"classroom_id": classroom["classroom_id"]})
+            await db.announcements.delete_many({"classroom_id": classroom["classroom_id"]})
         await db.classrooms.delete_many({"teacher_id": user_id})
+        await db.new_quests.delete_many({"creator_id": user_id, "creator_type": "teacher"})
     
     # If parent, delete their chores/allowances
     if user.get("role") == "parent":
         await db.parent_chores.delete_many({"parent_id": user_id})
+        await db.new_quests.delete_many({"creator_id": user_id, "creator_type": "parent"})
         await db.allowances.delete_many({"parent_id": user_id})
         await db.reward_penalties.delete_many({"parent_id": user_id})
+        await db.chore_submissions.delete_many({"parent_id": user_id})
     
-    return {"message": f"User {user.get('name', user_id)} deleted successfully"}
+    return {"message": f"User {user.get('name', user_id)} and all related data deleted successfully"}
 
 # Stats
 @router.get("/stats")
