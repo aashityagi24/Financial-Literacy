@@ -96,7 +96,7 @@ async def get_topic_details(topic_id: str, request: Request):
 
 @router.get("/lessons/{lesson_id}")
 async def get_lesson(lesson_id: str, request: Request):
-    """Get single lesson"""
+    """Get single lesson and mark as started"""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
@@ -108,15 +108,30 @@ async def get_lesson(lesson_id: str, request: Request):
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
     
-    progress = await db.user_lesson_progress.find_one({
+    # Mark as started if not already
+    existing = await db.user_lesson_progress.find_one({
         "user_id": user["user_id"],
         "lesson_id": lesson_id
-    }, {"_id": 0})
+    })
     
-    lesson["user_progress"] = progress
+    if not existing:
+        await db.user_lesson_progress.insert_one({
+            "id": f"ulp_{uuid.uuid4().hex[:12]}",
+            "user_id": user["user_id"],
+            "lesson_id": lesson_id,
+            "completed": False,
+            "score": None,
+            "started_at": datetime.now(timezone.utc).isoformat(),
+            "completed_at": None
+        })
+        lesson["user_progress"] = None
+    else:
+        lesson["user_progress"] = {k: v for k, v in existing.items() if k != "_id"}
     
     quiz = await db.quizzes.find_one({"lesson_id": lesson_id}, {"_id": 0})
     lesson["has_quiz"] = quiz is not None
+    if quiz:
+        lesson["quiz"] = quiz
     
     return lesson
 
