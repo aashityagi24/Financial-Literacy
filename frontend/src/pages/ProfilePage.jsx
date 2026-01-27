@@ -307,9 +307,9 @@ export default function ProfilePage({ user, setUser }) {
                   {parents.map((parent) => (
                     <div key={parent.user_id} className="flex items-center gap-3 bg-[#E0FBFC] rounded-xl p-3 border-2 border-[#1D3557]">
                       <img 
-                        src={parent.picture || 'https://via.placeholder.com/40'} 
+                        src={parent.picture || getDefaultAvatar('parent', parent.name)} 
                         alt={parent.name}
-                        className="w-10 h-10 rounded-full border-2 border-[#1D3557]"
+                        className="w-10 h-10 rounded-full border-2 border-[#1D3557] object-cover"
                       />
                       <div>
                         <p className="font-bold text-[#1D3557]">{parent.name}</p>
