@@ -79,7 +79,17 @@ export const ProtectedRoute = ({ children }) => {
     const checkAuth = async () => {
       try {
         console.log('Checking auth via /api/auth/me...');
-        const response = await axios.get(`${API}/auth/me`);
+        
+        // Configure request with both cookie and header-based auth
+        const config = { withCredentials: true };
+        
+        // Also try Authorization header with stored token as fallback
+        const storedToken = localStorage.getItem('session_token');
+        if (storedToken) {
+          config.headers = { Authorization: `Bearer ${storedToken}` };
+        }
+        
+        const response = await axios.get(`${API}/auth/me`, config);
         console.log('Auth check success:', response.data.email);
         setUser(response.data);
         setIsAuthenticated(true);
@@ -91,6 +101,8 @@ export const ProtectedRoute = ({ children }) => {
         }
       } catch (error) {
         console.log('Auth check failed:', error.response?.status, error.response?.data?.detail);
+        // Clear any stored token on auth failure
+        localStorage.removeItem('session_token');
         setIsAuthenticated(false);
         navigate('/');
       }
