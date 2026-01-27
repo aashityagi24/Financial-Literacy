@@ -2222,8 +2222,8 @@ async def _legacy_claim_achievement(achievement_id: str, request: Request):
 # ============== NEW QUEST SYSTEM ==============
 
 # Upload quest image/pdf
-@api_router.post("/upload/quest-asset")
-async def upload_quest_asset(file: UploadFile = File(...)):
+# @api_router.post("/upload/quest-asset")  # MOVED
+async def _legacy_upload_quest_asset(file: UploadFile = File(...)):
     """Upload image or PDF for quests"""
     QUEST_ASSETS_DIR = UPLOADS_DIR / "quests"
     QUEST_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
@@ -2242,8 +2242,8 @@ async def upload_quest_asset(file: UploadFile = File(...)):
     return {"url": f"/api/uploads/quests/{filename}"}
 
 # Admin Quest Management
-@api_router.post("/admin/quests")
-async def create_admin_quest(quest_data: QuestCreate, request: Request):
+# @api_router.post("/admin/quests")  # MOVED
+async def _legacy_create_admin_quest(quest_data: QuestCreate, request: Request):
     """Admin creates a new quest with Q&A"""
     user = await require_admin(request)
     
@@ -2287,8 +2287,8 @@ async def create_admin_quest(quest_data: QuestCreate, request: Request):
     await db.new_quests.insert_one(quest_doc)
     return {"quest_id": quest_id, "message": "Quest created successfully"}
 
-@api_router.get("/admin/quests")
-async def get_admin_quests(request: Request):
+# @api_router.get("/admin/quests")  # MOVED
+async def _legacy_get_admin_quests(request: Request):
     """Get all admin-created quests"""
     await require_admin(request)
     quests = await db.new_quests.find(
@@ -2297,8 +2297,8 @@ async def get_admin_quests(request: Request):
     ).sort("created_at", -1).to_list(200)
     return quests
 
-@api_router.put("/admin/quests/{quest_id}")
-async def update_admin_quest(quest_id: str, quest_data: QuestCreate, request: Request):
+# @api_router.put("/admin/quests/{quest_id}")  # MOVED
+async def _legacy_update_admin_quest(quest_id: str, quest_data: QuestCreate, request: Request):
     """Update an admin quest"""
     await require_admin(request)
     
@@ -2335,8 +2335,8 @@ async def update_admin_quest(quest_id: str, quest_data: QuestCreate, request: Re
     )
     return {"message": "Quest updated"}
 
-@api_router.delete("/admin/quests/{quest_id}")
-async def delete_admin_quest(quest_id: str, request: Request):
+# @api_router.delete("/admin/quests/{quest_id}")  # MOVED
+async def _legacy_delete_admin_quest(quest_id: str, request: Request):
     """Delete an admin quest"""
     await require_admin(request)
     await db.new_quests.delete_one({"quest_id": quest_id, "creator_type": "admin"})
@@ -2492,8 +2492,8 @@ async def delete_teacher_quest(quest_id: str, request: Request):
     return {"message": "Quest deleted"}
 
 # Parent Chore Management (shown as quests to children)
-@api_router.post("/parent/chores-new")
-async def create_parent_chore(chore_data: ChoreCreate, request: Request):
+# @api_router.post("/parent/chores-new")  # MOVED
+async def _legacy_create_parent_chore(chore_data: ChoreCreate, request: Request):
     """Parent creates a chore for their child"""
     user = await require_parent(request)
     
@@ -2546,8 +2546,8 @@ async def create_parent_chore(chore_data: ChoreCreate, request: Request):
     
     return {"chore_id": chore_id, "message": "Chore created successfully"}
 
-@api_router.get("/parent/chores-new")
-async def get_parent_chores(request: Request):
+# @api_router.get("/parent/chores-new")  # MOVED
+async def _legacy_get_parent_chores(request: Request):
     """Get parent's created chores"""
     user = await require_parent(request)
     chores = await db.new_quests.find(
@@ -2556,8 +2556,8 @@ async def get_parent_chores(request: Request):
     ).sort("created_at", -1).to_list(200)
     return chores
 
-@api_router.delete("/parent/chores-new/{chore_id}")
-async def delete_parent_chore(chore_id: str, request: Request):
+# @api_router.delete("/parent/chores-new/{chore_id}")  # MOVED
+async def _legacy_delete_parent_chore(chore_id: str, request: Request):
     """Delete a parent chore"""
     user = await require_parent(request)
     await db.new_quests.delete_one({
@@ -5722,7 +5722,7 @@ async def create_chore(chore: ChoreCreate, request: Request):
     return {"message": "Chore created", "chore_id": chore_doc["chore_id"]}
 
 @api_router.get("/parent/chores")
-async def get_parent_chores(request: Request):
+async def _legacy_get_parent_chores(request: Request):
     """Get all chores created by parent"""
     parent = await require_parent(request)
     
