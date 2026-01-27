@@ -1448,8 +1448,8 @@ async def _legacy_get_store_items(request: Request):
     
     return items
 
-@api_router.post("/store/purchase")
-async def purchase_item(purchase: PurchaseCreate, request: Request):
+# @api_router.post("/store/purchase")  # MOVED TO routes/store.py
+async def _legacy_purchase_item(purchase: PurchaseCreate, request: Request):
     """Purchase an item from the store"""
     user = await get_current_user(request)
     
