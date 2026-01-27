@@ -3703,8 +3703,8 @@ async def get_learning_progress(request: Request):
 
 # ============== TEACHER ROUTES ==============
 
-@api_router.get("/teacher/dashboard")
-async def teacher_dashboard(request: Request):
+# @api_router.get("/teacher/dashboard")  # MOVED
+async def _legacy_teacher_dashboard(request: Request):
     """Get teacher dashboard data"""
     teacher = await require_teacher(request)
     
@@ -3731,8 +3731,8 @@ async def teacher_dashboard(request: Request):
         "total_students": sum(c.get("student_count", 0) for c in classrooms)
     }
 
-@api_router.post("/teacher/classrooms")
-async def create_classroom(classroom: ClassroomCreate, request: Request):
+# @api_router.post("/teacher/classrooms")  # MOVED
+async def _legacy_create_classroom(classroom: ClassroomCreate, request: Request):
     """Create a new classroom"""
     teacher = await require_teacher(request)
     
@@ -3751,8 +3751,8 @@ async def create_classroom(classroom: ClassroomCreate, request: Request):
     classroom_doc.pop("_id", None)
     return {"message": "Classroom created", "classroom": classroom_doc}
 
-@api_router.get("/teacher/classrooms")
-async def get_classrooms(request: Request):
+# @api_router.get("/teacher/classrooms")  # MOVED
+async def _legacy_get_classrooms(request: Request):
     """Get teacher's classrooms"""
     teacher = await require_teacher(request)
     
@@ -3763,8 +3763,8 @@ async def get_classrooms(request: Request):
     
     return classrooms
 
-@api_router.get("/teacher/classrooms/{classroom_id}")
-async def get_classroom_details(classroom_id: str, request: Request):
+# @api_router.get("/teacher/classrooms/{classroom_id}")  # MOVED
+async def _legacy_get_classroom_details(classroom_id: str, request: Request):
     """Get detailed classroom info with students"""
     teacher = await require_teacher(request)
     
@@ -4237,8 +4237,8 @@ async def get_classroom_comparison(classroom_id: str, request: Request):
         "count": len(comparison_data)
     }
 
-@api_router.delete("/teacher/classrooms/{classroom_id}")
-async def delete_classroom(classroom_id: str, request: Request):
+# @api_router.delete("/teacher/classrooms/{classroom_id}")  # MOVED
+async def _legacy_delete_classroom(classroom_id: str, request: Request):
     """Delete a classroom"""
     teacher = await require_teacher(request)
     
@@ -4256,7 +4256,7 @@ async def delete_classroom(classroom_id: str, request: Request):
     
     return {"message": "Classroom deleted"}
 
-@api_router.post("/teacher/classrooms/{classroom_id}/reward")
+# @api_router.post("/teacher/classrooms/{classroom_id}/reward")  # MOVED
 async def give_classroom_reward(classroom_id: str, reward: ClassroomReward, request: Request):
     """Give coins to students"""
     teacher = await require_teacher(request)
@@ -4300,7 +4300,7 @@ async def give_classroom_reward(classroom_id: str, reward: ClassroomReward, requ
     return {"message": f"Rewarded {len(reward.student_ids)} students with ₹{reward.amount} each"}
 
 @api_router.post("/teacher/classrooms/{classroom_id}/challenges")
-async def create_classroom_challenge(classroom_id: str, challenge: ChallengeCreate, request: Request):
+async def _legacy_create_classroom_challenge(classroom_id: str, challenge: ChallengeCreate, request: Request):
     """Create a classroom challenge"""
     teacher = await require_teacher(request)
     
@@ -4325,8 +4325,8 @@ async def create_classroom_challenge(classroom_id: str, challenge: ChallengeCrea
     await db.classroom_challenges.insert_one(challenge_doc)
     return {"message": "Challenge created", "challenge_id": challenge_doc["challenge_id"]}
 
-@api_router.delete("/teacher/challenges/{challenge_id}")
-async def delete_challenge(challenge_id: str, request: Request):
+# @api_router.delete("/teacher/challenges/{challenge_id}")  # MOVED
+async def _legacy_delete_challenge(challenge_id: str, request: Request):
     """Delete a classroom challenge"""
     teacher = await require_teacher(request)
     
