@@ -432,3 +432,253 @@ async def get_classroom_comparison(classroom_id: str, request: Request):
         "students": comparison_data,
         "count": len(comparison_data)
     }
+
+
+# ============== TEACHER QUEST ROUTES ==============
+
+@router.post("/quests")
+async def create_teacher_quest(request: Request):
+    """Create a quest for students"""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    body = await request.json()
+    
+    quest_id = f"quest_{uuid.uuid4().hex[:12]}"
+    await db.new_quests.insert_one({
+        "quest_id": quest_id,
+        "title": body.get("title"),
+        "description": body.get("description", ""),
+        "reward_coins": body.get("reward_coins", 10),
+        "creator_type": "teacher",
+        "creator_id": teacher["user_id"],
+        "classroom_id": body.get("classroom_id"),
+        "quest_type": body.get("quest_type", "task"),
+        "deadline": body.get("deadline"),
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": "Quest created", "quest_id": quest_id}
+
+@router.get("/quests")
+async def get_teacher_quests(request: Request):
+    """Get quests created by teacher"""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    
+    quests = await db.new_quests.find(
+        {"creator_id": teacher["user_id"], "creator_type": "teacher"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return quests
+
+@router.get("/quests/{quest_id}")
+async def get_teacher_quest(quest_id: str, request: Request):
+    """Get a specific teacher quest"""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    
+    quest = await db.new_quests.find_one({
+        "quest_id": quest_id,
+        "creator_id": teacher["user_id"]
+    }, {"_id": 0})
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    return quest
+
+@router.put("/quests/{quest_id}")
+async def update_teacher_quest(quest_id: str, request: Request):
+    """Update a teacher quest"""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    body = await request.json()
+    
+    fields = ["title", "description", "reward_coins", "deadline", "is_active"]
+    update = {k: v for k, v in body.items() if k in fields}
+    
+    await db.new_quests.update_one(
+        {"quest_id": quest_id, "creator_id": teacher["user_id"]},
+        {"$set": update}
+    )
+    return {"message": "Quest updated"}
+
+@router.delete("/quests/{quest_id}")
+async def delete_teacher_quest(quest_id: str, request: Request):
+    """Delete a teacher quest"""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    
+    await db.new_quests.delete_one({
+        "quest_id": quest_id,
+        "creator_id": teacher["user_id"]
+    })
+    return {"message": "Quest deleted"}
+
+# ============== ADDITIONAL TEACHER ROUTES ==============
+
+@router.get("/classrooms/{classroom_id}/student/{student_id}/insights")
+async def get_student_insights_alt(classroom_id: str, student_id: str, request: Request):
+    """Alternate path for student insights"""
+    return await get_student_insights(classroom_id, student_id, request)
+
+@router.post("/classrooms/{classroom_id}/challenges")
+async def create_classroom_challenge(classroom_id: str, request: Request):
+    """Create a challenge for a classroom"""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    body = await request.json()
+    
+    classroom = await db.classrooms.find_one({
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["user_id"]
+    })
+    if not classroom:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+    
+    challenge_id = f"chal_{uuid.uuid4().hex[:12]}"
+    await db.classroom_challenges.insert_one({
+        "challenge_id": challenge_id,
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["user_id"],
+        "title": body.get("title"),
+        "description": body.get("description", ""),
+        "reward_coins": body.get("reward_coins", 10),
+        "deadline": body.get("deadline"),
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": "Challenge created", "challenge_id": challenge_id}
+
+@router.post("/challenges/{challenge_id}/complete/{student_id}")
+async def complete_challenge_for_student(challenge_id: str, student_id: str, request: Request):
+    """Mark a challenge as complete for a student"""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    
+    challenge = await db.classroom_challenges.find_one({
+        "challenge_id": challenge_id,
+        "teacher_id": teacher["user_id"]
+    })
+    if not challenge:
+        raise HTTPException(status_code=404, detail="Challenge not found")
+    
+    # Award coins
+    reward = challenge.get("reward_coins", 10)
+    await db.wallet_accounts.update_one(
+        {"user_id": student_id, "account_type": "spending"},
+        {"$inc": {"balance": reward}}
+    )
+    
+    # Record completion
+    await db.challenge_completions.insert_one({
+        "completion_id": f"cc_{uuid.uuid4().hex[:12]}",
+        "challenge_id": challenge_id,
+        "student_id": student_id,
+        "completed_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": f"Challenge completed, awarded {reward} coins"}
+
+@router.post("/classrooms/{classroom_id}/announcements")
+async def create_announcement(classroom_id: str, request: Request):
+    """Create an announcement for a classroom"""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    body = await request.json()
+    
+    classroom = await db.classrooms.find_one({
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["user_id"]
+    })
+    if not classroom:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+    
+    announcement_id = f"ann_{uuid.uuid4().hex[:12]}"
+    await db.announcements.insert_one({
+        "announcement_id": announcement_id,
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["user_id"],
+        "title": body.get("title"),
+        "content": body.get("content", ""),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": "Announcement created", "announcement_id": announcement_id}
+
+@router.get("/classrooms/{classroom_id}/announcements")
+async def get_announcements(classroom_id: str, request: Request):
+    """Get announcements for a classroom"""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    
+    classroom = await db.classrooms.find_one({
+        "classroom_id": classroom_id,
+        "teacher_id": teacher["user_id"]
+    })
+    if not classroom:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+    
+    announcements = await db.announcements.find(
+        {"classroom_id": classroom_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return announcements
+
+@router.delete("/announcements/{announcement_id}")
+async def delete_announcement(announcement_id: str, request: Request):
+    """Delete an announcement"""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    
+    await db.announcements.delete_one({
+        "announcement_id": announcement_id,
+        "teacher_id": teacher["user_id"]
+    })
+    return {"message": "Announcement deleted"}
+
+@router.get("/students/{student_id}/progress")
+async def get_student_progress(student_id: str, request: Request):
+    """Get a student's progress (must be in teacher's classroom)"""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    
+    # Verify student is in teacher's classroom
+    classrooms = await db.classrooms.find(
+        {"teacher_id": teacher["user_id"]},
+        {"classroom_id": 1}
+    ).to_list(50)
+    classroom_ids = [c["classroom_id"] for c in classrooms]
+    
+    enrollment = await db.classroom_students.find_one({
+        "student_id": student_id,
+        "classroom_id": {"$in": classroom_ids},
+        "status": "active"
+    })
+    if not enrollment:
+        raise HTTPException(status_code=403, detail="Student not in your classroom")
+    
+    student = await db.users.find_one({"user_id": student_id}, {"_id": 0})
+    wallets = await db.wallet_accounts.find({"user_id": student_id}, {"_id": 0}).to_list(5)
+    
+    lessons = await db.user_content_progress.count_documents({
+        "user_id": student_id, "completed": True
+    })
+    quests = await db.quest_completions.count_documents({
+        "user_id": student_id, "is_completed": True
+    })
+    
+    return {
+        "student": student,
+        "wallets": wallets,
+        "lessons_completed": lessons,
+        "quests_completed": quests
+    }
