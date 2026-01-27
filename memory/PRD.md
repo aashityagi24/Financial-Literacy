@@ -42,6 +42,32 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Recent Updates (January 27, 2026)
 
+**School User Role System (NEW):**
+- **School Login Page** (`/school-login`): Dedicated login for schools with username/password authentication
+- **School Dashboard** (`/school-dashboard`): Comprehensive dashboard for school administrators:
+  - Overview tab with teachers/students cards
+  - Teachers tab with search and list view
+  - Students tab with search and grade filtering
+  - Performance tab with student comparison (sortable by name, grade, balance, lessons, quests, streak)
+  - Stats cards showing total teachers, students, and classrooms
+- **Admin School Management**: New "Schools" tab in Admin dashboard:
+  - Create schools with name, username, password, address, contact email
+  - View all schools with teacher/student counts
+  - Delete schools (unlinks associated users)
+- **CSV Bulk Upload**: Schools can bulk upload teachers, students, and parents via CSV files
+- **Landing Page**: Added "School" login button in navigation
+
+**Backend School APIs:**
+- POST /api/auth/school-login - School authentication
+- GET /api/school/dashboard - School dashboard data
+- GET /api/school/students/comparison - Student performance comparison
+- POST /api/school/upload/teachers - Bulk upload teachers
+- POST /api/school/upload/students - Bulk upload students  
+- POST /api/school/upload/parents - Bulk upload parents
+- POST /api/admin/schools - Create school (admin)
+- GET /api/admin/schools - List schools (admin)
+- DELETE /api/admin/schools/{id} - Delete school (admin)
+
 **Teacher Dashboard Enhancements:**
 - **Comprehensive Student Insights Modal**: Teachers can view detailed data for each student:
   - Money Jars breakdown (all account balances)
@@ -116,19 +142,24 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ## Credentials
 - **Admin:** admin@learnersplanet.com / finlit@2026
+- **Test School:** springfield / test123 (Springfield Elementary)
 - **Users:** Google Social Login
 
 ## Key Files
-- `/app/backend/server.py` - Monolithic FastAPI backend
+- `/app/backend/server.py` - Monolithic FastAPI backend (9200+ lines - needs refactoring)
 - `/app/frontend/src/pages/Dashboard.jsx` - Child dashboard
 - `/app/frontend/src/pages/StockMarketPage.jsx` - Stock trading UI
 - `/app/frontend/src/pages/MoneyGardenPage.jsx` - Garden/farm UI
 - `/app/frontend/src/pages/ContentManagement.jsx` - Admin content management
+- `/app/frontend/src/pages/SchoolLogin.jsx` - School login page (NEW)
+- `/app/frontend/src/pages/SchoolDashboard.jsx` - School dashboard (NEW)
+- `/app/frontend/src/pages/AdminPage.jsx` - Admin dashboard with Schools tab
 - `/app/frontend/src/components/NotificationCenter.jsx` - Notification dialog
 
 ## Pending/Backlog
 
 ### P1 - High Priority
+- [x] School User Role System ✅ (Completed Jan 27, 2026)
 - [ ] Streak Bonuses (7-day, 30-day milestones)
 - [ ] Leaderboards
 - [ ] Spending limits & parent approval for large transactions
@@ -141,5 +172,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 - [ ] Tutorial system
 
 ### Technical Debt
-- `/app/backend/server.py` - Over 8000 lines, needs modular refactoring
+- `/app/backend/server.py` - **CRITICAL**: Over 9200 lines, needs modular refactoring (routes, models, services)
 - `/app/frontend/src/pages/ContentManagement.jsx` - Over 1500 lines, needs component decomposition
+- `/app/frontend/src/pages/TeacherDashboard.jsx` - Large file, student insights modal should be extracted
+- `/app/frontend/src/pages/ParentDashboard.jsx` - Growing file, consider component extraction
