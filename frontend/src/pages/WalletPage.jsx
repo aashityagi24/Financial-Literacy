@@ -363,9 +363,14 @@ export default function WalletPage({ user }) {
                 let isPositive = false;
                 let isNeutral = false;
                 
-                if (trans.transaction_type === 'reward' || trans.transaction_type === 'earning' || trans.transaction_type === 'deposit' || trans.transaction_type === 'stock_sell' || trans.transaction_type === 'garden_sell' || trans.transaction_type === 'parent_reward' || trans.transaction_type === 'gift_received' || trans.transaction_type === 'allowance') {
+                // Positive transactions (earnings)
+                const positiveTypes = ['reward', 'quest_reward', 'chore_reward', 'lesson_reward', 'earning', 'deposit', 'stock_sell', 'stock_sale', 'garden_sell', 'garden_sale', 'plant_sale', 'investment_sale', 'parent_reward', 'gift_received', 'allowance'];
+                // Negative transactions (spending)
+                const negativeTypes = ['purchase', 'withdrawal', 'stock_buy', 'garden_buy', 'plant_purchase', 'investment_purchase', 'parent_penalty', 'gift_sent', 'charitable_donation'];
+                
+                if (positiveTypes.includes(trans.transaction_type)) {
                   isPositive = true;
-                } else if (trans.transaction_type === 'purchase' || trans.transaction_type === 'withdrawal' || trans.transaction_type === 'stock_buy' || trans.transaction_type === 'garden_buy' || trans.transaction_type === 'parent_penalty' || trans.transaction_type === 'gift_sent') {
+                } else if (negativeTypes.includes(trans.transaction_type)) {
                   isPositive = false;
                 } else if (trans.transaction_type === 'transfer') {
                   isNeutral = true;
