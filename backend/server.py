@@ -2428,6 +2428,117 @@ async def delete_parent_chore(chore_id: str, request: Request):
     })
     return {"message": "Chore deleted"}
 
+# ============== PARENT REWARDS & PENALTIES ==============
+
+@api_router.post("/parent/reward-penalty")
+async def create_reward_penalty(data: RewardPenaltyCreate, request: Request):
+    """Parent gives instant reward or penalty to child"""
+    user = await require_parent(request)
+    
+    # Verify parent-child relationship
+    link = await db.parent_child_links.find_one({
+        "parent_id": user["user_id"],
+        "child_id": data.child_id,
+        "status": "active"
+    })
+    if not link:
+        raise HTTPException(status_code=403, detail="Not authorized for this child")
+    
+    # Get child
+    child = await db.users.find_one({"user_id": data.child_id})
+    if not child:
+        raise HTTPException(status_code=404, detail="Child not found")
+    
+    # Ensure amount sign matches category
+    amount = abs(data.amount) if data.category == 'reward' else -abs(data.amount)
+    
+    record_id = f"rp_{uuid.uuid4().hex[:12]}"
+    
+    # Create record
+    record_doc = {
+        "record_id": record_id,
+        "parent_id": user["user_id"],
+        "parent_name": user.get("name", "Parent"),
+        "child_id": data.child_id,
+        "title": data.title,
+        "description": data.description,
+        "amount": amount,
+        "category": data.category,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.reward_penalties.insert_one(record_doc)
+    
+    # Update child's spending wallet (can go negative for penalties)
+    await db.wallet_accounts.update_one(
+        {"user_id": data.child_id, "account_type": "spending"},
+        {"$inc": {"balance": amount}}
+    )
+    
+    # Create transaction record
+    txn_type = "parent_reward" if data.category == "reward" else "parent_penalty"
+    await db.transactions.insert_one({
+        "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
+        "user_id": data.child_id,
+        "amount": amount,
+        "transaction_type": txn_type,
+        "description": f"{data.category.capitalize()}: {data.title}",
+        "from_user": user["user_id"],
+        "from_name": user.get("name", "Parent"),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Create notification for child
+    emoji = "🌟" if data.category == "reward" else "⚠️"
+    msg = f"{emoji} {user.get('name', 'Parent')} gave you a {data.category}: {data.title} (₹{abs(amount)})"
+    
+    await db.notifications.insert_one({
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": data.child_id,
+        "message": msg,
+        "notification_type": txn_type,
+        "link": "/wallet",
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "record_id": record_id,
+        "message": f"{data.category.capitalize()} applied successfully",
+        "new_balance": (await db.wallet_accounts.find_one(
+            {"user_id": data.child_id, "account_type": "spending"},
+            {"_id": 0, "balance": 1}
+        )).get("balance", 0)
+    }
+
+@api_router.get("/parent/reward-penalty")
+async def get_reward_penalties(request: Request, child_id: Optional[str] = None):
+    """Get parent's reward/penalty history"""
+    user = await require_parent(request)
+    
+    query = {"parent_id": user["user_id"]}
+    if child_id:
+        query["child_id"] = child_id
+    
+    records = await db.reward_penalties.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return records
+
+@api_router.delete("/parent/reward-penalty/{record_id}")
+async def delete_reward_penalty(record_id: str, request: Request):
+    """Delete a reward/penalty record (does not reverse the transaction)"""
+    user = await require_parent(request)
+    
+    await db.reward_penalties.delete_one({
+        "record_id": record_id,
+        "parent_id": user["user_id"]
+    })
+    
+    return {"message": "Record deleted"}
+
 # ============== PARENT SHOPPING LIST ==============
 
 @api_router.post("/parent/shopping-list")
