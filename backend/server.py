@@ -1115,6 +1115,86 @@ async def admin_login(login_data: AdminLoginRequest, response: Response):
     
     return {"user": admin_user, "session_token": session_token}
 
+class SchoolLoginRequest(BaseModel):
+    username: str
+    password: str
+
+@api_router.post("/auth/school-login")
+async def school_login(login_data: SchoolLoginRequest, response: Response):
+    """School login with username and password"""
+    import hashlib
+    
+    # Find school by username
+    school = await db.schools.find_one({"username": login_data.username}, {"_id": 0})
+    
+    if not school:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Verify password (hashed)
+    password_hash = hashlib.sha256(login_data.password.encode()).hexdigest()
+    if school.get("password_hash") != password_hash:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Create session
+    session_token = f"school_sess_{uuid.uuid4().hex}"
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    
+    await db.user_sessions.insert_one({
+        "user_id": school["school_id"],
+        "session_token": session_token,
+        "expires_at": expires_at.isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "user_type": "school"
+    })
+    
+    # Set cookie
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+        max_age=7 * 24 * 60 * 60
+    )
+    
+    return {
+        "school": {
+            "school_id": school["school_id"],
+            "name": school["name"],
+            "username": school["username"],
+            "role": "school"
+        },
+        "session_token": session_token
+    }
+
+async def get_current_school(request: Request):
+    """Get current school from session"""
+    session_token = request.cookies.get("session_token")
+    if not session_token or not session_token.startswith("school_sess_"):
+        raise HTTPException(status_code=401, detail="Not authenticated as school")
+    
+    session = await db.user_sessions.find_one({
+        "session_token": session_token,
+        "user_type": "school"
+    })
+    
+    if not session:
+        raise HTTPException(status_code=401, detail="Invalid session")
+    
+    if datetime.fromisoformat(session["expires_at"]) < datetime.now(timezone.utc):
+        raise HTTPException(status_code=401, detail="Session expired")
+    
+    school = await db.schools.find_one({"school_id": session["user_id"]}, {"_id": 0})
+    if not school:
+        raise HTTPException(status_code=401, detail="School not found")
+    
+    return school
+
+async def require_school(request: Request):
+    """Require school authentication"""
+    return await get_current_school(request)
+
 @api_router.post("/auth/session")
 async def create_session(request: Request, response: Response):
     """Exchange session_id from Google OAuth for session data"""
