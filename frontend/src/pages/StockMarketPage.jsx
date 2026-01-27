@@ -174,7 +174,7 @@ export default function StockMarketPage({ user }) {
   const investingBalance = wallet?.accounts?.find(a => a.account_type === 'investing')?.balance || 0;
   const spendingBalance = wallet?.accounts?.find(a => a.account_type === 'spending')?.balance || 0;
 
-  const getHolding = (stockId) => portfolio.holdings.find(h => h.stock?.stock_id === stockId);
+  const getHolding = (stockId) => portfolio.holdings?.find(h => h.stock_id === stockId || h.stock?.stock_id === stockId);
 
   if (loading) {
     return (
