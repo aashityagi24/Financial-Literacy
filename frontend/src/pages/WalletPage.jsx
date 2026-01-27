@@ -151,21 +151,39 @@ export default function WalletPage({ user }) {
   
   const getTransactionIcon = (type) => {
     switch(type) {
+      // Deposits/Earnings
       case 'deposit': return <ArrowDown className="w-4 h-4 text-[#06D6A0]" />;
-      case 'withdrawal': return <ArrowUp className="w-4 h-4 text-[#EE6C4D]" />;
-      case 'transfer': return <ArrowLeftRight className="w-4 h-4 text-[#3D5A80]" />;
-      case 'purchase': return <span className="text-sm">🛒</span>;
       case 'reward': return <span className="text-sm">⭐</span>;
+      case 'quest_reward': return <span className="text-sm">🏆</span>;
+      case 'chore_reward': return <span className="text-sm">✅</span>;
+      case 'lesson_reward': return <span className="text-sm">📚</span>;
       case 'earning': return <span className="text-sm">💰</span>;
       case 'allowance': return <span className="text-sm">💵</span>;
+      case 'parent_reward': return <span className="text-sm">🌟</span>;
+      case 'gift_received': return <span className="text-sm">🎁</span>;
+      
+      // Withdrawals/Spending
+      case 'withdrawal': return <ArrowUp className="w-4 h-4 text-[#EE6C4D]" />;
+      case 'purchase': return <span className="text-sm">🛒</span>;
+      case 'parent_penalty': return <span className="text-sm">⚠️</span>;
+      case 'gift_sent': return <span className="text-sm">💝</span>;
+      case 'charitable_donation': return <span className="text-sm">❤️</span>;
+      
+      // Investments
       case 'stock_buy': return <span className="text-sm">📈</span>;
       case 'stock_sell': return <span className="text-sm">📊</span>;
+      case 'stock_sale': return <span className="text-sm">📊</span>;
       case 'garden_buy': return <span className="text-sm">🌱</span>;
       case 'garden_sell': return <span className="text-sm">🥕</span>;
-      case 'parent_reward': return <span className="text-sm">🌟</span>;
-      case 'parent_penalty': return <span className="text-sm">⚠️</span>;
-      case 'gift_received': return <span className="text-sm">🎁</span>;
-      case 'gift_sent': return <span className="text-sm">💝</span>;
+      case 'garden_sale': return <span className="text-sm">🥕</span>;
+      case 'plant_purchase': return <span className="text-sm">🌱</span>;
+      case 'plant_sale': return <span className="text-sm">🌻</span>;
+      case 'investment_purchase': return <span className="text-sm">📈</span>;
+      case 'investment_sale': return <span className="text-sm">💹</span>;
+      
+      // Transfers
+      case 'transfer': return <ArrowLeftRight className="w-4 h-4 text-[#3D5A80]" />;
+      
       default: return <ArrowLeftRight className="w-4 h-4" />;
     }
   };
