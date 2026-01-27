@@ -161,6 +161,10 @@ export default function WalletPage({ user }) {
       case 'stock_sell': return <span className="text-sm">📊</span>;
       case 'garden_buy': return <span className="text-sm">🌱</span>;
       case 'garden_sell': return <span className="text-sm">🥕</span>;
+      case 'parent_reward': return <span className="text-sm">🌟</span>;
+      case 'parent_penalty': return <span className="text-sm">⚠️</span>;
+      case 'gift_received': return <span className="text-sm">🎁</span>;
+      case 'gift_sent': return <span className="text-sm">💝</span>;
       default: return <ArrowLeftRight className="w-4 h-4" />;
     }
   };
