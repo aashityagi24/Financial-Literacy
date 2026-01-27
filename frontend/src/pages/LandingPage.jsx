@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, Shield, X } from 'lucide-react';
+import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, Shield, X, School } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -123,6 +123,14 @@ export default function LandingPage() {
               />
             </div>
             <div className="flex items-center gap-3">
+              <button
+                data-testid="school-login-btn"
+                onClick={() => navigate('/school-login')}
+                className="px-4 py-2 text-[#3D5A80] hover:text-[#1D3557] text-sm font-medium flex items-center gap-1"
+              >
+                <School className="w-4 h-4" />
+                School
+              </button>
               <button
                 data-testid="admin-login-btn"
                 onClick={() => setShowAdminLogin(true)}
