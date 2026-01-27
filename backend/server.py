@@ -1139,8 +1139,8 @@ class SchoolLoginRequest(BaseModel):
     username: str
     password: str
 
-@api_router.post("/auth/school-login")
-async def school_login(login_data: SchoolLoginRequest, response: Response):
+# @api_router.post("/auth/school-login")  # MOVED TO routes/auth.py
+async def _legacy_school_login(login_data: SchoolLoginRequest, response: Response):
     """School login with username and password"""
     import hashlib
     
