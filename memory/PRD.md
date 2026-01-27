@@ -65,23 +65,21 @@ A gamified financial literacy learning application for children (K-5) with disti
    - Backend filters by `creator_type` (admin/teacher/parent)
    - Source parameter in GET /api/child/quests-new
 
-5. **Teacher Name Display** ✅
-   - Profile page shows "Teacher: [name]" for each enrolled classroom
-   - GET /api/student/classrooms now returns teacher object with name
+5. **Wallet Recent Activities** ✅ (NEW)
+   - Shows all transaction types: quest_reward, chore_reward, lesson_reward, allowance, gifts, penalties
+   - Icons: 🏆 (quest), ✅ (chore), 📚 (lesson), 💵 (allowance), 💝 (gift sent), 🎁 (gift received), ⚠️ (penalty)
 
-6. **Default Avatars** ✅
-   - Created `/app/frontend/src/utils/avatars.js` with `getDefaultAvatar` utility
-   - Generates SVG data URLs with role-based colors:
-     - Child: Yellow (#FFD23F)
-     - Parent: Green (#06D6A0)
-     - Teacher: Blue (#3D5A80)
-     - Admin: Orange (#EE6C4D)
-     - School: Dark Blue (#1D3557)
+6. **User Deletion (Admin)** ✅ (NEW)
+   - Complete cascading delete from 20+ collections
+   - Removes: users, wallets, transactions, notifications, sessions, achievements, investments, etc.
+   - Role-specific cleanup (teacher classrooms, parent chores)
 
-7. **School User Creation Enhanced** ✅
-   - Schools can add existing users (without school_id) to their school
-   - Individual user creation with automatic relationships
-   - Bulk upload with relationship columns
+7. **Quest & Announcement Notifications** ✅
+   - Admin/teacher quests send notifications to children
+   - Teacher announcements send notifications to classroom students
+
+8. **Default Avatars** ✅
+   - Role-based SVG avatars (Child=Yellow, Parent=Green, Teacher=Blue)
 
 **Session 2 Bug Fixes & Feature Enhancements:**
 
