@@ -69,12 +69,12 @@ async def create_admin_quest(quest_data: QuestCreate, request: Request):
     user = await require_admin(request)
     
     quest_id = f"quest_{uuid.uuid4().hex[:12]}"
-    questions_points = sum(q.get("points", 0) or 0 for q in quest_data.questions)
     base_reward = quest_data.reward_amount or 0
-    total_points = questions_points + base_reward if len(quest_data.questions) == 0 else questions_points
     
     processed_questions = []
-    for q in quest_data.questions:
+    for i, q in enumerate(quest_data.questions):
+        # Ensure each question has points (default 5 if not set)
+        points = q.get("points", 0) or 5
         processed_questions.append({
             "question_id": f"q_{uuid.uuid4().hex[:8]}",
             "question_text": q.get("question_text", ""),
@@ -82,15 +82,23 @@ async def create_admin_quest(quest_data: QuestCreate, request: Request):
             "image_url": q.get("image_url"),
             "options": q.get("options"),
             "correct_answer": q.get("correct_answer"),
-            "points": q.get("points", 0) or 0
+            "points": points
         })
+    
+    questions_points = sum(q["points"] for q in processed_questions)
+    
+    # Calculate total: if questions exist, use question points; otherwise use base reward
+    if len(processed_questions) > 0:
+        total_points = questions_points
+    else:
+        total_points = base_reward if base_reward > 0 else 10  # Default 10 if nothing set
     
     quest_doc = {
         "quest_id": quest_id,
         "creator_type": "admin",
         "creator_id": user["user_id"],
         "title": quest_data.title,
-        "description": quest_data.description,
+        "description": quest_data.description or "",
         "image_url": quest_data.image_url,
         "pdf_url": quest_data.pdf_url,
         "min_grade": quest_data.min_grade,
@@ -99,7 +107,7 @@ async def create_admin_quest(quest_data: QuestCreate, request: Request):
         "due_time": "23:59:00",
         "reward_amount": base_reward,
         "questions": processed_questions,
-        "total_points": total_points if total_points > 0 else base_reward,
+        "total_points": total_points,
         "is_active": True,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
