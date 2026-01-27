@@ -1519,8 +1519,8 @@ async def _legacy_purchase_item(purchase: PurchaseCreate, request: Request):
     
     return {"message": "Purchase successful", "item": item}
 
-@api_router.get("/store/purchases")
-async def get_purchases(request: Request):
+# @api_router.get("/store/purchases")  # MOVED TO routes/store.py
+async def _legacy_get_purchases(request: Request):
     """Get user's purchase history"""
     user = await get_current_user(request)
     
@@ -1531,8 +1531,8 @@ async def get_purchases(request: Request):
     
     return purchases
 
-@api_router.get("/child/shopping-list")
-async def get_child_shopping_list(request: Request):
+# @api_router.get("/child/shopping-list")  # MOVED TO routes/store.py
+async def _legacy_get_child_shopping_list(request: Request):
     """Get child's shopping list from parent-assigned chores"""
     user = await get_current_user(request)
     if user.get("role") != "child":
