@@ -503,6 +503,65 @@ export default function AdminPage({ user }) {
                 </DialogContent>
               </Dialog>
             </div>
+            
+            {/* Filters */}
+            <div className="flex flex-wrap gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 font-medium">Filters:</span>
+              </div>
+              <Select value={filters.role} onValueChange={(v) => setFilters({...filters, role: v})}>
+                <SelectTrigger className="w-36 bg-white">
+                  <SelectValue placeholder="User Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="child">Child</SelectItem>
+                  <SelectItem value="parent">Parent</SelectItem>
+                  <SelectItem value="teacher">Teacher</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="school">School</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filters.grade} onValueChange={(v) => setFilters({...filters, grade: v})}>
+                <SelectTrigger className="w-36 bg-white">
+                  <SelectValue placeholder="Grade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Grades</SelectItem>
+                  <SelectItem value="none">No Grade</SelectItem>
+                  <SelectItem value="0">K</SelectItem>
+                  <SelectItem value="1">Grade 1</SelectItem>
+                  <SelectItem value="2">Grade 2</SelectItem>
+                  <SelectItem value="3">Grade 3</SelectItem>
+                  <SelectItem value="4">Grade 4</SelectItem>
+                  <SelectItem value="5">Grade 5</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filters.school} onValueChange={(v) => setFilters({...filters, school: v})}>
+                <SelectTrigger className="w-44 bg-white">
+                  <SelectValue placeholder="School" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Schools</SelectItem>
+                  <SelectItem value="none">No School</SelectItem>
+                  {schools.map(s => (
+                    <SelectItem key={s.school_id} value={s.school_id}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {(filters.role !== 'all' || filters.grade !== 'all' || filters.school !== 'all') && (
+                <button 
+                  onClick={() => setFilters({ role: 'all', grade: 'all', school: 'all' })}
+                  className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded"
+                >
+                  Clear Filters
+                </button>
+              )}
+              <span className="ml-auto text-sm text-gray-500">
+                Showing {filteredUsers.length} of {users.length} users
+              </span>
+            </div>
+            
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
