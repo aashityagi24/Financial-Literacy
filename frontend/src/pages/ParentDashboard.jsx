@@ -319,7 +319,7 @@ export default function ParentDashboard({ user }) {
                     <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Link Child Account</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 mt-4">
-                    <p className="text-sm text-[#3D5A80]">Enter your child's account email to link their account.</p>
+                    <p className="text-sm text-[#3D5A80]">Enter your child&apos;s account email to link their account.</p>
                     <Input 
                       type="email"
                       placeholder="Child's email" 
@@ -337,7 +337,7 @@ export default function ParentDashboard({ user }) {
               <div className="card-playful p-8 text-center mb-6">
                 <Users className="w-16 h-16 mx-auto text-[#98C1D9] mb-4" />
                 <h3 className="text-xl font-bold text-[#1D3557] mb-2">No Children Linked</h3>
-                <p className="text-[#3D5A80]">Link your child's account to monitor their progress!</p>
+                <p className="text-[#3D5A80]">Link your child&apos;s account to monitor their progress!</p>
               </div>
             ) : (
               <div className="grid gap-4 mb-6">
@@ -384,7 +384,7 @@ export default function ParentDashboard({ user }) {
                         <div className="mt-4 pt-4 border-t border-[#1D3557]/20">
                           <div className="flex items-center gap-2 mb-2">
                             <School className="w-4 h-4 text-[#06D6A0]" />
-                            <span className="font-bold text-[#1D3557] text-base">{child.name}'s Classroom</span>
+                            <span className="font-bold text-[#1D3557] text-base">{child.name}&apos;s Classroom</span>
                           </div>
                           <div className="bg-[#06D6A0]/10 rounded-xl p-3 border-2 border-[#06D6A0]">
                             <p className="font-bold text-[#1D3557]">{classroomInfo.classroom?.name}</p>
@@ -506,7 +506,7 @@ export default function ParentDashboard({ user }) {
                           </Select>
                         </div>
                       </div>
-                      <p className="text-xs text-[#3D5A80]">Your child will need to complete this chore and request approval. You'll need to validate it before the reward is credited.</p>
+                      <p className="text-xs text-[#3D5A80]">Your child will need to complete this chore and request approval. You&apos;ll need to validate it before the reward is credited.</p>
                       <button onClick={handleCreateChore} className="btn-primary w-full py-3">Create Chore</button>
                     </div>
                   </DialogContent>
