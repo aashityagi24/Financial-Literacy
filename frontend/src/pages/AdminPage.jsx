@@ -349,7 +349,85 @@ export default function AdminPage({ user }) {
         {/* Users Tab */}
         {activeTab === 'users' && (
           <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">User Management</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-800">User Management</h2>
+              <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
+                <DialogTrigger asChild>
+                  <button className="flex items-center gap-2 px-4 py-2 bg-[#06D6A0] text-white rounded-lg hover:bg-[#05C090] transition-colors">
+                    <Plus className="w-4 h-4" />
+                    Add User
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="bg-white border-2 border-gray-200 rounded-xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-lg font-bold text-gray-800">Create New User</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                      <Input 
+                        placeholder="Full name" 
+                        value={newUserForm.name}
+                        onChange={(e) => setNewUserForm({...newUserForm, name: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                      <Input 
+                        type="email"
+                        placeholder="email@example.com" 
+                        value={newUserForm.email}
+                        onChange={(e) => setNewUserForm({...newUserForm, email: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                      <Select 
+                        value={newUserForm.role} 
+                        onValueChange={(v) => setNewUserForm({...newUserForm, role: v})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="child">Child</SelectItem>
+                          <SelectItem value="parent">Parent</SelectItem>
+                          <SelectItem value="teacher">Teacher</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {newUserForm.role === 'child' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Grade</label>
+                        <Select 
+                          value={String(newUserForm.grade)} 
+                          onValueChange={(v) => setNewUserForm({...newUserForm, grade: parseInt(v)})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">Kindergarten</SelectItem>
+                            <SelectItem value="1">1st Grade</SelectItem>
+                            <SelectItem value="2">2nd Grade</SelectItem>
+                            <SelectItem value="3">3rd Grade</SelectItem>
+                            <SelectItem value="4">4th Grade</SelectItem>
+                            <SelectItem value="5">5th Grade</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    <button
+                      onClick={handleCreateUser}
+                      className="w-full py-2 bg-[#06D6A0] text-white rounded-lg hover:bg-[#05C090] font-medium"
+                    >
+                      Create User
+                    </button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -358,6 +436,7 @@ export default function AdminPage({ user }) {
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Email</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Role</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Grade</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -397,6 +476,16 @@ export default function AdminPage({ user }) {
                           ? (u.grade === 0 ? 'K' : `Grade ${u.grade}`)
                           : '-'
                         }
+                      </td>
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => handleDeleteUser(u.user_id, u.name)}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete user"
+                          disabled={u.user_id === user?.user_id}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </td>
                     </tr>
                   ))}
