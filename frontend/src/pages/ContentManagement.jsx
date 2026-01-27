@@ -322,6 +322,7 @@ export default function ContentManagement({ user }) {
   const [topics, setTopics] = useState([]);
   const [allContent, setAllContent] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [gradeFilter, setGradeFilter] = useState('all'); // Grade filter: 'all' or 0-5
   
   // Selection states
   const [selectedTopic, setSelectedTopic] = useState(null);
