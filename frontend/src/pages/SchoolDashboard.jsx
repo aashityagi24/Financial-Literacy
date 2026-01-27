@@ -382,10 +382,20 @@ export default function SchoolDashboard() {
             </button>
           ))}
           
+          {/* Add User Button */}
+          <button
+            onClick={() => setShowAddUserModal(true)}
+            className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 bg-[#3D5A80] text-white hover:bg-[#2D4A70] transition-colors ml-auto"
+            data-testid="add-user-btn"
+          >
+            <UserPlus className="w-4 h-4" />
+            Add User
+          </button>
+          
           {/* Bulk Upload Button */}
           <button
             onClick={() => setShowUploadModal(true)}
-            className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 bg-[#06D6A0] text-white hover:bg-[#05C090] transition-colors ml-auto"
+            className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 bg-[#06D6A0] text-white hover:bg-[#05C090] transition-colors"
             data-testid="bulk-upload-btn"
           >
             <Upload className="w-4 h-4" />
