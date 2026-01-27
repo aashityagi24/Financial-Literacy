@@ -47,6 +47,13 @@ export default function AdminPage({ user }) {
     contact_email: ''
   });
   
+  // Filters for user management
+  const [filters, setFilters] = useState({
+    role: 'all',
+    grade: 'all',
+    school: 'all'
+  });
+  
   useEffect(() => {
     if (user?.role !== 'admin') {
       toast.error('Admin access required');
