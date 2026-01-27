@@ -422,15 +422,15 @@ export default function QuestsPage({ user }) {
                       </div>
                       
                       <h3 className={`font-bold text-lg truncate ${isCompleted ? 'text-gray-500 line-through' : 'text-[#1D3557]'}`}>
-                        {quest.title}
+                        {quest.title || 'Untitled Quest'}
                       </h3>
                       <p className={`text-sm line-clamp-2 ${isCompleted ? 'text-gray-400' : 'text-[#3D5A80]'}`}>
-                        {quest.description}
+                        {quest.description || <span className="italic">No description provided</span>}
                       </p>
                       
                       <div className="flex items-center gap-4 mt-2">
                         <span className={`text-sm font-bold flex items-center gap-1 ${isCompleted ? 'text-gray-400' : 'text-[#FFD23F]'}`}>
-                          <Star className="w-4 h-4" /> ₹{quest.total_points || quest.reward_amount}
+                          <Star className="w-4 h-4" /> ₹{quest.total_points || quest.reward_amount || 0}
                           {hasEarned && <span className="text-[#06D6A0] ml-1">(Earned!)</span>}
                           {isCompleted && !hasEarned && <span className="text-[#EE6C4D] ml-1">(Tried)</span>}
                         </span>
