@@ -14,6 +14,10 @@ export default function AuthCallback() {
     hasProcessed.current = true;
     
     const processSession = async () => {
+      console.log('=== AuthCallback: Processing session ===');
+      console.log('Current URL:', window.location.href);
+      console.log('Hash:', window.location.hash);
+      
       // Extract session_id from URL fragment
       const hash = window.location.hash;
       const sessionIdMatch = hash.match(/session_id=([^&]+)/);
@@ -27,7 +31,8 @@ export default function AuthCallback() {
       
       const sessionId = sessionIdMatch[1];
       
-      console.log('Processing session_id:', sessionId.substring(0, 10) + '...');
+      console.log('Extracted session_id:', sessionId.substring(0, 20) + '...');
+      console.log('Calling API:', `${API}/auth/session`);
       
       try {
         // Exchange session_id for session data
@@ -42,6 +47,7 @@ export default function AuthCallback() {
         // Store session token in localStorage as backup for cookie
         if (session_token) {
           localStorage.setItem('session_token', session_token);
+          console.log('Session token stored in localStorage');
         }
         
         // Clear the hash from URL
@@ -51,12 +57,17 @@ export default function AuthCallback() {
         
         // Navigate based on user role - use replace to avoid back-button issues
         if (!user.role) {
+          console.log('User has no role, redirecting to role-selection');
           navigate('/role-selection', { state: { user }, replace: true });
         } else {
+          console.log('User has role:', user.role, ', redirecting to dashboard');
           navigate('/dashboard', { state: { user }, replace: true });
         }
       } catch (error) {
-        console.error('Auth error:', error.response?.data || error.message);
+        console.error('=== Auth Error ===');
+        console.error('Status:', error.response?.status);
+        console.error('Data:', error.response?.data);
+        console.error('Message:', error.message);
         toast.error(error.response?.data?.detail || 'Sign in failed. Please try again.');
         // Clear the hash and redirect to landing
         window.history.replaceState(null, '', '/');
