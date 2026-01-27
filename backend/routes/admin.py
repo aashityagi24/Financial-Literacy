@@ -50,11 +50,21 @@ class LessonCreate(BaseModel):
 # User Management
 @router.get("/users")
 async def get_users(request: Request):
-    """Get all users"""
+    """Get all users with school info"""
     from services.auth import require_admin
     db = get_db()
     await require_admin(request)
     users = await db.users.find({}, {"_id": 0}).to_list(1000)
+    
+    # Get all schools for lookup
+    schools = await db.schools.find({}, {"_id": 0, "school_id": 1, "name": 1}).to_list(100)
+    school_map = {s["school_id"]: s["name"] for s in schools}
+    
+    # Add school_name to each user
+    for user in users:
+        school_id = user.get("school_id")
+        user["school_name"] = school_map.get(school_id) if school_id else None
+    
     return users
 
 @router.post("/users")
