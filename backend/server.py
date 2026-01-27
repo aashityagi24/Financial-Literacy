@@ -2162,8 +2162,8 @@ async def _legacy_sell_investment(investment_id: str, request: Request):
 
 # ============== ACHIEVEMENTS ROUTES ==============
 
-@api_router.get("/achievements")
-async def get_achievements(request: Request):
+# @api_router.get("/achievements")  # MOVED
+async def _legacy_get_achievements(request: Request):
     """Get all achievements and user's earned ones"""
     user = await get_current_user(request)
     
@@ -2184,8 +2184,8 @@ async def get_achievements(request: Request):
     
     return result
 
-@api_router.post("/achievements/{achievement_id}/claim")
-async def claim_achievement(achievement_id: str, request: Request):
+# @api_router.post("/achievements/{achievement_id}/claim")  # MOVED
+async def _legacy_claim_achievement(achievement_id: str, request: Request):
     """Claim an earned achievement"""
     user = await get_current_user(request)
     
@@ -4796,8 +4796,8 @@ async def create_notification(
     await db.notifications.insert_one(notification)
     return notification
 
-@api_router.get("/notifications")
-async def get_notifications(request: Request):
+# @api_router.get("/notifications")  # MOVED
+async def _legacy_get_notifications(request: Request):
     """Get notifications for current user"""
     user = await get_current_user(request)
     
@@ -4829,8 +4829,8 @@ async def get_notifications(request: Request):
         "unread_count": unread_count
     }
 
-@api_router.post("/notifications/mark-read")
-async def mark_notifications_read(request: Request):
+# @api_router.post("/notifications/mark-read")  # MOVED
+async def _legacy_mark_notifications_read(request: Request):
     """Mark all notifications as read"""
     user = await get_current_user(request)
     
@@ -4847,8 +4847,8 @@ async def mark_notifications_read(request: Request):
     
     return {"message": "Notifications marked as read"}
 
-@api_router.post("/notifications/mark-all-read")
-async def mark_all_notifications_read(request: Request):
+# @api_router.post("/notifications/mark-all-read")  # MOVED
+async def _legacy_mark_all_notifications_read(request: Request):
     """Mark all notifications as read (alias)"""
     user = await get_current_user(request)
     
@@ -4866,8 +4866,8 @@ async def mark_all_notifications_read(request: Request):
     total_updated = result1.modified_count + result2.modified_count
     return {"message": "All notifications marked as read", "updated": total_updated}
 
-@api_router.delete("/notifications/{notification_id}")
-async def delete_notification(notification_id: str, request: Request):
+# @api_router.delete("/notifications/{notification_id}")  # MOVED
+async def _legacy_delete_notification(notification_id: str, request: Request):
     """Delete a notification"""
     user = await get_current_user(request)
     
