@@ -112,6 +112,29 @@ async def update_user_role(user_id: str, request: Request):
     
     return {"message": "Role updated"}
 
+@router.put("/users/{user_id}/grade")
+async def update_user_grade(user_id: str, request: Request):
+    """Update user grade (K=0, 1-5)"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    body = await request.json()
+    new_grade = body.get("grade")
+    
+    if new_grade is not None and (not isinstance(new_grade, int) or new_grade < 0 or new_grade > 5):
+        raise HTTPException(status_code=400, detail="Grade must be 0 (K) through 5")
+    
+    result = await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {"grade": new_grade}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": f"Grade updated to {new_grade if new_grade else 'none'}"}
+
 @router.delete("/users/{user_id}")
 async def delete_user(user_id: str, request: Request):
     """Delete a user and all related data"""
