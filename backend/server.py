@@ -8772,16 +8772,16 @@ async def _legacy_get_market_status(request: Request):
         "message": "Market is open for trading" if is_open else f"Market opens at {STOCK_MARKET_OPEN_HOUR}:00 AM IST"
     }
 
-@api_router.get("/stocks/categories")
-async def get_stock_categories(request: Request):
+# @api_router.get("/stocks/categories")  # MOVED
+async def _legacy_get_stock_categories(request: Request):
     """Get active stock categories"""
     user = await get_current_user(request)
     
     categories = await db.stock_categories.find({"is_active": True}, {"_id": 0}).to_list(100)
     return categories
 
-@api_router.get("/stocks/list")
-async def get_stocks_list(request: Request, category_id: Optional[str] = None):
+# @api_router.get("/stocks/list")  # MOVED
+async def _legacy_get_stocks_list(request: Request, category_id: Optional[str] = None):
     """Get list of all available stocks with current prices"""
     user = await get_current_user(request)
     
