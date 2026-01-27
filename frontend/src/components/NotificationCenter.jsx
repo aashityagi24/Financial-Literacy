@@ -12,18 +12,35 @@ import {
 } from "@/components/ui/dialog";
 
 const notificationIcons = {
+  // Announcements & General
   announcement: { icon: Megaphone, color: 'text-[#FFD23F]', bg: 'bg-[#FFD23F]/20', path: '/dashboard' },
   reward: { icon: Trophy, color: 'text-[#06D6A0]', bg: 'bg-[#06D6A0]/20', path: '/wallet' },
+  
+  // Gift related
   gift_received: { icon: Gift, color: 'text-[#EE6C4D]', bg: 'bg-[#EE6C4D]/20', path: '/wallet' },
   gift_request: { icon: Gift, color: 'text-[#3D5A80]', bg: 'bg-[#3D5A80]/20', path: null },
   gift_request_declined: { icon: X, color: 'text-[#EE6C4D]', bg: 'bg-[#EE6C4D]/20', path: '/wallet' },
+  gift_sent: { icon: Gift, color: 'text-[#06D6A0]', bg: 'bg-[#06D6A0]/20', path: '/wallet' },
+  
+  // Quest related
+  quest: { icon: Trophy, color: 'text-[#FFD23F]', bg: 'bg-[#FFD23F]/20', path: '/quests' },
   quest_created: { icon: Trophy, color: 'text-[#FFD23F]', bg: 'bg-[#FFD23F]/20', path: '/quests' },
   quest_completed: { icon: Check, color: 'text-[#06D6A0]', bg: 'bg-[#06D6A0]/20', path: '/quests' },
+  quest_reminder: { icon: Trophy, color: 'text-[#FFD23F]', bg: 'bg-[#FFD23F]/20', path: '/quests' },
+  
+  // Chore related
+  chore: { icon: Trophy, color: 'text-[#06D6A0]', bg: 'bg-[#06D6A0]/20', path: '/quests' },
   chore_created: { icon: Trophy, color: 'text-[#06D6A0]', bg: 'bg-[#06D6A0]/20', path: '/quests' },
   chore_approved: { icon: Check, color: 'text-[#06D6A0]', bg: 'bg-[#06D6A0]/20', path: '/wallet' },
   chore_rejected: { icon: X, color: 'text-[#EE6C4D]', bg: 'bg-[#EE6C4D]/20', path: '/quests' },
+  chore_validation: { icon: Check, color: 'text-[#FFD23F]', bg: 'bg-[#FFD23F]/20', path: '/parent-dashboard' },
+  chore_reminder: { icon: Trophy, color: 'text-[#FFD23F]', bg: 'bg-[#FFD23F]/20', path: '/quests' },
+  
+  // Investment related
   stock_update: { icon: Trophy, color: 'text-[#10B981]', bg: 'bg-[#10B981]/20', path: '/stock-market' },
   garden_update: { icon: Trophy, color: 'text-[#228B22]', bg: 'bg-[#228B22]/20', path: '/garden' },
+  investment_purchase: { icon: Trophy, color: 'text-[#10B981]', bg: 'bg-[#10B981]/20', path: '/wallet' },
+  investment_sale: { icon: Trophy, color: 'text-[#10B981]', bg: 'bg-[#10B981]/20', path: '/wallet' },
 };
 
 export default function NotificationCenter({ onGiftRequestAction }) {
