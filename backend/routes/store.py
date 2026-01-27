@@ -202,7 +202,12 @@ async def get_items_by_category(request: Request, category_id: str = None):
     user = await get_current_user(request)
     grade = user.get("grade", 3) or 3
     
-    query = {"is_available": True, "min_grade": {"$lte": grade}, "max_grade": {"$gte": grade}}
+    # Only filter by grade - is_available defaults to true if not set
+    query = {
+        "min_grade": {"$lte": grade}, 
+        "max_grade": {"$gte": grade},
+        "$or": [{"is_available": True}, {"is_available": {"$exists": False}}]
+    }
     if category_id:
         query["category_id"] = category_id
     
@@ -211,7 +216,7 @@ async def get_items_by_category(request: Request, category_id: str = None):
     # Group by category
     by_category = {}
     for item in items:
-        cat_id = item.get("category_id", "uncategorized")
+        cat_id = item.get("category_id") or item.get("category", "uncategorized")
         if cat_id not in by_category:
             by_category[cat_id] = []
         by_category[cat_id].append(item)
