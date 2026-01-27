@@ -433,3 +433,157 @@ async def delete_parent_chore(chore_id: str, request: Request):
         "creator_id": user["user_id"]
     })
     return {"message": "Chore deleted"}
+
+@router.get("/parent/chores-pending")
+async def get_pending_chores(request: Request):
+    """Get chores pending parent approval"""
+    from services.auth import require_parent
+    db = get_db()
+    user = await require_parent(request)
+    
+    # Get all chores created by this parent
+    chores = await db.new_quests.find(
+        {"creator_type": "parent", "creator_id": user["user_id"]},
+        {"_id": 0}
+    ).to_list(200)
+    
+    pending = []
+    for chore in chores:
+        chore_id = chore.get("chore_id") or chore.get("quest_id")
+        # Get completion status
+        completion = await db.quest_completions.find_one(
+            {"quest_id": chore_id, "status": "pending_approval"},
+            {"_id": 0}
+        )
+        if completion:
+            chore["completion"] = completion
+            chore["child"] = await db.users.find_one(
+                {"user_id": completion["user_id"]},
+                {"_id": 0, "name": 1, "avatar": 1}
+            )
+            pending.append(chore)
+    
+    return pending
+
+@router.post("/parent/chores/{chore_id}/approve")
+async def approve_chore(chore_id: str, request: Request):
+    """Parent approves a completed chore"""
+    from services.auth import require_parent
+    db = get_db()
+    user = await require_parent(request)
+    
+    # Verify parent owns this chore
+    chore = await db.new_quests.find_one({
+        "chore_id": chore_id,
+        "creator_type": "parent",
+        "creator_id": user["user_id"]
+    })
+    if not chore:
+        raise HTTPException(status_code=404, detail="Chore not found")
+    
+    # Get the pending completion
+    completion = await db.quest_completions.find_one({
+        "quest_id": chore_id,
+        "status": "pending_approval"
+    })
+    if not completion:
+        raise HTTPException(status_code=400, detail="No pending completion found")
+    
+    child_id = completion["user_id"]
+    reward = chore.get("reward_amount", chore.get("total_points", 0))
+    
+    # Update completion status
+    await db.quest_completions.update_one(
+        {"quest_id": chore_id, "user_id": child_id},
+        {"$set": {
+            "status": "approved",
+            "is_completed": True,
+            "approved_at": datetime.now(timezone.utc).isoformat(),
+            "approved_by": user["user_id"]
+        }}
+    )
+    
+    # Award coins to child
+    await db.wallet_accounts.update_one(
+        {"user_id": child_id, "account_type": "spending"},
+        {"$inc": {"balance": reward}}
+    )
+    
+    # Record transaction
+    await db.transactions.insert_one({
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": child_id,
+        "to_account": "spending",
+        "amount": reward,
+        "transaction_type": "chore_reward",
+        "description": f"Approved: {chore.get('title', 'Chore')}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Notify child
+    await db.notifications.insert_one({
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": child_id,
+        "message": f"🎉 Chore approved! You earned ₹{reward} for: {chore.get('title')}",
+        "type": "chore_approved",
+        "link": "/wallet",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "Chore approved", "reward": reward}
+
+@router.post("/parent/chores/{chore_id}/reject")
+async def reject_chore(chore_id: str, request: Request):
+    """Parent rejects a completed chore"""
+    from services.auth import require_parent
+    db = get_db()
+    user = await require_parent(request)
+    
+    body = await request.json()
+    reason = body.get("reason", "Please try again")
+    
+    # Verify parent owns this chore
+    chore = await db.new_quests.find_one({
+        "chore_id": chore_id,
+        "creator_type": "parent",
+        "creator_id": user["user_id"]
+    })
+    if not chore:
+        raise HTTPException(status_code=404, detail="Chore not found")
+    
+    # Get the pending completion
+    completion = await db.quest_completions.find_one({
+        "quest_id": chore_id,
+        "status": "pending_approval"
+    })
+    if not completion:
+        raise HTTPException(status_code=400, detail="No pending completion found")
+    
+    child_id = completion["user_id"]
+    
+    # Update completion status - allow re-submission
+    await db.quest_completions.update_one(
+        {"quest_id": chore_id, "user_id": child_id},
+        {"$set": {
+            "status": "rejected",
+            "is_completed": False,
+            "rejection_reason": reason,
+            "rejected_at": datetime.now(timezone.utc).isoformat(),
+            "rejected_by": user["user_id"]
+        }}
+    )
+    
+    # Notify child
+    await db.notifications.insert_one({
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": child_id,
+        "message": f"Chore needs more work: {chore.get('title')}. Reason: {reason}",
+        "type": "chore_rejected",
+        "link": "/quests",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "Chore rejected", "reason": reason}
+
