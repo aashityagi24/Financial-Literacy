@@ -5,14 +5,19 @@ from typing import Optional
 import random
 import string
 
-# Import db from the main server module when used from routes
-# This will be set by the server.py when importing
-db = None
+# Database will be injected
+_db = None
 
-def set_db(database):
-    """Set the database instance - called by server.py"""
-    global db
-    db = database
+def init_db(database):
+    """Initialize database reference"""
+    global _db
+    _db = database
+
+def get_db():
+    """Get database instance"""
+    if _db is None:
+        raise RuntimeError("Database not initialized. Call init_db() first.")
+    return _db
 
 async def get_session_from_header(request: Request) -> Optional[str]:
     """Get session token from Authorization header"""
