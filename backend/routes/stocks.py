@@ -278,7 +278,10 @@ async def sell_stock(request: Request):
     if not holding or holding.get("quantity", 0) < quantity:
         raise HTTPException(status_code=400, detail="Insufficient shares")
     
-    stock = await db.admin_stocks.find_one({"stock_id": stock_id}, {"_id": 0})
+    # Try investment_stocks first, then admin_stocks
+    stock = await db.investment_stocks.find_one({"stock_id": stock_id}, {"_id": 0})
+    if not stock:
+        stock = await db.admin_stocks.find_one({"stock_id": stock_id}, {"_id": 0})
     if not stock:
         raise HTTPException(status_code=404, detail="Stock not found")
     
@@ -313,6 +316,16 @@ async def sell_stock(request: Request):
         "quantity": quantity,
         "price": stock["current_price"],
         "total": total_value,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Record in transactions for wallet history
+    await db.transactions.insert_one({
+        "transaction_id": f"tx_{uuid.uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "transaction_type": "stock_sale",
+        "amount": total_value,
+        "description": f"Sold {quantity} shares of {stock['name']}",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
