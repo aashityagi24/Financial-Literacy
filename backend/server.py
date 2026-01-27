@@ -4667,8 +4667,8 @@ async def get_student_challenges(request: Request):
 class AddParentRequest(BaseModel):
     parent_email: str
 
-@api_router.post("/child/add-parent")
-async def child_add_parent(add_request: AddParentRequest, request: Request):
+# @api_router.post("/child/add-parent")  # MOVED to routes/child.py
+async def _legacy_child_add_parent(add_request: AddParentRequest, request: Request):
     """Child adds a parent by email (max 2 parents)"""
     user = await get_current_user(request)
     
@@ -4713,8 +4713,8 @@ async def child_add_parent(add_request: AddParentRequest, request: Request):
     
     return {"message": "Parent added successfully!", "parent_name": parent.get("name")}
 
-@api_router.get("/child/parents")
-async def get_child_parents(request: Request):
+# @api_router.get("/child/parents")  # MOVED to routes/child.py
+async def _legacy_get_child_parents(request: Request):
     """Get child's linked parents"""
     user = await get_current_user(request)
     
@@ -4734,8 +4734,8 @@ async def get_child_parents(request: Request):
     
     return parents
 
-@api_router.get("/child/announcements")
-async def get_child_announcements(request: Request):
+# @api_router.get("/child/announcements")  # MOVED to routes/child.py
+async def _legacy_get_child_announcements(request: Request):
     """Get announcements from all classrooms the child is in"""
     user = await get_current_user(request)
     
@@ -4892,8 +4892,8 @@ async def _legacy_delete_notification(notification_id: str, request: Request):
 
 # ============== CLASSMATES & GIFTING ==============
 
-@api_router.get("/child/classmates")
-async def get_classmates(request: Request):
+# @api_router.get("/child/classmates")  # MOVED to routes/child.py
+async def _legacy_get_classmates(request: Request):
     """Get all classmates with their info and savings goals"""
     user = await get_current_user(request)
     
@@ -5094,8 +5094,8 @@ async def request_gift(req: GiftRequestCreate, request: Request):
     
     return {"message": "Gift request sent!", "request_id": gift_request["request_id"]}
 
-@api_router.get("/child/gift-requests")
-async def get_gift_requests(request: Request):
+# @api_router.get("/child/gift-requests")  # MOVED to routes/child.py
+async def _legacy_get_gift_requests(request: Request):
     """Get pending gift requests for user"""
     user = await get_current_user(request)
     
@@ -5113,8 +5113,8 @@ async def get_gift_requests(request: Request):
     
     return {"received": received, "sent": sent}
 
-@api_router.post("/child/gift-requests/{request_id}/respond")
-async def respond_to_gift_request(request_id: str, request: Request):
+# @api_router.post("/child/gift-requests/{request_id}/respond")  # MOVED to routes/child.py
+async def _legacy_respond_to_gift_request(request_id: str, request: Request):
     """Accept or decline a gift request"""
     user = await get_current_user(request)
     body = await request.json()
