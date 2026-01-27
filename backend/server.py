@@ -7274,9 +7274,10 @@ async def _legacy_get_school_students_comparison(request: Request):
     }
 
 # ============== SCHOOL BULK UPLOAD ==============
+# NOTE: These routes have been moved to /routes/school.py
 
-@api_router.post("/school/upload/teachers")
-async def school_upload_teachers(request: Request):
+# @api_router.post("/school/upload/teachers")  # MOVED TO routes/school.py
+async def _legacy_school_upload_teachers(request: Request):
     """Bulk upload teachers via CSV data"""
     school = await require_school(request)
     school_id = school["school_id"]
