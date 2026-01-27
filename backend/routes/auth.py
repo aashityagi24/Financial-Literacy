@@ -138,9 +138,10 @@ async def create_session(request: Request, response: Response):
     async with httpx.AsyncClient() as client:
         try:
             logger.info("Calling Emergent auth validation...")
-            auth_response = await client.post(
-                "https://auth.emergentagent.com/validate",
-                json={"session_id": session_id}
+            # Use the correct Emergent auth endpoint with X-Session-ID header
+            auth_response = await client.get(
+                "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+                headers={"X-Session-ID": session_id}
             )
             logger.info(f"Auth validation response: status={auth_response.status_code}, body={auth_response.text[:200] if auth_response.text else 'empty'}")
             
