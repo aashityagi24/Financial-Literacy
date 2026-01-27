@@ -5360,12 +5360,17 @@ async def upload_goal_image(file: UploadFile = File(...)):
 # ============== CONTENT MANAGEMENT ROUTES (NEW HIERARCHICAL SYSTEM) ==============
 
 @api_router.get("/content/topics")
-async def get_all_topics(request: Request):
+async def get_all_topics(request: Request, grade: Optional[int] = None):
     """Get all topics with hierarchy and unlock status (for users)"""
     user = await get_current_user(request)
     user_grade = user.get("grade") if user else None
     user_id = user.get("user_id") if user else None
     is_child = user.get("role") == "child" if user else False
+    is_teacher = user.get("role") == "teacher" if user else False
+    
+    # If teacher provides grade filter, use that instead
+    if is_teacher and grade is not None:
+        user_grade = grade
     
     # Build query - if user has no grade or is admin, show all topics
     if user_grade is None or (user and user.get("role") == "admin"):
