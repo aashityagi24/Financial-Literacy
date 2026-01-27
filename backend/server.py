@@ -65,6 +65,11 @@ from routes import wallet as wallet_routes
 from routes import store as store_routes
 from routes import garden as garden_routes
 from routes import investments as investment_routes
+from routes import achievements as achievement_routes
+from routes import quests as quest_routes
+from routes import notifications as notification_routes
+from routes import teacher as teacher_routes
+from routes import parent as parent_routes
 
 # Initialize database in modules
 auth_service.init_db(db)
@@ -74,6 +79,11 @@ wallet_routes.init_db(db)
 store_routes.init_db(db)
 garden_routes.init_db(db)
 investment_routes.init_db(db)
+achievement_routes.init_db(db)
+quest_routes.init_db(db)
+notification_routes.init_db(db)
+teacher_routes.init_db(db)
+parent_routes.init_db(db)
 
 # Include modular routers
 api_router.include_router(auth_routes.router)
@@ -82,6 +92,11 @@ api_router.include_router(wallet_routes.router)
 api_router.include_router(store_routes.router)
 api_router.include_router(garden_routes.router)
 api_router.include_router(investment_routes.router)
+api_router.include_router(achievement_routes.router)
+api_router.include_router(quest_routes.router)
+api_router.include_router(notification_routes.router)
+api_router.include_router(teacher_routes.router)
+api_router.include_router(parent_routes.router)
 
 # ============== MODELS ==============
 
