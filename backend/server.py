@@ -7526,8 +7526,8 @@ async def _legacy_school_upload_parents(request: Request):
         "message": f"Created {created} parents, linked {linked} to children"
     }
 
-@api_router.post("/admin/topics")
-async def admin_create_topic(request: Request):
+# @api_router.post("/admin/topics")  # MOVED
+async def _legacy_admin_create_topic(request: Request):
     """Create a learning topic (admin only)"""
     admin = await require_admin(request)
     body = await request.json()
@@ -7548,8 +7548,8 @@ async def admin_create_topic(request: Request):
     await db.learning_topics.insert_one(topic)
     return {"message": "Topic created", "topic_id": topic["topic_id"]}
 
-@api_router.put("/admin/topics/{topic_id}")
-async def admin_update_topic(topic_id: str, request: Request):
+# @api_router.put("/admin/topics/{topic_id}")  # MOVED
+async def _legacy_admin_update_topic(topic_id: str, request: Request):
     """Update a learning topic (admin only)"""
     await require_admin(request)
     body = await request.json()
@@ -7563,8 +7563,8 @@ async def admin_update_topic(topic_id: str, request: Request):
     
     return {"message": "Topic updated"}
 
-@api_router.delete("/admin/topics/{topic_id}")
-async def admin_delete_topic(topic_id: str, request: Request):
+# @api_router.delete("/admin/topics/{topic_id}")  # MOVED
+async def _legacy_admin_delete_topic(topic_id: str, request: Request):
     """Delete a learning topic (admin only)"""
     await require_admin(request)
     
@@ -7573,8 +7573,8 @@ async def admin_delete_topic(topic_id: str, request: Request):
     
     return {"message": "Topic and associated lessons deleted"}
 
-@api_router.post("/admin/lessons")
-async def admin_create_lesson(lesson: LessonCreate, request: Request):
+# @api_router.post("/admin/lessons")  # MOVED
+async def _legacy_admin_create_lesson(lesson: LessonCreate, request: Request):
     """Create a lesson (admin only)"""
     admin = await require_admin(request)
     
@@ -7597,8 +7597,8 @@ async def admin_create_lesson(lesson: LessonCreate, request: Request):
     await db.learning_lessons.insert_one(lesson_doc)
     return {"message": "Lesson created", "lesson_id": lesson_doc["lesson_id"]}
 
-@api_router.put("/admin/lessons/{lesson_id}")
-async def admin_update_lesson(lesson_id: str, lesson: LessonUpdate, request: Request):
+# @api_router.put("/admin/lessons/{lesson_id}")  # MOVED
+async def _legacy_admin_update_lesson(lesson_id: str, lesson: LessonUpdate, request: Request):
     """Update a lesson (admin only)"""
     await require_admin(request)
     
@@ -7611,8 +7611,8 @@ async def admin_update_lesson(lesson_id: str, lesson: LessonUpdate, request: Req
     
     return {"message": "Lesson updated"}
 
-@api_router.delete("/admin/lessons/{lesson_id}")
-async def admin_delete_lesson(lesson_id: str, request: Request):
+# @api_router.delete("/admin/lessons/{lesson_id}")  # MOVED
+async def _legacy_admin_delete_lesson(lesson_id: str, request: Request):
     """Delete a lesson (admin only)"""
     await require_admin(request)
     
@@ -7700,8 +7700,8 @@ async def admin_delete_activity(activity_id: str, request: Request):
     await db.activities.delete_one({"activity_id": activity_id})
     return {"message": "Activity deleted"}
 
-@api_router.get("/admin/stats")
-async def admin_get_stats(request: Request):
+# @api_router.get("/admin/stats")  # MOVED
+async def _legacy_admin_get_stats(request: Request):
     """Get platform statistics (admin only)"""
     await require_admin(request)
     
