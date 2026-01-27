@@ -270,6 +270,8 @@ function SortableContentItem({ content, onEdit, onDelete, onMove, typeConfig }) 
   };
 
   const Icon = typeConfig.icon;
+  const gradeLabel = content.min_grade === 0 ? 'K' : content.min_grade;
+  const maxGradeLabel = content.max_grade;
 
   return (
     <div 
@@ -295,9 +297,12 @@ function SortableContentItem({ content, onEdit, onDelete, onMove, typeConfig }) 
       )}
       
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <h4 className="font-medium text-gray-800">{content.title}</h4>
           <span className={`text-xs px-2 py-0.5 rounded ${typeConfig.color}`}>{typeConfig.label}</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-medium">
+            Grade {gradeLabel}-{maxGradeLabel}
+          </span>
           {content.is_published ? (
             <span className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-600 flex items-center gap-1">
               <Eye className="w-3 h-3" /> Live
