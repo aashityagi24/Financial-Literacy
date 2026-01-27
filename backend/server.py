@@ -7019,9 +7019,10 @@ async def admin_create_user(request: Request):
     }
 
 # ============== ADMIN SCHOOL MANAGEMENT ==============
+# NOTE: These routes have been moved to /routes/school.py
 
-@api_router.post("/admin/schools")
-async def admin_create_school(data: SchoolCreate, request: Request):
+# @api_router.post("/admin/schools")  # MOVED TO routes/school.py
+async def _legacy_admin_create_school(data: SchoolCreate, request: Request):
     """Create a new school (admin only)"""
     import hashlib
     await require_admin(request)
