@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
@@ -31,7 +31,8 @@ export default function NotificationCenter({ onGiftRequestAction }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [hasUnreadOnOpen, setHasUnreadOnOpen] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
 
   useEffect(() => {
     const loadNotifications = async () => {
@@ -50,17 +51,19 @@ export default function NotificationCenter({ onGiftRequestAction }) {
     return () => clearInterval(interval);
   }, []);
 
-  const handleOpen = async () => {
-    setIsOpen(true);
-    if (unreadCount > 0) {
-      try {
-        await axios.post(`${API}/notifications/mark-read`);
-        setUnreadCount(0);
-        setNotifications(notifications.map(n => ({ ...n, read: true })));
-      } catch (error) {
-        console.error('Failed to mark as read:', error);
-      }
+  // Handle navigation after dialog closes
+  useEffect(() => {
+    if (!isOpen && pendingNavigation) {
+      const path = pendingNavigation;
+      setPendingNavigation(null);
+      navigate(path);
     }
+  }, [isOpen, pendingNavigation, navigate]);
+
+  const handleOpen = () => {
+    // Track if there are unread notifications when opening
+    setHasUnreadOnOpen(unreadCount > 0 || notifications.some(n => !n.read));
+    setIsOpen(true);
   };
 
   const handleDelete = async (notificationId, e) => {
@@ -80,13 +83,14 @@ export default function NotificationCenter({ onGiftRequestAction }) {
       // Update local state to mark all as read
       setNotifications(notifications.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
+      setHasUnreadOnOpen(false);
       toast.success('All notifications marked as read');
     } catch (error) {
       toast.error('Failed to mark notifications as read');
     }
   };
 
-  const handleNotificationClick = (notif) => {
+  const handleNotificationClick = useCallback((notif) => {
     const typeInfo = notificationIcons[notif.notification_type] || notificationIcons.announcement;
     
     // Don't navigate for gift requests (they have action buttons)
@@ -95,20 +99,12 @@ export default function NotificationCenter({ onGiftRequestAction }) {
     // Get the navigation path
     const path = typeInfo.path;
     
-    // Navigate and close dialog
     if (path) {
-      // Store the path before closing
-      const targetPath = path;
-      // Close dialog first
+      // Set pending navigation and close dialog - navigation happens in useEffect
+      setPendingNavigation(path);
       setIsOpen(false);
-      // Use requestAnimationFrame to ensure dialog has closed before navigating
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          navigate(targetPath);
-        }, 50);
-      });
     }
-  };
+  }, []);
 
   const formatTime = (dateString) => {
     const date = new Date(dateString);
