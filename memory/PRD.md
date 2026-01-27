@@ -40,12 +40,35 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Role-based visibility (Child, Parent, Teacher)
 - Progressive unlock system for children
 
-### Recent Bug Fixes (January 27, 2026)
-- **Fixed:** Dashboard "Active Quests" now correctly hides completed quests
-- **Fixed:** Notification center navigation now works properly (clicking notification closes dialog and navigates)
-- **Fixed:** "Mark all as read" button now visible, functional, AND persists after page reload
-- **Fixed:** Chore completion now properly sets `is_completed: true` in database
-- **Fixed:** Backend normalizes notification data (handles both old and new field patterns)
+### Recent Updates (January 27, 2026)
+
+**Teacher Dashboard Enhancements:**
+- **Comprehensive Student Insights Modal**: Teachers can view detailed data for each student:
+  - Money Jars breakdown (all account balances)
+  - Total earnings vs spending
+  - Parent chores (assigned, completed, pending, rejected)
+  - Teacher quests completion rate
+  - Gift activity (received/sent)
+  - Money Garden performance (invested, earned, P/L)
+  - Stock Market performance (portfolio value, realized/unrealized gains)
+  - Learning progress (lessons completed, percentage)
+  - Badges earned
+  
+- **Student Comparison Table**: New "Compare All" button shows all students side-by-side with:
+  - All financial metrics
+  - Chores/quests completed
+  - Learning progress
+  - Investment P/L
+  - Gift activity
+  - Badges and streaks
+  - Top performer highlighted with crown
+
+- **Grade-Filtered Learning Content**: Learning content link moved inside classroom, filtered by classroom grade
+
+**Bug Fixes:**
+- Dashboard "Active Quests" now correctly hides completed quests
+- Notification center navigation and "Mark all as read" fixed
+- Chore completion properly sets `is_completed: true`
 
 ## API Endpoints
 
