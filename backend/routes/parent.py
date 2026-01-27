@@ -419,7 +419,9 @@ async def get_child_insights(child_id: str, request: Request):
             "realized_gains": realized_gains,
             "unrealized_gains": unrealized_gains
         },
-        "savings_goals": savings_goals
+        "savings_goals": savings_goals,
+        # Investment type based on grade: K (0) = none, 1-2 = garden, 3-5 = stocks
+        "investment_type": "garden" if 1 <= grade <= 2 else ("stocks" if 3 <= grade <= 5 else None)
     }
 
 @router.post("/savings-goals")
