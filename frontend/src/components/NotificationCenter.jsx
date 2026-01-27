@@ -115,8 +115,8 @@ export default function NotificationCenter({ onGiftRequestAction }) {
     // Don't navigate for gift requests (they have action buttons)
     if (notif.notification_type === 'gift_request') return;
     
-    // Get the navigation path
-    const path = typeInfo.path;
+    // Get the navigation path - prefer link field if present, then use type mapping
+    const path = notif.link || typeInfo.path;
     
     if (path) {
       // Close dialog first, then navigate after a small delay for animation
