@@ -2586,7 +2586,7 @@ async def _legacy_delete_parent_chore(chore_id: str, request: Request):
 
 # ============== PARENT REWARDS & PENALTIES ==============
 
-@api_router.post("/parent/reward-penalty")
+# @api_router.post("/parent/reward-penalty")
 async def _legacy_create_reward_penalty(data: RewardPenaltyCreate, request: Request):
     """Parent gives instant reward or penalty to child"""
     user = await require_parent(request)
@@ -2667,7 +2667,7 @@ async def _legacy_create_reward_penalty(data: RewardPenaltyCreate, request: Requ
         )).get("balance", 0)
     }
 
-@api_router.get("/parent/reward-penalty")
+# @api_router.get("/parent/reward-penalty")
 async def get_reward_penalties(request: Request, child_id: Optional[str] = None):
     """Get parent's reward/penalty history"""
     user = await require_parent(request)
@@ -2683,7 +2683,7 @@ async def get_reward_penalties(request: Request, child_id: Optional[str] = None)
     
     return records
 
-@api_router.delete("/parent/reward-penalty/{record_id}")
+# @api_router.delete("/parent/reward-penalty/{record_id}")
 async def delete_reward_penalty(record_id: str, request: Request):
     """Delete a reward/penalty record (does not reverse the transaction)"""
     user = await require_parent(request)
@@ -2697,7 +2697,7 @@ async def delete_reward_penalty(record_id: str, request: Request):
 
 # ============== PARENT SHOPPING LIST ==============
 
-@api_router.post("/parent/shopping-list")
+# @api_router.post("/parent/shopping-list")
 async def add_to_shopping_list(item_data: ShoppingListItemCreate, request: Request):
     """Parent adds item to shopping list for a child"""
     user = await require_parent(request)
@@ -2736,7 +2736,7 @@ async def add_to_shopping_list(item_data: ShoppingListItemCreate, request: Reque
     await db.shopping_lists.insert_one(list_doc)
     return {"list_id": list_id, "message": "Item added to shopping list"}
 
-@api_router.get("/parent/shopping-list")
+# @api_router.get("/parent/shopping-list")
 async def get_shopping_list(request: Request, child_id: str = None):
     """Get parent's shopping list, optionally filtered by child"""
     user = await require_parent(request)
@@ -2766,7 +2766,7 @@ async def get_shopping_list(request: Request, child_id: str = None):
     
     return list(by_child.values())
 
-@api_router.delete("/parent/shopping-list/{list_id}")
+# @api_router.delete("/parent/shopping-list/{list_id}")
 async def remove_from_shopping_list(list_id: str, request: Request):
     """Remove item from shopping list"""
     user = await require_parent(request)
@@ -2782,7 +2782,7 @@ async def remove_from_shopping_list(list_id: str, request: Request):
     
     return {"message": "Item removed from shopping list"}
 
-@api_router.post("/parent/shopping-list/create-chore")
+# @api_router.post("/parent/shopping-list/create-chore")
 async def create_chore_from_shopping_list(chore_data: ShoppingListChoreCreate, request: Request):
     """Create a chore from shopping list items - child completes chore to earn items"""
     user = await require_parent(request)
@@ -3120,7 +3120,7 @@ async def _legacy_request_chore_completion(chore_id: str, request: Request):
     
     return {"message": "Completion request sent to parent"}
 
-@api_router.get("/parent/chore-requests")
+# @api_router.get("/parent/chore-requests")
 async def get_chore_requests(request: Request):
     """Get pending chore completion requests for parent"""
     user = await require_parent(request)
@@ -3149,7 +3149,7 @@ async def get_chore_requests(request: Request):
     
     return enriched
 
-@api_router.post("/parent/chore-requests/{request_id}/validate")
+# @api_router.post("/parent/chore-requests/{request_id}/validate")
 async def validate_chore_completion(request_id: str, request: Request):
     """Parent validates (approves/rejects) chore completion"""
     user = await require_parent(request)
@@ -5299,7 +5299,7 @@ async def _legacy_link_child(link_request: LinkChildRequest, request: Request):
     
     return {"message": "Child linked successfully", "child": child}
 
-@api_router.get("/parent/children")
+# @api_router.get("/parent/children")
 async def get_children(request: Request):
     """Get parent's linked children"""
     parent = await require_parent(request)
@@ -5320,7 +5320,7 @@ async def get_children(request: Request):
     
     return children
 
-@api_router.get("/parent/children/{child_id}/progress")
+# @api_router.get("/parent/children/{child_id}/progress")
 async def get_child_progress(child_id: str, request: Request):
     """Get detailed progress for a child"""
     parent = await require_parent(request)
@@ -5622,7 +5622,7 @@ async def _legacy_get_child_insights(child_id: str, request: Request):
         "investment_type": "garden" if child_grade >= 1 and child_grade <= 2 else ("stocks" if child_grade >= 3 else None)
     }
 
-@api_router.get("/parent/children/{child_id}/classroom")
+# @api_router.get("/parent/children/{child_id}/classroom")
 async def get_child_classroom(child_id: str, request: Request):
     """Get child's classroom info and announcements for parent view"""
     parent = await require_parent(request)
@@ -5694,7 +5694,7 @@ async def get_child_classroom(child_id: str, request: Request):
         "announcements": announcements
     }
 
-@api_router.post("/parent/chores")
+# @api_router.post("/parent/chores")
 async def create_chore(chore: ChoreCreate, request: Request):
     """Create a chore for a child"""
     parent = await require_parent(request)
@@ -5738,7 +5738,7 @@ async def create_chore(chore: ChoreCreate, request: Request):
     
     return {"message": "Chore created", "chore_id": chore_doc["chore_id"]}
 
-@api_router.get("/parent/chores")
+# @api_router.get("/parent/chores")
 async def _legacy_get_parent_chores(request: Request):
     """Get all chores created by parent"""
     parent = await require_parent(request)
@@ -5757,7 +5757,7 @@ async def _legacy_get_parent_chores(request: Request):
     
     return chores
 
-@api_router.post("/parent/chores/{chore_id}/approve")
+# @api_router.post("/parent/chores/{chore_id}/approve")
 async def approve_chore(chore_id: str, request: Request):
     """Approve a completed chore and give reward"""
     parent = await require_parent(request)
@@ -5822,7 +5822,7 @@ async def approve_chore(chore_id: str, request: Request):
     
     return {"message": "Chore approved", "reward": chore["reward_amount"]}
 
-@api_router.delete("/parent/chores/{chore_id}")
+# @api_router.delete("/parent/chores/{chore_id}")
 async def delete_chore(chore_id: str, request: Request):
     """Delete a chore"""
     parent = await require_parent(request)
@@ -5837,7 +5837,7 @@ async def delete_chore(chore_id: str, request: Request):
     
     return {"message": "Chore deleted"}
 
-@api_router.post("/parent/allowance")
+# @api_router.post("/parent/allowance")
 async def _legacy_create_allowance(allowance: AllowanceCreate, request: Request):
     """Set up recurring allowance for a child"""
     parent = await require_parent(request)
@@ -5932,7 +5932,7 @@ async def _legacy_trigger_allowances(request: Request):
     await process_recurring_allowances()
     return {"message": "Allowance processing triggered"}
 
-@api_router.post("/parent/give-money")
+# @api_router.post("/parent/give-money")
 async def give_money_to_child(request: Request):
     """Give money directly to a child"""
     parent = await require_parent(request)
@@ -6009,7 +6009,7 @@ async def _legacy_create_savings_goal(goal: SavingsGoalCreate, request: Request)
     await db.savings_goals.insert_one(goal_doc)
     return {"message": "Savings goal created", "goal_id": goal_doc["goal_id"]}
 
-@api_router.get("/parent/savings-goals")
+# @api_router.get("/parent/savings-goals")
 async def get_savings_goals(request: Request):
     """Get savings goals for all children"""
     parent = await require_parent(request)
