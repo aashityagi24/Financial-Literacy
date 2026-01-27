@@ -42,6 +42,41 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Recent Updates (January 27, 2026)
 
+**Session 3 Bug Fixes & Feature Enhancements:**
+
+1. **Join Classroom Fixed** ✅
+   - Fixed ObjectId serialization error by adding `{'_id': 0}` projection
+   - Fixed join_code/invite_code mismatch (backend now uses `join_code` consistently)
+   - Returns teacher info (name, email, picture) in response
+   - Updated existing classrooms via migration script to have join_code
+
+2. **Teacher Name Display** ✅
+   - Profile page shows "Teacher: [name]" for each enrolled classroom
+   - GET /api/student/classrooms now returns teacher object with name
+
+3. **Default Avatars** ✅
+   - Created `/app/frontend/src/utils/avatars.js` with `getDefaultAvatar` utility
+   - Generates SVG data URLs with role-based colors:
+     - Child: Yellow (#FFD23F)
+     - Parent: Green (#06D6A0)
+     - Teacher: Blue (#3D5A80)
+     - Admin: Orange (#EE6C4D)
+     - School: Dark Blue (#1D3557)
+   - Applied to Dashboard and ProfilePage
+
+4. **School User Creation Enhanced** ✅
+   - Schools can add existing users (without school_id) to their school
+   - Individual user creation with automatic relationships:
+     - Teachers: Optional grade and class_name (creates classroom automatically)
+     - Children: Optional teacher_email or classroom_code (enrolls automatically)
+     - Parents: Optional child_email (links to child automatically)
+
+5. **Bulk Upload Enhanced** ✅
+   - Teachers CSV: name, email, grade (optional), class_name (optional)
+   - Students CSV: name, email, grade, teacher_email (optional - links to teacher's classroom)
+   - Parents CSV: name, email, child_email (optional - links to child)
+   - Returns created count + relationship links count
+
 **Session 2 Bug Fixes & Feature Enhancements:**
 
 1. **Google OAuth Sign-In Fixed** ✅
