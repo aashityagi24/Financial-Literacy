@@ -48,7 +48,7 @@ export default function SchoolDashboard() {
   // Individual User Creation State
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [addUserType, setAddUserType] = useState('teacher');
-  const [addUserForm, setAddUserForm] = useState({ name: '', email: '', grade: '3', parent_email: '', classroom_code: '' });
+  const [addUserForm, setAddUserForm] = useState({ name: '', email: '', grade: '3', parent_email: '', classroom_code: '', teacher_email: '' });
   const [addUserLoading, setAddUserLoading] = useState(false);
 
   useEffect(() => {
