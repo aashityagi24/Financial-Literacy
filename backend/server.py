@@ -6810,6 +6810,106 @@ async def admin_update_user_role(user_id: str, request: Request):
     
     return {"message": "Role updated"}
 
+@api_router.delete("/admin/users/{user_id}")
+async def admin_delete_user(user_id: str, request: Request):
+    """Delete a user and all related data (admin only)"""
+    admin = await require_admin(request)
+    
+    # Don't allow deleting yourself
+    if user_id == admin["user_id"]:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+    
+    # Get user to check if exists
+    user = await db.users.find_one({"user_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Delete user and all related data
+    # Note: This is a cascading delete - remove all user data
+    await db.users.delete_one({"user_id": user_id})
+    await db.wallet_accounts.delete_many({"user_id": user_id})
+    await db.transactions.delete_many({"user_id": user_id})
+    await db.notifications.delete_many({"user_id": user_id})
+    await db.quest_completions.delete_many({"user_id": user_id})
+    await db.user_content_progress.delete_many({"user_id": user_id})
+    await db.user_achievements.delete_many({"user_id": user_id})
+    await db.farms.delete_many({"user_id": user_id})
+    await db.stock_portfolios.delete_many({"user_id": user_id})
+    await db.savings_goals.delete_many({"child_id": user_id})
+    await db.parent_child_links.delete_many({"$or": [{"parent_id": user_id}, {"child_id": user_id}]})
+    await db.classroom_students.delete_many({"student_id": user_id})
+    
+    # If teacher, delete their classrooms
+    if user.get("role") == "teacher":
+        await db.classrooms.delete_many({"teacher_id": user_id})
+    
+    # If parent, delete their chores/allowances
+    if user.get("role") == "parent":
+        await db.parent_chores.delete_many({"parent_id": user_id})
+        await db.allowances.delete_many({"parent_id": user_id})
+        await db.reward_penalties.delete_many({"parent_id": user_id})
+    
+    return {"message": f"User {user.get('name', user_id)} deleted successfully"}
+
+@api_router.post("/admin/users")
+async def admin_create_user(request: Request):
+    """Create a new user (admin only)"""
+    await require_admin(request)
+    
+    body = await request.json()
+    
+    # Validate required fields
+    email = body.get("email")
+    name = body.get("name")
+    role = body.get("role", "child")
+    grade = body.get("grade")
+    
+    if not email or not name:
+        raise HTTPException(status_code=400, detail="Email and name are required")
+    
+    if role not in ["child", "parent", "teacher", "admin"]:
+        raise HTTPException(status_code=400, detail="Invalid role")
+    
+    # Check if email already exists
+    existing = await db.users.find_one({"email": email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    user_id = f"user_{uuid.uuid4().hex[:12]}"
+    
+    # Create user
+    user_doc = {
+        "user_id": user_id,
+        "email": email,
+        "name": name,
+        "role": role,
+        "grade": grade if role == "child" else None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by_admin": True
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    # If child, create wallet accounts
+    if role == "child":
+        account_types = ["spending", "savings", "gifting"]
+        if grade and grade >= 1:
+            account_types.append("investing")
+        
+        for acc_type in account_types:
+            await db.wallet_accounts.insert_one({
+                "account_id": f"acc_{uuid.uuid4().hex[:12]}",
+                "user_id": user_id,
+                "account_type": acc_type,
+                "balance": 100.0 if acc_type == "spending" else 0.0,  # Starting balance
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+    
+    return {
+        "user_id": user_id,
+        "message": f"User {name} created successfully"
+    }
+
 @api_router.post("/admin/topics")
 async def admin_create_topic(request: Request):
     """Create a learning topic (admin only)"""
