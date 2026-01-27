@@ -848,8 +848,19 @@ export default function ContentManagement({ user }) {
   const getContentTypeConfig = (type) => CONTENT_TYPES.find(t => t.value === type) || CONTENT_TYPES[0];
   
   const subtopicContent = selectedSubtopic 
-    ? allContent.filter(c => c.topic_id === selectedSubtopic.topic_id).sort((a, b) => a.order - b.order)
+    ? filteredContent.filter(c => c.topic_id === selectedSubtopic.topic_id).sort((a, b) => a.order - b.order)
     : [];
+  
+  // Grade options for filter
+  const gradeFilterOptions = [
+    { value: 'all', label: 'All Grades' },
+    { value: '0', label: 'Kindergarten' },
+    { value: '1', label: 'Grade 1' },
+    { value: '2', label: 'Grade 2' },
+    { value: '3', label: 'Grade 3' },
+    { value: '4', label: 'Grade 4' },
+    { value: '5', label: 'Grade 5' },
+  ];
   
   if (loading) {
     return (
@@ -872,6 +883,28 @@ export default function ContentManagement({ user }) {
               <Library className="w-6 h-6 text-blue-600" />
               <h1 className="text-xl font-semibold text-gray-800">Content Management</h1>
             </div>
+          </div>
+          
+          {/* Grade Filter */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-600 font-medium">Filter by Grade:</span>
+            <Select value={gradeFilter} onValueChange={setGradeFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="All Grades" />
+              </SelectTrigger>
+              <SelectContent>
+                {gradeFilterOptions.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {gradeFilter !== 'all' && (
+              <Button variant="ghost" size="sm" onClick={() => setGradeFilter('all')}>
+                <X className="w-4 h-4 mr-1" /> Clear
+              </Button>
+            )}
           </div>
         </div>
       </header>
