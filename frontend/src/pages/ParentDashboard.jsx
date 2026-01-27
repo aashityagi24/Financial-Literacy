@@ -137,10 +137,6 @@ export default function ParentDashboard({ user }) {
       setInsightsLoading(false);
     }
   };
-    } catch (error) {
-      toast.error('Failed to load child progress');
-    }
-  };
   
   const handleLinkChild = async () => {
     try {
