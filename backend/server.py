@@ -9016,8 +9016,8 @@ async def _legacy_buy_stock(data: BuyStockRequest, request: Request):
         "total_cost": round(total_cost, 2)
     }
 
-@api_router.post("/stocks/sell")
-async def sell_stock(data: SellStockRequest, request: Request):
+# @api_router.post("/stocks/sell")  # MOVED
+async def _legacy_sell_stock(data: SellStockRequest, request: Request):
     """Sell shares of a stock"""
     user = await get_current_user(request)
     user_id = user["user_id"]
@@ -9108,8 +9108,8 @@ async def sell_stock(data: SellStockRequest, request: Request):
         "profit_loss": round(profit_loss, 2)
     }
 
-@api_router.get("/stocks/news")
-async def get_stock_news(request: Request, stock_id: Optional[str] = None, category_id: Optional[str] = None):
+# @api_router.get("/stocks/news")  # MOVED
+async def _legacy_get_stock_news(request: Request, stock_id: Optional[str] = None, category_id: Optional[str] = None):
     """Get active news and predictions"""
     user = await get_current_user(request)
     
@@ -9127,8 +9127,8 @@ async def get_stock_news(request: Request, stock_id: Optional[str] = None, categ
     return news
 
 # NOTE: This route must be AFTER all other /stocks/* routes because {stock_id} is a catch-all
-@api_router.get("/stocks/{stock_id}")
-async def get_stock_detail(stock_id: str, request: Request):
+# @api_router.get("/stocks/{stock_id}")  # MOVED
+async def _legacy_get_stock_detail(stock_id: str, request: Request):
     """Get detailed info about a specific stock"""
     user = await get_current_user(request)
     
