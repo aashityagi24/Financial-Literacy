@@ -8636,6 +8636,142 @@ async def daily_market_simulation():
             "created_at": datetime.now(timezone.utc).isoformat()
         })
 
+async def process_recurring_allowances():
+    """
+    Process recurring allowances for children.
+    Runs daily at 6:00 AM IST (00:30 UTC).
+    Checks all active allowances and distributes money based on frequency.
+    """
+    logger.info("Processing recurring allowances...")
+    
+    today = datetime.now(timezone.utc)
+    today_str = today.strftime("%Y-%m-%d")
+    task_id = "process_allowances"
+    
+    # Check if already run today
+    last_run = await db.scheduler_logs.find_one({"task": task_id, "date": today_str})
+    if last_run:
+        logger.info(f"Allowance processing already ran today at {last_run.get('created_at')}")
+        return
+    
+    try:
+        # Get all active allowances
+        allowances = await db.allowances.find({"is_active": True}).to_list(500)
+        
+        processed_count = 0
+        total_distributed = 0
+        
+        for allowance in allowances:
+            should_pay = False
+            frequency = allowance.get("frequency", "weekly")
+            last_paid = allowance.get("last_paid_at")
+            
+            if last_paid:
+                last_paid_date = datetime.fromisoformat(last_paid.replace('Z', '+00:00'))
+                days_since_last = (today - last_paid_date).days
+                
+                if frequency == "daily":
+                    should_pay = days_since_last >= 1
+                elif frequency == "weekly":
+                    should_pay = days_since_last >= 7
+                elif frequency == "biweekly":
+                    should_pay = days_since_last >= 14
+                elif frequency == "monthly":
+                    should_pay = days_since_last >= 30
+            else:
+                # Never paid, should pay on first run
+                # Check if created more than 1 day ago (don't pay immediately on creation)
+                created_at = allowance.get("created_at")
+                if created_at:
+                    created_date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    days_since_created = (today - created_date).days
+                    if frequency == "daily":
+                        should_pay = days_since_created >= 1
+                    elif frequency == "weekly":
+                        should_pay = days_since_created >= 7
+                    elif frequency == "biweekly":
+                        should_pay = days_since_created >= 14
+                    elif frequency == "monthly":
+                        should_pay = days_since_created >= 30
+            
+            if should_pay:
+                child_id = allowance["child_id"]
+                parent_id = allowance["parent_id"]
+                amount = allowance["amount"]
+                
+                # Get parent name for transaction record
+                parent = await db.users.find_one({"user_id": parent_id}, {"name": 1})
+                parent_name = parent.get("name", "Parent") if parent else "Parent"
+                
+                # Get child name for logging
+                child = await db.users.find_one({"user_id": child_id}, {"name": 1})
+                child_name = child.get("name", "Child") if child else "Child"
+                
+                # Credit child's spending wallet
+                await db.wallet_accounts.update_one(
+                    {"user_id": child_id, "account_type": "spending"},
+                    {"$inc": {"balance": amount}}
+                )
+                
+                # Create transaction record
+                await db.transactions.insert_one({
+                    "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
+                    "user_id": child_id,
+                    "amount": amount,
+                    "transaction_type": "allowance",
+                    "description": f"{frequency.capitalize()} allowance from {parent_name}",
+                    "from_user": parent_id,
+                    "from_name": parent_name,
+                    "created_at": today.isoformat()
+                })
+                
+                # Create notification for child
+                await db.notifications.insert_one({
+                    "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+                    "user_id": child_id,
+                    "message": f"💰 You received your {frequency} allowance of ₹{amount} from {parent_name}!",
+                    "notification_type": "allowance",
+                    "link": "/wallet",
+                    "read": False,
+                    "created_at": today.isoformat()
+                })
+                
+                # Update last_paid_at
+                await db.allowances.update_one(
+                    {"allowance_id": allowance["allowance_id"]},
+                    {"$set": {"last_paid_at": today.isoformat()}}
+                )
+                
+                processed_count += 1
+                total_distributed += amount
+                logger.info(f"Allowance paid: ₹{amount} to {child_name} ({frequency})")
+        
+        # Log successful run
+        await db.scheduler_logs.insert_one({
+            "log_id": f"log_{uuid.uuid4().hex[:12]}",
+            "task": task_id,
+            "date": today_str,
+            "status": "success",
+            "details": {
+                "allowances_processed": processed_count,
+                "total_distributed": total_distributed
+            },
+            "created_at": today.isoformat()
+        })
+        
+        logger.info(f"Allowance processing complete: {processed_count} allowances, ₹{total_distributed} distributed")
+        
+    except Exception as e:
+        logger.error(f"Error processing allowances: {e}")
+        await db.scheduler_logs.insert_one({
+            "log_id": f"log_{uuid.uuid4().hex[:12]}",
+            "task": task_id,
+            "date": today_str,
+            "status": "failed",
+            "error": str(e),
+            "created_at": today.isoformat()
+        })
+
 @app.on_event("startup")
 async def startup_scheduler():
     """Start the scheduler when the app starts"""
