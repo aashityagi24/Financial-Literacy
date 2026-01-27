@@ -63,11 +63,7 @@ async def get_stocks_list(request: Request, category_id: str = None):
     user = await get_current_user(request)
     grade = user.get("grade", 3) or 3
     
-    query = {
-        "is_active": True,
-        "min_grade": {"$lte": grade},
-        "max_grade": {"$gte": grade}
-    }
+    query = {"is_active": True}
     if category_id:
         query["category_id"] = category_id
     
@@ -76,7 +72,19 @@ async def get_stocks_list(request: Request, category_id: str = None):
     if not stocks:
         stocks = await db.admin_stocks.find(query, {"_id": 0}).to_list(100)
     
+    # Filter by grade (only if min_grade/max_grade are set)
+    filtered_stocks = []
     for stock in stocks:
+        min_g = stock.get("min_grade")
+        max_g = stock.get("max_grade")
+        # Include stock if no grade restriction OR grade is in range
+        if (min_g is None and max_g is None) or \
+           (min_g is not None and max_g is not None and min_g <= grade <= max_g) or \
+           (min_g is None and max_g is not None and grade <= max_g) or \
+           (max_g is None and min_g is not None and grade >= min_g):
+            filtered_stocks.append(stock)
+    
+    for stock in filtered_stocks:
         history = stock.get("price_history", [])[-10:]
         stock["recent_history"] = history
         if len(history) >= 2:
@@ -88,7 +96,7 @@ async def get_stocks_list(request: Request, category_id: str = None):
             stock["price_change"] = 0
             stock["price_change_percent"] = 0
     
-    return stocks
+    return filtered_stocks
 
 @router.get("/portfolio")
 async def get_portfolio(request: Request):
