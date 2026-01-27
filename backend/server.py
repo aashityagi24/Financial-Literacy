@@ -8034,14 +8034,14 @@ async def _legacy_upload_investment_image(file: UploadFile = File(...)):
     return {"url": f"/api/uploads/investments/{filename}"}
 
 # Plants (for K-2 grades)
-@api_router.get("/admin/investments/plants")
+# @api_router.get("/admin/investments/plants")  # MOVED
 async def admin_get_plants(request: Request):
     """Get all plants (admin only)"""
     await require_admin(request)
     plants = await db.investment_plants.find({}, {"_id": 0}).to_list(100)
     return plants
 
-@api_router.post("/admin/investments/plants")
+# @api_router.post("/admin/investments/plants")  # MOVED
 async def admin_create_plant(data: InvestmentPlantCreate, request: Request):
     """Create an investment plant (admin only)"""
     await require_admin(request)
@@ -8063,7 +8063,7 @@ async def admin_create_plant(data: InvestmentPlantCreate, request: Request):
     await db.investment_plants.insert_one(plant)
     return {"message": "Plant created", "plant_id": plant["plant_id"]}
 
-@api_router.put("/admin/investments/plants/{plant_id}")
+# @api_router.put("/admin/investments/plants/{plant_id}")  # MOVED
 async def admin_update_plant(plant_id: str, data: InvestmentPlantUpdate, request: Request):
     """Update an investment plant (admin only)"""
     await require_admin(request)
@@ -8077,7 +8077,7 @@ async def admin_update_plant(plant_id: str, data: InvestmentPlantUpdate, request
     
     return {"message": "Plant updated"}
 
-@api_router.delete("/admin/investments/plants/{plant_id}")
+# @api_router.delete("/admin/investments/plants/{plant_id}")  # MOVED
 async def admin_delete_plant(plant_id: str, request: Request):
     """Delete an investment plant (admin only)"""
     await require_admin(request)
@@ -8087,14 +8087,14 @@ async def admin_delete_plant(plant_id: str, request: Request):
     return {"message": "Plant deleted"}
 
 # Stocks (for grades 3-5)
-@api_router.get("/admin/investments/stocks")
+# @api_router.get("/admin/investments/stocks")  # MOVED
 async def admin_get_stocks(request: Request):
     """Get all stocks (admin only)"""
     await require_admin(request)
     stocks = await db.investment_stocks.find({}, {"_id": 0}).to_list(100)
     return stocks
 
-@api_router.post("/admin/investments/stocks")
+# @api_router.post("/admin/investments/stocks")  # MOVED
 async def admin_create_stock(data: InvestmentStockCreate, request: Request):
     """Create an investment stock (admin only)"""
     await require_admin(request)
@@ -8137,7 +8137,7 @@ async def admin_create_stock(data: InvestmentStockCreate, request: Request):
     
     return {"message": "Stock created", "stock_id": stock["stock_id"]}
 
-@api_router.put("/admin/investments/stocks/{stock_id}")
+# @api_router.put("/admin/investments/stocks/{stock_id}")  # MOVED
 async def admin_update_stock(stock_id: str, data: InvestmentStockUpdate, request: Request):
     """Update an investment stock (admin only)"""
     await require_admin(request)
@@ -8162,7 +8162,7 @@ async def admin_update_stock(stock_id: str, data: InvestmentStockUpdate, request
     
     return {"message": "Stock updated"}
 
-@api_router.delete("/admin/investments/stocks/{stock_id}")
+# @api_router.delete("/admin/investments/stocks/{stock_id}")  # MOVED
 async def admin_delete_stock(stock_id: str, request: Request):
     """Delete an investment stock (admin only)"""
     await require_admin(request)
