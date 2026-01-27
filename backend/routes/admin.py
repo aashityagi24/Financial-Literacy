@@ -755,3 +755,220 @@ async def admin_delete_stock_news(news_id: str, request: Request):
     await require_admin(request)
     await db.stock_news.delete_one({"news_id": news_id})
     return {"message": "News deleted"}
+
+
+@router.post("/stock-news/{news_id}/apply")
+async def admin_apply_stock_news(news_id: str, request: Request):
+    """Apply news impact to stock price"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    news = await db.stock_news.find_one({"news_id": news_id})
+    if not news:
+        raise HTTPException(status_code=404, detail="News not found")
+    
+    impact = news.get("impact", 0)
+    stock_id = news.get("stock_id")
+    
+    if stock_id:
+        stock = await db.investment_stocks.find_one({"stock_id": stock_id})
+        if stock:
+            new_price = max(1, stock["current_price"] * (1 + impact / 100))
+            await db.investment_stocks.update_one(
+                {"stock_id": stock_id},
+                {"$set": {"current_price": round(new_price, 2)}}
+            )
+    
+    await db.stock_news.update_one(
+        {"news_id": news_id},
+        {"$set": {"applied": True, "applied_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "News impact applied"}
+
+# ============== ADMIN QUIZ, BOOK, ACTIVITY MANAGEMENT ==============
+
+@router.post("/quizzes")
+async def admin_create_quiz(request: Request):
+    """Create a quiz for a lesson"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    quiz_id = f"quiz_{uuid.uuid4().hex[:12]}"
+    await db.quizzes.insert_one({
+        "quiz_id": quiz_id,
+        "lesson_id": body.get("lesson_id"),
+        "title": body.get("title", "Quiz"),
+        "questions": body.get("questions", []),
+        "passing_score": body.get("passing_score", 70),
+        "reward_coins": body.get("reward_coins", 10),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": "Quiz created", "quiz_id": quiz_id}
+
+@router.post("/books")
+async def admin_create_book(request: Request):
+    """Create a learning book"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    book_id = f"book_{uuid.uuid4().hex[:12]}"
+    await db.books.insert_one({
+        "book_id": book_id,
+        "title": body.get("title"),
+        "description": body.get("description", ""),
+        "cover_image": body.get("cover_image"),
+        "content_url": body.get("content_url"),
+        "min_grade": body.get("min_grade", 0),
+        "max_grade": body.get("max_grade", 5),
+        "reward_coins": body.get("reward_coins", 5),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": "Book created", "book_id": book_id}
+
+@router.delete("/books/{book_id}")
+async def admin_delete_book(book_id: str, request: Request):
+    """Delete a book"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    await db.books.delete_one({"book_id": book_id})
+    return {"message": "Book deleted"}
+
+@router.post("/activities")
+async def admin_create_activity(request: Request):
+    """Create a learning activity"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    activity_id = f"act_{uuid.uuid4().hex[:12]}"
+    await db.activities.insert_one({
+        "activity_id": activity_id,
+        "title": body.get("title"),
+        "description": body.get("description", ""),
+        "activity_type": body.get("activity_type", "interactive"),
+        "activity_url": body.get("activity_url"),
+        "thumbnail": body.get("thumbnail"),
+        "min_grade": body.get("min_grade", 0),
+        "max_grade": body.get("max_grade", 5),
+        "reward_coins": body.get("reward_coins", 10),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    return {"message": "Activity created", "activity_id": activity_id}
+
+@router.delete("/activities/{activity_id}")
+async def admin_delete_activity(activity_id: str, request: Request):
+    """Delete an activity"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    await db.activities.delete_one({"activity_id": activity_id})
+    return {"message": "Activity deleted"}
+
+# ============== ADMIN INVESTMENT SIMULATION ==============
+
+@router.get("/investments/stocks/{stock_id}/history")
+async def admin_get_stock_history(stock_id: str, request: Request, days: int = 30):
+    """Get stock price history"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    history = await db.stock_price_history.find(
+        {"stock_id": stock_id},
+        {"_id": 0}
+    ).sort("date", -1).limit(days).to_list(days)
+    
+    return list(reversed(history))
+
+@router.post("/investments/simulate-fluctuation")
+async def admin_simulate_fluctuation(request: Request):
+    """Manually trigger stock price fluctuation"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    import random
+    stocks = await db.investment_stocks.find({"is_active": True}).to_list(100)
+    
+    for stock in stocks:
+        volatility = stock.get("volatility", 0.1)
+        trend = stock.get("trend", 0)
+        change_pct = random.gauss(trend, volatility)
+        new_price = stock["current_price"] * (1 + change_pct)
+        new_price = max(stock.get("min_price", 1), min(new_price, stock.get("max_price", 1000)))
+        
+        await db.investment_stocks.update_one(
+            {"stock_id": stock["stock_id"]},
+            {"$set": {"current_price": round(new_price, 2)}}
+        )
+    
+    return {"message": f"Simulated fluctuation for {len(stocks)} stocks"}
+
+@router.post("/investments/simulate-day")
+async def admin_simulate_day(request: Request):
+    """Simulate a full trading day"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    import random
+    from datetime import date
+    
+    stocks = await db.investment_stocks.find({"is_active": True}).to_list(100)
+    today = date.today().isoformat()
+    
+    for stock in stocks:
+        # Record today's price in history
+        await db.stock_price_history.update_one(
+            {"stock_id": stock["stock_id"], "date": today},
+            {"$set": {
+                "stock_id": stock["stock_id"],
+                "date": today,
+                "open": stock["current_price"],
+                "close": stock["current_price"],
+                "high": stock["current_price"],
+                "low": stock["current_price"]
+            }},
+            upsert=True
+        )
+    
+    return {"message": f"Simulated day for {len(stocks)} stocks"}
+
+@router.get("/investments/scheduler-logs")
+async def admin_get_scheduler_logs(request: Request):
+    """Get scheduler logs"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    logs = await db.scheduler_logs.find(
+        {},
+        {"_id": 0}
+    ).sort("timestamp", -1).limit(50).to_list(50)
+    return logs
+
+@router.get("/investments/scheduler-status")
+async def admin_get_scheduler_status(request: Request):
+    """Get scheduler status"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    last_run = await db.scheduler_logs.find_one(
+        {},
+        sort=[("timestamp", -1)]
+    )
+    
+    return {
+        "status": "active",
+        "last_run": last_run.get("timestamp") if last_run else None,
+        "last_job": last_run.get("job_name") if last_run else None
+    }
