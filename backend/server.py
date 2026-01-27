@@ -4134,8 +4134,19 @@ async def get_notifications(request: Request):
         {"_id": 0}
     ).sort("created_at", -1).to_list(50)
     
+    # Normalize notification fields for consistency
+    for notif in notifications:
+        # Normalize type field: use notification_type, fallback to type
+        if "notification_type" not in notif and "type" in notif:
+            notif["notification_type"] = notif["type"]
+        # Normalize read field: use read, fallback to is_read
+        if "read" not in notif and "is_read" in notif:
+            notif["read"] = notif["is_read"]
+        elif "read" not in notif:
+            notif["read"] = False
+    
     # Count unread
-    unread_count = sum(1 for n in notifications if not n.get("read"))
+    unread_count = sum(1 for n in notifications if not n.get("read", False))
     
     return {
         "notifications": notifications,
