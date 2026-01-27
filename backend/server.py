@@ -7184,8 +7184,8 @@ async def _legacy_get_school_dashboard(request: Request):
         "students": students
     }
 
-@api_router.get("/school/students/comparison")
-async def get_school_students_comparison(request: Request):
+# @api_router.get("/school/students/comparison")  # MOVED TO routes/school.py
+async def _legacy_get_school_students_comparison(request: Request):
     """Get comparison data for all students in the school"""
     school = await require_school(request)
     school_id = school["school_id"]
