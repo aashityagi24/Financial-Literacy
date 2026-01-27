@@ -948,10 +948,10 @@ export default function ContentManagement({ user }) {
                 </Button>
               </div>
               
-              {topics.length === 0 ? (
+              {filteredTopics.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
                   <FolderOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p>No topics yet. Create your first topic to get started!</p>
+                  <p>{gradeFilter === 'all' ? 'No topics yet. Create your first topic to get started!' : `No topics found for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label || 'selected grade'}.`}</p>
                 </div>
               ) : (
                 <DndContext
@@ -960,11 +960,11 @@ export default function ContentManagement({ user }) {
                   onDragEnd={handleTopicDragEnd}
                 >
                   <SortableContext
-                    items={[...topics].sort((a, b) => (a.order || 0) - (b.order || 0)).map(t => t.topic_id)}
+                    items={[...filteredTopics].sort((a, b) => (a.order || 0) - (b.order || 0)).map(t => t.topic_id)}
                     strategy={verticalListSortingStrategy}
                   >
                     <div className="space-y-3">
-                      {[...topics].sort((a, b) => (a.order || 0) - (b.order || 0)).map((topic) => (
+                      {[...filteredTopics].sort((a, b) => (a.order || 0) - (b.order || 0)).map((topic) => (
                         <SortableTopicItem
                           key={topic.topic_id}
                           topic={topic}
