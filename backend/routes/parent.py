@@ -823,7 +823,31 @@ async def create_chore(request: Request):
     chore_id = f"chore_{uuid.uuid4().hex[:12]}"
     title = body.get("title")
     reward = body.get("reward_coins", 10)
+    child = await db.users.find_one({"user_id": child_id}, {"_id": 0, "name": 1})
     
+    # Store in new_quests collection for consistency with child quest view
+    await db.new_quests.insert_one({
+        "quest_id": chore_id,
+        "chore_id": chore_id,
+        "title": title,
+        "description": body.get("description", ""),
+        "reward_amount": reward,
+        "reward_coins": reward,
+        "total_points": reward,
+        "creator_type": "parent",
+        "creator_id": parent["user_id"],
+        "creator_name": parent.get("name", "Parent"),
+        "assigned_to": child_id,
+        "child_id": child_id,
+        "child_name": child.get("name") if child else "Unknown",
+        "is_recurring": body.get("is_recurring", False),
+        "frequency": body.get("frequency", "once"),
+        "is_active": True,
+        "status": "active",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Also keep in parent_chores for parent's chore list view
     await db.parent_chores.insert_one({
         "chore_id": chore_id,
         "parent_id": parent["user_id"],
