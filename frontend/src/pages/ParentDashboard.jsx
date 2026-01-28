@@ -1000,7 +1000,7 @@ export default function ParentDashboard({ user }) {
                 <div className="card-playful p-6 mb-6 bg-gradient-to-r from-[#06D6A0] to-[#42E8B3] text-white">
                   <div className="flex items-center gap-4">
                     <img 
-                      src={childProgress.child.picture || 'https://via.placeholder.com/60'} 
+                      src={childProgress.child.picture || getDefaultAvatar('child', childProgress.child.name)} 
                       alt={childProgress.child.name}
                       className="w-16 h-16 rounded-full border-3 border-white"
                     />
