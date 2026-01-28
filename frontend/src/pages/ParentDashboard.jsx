@@ -196,9 +196,9 @@ export default function ParentDashboard({ user }) {
   
   const handleCreateRewardPenalty = async () => {
     try {
-      const response = await axios.post(`${API}/parent/reward-penalty`, rpForm);
+      await axios.post(`${API}/parent/reward-penalty`, rpForm);
       const isReward = rpForm.category === 'reward';
-      toast.success(`${isReward ? 'Reward' : 'Penalty'} applied! New balance: ₹${response.data.new_balance}`);
+      toast.success(`${isReward ? 'Reward' : 'Penalty'} applied!`);
       setShowRewardPenalty(false);
       setRpForm({ child_id: '', title: '', description: '', amount: 5, category: 'reward' });
       fetchData();
