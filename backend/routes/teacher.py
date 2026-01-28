@@ -673,6 +673,8 @@ async def create_teacher_quest(request: Request):
         "title": body.get("title"),
         "description": body.get("description", ""),
         "image_url": body.get("image_url"),
+        "pdf_url": body.get("pdf_url"),
+        "due_date": body.get("due_date"),
         "reward_amount": base_reward,
         "reward_coins": base_reward,
         "total_points": total_points,
@@ -685,6 +687,7 @@ async def create_teacher_quest(request: Request):
         "deadline": body.get("deadline"),
         "min_grade": body.get("min_grade"),
         "max_grade": body.get("max_grade"),
+        "target_grades": body.get("target_grades"),
         "is_active": True,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
