@@ -386,7 +386,7 @@ async def get_child_insights(child_id: str, request: Request):
         "transactions": {
             "total_earned": total_earned,
             "total_spent": total_spent,
-            "recent": transactions[:20]
+            "recent": transactions  # Return all fetched transactions for pagination
         },
         "chores": {
             "total_assigned": len(all_chores),
