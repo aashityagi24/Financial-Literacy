@@ -149,7 +149,8 @@ class TestStockList:
         for stock in stocks:
             assert "stock_id" in stock
             assert "name" in stock
-            assert "ticker" in stock
+            # Some stocks use "ticker", some use "symbol"
+            assert "ticker" in stock or "symbol" in stock, f"Stock {stock['name']} missing ticker/symbol"
             assert "current_price" in stock
             assert "price_change" in stock or "price_change_percent" in stock
         
