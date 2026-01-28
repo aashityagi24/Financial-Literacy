@@ -614,14 +614,21 @@ async def get_chore_requests(request: Request):
     db = get_db()
     parent = await require_parent(request)
     
-    # Get all chores created by this parent
-    chores = await db.new_quests.find(
+    # Get all chores created by this parent (from both collections)
+    parent_chores = await db.new_quests.find(
         {"creator_type": "parent", "creator_id": parent["user_id"]},
         {"_id": 0}
     ).to_list(200)
     
+    legacy_chores = await db.parent_chores.find(
+        {"parent_id": parent["user_id"]},
+        {"_id": 0}
+    ).to_list(200)
+    
+    all_chores = parent_chores + legacy_chores
+    
     pending_requests = []
-    for chore in chores:
+    for chore in all_chores:
         chore_id = chore.get("chore_id") or chore.get("quest_id")
         # Get completion with pending_approval status
         completion = await db.quest_completions.find_one(
@@ -637,7 +644,7 @@ async def get_chore_requests(request: Request):
                 "request_id": completion.get("completion_id"),
                 "chore_id": chore_id,
                 "chore_title": chore.get("title"),
-                "reward_amount": chore.get("reward_amount", chore.get("total_points", 0)),
+                "reward_amount": chore.get("reward_amount", chore.get("reward_coins", chore.get("total_points", 0))),
                 "child_id": completion["user_id"],
                 "child_name": child.get("name") if child else "Unknown",
                 "child_avatar": child.get("avatar") if child else None,
