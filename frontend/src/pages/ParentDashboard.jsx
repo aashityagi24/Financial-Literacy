@@ -1416,6 +1416,154 @@ export default function ParentDashboard({ user }) {
             )}
           </DialogContent>
         </Dialog>
+        
+        {/* Full Transactions Dialog with Pagination & Date Filter */}
+        <Dialog open={showAllTransactions} onOpenChange={setShowAllTransactions}>
+          <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-[#1D3557] flex items-center gap-3" style={{ fontFamily: 'Fredoka' }}>
+                <Wallet className="w-6 h-6 text-[#FFD23F]" />
+                {showChildInsights?.name}&apos;s Transaction History
+              </DialogTitle>
+            </DialogHeader>
+            
+            {/* Date Filter */}
+            <div className="flex items-center gap-3 mt-4 mb-4">
+              <Filter className="w-4 h-4 text-[#3D5A80]" />
+              <span className="text-sm font-medium text-[#1D3557]">Filter:</span>
+              <div className="flex gap-2">
+                {[
+                  { value: 'all', label: 'All Time' },
+                  { value: 'today', label: 'Today' },
+                  { value: 'week', label: 'This Week' },
+                  { value: 'month', label: 'This Month' }
+                ].map((filter) => (
+                  <button
+                    key={filter.value}
+                    onClick={() => {
+                      setTransactionsDateFilter(filter.value);
+                      setTransactionsPage(1);
+                    }}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                      transactionsDateFilter === filter.value
+                        ? 'bg-[#3D5A80] text-white'
+                        : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
+                    }`}
+                    data-testid={`filter-${filter.value}`}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            {/* Transactions List */}
+            {(() => {
+              const allTransactions = childInsights?.transactions?.recent || [];
+              
+              // Apply date filter
+              const filteredTransactions = allTransactions.filter((tx) => {
+                if (transactionsDateFilter === 'all') return true;
+                if (!tx.created_at) return false;
+                
+                const txDate = new Date(tx.created_at);
+                const now = new Date();
+                
+                if (transactionsDateFilter === 'today') {
+                  return txDate.toDateString() === now.toDateString();
+                } else if (transactionsDateFilter === 'week') {
+                  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                  return txDate >= weekAgo;
+                } else if (transactionsDateFilter === 'month') {
+                  const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                  return txDate >= monthAgo;
+                }
+                return true;
+              });
+              
+              // Pagination
+              const totalPages = Math.ceil(filteredTransactions.length / TRANSACTIONS_PER_PAGE);
+              const startIdx = (transactionsPage - 1) * TRANSACTIONS_PER_PAGE;
+              const paginatedTransactions = filteredTransactions.slice(startIdx, startIdx + TRANSACTIONS_PER_PAGE);
+              
+              return (
+                <>
+                  <div className="text-xs text-[#98C1D9] mb-2">
+                    Showing {paginatedTransactions.length} of {filteredTransactions.length} transactions
+                  </div>
+                  
+                  {paginatedTransactions.length === 0 ? (
+                    <div className="text-center py-8 text-[#3D5A80]">
+                      No transactions found for the selected filter.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {paginatedTransactions.map((tx, i) => (
+                        <div 
+                          key={i} 
+                          className="flex items-center justify-between p-3 bg-[#E0FBFC] rounded-xl border border-[#1D3557]/10"
+                          data-testid={`transaction-item-${i}`}
+                        >
+                          <div className="flex flex-col flex-1 mr-3">
+                            <span className="text-sm font-medium text-[#1D3557]">
+                              {tx.description || tx.transaction_type}
+                            </span>
+                            <span className="text-xs text-[#3D5A80]">
+                              {tx.created_at ? new Date(tx.created_at).toLocaleString() : 'Unknown date'}
+                            </span>
+                            {tx.transaction_type && (
+                              <span className="text-[10px] text-[#98C1D9] capitalize">
+                                {tx.transaction_type.replace(/_/g, ' ')}
+                              </span>
+                            )}
+                          </div>
+                          <span className={`text-lg font-bold ${tx.amount >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                            {tx.amount >= 0 ? '+' : ''}₹{Math.abs(tx.amount).toFixed(0)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#1D3557]/10">
+                      <button
+                        onClick={() => setTransactionsPage(p => Math.max(1, p - 1))}
+                        disabled={transactionsPage === 1}
+                        className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          transactionsPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-[#3D5A80] text-white hover:bg-[#1D3557]'
+                        }`}
+                        data-testid="pagination-prev"
+                      >
+                        <ArrowLeft className="w-4 h-4" /> Previous
+                      </button>
+                      
+                      <span className="text-sm text-[#3D5A80]">
+                        Page {transactionsPage} of {totalPages}
+                      </span>
+                      
+                      <button
+                        onClick={() => setTransactionsPage(p => Math.min(totalPages, p + 1))}
+                        disabled={transactionsPage === totalPages}
+                        className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          transactionsPage === totalPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-[#3D5A80] text-white hover:bg-[#1D3557]'
+                        }`}
+                        data-testid="pagination-next"
+                      >
+                        Next <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
