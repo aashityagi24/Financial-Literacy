@@ -461,15 +461,45 @@ async def create_savings_goal(data: SavingsGoalCreate, request: Request):
 
 @router.get("/savings-goals")
 async def get_parent_savings_goals(request: Request):
-    """Get all savings goals created by parent"""
+    """Get all savings goals for parent's children (created by parent or child)"""
     from services.auth import require_parent
     db = get_db()
     parent = await require_parent(request)
     
+    # Get parent's children
+    links = await db.parent_child_links.find(
+        {"parent_id": parent["user_id"], "status": "active"},
+        {"_id": 0, "child_id": 1}
+    ).to_list(20)
+    child_ids = [l["child_id"] for l in links]
+    
+    # Get all goals for parent's children (both parent-created and child-created)
     goals = await db.savings_goals.find(
-        {"parent_id": parent["user_id"]},
+        {"$or": [
+            {"parent_id": parent["user_id"]},
+            {"user_id": {"$in": child_ids}}
+        ]},
         {"_id": 0}
     ).to_list(100)
+    
+    # Enrich with child names and timeline info
+    for goal in goals:
+        child_id = goal.get("child_id") or goal.get("user_id")
+        if child_id:
+            child = await db.users.find_one({"user_id": child_id}, {"_id": 0, "name": 1})
+            goal["child_name"] = child.get("name") if child else "Unknown"
+        
+        # Add progress info
+        target = goal.get("target_amount", 0)
+        current = goal.get("current_amount", 0)
+        goal["progress_percent"] = round((current / target * 100) if target > 0 else 0, 1)
+        goal["amount_to_go"] = max(0, target - current)
+        
+        # Determine creator
+        if goal.get("parent_id"):
+            goal["created_by"] = "Parent"
+        else:
+            goal["created_by"] = "Child"
     
     return goals
 
