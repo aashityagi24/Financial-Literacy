@@ -409,7 +409,7 @@ export default function ParentDashboard({ user }) {
                     >
                       <div className="flex items-center gap-4">
                         <img 
-                          src={child.picture || 'https://via.placeholder.com/50'} 
+                          src={child.picture || getDefaultAvatar('child', child.name)} 
                           alt={child.name}
                           className="w-14 h-14 rounded-full border-3 border-[#1D3557]"
                         />
