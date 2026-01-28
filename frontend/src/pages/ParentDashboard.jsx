@@ -1461,8 +1461,15 @@ export default function ParentDashboard({ user }) {
             {(() => {
               const allTransactions = childInsights?.transactions?.recent || [];
               
+              // Sort transactions by date (newest first) - handle inconsistent date formats
+              const sortedTransactions = [...allTransactions].sort((a, b) => {
+                const dateA = new Date(a.created_at || 0);
+                const dateB = new Date(b.created_at || 0);
+                return dateB.getTime() - dateA.getTime(); // Descending (newest first)
+              });
+              
               // Apply date filter
-              const filteredTransactions = allTransactions.filter((tx) => {
+              const filteredTransactions = sortedTransactions.filter((tx) => {
                 if (transactionsDateFilter === 'all') return true;
                 if (!tx.created_at) return false;
                 
