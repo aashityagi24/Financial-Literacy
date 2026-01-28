@@ -934,9 +934,26 @@ export default function TeacherDashboard({ user }) {
                               <h4 className="font-bold text-[#1D3557]">{quest.title}</h4>
                               <p className="text-sm text-[#3D5A80] mt-1">{quest.description}</p>
                               <div className="flex items-center gap-4 mt-2 text-xs text-[#3D5A80]">
-                                <span>₹{quest.total_points} total</span>
-                                <span>{quest.questions?.length || 0} questions</span>
-                                <span>Due: {quest.due_date}</span>
+                                <span>₹{quest.total_points || quest.reward_amount || 0} total</span>
+                                <span>
+                                  {quest.questions?.length > 0 
+                                    ? `${quest.questions.length} ${quest.questions[0]?.question_type === 'mcq' ? 'MCQ' : quest.questions[0]?.question_type === 'multi_select' ? 'Multi-select' : 'Text'} question${quest.questions.length > 1 ? 's' : ''}`
+                                    : 'No questions'}
+                                </span>
+                                <span>Due: {quest.due_date ? new Date(quest.due_date).toLocaleDateString() : 'Not set'}</span>
+                              </div>
+                              {/* Attachment indicators */}
+                              <div className="flex items-center gap-2 mt-2">
+                                {quest.image_url && (
+                                  <span className="text-xs bg-[#9B5DE5]/20 text-[#9B5DE5] px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <ImageIcon className="w-3 h-3" /> Image added
+                                  </span>
+                                )}
+                                {quest.pdf_url && (
+                                  <span className="text-xs bg-[#EE6C4D]/20 text-[#EE6C4D] px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <FileText className="w-3 h-3" /> PDF added
+                                  </span>
+                                )}
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
