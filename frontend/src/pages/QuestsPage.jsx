@@ -43,13 +43,22 @@ export default function QuestsPage({ user }) {
       const res = await axios.get(`${API}/child/quests-new`, {
         params: { source, sort: sortBy }
       });
-      // Sort quests: incomplete first, completed at bottom
+      // Sort quests: incomplete first, pending approval next, completed at bottom
       const sortedQuests = [...res.data].sort((a, b) => {
         // Completed quests go to the bottom - check user_status or is_completed/has_earned
-        const aCompleted = a.user_status === 'completed' || a.is_completed || a.has_earned;
-        const bCompleted = b.user_status === 'completed' || b.is_completed || b.has_earned;
+        const aCompleted = a.user_status === 'completed' || a.user_status === 'approved' || a.is_completed || a.has_earned || a.status === 'completed';
+        const bCompleted = b.user_status === 'completed' || b.user_status === 'approved' || b.is_completed || b.has_earned || b.status === 'completed';
+        const aPending = a.user_status === 'pending_approval';
+        const bPending = b.user_status === 'pending_approval';
+        
+        // Completed at bottom
         if (aCompleted && !bCompleted) return 1;
         if (!aCompleted && bCompleted) return -1;
+        
+        // Pending approval after active but before completed
+        if (aPending && !bPending && !bCompleted) return 1;
+        if (!aPending && bPending && !aCompleted) return -1;
+        
         return 0; // Keep original sort order for same status
       });
       setQuests(sortedQuests);
