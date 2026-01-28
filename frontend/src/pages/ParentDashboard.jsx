@@ -1239,6 +1239,23 @@ export default function ParentDashboard({ user }) {
                       <span className="font-bold text-red-600">₹{childInsights.transactions?.total_spent?.toFixed(0)}</span>
                     </div>
                   </div>
+                  
+                  {/* Recent Activity - sorted newest first */}
+                  {childInsights.transactions?.recent?.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-[#1D3557]/10">
+                      <h5 className="font-bold text-[#1D3557] text-sm mb-2">Recent Activity:</h5>
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {childInsights.transactions.recent.slice(0, 5).map((tx, i) => (
+                          <div key={i} className="flex items-center justify-between text-xs bg-white rounded p-2">
+                            <span className="text-[#3D5A80] truncate max-w-[180px]">{tx.description || tx.transaction_type}</span>
+                            <span className={tx.amount >= 0 ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>
+                              {tx.amount >= 0 ? '+' : ''}₹{Math.abs(tx.amount).toFixed(0)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Chores & Quests */}
