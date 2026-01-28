@@ -104,13 +104,19 @@ async def request_chore_completion(chore_id: str, request: Request):
     if not chore:
         raise HTTPException(status_code=404, detail="Chore not found")
     
-    # Check if already submitted
+    # Check if chore is already completed
+    if chore.get("status") == "completed" or not chore.get("is_active", True):
+        raise HTTPException(status_code=400, detail="This chore has already been completed")
+    
+    # Check if already submitted for approval or approved
     existing = await db.quest_completions.find_one({
         "quest_id": chore_id,
         "user_id": user["user_id"],
-        "status": "pending_approval"
+        "status": {"$in": ["pending_approval", "approved"]}
     })
     if existing:
+        if existing.get("status") == "approved":
+            raise HTTPException(status_code=400, detail="Reward already received for this chore")
         raise HTTPException(status_code=400, detail="Already submitted for approval")
     
     # Create completion record with pending_approval status
