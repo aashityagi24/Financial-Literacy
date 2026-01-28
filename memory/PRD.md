@@ -40,9 +40,31 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Role-based visibility (Child, Parent, Teacher)
 - Progressive unlock system for children
 
-### Recent Updates (January 27, 2026)
+### Recent Updates (January 28, 2026)
 
-**Session 4 Bug Fixes (Latest):**
+**Session 5 - Stock Market & Notifications Complete:**
+
+1. **Stock/Investment System Fully Working** ✅
+   - Wallet Transfer: Fixed default values for `transaction_type` and `description`
+   - Stock Detail: Fixed to look in `investment_stocks` first, then `admin_stocks`
+   - Buy/Sell: Correctly updates investing account balance
+   - Admin: Create/update/delete stocks, categories, and news all working
+   - Market Hours: 9AM-4PM IST enforced
+   - Daily Fluctuation: Scheduled at 7:15 AM, 12 PM, 4:30 PM IST
+
+2. **Notifications System Enhanced** ✅
+   - Polling reduced from 30s to 10s for more real-time feel
+   - Added notifications for chore creation
+   - Added notifications for chore approval
+   - Existing notifications for quests, announcements, rewards, penalties all working
+
+3. **Child Dashboard** ✅
+   - Shows 2 active quests (live and not completed)
+   - Quest filtering working correctly
+
+### Previous Session Updates (January 27, 2026)
+
+**Session 4 Bug Fixes:**
 
 1. **Stock Market Page Fixed for Grade 3+ Users** ✅ (P0 BUG FIX)
    - Root Cause: Frontend data structure mismatch - StockMarketPage.jsx expected `portfolio.summary.total_invested` but API returns `portfolio.total_invested`
