@@ -1247,14 +1247,32 @@ export default function ParentDashboard({ user }) {
                     </div>
                   </div>
                   
-                  {/* Recent Activity - sorted newest first */}
+                  {/* Recent Activity - sorted newest first (showing 7 items) */}
                   {childInsights.transactions?.recent?.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-[#1D3557]/10">
-                      <h5 className="font-bold text-[#1D3557] text-sm mb-2">Recent Activity:</h5>
-                      <div className="space-y-1 max-h-32 overflow-y-auto">
-                        {childInsights.transactions.recent.slice(0, 5).map((tx, i) => (
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="font-bold text-[#1D3557] text-sm">Recent Activity:</h5>
+                        <button
+                          onClick={() => {
+                            setShowAllTransactions(true);
+                            setTransactionsPage(1);
+                            setTransactionsDateFilter('all');
+                          }}
+                          className="text-xs text-[#3D5A80] hover:text-[#1D3557] flex items-center gap-1 underline"
+                          data-testid="view-all-transactions-btn"
+                        >
+                          View All <ChevronRight className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <div className="space-y-1 max-h-48 overflow-y-auto">
+                        {childInsights.transactions.recent.slice(0, 7).map((tx, i) => (
                           <div key={i} className="flex items-center justify-between text-xs bg-white rounded p-2">
-                            <span className="text-[#3D5A80] truncate max-w-[180px]">{tx.description || tx.transaction_type}</span>
+                            <div className="flex flex-col">
+                              <span className="text-[#3D5A80] truncate max-w-[180px]">{tx.description || tx.transaction_type}</span>
+                              <span className="text-[#98C1D9] text-[10px]">
+                                {tx.created_at ? new Date(tx.created_at).toLocaleDateString() : ''}
+                              </span>
+                            </div>
                             <span className={tx.amount >= 0 ? 'text-green-600 font-medium' : 'text-red-500 font-medium'}>
                               {tx.amount >= 0 ? '+' : ''}₹{Math.abs(tx.amount).toFixed(0)}
                             </span>
