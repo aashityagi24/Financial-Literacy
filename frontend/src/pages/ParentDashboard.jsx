@@ -7,7 +7,7 @@ import {
   Users, ChevronLeft, Plus, Gift, Target, Wallet, 
   Check, Clock, X, ChevronRight, Eye, Calendar, Trash2,
   School, Megaphone, Store, LogOut, User, TrendingUp, TrendingDown,
-  Sprout, LineChart, BookOpen, Award, CheckCircle, XCircle
+  Sprout, LineChart, BookOpen, Award, CheckCircle, XCircle, History
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import NotificationCenter from '@/components/NotificationCenter';
+import { getDefaultAvatar } from '@/utils/avatars';
 
 const gradeLabels = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
 
