@@ -791,8 +791,14 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
     if user.get("role") != "child":
         raise HTTPException(status_code=403, detail="Only children can access quests")
     
-    # Build filter based on source
-    filter_query = {"is_active": True}
+    # Build filter - include both active quests and completed ones for this user
+    filter_query = {
+        "$or": [
+            {"is_active": True},  # Active quests
+            {"status": "completed", "child_id": user["user_id"]},  # Completed chores assigned to this user
+            {"status": "completed", "assigned_to": user["user_id"]}  # Completed chores assigned to this user
+        ]
+    }
     if source and source != 'all':
         filter_query["creator_type"] = source
     
@@ -807,10 +813,27 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
         {"user_id": user["user_id"]},
         {"_id": 0}
     ).to_list(200)
-    completion_map = {c["quest_id"]: c.get("status", "completed") for c in completions if c.get("quest_id")}
+    completion_map = {c["quest_id"]: c for c in completions if c.get("quest_id")}
     
+    enriched_quests = []
     for quest in quests:
-        quest["user_status"] = completion_map.get(quest.get("quest_id"), "available")
+        quest_id = quest.get("quest_id") or quest.get("chore_id")
+        completion = completion_map.get(quest_id)
+        
+        # Determine user status
+        if completion:
+            quest["user_status"] = completion.get("status", "completed")
+            quest["completion_info"] = {
+                "completed_at": completion.get("approved_at") or completion.get("completed_at"),
+                "score": completion.get("score", 0)
+            }
+        elif quest.get("status") == "completed":
+            quest["user_status"] = "completed"
+        else:
+            quest["user_status"] = "available"
+        
+        # Mark as grayed out if completed
+        quest["is_completed"] = quest["user_status"] in ["completed", "approved"]
         
         # Calculate total_points if questions exist but total is 0
         questions = quest.get("questions", [])
@@ -821,13 +844,19 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
             elif quest.get("reward_amount", 0) > 0:
                 quest["total_points"] = quest["reward_amount"]
             else:
-                # Default reward if nothing specified
-                quest["total_points"] = len(questions) * 5  # 5 points per question as default
+                quest["total_points"] = len(questions) * 5
+        
+        enriched_quests.append(quest)
     
-    # Sort quests
+    # Sort: Active quests first, then completed at the bottom
+    enriched_quests.sort(key=lambda x: (x.get("is_completed", False), x.get("created_at", "")), reverse=False)
+    
+    # Secondary sort based on user preference
+    active_quests = [q for q in enriched_quests if not q.get("is_completed")]
+    completed_quests = [q for q in enriched_quests if q.get("is_completed")]
+    
     if sort == "reward":
-        quests.sort(key=lambda x: x.get("total_points", 0), reverse=True)
-    else:
+        active_quests.sort(key=lambda x: x.get("total_points", 0), reverse=True)
         quests.sort(key=lambda x: x.get("due_date") or "9999-99-99")
     
     return quests
