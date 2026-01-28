@@ -537,14 +537,20 @@ export default function QuestsPage({ user }) {
                         {quest.description || <span className="italic">No description provided</span>}
                       </p>
                       
-                      <div className="flex items-center gap-4 mt-2">
+                      <div className="flex items-center gap-4 mt-2 flex-wrap">
                         <span className={`text-sm font-bold flex items-center gap-1 ${isCompleted ? 'text-gray-400' : 'text-[#FFD23F]'}`}>
                           <Star className="w-4 h-4" /> ₹{quest.total_points || quest.reward_amount || 0}
                           {hasEarned && <span className="text-[#06D6A0] ml-1">(Earned!)</span>}
                           {isCompleted && !hasEarned && <span className="text-[#EE6C4D] ml-1">(Tried)</span>}
                         </span>
                         
-                        {!isChore && daysLeft !== null && (
+                        {isPendingApproval && (
+                          <span className="text-xs bg-[#FFD23F] text-[#1D3557] px-2 py-0.5 rounded-full font-bold">
+                            ⏳ Waiting for approval
+                          </span>
+                        )}
+                        
+                        {!isChore && daysLeft !== null && !isCompleted && (
                           <span className={`text-sm flex items-center gap-1 ${
                             daysLeft <= 1 ? 'text-[#EE6C4D]' : 'text-[#3D5A80]'
                           }`}>
