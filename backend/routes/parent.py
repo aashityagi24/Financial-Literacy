@@ -1004,10 +1004,22 @@ async def give_money_to_child(request: Request):
     await db.transactions.insert_one({
         "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
         "user_id": child_id,
-        "type": "gift",
+        "transaction_type": "gift_received",
         "amount": amount,
-        "description": reason,
+        "description": f"Gift from {parent.get('name', 'Parent')}: {reason}",
         "from_user_id": parent["user_id"],
+        "to_account": "spending",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Send notification to child
+    await db.notifications.insert_one({
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": child_id,
+        "type": "gift_received",
+        "message": f"🎁 You received ₹{amount} from {parent.get('name', 'Parent')}! Reason: {reason}",
+        "link": "/wallet",
+        "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
