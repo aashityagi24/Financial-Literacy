@@ -15,7 +15,7 @@ import os
 import subprocess
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://coinquest-kids-1.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://finlit-kids-1.preview.emergentagent.com').rstrip('/')
 
 # Global test data
 TEST_DATA = {}

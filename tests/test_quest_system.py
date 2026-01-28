@@ -7,7 +7,7 @@ import requests
 import os
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://coinquest-kids-1.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://finlit-kids-1.preview.emergentagent.com')
 
 # Admin credentials
 ADMIN_EMAIL = "admin@learnersplanet.com"
