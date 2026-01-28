@@ -883,11 +883,24 @@ async def approve_chore(chore_id: str, request: Request):
         {"$set": {"is_verified": True}}
     )
     
+    reward = chore.get("reward_coins", 0)
+    
     # Award coins
     await db.wallet_accounts.update_one(
         {"user_id": chore["child_id"], "account_type": "spending"},
-        {"$inc": {"balance": chore.get("reward_coins", 0)}}
+        {"$inc": {"balance": reward}}
     )
+    
+    # Send notification to child
+    await db.notifications.insert_one({
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": chore["child_id"],
+        "type": "chore_approved",
+        "message": f"🎉 Chore approved! You earned ₹{reward} for: {chore.get('title')}",
+        "link": "/wallet",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
     
     return {"message": "Chore approved, coins awarded"}
 
