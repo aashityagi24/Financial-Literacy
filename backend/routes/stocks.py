@@ -363,8 +363,16 @@ async def get_stock_details(stock_id: str, request: Request):
     db = get_db()
     await get_current_user(request)
     
-    stock = await db.admin_stocks.find_one({"stock_id": stock_id}, {"_id": 0})
+    # Try investment_stocks first, then admin_stocks
+    stock = await db.investment_stocks.find_one({"stock_id": stock_id}, {"_id": 0})
+    if not stock:
+        stock = await db.admin_stocks.find_one({"stock_id": stock_id}, {"_id": 0})
     if not stock:
         raise HTTPException(status_code=404, detail="Stock not found")
+    
+    # Add price history if available
+    history = stock.get("price_history", [])
+    if history:
+        stock["price_history"] = history[-30:]  # Last 30 entries
     
     return stock
