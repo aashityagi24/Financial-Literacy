@@ -821,19 +821,34 @@ async def create_chore(request: Request):
         raise HTTPException(status_code=403, detail="Not authorized for this child")
     
     chore_id = f"chore_{uuid.uuid4().hex[:12]}"
+    title = body.get("title")
+    reward = body.get("reward_coins", 10)
+    
     await db.parent_chores.insert_one({
         "chore_id": chore_id,
         "parent_id": parent["user_id"],
         "child_id": child_id,
-        "title": body.get("title"),
+        "title": title,
         "description": body.get("description", ""),
-        "reward_coins": body.get("reward_coins", 10),
+        "reward_coins": reward,
         "is_recurring": body.get("is_recurring", False),
         "frequency": body.get("frequency"),
         "is_completed": False,
         "is_verified": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     })
+    
+    # Send notification to child
+    await db.notifications.insert_one({
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": child_id,
+        "type": "chore_created",
+        "message": f"📋 New chore from {parent.get('name', 'Parent')}: {title} (₹{reward})",
+        "link": "/quests",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
     return {"message": "Chore created", "chore_id": chore_id}
 
 @router.get("/chores")
