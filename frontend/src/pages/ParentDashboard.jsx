@@ -810,7 +810,7 @@ export default function ParentDashboard({ user }) {
                   {chores.filter(c => c.status !== 'approved' && c.status !== 'completed').length === 0 ? (
                     <p className="text-center text-[#3D5A80] py-4">No active chores. Create one using the button above!</p>
                   ) : (
-                    chores.map((chore) => {
+                    chores.filter(c => c.status !== 'approved' && c.status !== 'completed').map((chore) => {
                       const pendingRequest = choreRequests.find(r => r.chore_id === chore.chore_id && r.status === 'pending');
                       
                       return (
@@ -823,11 +823,15 @@ export default function ParentDashboard({ user }) {
                                   <span className="bg-[#06D6A0] text-white text-xs px-2 py-1 rounded-full font-bold">
                                     ✓ {chore.child_name} marked complete
                                   </span>
-                                ) : chore.status === 'pending' || chore.is_active ? (
-                                  <span className="bg-[#FFD23F]/30 text-[#1D3557] text-xs px-2 py-1 rounded-full font-bold">
-                                    ⏳ Pending
+                                ) : chore.status === 'pending_approval' ? (
+                                  <span className="bg-[#FFD23F] text-[#1D3557] text-xs px-2 py-1 rounded-full font-bold">
+                                    ⏳ Awaiting Approval
                                   </span>
                                 ) : (
+                                  <span className="bg-[#3D5A80]/20 text-[#1D3557] text-xs px-2 py-1 rounded-full font-bold">
+                                    📋 Active
+                                  </span>
+                                )
                                   <span className="bg-[#06D6A0]/20 text-[#06D6A0] text-xs px-2 py-1 rounded-full font-bold">
                                     ✓ Completed
                                   </span>
