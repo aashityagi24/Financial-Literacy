@@ -42,6 +42,22 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Recent Updates (January 28, 2026)
 
+**Session 6 - Recent Activity Enhancements Complete:**
+
+1. **Parent Dashboard - Child Insights Modal Enhanced** ✅
+   - Quick view now shows exactly **7 transactions** (was 5)
+   - Added "View All" button to open full transactions modal
+   - Each transaction shows description, date, and amount
+   - Transactions sorted newest first (descending by created_at)
+
+2. **Full Transactions Modal (NEW)** ✅
+   - Displays up to 100 transactions with **pagination (15 per page)**
+   - **Date Filters**: All Time, Today, This Week, This Month
+   - Shows "Showing X of Y transactions" count
+   - Previous/Next navigation buttons
+   - "Page X of Y" indicator
+   - Backend enhanced to return all transactions (was limited to 20)
+
 **Session 5 - Stock Market & Notifications Complete:**
 
 1. **Stock/Investment System Fully Working** ✅
