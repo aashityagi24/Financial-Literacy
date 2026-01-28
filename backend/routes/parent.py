@@ -828,18 +828,36 @@ async def get_child_progress(child_id: str, request: Request):
     child = await db.users.find_one({"user_id": child_id}, {"_id": 0})
     wallets = await db.wallet_accounts.find({"user_id": child_id}, {"_id": 0}).to_list(5)
     
+    # Get recent transactions - sorted by created_at descending (newest first)
+    transactions = await db.transactions.find(
+        {"user_id": child_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(10)
+    
     lessons_completed = await db.user_lesson_progress.count_documents({
         "user_id": child_id, "completed": True
     })
     quests_completed = await db.quest_completions.count_documents({
-        "user_id": child_id, "status": "completed"
+        "user_id": child_id, "status": {"$in": ["completed", "approved"]}
     })
+    
+    # Get streak
+    streak_doc = await db.user_streaks.find_one({"user_id": child_id}, {"_id": 0})
+    
+    # Get topic progress
+    topic_progress = await db.user_lesson_progress.find(
+        {"user_id": child_id},
+        {"_id": 0, "topic_id": 1, "topic_name": 1, "completed": 1}
+    ).to_list(20)
     
     return {
         "child": child,
-        "wallets": wallets,
+        "wallet": wallets,
+        "transactions": transactions,
         "lessons_completed": lessons_completed,
-        "quests_completed": quests_completed
+        "quests_completed": quests_completed,
+        "streak": streak_doc.get("current_streak", 0) if streak_doc else 0,
+        "topic_progress": topic_progress
     }
 
 @router.get("/children/{child_id}/classroom")
