@@ -1265,7 +1265,10 @@ export default function ParentDashboard({ user }) {
                         </button>
                       </div>
                       <div className="space-y-1 max-h-48 overflow-y-auto">
-                        {childInsights.transactions.recent.slice(0, 7).map((tx, i) => (
+                        {[...childInsights.transactions.recent]
+                          .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+                          .slice(0, 7)
+                          .map((tx, i) => (
                           <div key={i} className="flex items-center justify-between text-xs bg-white rounded p-2">
                             <div className="flex flex-col">
                               <span className="text-[#3D5A80] truncate max-w-[180px]">{tx.description || tx.transaction_type}</span>
