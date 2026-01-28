@@ -703,6 +703,17 @@ async def validate_chore_request(request_id: str, request: Request):
             }}
         )
         
+        # Mark the chore as completed in new_quests
+        await db.new_quests.update_one(
+            {"$or": [{"chore_id": chore_id}, {"quest_id": chore_id}]},
+            {"$set": {
+                "status": "completed",
+                "is_active": False,
+                "completed_at": datetime.now(timezone.utc).isoformat(),
+                "completed_by": child_id
+            }}
+        )
+        
         # Award coins to child
         await db.wallet_accounts.update_one(
             {"user_id": child_id, "account_type": "spending"},
@@ -719,6 +730,24 @@ async def validate_chore_request(request_id: str, request: Request):
             "description": f"Approved: {chore.get('title', 'Chore')}",
             "created_at": datetime.now(timezone.utc).isoformat()
         })
+        
+        # Handle recurring chores - schedule next instance
+        if chore.get("is_recurring") and chore.get("frequency"):
+            frequency = chore.get("frequency", "weekly")
+            days_offset = {"daily": 1, "weekly": 7, "monthly": 30}.get(frequency, 7)
+            next_date = datetime.now(timezone.utc) + timedelta(days=days_offset)
+            
+            new_chore_id = f"chore_{uuid.uuid4().hex[:12]}"
+            await db.new_quests.insert_one({
+                **{k: v for k, v in chore.items() if k != "_id"},
+                "chore_id": new_chore_id,
+                "quest_id": new_chore_id,
+                "status": "active",
+                "is_active": True,
+                "scheduled_date": next_date.isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "parent_chore_id": chore_id  # Link to original
+            })
         
         # Notify child
         await db.notifications.insert_one({
