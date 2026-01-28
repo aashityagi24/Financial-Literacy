@@ -471,7 +471,7 @@ async def get_parent_savings_goals(request: Request):
         {"parent_id": parent["user_id"], "status": "active"},
         {"_id": 0, "child_id": 1}
     ).to_list(20)
-    child_ids = [l["child_id"] for l in links]
+    child_ids = [link["child_id"] for link in links]
     
     # Get all goals for parent's children (both parent-created and child-created)
     goals = await db.savings_goals.find(
