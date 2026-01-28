@@ -22,8 +22,8 @@ class TransactionCreate(BaseModel):
     from_account: str = None
     to_account: str = None
     amount: float
-    transaction_type: str
-    description: str
+    transaction_type: str = "transfer"
+    description: str = "Account transfer"
 
 @router.get("/wallet")
 async def get_wallet(request: Request):
