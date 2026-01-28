@@ -92,32 +92,45 @@ async def request_chore_completion(chore_id: str, request: Request):
     if user.get("role") != "child":
         raise HTTPException(status_code=403, detail="Only children can request completion")
     
+    # Try both chore_id and quest_id
     chore = await db.new_quests.find_one({
-        "chore_id": chore_id,
-        "child_id": user["user_id"]
+        "$or": [
+            {"chore_id": chore_id, "assigned_to": user["user_id"]},
+            {"chore_id": chore_id, "child_id": user["user_id"]},
+            {"quest_id": chore_id, "creator_type": "parent"}
+        ]
     })
     
     if not chore:
         raise HTTPException(status_code=404, detail="Chore not found")
     
-    request_doc = {
-        "request_id": f"req_{uuid.uuid4().hex[:12]}",
-        "chore_id": chore_id,
-        "child_id": user["user_id"],
-        "child_name": user.get("name", "Child"),
-        "parent_id": chore["creator_id"],
-        "title": chore["title"],
-        "reward_amount": chore["reward_amount"],
-        "status": "pending",
-        "requested_at": datetime.now(timezone.utc).isoformat()
-    }
-    await db.chore_completion_requests.insert_one(request_doc)
+    # Check if already submitted
+    existing = await db.quest_completions.find_one({
+        "quest_id": chore_id,
+        "user_id": user["user_id"],
+        "status": "pending_approval"
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Already submitted for approval")
     
+    # Create completion record with pending_approval status
+    completion_id = f"comp_{uuid.uuid4().hex[:12]}"
+    await db.quest_completions.insert_one({
+        "completion_id": completion_id,
+        "quest_id": chore_id,
+        "user_id": user["user_id"],
+        "status": "pending_approval",
+        "submitted_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Send notification to parent
     await db.notifications.insert_one({
         "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
-        "user_id": chore["creator_id"],
-        "type": "chore_request",
-        "message": f"{user.get('name', 'Your child')} completed: {chore['title']}",
+        "user_id": chore.get("creator_id"),
+        "type": "chore_validation",
+        "message": f"✓ {user.get('name', 'Your child')} completed: {chore.get('title')}",
+        "link": "/parent-dashboard",
         "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     })
