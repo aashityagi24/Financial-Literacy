@@ -831,10 +831,6 @@ export default function ParentDashboard({ user }) {
                                   <span className="bg-[#3D5A80]/20 text-[#1D3557] text-xs px-2 py-1 rounded-full font-bold">
                                     📋 Active
                                   </span>
-                                )
-                                  <span className="bg-[#06D6A0]/20 text-[#06D6A0] text-xs px-2 py-1 rounded-full font-bold">
-                                    ✓ Completed
-                                  </span>
                                 )}
                               </div>
                               <p className="text-sm text-[#3D5A80]">{chore.child_name} • +₹{chore.reward_amount} • {chore.frequency}</p>
