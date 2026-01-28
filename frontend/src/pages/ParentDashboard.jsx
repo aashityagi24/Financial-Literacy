@@ -7,7 +7,8 @@ import {
   Users, ChevronLeft, Plus, Gift, Target, Wallet, 
   Check, Clock, X, ChevronRight, Eye, Calendar, Trash2,
   School, Megaphone, Store, LogOut, User, TrendingUp, TrendingDown,
-  Sprout, LineChart, BookOpen, Award, CheckCircle, XCircle, History
+  Sprout, LineChart, BookOpen, Award, CheckCircle, XCircle, History,
+  Filter, ArrowLeft, ArrowRight
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
