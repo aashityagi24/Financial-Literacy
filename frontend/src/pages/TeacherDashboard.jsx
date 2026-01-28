@@ -1384,7 +1384,7 @@ export default function TeacherDashboard({ user }) {
                       >
                         <td className="px-2 py-2 flex items-center gap-1">
                           <img 
-                            src={student.avatar || `https://api.dicebear.com/7.x/thumbs/svg?seed=${student.name}`}
+                            src={student.avatar || getDefaultAvatar('child', student.name)}
                             alt=""
                             className="w-5 h-5 rounded-full"
                           />
