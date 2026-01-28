@@ -9,7 +9,7 @@ import {
   BookOpen, LogOut, User, Target, Calendar, Edit2,
   Wallet, TrendingUp, TrendingDown, Sprout, LineChart,
   Award, Flame, ArrowUpDown, CheckCircle, XCircle, Clock,
-  BarChart3
+  BarChart3, Image as ImageIcon, FileText
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
