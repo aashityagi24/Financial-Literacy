@@ -47,6 +47,12 @@ export default function ParentDashboard({ user }) {
   const [childInsights, setChildInsights] = useState(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
   
+  // Full transactions view state
+  const [showAllTransactions, setShowAllTransactions] = useState(false);
+  const [transactionsPage, setTransactionsPage] = useState(1);
+  const [transactionsDateFilter, setTransactionsDateFilter] = useState('all'); // 'all', 'today', 'week', 'month'
+  const TRANSACTIONS_PER_PAGE = 15;
+  
   // Dialogs
   const [showLinkChild, setShowLinkChild] = useState(false);
   const [showCreateChore, setShowCreateChore] = useState(false);
