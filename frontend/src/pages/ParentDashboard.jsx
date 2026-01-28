@@ -1065,7 +1065,7 @@ export default function ParentDashboard({ user }) {
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-[#1D3557] flex items-center gap-3" style={{ fontFamily: 'Fredoka' }}>
                 <img 
-                  src={showChildInsights?.picture || `https://api.dicebear.com/7.x/thumbs/svg?seed=${showChildInsights?.name}`} 
+                  src={showChildInsights?.picture || getDefaultAvatar('child', showChildInsights?.name)} 
                   alt="" 
                   className="w-10 h-10 rounded-full border-2 border-[#1D3557]"
                 />
