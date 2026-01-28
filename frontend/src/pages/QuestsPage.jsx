@@ -483,28 +483,33 @@ export default function QuestsPage({ user }) {
             {quests.map((quest) => {
               const daysLeft = getDaysUntilDue(quest.due_date);
               const isChore = quest.creator_type === 'parent';
-              // Quest is completed if user_status is 'completed', or is_completed, or has_earned
-              const isCompleted = quest.user_status === 'completed' || quest.is_completed || quest.has_earned;
-              const hasEarned = quest.has_earned || quest.user_status === 'completed';
+              // Quest is completed if user_status is 'completed' or 'approved', or is_completed, or has_earned
+              const isCompleted = quest.user_status === 'completed' || quest.user_status === 'approved' || quest.is_completed || quest.has_earned || quest.status === 'completed';
+              const hasEarned = quest.has_earned || quest.user_status === 'completed' || quest.user_status === 'approved';
+              const isPendingApproval = quest.user_status === 'pending_approval';
               
               return (
                 <div 
                   key={quest.quest_id || quest.chore_id}
-                  onClick={() => !isCompleted && openQuest(quest)}
+                  onClick={() => !isCompleted && !isPendingApproval && openQuest(quest)}
                   className={`card-playful p-4 transition-all ${
                     isCompleted 
                       ? 'opacity-50 grayscale cursor-default bg-gray-100' 
-                      : 'cursor-pointer hover:shadow-lg'
+                      : isPendingApproval
+                        ? 'opacity-70 cursor-default bg-[#FFD23F]/20 border-2 border-[#FFD23F]'
+                        : 'cursor-pointer hover:shadow-lg'
                   }`}
                   data-testid={`quest-${quest.quest_id || quest.chore_id}`}
                 >
                   <div className="flex items-start gap-4">
                     {/* Quest Image or Icon */}
                     <div className={`w-16 h-16 rounded-xl border-3 border-[#1D3557] flex items-center justify-center flex-shrink-0 ${
-                      isCompleted ? 'bg-gray-300' : 'bg-[#FFD23F]'
+                      isCompleted ? 'bg-gray-300' : isPendingApproval ? 'bg-[#FFD23F]' : 'bg-[#FFD23F]'
                     }`}>
                       {isCompleted ? (
                         <CheckCircle className="w-8 h-8 text-[#06D6A0]" />
+                      ) : isPendingApproval ? (
+                        <Clock className="w-8 h-8 text-[#1D3557]" />
                       ) : quest.image_url ? (
                         <img src={getAssetUrl(quest.image_url)} alt="" className="w-full h-full object-cover rounded-lg" />
                       ) : (
