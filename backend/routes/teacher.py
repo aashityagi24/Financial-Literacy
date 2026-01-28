@@ -754,13 +754,31 @@ async def update_teacher_quest(quest_id: str, request: Request):
     teacher = await require_teacher(request)
     body = await request.json()
     
-    fields = ["title", "description", "reward_coins", "deadline", "is_active"]
+    # Allow all quest fields to be updated
+    fields = ["title", "description", "reward_coins", "deadline", "is_active", 
+              "due_date", "questions", "image_url", "pdf_url", "reward_amount", 
+              "total_points", "target_grades"]
     update = {k: v for k, v in body.items() if k in fields}
     
-    await db.new_quests.update_one(
+    # Recalculate total_points if questions are updated
+    if "questions" in update:
+        questions = update["questions"]
+        if questions:
+            update["total_points"] = sum(q.get("points", 0) for q in questions)
+        elif "reward_amount" in update:
+            update["total_points"] = update["reward_amount"]
+    
+    result = await db.new_quests.update_one(
         {"quest_id": quest_id, "creator_id": teacher["user_id"]},
         {"$set": update}
     )
+    
+    if result.modified_count == 0:
+        # Check if quest exists but belongs to different teacher
+        quest = await db.new_quests.find_one({"quest_id": quest_id})
+        if not quest:
+            raise HTTPException(status_code=404, detail="Quest not found")
+    
     return {"message": "Quest updated"}
 
 @router.delete("/quests/{quest_id}")
