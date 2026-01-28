@@ -920,11 +920,41 @@ async def get_chores(request: Request):
     db = get_db()
     parent = await require_parent(request)
     
-    chores = await db.parent_chores.find(
-        {"parent_id": parent["user_id"]},
+    # Get chores from new_quests (primary)
+    chores = await db.new_quests.find(
+        {"creator_type": "parent", "creator_id": parent["user_id"]},
         {"_id": 0}
     ).sort("created_at", -1).to_list(200)
-    return chores
+    
+    # Check completion status for each chore
+    enriched_chores = []
+    for chore in chores:
+        chore_id = chore.get("chore_id") or chore.get("quest_id")
+        
+        # Get child name
+        child = await db.users.find_one(
+            {"user_id": chore.get("child_id") or chore.get("assigned_to")},
+            {"_id": 0, "name": 1}
+        )
+        
+        # Check completion status
+        completion = await db.quest_completions.find_one(
+            {"quest_id": chore_id},
+            {"_id": 0, "status": 1}
+        )
+        
+        enriched_chore = {
+            **chore,
+            "chore_id": chore_id,
+            "child_name": child.get("name") if child else chore.get("child_name", "Unknown"),
+            "reward_amount": chore.get("reward_amount", chore.get("reward_coins", chore.get("total_points", 0))),
+            "frequency": chore.get("frequency", "once"),
+            "completion_status": completion.get("status") if completion else None,
+            "status": completion.get("status") if completion else chore.get("status", "active")
+        }
+        enriched_chores.append(enriched_chore)
+    
+    return enriched_chores
 
 @router.post("/chores/{chore_id}/approve")
 async def approve_chore(chore_id: str, request: Request):
