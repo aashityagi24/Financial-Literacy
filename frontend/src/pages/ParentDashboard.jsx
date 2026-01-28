@@ -939,6 +939,64 @@ export default function ParentDashboard({ user }) {
                   )}
                 </div>
               )}
+              
+              {/* History Tab - Completed Chores */}
+              {activeRPTab === 'history' && (
+                <div className="space-y-3">
+                  <h3 className="text-lg font-bold text-[#1D3557] mb-3">Completed Chores</h3>
+                  {chores.filter(c => c.status === 'approved' || c.status === 'completed').length === 0 ? (
+                    <p className="text-center text-[#3D5A80] py-4">No completed chores yet.</p>
+                  ) : (
+                    chores.filter(c => c.status === 'approved' || c.status === 'completed').map((chore) => (
+                      <div key={chore.chore_id} className="card-playful p-4 opacity-80 bg-[#06D6A0]/10 border-l-4 border-[#06D6A0]">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">✅</span>
+                              <h4 className="font-bold text-[#1D3557] line-through">{chore.title}</h4>
+                            </div>
+                            <p className="text-sm text-[#3D5A80]">
+                              {chore.child_name} • <span className="text-[#06D6A0] font-bold">+₹{chore.reward_amount}</span> earned
+                            </p>
+                            <p className="text-xs text-[#98C1D9] mt-1">Completed • {chore.frequency}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  
+                  <h3 className="text-lg font-bold text-[#1D3557] mb-3 mt-6">Reward & Penalty History</h3>
+                  {rewardPenalties.length === 0 ? (
+                    <p className="text-center text-[#3D5A80] py-4">No rewards or penalties applied yet.</p>
+                  ) : (
+                    rewardPenalties.map((record) => (
+                      <div 
+                        key={record.record_id} 
+                        className={`card-playful p-4 opacity-80 border-l-4 ${
+                          record.category === 'reward' ? 'border-[#06D6A0] bg-[#06D6A0]/10' : 'border-[#EE6C4D] bg-[#EE6C4D]/10'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{record.category === 'reward' ? '🌟' : '⚠️'}</span>
+                              <h4 className="font-bold text-[#1D3557]">{record.title}</h4>
+                            </div>
+                            <p className="text-sm text-[#3D5A80]">
+                              {dashboard?.children?.find(c => c.user_id === record.child_id)?.name || 'Child'} • 
+                              <span className={record.category === 'reward' ? 'text-[#06D6A0] font-bold' : 'text-[#EE6C4D] font-bold'}>
+                                {record.category === 'reward' ? '+' : '-'}₹{Math.abs(record.amount)}
+                              </span>
+                            </p>
+                            {record.description && <p className="text-xs text-[#3D5A80] mt-1">{record.description}</p>}
+                            <p className="text-xs text-[#98C1D9] mt-1">{new Date(record.created_at).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
             
             {/* Allowances */}
