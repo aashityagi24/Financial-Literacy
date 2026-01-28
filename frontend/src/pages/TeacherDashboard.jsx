@@ -1038,7 +1038,7 @@ export default function TeacherDashboard({ user }) {
                       <div key={student.user_id} className="card-playful p-4">
                         <div className="flex items-center gap-4">
                           <img 
-                            src={student.picture || 'https://via.placeholder.com/40'} 
+                            src={student.picture || getDefaultAvatar('child', student.name)} 
                             alt={student.name}
                             className="w-12 h-12 rounded-full border-2 border-[#1D3557]"
                           />
