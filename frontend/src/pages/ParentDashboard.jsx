@@ -769,7 +769,7 @@ export default function ParentDashboard({ user }) {
                       : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
                   }`}
                 >
-                  📋 Chores ({chores.length})
+                  📋 Active Chores ({chores.filter(c => c.status !== 'approved' && c.status !== 'completed').length})
                 </button>
                 <button
                   onClick={() => setActiveRPTab('rewards')}
@@ -791,13 +791,24 @@ export default function ParentDashboard({ user }) {
                 >
                   ⚠️ Penalties ({rewardPenalties.filter(r => r.category === 'penalty').length})
                 </button>
+                <button
+                  onClick={() => setActiveRPTab('history')}
+                  className={`px-4 py-2 rounded-xl font-bold transition-colors ${
+                    activeRPTab === 'history' 
+                      ? 'bg-[#9B5DE5] text-white' 
+                      : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
+                  }`}
+                >
+                  <History className="w-4 h-4 inline mr-1" />
+                  History ({chores.filter(c => c.status === 'approved' || c.status === 'completed').length})
+                </button>
               </div>
               
-              {/* Chores Tab */}
+              {/* Chores Tab - Active Only */}
               {activeRPTab === 'chores' && (
                 <div className="space-y-3">
-                  {chores.length === 0 ? (
-                    <p className="text-center text-[#3D5A80] py-4">No chores created yet. Create one using the button above!</p>
+                  {chores.filter(c => c.status !== 'approved' && c.status !== 'completed').length === 0 ? (
+                    <p className="text-center text-[#3D5A80] py-4">No active chores. Create one using the button above!</p>
                   ) : (
                     chores.map((chore) => {
                       const pendingRequest = choreRequests.find(r => r.chore_id === chore.chore_id && r.status === 'pending');
