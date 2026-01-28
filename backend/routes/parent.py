@@ -614,22 +614,23 @@ async def get_chore_requests(request: Request):
     db = get_db()
     parent = await require_parent(request)
     
-    # Get all chores created by this parent (from both collections)
+    # Get all chores created by this parent (from new_quests with creator_type: parent)
     parent_chores = await db.new_quests.find(
         {"creator_type": "parent", "creator_id": parent["user_id"]},
         {"_id": 0}
     ).to_list(200)
     
-    legacy_chores = await db.parent_chores.find(
-        {"parent_id": parent["user_id"]},
-        {"_id": 0}
-    ).to_list(200)
-    
-    all_chores = parent_chores + legacy_chores
-    
     pending_requests = []
-    for chore in all_chores:
+    seen_chore_ids = set()
+    
+    for chore in parent_chores:
         chore_id = chore.get("chore_id") or chore.get("quest_id")
+        
+        # Skip if we've already processed this chore
+        if chore_id in seen_chore_ids:
+            continue
+        seen_chore_ids.add(chore_id)
+        
         # Get completion with pending_approval status
         completion = await db.quest_completions.find_one(
             {"quest_id": chore_id, "status": "pending_approval"},
