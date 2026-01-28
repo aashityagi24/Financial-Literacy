@@ -957,13 +957,25 @@ export default function ParentDashboard({ user }) {
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <h4 className="font-bold text-[#1D3557]">{goal.title}</h4>
-                          <p className="text-sm text-[#3D5A80]">{goal.child_name}</p>
+                          <p className="text-sm text-[#3D5A80]">
+                            {goal.child_name} • Created by {goal.created_by || 'Parent'}
+                          </p>
+                          {goal.deadline && (
+                            <p className="text-xs text-[#3D5A80]">
+                              📅 Target: {new Date(goal.deadline).toLocaleDateString()}
+                            </p>
+                          )}
                         </div>
-                        <span className={`font-bold ${goal.completed ? 'text-[#06D6A0]' : 'text-[#1D3557]'}`}>
-                          ₹{goal.current_amount}/₹{goal.target_amount}
-                        </span>
+                        <div className="text-right">
+                          <span className={`font-bold ${goal.completed ? 'text-[#06D6A0]' : 'text-[#1D3557]'}`}>
+                            ₹{goal.current_amount || 0}/₹{goal.target_amount}
+                          </span>
+                          {!goal.completed && goal.amount_to_go > 0 && (
+                            <p className="text-xs text-[#3D5A80]">₹{goal.amount_to_go} to go</p>
+                          )}
+                        </div>
                       </div>
-                      <Progress value={(goal.current_amount / goal.target_amount) * 100} className="h-2" />
+                      <Progress value={goal.progress_percent || (goal.current_amount / goal.target_amount) * 100} className="h-2" />
                       {goal.completed && <p className="text-xs text-[#06D6A0] mt-1">✓ Goal reached!</p>}
                     </div>
                   ))}
