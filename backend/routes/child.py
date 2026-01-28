@@ -857,9 +857,11 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
     
     if sort == "reward":
         active_quests.sort(key=lambda x: x.get("total_points", 0), reverse=True)
-        quests.sort(key=lambda x: x.get("due_date") or "9999-99-99")
+    else:
+        active_quests.sort(key=lambda x: x.get("due_date") or "9999-99-99")
     
-    return quests
+    # Return active quests first, then completed at the end
+    return active_quests + completed_quests
 
 @router.post("/quests-new/{quest_id}/submit")
 async def submit_quest(quest_id: str, request: Request):
