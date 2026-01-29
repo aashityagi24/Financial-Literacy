@@ -1,0 +1,110 @@
+{
+  "summary": "Verified Available vs Allocated balance feature for Savings and Investing jars. All features working correctly: Dashboard shows 'Available' label with available_balance for Savings/Investing jars, Wallet page shows full breakdown (Available vs In Goals for Savings, Available vs Invested for Investing), Spending/Gifting jars show regular balance without allocation breakdown.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ Backend: /api/wallet returns 200 with correct data structure",
+    "✅ Backend: Savings account has available_balance, allocated_balance, total_balance fields",
+    "✅ Backend: Investing account has available_balance, allocated_balance, total_balance fields",
+    "✅ Backend: Spending account has allocated_balance = 0 (correct)",
+    "✅ Backend: Gifting account has allocated_balance = 0 (correct)",
+    "✅ Backend: savings_allocated = sum of savings_goals.current_amount (₹100)",
+    "✅ Backend: investing_allocated = stock holdings + garden plots value (₹0)",
+    "✅ Backend: Savings available_balance = max(0, balance - allocated) = ₹0",
+    "✅ Backend: total_balance includes all account totals (₹99)",
+    "✅ Frontend Dashboard: Savings jar shows ₹0 with 'Available' label",
+    "✅ Frontend Dashboard: Investing jar shows ₹0 with 'Available' label",
+    "✅ Frontend Dashboard: Spending jar shows ₹49 without 'Available' label",
+    "✅ Frontend Dashboard: Gifting jar shows ₹0 without 'Available' label",
+    "✅ Frontend Wallet: Savings jar shows 'Available: ₹0' and 'In Goals: ₹100'",
+    "✅ Frontend Wallet: Investing jar shows 'Available: ₹0' and 'Invested: ₹0'",
+    "✅ Frontend Wallet: Spending jar shows regular balance (₹49) without breakdown",
+    "✅ Frontend Wallet: Gifting jar shows regular balance (₹0) without breakdown"
+  ],
+
+  "api_response_verification": {
+    "endpoint": "/api/wallet",
+    "response_structure": {
+      "accounts": [
+        {
+          "account_type": "spending",
+          "balance": 49.0,
+          "available_balance": 49.0,
+          "allocated_balance": 0,
+          "total_balance": 49.0
+        },
+        {
+          "account_type": "savings",
+          "balance": 50.0,
+          "available_balance": 0,
+          "allocated_balance": 100,
+          "total_balance": 50.0
+        },
+        {
+          "account_type": "investing",
+          "balance": 0.0,
+          "available_balance": 0.0,
+          "allocated_balance": 0,
+          "total_balance": 0.0
+        },
+        {
+          "account_type": "gifting",
+          "balance": 0.0,
+          "available_balance": 0.0,
+          "allocated_balance": 0,
+          "total_balance": 0.0
+        }
+      ],
+      "total_balance": 99.0,
+      "savings_allocated": 100,
+      "investing_allocated": 0
+    }
+  },
+
+  "test_report_links": [
+    "/app/backend/tests/test_wallet_available_allocated.py",
+    "/app/test_reports/pytest/wallet_available_allocated_results.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "Backend wallet.py correctly calculates savings_allocated from savings_goals.current_amount",
+    "Backend wallet.py correctly calculates investing_allocated from stock holdings + garden plots",
+    "Dashboard.jsx lines 357-365 correctly shows available_balance for savings/investing with 'Available' label",
+    "WalletPage.jsx lines 323-342 correctly shows Available vs In Goals/Invested breakdown",
+    "Spending and Gifting jars correctly show regular balance without allocation breakdown"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_wallet_available_allocated.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (10/10 tests passed)",
+    "frontend": "100% (All UI tests passed)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_sess_607235502edf45a6b4f7f0191a9fd1c0",
+    "test_child_user_id": "user_cd3928036bf4",
+    "test_child_name": "Aashi M"
+  },
+
+  "seed_data_creation": "Used existing test data - test child has ₹100 allocated to savings goals but only ₹50 in savings jar balance, so available shows ₹0 (expected behavior)",
+
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+
+  "context_for_next_testing_agent": "Available vs Allocated balance feature verified working. Test child 'Aashi M' (user_cd3928036bf4) has: Savings jar with ₹50 balance, ₹100 in goals (available = ₹0), Investing jar with ₹0 balance and ₹0 invested. Dashboard shows 'Available' label under Savings/Investing jars. Wallet page shows full breakdown with 'In Goals' for Savings and 'Invested' for Investing."
+}
