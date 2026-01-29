@@ -293,14 +293,14 @@ export default function WalletPage({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
-        {/* Total Balance */}
+        {/* Total Available Balance - Only spendable money */}
         <div className="card-playful p-6 mb-6 bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] animate-bounce-in">
           <div className="text-center">
-            <p className="text-[#1D3557] font-medium mb-1">Total Balance</p>
+            <p className="text-[#1D3557] font-medium mb-1">Money You Can Spend</p>
             <p className="text-5xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }} data-testid="total-balance">
-              ₹{totalBalance.toFixed(0)}
+              ₹{totalAvailable.toFixed(0)}
             </p>
-            <p className="text-sm text-[#1D3557]/70 mt-2">Across all your money jars</p>
+            <p className="text-sm text-[#1D3557]/70 mt-2">Available across all your jars</p>
           </div>
         </div>
         
