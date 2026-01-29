@@ -204,9 +204,10 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
                 >
                   <div className="flex items-center gap-2">
                     <img 
-                      src={classmate.picture || 'https://via.placeholder.com/32'} 
+                      src={classmate.picture || getDefaultAvatar('child', classmate.name)} 
                       alt={classmate.name}
                       className="w-8 h-8 rounded-full border border-[#1D3557]"
+                      onError={(e) => { e.target.src = getDefaultAvatar('child', classmate.name); }}
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-[#1D3557] text-sm truncate">{classmate.name}</p>
