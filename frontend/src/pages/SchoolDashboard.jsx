@@ -489,6 +489,8 @@ export default function SchoolDashboard() {
                   <tr>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Name</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Email</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Class</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Grade</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
                   </tr>
                 </thead>
@@ -507,6 +509,8 @@ export default function SchoolDashboard() {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-gray-600">{teacher.email}</td>
+                      <td className="py-3 px-4 text-gray-600">{teacher.classroom_name || '-'}</td>
+                      <td className="py-3 px-4 text-gray-600">{teacher.classroom_grade || '-'}</td>
                       <td className="py-3 px-4">
                         <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
                           Active
