@@ -46,6 +46,7 @@ export default function TeacherDashboard({ user }) {
   const [teacherQuests, setTeacherQuests] = useState([]);
   const [activeTab, setActiveTab] = useState('classroom');
   const [editingQuest, setEditingQuest] = useState(null);
+  const [studentSearch, setStudentSearch] = useState('');
   
   // Forms
   const [showCreateClass, setShowCreateClass] = useState(false);
