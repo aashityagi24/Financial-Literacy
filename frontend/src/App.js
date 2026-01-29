@@ -131,8 +131,13 @@ export const ProtectedRoute = ({ children }) => {
     return null;
   }
   
-  // Clone children with user prop
-  return children({ user, setUser });
+  // Clone children with user prop and include OnboardingTour for child/parent
+  return (
+    <>
+      <OnboardingTour user={user} onComplete={() => setUser({...user, has_completed_onboarding: true})} />
+      {children({ user, setUser })}
+    </>
+  );
 };
 
 // App Router with session_id detection
