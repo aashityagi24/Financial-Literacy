@@ -18,10 +18,10 @@ def get_db():
 router = APIRouter(prefix="/stocks", tags=["stocks"])
 
 def is_market_open():
-    """Check if market is open (9 AM - 4 PM IST)"""
+    """Check if market is open (7 AM - 5 PM IST)"""
     ist = pytz.timezone('Asia/Kolkata')
     ist_now = datetime.now(ist)
-    return 9 <= ist_now.hour < 16
+    return 7 <= ist_now.hour < 17
 
 @router.get("/market-status")
 async def get_market_status(request: Request):
@@ -36,8 +36,8 @@ async def get_market_status(request: Request):
     return {
         "is_open": is_market_open(),
         "current_time": ist_now.strftime("%H:%M"),
-        "open_time": "09:00",
-        "close_time": "16:00",
+        "open_time": "07:00",
+        "close_time": "17:00",
         "timezone": "IST"
     }
 
