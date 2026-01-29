@@ -102,11 +102,12 @@ async def get_wallet(request: Request):
                 "total_balance": balance
             })
     
-    total_balance = sum(acc.get("total_balance", acc.get("balance", 0)) for acc in enriched_accounts)
+    # Total available = sum of all available_balance (money that can actually be spent/used)
+    total_available = sum(acc.get("available_balance", 0) for acc in enriched_accounts)
     
     return {
         "accounts": enriched_accounts,
-        "total_balance": total_balance,
+        "total_available": total_available,
         "savings_allocated": savings_allocated,
         "investing_allocated": investing_allocated
     }
