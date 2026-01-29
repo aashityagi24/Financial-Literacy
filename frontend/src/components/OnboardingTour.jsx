@@ -109,17 +109,16 @@ const parentSteps = [
 
 export default function OnboardingTour({ user, onComplete }) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
+  
+  // Initialize isOpen based on user - show for child/parent who haven't completed onboarding
+  const shouldShowOnboarding = user && 
+    (user.role === 'child' || user.role === 'parent') && 
+    !user.has_completed_onboarding;
+  
+  const [isOpen, setIsOpen] = useState(shouldShowOnboarding);
   
   const steps = user?.role === 'parent' ? parentSteps : childSteps;
   const isLastStep = currentStep === steps.length - 1;
-  
-  useEffect(() => {
-    // Show onboarding only for child/parent who haven't completed it
-    if (user && (user.role === 'child' || user.role === 'parent') && !user.has_completed_onboarding) {
-      setIsOpen(true);
-    }
-  }, [user]);
   
   const handleNext = () => {
     if (isLastStep) {
