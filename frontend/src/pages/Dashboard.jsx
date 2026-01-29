@@ -199,7 +199,7 @@ export default function Dashboard({ user, setUser }) {
               <img 
                 src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/ul81dgc9_Friendly%20%27Money%20Matter%27%20Logo%20Design%20%281%29.png"
                 alt="CoinQuest"
-                className="h-28 w-auto object-contain -my-4"
+                className="h-36 w-auto object-contain -my-6"
               />
             </Link>
             
