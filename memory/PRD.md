@@ -59,19 +59,25 @@ A gamified financial literacy learning application for children (K-5) with disti
    - Spending & Gifting jars: Show regular balance (no allocation concept)
    - Backend calculates: savings_allocated from goals, investing_allocated from holdings
 
-3. **Parent Dashboard - Child Insights Modal Enhanced** ✅
+3. **Total Balance Logic Fixed** ✅ (BUG FIX)
+   - Changed from "Total Balance" to **"Money You Can Spend"**
+   - Now shows only sum of **available balances** across all jars
+   - Prevents children from thinking they have more money than they can actually use
+   - Example: Spending ₹49 + Savings available ₹0 + Investing available ₹0 + Gifting ₹0 = ₹49
+
+4. **Child-Friendly Font Sizes** ✅ (UX IMPROVEMENT)
+   - Increased font sizes for Savings/Investing jar details
+   - Labels: text-lg (larger), Amounts: text-2xl (extra large)
+   - Easy for children to read Available/Allocated breakdown
+
+5. **Parent Dashboard - Child Insights Modal Enhanced** ✅
    - Quick view now shows exactly **7 transactions** (was 5)
    - Added "View All" button to open full transactions modal
-   - Each transaction shows description, date, and amount
-   - Transactions sorted newest first (descending by created_at)
+   - Transactions sorted newest first
 
-4. **Full Transactions Modal (NEW)** ✅
-   - Displays up to 100 transactions with **pagination (15 per page)**
+6. **Full Transactions Modal (NEW)** ✅
+   - Pagination with **15 transactions per page**
    - **Date Filters**: All Time, Today, This Week, This Month
-   - Shows "Showing X of Y transactions" count
-   - Previous/Next navigation buttons
-   - "Page X of Y" indicator
-   - Backend enhanced to return all transactions (was limited to 20)
 
 **Session 5 - Stock Market & Notifications Complete:**
 
