@@ -381,12 +381,34 @@ async def get_classmates(request: Request):
         if not student:
             continue
         
-        # Get wallet balances
+        # Get wallet balances by type
         wallets = await db.wallet_accounts.find(
             {"user_id": student_id},
             {"_id": 0}
         ).to_list(10)
+        
+        spending_balance = 0
+        savings_balance = 0
+        investing_balance = 0
+        
+        for w in wallets:
+            acc_type = w.get("account_type")
+            balance = w.get("balance", 0)
+            if acc_type == "spending":
+                spending_balance = balance
+            elif acc_type == "savings":
+                savings_balance = balance
+            elif acc_type == "investing":
+                investing_balance = balance
+        
         total_balance = sum(w.get("balance", 0) for w in wallets)
+        
+        # Get savings goals total
+        savings_goals = await db.savings_goals.find(
+            {"$or": [{"child_id": student_id}, {"user_id": student_id}]},
+            {"_id": 0, "current_amount": 1}
+        ).to_list(50)
+        total_saved_in_goals = sum(g.get("current_amount", 0) for g in savings_goals)
         
         # Get lessons completed
         lessons = await db.user_content_progress.count_documents({
@@ -394,22 +416,35 @@ async def get_classmates(request: Request):
             "completed": True
         })
         
-        # Get badges/achievements
-        badges = await db.user_achievements.count_documents({"user_id": student_id})
+        # Get badges/achievements earned
+        badges = await db.user_achievements.find(
+            {"user_id": student_id},
+            {"_id": 0, "achievement_id": 1}
+        ).to_list(50)
+        badge_count = len(badges)
+        
+        # Get quests completed
+        quests_completed = await db.quest_completions.count_documents({
+            "user_id": student_id,
+            "status": "approved"
+        })
         
         # Get investment performance based on grade
         grade = student.get("grade", 0) or 0
-        investment_performance = 0
+        investment_value = 0
+        investment_profit = 0
         
         if 1 <= grade <= 2:
             # Garden performance
             garden_plots = await db.user_garden_plots.find(
                 {"user_id": student_id},
-                {"purchase_price": 1, "total_harvested": 1}
+                {"purchase_price": 1, "total_harvested": 1, "plant_value": 1}
             ).to_list(50)
             garden_invested = sum(p.get("purchase_price", 0) for p in garden_plots)
+            garden_current_value = sum(p.get("plant_value", 0) for p in garden_plots)
             garden_earned = sum(p.get("total_harvested", 0) for p in garden_plots)
-            investment_performance = garden_earned - garden_invested
+            investment_value = garden_current_value + investing_balance
+            investment_profit = garden_earned - garden_invested
         elif 3 <= grade <= 5:
             # Stock performance
             stock_holdings = await db.user_stock_holdings.find(
@@ -419,22 +454,28 @@ async def get_classmates(request: Request):
             portfolio_value = 0
             total_cost = 0
             for holding in stock_holdings:
-                stock = await db.stocks.find_one({"stock_id": holding.get("stock_id")})
+                stock = await db.investment_stocks.find_one({"stock_id": holding.get("stock_id")})
                 if stock:
                     portfolio_value += holding.get("shares", 0) * stock.get("current_price", 0)
                 total_cost += holding.get("total_cost", 0)
-            investment_performance = portfolio_value - total_cost
+            investment_value = portfolio_value + investing_balance
+            investment_profit = portfolio_value - total_cost
         
         classmates.append({
             "user_id": student_id,
             "name": student.get("name", "Unknown"),
+            "picture": student.get("picture"),
             "avatar": student.get("avatar"),
             "grade": grade,
             "streak_count": student.get("streak_count", 0),
-            "total_balance": round(total_balance, 2),
+            "spending_balance": round(spending_balance, 0),
+            "total_balance": round(total_balance, 0),
+            "total_saved": round(total_saved_in_goals, 0),
+            "investment_value": round(investment_value, 0),
+            "investment_profit": round(investment_profit, 0),
             "lessons_completed": lessons,
-            "badges": badges,
-            "investment_performance": round(investment_performance, 2)
+            "quests_completed": quests_completed,
+            "badges": badge_count
         })
     
     # Sort by lessons completed
