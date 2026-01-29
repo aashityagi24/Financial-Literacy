@@ -171,8 +171,10 @@ export default function StockMarketPage({ user }) {
     return categoryMatch && riskMatch;
   });
 
-  const investingBalance = wallet?.accounts?.find(a => a.account_type === 'investing')?.balance || 0;
-  const spendingBalance = wallet?.accounts?.find(a => a.account_type === 'spending')?.balance || 0;
+  const investingAccount = wallet?.accounts?.find(a => a.account_type === 'investing');
+  const spendingAccount = wallet?.accounts?.find(a => a.account_type === 'spending');
+  const investingBalance = investingAccount?.available_balance ?? investingAccount?.balance ?? 0;
+  const spendingBalance = spendingAccount?.available_balance ?? spendingAccount?.balance ?? 0;
 
   const getHolding = (stockId) => portfolio.holdings?.find(h => h.stock_id === stockId || h.stock?.stock_id === stockId);
 
