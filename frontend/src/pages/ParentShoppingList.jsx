@@ -212,7 +212,12 @@ export default function ParentShoppingList({ user }) {
               {children.map((child) => (
                 <SelectItem key={child.user_id} value={child.user_id}>
                   <div className="flex items-center gap-2">
-                    <img src={child.picture || 'https://via.placeholder.com/24'} alt="" className="w-6 h-6 rounded-full" />
+                    <img 
+                      src={child.picture || getDefaultAvatar('child', child.name)} 
+                      alt="" 
+                      className="w-6 h-6 rounded-full"
+                      onError={(e) => { e.target.src = getDefaultAvatar('child', child.name); }}
+                    />
                     {child.name}
                   </div>
                 </SelectItem>
