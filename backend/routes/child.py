@@ -396,8 +396,6 @@ async def get_classmates(request: Request):
             balance = w.get("balance", 0)
             if acc_type == "spending":
                 spending_balance = balance
-            elif acc_type == "savings":
-                savings_balance = balance
             elif acc_type == "investing":
                 investing_balance = balance
         
