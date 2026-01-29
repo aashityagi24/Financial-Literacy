@@ -253,9 +253,9 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
                   </div>
                 </div>
               ))}
-              {classmates.length > 5 && (
+              {filteredClassmates.length > 5 && (
                 <Link to="/classmates" className="text-xs text-center text-[#3D5A80] hover:text-[#1D3557] block">
-                  +{classmates.length - 5} more classmates →
+                  +{filteredClassmates.length - 5} more classmates →
                 </Link>
               )}
             </div>
