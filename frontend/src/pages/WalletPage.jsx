@@ -113,7 +113,7 @@ export default function WalletPage({ user }) {
     try {
       const [walletRes, transRes] = await Promise.all([
         axios.get(`${API}/wallet`),
-        axios.get(`${API}/wallet/transactions`)
+        axios.get(`${API}/wallet/transactions?limit=100`) // Get more for pagination
       ]);
       setWallet(walletRes.data);
       setTransactions(transRes.data);
