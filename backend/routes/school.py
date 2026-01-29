@@ -130,6 +130,16 @@ async def get_school_dashboard(request: Request):
         {"_id": 0}
     ).to_list(500)
     
+    # Enrich teachers with their classroom info
+    for teacher in teachers:
+        teacher_classrooms = [c for c in classrooms if c.get("teacher_id") == teacher["user_id"]]
+        if teacher_classrooms:
+            teacher["classroom_name"] = teacher_classrooms[0].get("name", "-")
+            teacher["classroom_grade"] = teacher_classrooms[0].get("grade", "-")
+        else:
+            teacher["classroom_name"] = "-"
+            teacher["classroom_grade"] = "-"
+    
     for student in students:
         for classroom in classrooms:
             classroom_students = await db.classroom_students.find(
