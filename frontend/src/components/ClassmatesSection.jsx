@@ -197,12 +197,21 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
             </div>
           ) : (
             <div className="space-y-2 flex-1 overflow-y-auto">
-              {classmates.slice(0, 5).map((classmate) => (
+              {classmates.slice(0, 5).map((classmate, index) => (
                 <div 
                   key={classmate.user_id}
                   className="bg-[#E0FBFC] rounded-lg p-2 border border-[#1D3557]/20"
                 >
                   <div className="flex items-center gap-2">
+                    {/* Rank badge */}
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                      index === 0 ? 'bg-[#FFD23F] text-[#1D3557]' :
+                      index === 1 ? 'bg-gray-300 text-gray-700' :
+                      index === 2 ? 'bg-[#CD7F32] text-white' :
+                      'bg-gray-200 text-gray-600'
+                    }`}>
+                      {index + 1}
+                    </div>
                     <img 
                       src={classmate.picture || getDefaultAvatar('child', classmate.name)} 
                       alt={classmate.name}
@@ -211,9 +220,11 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-[#1D3557] text-sm truncate">{classmate.name}</p>
-                      <div className="flex gap-2 text-xs text-[#3D5A80]">
-                        <span>₹{classmate.total_balance?.toFixed(0)}</span>
-                        <span>📚{classmate.lessons_completed}</span>
+                      <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-[#3D5A80]">
+                        <span title="Streak">🔥{classmate.streak_count || 0}</span>
+                        <span title="Lessons">📚{classmate.lessons_completed || 0}</span>
+                        <span title="Saved">💰₹{classmate.total_saved || 0}</span>
+                        {classmate.badges > 0 && <span title="Badges">🏆{classmate.badges}</span>}
                       </div>
                     </div>
                     <div className="flex gap-1">
