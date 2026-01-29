@@ -354,61 +354,174 @@ export default function WalletPage({ user }) {
         
         {/* Transaction History */}
         <div className="card-playful p-6 animate-bounce-in stagger-3">
-          <div className="flex items-center gap-2 mb-4">
-            <History className="w-5 h-5 text-[#3D5A80]" />
-            <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Recent Activity</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <History className="w-5 h-5 text-[#3D5A80]" />
+              <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Recent Activity</h2>
+            </div>
+            
+            {/* Date Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-[#3D5A80]" />
+              <div className="flex gap-1">
+                {[
+                  { value: 'all', label: 'All' },
+                  { value: 'today', label: 'Today' },
+                  { value: 'week', label: 'Week' },
+                  { value: 'month', label: 'Month' }
+                ].map((f) => (
+                  <button
+                    key={f.value}
+                    onClick={() => {
+                      setDateFilter(f.value);
+                      setCurrentPage(1);
+                    }}
+                    className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+                      dateFilter === f.value
+                        ? 'bg-[#3D5A80] text-white'
+                        : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
+                    }`}
+                    data-testid={`wallet-filter-${f.value}`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           
           {transactions.length === 0 ? (
             <p className="text-center text-[#3D5A80] py-4">No transactions yet. Complete quests to start earning!</p>
           ) : (
-            <div className="space-y-3" data-testid="transactions-list">
-              {transactions.slice(0, 10).map((trans, index) => {
-                let displayAmount = Math.abs(trans.amount || 0);
-                let isPositive = false;
-                let isNeutral = false;
+            (() => {
+              // Sort transactions by date (newest first) - handle inconsistent date formats
+              const sortedTransactions = [...transactions].sort((a, b) => {
+                const dateA = new Date(a.created_at || 0);
+                const dateB = new Date(b.created_at || 0);
+                return dateB.getTime() - dateA.getTime();
+              });
+              
+              // Apply date filter
+              const filteredTransactions = sortedTransactions.filter((tx) => {
+                if (dateFilter === 'all') return true;
+                if (!tx.created_at) return false;
                 
-                // Positive transactions (earnings)
-                const positiveTypes = ['reward', 'quest_reward', 'chore_reward', 'lesson_reward', 'earning', 'deposit', 'stock_sell', 'stock_sale', 'garden_sell', 'garden_sale', 'plant_sale', 'investment_sale', 'parent_reward', 'gift_received', 'allowance'];
-                // Negative transactions (spending)
-                const negativeTypes = ['purchase', 'withdrawal', 'stock_buy', 'garden_buy', 'plant_purchase', 'investment_purchase', 'parent_penalty', 'gift_sent', 'charitable_donation'];
+                const txDate = new Date(tx.created_at);
+                const now = new Date();
                 
-                if (positiveTypes.includes(trans.transaction_type)) {
-                  isPositive = true;
-                } else if (negativeTypes.includes(trans.transaction_type)) {
-                  isPositive = false;
-                } else if (trans.transaction_type === 'transfer') {
-                  isNeutral = true;
-                } else {
-                  isPositive = trans.amount > 0 || trans.to_account !== null;
+                if (dateFilter === 'today') {
+                  return txDate.toDateString() === now.toDateString();
+                } else if (dateFilter === 'week') {
+                  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                  return txDate >= weekAgo;
+                } else if (dateFilter === 'month') {
+                  const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                  return txDate >= monthAgo;
                 }
-                
-                return (
-                  <div 
-                    key={trans.transaction_id || index}
-                    className="flex items-center justify-between bg-[#E0FBFC] rounded-xl p-3 border-2 border-[#1D3557]/20"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-white rounded-xl border-2 border-[#1D3557] flex items-center justify-center">
-                        {getTransactionIcon(trans.transaction_type)}
-                      </div>
-                      <div>
-                        <p className="font-bold text-[#1D3557]">{trans.description}</p>
-                        <p className="text-xs text-[#3D5A80]">
-                          {new Date(trans.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <span className={`font-bold ${
-                      isNeutral ? 'text-[#3D5A80]' : 
-                      isPositive ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'
-                    }`}>
-                      {isNeutral ? '↔' : isPositive ? '+' : '-'}₹{displayAmount.toFixed(0)}
-                    </span>
+                return true;
+              });
+              
+              // Pagination
+              const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
+              const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+              const paginatedTransactions = filteredTransactions.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+              
+              return (
+                <>
+                  <div className="text-xs text-[#98C1D9] mb-3">
+                    Showing {paginatedTransactions.length} of {filteredTransactions.length} transactions
                   </div>
-                );
-              })}
-            </div>
+                  
+                  {paginatedTransactions.length === 0 ? (
+                    <p className="text-center text-[#3D5A80] py-4">No transactions found for this filter.</p>
+                  ) : (
+                    <div className="space-y-3" data-testid="transactions-list">
+                      {paginatedTransactions.map((trans, index) => {
+                        let displayAmount = Math.abs(trans.amount || 0);
+                        let isPositive = false;
+                        let isNeutral = false;
+                        
+                        // Positive transactions (earnings)
+                        const positiveTypes = ['reward', 'quest_reward', 'chore_reward', 'lesson_reward', 'earning', 'deposit', 'stock_sell', 'stock_sale', 'garden_sell', 'garden_sale', 'plant_sale', 'investment_sale', 'parent_reward', 'gift_received', 'allowance'];
+                        // Negative transactions (spending)
+                        const negativeTypes = ['purchase', 'withdrawal', 'stock_buy', 'garden_buy', 'plant_purchase', 'investment_purchase', 'parent_penalty', 'gift_sent', 'charitable_donation'];
+                        
+                        if (positiveTypes.includes(trans.transaction_type)) {
+                          isPositive = true;
+                        } else if (negativeTypes.includes(trans.transaction_type)) {
+                          isPositive = false;
+                        } else if (trans.transaction_type === 'transfer') {
+                          isNeutral = true;
+                        } else {
+                          isPositive = trans.amount > 0 || trans.to_account !== null;
+                        }
+                        
+                        return (
+                          <div 
+                            key={trans.transaction_id || index}
+                            className="flex items-center justify-between bg-[#E0FBFC] rounded-xl p-3 border-2 border-[#1D3557]/20"
+                            data-testid={`transaction-item-${index}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-white rounded-xl border-2 border-[#1D3557] flex items-center justify-center">
+                                {getTransactionIcon(trans.transaction_type)}
+                              </div>
+                              <div>
+                                <p className="font-bold text-[#1D3557]">{trans.description}</p>
+                                <p className="text-xs text-[#3D5A80]">
+                                  {new Date(trans.created_at).toLocaleDateString()} {new Date(trans.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              </div>
+                            </div>
+                            <span className={`font-bold ${
+                              isNeutral ? 'text-[#3D5A80]' : 
+                              isPositive ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'
+                            }`}>
+                              {isNeutral ? '↔' : isPositive ? '+' : '-'}₹{displayAmount.toFixed(0)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#1D3557]/10">
+                      <button
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          currentPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-[#3D5A80] text-white hover:bg-[#1D3557]'
+                        }`}
+                        data-testid="wallet-pagination-prev"
+                      >
+                        <ArrowLeft className="w-4 h-4" /> Prev
+                      </button>
+                      
+                      <span className="text-sm text-[#3D5A80]">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      
+                      <button
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          currentPage === totalPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-[#3D5A80] text-white hover:bg-[#1D3557]'
+                        }`}
+                        data-testid="wallet-pagination-next"
+                      >
+                        Next <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()
           )}
         </div>
       </main>
