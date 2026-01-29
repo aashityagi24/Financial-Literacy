@@ -1,0 +1,86 @@
+{
+  "summary": "Verified expired quest functionality for CoinQuest. All features working correctly: expired quests are grayed out, non-clickable, show EXPIRED badge, (Missed) text, and Expired date. Quest ordering is correct (Active -> Expired -> Completed). Dashboard correctly filters out expired quests from Active Quests section. Fixed a bug in backend sorting where created_at field type mismatch caused TypeError.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ Backend: GET /api/child/quests-new returns 200",
+    "✅ Backend: Expired quest has is_expired=true and user_status='expired'",
+    "✅ Backend: Active quest (future due_date) is NOT marked as expired",
+    "✅ Backend: Completed quest is marked as completed, not expired",
+    "✅ Backend: Quest ordering is correct (Active -> Expired -> Completed)",
+    "✅ Backend: Expired quest due_date is in the past",
+    "✅ Frontend: Dashboard loads and shows Active Quests section",
+    "✅ Frontend: Expired quest is NOT shown in Dashboard Active Quests (correctly filtered)",
+    "✅ Frontend: Quests page shows expired quest with EXPIRED badge",
+    "✅ Frontend: Expired quest shows '(Missed)' next to reward amount",
+    "✅ Frontend: Expired quest shows 'Expired [date]' instead of 'days left'",
+    "✅ Frontend: Expired quest has grayscale styling (opacity-50, grayscale)",
+    "✅ Frontend: Expired quest has cursor-not-allowed (non-clickable)",
+    "✅ Frontend: Expired quest has gray background (bg-gray-200)",
+    "✅ Frontend: Completed quest shows COMPLETED badge and (Earned!) text"
+  ],
+
+  "verified_features": {
+    "backend_expired_logic": "is_quest_expired() function correctly checks if due_date has passed using IST timezone",
+    "backend_quest_ordering": "Quests sorted: Active (priority 0) -> Expired (priority 1) -> Completed (priority 2)",
+    "frontend_expired_styling": "Expired quests have: opacity-50, grayscale, cursor-not-allowed, bg-gray-200, border-gray-400",
+    "frontend_expired_badge": "EXPIRED badge displayed with XCircle icon",
+    "frontend_missed_text": "(Missed) shown next to reward amount for expired quests",
+    "frontend_expired_date": "Shows 'Expired [date]' instead of 'days left'",
+    "dashboard_filtering": "Dashboard filters out expired quests from Active Quests section using is_expired flag"
+  },
+
+  "test_report_links": [
+    "/app/backend/tests/test_expired_quests.py",
+    "/app/test_reports/pytest/expired_quests_results.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "Backend is_quest_expired() function at lines 822-855 correctly handles IST timezone using zoneinfo.ZoneInfo",
+    "Backend get_child_quests endpoint at lines 857-954 correctly sets is_expired and user_status='expired' for past due quests",
+    "Frontend QuestsPage.jsx correctly handles expired status with grayscale styling and non-clickable behavior",
+    "Frontend Dashboard.jsx correctly filters out expired quests using is_expired flag at line 63"
+  ],
+
+  "updated_files": [
+    "/app/backend/routes/child.py - Fixed TypeError in sorting by normalizing created_at to string"
+  ],
+
+  "success_rate": {
+    "backend": "100% (6/6 tests passed)",
+    "frontend": "100% (9/9 visual checks passed)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_expired_sess_1769709169743",
+    "test_user": "Test Expired Quest User (test.expired.quest@example.com)",
+    "test_user_id": "test_expired_quest_user_1769709169743"
+  },
+
+  "seed_data_creation": "Created test quests: 1 expired (due_date: 2025-01-01), 1 active (due_date: 2026-12-31), 1 completed",
+
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+
+  "context_for_next_testing_agent": "Expired quest functionality fully tested and working. Backend calculates expired status dynamically based on due_date (IST timezone). Frontend handles 'expired' status with grayed-out styling. Test data includes: quest_expired_test_1769709169773 (expired), quest_active_test_1769709169784 (active), quest_completed_test_1769709169789 (completed). Fixed a bug where created_at field type mismatch caused TypeError in sorting.",
+
+  "bug_fix_applied": {
+    "file": "/app/backend/routes/child.py",
+    "line": 941,
+    "issue": "TypeError: '<' not supported between instances of 'str' and 'datetime.datetime'",
+    "fix": "Added get_created_at_str() helper function to normalize created_at to string for consistent sorting",
+    "root_cause": "created_at field in MongoDB can be either string (ISO format) or datetime object, causing comparison failure during sorting"
+  }
+}
