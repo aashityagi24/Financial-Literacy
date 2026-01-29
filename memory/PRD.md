@@ -42,7 +42,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Recent Updates (January 28, 2026)
 
-**Session 6 - Recent Activity Enhancements Complete:**
+**Session 6 - Recent Activity & Wallet Clarity Enhancements:**
 
 1. **Child Wallet Page - Recent Activity Fixed** ✅ (P0 BUG FIX)
    - Transactions now sorted **newest first** (Jan 28 before Jan 27)
@@ -51,13 +51,21 @@ A gamified financial literacy learning application for children (K-5) with disti
    - Added **date filters** (All, Today, Week, Month)
    - Each transaction now shows date AND time
 
-2. **Parent Dashboard - Child Insights Modal Enhanced** ✅
+2. **Wallet Balance Clarity - Available vs Allocated** ✅ (UX IMPROVEMENT)
+   - **Dashboard**: Shows only "Available" balance for Savings & Investing jars with label
+   - **Wallet Page**: Shows full breakdown:
+     - Savings: "Available" (unallocated) + "In Goals" (allocated to savings goals)
+     - Investing: "Available" (cash ready to invest) + "Invested" (portfolio value)
+   - Spending & Gifting jars: Show regular balance (no allocation concept)
+   - Backend calculates: savings_allocated from goals, investing_allocated from holdings
+
+3. **Parent Dashboard - Child Insights Modal Enhanced** ✅
    - Quick view now shows exactly **7 transactions** (was 5)
    - Added "View All" button to open full transactions modal
    - Each transaction shows description, date, and amount
    - Transactions sorted newest first (descending by created_at)
 
-3. **Full Transactions Modal (NEW)** ✅
+4. **Full Transactions Modal (NEW)** ✅
    - Displays up to 100 transactions with **pagination (15 per page)**
    - **Date Filters**: All Time, Today, This Week, This Month
    - Shows "Showing X of Y transactions" count
