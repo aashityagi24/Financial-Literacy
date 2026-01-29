@@ -40,6 +40,35 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Role-based visibility (Child, Parent, Teacher)
 - Progressive unlock system for children
 
+### Recent Updates (January 29, 2026)
+
+**Session 7 - Onboarding & UX Improvements:**
+
+1. **First-Time User Onboarding Tour** ✅ (NEW FEATURE)
+   - Guided walkthrough for first-time **child and parent** users
+   - **Child Tour (7 steps)**: Welcome, Money Jars, Quests, Store, Investments, Achievements, Learning
+   - **Parent Tour (6 steps)**: Welcome, Connect with Child, Chores & Rewards, Allowances, Give Money, Track Progress
+   - Colorful animated modals with progress dots and navigation
+   - Skip or complete to mark onboarding done (stored in user document)
+   - Does NOT show for teachers, admins, or school roles
+
+2. **School Dashboard - Teachers Table Enhanced** ✅
+   - Added **Class** and **Grade** columns to Teachers tab
+   - Shows teacher's assigned classroom name and grade level
+
+3. **Stock Market - Market Hours Updated** ✅
+   - Changed to **7:00 AM - 5:00 PM IST** (was 9:15 AM - 3:30 PM)
+   - Children can now trade before/after school
+   - Money Garden already had correct hours
+
+4. **Avatar Fixes** ✅
+   - Fixed broken placeholder images across Classmates, Dashboard, Parent Shopping List
+   - Now shows user initials with colored background when no picture available
+
+5. **Dashboard Active Quests Fixed** ✅
+   - Dashboard now correctly fetches from `/child/quests-new` endpoint
+   - Active quests now display properly on home dashboard
+
 ### Recent Updates (January 28, 2026)
 
 **Session 6 - Recent Activity & Wallet Clarity Enhancements:**
