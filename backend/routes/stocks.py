@@ -27,7 +27,6 @@ def is_market_open():
 async def get_market_status(request: Request):
     """Get current market status"""
     from services.auth import get_current_user
-    db = get_db()
     await get_current_user(request)
     
     ist = pytz.timezone('Asia/Kolkata')
