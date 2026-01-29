@@ -1028,6 +1028,21 @@ export default function TeacherDashboard({ user }) {
                   )}
                 </div>
                 
+                {/* Student Search */}
+                {classroomDetails.students.length > 0 && (
+                  <div className="relative mb-4">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#3D5A80]" />
+                    <Input
+                      type="text"
+                      placeholder="Search students by name..."
+                      value={studentSearch}
+                      onChange={(e) => setStudentSearch(e.target.value)}
+                      className="pl-10 py-2 h-10 text-base bg-white border-2 border-[#1D3557]/20 rounded-xl"
+                      data-testid="teacher-student-search"
+                    />
+                  </div>
+                )}
+                
                 {classroomDetails.students.length === 0 ? (
                   <div className="card-playful p-6 text-center mb-6">
                     <Users className="w-12 h-12 mx-auto text-[#98C1D9] mb-2" />
@@ -1035,7 +1050,9 @@ export default function TeacherDashboard({ user }) {
                   </div>
                 ) : (
                   <div className="space-y-3 mb-6">
-                    {classroomDetails.students.map((student) => (
+                    {classroomDetails.students
+                      .filter(s => s.name?.toLowerCase().includes(studentSearch.toLowerCase()))
+                      .map((student) => (
                       <div key={student.user_id} className="card-playful p-4">
                         <div className="flex items-center gap-4">
                           <img 
