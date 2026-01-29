@@ -42,6 +42,24 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Recent Updates (January 29, 2026)
 
+**Session 8 - Expired Quest Logic (P0 FEATURE):**
+
+1. **Expired Quest Logic Implemented** ✅ (P0 NEW FEATURE)
+   - Quests past their due date (11:59 PM IST) are now automatically marked as "expired"
+   - **Backend Changes** (`/app/backend/routes/child.py`):
+     - Added `is_quest_expired()` function using IST timezone (Asia/Kolkata)
+     - Quests get `user_status='expired'` and `is_expired=true` when due_date has passed
+     - Fixed sorting bug with mixed datetime/string `created_at` fields
+   - **Frontend QuestsPage Changes**:
+     - Expired quests shown with gray background, grayscale filter, `cursor-not-allowed`
+     - "EXPIRED" badge with XCircle icon displayed
+     - Shows "(Missed)" next to reward amount
+     - Shows "Expired [date]" instead of "days left"
+     - Quest order: Active → Expired → Completed
+   - **Frontend Dashboard Changes**:
+     - Expired quests filtered out of "Active Quests" section
+   - **Child Behavior**: Cannot click/access expired quests, no reward given
+
 **Session 7 - Onboarding & UX Improvements:**
 
 1. **First-Time User Onboarding Tour** ✅ (NEW FEATURE)
