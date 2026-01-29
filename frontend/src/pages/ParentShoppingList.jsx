@@ -364,7 +364,7 @@ export default function ParentShoppingList({ user }) {
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <p className="text-sm text-[#3D5A80]">
-              Create a chore for {selectedChildData?.name}. Set a custom reward amount they'll earn when completing it.
+              Create a chore for {selectedChildData?.name}. Set a custom reward amount they&apos;ll earn when completing it.
             </p>
             
             <div className="bg-[#E0FBFC] rounded-xl p-3">
