@@ -194,7 +194,7 @@ export default function WalletPage({ user }) {
   };
   
   const filteredAccounts = getFilteredAccounts();
-  const totalBalance = filteredAccounts.reduce((sum, acc) => sum + (acc.balance || 0), 0) || 0;
+  const totalBalance = filteredAccounts.reduce((sum, acc) => sum + (acc.total_balance ?? acc.balance ?? 0), 0) || 0;
   
   if (loading) {
     return (
