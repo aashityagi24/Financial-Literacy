@@ -297,3 +297,17 @@ async def update_profile(request: Request):
     
     updated_user = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0})
     return updated_user
+
+@router.post("/complete-onboarding")
+async def complete_onboarding(request: Request):
+    """Mark user onboarding as complete"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {"has_completed_onboarding": True}}
+    )
+    
+    return {"message": "Onboarding completed", "has_completed_onboarding": True}
