@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
 import axios from "axios";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -11,7 +11,6 @@ import RoleSelection from "@/pages/RoleSelection";
 import Dashboard from "@/pages/Dashboard";
 import WalletPage from "@/pages/WalletPage";
 import StorePage from "@/pages/StorePage";
-import InvestmentPage from "@/pages/InvestmentPage";
 import QuestsPage from "@/pages/QuestsPage";
 import AchievementsPage from "@/pages/AchievementsPage";
 import ChatBuddy from "@/pages/ChatBuddy";
