@@ -193,13 +193,13 @@ export default function Dashboard({ user, setUser }) {
       
       {/* Header */}
       <header className="bg-white border-b-3 border-[#1D3557]">
-        <div className="container mx-auto px-4 py-2">
+        <div className="container mx-auto px-4 py-1">
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center">
               <img 
                 src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/ul81dgc9_Friendly%20%27Money%20Matter%27%20Logo%20Design%20%281%29.png"
                 alt="CoinQuest"
-                className="h-20 w-auto object-contain -my-2"
+                className="h-28 w-auto object-contain -my-4"
               />
             </Link>
             
