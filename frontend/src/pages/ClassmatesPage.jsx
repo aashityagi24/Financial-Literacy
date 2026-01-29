@@ -169,63 +169,58 @@ export default function ClassmatesPage({ user }) {
             </div>
 
             {/* Classmates List */}
-            <div className="space-y-4">
-              {classmates.map((classmate, index) => (
+            <div className="space-y-3">
+              {classmates.map((classmate) => (
                 <div 
                   key={classmate.user_id}
-                  className="card-playful p-4"
+                  className="card-playful p-3"
                 >
-                  <div className="flex items-start gap-4">
-                    {/* Rank badge */}
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                      index === 0 ? 'bg-[#FFD23F] text-[#1D3557]' :
-                      index === 1 ? 'bg-gray-300 text-gray-700' :
-                      index === 2 ? 'bg-[#CD7F32] text-white' :
-                      'bg-gray-200 text-gray-600'
-                    }`}>
-                      #{index + 1}
-                    </div>
+                  <div className="flex items-start gap-3">
                     <img 
                       src={classmate.picture || getDefaultAvatar('child', classmate.name)} 
                       alt={classmate.name}
-                      className="w-14 h-14 rounded-full border-3 border-[#1D3557]"
+                      className="w-12 h-12 rounded-full border-2 border-[#1D3557]"
                       onError={(e) => { e.target.src = getDefaultAvatar('child', classmate.name); }}
                     />
                     <div className="flex-1">
-                      <h3 className="font-bold text-[#1D3557] text-lg">{classmate.name}</h3>
+                      <h3 className="font-bold text-[#1D3557] text-base">{classmate.name}</h3>
                       
-                      {/* Stats Grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
-                        <div className="bg-[#FFD23F]/20 rounded-lg p-2 text-center">
-                          <p className="text-lg font-bold text-[#1D3557]">🔥 {classmate.streak_count || 0}</p>
-                          <p className="text-[10px] text-[#3D5A80]">Day Streak</p>
+                      {/* Stats Grid - Compact */}
+                      <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 mt-2">
+                        <div className="bg-[#FFD23F]/20 rounded-lg px-2 py-1 text-center">
+                          <p className="text-sm font-bold text-[#1D3557]">🔥 {classmate.streak_count || 0}</p>
+                          <p className="text-[9px] text-[#3D5A80]">Streak</p>
                         </div>
-                        <div className="bg-[#4CC9F0]/20 rounded-lg p-2 text-center">
-                          <p className="text-lg font-bold text-[#1D3557]">📚 {classmate.lessons_completed || 0}</p>
-                          <p className="text-[10px] text-[#3D5A80]">Lessons</p>
+                        <div className="bg-[#4CC9F0]/20 rounded-lg px-2 py-1 text-center">
+                          <p className="text-sm font-bold text-[#1D3557]">📚 {classmate.lessons_completed || 0}</p>
+                          <p className="text-[9px] text-[#3D5A80]">Lessons</p>
                         </div>
-                        <div className="bg-[#06D6A0]/20 rounded-lg p-2 text-center">
-                          <p className="text-lg font-bold text-[#1D3557]">💰 ₹{classmate.total_saved || 0}</p>
-                          <p className="text-[10px] text-[#3D5A80]">Saved</p>
+                        <div className="bg-[#EE6C4D]/20 rounded-lg px-2 py-1 text-center">
+                          <p className="text-sm font-bold text-[#1D3557]">✅ {classmate.quests_completed || 0}</p>
+                          <p className="text-[9px] text-[#3D5A80]">Quests</p>
                         </div>
-                        <div className="bg-[#9B5DE5]/20 rounded-lg p-2 text-center">
-                          <p className="text-lg font-bold text-[#1D3557]">📈 ₹{classmate.investment_value || 0}</p>
-                          <p className="text-[10px] text-[#3D5A80]">Invested</p>
+                        <div className="bg-[#06D6A0]/20 rounded-lg px-2 py-1 text-center">
+                          <p className="text-sm font-bold text-[#1D3557]">💰 ₹{classmate.total_saved || 0}</p>
+                          <p className="text-[9px] text-[#3D5A80]">Saved</p>
                         </div>
-                      </div>
-                      
-                      {/* Additional Stats Row */}
-                      <div className="flex flex-wrap gap-3 mt-2 text-sm text-[#3D5A80]">
-                        <span title="Available Balance">💵 ₹{classmate.spending_balance || 0} spending</span>
-                        <span title="Quests Completed">✅ {classmate.quests_completed || 0} quests</span>
-                        {classmate.badges > 0 && (
-                          <span title="Badges Earned" className="text-[#F72585]">🏆 {classmate.badges} badges</span>
-                        )}
-                        {classmate.investment_profit !== 0 && (
-                          <span className={classmate.investment_profit > 0 ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}>
-                            {classmate.investment_profit > 0 ? '📈' : '📉'} ₹{Math.abs(classmate.investment_profit || 0)} {classmate.investment_profit > 0 ? 'profit' : 'loss'}
-                          </span>
-                        )}
+                        <div className="bg-[#3D5A80]/20 rounded-lg px-2 py-1 text-center">
+                          <p className="text-sm font-bold text-[#1D3557]">💵 ₹{classmate.spending_balance || 0}</p>
+                          <p className="text-[9px] text-[#3D5A80]">Spending</p>
+                        </div>
+                        <div className="bg-[#9B5DE5]/20 rounded-lg px-2 py-1 text-center">
+                          <p className="text-sm font-bold text-[#1D3557]">📈 ₹{classmate.investment_value || 0}</p>
+                          <p className="text-[9px] text-[#3D5A80]">Invested</p>
+                        </div>
+                        <div className={`${classmate.investment_profit >= 0 ? 'bg-[#06D6A0]/20' : 'bg-[#EE6C4D]/20'} rounded-lg px-2 py-1 text-center`}>
+                          <p className={`text-sm font-bold ${classmate.investment_profit >= 0 ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
+                            {classmate.investment_profit >= 0 ? '+' : '-'}₹{Math.abs(classmate.investment_profit || 0)}
+                          </p>
+                          <p className="text-[9px] text-[#3D5A80]">P/L</p>
+                        </div>
+                        <div className="bg-[#F72585]/20 rounded-lg px-2 py-1 text-center">
+                          <p className="text-sm font-bold text-[#1D3557]">🏆 {classmate.badges || 0}</p>
+                          <p className="text-[9px] text-[#3D5A80]">Badges</p>
+                        </div>
                       </div>
                       
                       {/* Savings Goals */}
