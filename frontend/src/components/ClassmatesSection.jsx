@@ -179,10 +179,15 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
 
   // Compact view for dashboard card
   if (compact) {
+    // Filter classmates by search query
+    const filteredClassmates = classmates.filter(c => 
+      c.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    
     return (
       <>
         <div className="flex flex-col h-full" data-testid="classmates-section">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
               <Users className="w-5 h-5 inline mr-2" />
               My Classroom
@@ -191,14 +196,29 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
               <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
+          
+          {/* Search Input */}
+          <div className="relative mb-2">
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#3D5A80]" />
+            <Input
+              type="text"
+              placeholder="Search classmates..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 py-1 h-8 text-sm bg-white border-[#1D3557]/20"
+              data-testid="classmates-search"
+            />
+          </div>
 
-          {classmates.length === 0 ? (
+          {filteredClassmates.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-center py-2">
-              <p className="text-sm text-[#3D5A80]">No classmates yet</p>
+              <p className="text-sm text-[#3D5A80]">
+                {searchQuery ? 'No matches found' : 'No classmates yet'}
+              </p>
             </div>
           ) : (
             <div className="space-y-2 flex-1 overflow-y-auto">
-              {classmates.slice(0, 5).map((classmate) => (
+              {filteredClassmates.slice(0, 5).map((classmate) => (
                 <div 
                   key={classmate.user_id}
                   className="bg-[#E0FBFC] rounded-lg p-2 border border-[#1D3557]/20"
