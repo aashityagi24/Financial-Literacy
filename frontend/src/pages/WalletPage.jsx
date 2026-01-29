@@ -194,7 +194,8 @@ export default function WalletPage({ user }) {
   };
   
   const filteredAccounts = getFilteredAccounts();
-  const totalBalance = filteredAccounts.reduce((sum, acc) => sum + (acc.total_balance ?? acc.balance ?? 0), 0) || 0;
+  // Total balance = only money that can be spent (sum of available balances)
+  const totalAvailable = filteredAccounts.reduce((sum, acc) => sum + (acc.available_balance ?? acc.balance ?? 0), 0) || 0;
   
   if (loading) {
     return (
