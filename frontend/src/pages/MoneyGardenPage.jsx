@@ -691,7 +691,7 @@ export default function MoneyGardenPage({ user }) {
               <div className="text-center py-8">
                 <span className="text-5xl">🌙</span>
                 <p className="text-[#8B4513] font-bold mt-2">Market is closed!</p>
-                <p className="text-sm text-[#3D5A80]">Open 9 AM - 6 PM</p>
+                <p className="text-sm text-[#3D5A80]">Open 7:00 AM - 5:00 PM IST</p>
               </div>
             ) : farm.inventory.length === 0 ? (
               <div className="text-center py-8">
