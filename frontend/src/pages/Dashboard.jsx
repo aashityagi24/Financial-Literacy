@@ -352,7 +352,17 @@ export default function Dashboard({ user, setUser }) {
                   >
                     <div className="text-xl mb-1">{config?.icon}</div>
                     <p className="text-sm font-bold capitalize">{displayLabel}</p>
-                    <p className="text-lg font-bold">₹{account.balance?.toFixed(0)}</p>
+                    {/* Show Available balance for savings/investing, total for others */}
+                    <p className="text-lg font-bold">
+                      ₹{(account.account_type === 'savings' || account.account_type === 'investing'
+                        ? (account.available_balance ?? account.balance)
+                        : account.balance
+                      )?.toFixed(0)}
+                    </p>
+                    {/* Show "Available" label for savings/investing */}
+                    {(account.account_type === 'savings' || account.account_type === 'investing') && (
+                      <p className="text-[10px] opacity-80">Available</p>
+                    )}
                   </Link>
                 );
               })}
