@@ -195,12 +195,14 @@ export default function Dashboard({ user, setUser }) {
       <header className="bg-white border-b-3 border-[#1D3557]">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#FFD23F] rounded-xl border-3 border-[#1D3557] shadow-[2px_2px_0px_0px_#1D3557] flex items-center justify-center">
-                <Coins className="w-6 h-6 text-[#1D3557]" />
-              </div>
+            <Link to="/" className="flex items-center gap-3">
+              <img 
+                src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/ul81dgc9_Friendly%20%27Money%20Matter%27%20Logo%20Design%20%281%29.png"
+                alt="CoinQuest"
+                className="w-10 h-10 object-contain"
+              />
               <span className="text-xl font-bold text-[#1D3557] hidden sm:block" style={{ fontFamily: 'Fredoka' }}>CoinQuest</span>
-            </div>
+            </Link>
             
             <div className="flex items-center gap-4">
               {/* Admin link */}
