@@ -205,14 +205,20 @@ export default function StockMarketPage({ user }) {
               </div>
             </div>
             
-            {/* Market Status Badge */}
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-base font-medium ${
-              marketStatus.is_open 
-                ? 'bg-[#10B981]/20 text-[#10B981]' 
-                : 'bg-red-500/20 text-red-400'
-            }`}>
-              <div className={`w-3 h-3 rounded-full ${marketStatus.is_open ? 'bg-[#10B981] animate-pulse' : 'bg-red-500'}`} />
-              {marketStatus.is_open ? 'Market Open' : 'Market Closed'}
+            {/* Market Status Badge with Hours */}
+            <div className="flex flex-col items-center">
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-base font-medium ${
+                marketStatus.is_open 
+                  ? 'bg-[#10B981]/20 text-[#10B981]' 
+                  : 'bg-red-500/20 text-red-400'
+              }`}>
+                <div className={`w-3 h-3 rounded-full ${marketStatus.is_open ? 'bg-[#10B981] animate-pulse' : 'bg-red-500'}`} />
+                {marketStatus.is_open ? 'Market Open' : 'Market Closed'}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                <Clock className="w-3 h-3 inline mr-1" />
+                Trading Hours: 9:15 AM - 3:30 PM IST
+              </p>
             </div>
             
             {/* Account Balance */}
