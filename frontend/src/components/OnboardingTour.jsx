@@ -71,13 +71,13 @@ const parentSteps = [
   {
     icon: Wallet,
     title: "Manage Allowances",
-    description: "Set up recurring allowances and one-time rewards. You can also apply penalties for learning moments.",
+    description: "Set up recurring allowances and one-time rewards. You can also apply penalties for learning.",
     color: "from-[#EE6C4D] to-[#FF9F7F]"
   },
   {
     icon: Gift,
     title: "Give Money & Gifts",
-    description: "Transfer coins directly to your child's wallet for special occasions or as surprise rewards!",
+    description: "Transfer coins directly to your child's wallet for special occasions or as rewards!",
     color: "from-[#9B5DE5] to-[#C77DFF]"
   },
   {
@@ -87,39 +87,10 @@ const parentSteps = [
     color: "from-[#4CC9F0] to-[#72EFDD]"
   }
 ];
-    icon: Target,
-    title: "Create Chores & Rewards 📝",
-    description: "Assign chores with coin rewards. Approve completed chores to teach the value of earning money.",
-    color: "from-[#06D6A0] to-[#42E8B3]",
-    image: "✅"
-  },
-  {
-    icon: Wallet,
-    title: "Manage Allowances 💰",
-    description: "Set up recurring allowances and one-time rewards. You can also apply penalties for learning moments.",
-    color: "from-[#EE6C4D] to-[#FF9F7F]",
-    image: "📅"
-  },
-  {
-    icon: Gift,
-    title: "Give Money & Gifts 🎁",
-    description: "Transfer coins directly to your child's wallet for special occasions or as surprise rewards!",
-    color: "from-[#9B5DE5] to-[#C77DFF]",
-    image: "💝"
-  },
-  {
-    icon: TrendingUp,
-    title: "Track Progress 📊",
-    description: "View detailed insights about your child's spending, saving, and learning activities from your dashboard.",
-    color: "from-[#4CC9F0] to-[#72EFDD]",
-    image: "📈"
-  }
-];
 
 export default function OnboardingTour({ user, onComplete }) {
   const [currentStep, setCurrentStep] = useState(0);
   
-  // Initialize isOpen based on user - show for child/parent who haven't completed onboarding
   const shouldShowOnboarding = user && 
     (user.role === 'child' || user.role === 'parent') && 
     !user.has_completed_onboarding;
@@ -163,47 +134,48 @@ export default function OnboardingTour({ user, onComplete }) {
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent 
-        className="bg-white border-4 border-[#1D3557] rounded-3xl max-w-lg p-0 overflow-hidden"
+        className="bg-white border-2 border-[#1D3557] rounded-2xl max-w-md p-0 overflow-hidden"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         {/* Skip button */}
         <button
           onClick={handleSkip}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
+          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 z-10"
           data-testid="onboarding-skip"
         >
           <X className="w-5 h-5" />
         </button>
         
-        {/* Header with gradient */}
-        <div className={`bg-gradient-to-r ${step.color} p-8 text-center`}>
-          <div className="text-6xl mb-4 animate-bounce">{step.image}</div>
-          <div className="bg-white/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <StepIcon className="w-8 h-8 text-white" />
+        {/* Header with icon */}
+        <div className={`bg-gradient-to-r ${step.color} px-6 py-5`}>
+          <div className="flex items-center gap-4">
+            <div className="bg-white/30 w-12 h-12 rounded-xl flex items-center justify-center">
+              <StepIcon className="w-6 h-6 text-[#1D3557]" />
+            </div>
+            <h2 
+              className="text-xl font-bold text-[#1D3557]" 
+              style={{ fontFamily: 'Fredoka' }}
+              data-testid="onboarding-title"
+            >
+              {step.title}
+            </h2>
           </div>
-          <h2 
-            className="text-2xl font-bold text-[#1D3557]" 
-            style={{ fontFamily: 'Fredoka' }}
-            data-testid="onboarding-title"
-          >
-            {step.title}
-          </h2>
         </div>
         
         {/* Content */}
-        <div className="p-6">
-          <p className="text-[#3D5A80] text-center text-lg mb-6">
+        <div className="px-6 py-4">
+          <p className="text-[#3D5A80] text-base leading-relaxed">
             {step.description}
           </p>
           
           {/* Progress dots */}
-          <div className="flex justify-center gap-2 mb-6">
+          <div className="flex justify-center gap-2 my-4">
             {steps.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentStep(index)}
-                className={`w-3 h-3 rounded-full transition-all ${
+                className={`w-2.5 h-2.5 rounded-full transition-all ${
                   index === currentStep 
                     ? 'bg-[#FFD23F] scale-125' 
                     : index < currentStep 
@@ -216,24 +188,24 @@ export default function OnboardingTour({ user, onComplete }) {
           </div>
           
           {/* Navigation buttons */}
-          <div className="flex justify-between gap-4">
+          <div className="flex gap-3">
             <button
               onClick={handlePrev}
               disabled={currentStep === 0}
-              className={`flex items-center gap-2 px-4 py-3 rounded-xl font-bold transition-all ${
+              className={`flex items-center gap-1 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
                 currentStep === 0
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : 'bg-[#E0FBFC] text-[#3D5A80] hover:bg-[#98C1D9]'
               }`}
               data-testid="onboarding-prev"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-4 h-4" />
               Back
             </button>
             
             <button
               onClick={handleNext}
-              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white transition-all ${
                 isLastStep 
                   ? 'bg-[#06D6A0] hover:bg-[#05B88A]' 
                   : 'bg-[#3D5A80] hover:bg-[#1D3557]'
@@ -242,19 +214,19 @@ export default function OnboardingTour({ user, onComplete }) {
             >
               {isLastStep ? (
                 <>
-                  Let&apos;s Go! <Sparkles className="w-5 h-5" />
+                  Let&apos;s Go! <Sparkles className="w-4 h-4" />
                 </>
               ) : (
                 <>
-                  Next <ChevronRight className="w-5 h-5" />
+                  Next <ChevronRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </div>
           
           {/* Step counter */}
-          <p className="text-center text-sm text-gray-400 mt-4">
-            Step {currentStep + 1} of {steps.length}
+          <p className="text-center text-xs text-gray-400 mt-3">
+            {currentStep + 1} of {steps.length}
           </p>
         </div>
       </DialogContent>
