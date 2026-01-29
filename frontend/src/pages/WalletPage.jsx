@@ -349,7 +349,7 @@ export default function WalletPage({ user }) {
                       ₹{acc.balance?.toFixed(0)}
                     </p>
                   )}
-                  <p className="text-xs opacity-80 mt-2">{info?.description}</p>
+                  <p className="text-sm opacity-90 mt-2">{info?.description}</p>
                 </div>
                 
                 {/* Action Button - always at bottom */}
