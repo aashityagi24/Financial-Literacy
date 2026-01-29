@@ -49,15 +49,19 @@ export default function Dashboard({ user, setUser }) {
     try {
       const [walletRes, questsRes, achievementsRes, goalsRes] = await Promise.all([
         axios.get(`${API}/wallet`),
-        axios.get(`${API}/child/quests`),
+        axios.get(`${API}/child/quests-new`),
         axios.get(`${API}/achievements`),
         axios.get(`${API}/child/savings-goals`)
       ]);
       
       setWallet(walletRes.data);
-      // Filter out completed quests - check user_status, is_completed, and has_earned
+      // Filter out completed quests - check status, user_status, is_completed, and has_earned
       const activeQuests = (questsRes.data || []).filter(q => 
-        q.user_status !== 'completed' && !q.is_completed && !q.has_earned
+        q.status !== 'approved' && 
+        q.status !== 'completed' &&
+        q.user_status !== 'completed' && 
+        !q.is_completed && 
+        !q.has_earned
       );
       // Cap to 2 active quests on dashboard
       setQuests(activeQuests.slice(0, 2));
