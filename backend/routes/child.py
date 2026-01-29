@@ -388,7 +388,6 @@ async def get_classmates(request: Request):
         ).to_list(10)
         
         spending_balance = 0
-        savings_balance = 0
         investing_balance = 0
         
         for w in wallets:
