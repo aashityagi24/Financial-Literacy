@@ -43,23 +43,24 @@ export default function QuestsPage({ user }) {
       const res = await axios.get(`${API}/child/quests-new`, {
         params: { source, sort: sortBy }
       });
-      // Sort quests: incomplete first, pending approval next, completed at bottom
+      // Sort quests: active first, pending approval next, expired after, completed at bottom
       const sortedQuests = [...res.data].sort((a, b) => {
-        // Completed quests go to the bottom - check user_status or is_completed/has_earned
-        const aCompleted = a.user_status === 'completed' || a.user_status === 'approved' || a.is_completed || a.has_earned || a.status === 'completed';
-        const bCompleted = b.user_status === 'completed' || b.user_status === 'approved' || b.is_completed || b.has_earned || b.status === 'completed';
-        const aPending = a.user_status === 'pending_approval';
-        const bPending = b.user_status === 'pending_approval';
+        // Define priority: active (0), pending (1), expired (2), completed (3)
+        const getPriority = (q) => {
+          const isCompleted = q.user_status === 'completed' || q.user_status === 'approved' || q.is_completed || q.has_earned || q.status === 'completed';
+          const isExpired = q.user_status === 'expired' || q.is_expired;
+          const isPending = q.user_status === 'pending_approval';
+          
+          if (isCompleted) return 3;
+          if (isExpired) return 2;
+          if (isPending) return 1;
+          return 0;
+        };
         
-        // Completed at bottom
-        if (aCompleted && !bCompleted) return 1;
-        if (!aCompleted && bCompleted) return -1;
+        const aPriority = getPriority(a);
+        const bPriority = getPriority(b);
         
-        // Pending approval after active but before completed
-        if (aPending && !bPending && !bCompleted) return 1;
-        if (!aPending && bPending && !aCompleted) return -1;
-        
-        return 0; // Keep original sort order for same status
+        return aPriority - bPriority;
       });
       setQuests(sortedQuests);
     } catch (error) {
