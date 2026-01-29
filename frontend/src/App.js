@@ -36,6 +36,9 @@ import SchoolLogin from "@/pages/SchoolLogin";
 import SchoolDashboard from "@/pages/SchoolDashboard";
 import GiftingPage from "@/pages/GiftingPage";
 
+// Components
+import OnboardingTour from "@/components/OnboardingTour";
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
 
