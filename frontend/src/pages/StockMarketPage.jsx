@@ -217,7 +217,7 @@ export default function StockMarketPage({ user }) {
               </div>
               <p className="text-xs text-gray-500 mt-1">
                 <Clock className="w-3 h-3 inline mr-1" />
-                Trading Hours: 9:15 AM - 3:30 PM IST
+                Trading Hours: 7:00 AM - 5:00 PM IST
               </p>
             </div>
             
