@@ -5,7 +5,7 @@ import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
   Wallet, ArrowLeftRight, ArrowDown, ArrowUp, 
-  ChevronLeft, History, Target
+  ChevronLeft, History, Target, Filter, ArrowLeft, ArrowRight
 } from 'lucide-react';
 import {
   Dialog,
@@ -33,6 +33,11 @@ export default function WalletPage({ user }) {
     to_account: '',
     amount: ''
   });
+  
+  // Pagination and filter state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [dateFilter, setDateFilter] = useState('all');
+  const ITEMS_PER_PAGE = 15;
   
   const grade = user?.grade ?? 3;
   
