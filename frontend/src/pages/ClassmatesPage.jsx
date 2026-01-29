@@ -177,9 +177,10 @@ export default function ClassmatesPage({ user }) {
                 >
                   <div className="flex items-start gap-4">
                     <img 
-                      src={classmate.picture || 'https://via.placeholder.com/56'} 
+                      src={classmate.picture || getDefaultAvatar('child', classmate.name)} 
                       alt={classmate.name}
                       className="w-14 h-14 rounded-full border-3 border-[#1D3557]"
+                      onError={(e) => { e.target.src = getDefaultAvatar('child', classmate.name); }}
                     />
                     <div className="flex-1">
                       <h3 className="font-bold text-[#1D3557] text-lg">{classmate.name}</h3>
