@@ -168,11 +168,8 @@ function AppRouter() {
           {({ user }) => <StorePage user={user} />}
         </ProtectedRoute>
       } />
-      <Route path="/investments" element={
-        <ProtectedRoute>
-          {({ user }) => <InvestmentPage user={user} />}
-        </ProtectedRoute>
-      } />
+      {/* Redirect /investments to /stock-market */}
+      <Route path="/investments" element={<Navigate to="/stock-market" replace />} />
       <Route path="/garden" element={
         <ProtectedRoute>
           {({ user }) => <MoneyGardenPage user={user} />}
