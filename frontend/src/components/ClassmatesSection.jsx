@@ -397,7 +397,7 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <p className="text-sm text-[#3D5A80]">
-                They'll get a notification and can choose to help you out! 💝
+                They&apos;ll get a notification and can choose to help you out! 💝
               </p>
               
               <div>
