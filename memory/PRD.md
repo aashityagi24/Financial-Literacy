@@ -44,13 +44,20 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 **Session 6 - Recent Activity Enhancements Complete:**
 
-1. **Parent Dashboard - Child Insights Modal Enhanced** ✅
+1. **Child Wallet Page - Recent Activity Fixed** ✅ (P0 BUG FIX)
+   - Transactions now sorted **newest first** (Jan 28 before Jan 27)
+   - Fixed by adding frontend JavaScript sorting to handle mixed date formats in database
+   - Added **pagination** (15 items per page)
+   - Added **date filters** (All, Today, Week, Month)
+   - Each transaction now shows date AND time
+
+2. **Parent Dashboard - Child Insights Modal Enhanced** ✅
    - Quick view now shows exactly **7 transactions** (was 5)
    - Added "View All" button to open full transactions modal
    - Each transaction shows description, date, and amount
    - Transactions sorted newest first (descending by created_at)
 
-2. **Full Transactions Modal (NEW)** ✅
+3. **Full Transactions Modal (NEW)** ✅
    - Displays up to 100 transactions with **pagination (15 per page)**
    - **Date Filters**: All Time, Today, This Week, This Month
    - Shows "Showing X of Y transactions" count
