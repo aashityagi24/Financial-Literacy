@@ -170,12 +170,21 @@ export default function ClassmatesPage({ user }) {
 
             {/* Classmates List */}
             <div className="space-y-4">
-              {classmates.map((classmate) => (
+              {classmates.map((classmate, index) => (
                 <div 
                   key={classmate.user_id}
                   className="card-playful p-4"
                 >
                   <div className="flex items-start gap-4">
+                    {/* Rank badge */}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                      index === 0 ? 'bg-[#FFD23F] text-[#1D3557]' :
+                      index === 1 ? 'bg-gray-300 text-gray-700' :
+                      index === 2 ? 'bg-[#CD7F32] text-white' :
+                      'bg-gray-200 text-gray-600'
+                    }`}>
+                      #{index + 1}
+                    </div>
                     <img 
                       src={classmate.picture || getDefaultAvatar('child', classmate.name)} 
                       alt={classmate.name}
@@ -184,10 +193,39 @@ export default function ClassmatesPage({ user }) {
                     />
                     <div className="flex-1">
                       <h3 className="font-bold text-[#1D3557] text-lg">{classmate.name}</h3>
-                      <div className="flex items-center gap-4 text-sm text-[#3D5A80] mt-1">
-                        <span className="flex items-center gap-1">💰 ₹{classmate.total_balance?.toFixed(0)}</span>
-                        <span className="flex items-center gap-1">📚 {classmate.lessons_completed} lessons</span>
-                        <span className="flex items-center gap-1">🔥 {classmate.streak_count} streak</span>
+                      
+                      {/* Stats Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+                        <div className="bg-[#FFD23F]/20 rounded-lg p-2 text-center">
+                          <p className="text-lg font-bold text-[#1D3557]">🔥 {classmate.streak_count || 0}</p>
+                          <p className="text-[10px] text-[#3D5A80]">Day Streak</p>
+                        </div>
+                        <div className="bg-[#4CC9F0]/20 rounded-lg p-2 text-center">
+                          <p className="text-lg font-bold text-[#1D3557]">📚 {classmate.lessons_completed || 0}</p>
+                          <p className="text-[10px] text-[#3D5A80]">Lessons</p>
+                        </div>
+                        <div className="bg-[#06D6A0]/20 rounded-lg p-2 text-center">
+                          <p className="text-lg font-bold text-[#1D3557]">💰 ₹{classmate.total_saved || 0}</p>
+                          <p className="text-[10px] text-[#3D5A80]">Saved</p>
+                        </div>
+                        <div className="bg-[#9B5DE5]/20 rounded-lg p-2 text-center">
+                          <p className="text-lg font-bold text-[#1D3557]">📈 ₹{classmate.investment_value || 0}</p>
+                          <p className="text-[10px] text-[#3D5A80]">Invested</p>
+                        </div>
+                      </div>
+                      
+                      {/* Additional Stats Row */}
+                      <div className="flex flex-wrap gap-3 mt-2 text-sm text-[#3D5A80]">
+                        <span title="Available Balance">💵 ₹{classmate.spending_balance || 0} spending</span>
+                        <span title="Quests Completed">✅ {classmate.quests_completed || 0} quests</span>
+                        {classmate.badges > 0 && (
+                          <span title="Badges Earned" className="text-[#F72585]">🏆 {classmate.badges} badges</span>
+                        )}
+                        {classmate.investment_profit !== 0 && (
+                          <span className={classmate.investment_profit > 0 ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}>
+                            {classmate.investment_profit > 0 ? '📈' : '📉'} ₹{Math.abs(classmate.investment_profit || 0)} {classmate.investment_profit > 0 ? 'profit' : 'loss'}
+                          </span>
+                        )}
                       </div>
                       
                       {/* Savings Goals */}
