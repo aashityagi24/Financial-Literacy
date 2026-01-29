@@ -819,6 +819,41 @@ async def respond_to_gift_request(request_id: str, request: Request):
 
 # ============== CHILD QUEST ROUTES ==============
 
+def is_quest_expired(due_date_str: str) -> bool:
+    """
+    Check if a quest is expired based on due_date.
+    A quest expires at 11:59 PM IST on the due date.
+    """
+    if not due_date_str:
+        return False
+    
+    try:
+        from zoneinfo import ZoneInfo
+        
+        # Parse due_date (could be ISO format or just date)
+        if "T" in due_date_str:
+            due_date = datetime.fromisoformat(due_date_str.replace("Z", "+00:00"))
+        else:
+            # Parse as date-only, set end of day (23:59:59) in IST
+            due_date = datetime.strptime(due_date_str[:10], "%Y-%m-%d")
+        
+        # Set IST timezone
+        ist = ZoneInfo("Asia/Kolkata")
+        
+        # Get current time in IST
+        now_ist = datetime.now(ist)
+        
+        # If due_date has no timezone, assume IST end of day (23:59:59)
+        if due_date.tzinfo is None:
+            due_date = due_date.replace(hour=23, minute=59, second=59, tzinfo=ist)
+        else:
+            # Convert to IST for comparison
+            due_date = due_date.astimezone(ist)
+        
+        return now_ist > due_date
+    except Exception:
+        return False
+
 @router.get("/quests-new")
 async def get_child_quests(request: Request, source: str = None, sort: str = "due_date"):
     """Get available quests for child, optionally filtered by source"""
@@ -858,6 +893,10 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
         quest_id = quest.get("quest_id") or quest.get("chore_id")
         completion = completion_map.get(quest_id)
         
+        # Check if quest is expired (due_date has passed and quest not completed)
+        due_date = quest.get("due_date")
+        quest_expired = is_quest_expired(due_date)
+        
         # Determine user status
         if completion:
             quest["user_status"] = completion.get("status", "completed")
@@ -867,11 +906,15 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
             }
         elif quest.get("status") == "completed":
             quest["user_status"] = "completed"
+        elif quest_expired:
+            # Quest is expired - not completed before due date
+            quest["user_status"] = "expired"
         else:
             quest["user_status"] = "available"
         
-        # Mark as grayed out if completed
+        # Mark as grayed out if completed OR expired
         quest["is_completed"] = quest["user_status"] in ["completed", "approved"]
+        quest["is_expired"] = quest["user_status"] == "expired"
         
         # Calculate total_points if questions exist but total is 0
         questions = quest.get("questions", [])
@@ -886,11 +929,20 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
         
         enriched_quests.append(quest)
     
-    # Sort: Active quests first, then completed at the bottom
-    enriched_quests.sort(key=lambda x: (x.get("is_completed", False), x.get("created_at", "")), reverse=False)
+    # Sort: Active quests first, then expired, then completed at the bottom
+    # Priority: available (0) < expired (1) < completed (2)
+    def get_sort_priority(q):
+        if q.get("is_completed"):
+            return 2
+        if q.get("is_expired"):
+            return 1
+        return 0
     
-    # Secondary sort based on user preference
-    active_quests = [q for q in enriched_quests if not q.get("is_completed")]
+    enriched_quests.sort(key=lambda x: (get_sort_priority(x), x.get("created_at", "")), reverse=False)
+    
+    # Secondary sort based on user preference for active quests only
+    active_quests = [q for q in enriched_quests if not q.get("is_completed") and not q.get("is_expired")]
+    expired_quests = [q for q in enriched_quests if q.get("is_expired")]
     completed_quests = [q for q in enriched_quests if q.get("is_completed")]
     
     if sort == "reward":
@@ -898,8 +950,8 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
     else:
         active_quests.sort(key=lambda x: x.get("due_date") or "9999-99-99")
     
-    # Return active quests first, then completed at the end
-    return active_quests + completed_quests
+    # Return: active quests first, then expired, then completed at the end
+    return active_quests + expired_quests + completed_quests
 
 @router.post("/quests-new/{quest_id}/submit")
 async def submit_quest(quest_id: str, request: Request):
