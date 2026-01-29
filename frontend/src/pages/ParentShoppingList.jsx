@@ -231,7 +231,7 @@ export default function ParentShoppingList({ user }) {
           <div className="card-playful p-4 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                📋 {selectedChildData?.name}'s Shopping List
+                📋 {selectedChildData?.name}&apos;s Shopping List
               </h2>
               <button
                 onClick={() => setShowCreateChore(true)}
