@@ -1,0 +1,67 @@
+{
+  "summary": "Verified wallet page font size fix and 'Money You Can Spend' label change. All 7 tests passed. Total now correctly shows ₹49 (sum of available balances) instead of ₹99 (total balance). Savings and Investing jars display large readable fonts (text-lg/text-2xl) for 'Available' and 'In Goals/Invested' labels.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ TEST 1: 'Money You Can Spend' label is displayed (not 'Total Balance')",
+    "✅ TEST 2: Total shows ₹49 (sum of available balances only)",
+    "✅ TEST 3a: Savings jar shows 'Available:' label",
+    "✅ TEST 3b: Savings jar shows 'In Goals:' label",
+    "✅ TEST 3c: Savings jar has large fonts (text-lg/text-2xl)",
+    "✅ TEST 4a: Investing jar shows 'Available:' label",
+    "✅ TEST 4b: Investing jar shows 'Invested:' label",
+    "✅ TEST 4c: Investing jar has large fonts (text-lg/text-2xl)",
+    "✅ TEST 5: Spending jar shows regular balance (no breakdown)",
+    "✅ TEST 6: Gifting jar shows regular balance (no breakdown)",
+    "✅ TEST 7: Subtitle 'Available across all your jars' is displayed"
+  ],
+
+  "verified_fixes": {
+    "font_size_fix": "Savings and Investing jars now use text-lg for labels and text-2xl for amounts - clearly readable for children",
+    "total_balance_fix": "Total now shows 'Money You Can Spend: ₹49' instead of 'Total Balance: ₹99'",
+    "calculation_fix": "Total is calculated from sum of available_balance fields (49 + 0 + 0 + 0 = ₹49)"
+  },
+
+  "test_report_links": [
+    "/app/test_reports/iteration_36.json"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "WalletPage.jsx line 299: Correctly shows 'Money You Can Spend' label",
+    "WalletPage.jsx line 198: Correctly calculates totalAvailable from available_balance",
+    "WalletPage.jsx lines 326-341: Correctly uses text-lg and text-2xl for large readable fonts",
+    "Backend wallet.py line 106: Correctly returns total_available field"
+  ],
+
+  "updated_files": [],
+
+  "success_rate": {
+    "backend": "Skipped (frontend only testing)",
+    "frontend": "100% (11/11 tests passed)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_sess_607235502edf45a6b4f7f0191a9fd1c0",
+    "test_child_user_id": "user_cd3928036bf4",
+    "test_child_name": "Aashi M"
+  },
+
+  "seed_data_creation": "Used existing test data - test child has Spending ₹49, Savings ₹50 (₹100 in goals, available=₹0), Investing ₹0, Gifting ₹0",
+
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+
+  "context_for_next_testing_agent": "Font size fix and 'Money You Can Spend' label verified working. Test child 'Aashi M' has: Spending ₹49, Savings jar with ₹50 balance but ₹100 in goals (available=₹0), Investing ₹0, Gifting ₹0. Total available = ₹49. All fonts are now large and child-friendly."
+}
