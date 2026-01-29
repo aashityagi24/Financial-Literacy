@@ -318,8 +318,35 @@ export default function WalletPage({ user }) {
               >
                 <div className="text-3xl mb-2">{info?.icon}</div>
                 <p className="capitalize text-lg font-bold">{displayLabel}</p>
-                <p className="text-2xl font-bold" style={{ fontFamily: 'Fredoka' }}>₹{acc.balance?.toFixed(0)}</p>
-                <p className="text-base opacity-90 mt-1">{info?.description}</p>
+                
+                {/* Show Available vs Allocated for savings and investing */}
+                {(acc.account_type === 'savings' || acc.account_type === 'investing') ? (
+                  <>
+                    <div className="bg-white/20 rounded-lg p-2 mt-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm opacity-90">Available:</span>
+                        <span className="font-bold" style={{ fontFamily: 'Fredoka' }}>
+                          ₹{(acc.available_balance ?? acc.balance)?.toFixed(0)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="text-sm opacity-90">
+                          {acc.account_type === 'savings' ? 'In Goals:' : 'Invested:'}
+                        </span>
+                        <span className="font-bold" style={{ fontFamily: 'Fredoka' }}>
+                          ₹{(acc.allocated_balance ?? 0)?.toFixed(0)}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-xs opacity-80 mt-2">{info?.description}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold" style={{ fontFamily: 'Fredoka' }}>₹{acc.balance?.toFixed(0)}</p>
+                    <p className="text-base opacity-90 mt-1">{info?.description}</p>
+                  </>
+                )}
+                
                 {info?.action && (
                   <Link 
                     to={info.action.path}
