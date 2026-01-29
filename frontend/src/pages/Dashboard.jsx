@@ -55,13 +55,15 @@ export default function Dashboard({ user, setUser }) {
       ]);
       
       setWallet(walletRes.data);
-      // Filter out completed quests - check status, user_status, is_completed, and has_earned
+      // Filter out completed AND expired quests - check status, user_status, is_completed, has_earned, and is_expired
       const activeQuests = (questsRes.data || []).filter(q => 
         q.status !== 'approved' && 
         q.status !== 'completed' &&
         q.user_status !== 'completed' && 
+        q.user_status !== 'expired' &&
         !q.is_completed && 
-        !q.has_earned
+        !q.has_earned &&
+        !q.is_expired
       );
       // Cap to 2 active quests on dashboard
       setQuests(activeQuests.slice(0, 2));
