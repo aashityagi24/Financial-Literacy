@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
-import { Users, Gift, Target, ChevronLeft, HandHeart } from 'lucide-react';
+import { Users, Gift, Target, ChevronLeft, HandHeart, Search } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { getDefaultAvatar } from '@/utils/avatars';
 import {
@@ -26,6 +26,7 @@ export default function ClassmatesPage({ user }) {
   const [requestForm, setRequestForm] = useState({ amount: '', reason: '' });
   const [submitting, setSubmitting] = useState(false);
   const [wallet, setWallet] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchData();
