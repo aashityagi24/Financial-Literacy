@@ -497,26 +497,34 @@ export default function QuestsPage({ user }) {
               const isCompleted = quest.user_status === 'completed' || quest.user_status === 'approved' || quest.is_completed || quest.has_earned || quest.status === 'completed';
               const hasEarned = quest.has_earned || quest.user_status === 'completed' || quest.user_status === 'approved';
               const isPendingApproval = quest.user_status === 'pending_approval';
+              const isExpired = quest.user_status === 'expired' || quest.is_expired;
+              
+              // Determine if quest should be disabled (not clickable)
+              const isDisabled = isCompleted || isPendingApproval || isExpired;
               
               return (
                 <div 
                   key={quest.quest_id || quest.chore_id}
-                  onClick={() => !isCompleted && !isPendingApproval && openQuest(quest)}
+                  onClick={() => !isDisabled && openQuest(quest)}
                   className={`card-playful p-4 transition-all ${
-                    isCompleted 
-                      ? 'opacity-50 grayscale cursor-default bg-gray-100' 
-                      : isPendingApproval
-                        ? 'opacity-70 cursor-default bg-[#FFD23F]/20 border-2 border-[#FFD23F]'
-                        : 'cursor-pointer hover:shadow-lg'
+                    isExpired
+                      ? 'opacity-50 grayscale cursor-not-allowed bg-gray-200 border-2 border-gray-400'
+                      : isCompleted 
+                        ? 'opacity-50 grayscale cursor-default bg-gray-100' 
+                        : isPendingApproval
+                          ? 'opacity-70 cursor-default bg-[#FFD23F]/20 border-2 border-[#FFD23F]'
+                          : 'cursor-pointer hover:shadow-lg'
                   }`}
                   data-testid={`quest-${quest.quest_id || quest.chore_id}`}
                 >
                   <div className="flex items-start gap-4">
                     {/* Quest Image or Icon */}
-                    <div className={`w-16 h-16 rounded-xl border-3 border-[#1D3557] flex items-center justify-center flex-shrink-0 ${
-                      isCompleted ? 'bg-gray-300' : isPendingApproval ? 'bg-[#FFD23F]' : 'bg-[#FFD23F]'
+                    <div className={`w-16 h-16 rounded-xl border-3 flex items-center justify-center flex-shrink-0 ${
+                      isExpired ? 'bg-gray-300 border-gray-400' : isCompleted ? 'bg-gray-300 border-[#1D3557]' : isPendingApproval ? 'bg-[#FFD23F] border-[#1D3557]' : 'bg-[#FFD23F] border-[#1D3557]'
                     }`}>
-                      {isCompleted ? (
+                      {isExpired ? (
+                        <XCircle className="w-8 h-8 text-gray-500" />
+                      ) : isCompleted ? (
                         <CheckCircle className="w-8 h-8 text-[#06D6A0]" />
                       ) : isPendingApproval ? (
                         <Clock className="w-8 h-8 text-[#1D3557]" />
@@ -529,29 +537,35 @@ export default function QuestsPage({ user }) {
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${getSourceColor(quest.creator_type)}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${isExpired ? 'bg-gray-400 text-white' : getSourceColor(quest.creator_type)}`}>
                           {getSourceIcon(quest.creator_type)}
                           {getSourceLabel(quest.creator_type)}
                         </span>
-                        {isCompleted && (
+                        {isExpired && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-gray-500 text-white flex items-center gap-1 font-bold">
+                            <XCircle className="w-3 h-3" /> EXPIRED
+                          </span>
+                        )}
+                        {isCompleted && !isExpired && (
                           <span className={`text-xs px-2 py-1 rounded-full text-white flex items-center gap-1 font-bold ${hasEarned ? 'bg-[#06D6A0]' : 'bg-[#EE6C4D]'}`}>
                             <CheckCircle className="w-3 h-3" /> {hasEarned ? 'COMPLETED' : 'ATTEMPTED'}
                           </span>
                         )}
                       </div>
                       
-                      <h3 className={`font-bold text-lg truncate ${isCompleted ? 'text-gray-500 line-through' : 'text-[#1D3557]'}`}>
+                      <h3 className={`font-bold text-lg truncate ${isExpired ? 'text-gray-400 line-through' : isCompleted ? 'text-gray-500 line-through' : 'text-[#1D3557]'}`}>
                         {quest.title || 'Untitled Quest'}
                       </h3>
-                      <p className={`text-sm line-clamp-2 ${isCompleted ? 'text-gray-400' : 'text-[#3D5A80]'}`}>
+                      <p className={`text-sm line-clamp-2 ${isExpired || isCompleted ? 'text-gray-400' : 'text-[#3D5A80]'}`}>
                         {quest.description || <span className="italic">No description provided</span>}
                       </p>
                       
                       <div className="flex items-center gap-4 mt-2 flex-wrap">
-                        <span className={`text-sm font-bold flex items-center gap-1 ${isCompleted ? 'text-gray-400' : 'text-[#FFD23F]'}`}>
+                        <span className={`text-sm font-bold flex items-center gap-1 ${isExpired || isCompleted ? 'text-gray-400' : 'text-[#FFD23F]'}`}>
                           <Star className="w-4 h-4" /> ₹{quest.total_points || quest.reward_amount || 0}
-                          {hasEarned && <span className="text-[#06D6A0] ml-1">(Earned!)</span>}
-                          {isCompleted && !hasEarned && <span className="text-[#EE6C4D] ml-1">(Tried)</span>}
+                          {hasEarned && !isExpired && <span className="text-[#06D6A0] ml-1">(Earned!)</span>}
+                          {isCompleted && !hasEarned && !isExpired && <span className="text-[#EE6C4D] ml-1">(Tried)</span>}
+                          {isExpired && <span className="text-gray-500 ml-1">(Missed)</span>}
                         </span>
                         
                         {isPendingApproval && (
@@ -560,7 +574,14 @@ export default function QuestsPage({ user }) {
                           </span>
                         )}
                         
-                        {!isChore && daysLeft !== null && !isCompleted && (
+                        {isExpired && quest.due_date && (
+                          <span className="text-sm text-gray-500 flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            Expired {new Date(quest.due_date).toLocaleDateString()}
+                          </span>
+                        )}
+                        
+                        {!isChore && daysLeft !== null && !isCompleted && !isExpired && (
                           <span className={`text-sm flex items-center gap-1 ${
                             daysLeft <= 1 ? 'text-[#EE6C4D]' : 'text-[#3D5A80]'
                           }`}>
@@ -569,13 +590,13 @@ export default function QuestsPage({ user }) {
                           </span>
                         )}
                         
-                        {isChore && (
+                        {isChore && !isExpired && (
                           <span className="text-sm text-[#3D5A80] capitalize">
                             {quest.frequency === 'one_time' ? 'One-time' : quest.frequency}
                           </span>
                         )}
                         
-                        {quest.questions?.length > 0 && (
+                        {quest.questions?.length > 0 && !isExpired && (
                           <span className="text-sm text-[#3D5A80]">
                             {quest.questions.length} question{quest.questions.length > 1 ? 's' : ''}
                           </span>
