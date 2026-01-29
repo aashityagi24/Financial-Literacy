@@ -2,7 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { API } from '@/App';
 import { 
-  Wallet, Target, ShoppingCart, TrendingUp, Award, 
+  Wallet, Target, ShoppingCart, TrendingUp, 
   Users, BookOpen, Gift, ChevronRight, ChevronLeft, X, Sparkles
 } from 'lucide-react';
 import {
@@ -13,71 +13,80 @@ import {
 const childSteps = [
   {
     icon: Sparkles,
-    title: "Welcome to CoinQuest! 🎉",
+    title: "Welcome to CoinQuest!",
     description: "Get ready for an amazing adventure where you'll learn about money while having fun!",
-    color: "from-[#FFD23F] to-[#FFEB99]",
-    image: "🏰"
+    color: "from-[#FFD23F] to-[#FFEB99]"
   },
   {
     icon: Wallet,
-    title: "Your Money Jars 🏦",
-    description: "You have 4 special jars: Spending (for buying things), Savings (for your goals), Investing (to grow money), and Gifting (to share with friends)!",
-    color: "from-[#06D6A0] to-[#42E8B3]",
-    image: "🐷"
-  },
-  {
-    icon: Target,
-    title: "Complete Quests 🎯",
-    description: "Finish quests from your teacher or parents to earn coins! The more you complete, the richer you get!",
-    color: "from-[#EE6C4D] to-[#FF9F7F]",
-    image: "⭐"
-  },
-  {
-    icon: ShoppingCart,
-    title: "Visit the Store 🛒",
-    description: "Spend your hard-earned coins on cool items in the virtual store. But remember - save some too!",
-    color: "from-[#3D5A80] to-[#5A7CA8]",
-    image: "🎁"
-  },
-  {
-    icon: TrendingUp,
-    title: "Grow Your Money 📈",
-    description: "Plant seeds in the Money Garden or trade in the Stock Market to watch your money grow over time!",
-    color: "from-[#9B5DE5] to-[#C77DFF]",
-    image: "🌱"
-  },
-  {
-    icon: Award,
-    title: "Earn Achievements 🏆",
-    description: "Collect badges and trophies as you learn. Can you unlock them all?",
-    color: "from-[#F72585] to-[#FF85A1]",
-    image: "🎖️"
+    title: "Your Money Jars",
+    description: "You have 4 special jars: Spending (for buying), Savings (for goals), Investing (to grow), and Gifting (to share)!",
+    color: "from-[#06D6A0] to-[#42E8B3]"
   },
   {
     icon: BookOpen,
-    title: "Learn & Earn 📚",
+    title: "Learn & Earn",
     description: "Take fun lessons about money and earn coins for completing them. Knowledge is treasure!",
-    color: "from-[#4CC9F0] to-[#72EFDD]",
-    image: "💡"
+    color: "from-[#4CC9F0] to-[#72EFDD]"
+  },
+  {
+    icon: Target,
+    title: "Complete Quests",
+    description: "Finish quests from your teacher or parents to earn coins! The more you complete, the richer you get!",
+    color: "from-[#EE6C4D] to-[#FF9F7F]"
+  },
+  {
+    icon: ShoppingCart,
+    title: "Visit the Store",
+    description: "Spend your hard-earned coins on cool items in the virtual store. But remember - save some too!",
+    color: "from-[#3D5A80] to-[#5A7CA8]"
+  },
+  {
+    icon: TrendingUp,
+    title: "Grow Your Money",
+    description: "Plant seeds in the Money Garden or trade in the Stock Market to watch your money grow!",
+    color: "from-[#9B5DE5] to-[#C77DFF]"
   }
 ];
 
 const parentSteps = [
   {
     icon: Sparkles,
-    title: "Welcome to CoinQuest! 🎉",
+    title: "Welcome to CoinQuest!",
     description: "Help your child develop healthy money habits through fun, gamified learning!",
-    color: "from-[#FFD23F] to-[#FFEB99]",
-    image: "👨‍👩‍👧"
+    color: "from-[#FFD23F] to-[#FFEB99]"
   },
   {
     icon: Users,
-    title: "Connect with Your Child 👨‍👩‍👧",
+    title: "Connect with Your Child",
     description: "Link your account to your child's profile to monitor their progress and activities.",
-    color: "from-[#3D5A80] to-[#5A7CA8]",
-    image: "🔗"
+    color: "from-[#3D5A80] to-[#5A7CA8]"
   },
   {
+    icon: Target,
+    title: "Create Chores & Rewards",
+    description: "Assign chores with coin rewards. Approve completed chores to teach the value of earning.",
+    color: "from-[#06D6A0] to-[#42E8B3]"
+  },
+  {
+    icon: Wallet,
+    title: "Manage Allowances",
+    description: "Set up recurring allowances and one-time rewards. You can also apply penalties for learning moments.",
+    color: "from-[#EE6C4D] to-[#FF9F7F]"
+  },
+  {
+    icon: Gift,
+    title: "Give Money & Gifts",
+    description: "Transfer coins directly to your child's wallet for special occasions or as surprise rewards!",
+    color: "from-[#9B5DE5] to-[#C77DFF]"
+  },
+  {
+    icon: TrendingUp,
+    title: "Track Progress",
+    description: "View detailed insights about your child's spending, saving, and learning activities.",
+    color: "from-[#4CC9F0] to-[#72EFDD]"
+  }
+];
     icon: Target,
     title: "Create Chores & Rewards 📝",
     description: "Assign chores with coin rewards. Approve completed chores to teach the value of earning money.",
