@@ -938,7 +938,14 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
             return 1
         return 0
     
-    enriched_quests.sort(key=lambda x: (get_sort_priority(x), x.get("created_at", "")), reverse=False)
+    # Normalize created_at to string for consistent sorting
+    def get_created_at_str(q):
+        created_at = q.get("created_at", "")
+        if isinstance(created_at, datetime):
+            return created_at.isoformat()
+        return str(created_at) if created_at else ""
+    
+    enriched_quests.sort(key=lambda x: (get_sort_priority(x), get_created_at_str(x)), reverse=False)
     
     # Secondary sort based on user preference for active quests only
     active_quests = [q for q in enriched_quests if not q.get("is_completed") and not q.get("is_expired")]
