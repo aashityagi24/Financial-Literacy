@@ -310,48 +310,53 @@ export default function WalletPage({ user }) {
           {filteredAccounts.map((acc, index) => {
             const info = accountInfo[acc.account_type];
             const displayLabel = info?.label || acc.account_type;
+            const hasAllocation = acc.account_type === 'savings' || acc.account_type === 'investing';
+            
             return (
               <div 
                 key={acc.account_type} 
-                className={`card-playful p-4 bg-gradient-to-br ${info?.color} text-white animate-bounce-in`}
-                style={{ animationDelay: `${0.1 * (index + 1)}s` }}
+                className={`card-playful p-4 bg-gradient-to-br ${info?.color} text-white animate-bounce-in flex flex-col`}
+                style={{ animationDelay: `${0.1 * (index + 1)}s`, minHeight: '200px' }}
                 data-testid={`jar-${acc.account_type}`}
               >
-                <div className="text-4xl mb-2">{info?.icon}</div>
-                <p className="capitalize text-xl font-bold">{displayLabel}</p>
+                {/* Header */}
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">{info?.icon}</span>
+                  <span className="capitalize text-lg font-bold">{displayLabel}</span>
+                </div>
                 
-                {/* Show Available vs Allocated for savings and investing - LARGE FONT for children */}
-                {(acc.account_type === 'savings' || acc.account_type === 'investing') ? (
-                  <>
-                    <div className="bg-white/20 rounded-xl p-3 mt-3">
+                {/* Balance Section - flex-grow to push button to bottom */}
+                <div className="flex-grow">
+                  {hasAllocation ? (
+                    <div className="bg-white/20 rounded-lg p-2">
                       <div className="flex justify-between items-center">
-                        <span className="text-lg font-medium">Available:</span>
-                        <span className="text-2xl font-bold" style={{ fontFamily: 'Fredoka' }}>
+                        <span className="text-base font-medium">Available:</span>
+                        <span className="text-xl font-bold" style={{ fontFamily: 'Fredoka' }}>
                           ₹{(acc.available_balance ?? acc.balance)?.toFixed(0)}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center mt-2 pt-2 border-t border-white/30">
-                        <span className="text-lg font-medium">
+                      <div className="flex justify-between items-center mt-1 pt-1 border-t border-white/30">
+                        <span className="text-base font-medium">
                           {acc.account_type === 'savings' ? 'In Goals:' : 'Invested:'}
                         </span>
-                        <span className="text-2xl font-bold" style={{ fontFamily: 'Fredoka' }}>
+                        <span className="text-xl font-bold" style={{ fontFamily: 'Fredoka' }}>
                           ₹{(acc.allocated_balance ?? 0)?.toFixed(0)}
                         </span>
                       </div>
                     </div>
-                    <p className="text-sm opacity-80 mt-2">{info?.description}</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-3xl font-bold" style={{ fontFamily: 'Fredoka' }}>₹{acc.balance?.toFixed(0)}</p>
-                    <p className="text-base opacity-90 mt-1">{info?.description}</p>
-                  </>
-                )}
+                  ) : (
+                    <p className="text-3xl font-bold" style={{ fontFamily: 'Fredoka' }}>
+                      ₹{acc.balance?.toFixed(0)}
+                    </p>
+                  )}
+                  <p className="text-xs opacity-80 mt-2">{info?.description}</p>
+                </div>
                 
+                {/* Action Button - always at bottom */}
                 {info?.action && (
                   <Link 
                     to={info.action.path}
-                    className="mt-3 block w-full py-2 bg-white/20 hover:bg-white/30 rounded-xl text-lg font-bold text-center"
+                    className="mt-auto block w-full py-2 bg-white/20 hover:bg-white/30 rounded-xl text-base font-bold text-center"
                     data-testid={`jar-${acc.account_type}-action`}
                   >
                     {info.action.label}
