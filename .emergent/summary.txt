@@ -5,41 +5,41 @@
 -   **Gamified Features:** Virtual store, investment simulations (Money Garden for K-2, Stock Market for 3-5), quests, achievements, daily rewards, avatar customization, and streak bonuses.
 -   **Content System:** A hierarchical content structure managed by the Admin.
 -   **Parent & Teacher Features:** Comprehensive dashboards to monitor child/student progress, including a detailed Recent Activity view for each child.
--   **UI/UX:** User avatars should be standardized to show the first initial of the user's name if a profile picture is not available. UI for lists like chores should be organized to separate active items from completed history.
+-   **UI/UX:** User avatars should be standardized to show the first initial of the user's name if a profile picture is not available. UI for lists like chores should be organized to separate active items from completed history. The user is very particular about child-friendly UI, including large fonts, compact layouts, and uniform design.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is largely functional. In this session, the agent resolved a critical P0 bug preventing Grade 3+ users from accessing the Stock Market page. The root causes were an empty database and a frontend data structure mismatch, both of which have been fixed and verified. The agent also implemented a significant number of user-requested bug fixes and enhancements, including:
--   **Quest Management:** Fixed bugs preventing quest edits (like adding PDFs/due dates) from propagating to the child's view. Enhanced teacher quest cards to show more details (due date, attachment icons).
--   **Stock/Investment E2E Fix:** Resolved issues with money transfers, stock purchases/sales, and detail views. Verified admin functionality for managing stocks.
--   **Chore Lifecycle:** Implemented a complete, robust chore approval workflow. Chores are now consistently stored, children can mark them complete (once), parents can approve/reject them, and approved chores are moved to a history section. Logic for handling recurring chores has been added.
--   **Parent Dashboard UI:** Refactored the dashboard to use tabs for Active Chores, Rewards, Penalties, and a new History section to avoid clutter.
--   **Standardized Avatars:** Refactored Teacher and Parent dashboards to use a consistent  utility, ensuring all user icons display an initial if no picture is available.
--   **Notifications:** Implemented notifications for chore creation and approval, and reduced the frontend polling interval for a more real-time feel.
+The application is stable and has undergone significant UI/UX enhancements in this session based on detailed user feedback. Key accomplishments include:
+-   **Recent Activity Sorting & Pagination:** Fixed incorrect transaction sorting caused by inconsistent date formats in the database. Implemented robust frontend sorting, pagination, and date filtering on both the Parent Dashboard and the Child's Wallet Page.
+-   **Wallet Balance Clarity:** Introduced Available vs. Allocated balances for Savings and Investing jars to prevent confusion. The main dashboard and wallet page now clearly distinguish between spendable money and money committed to goals or investments.
+-   **UI/UX Overhaul:** Addressed numerous user requests for better design, including increasing font sizes for readability, making layouts more compact and uniform (especially on the Wallet Page), and updating the main dashboard logo.
+-   **Feature & Navigation Fixes:** Corrected navigation bugs (e.g., Go Invest button), fixed data display issues (e.g., trading balance not updating), and aligned API endpoints between different pages to ensure data consistency (e.g., active quests on the dashboard).
+-   **Avatar Standardization:** A widespread bug causing broken avatar images was fixed by refactoring multiple components to use a consistent utility that displays user initials if a picture is absent.
+-   **Onboarding & Engagement:** A guided onboarding tour for new users was implemented and refined. To boost engagement, the My Classroom view was enhanced with competitive stats like streaks, balances, and P/L.
+-   **Search Functionality:** Added search bars to the Child's My Classroom view, the Teacher Dashboard, and the School Dashboard for easier user lookup.
 
 **Last working item**:
-    - Last item agent was working: The user reported that the Recent Activity list for a child was not sorted correctly (newest first). The agent investigated and found that the main wallet page was sorted correctly, but a separate Recent Activity view within the Parent Dashboard's child insights modal was not displaying transactions at all. The backend endpoint was already fetching and sorting the data correctly. The agent's last action was to add the JSX to  to render this list inside the insights modal.
+    - Last item agent was working: The user requested that quests not completed by their due date should automatically be grayed out, moved to the bottom of the list, and marked as 'incomplete'. The child should not receive a reward and should be unable to access the quest after 11:59 PM IST on the due date. The agent had just started investigating by viewing .
     - Status: IN PROGRESS
     - Agent Testing Done: N
-    - Which testing method agent to use? screenshot tool
+    - Which testing method agent to use? both
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: Verify the Recent Activity list is now correctly displayed and sorted in the Parent Dashboard's child insights modal. (P0)
+  - Issue 1: Implement the Expired Quest logic. (P0)
 
   Issues Detail:
   - Issue 1: 
-     - Attempted fixes: The agent identified that the  modal in  was fetching transaction data but never rendering it. The agent added the necessary JSX to display the transaction list.
+     - Attempted fixes: Investigation started by viewing the relevant frontend file. No code changes have been made yet.
      - Next debug checklist: 
-        1. Take a screenshot of the Parent Dashboard.
-        2. In the screenshot flow, click the View Insights button for a child who has recent transactions.
-        3. Verify that the modal now contains a Recent Activity section.
-        4. Confirm that the transactions in this list are sorted with the most recent item at the top.
-     - Why fix this issue and what will be achieved with the fix? This fixes a UI bug and ensures parents can accurately track their child's most recent financial activities from the dashboard.
+        1. **Backend:** Decide on the implementation strategy. A robust approach would be to use  to run a daily background job that finds all quests with a  of yesterday and an incomplete status, then updates their status to 'expired' or 'incomplete'.
+        2. **Backend:** If a background job is not feasible, modify the  endpoint to dynamically calculate the status based on the  and the current time during the request.
+        3. **Frontend:** Update  and  to handle the new 'expired'/'incomplete' status. This includes applying a grayed-out style, disabling the item, and adjusting the sorting logic to always place these at the bottom of the list.
+     - Why fix this issue and what will be achieved with the fix? This implements a core gamification rule, teaching children about deadlines and consequences, and prevents the quest list from becoming cluttered with old, inaccessible items.
      - Status:  IN PROGRESS
-     - Is recurring issue? Y
-     - Should Test frontend/backend/both after fix? frontend
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? both
      - Blocked on other issue: None
 
 **In progress Task List**:
@@ -57,101 +57,101 @@ The application is largely functional. In this session, the agent resolved a cri
     - **P2: Refactor  and :** These components are large and could be broken down into smaller, more manageable pieces.
 
 **Completed work in this session**
-- **Stock Market Access (P0 Bug):** FIXED. Resolved bug preventing Grade 3+ users from accessing the stock market by seeding the database and fixing a frontend data structure mismatch in .
-- **Chore Approval Workflow:** IMPLEMENTED & FIXED. A complete workflow for creating, completing, and approving chores is now functional. This includes preventing duplicate submissions and moving completed chores to a history view.
-- **Recurring Chores:** IMPLEMENTED. When a recurring chore is approved, a new instance is automatically created for the next cycle.
-- **Parent Dashboard UI/UX:** IMPROVED. Refactored the chores/rewards/penalties section into an organized tabbed view with an Active and History separation.
-- **Standardized User Avatars:** IMPLEMENTED. All user icons across the Teacher and Parent dashboards now consistently use the  utility, showing initials instead of broken images.
-- **Quest Update/Display:** FIXED. Bugs preventing quest edits (e.g., due dates, PDFs) from appearing on the child's view have been resolved. Teacher quest cards now show more summary details.
-- **Stock Investment E2E Flow:** FIXED. Issues with wallet transfers, buying/selling stocks, and viewing stock details have been resolved.
-- **Parent-to-Child Transactions:** FIXED. Give Money and Penalty actions from parents now correctly appear in the child's wallet activity.
-- **Savings Goal Display:** ENHANCED. The parent's view of savings goals now shows goals for all their children, including names and progress.
-- **Notification System:** ENHANCED. Added notifications for chore creation and approval.
+- **Recent Activity Feature:** FIXED & ENHANCED. Corrected sorting issues and added pagination and date filters to the Parent Dashboard and Child Wallet.
+- **Wallet Balance Clarity:** IMPLEMENTED. The app now distinguishes between Available and Allocated balances for savings and investments.
+- **Total Balance Calculation:** FIXED. Total balance now correctly reflects only spendable money.
+- **Child-Friendly UI:** IMPROVED. Adjusted font sizes and layouts on the Wallet Page and other areas for better readability.
+- **Go Invest Navigation:** FIXED. Corrected the wallet's invest button to navigate to  and removed the old .
+- **Stock Market Balance Display:** FIXED. Ensured the trading balance updates correctly after transfers.
+- **Market Hours:** UPDATED. Set market hours to 7 AM - 5 PM IST for both stocks and the money garden.
+- **Dashboard Active Quests:** FIXED. The child's dashboard now correctly displays active quests.
+- **Avatar Image Fallback:** FIXED. Replaced broken avatar images with user initials across the application.
+- **Search Functionality:** IMPLEMENTED. Added search bars to the Classmates, Teacher, and School dashboards.
+- **Onboarding Tour:** IMPLEMENTED. A new guided tour for first-time child and parent users was created and refined.
+- **Classmates View Stats:** ENHANCED. The classmates section now shows competitive stats like P/L, savings, and streaks.
+- **Dashboard Logo:** UPDATED. The main child dashboard logo was updated to the new design and resized based on user feedback.
 
 **Earlier issues found/mentioned but not fixed**
-   - None from this session. All user-reported issues were addressed.
+   - None. All user-reported issues in this session were addressed.
 
 **Known issue recurrence from previous fork**
-  - None.
+  - **Issue:** The Recent Activity sorting issue.
+  - **Recurrence count:** 1
+  - **Status:** RESOLVED. The agent fixed the issue on the Parent Dashboard, then fixed it again when the user pointed out it also existed on the Child's Wallet page. The root cause (inconsistent date formats) was handled with frontend sorting.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, Pydantic, MongoDB, Motor (async driver), APScheduler for recurring tasks.
-- **Frontend:** React, React Router, Axios, Tailwind CSS, Shadcn UI, Sonner (toasts).
-- **Authentication:** Emergent-managed Google OAuth, session-based using  cookies.
-- **Data Consistency:** A key challenge in this session was resolving inconsistencies where different parts of the app were writing to/reading from different database collections for the same feature (e.g.,  vs. ). The agent refactored this to use  as the single source of truth for all quests and chores.
+- **Backend:** FastAPI, Pydantic, MongoDB (Motor), APScheduler.
+- **Frontend:** React, React Router, Axios, Tailwind CSS, Shadcn UI, Sonner.
+- **Frontend Sorting:** Implemented client-side sorting using  to handle inconsistent date string formats from the database.
+- **State Management:** Extensive use of  and  for UI state, filters, pagination, and data fetching.
+- **Backend Data Enrichment:** Modified several endpoints to aggregate and calculate new data points on the fly (e.g., , classmate stats, teacher's classroom).
 
 **key DB schema**
-  - **users:** Stores user profile information, role, grade, .
-  - **new_quests:** Master collection for all quests and parent-created chores. Now includes  ('active', 'pending_approval', 'approved'), , and .
-  - **quest_completions:** Tracks user attempts to complete quests/chores. Used to manage the pending approval state.
-  - **transactions:** Records all financial movements. Sorted by  descending.
-  - **investment_stocks:** The master list of available stocks for the stock market game.
-  - **parent_child_links:** Links parent accounts to child accounts.
+  - **users:** Added a new boolean field: .
+  - **new_quests:** The  field will be central to implementing the next task for expired quests.
+  - **wallet_accounts:** No schema change, but the backend logic for calculating balances (, ) has been significantly reworked.
 
 **changes in tech stack**
   - No changes.
 
 **All files of reference**
-- **/app/backend/routes/parent.py**: Heavily modified to fix the entire chore and chore approval workflow, give-money/penalty transactions, and enhance savings goal and child progress endpoints.
-- **/app/backend/routes/child.py**: Modified to add checks preventing duplicate chore submissions and to correctly return completed quests for the UI.
-- **/app/backend/routes/stocks.py**: Modified to fix a bug where stock details were being looked up in the wrong collection.
-- **/app/backend/routes/teacher.py**: Modified to allow more fields (due date, pdf_url) to be updated and created for quests.
-- **/app/frontend/src/pages/ParentDashboard.jsx**: Heavily modified to standardize avatars and refactor the chores/rewards/penalties section into a tabbed view with a history page. JSX was added to the child insights modal to display recent transactions.
-- **/app/frontend/src/pages/TeacherDashboard.jsx**: Modified to standardize avatars and display more details on quest cards.
-- **/app/frontend/src/pages/StockMarketPage.jsx**: Modified to fix a data-access bug that was crashing the page.
-- **/app/frontend/src/pages/QuestsPage.jsx**: Modified to correctly gray out and sort completed/approved chores.
+- **/app/backend/routes/wallet.py**: Heavily modified to implement the Available vs Allocated balance logic, which is critical to the app's financial clarity.
+- **/app/frontend/src/pages/WalletPage.jsx**: Heavily modified with new balance logic, pagination, date filters, and multiple UI/UX fixes for child-friendliness.
+- **/app/frontend/src/components/ClassmatesSection.jsx**: Heavily modified to add competitive stats, search functionality, and fix avatar displays.
+- **/app/frontend/src/components/OnboardingTour.jsx**: New component created to provide a guided welcome experience for new users.
+- **/app/frontend/src/App.js**: Modified to integrate the Onboarding Tour and to redirect the old  route to .
+- **/app/frontend/src/pages/InvestmentPage.jsx**: This redundant file was deleted.
 
 **Areas that need refactoring**:
-- The agent successfully refactored the Parent Dashboard UI to be more organized, but the component files (, ) remain very large and monolithic. They would benefit from being broken down into smaller, more focused components.
+-  and  remain large monolithic components that would benefit from being broken down into smaller, reusable child components.
 
 **key api endpoints**
-- **PUT **: (Enhanced) Now handles chore approval/rejection, awards coins, updates the chore's status to 'approved', and creates new instances for recurring chores.
-- **POST **: (Enhanced) Now prevents a child from re-submitting a chore that is already pending or has been approved.
-- **GET **: (Enhanced) Now correctly fetches and sorts quests, placing active quests first and completed/approved quests at the bottom.
-- **POST **: (Refactored) Now correctly creates chores in the  collection to maintain data consistency.
-- **GET **: (Enhanced) Now includes the child's recent transactions, sorted newest-first.
+- **POST **: (New) Marks that a user has finished the welcome tour.
+- **GET **: (Enhanced) Now returns ,  for each jar, and an overall .
+- **GET **: (Enhanced) Returns richer data for each classmate, including savings, investment values, and profit/loss.
+- **GET **: (Enhanced) The  array within the response now includes the  for each teacher.
 
 **Critical Info for New Agent**
-- **Verify Last Fix:** Your immediate priority is to verify the last fix made. The agent added JSX to the child insights modal in  to display recent transactions. You need to test this UI flow to confirm the list appears and is sorted correctly.
-- **Data Model Consistency:** The previous agent spent significant effort unifying the chore system to use the  collection as the source of truth. Be mindful of this architecture when making any changes related to quests or chores to avoid re-introducing data inconsistencies.
-- **User Feedback Loop:** The user provides frequent, detailed feedback. Expect to work in a tight loop of implementing a feature/fix, then receiving a list of new issues or refinements. Address them systematically as they come.
+- **Immediate Task:** Your first priority is to implement the Expired Quest logic. A robust solution would involve a daily backend job (using ) to update the status of overdue quests. The frontend (, ) must then be updated to visually reflect this expired status (grayed out, moved to the bottom, disabled).
+- **User-Centric UI:** The user is highly focused on UI/UX, especially for children. Expect detailed feedback on font sizes, layout compactness, and design uniformity. Test all UI changes from the perspective of a young user.
+- **Balance Logic:** The concept of  vs  is now a core part of the wallet. Ensure any future financial features respect this distinction to prevent confusion or inconsistencies.
 
 **documents and test reports created in this job**
-  - /app/test_reports/iteration_31.json
+  - /app/test_reports/iteration_41.json
   - /app/memory/PRD.md (updated)
 
 **Last 10 User Messages and any pending HUMAN messages** 
- - 10. The recent activities should be arranged in the decending order... - **(IN PROGRESS)** Agent identified the unsorted list was in the Parent Dashboard's child insights modal and added the UI to display it. Verification is pending.
- - 9. Once a chore has been marked as complete... - **(COMPLETED)** Agent implemented the full chore lifecycle, including moving to history, handling recurrence, and preventing duplicate submissions.
- - 8. In the recent activity for the child, the most recent ones should be on top... - **(COMPLETED)** Agent fixed avatar consistency and refactored the parent dashboard UI to separate active/historical items.
- - 7. The chore approval workflow I cant see from the parent dashboard... - **(COMPLETED)** Agent fixed a series of bugs related to chore data consistency, penalty/reward toasts, parent-to-child money transfers, and savings goal display.
- - 6. In the stock/investment the money transfer and buy sell is not working... - **(COMPLETED)** Agent performed an end-to-end fix of the entire stock market and notification systems.
- - 5. In the teacher dashboard for quest, when editing the changes are not getting shown... - **(COMPLETED)** Agent fixed bugs with quest creation and updates, ensuring changes propagate to child views.
- - 4. The Bulk Upload Users modal is working!... (Agent's own summary)
- - 3. 🟡 P1 - Awaiting User Verification... - User confirmed several features were working and requested implementation of the next P1 items.
- - 2. It is still not working - showing the same error - User reporting the P0 stock market bug persisted after the first backend fix attempt. **(COMPLETED)**
- - 1. P0 complete please - Initial user request to start work.
+ - 10. a quest should be automatically grayed and and moved to the bottom... - **(IN PROGRESS)** User requested logic for expired quests. This is the current task.
+ - 9. increase more (logo size) - **(COMPLETED)** Agent increased logo size again.
+ - 8. increase more (logo size) - **(COMPLETED)** Agent increased logo size.
+ - 7. increase the size of the logo further but dont increase the size of the header - **(COMPLETED)** Agent increased logo size while keeping the header compact.
+ - 6. remove the types coinquest and increase the logo size by 3 levels - **(COMPLETED)** Agent removed text next to the logo and increased its size.
+ - 5. inside the platform there is the old logo... - **(COMPLETED)** Agent updated the logo on the main dashboard to the new design.
+ - 4. Add column of teacher and class also - **(COMPLETED)** Agent added a Class column to the teacher list on the School Dashboard.
+ - 3. The icon image shows image error... - **(COMPLETED)** Agent fixed broken avatar images across multiple components.
+ - 2. The dashboard active quest is not ties with the quest ssection... - **(COMPLETED)** Agent fixed a bug where the dashboard was using an old API endpoint for quests.
+ - 1. Th emarket hours for both garden and stock should be from 7 am to 5pm... - **(COMPLETED)** Agent updated market hours on both frontend and backend.
 
 **Project Health Check:**
-- **Healthy:** The application is stable. All critical, user-reported bugs from this session have been addressed, including a major P0 issue. Core workflows like stock trading and chore approvals are now functional.
+- **Healthy:** The application is stable and functioning well. The agent successfully addressed a long series of user-requested fixes, features, and UI/UX enhancements, demonstrating high responsiveness.
 
 **3rd Party Integrations**
 - **Emergent-managed Google Auth:** For user authentication.
-- **APScheduler:** For running scheduled backend jobs (e.g., daily stock fluctuations, allowances).
+- **APScheduler:** For running scheduled backend jobs.
 
 **Testing status**
   - Testing agent used after significant changes: YES
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: []
-  - Known regressions: None. All fixes have been incremental improvements.
+  - Known regressions: None.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
 -   **School:**  / 
--   **Parent/Teacher/Child:** Use Google Sign In. There are existing parent/child links and test data for features like chores and stocks.
+-   **Parent/Teacher/Child:** Use Google Sign In. There is existing test data.
 
 **What agent forgot to execute**
-- The agent did not get a chance to verify the final fix for displaying the sorted transaction list in the  modal on the . This is the immediate next step.</analysis>
+- Nothing was forgotten. The agent was actively working on the user's latest request when the session ended.</analysis>
