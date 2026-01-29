@@ -1,0 +1,61 @@
+{
+  "summary": "Verified bug fix: Dashboard now correctly shows active quests using /child/quests-new endpoint. Previously showed 'No active quests' but now displays 2 active quests (PDF Testing, Updated Quest Title) matching the Quests page.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ TEST 1: Dashboard loads successfully with session authentication",
+    "✅ TEST 2: Active Quests section found on Dashboard",
+    "✅ TEST 3: 'No active quests' message NOT showing (bug fixed!)",
+    "✅ TEST 4: Dashboard shows 2 active quests (PDF Testing, Updated Quest Title)",
+    "✅ TEST 5: Quest cards display title, description, and reward amount (+₹10)",
+    "✅ TEST 6: Quests on Dashboard match those on Quests page",
+    "✅ TEST 7: Completed quest (Needs - COMPLETED) is filtered out from Dashboard"
+  ],
+
+  "verified_features": {
+    "dashboard_quests_display": "Dashboard now fetches from /child/quests-new and shows up to 2 active quests",
+    "quest_filtering": "Completed/approved quests are correctly filtered out (status !== 'approved', status !== 'completed', user_status !== 'completed', !is_completed, !has_earned)",
+    "quest_card_content": "Quest cards show title, description, and reward amount (+₹XX format)"
+  },
+
+  "test_report_links": [
+    "/app/test_reports/iteration_40.json"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "Endpoint fix correctly implemented: Line 52 changed from /child/quests to /child/quests-new",
+    "Filtering logic at Lines 59-65 properly excludes completed/approved quests",
+    "Dashboard correctly caps display to 2 quests with .slice(0, 2)"
+  ],
+
+  "updated_files": [],
+
+  "success_rate": {
+    "backend": "Skipped (frontend only testing)",
+    "frontend": "100% (7/7 tests passed)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_sess_607235502edf45a6b4f7f0191a9fd1c0",
+    "test_user": "Aashi M (aashim.6898@gmail.com)"
+  },
+
+  "seed_data_creation": "Used existing test data - 5 active quests + 1 completed quest",
+
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+
+  "context_for_next_testing_agent": "Bug fix verified: Dashboard now uses /child/quests-new endpoint (Line 52) and correctly displays active quests. Test child has 5 active quests (PDF Testing, Updated Quest Title, Clean your room, BUy Groceries, Shopping For Parathas) and 1 completed quest (Needs). Dashboard shows first 2 active quests. Filtering logic at Lines 59-65 works correctly."
+}
