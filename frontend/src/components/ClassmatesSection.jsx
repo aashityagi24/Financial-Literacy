@@ -5,6 +5,7 @@ import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { Users, Gift, Target, ChevronRight, Send, HandHeart, ArrowLeftRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { getDefaultAvatar } from '@/utils/avatars';
 import {
   Dialog,
   DialogContent,
