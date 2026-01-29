@@ -87,7 +87,7 @@ export default function WalletPage({ user }) {
           icon: '📈', 
           color: 'from-[#3D5A80] to-[#5A7BA0]',
           description: 'Grow your money over time!',
-          action: { label: 'Go Invest', path: '/investments' }
+          action: { label: 'Go Invest', path: '/stock-market' }
         },
       };
     }
