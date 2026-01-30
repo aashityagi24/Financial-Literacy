@@ -391,3 +391,40 @@ async def seed_badges(request: Request):
         )
     
     return {"message": f"Seeded {len(FIRST_TIME_BADGES)} badges", "badges": [b["name"] for b in FIRST_TIME_BADGES]}
+
+@router.get("/badges")
+async def get_user_badges(request: Request):
+    """Get all badges with user's earned status"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    
+    # Get all available badges
+    all_badges = FIRST_TIME_BADGES.copy()
+    
+    # Get user's earned badges
+    earned = await db.user_achievements.find(
+        {"user_id": user["user_id"]},
+        {"_id": 0}
+    ).to_list(100)
+    earned_ids = {e["achievement_id"] for e in earned}
+    earned_map = {e["achievement_id"]: e for e in earned}
+    
+    # Merge data
+    badges_with_status = []
+    for badge in all_badges:
+        badge_data = {
+            **badge,
+            "earned": badge["achievement_id"] in earned_ids,
+            "earned_at": earned_map.get(badge["achievement_id"], {}).get("earned_at")
+        }
+        badges_with_status.append(badge_data)
+    
+    # Sort: earned badges first, then unearned
+    badges_with_status.sort(key=lambda x: (not x["earned"], x["name"]))
+    
+    return {
+        "badges": badges_with_status,
+        "total_badges": len(all_badges),
+        "earned_count": len(earned_ids)
+    }
