@@ -15,12 +15,28 @@ ACTIVITIES_DIR = UPLOADS_DIR / "activities"
 VIDEOS_DIR = UPLOADS_DIR / "videos"
 STORE_IMAGES_DIR = UPLOADS_DIR / "store"
 INVESTMENT_IMAGES_DIR = UPLOADS_DIR / "investments"
+BADGES_DIR = UPLOADS_DIR / "badges"
 
 # Ensure directories exist
-for dir_path in [THUMBNAILS_DIR, PDFS_DIR, ACTIVITIES_DIR, VIDEOS_DIR, STORE_IMAGES_DIR, INVESTMENT_IMAGES_DIR]:
+for dir_path in [THUMBNAILS_DIR, PDFS_DIR, ACTIVITIES_DIR, VIDEOS_DIR, STORE_IMAGES_DIR, INVESTMENT_IMAGES_DIR, BADGES_DIR]:
     dir_path.mkdir(parents=True, exist_ok=True)
 
 router = APIRouter(prefix="/upload", tags=["uploads"])
+
+@router.post("/badge")
+async def upload_badge_image(file: UploadFile = File(...)):
+    """Upload a badge image"""
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    file_ext = file.filename.split(".")[-1] if "." in file.filename else "png"
+    filename = f"badge_{uuid.uuid4().hex[:12]}.{file_ext}"
+    file_path = BADGES_DIR / filename
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    return {"url": f"/api/uploads/badges/{filename}"}
 
 @router.post("/thumbnail")
 async def upload_thumbnail(file: UploadFile = File(...)):
