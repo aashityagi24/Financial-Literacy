@@ -187,3 +187,207 @@ async def streak_checkin(request: Request):
         "streak": current_streak,
         "reward": reward_coins
     }
+
+# ============== BADGE SYSTEM ==============
+
+# Badge definitions with cute icons
+FIRST_TIME_BADGES = [
+    {
+        "achievement_id": "badge_first_purchase",
+        "name": "First Shopper",
+        "description": "Made your first purchase from the store!",
+        "icon": "🛒",
+        "category": "first_time",
+        "trigger": "store_purchase",
+        "points": 5
+    },
+    {
+        "achievement_id": "badge_first_transfer",
+        "name": "Money Mover",
+        "description": "Made your first transfer between jars!",
+        "icon": "🔄",
+        "category": "first_time",
+        "trigger": "jar_transfer",
+        "points": 5
+    },
+    {
+        "achievement_id": "badge_first_quest",
+        "name": "Quest Champion",
+        "description": "Completed your first quest!",
+        "icon": "⭐",
+        "category": "first_time",
+        "trigger": "quest_complete",
+        "points": 10
+    },
+    {
+        "achievement_id": "badge_first_gift_given",
+        "name": "Generous Heart",
+        "description": "Gave your first gift to a friend!",
+        "icon": "💝",
+        "category": "first_time",
+        "trigger": "gift_given",
+        "points": 10
+    },
+    {
+        "achievement_id": "badge_first_gift_received",
+        "name": "Gift Getter",
+        "description": "Received your first gift from a friend!",
+        "icon": "🎁",
+        "category": "first_time",
+        "trigger": "gift_received",
+        "points": 5
+    },
+    {
+        "achievement_id": "badge_first_stock",
+        "name": "Stock Star",
+        "description": "Made your first stock investment!",
+        "icon": "📈",
+        "category": "first_time",
+        "trigger": "stock_buy",
+        "points": 10
+    },
+    {
+        "achievement_id": "badge_first_plant",
+        "name": "Green Thumb",
+        "description": "Planted your first seed in the money garden!",
+        "icon": "🌱",
+        "category": "first_time",
+        "trigger": "garden_plant",
+        "points": 10
+    },
+    {
+        "achievement_id": "badge_first_stock_profit",
+        "name": "Profit Pro",
+        "description": "Made your first profit from selling stocks!",
+        "icon": "💰",
+        "category": "first_time",
+        "trigger": "stock_profit",
+        "points": 15
+    },
+    {
+        "achievement_id": "badge_first_garden_profit",
+        "name": "Harvest Hero",
+        "description": "Made your first profit from selling plants!",
+        "icon": "🌻",
+        "category": "first_time",
+        "trigger": "garden_profit",
+        "points": 15
+    },
+    {
+        "achievement_id": "badge_first_activity",
+        "name": "Learning Starter",
+        "description": "Completed your first learning activity!",
+        "icon": "📚",
+        "category": "first_time",
+        "trigger": "activity_complete",
+        "points": 5
+    },
+    {
+        "achievement_id": "badge_first_goal_created",
+        "name": "Goal Setter",
+        "description": "Created your first savings goal!",
+        "icon": "🎯",
+        "category": "first_time",
+        "trigger": "goal_created",
+        "points": 5
+    },
+    {
+        "achievement_id": "badge_first_saving",
+        "name": "Saver Starter",
+        "description": "Made your first contribution to a savings goal!",
+        "icon": "🐷",
+        "category": "first_time",
+        "trigger": "saving_made",
+        "points": 10
+    },
+    {
+        "achievement_id": "badge_first_goal_achieved",
+        "name": "Dream Achiever",
+        "description": "Achieved your first savings goal!",
+        "icon": "🏆",
+        "category": "first_time",
+        "trigger": "goal_achieved",
+        "points": 20
+    }
+]
+
+async def award_badge(db, user_id: str, trigger: str):
+    """Award a badge to a user if they haven't earned it yet"""
+    # Find the badge for this trigger
+    badge = None
+    for b in FIRST_TIME_BADGES:
+        if b["trigger"] == trigger:
+            badge = b
+            break
+    
+    if not badge:
+        return None
+    
+    # Check if user already has this badge
+    existing = await db.user_achievements.find_one({
+        "user_id": user_id,
+        "achievement_id": badge["achievement_id"]
+    })
+    
+    if existing:
+        return None  # Already has badge
+    
+    # Award the badge
+    ua_doc = {
+        "id": f"ua_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id,
+        "achievement_id": badge["achievement_id"],
+        "earned_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.user_achievements.insert_one(ua_doc)
+    
+    # Award bonus points
+    await db.wallet_accounts.update_one(
+        {"user_id": user_id, "account_type": "spending"},
+        {"$inc": {"balance": badge["points"]}}
+    )
+    
+    # Record transaction
+    await db.transactions.insert_one({
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id,
+        "to_account": "spending",
+        "amount": badge["points"],
+        "transaction_type": "badge_reward",
+        "description": f"Badge earned: {badge['name']}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Create notification
+    await db.notifications.insert_one({
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id,
+        "type": "badge_earned",
+        "title": f"🎖️ New Badge: {badge['name']}!",
+        "message": f"{badge['description']} You earned ₹{badge['points']}!",
+        "icon": badge["icon"],
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return badge
+
+@router.post("/seed-badges")
+async def seed_badges(request: Request):
+    """Seed the default badges into the database (admin only)"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    # Clear existing badges
+    await db.achievements.delete_many({"category": "first_time"})
+    
+    # Insert new badges
+    for badge in FIRST_TIME_BADGES:
+        await db.achievements.update_one(
+            {"achievement_id": badge["achievement_id"]},
+            {"$set": badge},
+            upsert=True
+        )
+    
+    return {"message": f"Seeded {len(FIRST_TIME_BADGES)} badges", "badges": [b["name"] for b in FIRST_TIME_BADGES]}
