@@ -512,6 +512,7 @@ async def admin_update_badge(badge_id: str, request: Request):
     await require_admin(request)
     
     body = await request.json()
+    print(f"[BADGE UPDATE] Received body: {body}")
     
     existing = await db.achievements.find_one({"achievement_id": badge_id})
     if not existing:
@@ -524,12 +525,15 @@ async def admin_update_badge(badge_id: str, request: Request):
         if field in body:
             update_fields[field] = body[field]
     
+    print(f"[BADGE UPDATE] Fields to update: {update_fields}")
+    
     if update_fields:
         update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
-        await db.achievements.update_one(
+        result = await db.achievements.update_one(
             {"achievement_id": badge_id},
             {"$set": update_fields}
         )
+        print(f"[BADGE UPDATE] Update result: matched={result.matched_count}, modified={result.modified_count}")
     
     updated = await db.achievements.find_one({"achievement_id": badge_id}, {"_id": 0})
     return {"message": "Badge updated", "badge": updated}
