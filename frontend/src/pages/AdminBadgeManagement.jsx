@@ -272,10 +272,18 @@ export default function AdminBadgeManagement({ user }) {
             >
               <div className="flex items-start justify-between mb-3">
                 <div 
-                  className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl"
+                  className="w-16 h-16 rounded-xl flex items-center justify-center overflow-hidden"
                   style={{ backgroundColor: getCategoryColor(badge.category) + '20' }}
                 >
-                  {badge.icon}
+                  {badge.image_url ? (
+                    <img 
+                      src={getAssetUrl(badge.image_url)} 
+                      alt={badge.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-3xl">{badge.icon}</span>
+                  )}
                 </div>
                 <div className="flex gap-1">
                   <button 
