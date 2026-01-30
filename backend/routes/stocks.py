@@ -341,9 +341,22 @@ async def sell_stock(request: Request):
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
+    # Check if this sale resulted in profit
+    avg_buy_price = holding.get("average_buy_price", stock["current_price"])
+    cost_basis = avg_buy_price * quantity
+    profit = total_value - cost_basis
+    
+    badge = None
+    if profit > 0:
+        # Award "Profit Pro" badge for first stock profit
+        from routes.achievements import award_badge
+        badge = await award_badge(db, user["user_id"], "stock_profit")
+    
     return {
         "message": f"Sold {quantity} shares of {stock['name']}",
-        "total_received": total_value
+        "total_received": total_value,
+        "profit": profit,
+        "badge_earned": badge
     }
 
 @router.get("/news")
