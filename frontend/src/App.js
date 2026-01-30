@@ -35,6 +35,7 @@ import AdminStockManagement from "@/pages/AdminStockManagement";
 import SchoolLogin from "@/pages/SchoolLogin";
 import SchoolDashboard from "@/pages/SchoolDashboard";
 import GiftingPage from "@/pages/GiftingPage";
+import AdminBadgeManagement from "@/pages/AdminBadgeManagement";
 
 // Components
 import OnboardingTour from "@/components/OnboardingTour";
