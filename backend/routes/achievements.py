@@ -2,6 +2,9 @@
 from fastapi import APIRouter, HTTPException, Request
 from datetime import datetime, timezone, timedelta, date
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 _db = None
 
