@@ -132,6 +132,7 @@ export default function AdminBadgeManagement({ user }) {
       name: badge.name,
       description: badge.description,
       icon: badge.icon,
+      image_url: badge.image_url || '',
       category: badge.category,
       points: badge.points,
       trigger: badge.trigger || 'manual',
