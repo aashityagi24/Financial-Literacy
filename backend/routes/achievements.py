@@ -495,6 +495,7 @@ async def admin_create_badge(request: Request):
         "category": body["category"],
         "points": int(body["points"]),
         "trigger": body.get("trigger", "manual"),
+        "image_url": body.get("image_url", ""),
         "is_active": body.get("is_active", True),
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -517,7 +518,7 @@ async def admin_update_badge(badge_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Badge not found")
     
     update_fields = {}
-    allowed_fields = ["name", "description", "icon", "category", "points", "trigger", "is_active"]
+    allowed_fields = ["name", "description", "icon", "image_url", "category", "points", "trigger", "is_active"]
     
     for field in allowed_fields:
         if field in body:
