@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { 
   Coins, Wallet, Store, TrendingUp, Target, Trophy, 
   MessageCircle, User, LogOut, Flame, Gift, Sparkles,
-  ChevronRight, Star, BookOpen, Shield, GraduationCap, Users
+  ChevronRight, Star, BookOpen, Shield, GraduationCap, Users, Award
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
@@ -19,7 +19,8 @@ export default function Dashboard({ user, setUser }) {
   const [wallet, setWallet] = useState(null);
   const [streak, setStreak] = useState({ streak: 0, reward: 0 });
   const [quests, setQuests] = useState([]);
-  const [achievements, setAchievements] = useState([]);
+  const [badges, setBadges] = useState([]);
+  const [badgeStats, setBadgeStats] = useState({ total: 0, earned: 0 });
   const [savingsGoals, setSavingsGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showStreakModal, setShowStreakModal] = useState(false);
@@ -47,10 +48,10 @@ export default function Dashboard({ user, setUser }) {
   
   const fetchDashboardData = async () => {
     try {
-      const [walletRes, questsRes, achievementsRes, goalsRes] = await Promise.all([
+      const [walletRes, questsRes, badgesRes, goalsRes] = await Promise.all([
         axios.get(`${API}/wallet`),
         axios.get(`${API}/child/quests-new`),
-        axios.get(`${API}/achievements`),
+        axios.get(`${API}/badges`),
         axios.get(`${API}/child/savings-goals`)
       ]);
       
@@ -67,7 +68,9 @@ export default function Dashboard({ user, setUser }) {
       );
       // Cap to 2 active quests on dashboard
       setQuests(activeQuests.slice(0, 2));
-      setAchievements(achievementsRes.data.filter(a => a.earned).slice(0, 4));
+      // Get up to 8 badges (earned first, then unearned)
+      setBadges(badgesRes.data.badges?.slice(0, 8) || []);
+      setBadgeStats({ total: badgesRes.data.total_badges || 0, earned: badgesRes.data.earned_count || 0 });
       
       // Set active savings goals (up to 2 for dashboard display)
       const activeGoals = (goalsRes.data || []).filter(g => !g.completed);
