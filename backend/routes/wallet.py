@@ -77,12 +77,13 @@ async def get_wallet(request: Request):
         balance = acc.get("balance", 0)
         
         if acc_type == "savings":
-            # Savings: available = balance - allocated to goals
-            available = max(0, balance - savings_allocated)
+            # Savings: The balance IS the available amount
+            # Goals' current_amount comes from SPENDING account, not savings
+            # So we just show balance as available, and goals as a separate info
             enriched_accounts.append({
                 **acc,
-                "available_balance": available,
-                "allocated_balance": savings_allocated,
+                "available_balance": balance,  # All savings is available
+                "allocated_balance": savings_allocated,  # Info: how much is in goals (from spending)
                 "total_balance": balance
             })
         elif acc_type == "investing":
