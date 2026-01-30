@@ -100,14 +100,18 @@ export default function AdminBadgeManagement({ user }) {
   const handleUpdateBadge = async () => {
     if (!editingBadge) return;
     
+    console.log('Updating badge with formData:', formData);
+    
     try {
-      await axios.put(`${API}/admin/badges/${editingBadge.achievement_id}`, formData);
+      const response = await axios.put(`${API}/admin/badges/${editingBadge.achievement_id}`, formData);
+      console.log('Update response:', response.data);
       toast.success('Badge updated successfully');
       setShowEditModal(false);
       setEditingBadge(null);
       resetForm();
       fetchData();
     } catch (error) {
+      console.error('Update error:', error);
       toast.error(error.response?.data?.detail || 'Failed to update badge');
     }
   };
