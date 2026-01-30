@@ -528,7 +528,9 @@ export default function Dashboard({ user, setUser }) {
               <p className="text-center text-[#3D5A80] py-4">Complete activities to earn your first badge!</p>
             ) : (
               <div className="grid grid-cols-4 gap-3 gap-y-4">
-                {badges.map((badge) => (
+                {badges.map((badge) => {
+                  console.log('Rendering badge:', badge.name, 'image_url:', badge.image_url);
+                  return (
                   <div 
                     key={badge.achievement_id} 
                     className={`text-center group cursor-pointer ${!badge.earned ? 'opacity-40' : ''}`}
@@ -544,6 +546,7 @@ export default function Dashboard({ user, setUser }) {
                           src={getAssetUrl(badge.image_url)} 
                           alt={badge.name}
                           className="w-full h-full object-cover"
+                          onError={(e) => console.log('Image load error for', badge.name, e)}
                         />
                       ) : (
                         <span className="text-xl">{badge.icon}</span>
@@ -553,7 +556,8 @@ export default function Dashboard({ user, setUser }) {
                       {badge.name}
                     </p>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
