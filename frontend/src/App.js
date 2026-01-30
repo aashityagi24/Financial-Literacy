@@ -289,6 +289,11 @@ function AppRouter() {
           {({ user }) => <AdminStockManagement user={user} />}
         </ProtectedRoute>
       } />
+      <Route path="/admin/badges" element={
+        <ProtectedRoute>
+          {({ user }) => <AdminBadgeManagement user={user} />}
+        </ProtectedRoute>
+      } />
     </Routes>
   );
 }
