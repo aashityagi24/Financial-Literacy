@@ -524,21 +524,21 @@ export default function Dashboard({ user, setUser }) {
             {badges.length === 0 ? (
               <p className="text-center text-[#3D5A80] py-4">Complete activities to earn your first badge!</p>
             ) : (
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-4 gap-3 gap-y-4">
                 {badges.map((badge) => (
                   <div 
                     key={badge.achievement_id} 
                     className={`text-center group cursor-pointer ${!badge.earned ? 'opacity-40' : ''}`}
                     title={badge.earned ? `${badge.name} - ${badge.description}` : `${badge.name} - Not yet earned`}
                   >
-                    <div className={`w-14 h-14 mx-auto rounded-xl border-2 flex items-center justify-center text-2xl transition-all ${
+                    <div className={`w-12 h-12 mx-auto rounded-xl border-2 flex items-center justify-center text-xl transition-all ${
                       badge.earned 
                         ? 'bg-[#FFD23F] border-[#1D3557] badge-earned group-hover:scale-110' 
                         : 'bg-gray-200 border-gray-400 grayscale'
                     }`}>
                       {badge.icon}
                     </div>
-                    <p className={`text-xs font-bold mt-1 truncate ${badge.earned ? 'text-[#1D3557]' : 'text-gray-400'}`}>
+                    <p className={`text-[10px] font-bold mt-1 truncate ${badge.earned ? 'text-[#1D3557]' : 'text-gray-400'}`}>
                       {badge.name}
                     </p>
                   </div>
