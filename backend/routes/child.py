@@ -497,6 +497,7 @@ async def get_classmates(request: Request):
 async def gift_money(data: GiftRequest, request: Request):
     """Send money to a classmate"""
     from services.auth import get_current_user
+    from routes.achievements import award_badge
     db = get_db()
     user = await get_current_user(request)
     
@@ -562,7 +563,11 @@ async def gift_money(data: GiftRequest, request: Request):
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    return {"message": "Gift sent successfully"}
+    # Award badges
+    sender_badge = await award_badge(db, user["user_id"], "gift_given")
+    receiver_badge = await award_badge(db, data.to_user_id, "gift_received")
+    
+    return {"message": "Gift sent successfully", "badge_earned": sender_badge}
 
 @router.get("/gift-history")
 async def get_gift_history(request: Request):
