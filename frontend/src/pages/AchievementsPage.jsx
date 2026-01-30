@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { API } from '@/App';
+import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { Trophy, ChevronLeft, Lock, Check, Star } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
