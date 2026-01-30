@@ -42,7 +42,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Recent Updates (January 29, 2026)
 
-**Session 8 - Expired Quest Logic (P0 FEATURE):**
+**Session 8 - Expired Quest Logic & Streak Rewards:**
 
 1. **Expired Quest Logic Implemented** ✅ (P0 NEW FEATURE)
    - Quests past their due date (11:59 PM IST) are now automatically marked as "expired"
@@ -59,6 +59,19 @@ A gamified financial literacy learning application for children (K-5) with disti
    - **Frontend Dashboard Changes**:
      - Expired quests filtered out of "Active Quests" section
    - **Child Behavior**: Cannot click/access expired quests, no reward given
+
+2. **Daily Streak Rewards Fixed** ✅ (BUG FIX)
+   - **Issue**: Streak counting was working but rewards were not being given correctly
+   - **Fixed Logic** (`/app/backend/routes/achievements.py`):
+     - Daily login: ₹5 reward
+     - Every 5th day (5, 10, 15, 20...): ₹10 instead of ₹5
+   - **Backend Changes**:
+     - Fixed response field from `bonus` to `reward` (frontend expected `reward`)
+     - Added transaction recording for streak rewards
+     - Added descriptive message for 5-day bonus milestones
+   - **Frontend Dashboard Changes**:
+     - Enhanced streak modal with special styling for 5-day milestones
+     - Shows "5-Day Milestone Bonus!" message with 🎉 emoji on special days
 
 **Session 7 - Onboarding & UX Improvements:**
 
