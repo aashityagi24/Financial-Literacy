@@ -405,12 +405,17 @@ async def submit_quest(quest_id: str, request: Request):
             "created_at": datetime.now(timezone.utc).isoformat()
         })
     
+    # Award "Quest Champion" badge for first quest completion
+    from routes.achievements import award_badge
+    badge = await award_badge(db, user["user_id"], "quest_complete")
+    
     # For quests with questions, include correct answers so child can see them
     response = {
         "message": "Quest submitted!",
         "score": earned_points,
         "total_points": total_points,
-        "coins_earned": earned_points
+        "coins_earned": earned_points,
+        "badge_earned": badge
     }
     
     if has_questions:
