@@ -123,22 +123,25 @@ export default function AchievementsPage({ user }) {
             >
               <div 
                 className={`w-20 h-20 mx-auto rounded-2xl border-3 border-[#1D3557] flex items-center justify-center overflow-hidden mb-3 relative ${
-                  achievement.earned ? 'badge-earned' : 'badge-locked'
+                  achievement.earned ? 'badge-earned' : 'badge-locked grayscale'
                 }`}
                 style={{ backgroundColor: achievement.earned ? categoryColors[achievement.category] : '#98C1D9' }}
               >
-                {achievement.earned ? (
-                  achievement.image_url ? (
-                    <img 
-                      src={getAssetUrl(achievement.image_url)} 
-                      alt={achievement.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-4xl">{achievement.icon}</span>
-                  )
+                {/* Always show badge image/icon, grayed out if not earned */}
+                {achievement.image_url ? (
+                  <img 
+                    src={getAssetUrl(achievement.image_url)} 
+                    alt={achievement.name}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <Lock className="w-10 h-10 text-[#3D5A80]" />
+                  <span className="text-4xl">{achievement.icon}</span>
+                )}
+                {/* Show lock overlay if not earned */}
+                {!achievement.earned && (
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                    <Lock className="w-8 h-8 text-white drop-shadow-lg" />
+                  </div>
                 )}
                 {achievement.earned && (
                   <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#06D6A0] rounded-full border-2 border-[#1D3557] flex items-center justify-center">
