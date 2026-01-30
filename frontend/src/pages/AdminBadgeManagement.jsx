@@ -175,7 +175,7 @@ export default function AdminBadgeManagement({ user }) {
       const res = await axios.post(`${API}/upload/badge`, formDataUpload, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      console.log('Image uploaded, URL:', res.data.url);
+      console.log('Image uploaded successfully, URL:', res.data.url);
       setFormData(prev => {
         const newData = { ...prev, image_url: res.data.url };
         console.log('Updated formData with image_url:', newData);
@@ -187,6 +187,10 @@ export default function AdminBadgeManagement({ user }) {
       toast.error('Failed to upload image');
     } finally {
       setUploading(false);
+      // Reset the file input so the same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
   
