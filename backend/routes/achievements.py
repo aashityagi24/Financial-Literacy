@@ -24,9 +24,9 @@ async def get_all_badges_with_user_status(db, user_id: str):
     # First, try to get badges from database
     db_badges = await db.achievements.find({}, {"_id": 0}).to_list(100)
     
-    print(f"[DEBUG] Found {len(db_badges)} badges in DB")
+    logger.warning(f"[BADGES] Found {len(db_badges)} badges in DB")
     for b in db_badges[:3]:
-        print(f"[DEBUG] Badge: {b.get('name')}, image_url={b.get('image_url', 'NOT SET')}")
+        logger.warning(f"[BADGES] Badge: {b.get('name')}, image_url={b.get('image_url', 'NOT SET')}")
     
     # If no badges in DB, use the default ones and seed them
     if not db_badges:
