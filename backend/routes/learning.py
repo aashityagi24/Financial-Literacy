@@ -281,6 +281,7 @@ async def get_activities(request: Request):
 async def complete_activity(activity_id: str, request: Request):
     """Complete an activity"""
     from services.auth import get_current_user
+    from routes.achievements import award_badge
     db = get_db()
     user = await get_current_user(request)
     
@@ -317,7 +318,10 @@ async def complete_activity(activity_id: str, request: Request):
         {"$inc": {"balance": reward_coins}}
     )
     
-    return {"message": "Activity completed!", "coins_earned": reward_coins}
+    # Award "Learning Starter" badge for first activity completion
+    badge = await award_badge(db, user["user_id"], "activity_complete")
+    
+    return {"message": "Activity completed!", "coins_earned": reward_coins, "badge_earned": badge}
 
 @router.get("/progress")
 async def get_learning_progress(request: Request):
