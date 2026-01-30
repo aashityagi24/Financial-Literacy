@@ -65,13 +65,19 @@ A gamified financial literacy learning application for children (K-5) with disti
    - **Fixed Logic** (`/app/backend/routes/achievements.py`):
      - Daily login: ₹5 reward
      - Every 5th day (5, 10, 15, 20...): ₹10 instead of ₹5
+     - **Max reward capped at ₹20**
    - **Backend Changes**:
      - Fixed response field from `bonus` to `reward` (frontend expected `reward`)
-     - Added transaction recording for streak rewards
+     - Added transaction recording for streak rewards (appears in wallet recent activity)
      - Added descriptive message for 5-day bonus milestones
    - **Frontend Dashboard Changes**:
      - Enhanced streak modal with special styling for 5-day milestones
      - Shows "5-Day Milestone Bonus!" message with 🎉 emoji on special days
+
+3. **Dashboard Header Balance Fixed** ✅ (BUG FIX)
+   - **Issue**: Wallet icon in header showed ₹0 even when jars had balance
+   - **Root Cause**: Backend returned `total_available` but frontend used `total_balance`
+   - **Fix**: Backend now returns `total_balance` field with sum of all available (unallocated) balances
 
 **Session 7 - Onboarding & UX Improvements:**
 
