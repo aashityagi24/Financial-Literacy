@@ -165,6 +165,7 @@ async def get_child_savings_goals(request: Request):
 async def create_child_savings_goal(data: SavingsGoalCreate, request: Request):
     """Create a savings goal"""
     from services.auth import get_current_user
+    from routes.achievements import award_badge
     db = get_db()
     user = await get_current_user(request)
     
@@ -185,12 +186,16 @@ async def create_child_savings_goal(data: SavingsGoalCreate, request: Request):
     }
     await db.savings_goals.insert_one(goal_doc)
     
-    return {"goal_id": goal_doc["goal_id"], "message": "Savings goal created"}
+    # Award "Goal Setter" badge for first savings goal
+    badge = await award_badge(db, user["user_id"], "goal_created")
+    
+    return {"goal_id": goal_doc["goal_id"], "message": "Savings goal created", "badge_earned": badge}
 
 @router.post("/savings-goals/{goal_id}/contribute")
 async def contribute_to_goal(goal_id: str, request: Request):
     """Contribute to a savings goal"""
     from services.auth import get_current_user
+    from routes.achievements import award_badge
     db = get_db()
     user = await get_current_user(request)
     
@@ -226,6 +231,7 @@ async def contribute_to_goal(goal_id: str, request: Request):
     
     new_amount = goal.get("current_amount", 0) + amount
     completed = new_amount >= goal["target_amount"]
+    was_previously_completed = goal.get("completed", False)
     
     await db.savings_goals.update_one(
         {"goal_id": goal_id},
@@ -242,7 +248,20 @@ async def contribute_to_goal(goal_id: str, request: Request):
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    return {"message": "Contribution added", "new_amount": new_amount, "completed": completed}
+    # Award badges
+    saving_badge = await award_badge(db, user["user_id"], "saving_made")
+    
+    goal_achieved_badge = None
+    if completed and not was_previously_completed:
+        goal_achieved_badge = await award_badge(db, user["user_id"], "goal_achieved")
+    
+    return {
+        "message": "Contribution added", 
+        "new_amount": new_amount, 
+        "completed": completed,
+        "badge_earned": saving_badge,
+        "goal_badge_earned": goal_achieved_badge
+    }
 
 # Parents
 @router.post("/add-parent")
