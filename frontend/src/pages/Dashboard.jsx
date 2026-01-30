@@ -505,31 +505,42 @@ export default function Dashboard({ user, setUser }) {
             )}
           </div>
           
-          {/* Recent Achievements */}
+          {/* My Badges Section - 8 cute square cards */}
           <div className={`card-playful p-6 ${showAnimations ? 'animate-bounce-in stagger-4' : ''}`}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                My Badges
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                  My Badges
+                </h2>
+                <span className="text-sm bg-[#FFD23F] text-[#1D3557] px-2 py-0.5 rounded-full font-bold">
+                  {badgeStats.earned}/{badgeStats.total}
+                </span>
+              </div>
               <Link to="/achievements" className="text-[#3D5A80] hover:text-[#1D3557] flex items-center gap-1">
                 See All <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
             
-            {achievements.length === 0 ? (
-              <p className="text-center text-[#3D5A80] py-4">Complete quests to earn your first badge!</p>
+            {badges.length === 0 ? (
+              <p className="text-center text-[#3D5A80] py-4">Complete activities to earn your first badge!</p>
             ) : (
               <div className="grid grid-cols-4 gap-3">
-                {achievements.map((ach) => (
+                {badges.map((badge) => (
                   <div 
-                    key={ach.achievement_id} 
-                    className="text-center"
-                    title={ach.name}
+                    key={badge.achievement_id} 
+                    className={`text-center group cursor-pointer ${!badge.earned ? 'opacity-40' : ''}`}
+                    title={badge.earned ? `${badge.name} - ${badge.description}` : `${badge.name} - Not yet earned`}
                   >
-                    <div className="w-14 h-14 mx-auto bg-[#FFD23F] rounded-xl border-2 border-[#1D3557] flex items-center justify-center text-2xl badge-earned">
-                      {ach.icon}
+                    <div className={`w-14 h-14 mx-auto rounded-xl border-2 flex items-center justify-center text-2xl transition-all ${
+                      badge.earned 
+                        ? 'bg-[#FFD23F] border-[#1D3557] badge-earned group-hover:scale-110' 
+                        : 'bg-gray-200 border-gray-400 grayscale'
+                    }`}>
+                      {badge.icon}
                     </div>
-                    <p className="text-xs font-bold text-[#1D3557] mt-1 truncate">{ach.name}</p>
+                    <p className={`text-xs font-bold mt-1 truncate ${badge.earned ? 'text-[#1D3557]' : 'text-gray-400'}`}>
+                      {badge.name}
+                    </p>
                   </div>
                 ))}
               </div>
