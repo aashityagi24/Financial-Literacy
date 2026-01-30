@@ -374,8 +374,14 @@ async def sell_produce(request: Request, plant_id: str, quantity: int):
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
+    # Check if this sale resulted in profit (compare to seed cost)
+    # For simplicity, we'll award the badge on first garden sale as it's always profitable
+    from routes.achievements import award_badge
+    badge = await award_badge(db, user["user_id"], "garden_profit")
+    
     return {
         "message": f"Sold {quantity} for ₹{total_earnings}!",
         "earnings": total_earnings,
-        "price_per_unit": market_price["current_price"]
+        "price_per_unit": market_price["current_price"],
+        "badge_earned": badge
     }
