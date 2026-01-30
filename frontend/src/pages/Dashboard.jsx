@@ -531,12 +531,20 @@ export default function Dashboard({ user, setUser }) {
                     className={`text-center group cursor-pointer ${!badge.earned ? 'opacity-40' : ''}`}
                     title={badge.earned ? `${badge.name} - ${badge.description}` : `${badge.name} - Not yet earned`}
                   >
-                    <div className={`w-12 h-12 mx-auto rounded-xl border-2 flex items-center justify-center text-xl transition-all ${
+                    <div className={`w-12 h-12 mx-auto rounded-xl border-2 flex items-center justify-center overflow-hidden transition-all ${
                       badge.earned 
                         ? 'bg-[#FFD23F] border-[#1D3557] badge-earned group-hover:scale-110' 
                         : 'bg-gray-200 border-gray-400 grayscale'
                     }`}>
-                      {badge.icon}
+                      {badge.image_url ? (
+                        <img 
+                          src={getAssetUrl(badge.image_url)} 
+                          alt={badge.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-xl">{badge.icon}</span>
+                      )}
                     </div>
                     <p className={`text-[10px] font-bold mt-1 truncate ${badge.earned ? 'text-[#1D3557]' : 'text-gray-400'}`}>
                       {badge.name}
