@@ -330,9 +330,18 @@ export default function AdminBadgeManagement({ user }) {
         )}
       </div>
       
+      {/* Hidden file input */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        accept="image/*" 
+        onChange={handleImageUpload}
+        className="hidden"
+      />
+      
       {/* Create Badge Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="w-5 h-5" /> Create New Badge
@@ -358,14 +367,61 @@ export default function AdminBadgeManagement({ user }) {
               />
             </div>
             
+            {/* Badge Image Upload */}
             <div>
-              <label className="text-sm font-medium mb-2 block">Icon</label>
-              <div className="flex flex-wrap gap-2 p-2 border rounded-lg max-h-32 overflow-y-auto">
+              <label className="text-sm font-medium mb-2 block">Badge Image (Recommended)</label>
+              <div className="flex items-center gap-4">
+                <div 
+                  className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50"
+                >
+                  {formData.image_url ? (
+                    <img 
+                      src={getAssetUrl(formData.image_url)} 
+                      alt="Badge preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-3xl">{formData.icon}</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="w-full gap-2"
+                  >
+                    {uploading ? (
+                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                    {formData.image_url ? 'Change Image' : 'Upload Badge Image'}
+                  </Button>
+                  {formData.image_url && (
+                    <button 
+                      onClick={() => setFormData({...formData, image_url: ''})}
+                      className="text-xs text-red-500 mt-1 hover:underline"
+                    >
+                      Remove image (use emoji instead)
+                    </button>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">PNG or JPG, square recommended</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Fallback Emoji Icon */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Fallback Icon {formData.image_url && '(used if image fails)'}</label>
+              <div className="flex flex-wrap gap-2 p-2 border rounded-lg max-h-24 overflow-y-auto">
                 {BADGE_ICONS.map((icon) => (
                   <button
                     key={icon}
+                    type="button"
                     onClick={() => setFormData({...formData, icon})}
-                    className={`w-10 h-10 text-xl rounded-lg border-2 transition-all ${
+                    className={`w-8 h-8 text-lg rounded-lg border-2 transition-all ${
                       formData.icon === icon 
                         ? 'border-[#06D6A0] bg-[#06D6A0]/10' 
                         : 'border-gray-200 hover:border-gray-300'
