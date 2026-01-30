@@ -128,7 +128,7 @@ async def claim_streak_bonus(request: Request):
 
 @router.post("/streak/checkin")
 async def streak_checkin(request: Request):
-    """Daily streak check-in - Awards ₹5 daily, ₹10 on every 5th day (5, 10, 15, 20...)"""
+    """Daily streak check-in - Awards ₹5 daily, ₹10 on every 5th day (5, 10, 15, 20...), max ₹20"""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
@@ -148,11 +148,14 @@ async def streak_checkin(request: Request):
     else:
         current_streak = 1
     
-    # Calculate reward: ₹5 daily, ₹10 on every 5th day (5, 10, 15, 20...)
+    # Calculate reward: ₹5 daily, ₹10 on every 5th day (5, 10, 15, 20...), max ₹20
     if current_streak % 5 == 0:
         reward_coins = 10
     else:
         reward_coins = 5
+    
+    # Cap max reward at ₹20
+    reward_coins = min(reward_coins, 20)
     
     await db.users.update_one(
         {"user_id": user["user_id"]},
