@@ -169,6 +169,7 @@ async def buy_farm_plot(request: Request):
 async def plant_seed(data: PlantSeedRequest, request: Request):
     """Plant a seed in a plot"""
     from services.auth import get_current_user
+    from routes.achievements import award_badge
     db = get_db()
     user = await get_current_user(request)
     
@@ -217,7 +218,10 @@ async def plant_seed(data: PlantSeedRequest, request: Request):
         }}
     )
     
-    return {"message": f"{seed['name']} planted!", "seed_cost": seed["seed_cost"]}
+    # Award "Green Thumb" badge for first garden planting
+    badge = await award_badge(db, user["user_id"], "garden_plant")
+    
+    return {"message": f"{seed['name']} planted!", "seed_cost": seed["seed_cost"], "badge_earned": badge}
 
 @router.post("/garden/water/{plot_id}")
 async def water_plant(plot_id: str, request: Request):
