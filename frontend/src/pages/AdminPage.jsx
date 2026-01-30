@@ -329,6 +329,26 @@ export default function AdminPage({ user }) {
             </div>
           </Link>
           
+          {/* Badge Management Card */}
+          <Link 
+            to="/admin/badges" 
+            className="block bg-gradient-to-r from-[#9B5DE5] to-[#B07FF0] rounded-xl p-5 hover:shadow-lg transition-shadow"
+            data-testid="badge-management-link"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">🏆</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Badge Management</h3>
+                  <p className="text-white/80 text-sm">Create & manage achievement badges</p>
+                </div>
+              </div>
+              <ChevronRight className="w-6 h-6 text-white" />
+            </div>
+          </Link>
+          
           {/* Investment Management Card */}
           <Link 
             to="/admin/investments" 
