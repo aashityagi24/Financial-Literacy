@@ -118,6 +118,7 @@ async def get_wallet(request: Request):
 async def transfer_money(transaction: TransactionCreate, request: Request):
     """Transfer money between accounts"""
     from services.auth import get_current_user
+    from routes.achievements import award_badge
     db = get_db()
     user = await get_current_user(request)
     
@@ -158,7 +159,10 @@ async def transfer_money(transaction: TransactionCreate, request: Request):
     }
     await db.transactions.insert_one(trans_doc)
     
-    return {"message": "Transfer successful", "transaction_id": trans_doc["transaction_id"]}
+    # Award "Money Mover" badge for first transfer
+    badge = await award_badge(db, user["user_id"], "jar_transfer")
+    
+    return {"message": "Transfer successful", "transaction_id": trans_doc["transaction_id"], "badge_earned": badge}
 
 @router.get("/wallet/transactions")
 async def get_transactions(request: Request, limit: int = 20):
