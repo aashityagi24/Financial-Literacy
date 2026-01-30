@@ -183,11 +183,14 @@ export default function Dashboard({ user, setUser }) {
       {/* Streak Modal */}
       {showStreakModal && streak.reward > 0 && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="card-playful p-8 text-center animate-bounce-in bg-[#FFD23F]">
-            <div className="text-6xl mb-4 animate-coin-spin">🔥</div>
+          <div className={`card-playful p-8 text-center animate-bounce-in ${streak.streak % 5 === 0 ? 'bg-gradient-to-br from-[#FFD23F] to-[#FF9F1C]' : 'bg-[#FFD23F]'}`}>
+            <div className="text-6xl mb-4 animate-coin-spin">{streak.streak % 5 === 0 ? '🎉' : '🔥'}</div>
             <h2 className="text-3xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
               Day {streak.streak} Streak!
             </h2>
+            {streak.streak % 5 === 0 && (
+              <p className="text-lg text-[#1D3557] mb-1 font-bold">🌟 5-Day Milestone Bonus! 🌟</p>
+            )}
             <p className="text-xl text-[#1D3557]">You earned <strong>₹{streak.reward}</strong>!</p>
           </div>
         </div>
