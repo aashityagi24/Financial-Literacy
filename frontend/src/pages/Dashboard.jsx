@@ -69,9 +69,7 @@ export default function Dashboard({ user, setUser }) {
       // Cap to 2 active quests on dashboard
       setQuests(activeQuests.slice(0, 2));
       // Get up to 8 badges (earned first, then unearned)
-      console.log('Badges API response:', badgesRes.data);
       const badgesList = badgesRes.data.badges?.slice(0, 8) || [];
-      console.log('First badge:', badgesList[0]);
       setBadges(badgesList);
       setBadgeStats({ total: badgesRes.data.total_badges || 0, earned: badgesRes.data.earned_count || 0 });
       
