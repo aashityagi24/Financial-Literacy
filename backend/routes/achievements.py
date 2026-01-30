@@ -403,8 +403,8 @@ async def seed_badges(request: Request):
     db = get_db()
     await require_admin(request)
     
-    # Clear existing badges
-    await db.achievements.delete_many({"category": "first_time"})
+    # Clear existing badges and insert new ones
+    await db.achievements.delete_many({})
     
     # Insert new badges
     for badge in FIRST_TIME_BADGES:
@@ -423,32 +423,132 @@ async def get_user_badges(request: Request):
     db = get_db()
     user = await get_current_user(request)
     
-    # Get all available badges
-    all_badges = FIRST_TIME_BADGES.copy()
+    badges = await get_all_badges_with_user_status(db, user["user_id"])
     
-    # Get user's earned badges
-    earned = await db.user_achievements.find(
-        {"user_id": user["user_id"]},
-        {"_id": 0}
-    ).to_list(100)
-    earned_ids = {e["achievement_id"] for e in earned}
-    earned_map = {e["achievement_id"]: e for e in earned}
-    
-    # Merge data
-    badges_with_status = []
-    for badge in all_badges:
-        badge_data = {
-            **badge,
-            "earned": badge["achievement_id"] in earned_ids,
-            "earned_at": earned_map.get(badge["achievement_id"], {}).get("earned_at")
-        }
-        badges_with_status.append(badge_data)
-    
-    # Sort: earned badges first, then unearned
-    badges_with_status.sort(key=lambda x: (not x["earned"], x["name"]))
+    earned_count = len([b for b in badges if b.get("earned")])
     
     return {
-        "badges": badges_with_status,
-        "total_badges": len(all_badges),
-        "earned_count": len(earned_ids)
+        "badges": badges,
+        "total_badges": len(badges),
+        "earned_count": earned_count
+    }
+
+# ============== ADMIN BADGE MANAGEMENT ==============
+
+@router.get("/admin/badges")
+async def admin_get_all_badges(request: Request):
+    """Admin: Get all badges for management"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    badges = await db.achievements.find({}, {"_id": 0}).to_list(100)
+    
+    # If no badges, seed the defaults
+    if not badges:
+        for badge in FIRST_TIME_BADGES:
+            await db.achievements.update_one(
+                {"achievement_id": badge["achievement_id"]},
+                {"$set": badge},
+                upsert=True
+            )
+        badges = FIRST_TIME_BADGES.copy()
+    
+    return {"badges": badges, "total": len(badges)}
+
+@router.post("/admin/badges")
+async def admin_create_badge(request: Request):
+    """Admin: Create a new badge"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    body = await request.json()
+    
+    # Validate required fields
+    required = ["name", "description", "icon", "category", "points"]
+    for field in required:
+        if field not in body:
+            raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
+    
+    # Generate ID if not provided
+    badge_id = body.get("achievement_id") or f"badge_{uuid.uuid4().hex[:12]}"
+    
+    badge_doc = {
+        "achievement_id": badge_id,
+        "name": body["name"],
+        "description": body["description"],
+        "icon": body["icon"],
+        "category": body["category"],
+        "points": int(body["points"]),
+        "trigger": body.get("trigger", "manual"),
+        "is_active": body.get("is_active", True),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.achievements.insert_one(badge_doc)
+    
+    return {"message": "Badge created", "badge": badge_doc}
+
+@router.put("/admin/badges/{badge_id}")
+async def admin_update_badge(badge_id: str, request: Request):
+    """Admin: Update an existing badge"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    body = await request.json()
+    
+    existing = await db.achievements.find_one({"achievement_id": badge_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Badge not found")
+    
+    update_fields = {}
+    allowed_fields = ["name", "description", "icon", "category", "points", "trigger", "is_active"]
+    
+    for field in allowed_fields:
+        if field in body:
+            update_fields[field] = body[field]
+    
+    if update_fields:
+        update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.achievements.update_one(
+            {"achievement_id": badge_id},
+            {"$set": update_fields}
+        )
+    
+    updated = await db.achievements.find_one({"achievement_id": badge_id}, {"_id": 0})
+    return {"message": "Badge updated", "badge": updated}
+
+@router.delete("/admin/badges/{badge_id}")
+async def admin_delete_badge(badge_id: str, request: Request):
+    """Admin: Delete a badge"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    result = await db.achievements.delete_one({"achievement_id": badge_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Badge not found")
+    
+    # Also delete user achievements for this badge
+    await db.user_achievements.delete_many({"achievement_id": badge_id})
+    
+    return {"message": "Badge deleted"}
+
+@router.get("/admin/badge-categories")
+async def get_badge_categories(request: Request):
+    """Get available badge categories"""
+    from services.auth import require_admin
+    await require_admin(request)
+    
+    return {
+        "categories": [
+            {"id": "savings", "name": "Savings", "color": "#06D6A0"},
+            {"id": "investing", "name": "Investing", "color": "#3D5A80"},
+            {"id": "learning", "name": "Learning", "color": "#FFD23F"},
+            {"id": "streak", "name": "Streak", "color": "#EE6C4D"},
+            {"id": "gifting", "name": "Gifting", "color": "#9B5DE5"}
+        ]
     }
