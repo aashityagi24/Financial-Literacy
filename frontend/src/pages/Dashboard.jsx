@@ -529,24 +529,28 @@ export default function Dashboard({ user, setUser }) {
             ) : (
               <div className="grid grid-cols-4 gap-3 gap-y-4">
                 {badges.map((badge) => {
-                  console.log('Rendering badge:', badge.name, 'image_url:', badge.image_url);
+                  const hasImage = badge.image_url && badge.image_url.length > 0;
+                  const imageUrl = hasImage ? getAssetUrl(badge.image_url) : null;
                   return (
                   <div 
                     key={badge.achievement_id} 
                     className={`text-center group cursor-pointer ${!badge.earned ? 'opacity-40' : ''}`}
-                    title={badge.earned ? `${badge.name} - ${badge.description}` : `${badge.name} - Not yet earned`}
+                    title={`${badge.name} - ${badge.description}${hasImage ? ' (has image)' : ' (no image)'}`}
                   >
                     <div className={`w-12 h-12 mx-auto rounded-xl border-2 flex items-center justify-center overflow-hidden transition-all ${
                       badge.earned 
                         ? 'bg-[#FFD23F] border-[#1D3557] badge-earned group-hover:scale-110' 
                         : 'bg-gray-200 border-gray-400 grayscale'
                     }`}>
-                      {badge.image_url ? (
+                      {hasImage ? (
                         <img 
-                          src={getAssetUrl(badge.image_url)} 
+                          src={imageUrl} 
                           alt={badge.name}
                           className="w-full h-full object-cover"
-                          onError={(e) => console.log('Image load error for', badge.name, e)}
+                          onError={(e) => {
+                            console.error('Image failed to load:', imageUrl);
+                            e.target.style.display = 'none';
+                          }}
                         />
                       ) : (
                         <span className="text-xl">{badge.icon}</span>
