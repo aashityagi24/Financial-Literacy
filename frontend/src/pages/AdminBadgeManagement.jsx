@@ -86,13 +86,17 @@ export default function AdminBadgeManagement({ user }) {
       return;
     }
     
+    console.log('Creating badge with formData:', formData);
+    
     try {
-      await axios.post(`${API}/admin/badges`, formData);
+      const response = await axios.post(`${API}/admin/badges`, formData);
+      console.log('Create response:', response.data);
       toast.success('Badge created successfully');
       setShowCreateModal(false);
       resetForm();
       fetchData();
     } catch (error) {
+      console.error('Create error:', error);
       toast.error(error.response?.data?.detail || 'Failed to create badge');
     }
   };
