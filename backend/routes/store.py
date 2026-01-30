@@ -53,6 +53,7 @@ async def get_store_items(request: Request):
 async def purchase_item(purchase: PurchaseCreate, request: Request):
     """Purchase an item from the store"""
     from services.auth import get_current_user
+    from routes.achievements import award_badge
     db = get_db()
     user = await get_current_user(request)
     
@@ -119,7 +120,10 @@ async def purchase_item(purchase: PurchaseCreate, request: Request):
             {"$set": {"shopping_item_details.$.purchased": True}}
         )
     
-    return {"message": "Purchase successful", "item": item}
+    # Award "First Shopper" badge
+    badge = await award_badge(db, user["user_id"], "store_purchase")
+    
+    return {"message": "Purchase successful", "item": item, "badge_earned": badge}
 
 @router.get("/store/purchases")
 async def get_purchases(request: Request):
