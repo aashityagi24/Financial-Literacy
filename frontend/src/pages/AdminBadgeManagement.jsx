@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { API } from '@/App';
+import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
-  ChevronLeft, Award, Plus, Edit2, Trash2, Save, X, Search
+  ChevronLeft, Award, Plus, Edit2, Trash2, Save, X, Search, Upload, Image as ImageIcon
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-// Common emoji icons for badges
+// Common emoji icons for badges (fallback if no image)
 const BADGE_ICONS = [
   '🛒', '🔄', '⭐', '💝', '🎁', '📈', '🌱', '💰', '🌻', '📚',
   '🎯', '🐷', '🏆', '🔥', '💎', '🎖️', '🥇', '🥈', '🥉', '🌟',
@@ -36,6 +36,8 @@ export default function AdminBadgeManagement({ user }) {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
   
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -47,6 +49,7 @@ export default function AdminBadgeManagement({ user }) {
     name: '',
     description: '',
     icon: '⭐',
+    image_url: '',
     category: 'savings',
     points: 10,
     trigger: 'manual',
