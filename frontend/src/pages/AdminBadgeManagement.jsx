@@ -146,11 +146,38 @@ export default function AdminBadgeManagement({ user }) {
       name: '',
       description: '',
       icon: '⭐',
+      image_url: '',
       category: 'savings',
       points: 10,
       trigger: 'manual',
       is_active: true
     });
+  };
+  
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+    
+    setUploading(true);
+    const formDataUpload = new FormData();
+    formDataUpload.append('file', file);
+    
+    try {
+      const res = await axios.post(`${API}/upload/badge`, formDataUpload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setFormData(prev => ({ ...prev, image_url: res.data.url }));
+      toast.success('Badge image uploaded!');
+    } catch (error) {
+      toast.error('Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
   };
   
   const getCategoryColor = (category) => {
