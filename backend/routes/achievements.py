@@ -128,7 +128,7 @@ async def claim_streak_bonus(request: Request):
 
 @router.post("/streak/checkin")
 async def streak_checkin(request: Request):
-    """Daily streak check-in"""
+    """Daily streak check-in - Awards ₹5 daily, ₹10 on every 5th day (5, 10, 15, 20...)"""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
@@ -139,7 +139,7 @@ async def streak_checkin(request: Request):
     current_streak = user.get("streak_count", 0)
     
     if last_checkin == today:
-        return {"message": "Already checked in today", "streak": current_streak, "bonus": 0}
+        return {"message": "Already checked in today", "streak": current_streak, "reward": 0}
     
     yesterday = (date.today() - timedelta(days=1)).isoformat()
     
@@ -148,8 +148,11 @@ async def streak_checkin(request: Request):
     else:
         current_streak = 1
     
-    # Calculate bonus
-    bonus_coins = min(5 + current_streak, 20)
+    # Calculate reward: ₹5 daily, ₹10 on every 5th day (5, 10, 15, 20...)
+    if current_streak % 5 == 0:
+        reward_coins = 10
+    else:
+        reward_coins = 5
     
     await db.users.update_one(
         {"user_id": user["user_id"]},
@@ -159,13 +162,25 @@ async def streak_checkin(request: Request):
         }}
     )
     
+    # Add reward to spending wallet
     await db.wallet_accounts.update_one(
         {"user_id": user["user_id"], "account_type": "spending"},
-        {"$inc": {"balance": bonus_coins}}
+        {"$inc": {"balance": reward_coins}}
     )
+    
+    # Record transaction
+    await db.transactions.insert_one({
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "to_account": "spending",
+        "amount": reward_coins,
+        "transaction_type": "streak_reward",
+        "description": f"Day {current_streak} streak reward!" + (" (5-day bonus!)" if current_streak % 5 == 0 else ""),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
     
     return {
         "message": f"Check-in successful! {current_streak} day streak!",
         "streak": current_streak,
-        "bonus": bonus_coins
+        "reward": reward_coins
     }
