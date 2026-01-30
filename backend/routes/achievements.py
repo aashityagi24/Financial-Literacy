@@ -190,14 +190,14 @@ async def streak_checkin(request: Request):
 
 # ============== BADGE SYSTEM ==============
 
-# Badge definitions with cute icons
+# Badge definitions with cute icons and proper categories
 FIRST_TIME_BADGES = [
     {
         "achievement_id": "badge_first_purchase",
         "name": "First Shopper",
         "description": "Made your first purchase from the store!",
         "icon": "🛒",
-        "category": "first_time",
+        "category": "savings",
         "trigger": "store_purchase",
         "points": 5
     },
@@ -206,7 +206,7 @@ FIRST_TIME_BADGES = [
         "name": "Money Mover",
         "description": "Made your first transfer between jars!",
         "icon": "🔄",
-        "category": "first_time",
+        "category": "savings",
         "trigger": "jar_transfer",
         "points": 5
     },
@@ -215,7 +215,7 @@ FIRST_TIME_BADGES = [
         "name": "Quest Champion",
         "description": "Completed your first quest!",
         "icon": "⭐",
-        "category": "first_time",
+        "category": "learning",
         "trigger": "quest_complete",
         "points": 10
     },
@@ -224,7 +224,7 @@ FIRST_TIME_BADGES = [
         "name": "Generous Heart",
         "description": "Gave your first gift to a friend!",
         "icon": "💝",
-        "category": "first_time",
+        "category": "gifting",
         "trigger": "gift_given",
         "points": 10
     },
@@ -233,7 +233,7 @@ FIRST_TIME_BADGES = [
         "name": "Gift Getter",
         "description": "Received your first gift from a friend!",
         "icon": "🎁",
-        "category": "first_time",
+        "category": "gifting",
         "trigger": "gift_received",
         "points": 5
     },
@@ -242,7 +242,7 @@ FIRST_TIME_BADGES = [
         "name": "Stock Star",
         "description": "Made your first stock investment!",
         "icon": "📈",
-        "category": "first_time",
+        "category": "investing",
         "trigger": "stock_buy",
         "points": 10
     },
@@ -251,7 +251,7 @@ FIRST_TIME_BADGES = [
         "name": "Green Thumb",
         "description": "Planted your first seed in the money garden!",
         "icon": "🌱",
-        "category": "first_time",
+        "category": "investing",
         "trigger": "garden_plant",
         "points": 10
     },
@@ -260,7 +260,7 @@ FIRST_TIME_BADGES = [
         "name": "Profit Pro",
         "description": "Made your first profit from selling stocks!",
         "icon": "💰",
-        "category": "first_time",
+        "category": "investing",
         "trigger": "stock_profit",
         "points": 15
     },
@@ -269,7 +269,7 @@ FIRST_TIME_BADGES = [
         "name": "Harvest Hero",
         "description": "Made your first profit from selling plants!",
         "icon": "🌻",
-        "category": "first_time",
+        "category": "investing",
         "trigger": "garden_profit",
         "points": 15
     },
@@ -278,7 +278,7 @@ FIRST_TIME_BADGES = [
         "name": "Learning Starter",
         "description": "Completed your first learning activity!",
         "icon": "📚",
-        "category": "first_time",
+        "category": "learning",
         "trigger": "activity_complete",
         "points": 5
     },
@@ -287,7 +287,7 @@ FIRST_TIME_BADGES = [
         "name": "Goal Setter",
         "description": "Created your first savings goal!",
         "icon": "🎯",
-        "category": "first_time",
+        "category": "savings",
         "trigger": "goal_created",
         "points": 5
     },
@@ -296,7 +296,7 @@ FIRST_TIME_BADGES = [
         "name": "Saver Starter",
         "description": "Made your first contribution to a savings goal!",
         "icon": "🐷",
-        "category": "first_time",
+        "category": "savings",
         "trigger": "saving_made",
         "points": 10
     },
@@ -305,7 +305,7 @@ FIRST_TIME_BADGES = [
         "name": "Dream Achiever",
         "description": "Achieved your first savings goal!",
         "icon": "🏆",
-        "category": "first_time",
+        "category": "savings",
         "trigger": "goal_achieved",
         "points": 20
     }
