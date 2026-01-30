@@ -16,6 +16,44 @@ def get_db():
 
 router = APIRouter(tags=["achievements"])
 
+async def get_all_badges_with_user_status(db, user_id: str):
+    """Helper to get all badges with user's earned status"""
+    # First, try to get badges from database
+    db_badges = await db.achievements.find({}, {"_id": 0}).to_list(100)
+    
+    # If no badges in DB, use the default ones and seed them
+    if not db_badges:
+        for badge in FIRST_TIME_BADGES:
+            await db.achievements.update_one(
+                {"achievement_id": badge["achievement_id"]},
+                {"$set": badge},
+                upsert=True
+            )
+        db_badges = FIRST_TIME_BADGES.copy()
+    
+    # Get user's earned badges
+    earned = await db.user_achievements.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).to_list(100)
+    earned_ids = {e["achievement_id"] for e in earned}
+    earned_map = {e["achievement_id"]: e for e in earned}
+    
+    # Merge data
+    badges_with_status = []
+    for badge in db_badges:
+        badge_data = {
+            **badge,
+            "earned": badge["achievement_id"] in earned_ids,
+            "earned_at": earned_map.get(badge["achievement_id"], {}).get("earned_at")
+        }
+        badges_with_status.append(badge_data)
+    
+    # Sort: earned badges first
+    badges_with_status.sort(key=lambda x: (not x["earned"], x.get("name", "")))
+    
+    return badges_with_status
+
 @router.get("/achievements")
 async def get_achievements(request: Request):
     """Get all achievements and user's earned ones"""
@@ -23,22 +61,8 @@ async def get_achievements(request: Request):
     db = get_db()
     user = await get_current_user(request)
     
-    all_achievements = await db.achievements.find({}, {"_id": 0}).to_list(100)
-    user_achievements = await db.user_achievements.find(
-        {"user_id": user["user_id"]},
-        {"_id": 0}
-    ).to_list(100)
-    
-    earned_ids = {ua["achievement_id"] for ua in user_achievements}
-    
-    result = []
-    for ach in all_achievements:
-        result.append({
-            **ach,
-            "earned": ach["achievement_id"] in earned_ids
-        })
-    
-    return result
+    badges = await get_all_badges_with_user_status(db, user["user_id"])
+    return badges
 
 @router.post("/achievements/{achievement_id}/claim")
 async def claim_achievement(achievement_id: str, request: Request):
