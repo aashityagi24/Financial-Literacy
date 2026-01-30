@@ -107,7 +107,8 @@ async def get_wallet(request: Request):
     
     return {
         "accounts": enriched_accounts,
-        "total_available": total_available,
+        "total_balance": total_available,  # For dashboard header display
+        "total_available": total_available,  # Alias for clarity
         "savings_allocated": savings_allocated,
         "investing_allocated": investing_allocated
     }
