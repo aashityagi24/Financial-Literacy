@@ -340,10 +340,11 @@ export default function AdminBadgeManagement({ user }) {
         )}
       </div>
       
-      {/* Hidden file input */}
+      {/* Hidden file input - key resets when modals change */}
       <input 
         type="file" 
         ref={fileInputRef} 
+        key={`file-input-${showCreateModal}-${showEditModal}`}
         accept="image/*" 
         onChange={handleImageUpload}
         className="hidden"
