@@ -255,9 +255,14 @@ async def buy_stock(request: Request):
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
+    # Award "Stock Star" badge for first stock investment
+    from routes.achievements import award_badge
+    badge = await award_badge(db, user["user_id"], "stock_buy")
+    
     return {
         "message": f"Bought {quantity} shares of {stock['name']}",
-        "total_cost": total_cost
+        "total_cost": total_cost,
+        "badge_earned": badge
     }
 
 @router.post("/sell")
