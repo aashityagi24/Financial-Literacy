@@ -1,10 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, Shield, X, School } from 'lucide-react';
+import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, Shield, X, School, Play, Pause } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
+// Helper to get asset URL
+const getAssetUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  if (path.startsWith('/api/')) return `${BACKEND_URL}${path}`;
+  return `${BACKEND_URL}/api/uploads/${path}`;
+};
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -12,6 +21,22 @@ export default function LandingPage() {
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [walkthroughVideo, setWalkthroughVideo] = useState(null);
+
+  useEffect(() => {
+    // Fetch walkthrough video settings
+    const fetchWalkthroughVideo = async () => {
+      try {
+        const response = await axios.get(`${API}/admin/settings/walkthrough-video`);
+        if (response.data.url) {
+          setWalkthroughVideo(response.data);
+        }
+      } catch (error) {
+        console.log('No walkthrough video configured');
+      }
+    };
+    fetchWalkthroughVideo();
+  }, []);
   
   // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
   const handleLogin = () => {
