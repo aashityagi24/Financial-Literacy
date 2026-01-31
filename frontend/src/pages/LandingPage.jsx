@@ -260,6 +260,54 @@ export default function LandingPage() {
         </div>
       </section>
       
+      {/* Video Walkthrough Section */}
+      {walkthroughVideo?.url && (
+        <section className="py-20 bg-[#F8F9FA]" data-testid="walkthrough-video-section">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
+                {walkthroughVideo.title || 'See CoinQuest in Action'}
+              </h2>
+              <p className="text-xl text-[#3D5A80] max-w-2xl mx-auto">
+                {walkthroughVideo.description || 'Watch how kids learn financial literacy through fun games and activities'}
+              </p>
+            </div>
+            
+            <div className="max-w-4xl mx-auto">
+              <div className="card-playful p-4 bg-white">
+                <div className="relative rounded-2xl overflow-hidden border-3 border-[#1D3557] bg-black aspect-video">
+                  <video
+                    controls
+                    className="w-full h-full"
+                    poster=""
+                    data-testid="walkthrough-video-player"
+                  >
+                    <source src={getAssetUrl(walkthroughVideo.url)} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              </div>
+              
+              {/* Video highlight badges */}
+              <div className="flex flex-wrap justify-center gap-4 mt-8">
+                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border-2 border-[#1D3557] shadow-[2px_2px_0px_0px_#1D3557]">
+                  <Play className="w-4 h-4 text-[#06D6A0]" />
+                  <span className="text-sm font-bold text-[#1D3557]">Interactive Demos</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border-2 border-[#1D3557] shadow-[2px_2px_0px_0px_#1D3557]">
+                  <Star className="w-4 h-4 text-[#FFD23F]" />
+                  <span className="text-sm font-bold text-[#1D3557]">Real Features</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border-2 border-[#1D3557] shadow-[2px_2px_0px_0px_#1D3557]">
+                  <Trophy className="w-4 h-4 text-[#EE6C4D]" />
+                  <span className="text-sm font-bold text-[#1D3557]">Fun Learning</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+      
       {/* Grade Levels Section */}
       <section className="py-20">
         <div className="container mx-auto px-6">
