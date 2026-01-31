@@ -368,6 +368,26 @@ export default function AdminPage({ user }) {
               <ChevronRight className="w-6 h-6 text-white" />
             </div>
           </Link>
+          
+          {/* Video Management Card */}
+          <Link 
+            to="/admin/video" 
+            className="block bg-gradient-to-r from-[#EE6C4D] to-[#F4A261] rounded-xl p-5 hover:shadow-lg transition-shadow"
+            data-testid="video-management-link"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Video className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Walkthrough Video</h3>
+                  <p className="text-white/80 text-sm">Manage landing page video</p>
+                </div>
+              </div>
+              <ChevronRight className="w-6 h-6 text-white" />
+            </div>
+          </Link>
         </div>
         
         {/* Tabs */}
