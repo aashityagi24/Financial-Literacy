@@ -411,6 +411,11 @@ A gamified financial literacy learning application for children (K-5) with disti
 - GET /api/teacher/classrooms/{id}/comparison - **NEW** Compare all students in classroom
 - POST /api/teacher/classrooms/{id}/reward - Give rewards to students
 
+### Site Settings
+- GET /api/admin/settings/walkthrough-video - Public endpoint for landing page video
+- PUT /api/admin/settings/walkthrough-video - Admin-only update video settings  
+- DELETE /api/admin/settings/walkthrough-video - Admin-only delete video
+
 ## Credentials
 - **Admin:** admin@learnersplanet.com / finlit@2026
 - **Test School:** springfield / test123 (Springfield Elementary)
