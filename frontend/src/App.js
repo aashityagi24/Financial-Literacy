@@ -36,6 +36,7 @@ import SchoolLogin from "@/pages/SchoolLogin";
 import SchoolDashboard from "@/pages/SchoolDashboard";
 import GiftingPage from "@/pages/GiftingPage";
 import AdminBadgeManagement from "@/pages/AdminBadgeManagement";
+import AdminVideoManagement from "@/pages/AdminVideoManagement";
 
 // Components
 import OnboardingTour from "@/components/OnboardingTour";
@@ -292,6 +293,11 @@ function AppRouter() {
       <Route path="/admin/badges" element={
         <ProtectedRoute>
           {({ user }) => <AdminBadgeManagement user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/video" element={
+        <ProtectedRoute>
+          {({ user }) => <AdminVideoManagement user={user} />}
         </ProtectedRoute>
       } />
     </Routes>
