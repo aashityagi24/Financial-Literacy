@@ -149,6 +149,31 @@ async def upload_video_file(file: UploadFile = File(...)):
     
     return {"url": f"/api/uploads/videos/{filename}"}
 
+@router.post("/walkthrough-video")
+async def upload_walkthrough_video(file: UploadFile = File(...)):
+    """Upload the product walkthrough video for the landing page"""
+    allowed_extensions = [".mp4", ".webm", ".mov"]
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    
+    if file_ext not in allowed_extensions:
+        raise HTTPException(status_code=400, detail=f"File must be a video ({', '.join(allowed_extensions)})")
+    
+    # Use a consistent filename for the walkthrough video
+    filename = f"walkthrough{file_ext}"
+    file_path = VIDEOS_DIR / filename
+    
+    # Remove any existing walkthrough video with different extension
+    for ext in allowed_extensions:
+        existing = VIDEOS_DIR / f"walkthrough{ext}"
+        if existing.exists() and existing != file_path:
+            existing.unlink()
+    
+    # Save the video file
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    return {"url": f"/api/uploads/videos/{filename}"}
+
 @router.post("/goal-image")
 async def upload_goal_image(file: UploadFile = File(...)):
     """Upload an image for a savings goal"""
