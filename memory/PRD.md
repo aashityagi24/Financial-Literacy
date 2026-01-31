@@ -40,6 +40,31 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Role-based visibility (Child, Parent, Teacher)
 - Progressive unlock system for children
 
+### Recent Updates (January 31, 2026)
+
+**Session 9 - Video Walkthrough Feature:**
+
+1. **Video Walkthrough Section Implemented** ✅ (P0 NEW FEATURE)
+   - **Landing Page Enhancement**: Added a new video section between "Features" and "Grade Levels" sections
+   - **Conditional Rendering**: Video section only appears when an admin has uploaded a walkthrough video
+   - **Backend Changes** (`/app/backend/routes/admin.py`):
+     - GET `/api/admin/settings/walkthrough-video` - Public endpoint to fetch video settings
+     - PUT `/api/admin/settings/walkthrough-video` - Admin-only endpoint to update video URL, title, and description
+     - DELETE `/api/admin/settings/walkthrough-video` - Admin-only endpoint to remove video
+   - **Backend Changes** (`/app/backend/routes/uploads.py`):
+     - POST `/api/upload/walkthrough-video` - Handles video file upload (MP4, WebM, MOV, max 100MB)
+   - **Frontend AdminVideoManagement.jsx (NEW)**:
+     - Video preview section with playback controls
+     - File upload with drag-and-drop style interface
+     - Title and description editing
+     - Save settings and delete video functionality
+   - **Frontend AdminPage.jsx**:
+     - Added "Walkthrough Video" management card in the admin dashboard grid
+   - **Frontend LandingPage.jsx**:
+     - Conditional video section with responsive design
+     - Video highlight badges (Interactive Demos, Real Features, Fun Learning)
+   - **Database**: Uses `site_settings` collection with key `walkthrough_video`
+
 ### Recent Updates (January 29, 2026)
 
 **Session 8 - Expired Quest Logic & Streak Rewards:**
