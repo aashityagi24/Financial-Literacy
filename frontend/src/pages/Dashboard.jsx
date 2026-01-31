@@ -525,7 +525,7 @@ export default function Dashboard({ user, setUser }) {
             {badges.length === 0 ? (
               <p className="text-center text-[#3D5A80] py-4">Complete activities to earn your first badge!</p>
             ) : (
-              <div className="grid grid-cols-4 gap-3 gap-y-4">
+              <div className="grid grid-cols-4 gap-4 gap-y-5">
                 {badges.map((badge) => {
                   const hasImage = badge.image_url && badge.image_url.length > 0;
                   const imageUrl = hasImage ? getAssetUrl(badge.image_url) : null;
@@ -535,7 +535,7 @@ export default function Dashboard({ user, setUser }) {
                     className={`text-center group cursor-pointer ${!badge.earned ? 'opacity-40' : ''}`}
                     title={`${badge.name} - ${badge.description}${hasImage ? ' (has image)' : ' (no image)'}`}
                   >
-                    <div className={`w-12 h-12 mx-auto rounded-xl border-2 flex items-center justify-center overflow-hidden transition-all ${
+                    <div className={`w-16 h-16 mx-auto rounded-xl border-2 flex items-center justify-center overflow-hidden transition-all ${
                       badge.earned 
                         ? 'bg-[#FFD23F] border-[#1D3557] badge-earned group-hover:scale-110' 
                         : 'bg-gray-200 border-gray-400 grayscale'
@@ -551,10 +551,10 @@ export default function Dashboard({ user, setUser }) {
                           }}
                         />
                       ) : (
-                        <span className="text-xl">{badge.icon}</span>
+                        <span className="text-2xl">{badge.icon}</span>
                       )}
                     </div>
-                    <p className={`text-[10px] font-bold mt-1 truncate ${badge.earned ? 'text-[#1D3557]' : 'text-gray-400'}`}>
+                    <p className={`text-xs font-bold mt-1.5 truncate ${badge.earned ? 'text-[#1D3557]' : 'text-gray-400'}`}>
                       {badge.name}
                     </p>
                   </div>
