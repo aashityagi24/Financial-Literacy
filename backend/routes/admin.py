@@ -987,3 +987,52 @@ async def admin_get_scheduler_status(request: Request):
         "last_run": last_run.get("timestamp") if last_run else None,
         "last_job": last_run.get("job_name") if last_run else None
     }
+
+# ============== SITE SETTINGS (Walkthrough Video, etc.) ==============
+
+@router.get("/settings/walkthrough-video")
+async def get_walkthrough_video(request: Request):
+    """Get the walkthrough video URL (public endpoint)"""
+    db = get_db()
+    setting = await db.site_settings.find_one({"key": "walkthrough_video"}, {"_id": 0})
+    if setting:
+        return {"url": setting.get("value"), "title": setting.get("title", ""), "description": setting.get("description", "")}
+    return {"url": None, "title": "", "description": ""}
+
+@router.put("/settings/walkthrough-video")
+async def update_walkthrough_video(request: Request):
+    """Update the walkthrough video URL"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    
+    await db.site_settings.update_one(
+        {"key": "walkthrough_video"},
+        {"$set": {
+            "key": "walkthrough_video",
+            "value": body.get("url"),
+            "title": body.get("title", "See CoinQuest in Action"),
+            "description": body.get("description", "Watch how kids learn financial literacy through fun games and activities"),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    return {"message": "Walkthrough video updated"}
+
+@router.delete("/settings/walkthrough-video")
+async def delete_walkthrough_video(request: Request):
+    """Delete the walkthrough video"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    # Get current video URL to delete the file
+    setting = await db.site_settings.find_one({"key": "walkthrough_video"})
+    if setting and setting.get("value"):
+        video_path = UPLOADS_DIR / "videos" / setting["value"].split("/")[-1]
+        if video_path.exists():
+            video_path.unlink()
+    
+    await db.site_settings.delete_one({"key": "walkthrough_video"})
+    return {"message": "Walkthrough video deleted"}
