@@ -40,6 +40,23 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Role-based visibility (Child, Parent, Teacher)
 - Progressive unlock system for children
 
+### Recent Updates (February 5, 2026)
+
+**Session 10 - Quest Data Isolation Bug Fix:**
+
+1. **Quest Filtering Bug Fixed** ✅ (P0 BUG FIX)
+   - **Issue**: New children were seeing quests and chores from other parents/teachers not linked to them
+   - **Root Cause**: The query used `is_active: True` which returned ALL active quests without proper filtering
+   - **Backend Fix** (`/app/backend/routes/child.py` lines 881-960):
+     - **Admin quests**: Now filtered by `min_grade`/`max_grade` matching child's grade
+     - **Teacher quests**: Now filtered by `classroom_id` in child's enrolled classrooms (via `classroom_students` collection)
+     - **Parent chores**: Now filtered by `child_id` matching the current user (via `parent_child_links` collection)
+   - **Result**: Children now only see quests meant for them:
+     - Admin quests for their grade range
+     - Teacher quests from classrooms they're enrolled in
+     - Parent chores assigned specifically to them
+   - **Data Isolation**: New children without parent links or classroom enrollments no longer see unrelated content
+
 ### Recent Updates (January 31, 2026)
 
 **Session 9 - Video Walkthrough Feature:**
