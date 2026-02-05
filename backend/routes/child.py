@@ -888,16 +888,82 @@ async def get_child_quests(request: Request, source: str = None, sort: str = "du
     if user.get("role") != "child":
         raise HTTPException(status_code=403, detail="Only children can access quests")
     
-    # Build filter - include both active quests and completed ones for this user
-    filter_query = {
+    child_grade = user.get("grade", 0)
+    user_id = user["user_id"]
+    
+    # Get classroom IDs the child is enrolled in
+    enrollments = await db.classroom_students.find(
+        {"student_id": user_id, "status": "active"},
+        {"classroom_id": 1}
+    ).to_list(10)
+    classroom_ids = [e["classroom_id"] for e in enrollments]
+    
+    # Get parent IDs linked to this child
+    parent_links = await db.parent_child_links.find(
+        {"child_id": user_id, "status": "active"},
+        {"parent_id": 1}
+    ).to_list(10)
+    parent_ids = [p["parent_id"] for p in parent_links]
+    
+    # Build filter for quests the child should see:
+    # 1. Admin quests: grade-appropriate and active
+    # 2. Teacher quests: from classrooms the child is enrolled in
+    # 3. Parent chores: assigned specifically to this child
+    quest_conditions = []
+    
+    # Admin quests - grade appropriate
+    admin_condition = {
+        "creator_type": "admin",
+        "is_active": True,
         "$or": [
-            {"is_active": True},  # Active quests
-            {"status": "completed", "child_id": user["user_id"]},  # Completed chores assigned to this user
-            {"status": "completed", "assigned_to": user["user_id"]}  # Completed chores assigned to this user
+            # Grade range matches
+            {"$and": [
+                {"min_grade": {"$lte": child_grade}},
+                {"max_grade": {"$gte": child_grade}}
+            ]},
+            # No grade restrictions (for all grades)
+            {"min_grade": {"$exists": False}},
+            {"min_grade": None}
         ]
     }
+    quest_conditions.append(admin_condition)
+    
+    # Teacher quests - from child's classrooms
+    if classroom_ids:
+        teacher_condition = {
+            "creator_type": "teacher",
+            "is_active": True,
+            "classroom_id": {"$in": classroom_ids}
+        }
+        quest_conditions.append(teacher_condition)
+    
+    # Parent chores - assigned to this specific child
+    parent_condition = {
+        "creator_type": "parent",
+        "child_id": user_id
+    }
+    quest_conditions.append(parent_condition)
+    
+    # Also include completed quests for this user (to show history)
+    completed_condition = {
+        "$or": [
+            {"status": "completed", "child_id": user_id},
+            {"status": "completed", "assigned_to": user_id}
+        ]
+    }
+    quest_conditions.append(completed_condition)
+    
+    # Build the main filter
+    filter_query = {"$or": quest_conditions}
+    
+    # Apply source filter if specified
     if source and source != 'all':
-        filter_query["creator_type"] = source
+        filter_query = {
+            "$and": [
+                filter_query,
+                {"creator_type": source}
+            ]
+        }
     
     # Get quests from admin, teachers, and parents
     quests = await db.new_quests.find(
