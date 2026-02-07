@@ -616,26 +616,78 @@ async def delete_shopping_list(list_id: str, request: Request):
 
 @router.post("/shopping-list/create-chore")
 async def create_chore_from_shopping(request: Request):
-    """Create a chore from a shopping list item"""
+    """Create a chore from shopping list items - saves to new_quests for child visibility"""
     from services.auth import require_parent
     db = get_db()
     parent = await require_parent(request)
     body = await request.json()
     
+    child_id = body.get("child_id")
+    list_item_ids = body.get("list_item_ids", [])
+    title = body.get("title")
+    description = body.get("description", "")
+    reward_amount = body.get("reward_amount", 0)
+    
+    if not child_id or not title:
+        raise HTTPException(status_code=400, detail="child_id and title are required")
+    
+    if not list_item_ids:
+        raise HTTPException(status_code=400, detail="At least one list item must be selected")
+    
+    # Create the chore in new_quests collection so child can see it
     chore_id = f"chore_{uuid.uuid4().hex[:12]}"
-    await db.parent_chores.insert_one({
+    
+    # Get item details for the description
+    selected_items = await db.shopping_lists.find(
+        {"list_id": {"$in": list_item_ids}, "parent_id": parent["user_id"]},
+        {"_id": 0, "item_name": 1, "quantity": 1}
+    ).to_list(50)
+    
+    items_description = ", ".join([f"{i['item_name']} x{i['quantity']}" for i in selected_items])
+    full_description = f"{description}\n\nItems: {items_description}" if description else f"Items: {items_description}"
+    
+    await db.new_quests.insert_one({
+        "quest_id": chore_id,
         "chore_id": chore_id,
-        "parent_id": parent["user_id"],
-        "child_id": body.get("child_id"),
-        "title": body.get("title"),
-        "description": body.get("description", ""),
-        "reward_coins": body.get("reward_coins", 0),
-        "from_shopping_list": body.get("list_id"),
-        "is_completed": False,
-        "is_verified": False,
+        "title": title,
+        "description": full_description,
+        "creator_type": "parent",
+        "creator_id": parent["user_id"],
+        "creator_name": parent.get("name", "Parent"),
+        "child_id": child_id,  # Assigned to specific child
+        "reward_amount": reward_amount,
+        "total_points": reward_amount,
+        "from_shopping_list": True,
+        "shopping_list_items": list_item_ids,
+        "is_active": True,
+        "status": "active",
+        "questions": [],  # No questions for shopping chores
         "created_at": datetime.now(timezone.utc).isoformat()
     })
-    return {"message": "Chore created from shopping list", "chore_id": chore_id}
+    
+    # Update shopping list items to mark them as assigned
+    await db.shopping_lists.update_many(
+        {"list_id": {"$in": list_item_ids}},
+        {"$set": {"status": "assigned", "chore_id": chore_id}}
+    )
+    
+    # Create notification for the child
+    await db.notifications.insert_one({
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": child_id,
+        "type": "chore",
+        "title": "New Shopping Chore!",
+        "message": f"Your parent assigned you a new chore: {title}",
+        "related_id": chore_id,
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        "message": "Chore created from shopping list",
+        "chore_id": chore_id,
+        "total_reward": reward_amount
+    }
 
 # ============== CHORE MANAGEMENT ROUTES ==============
 
