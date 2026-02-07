@@ -454,7 +454,7 @@ async def admin_get_store_items(request: Request):
     from services.auth import require_admin
     db = get_db()
     await require_admin(request)
-    items = await db.store_items.find({}, {"_id": 0}).to_list(500)
+    items = await db.admin_store_items.find({}, {"_id": 0}).to_list(500)
     return items
 
 @router.post("/store/items")
@@ -466,7 +466,7 @@ async def admin_create_store_item(request: Request):
     body = await request.json()
     
     item_id = f"item_{uuid.uuid4().hex[:12]}"
-    await db.store_items.insert_one({
+    await db.admin_store_items.insert_one({
         "item_id": item_id,
         "name": body.get("name", "New Item"),
         "description": body.get("description", ""),
@@ -474,9 +474,10 @@ async def admin_create_store_item(request: Request):
         "category_id": body.get("category_id"),
         "image_url": body.get("image_url"),
         "stock": body.get("stock", -1),
-        "is_available": body.get("is_available", True),
+        "is_active": body.get("is_active", True),
         "min_grade": body.get("min_grade", 0),
         "max_grade": body.get("max_grade", 5),
+        "unit": body.get("unit", "piece"),
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     return {"message": "Item created", "item_id": item_id}
@@ -489,9 +490,9 @@ async def admin_update_store_item(item_id: str, request: Request):
     await require_admin(request)
     body = await request.json()
     
-    fields = ["name", "description", "price", "category_id", "image_url", "stock", "is_available", "min_grade", "max_grade"]
+    fields = ["name", "description", "price", "category_id", "image_url", "stock", "is_active", "min_grade", "max_grade", "unit"]
     update = {k: v for k, v in body.items() if k in fields}
-    await db.store_items.update_one({"item_id": item_id}, {"$set": update})
+    await db.admin_store_items.update_one({"item_id": item_id}, {"$set": update})
     return {"message": "Item updated"}
 
 @router.delete("/store/items/{item_id}")
@@ -500,7 +501,7 @@ async def admin_delete_store_item(item_id: str, request: Request):
     from services.auth import require_admin
     db = get_db()
     await require_admin(request)
-    await db.store_items.delete_one({"item_id": item_id})
+    await db.admin_store_items.delete_one({"item_id": item_id})
     return {"message": "Item deleted"}
 
 # ============== ADMIN GARDEN MANAGEMENT ==============
