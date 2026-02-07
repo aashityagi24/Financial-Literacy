@@ -1462,11 +1462,15 @@ export default function ContentManagement({ user }) {
                   <SelectContent>{GRADE_OPTIONS.map(g => <SelectItem key={g.value} value={String(g.value)}>{g.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
+            
+            {/* Reward - Only show if content is visible to children */}
+            {contentForm.visible_to?.includes('child') && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Reward (₹)</label>
                 <Input type="number" value={contentForm.reward_coins} onChange={e => setContentForm(p => ({ ...p, reward_coins: parseInt(e.target.value) || 0 }))} />
+                <p className="text-xs text-gray-500 mt-1">Children earn this when completing the content</p>
               </div>
-            </div>
+            )}
             
             {/* Publish Toggle */}
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
