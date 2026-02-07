@@ -14,9 +14,9 @@ import time
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
-# Test credentials from the review request
-PARENT_SESSION = "parent_sess_7c07b59f98264ceda978"
-CHILD_SESSION = "test_sess_607235502edf45a6b4f7f0191a9fd1c0"
+# Test credentials - fresh sessions
+PARENT_SESSION = "test_parent_session_1770443884791"
+CHILD_SESSION = "test_child_session_1770443884808"
 PARENT_USER_ID = "user_22d32d6b6d43"
 CHILD_USER_ID = "user_cd3928036bf4"
 TEST_STORE_ITEM_ID = "item_2d7c7783cf53"  # Carrots - price 50.0
