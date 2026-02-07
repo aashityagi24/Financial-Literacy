@@ -409,7 +409,7 @@ export default function StorePage({ user }) {
                       onSelect={() => openPurchaseDialog(item)}
                       formatPrice={formatPrice}
                       inShoppingList={!!isInShoppingList(item.item_id)}
-                      isPurchased={!!isItemPurchased(item.item_id)}
+                      isPurchasedFromList={!!isItemPurchased(item.item_id)}
                     />
                   );
                 })}
