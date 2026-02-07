@@ -693,23 +693,23 @@ export default function StorePage({ user }) {
   );
 }
 
-// Item Card Component - No more "Owned" state
-function ItemCard({ item, index, canAfford, categoryColor, onSelect, formatPrice, inShoppingList, isPurchased }) {
+// Item Card Component - Items can always be re-purchased
+function ItemCard({ item, index, canAfford, categoryColor, onSelect, formatPrice, inShoppingList, isPurchasedFromList }) {
   return (
     <div
-      className={`card-playful p-4 cursor-pointer hover:scale-105 transition-transform relative ${isPurchased ? 'opacity-60' : ''}`}
+      className="card-playful p-4 cursor-pointer hover:scale-105 transition-transform relative"
       style={{ animationDelay: `${index * 0.03}s` }}
       onClick={onSelect}
     >
-      {/* Shopping List Indicator */}
-      {inShoppingList && !isPurchased && (
+      {/* Shopping List Indicator - Only show for items on list */}
+      {inShoppingList && !isPurchasedFromList && (
         <div className="absolute -top-2 -right-2 bg-[#FFD23F] text-[#1D3557] text-xs px-2 py-1 rounded-full font-bold border-2 border-[#1D3557] z-10">
           📋 On List!
         </div>
       )}
-      {isPurchased && (
+      {isPurchasedFromList && (
         <div className="absolute -top-2 -right-2 bg-[#06D6A0] text-white text-xs px-2 py-1 rounded-full font-bold border-2 border-[#1D3557] z-10">
-          ✓ Bought!
+          ✓ List Done!
         </div>
       )}
       
@@ -717,18 +717,18 @@ function ItemCard({ item, index, canAfford, categoryColor, onSelect, formatPrice
         <img 
           src={getAssetUrl(item.image_url)} 
           alt={item.name}
-          className={`w-full aspect-square rounded-xl border-3 border-[#1D3557] object-contain bg-white mb-3 ${isPurchased ? 'grayscale' : ''}`}
+          className="w-full aspect-square rounded-xl border-3 border-[#1D3557] object-contain bg-white mb-3"
         />
       ) : (
         <div 
-          className={`w-full aspect-square rounded-xl border-3 border-[#1D3557] flex items-center justify-center text-5xl mb-3 ${isPurchased ? 'grayscale' : ''}`}
+          className="w-full aspect-square rounded-xl border-3 border-[#1D3557] flex items-center justify-center text-5xl mb-3"
           style={{ backgroundColor: categoryColor + '20' }}
         >
           {item.category_icon || '📦'}
         </div>
       )}
       
-      <h3 className={`font-bold text-[#1D3557] mb-1 ${isPurchased ? 'line-through' : ''}`} style={{ fontFamily: 'Fredoka' }}>{item.name}</h3>
+      <h3 className="font-bold text-[#1D3557] mb-1" style={{ fontFamily: 'Fredoka' }}>{item.name}</h3>
       <p className="text-sm text-[#3D5A80] mb-2 line-clamp-2">{item.description}</p>
       
       <div className="flex items-center justify-between mb-2">
@@ -743,14 +743,12 @@ function ItemCard({ item, index, canAfford, categoryColor, onSelect, formatPrice
       
       <button
         className={`w-full py-2 font-bold rounded-xl border-2 border-[#1D3557] transition-all ${
-          isPurchased 
-            ? 'bg-[#06D6A0] text-white cursor-default'
-            : canAfford 
-              ? 'btn-primary hover:scale-105' 
-              : 'bg-[#98C1D9] text-[#1D3557]'
+          canAfford 
+            ? 'btn-primary hover:scale-105' 
+            : 'bg-[#98C1D9] text-[#1D3557]'
         }`}
       >
-        {isPurchased ? '✓ Purchased' : canAfford ? 'Buy Now' : 'Need more ₹'}
+        {canAfford ? 'Buy Now' : 'Need more ₹'}
       </button>
     </div>
   );
