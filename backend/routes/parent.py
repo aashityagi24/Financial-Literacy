@@ -704,6 +704,52 @@ async def create_chore_from_shopping(request: Request):
         "total_reward": reward_amount
     }
 
+@router.get("/children-purchases")
+async def get_children_purchases(request: Request):
+    """Get purchase history for all linked children"""
+    from services.auth import require_parent
+    db = get_db()
+    parent = await require_parent(request)
+    
+    # Get all linked children
+    links = await db.parent_child_links.find(
+        {"parent_id": parent["user_id"], "status": "active"},
+        {"child_id": 1}
+    ).to_list(20)
+    child_ids = [link["child_id"] for link in links]
+    
+    if not child_ids:
+        return []
+    
+    # Get purchases for all children
+    purchases = await db.store_purchases.find(
+        {"user_id": {"$in": child_ids}},
+        {"_id": 0}
+    ).sort("purchased_at", -1).to_list(200)
+    
+    # Group by child and add child names
+    children_purchases = {}
+    for purchase in purchases:
+        child_id = purchase.get("user_id")
+        if child_id not in children_purchases:
+            child = await db.users.find_one({"user_id": child_id}, {"_id": 0, "name": 1})
+            children_purchases[child_id] = {
+                "child_id": child_id,
+                "child_name": child.get("name") if child else "Unknown",
+                "purchases": []
+            }
+        children_purchases[child_id]["purchases"].append({
+            "purchase_id": purchase.get("purchase_id"),
+            "item_id": purchase.get("item_id"),
+            "item_name": purchase.get("item_name"),
+            "price": purchase.get("price"),
+            "quantity": purchase.get("quantity", 1),
+            "purchased_at": purchase.get("purchased_at"),
+            "from_shopping_chore": purchase.get("from_shopping_chore", False)
+        })
+    
+    return list(children_purchases.values())
+
 # ============== CHORE MANAGEMENT ROUTES ==============
 
 @router.get("/chore-requests")
