@@ -133,16 +133,21 @@ async def purchase_item(purchase: PurchaseCreate, request: Request):
     await db.transactions.insert_one(trans_doc)
     
     # Auto-mark shopping list item as purchased if applicable
+    # Use update_many to mark item as purchased in ALL active shopping chores
     if user.get("role") == "child":
-        await db.new_quests.update_one(
-            {
-                "child_id": user["user_id"],
-                "is_shopping_chore": True,
-                "is_active": True,
-                "shopping_item_details.item_id": purchase.item_id
-            },
-            {"$set": {"shopping_item_details.$.purchased": True}}
-        )
+        # Find all active shopping chores with this item and update each one
+        shopping_chores = await db.new_quests.find({
+            "child_id": user["user_id"],
+            "is_shopping_chore": True,
+            "is_active": True,
+            "shopping_item_details.item_id": purchase.item_id
+        }).to_list(50)
+        
+        for chore in shopping_chores:
+            await db.new_quests.update_one(
+                {"chore_id": chore["chore_id"], "shopping_item_details.item_id": purchase.item_id},
+                {"$set": {"shopping_item_details.$.purchased": True}}
+            )
     
     # Award "First Shopper" badge
     badge = await award_badge(db, user["user_id"], "store_purchase")
