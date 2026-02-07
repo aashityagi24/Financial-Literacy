@@ -328,11 +328,15 @@ async def admin_reorder_topics(request: Request):
     await require_admin(request)
     body = await request.json()
     
-    for item in body.get("topics", []):
-        await db.content_topics.update_one(
-            {"topic_id": item["topic_id"]},
-            {"$set": {"order": item["order"]}}
-        )
+    # Frontend sends 'items' with 'id' field, map to topic_id
+    items = body.get("items") or body.get("topics", [])
+    for item in items:
+        topic_id = item.get("id") or item.get("topic_id")
+        if topic_id:
+            await db.content_topics.update_one(
+                {"topic_id": topic_id},
+                {"$set": {"order": item.get("order", 0)}}
+            )
     
     return {"message": "Topics reordered"}
 
