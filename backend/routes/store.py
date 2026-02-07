@@ -91,9 +91,33 @@ async def purchase_item(purchase: PurchaseCreate, request: Request):
         "item_id": item["item_id"],
         "item_name": item["name"],
         "price": item["price"],
+        "quantity": 1,
         "purchased_at": datetime.now(timezone.utc).isoformat()
     }
     await db.purchases.insert_one(purchase_doc)
+    
+    # Also store in store_purchases for parent visibility
+    is_from_shopping_chore = False
+    if user.get("role") == "child":
+        # Check if this item is in an active shopping chore
+        shopping_chore = await db.new_quests.find_one({
+            "child_id": user["user_id"],
+            "is_shopping_chore": True,
+            "is_active": True,
+            "shopping_item_details.item_id": purchase.item_id
+        })
+        is_from_shopping_chore = shopping_chore is not None
+    
+    await db.store_purchases.insert_one({
+        "purchase_id": purchase_doc["purchase_id"],
+        "user_id": user["user_id"],
+        "item_id": item["item_id"],
+        "item_name": item["name"],
+        "price": item["price"],
+        "quantity": 1,
+        "from_shopping_chore": is_from_shopping_chore,
+        "purchased_at": datetime.now(timezone.utc).isoformat()
+    })
     
     # Record transaction
     trans_doc = {
