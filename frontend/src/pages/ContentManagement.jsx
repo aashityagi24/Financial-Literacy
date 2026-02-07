@@ -273,6 +273,18 @@ function SortableContentItem({ content, onEdit, onDelete, onMove, typeConfig }) 
   const gradeLabel = content.min_grade === 0 ? 'K' : content.min_grade;
   const maxGradeLabel = content.max_grade;
 
+  // Get preview URL based on content type
+  const getPreviewUrl = () => {
+    const data = content.content_data || {};
+    if (data.html_url) return getAssetUrl(data.html_url);
+    if (data.pdf_url) return getAssetUrl(data.pdf_url);
+    if (data.video_url) return getAssetUrl(data.video_url);
+    if (data.content_url) return data.content_url;
+    return null;
+  };
+
+  const previewUrl = getPreviewUrl();
+
   return (
     <div 
       ref={setNodeRef}
@@ -319,10 +331,22 @@ function SortableContentItem({ content, onEdit, onDelete, onMove, typeConfig }) 
           )}
         </div>
         <p className="text-sm text-gray-500 truncate">{content.description}</p>
-        <p className="text-xs text-green-600 font-medium">₹{content.reward_coins} reward</p>
+        {content.visible_to?.includes('child') && (
+          <p className="text-xs text-green-600 font-medium">₹{content.reward_coins} reward</p>
+        )}
       </div>
       
       <div className="flex items-center gap-2">
+        {previewUrl && (
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="text-green-500 hover:text-green-600"
+            onClick={() => window.open(previewUrl, '_blank')}
+          >
+            <Eye className="w-3 h-3 mr-1" /> View
+          </Button>
+        )}
         <Button size="sm" variant="ghost" className="text-blue-500 hover:text-blue-600" onClick={onMove}>
           <MoveRight className="w-3 h-3 mr-1" /> Move
         </Button>
