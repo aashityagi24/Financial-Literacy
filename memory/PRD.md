@@ -42,7 +42,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Recent Updates (February 5, 2026)
 
-**Session 10 - Quest Data Isolation Bug Fix:**
+**Session 10 - Quest Data Isolation & Shopping List Bug Fixes:**
 
 1. **Quest Filtering Bug Fixed** ✅ (P0 BUG FIX)
    - **Issue**: New children were seeing quests and chores from other parents/teachers not linked to them
@@ -56,6 +56,21 @@ A gamified financial literacy learning application for children (K-5) with disti
      - Teacher quests from classrooms they're enrolled in
      - Parent chores assigned specifically to them
    - **Data Isolation**: New children without parent links or classroom enrollments no longer see unrelated content
+
+2. **Parent Shopping List Bug Fixed** ✅ (P0 BUG FIX)
+   - **Issue**: Parents could add items from store but: (1) List wasn't visible, (2) Chores weren't visible to children
+   - **Root Causes**:
+     - POST `/shopping-list` wasn't saving item details (item_name, price, image_url)
+     - GET `/shopping-list` returned flat array instead of grouped by child
+     - `/create-chore` saved to wrong collection (`parent_chores` instead of `new_quests`)
+   - **Backend Fix** (`/app/backend/routes/parent.py` lines 538-690):
+     - POST now fetches full item details from `admin_store_items` collection
+     - GET now returns `[{child_id, items: [...]}]` grouped structure
+     - create-chore now saves to `new_quests` collection with `child_id` for visibility
+   - **Result**: Full shopping list workflow now works:
+     - Parents can add items and see them in the list
+     - Parents can create chores from selected items
+     - Children see shopping chores in their Quest Board
 
 ### Recent Updates (January 31, 2026)
 
