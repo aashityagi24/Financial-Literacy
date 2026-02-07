@@ -421,10 +421,13 @@ async def admin_reorder_items(request: Request):
     body = await request.json()
     
     for item in body.get("items", []):
-        await db.content_items.update_one(
-            {"content_id": item["content_id"]},
-            {"$set": {"order": item["order"]}}
-        )
+        # Frontend sends 'id' field, map it to content_id
+        content_id = item.get("id") or item.get("content_id")
+        if content_id:
+            await db.content_items.update_one(
+                {"content_id": content_id},
+                {"$set": {"order": item.get("order", 0)}}
+            )
     
     return {"message": "Content reordered"}
 
