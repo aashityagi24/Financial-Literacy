@@ -129,16 +129,26 @@ async def get_topic_detail(topic_id: str, request: Request):
     is_admin = user and user.get("role") == "admin"
     is_child = user and user.get("role") == "child"
     user_id = user.get("user_id") if user else None
+    user_grade = user.get("grade") if user else None
     
     topic = await db.content_topics.find_one({"topic_id": topic_id}, {"_id": 0})
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
     
-    subtopics = await db.content_topics.find({"parent_id": topic_id}, {"_id": 0}).sort("order", 1).to_list(100)
+    # Grade filter for subtopics
+    if user_grade is not None and not is_admin:
+        subtopic_query = {"parent_id": topic_id, "min_grade": {"$lte": user_grade}, "max_grade": {"$gte": user_grade}}
+    else:
+        subtopic_query = {"parent_id": topic_id}
+    subtopics = await db.content_topics.find(subtopic_query, {"_id": 0}).sort("order", 1).to_list(100)
     
+    # Grade filter for content items
     content_query = {"topic_id": topic_id}
     if not is_admin:
         content_query["is_published"] = True
+    if user_grade is not None and not is_admin:
+        content_query["min_grade"] = {"$lte": user_grade}
+        content_query["max_grade"] = {"$gte": user_grade}
     content_items = await db.content_items.find(content_query, {"_id": 0}).sort("order", 1).to_list(100)
     
     if is_child and user_id:
@@ -151,8 +161,14 @@ async def get_topic_detail(topic_id: str, request: Request):
             content["is_completed"] = content["content_id"] in completed_content_ids
         
         for subtopic in subtopics:
+            # Grade filter for subtopic content
+            subtopic_content_query = {"topic_id": subtopic["topic_id"], "is_published": True}
+            if user_grade is not None:
+                subtopic_content_query["min_grade"] = {"$lte": user_grade}
+                subtopic_content_query["max_grade"] = {"$gte": user_grade}
+            
             subtopic_content = await db.content_items.find(
-                {"topic_id": subtopic["topic_id"], "is_published": True}, {"content_id": 1}
+                subtopic_content_query, {"content_id": 1}
             ).to_list(100)
             subtopic["completed_count"] = sum(1 for c in subtopic_content if c["content_id"] in completed_content_ids)
             subtopic["content_count"] = len(subtopic_content)
