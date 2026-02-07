@@ -42,7 +42,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Recent Updates (February 5, 2026)
 
-**Session 10 - Quest Data Isolation & Shopping List Bug Fixes:**
+**Session 10 - Quest Data Isolation & Shopping List & Admin Store Bug Fixes:**
 
 1. **Quest Filtering Bug Fixed** ✅ (P0 BUG FIX)
    - **Issue**: New children were seeing quests and chores from other parents/teachers not linked to them
@@ -71,6 +71,14 @@ A gamified financial literacy learning application for children (K-5) with disti
      - Parents can add items and see them in the list
      - Parents can create chores from selected items
      - Children see shopping chores in their Quest Board
+
+3. **Admin Store Management Bug Fixed** ✅ (P0 BUG FIX)
+   - **Issue**: Items uploaded by admin weren't shown in Admin Store Management page; random old items displayed instead
+   - **Root Cause**: Admin endpoints used `store_items` collection but store page used `admin_store_items` collection
+   - **Backend Fix** (`/app/backend/routes/admin.py` lines 451-504):
+     - Changed all CRUD operations from `store_items` to `admin_store_items`
+     - GET, POST, PUT, DELETE now all use correct collection
+   - **Result**: Admin Store Management now shows correct items that match what children see in the store
 
 ### Recent Updates (January 31, 2026)
 
