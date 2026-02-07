@@ -435,7 +435,7 @@ async def admin_update_store_category(category_id: str, request: Request):
     await require_admin(request)
     body = await request.json()
     
-    update = {k: v for k, v in body.items() if k in ["name", "icon", "order"]}
+    update = {k: v for k, v in body.items() if k in ["name", "icon", "order", "is_active", "image_url", "color"]}
     await db.admin_store_categories.update_one({"category_id": category_id}, {"$set": update})
     return {"message": "Category updated"}
 
