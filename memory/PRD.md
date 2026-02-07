@@ -42,7 +42,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Recent Updates (February 5, 2026)
 
-**Session 10 - Quest Data Isolation & Shopping List & Admin Store Bug Fixes:**
+**Session 10 - Quest Data Isolation, Shopping List, Admin Store & Shopping Chore Enhancement Fixes:**
 
 1. **Quest Filtering Bug Fixed** ✅ (P0 BUG FIX)
    - **Issue**: New children were seeing quests and chores from other parents/teachers not linked to them
@@ -79,6 +79,20 @@ A gamified financial literacy learning application for children (K-5) with disti
      - Changed all CRUD operations from `store_items` to `admin_store_items`
      - GET, POST, PUT, DELETE now all use correct collection
    - **Result**: Admin Store Management now shows correct items that match what children see in the store
+
+4. **Shopping Chore Checklist & Purchase History Feature** ✅ (P0 ENHANCEMENT)
+   - **Issue**: Shopping chore items weren't shown as a checklist in child's store; no way for parents to see purchase history
+   - **Backend Enhancements**:
+     - `create-chore` now adds `is_shopping_chore: true` flag and `shopping_item_details` array with full item info
+     - Added `GET /api/parent/children-purchases` - Returns grouped purchase history for all linked children
+     - Store purchase auto-marks shopping items as purchased in ALL matching chores (bug fix by testing agent)
+     - Added `store_purchases` collection to track purchases with `from_shopping_chore` flag
+   - **Frontend Enhancements**:
+     - Child's store shows "Your Shopping List" checklist section with items from active shopping chores
+     - Items auto-check off when purchased
+     - Parent dashboard now has "Children's Purchases" button and dialog showing purchase history grouped by child
+     - Purchases from shopping chores highlighted with "From Chore" badge
+   - **Result**: Complete shopping workflow visibility for both children and parents
 
 ### Recent Updates (January 31, 2026)
 
