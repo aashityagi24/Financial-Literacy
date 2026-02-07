@@ -209,20 +209,23 @@ async def mark_shopping_item_purchased(item_id: str, request: Request):
     if user.get("role") != "child":
         raise HTTPException(status_code=403, detail="Only children can access this")
     
-    chore = await db.new_quests.find_one({
+    # Find all active shopping chores with this item
+    chores = await db.new_quests.find({
         "child_id": user["user_id"],
         "is_shopping_chore": True,
         "is_active": True,
         "shopping_item_details.item_id": item_id
-    })
+    }).to_list(50)
     
-    if not chore:
+    if not chores:
         return {"message": "Item not in shopping list"}
     
-    await db.new_quests.update_one(
-        {"chore_id": chore["chore_id"], "shopping_item_details.item_id": item_id},
-        {"$set": {"shopping_item_details.$.purchased": True}}
-    )
+    # Update all matching chores
+    for chore in chores:
+        await db.new_quests.update_one(
+            {"chore_id": chore["chore_id"], "shopping_item_details.item_id": item_id},
+            {"$set": {"shopping_item_details.$.purchased": True}}
+        )
     
     return {"message": "Item marked as purchased"}
 
