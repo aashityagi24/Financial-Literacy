@@ -537,37 +537,69 @@ async def delete_reward_penalty(record_id: str, request: Request):
 
 @router.post("/shopping-list")
 async def create_shopping_list(request: Request):
-    """Create a shopping list item"""
+    """Add an item to the shopping list for a child"""
     from services.auth import require_parent
     db = get_db()
     parent = await require_parent(request)
     body = await request.json()
     
-    list_id = f"shop_{uuid.uuid4().hex[:12]}"
+    child_id = body.get("child_id")
+    item_id = body.get("item_id")
+    quantity = body.get("quantity", 1)
+    
+    if not child_id or not item_id:
+        raise HTTPException(status_code=400, detail="child_id and item_id are required")
+    
+    # Get the store item details
+    store_item = await db.admin_store_items.find_one({"item_id": item_id}, {"_id": 0})
+    if not store_item:
+        raise HTTPException(status_code=404, detail="Store item not found")
+    
+    list_id = f"shoplist_{uuid.uuid4().hex[:12]}"
     await db.shopping_lists.insert_one({
         "list_id": list_id,
         "parent_id": parent["user_id"],
-        "child_id": body.get("child_id"),
-        "title": body.get("title"),
-        "description": body.get("description", ""),
-        "estimated_cost": body.get("estimated_cost", 0),
-        "purchased": False,
+        "child_id": child_id,
+        "item_id": item_id,
+        "item_name": store_item.get("name"),
+        "item_price": store_item.get("price", 0),
+        "quantity": quantity,
+        "image_url": store_item.get("image_url"),
+        "category": store_item.get("category_id"),
+        "status": "pending",  # pending, assigned (to chore), purchased
+        "chore_id": None,
         "created_at": datetime.now(timezone.utc).isoformat()
     })
-    return {"message": "Shopping list item created", "list_id": list_id}
+    return {"message": "Item added to shopping list", "list_id": list_id}
 
 @router.get("/shopping-list")
 async def get_shopping_list(request: Request):
-    """Get parent's shopping lists"""
+    """Get parent's shopping lists grouped by child"""
     from services.auth import require_parent
     db = get_db()
     parent = await require_parent(request)
     
+    # Get all shopping list items for this parent
     items = await db.shopping_lists.find(
         {"parent_id": parent["user_id"]},
         {"_id": 0}
-    ).sort("created_at", -1).to_list(100)
-    return items
+    ).sort("created_at", -1).to_list(200)
+    
+    # Group items by child_id
+    children_items = {}
+    for item in items:
+        child_id = item.get("child_id")
+        if child_id not in children_items:
+            children_items[child_id] = []
+        children_items[child_id].append(item)
+    
+    # Return as list of {child_id, items: [...]}
+    result = [
+        {"child_id": child_id, "items": child_items}
+        for child_id, child_items in children_items.items()
+    ]
+    
+    return result
 
 @router.delete("/shopping-list/{list_id}")
 async def delete_shopping_list(list_id: str, request: Request):
