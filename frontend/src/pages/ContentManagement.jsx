@@ -1447,7 +1447,7 @@ export default function ContentManagement({ user }) {
             </div>
             
             {/* Grade & Rewards */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Min Grade</label>
                 <Select value={String(contentForm.min_grade)} onValueChange={v => setContentForm(p => ({ ...p, min_grade: parseInt(v) }))}>
@@ -1462,6 +1462,7 @@ export default function ContentManagement({ user }) {
                   <SelectContent>{GRADE_OPTIONS.map(g => <SelectItem key={g.value} value={String(g.value)}>{g.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
+            </div>
             
             {/* Reward - Only show if content is visible to children */}
             {contentForm.visible_to?.includes('child') && (
