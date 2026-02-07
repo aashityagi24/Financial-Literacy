@@ -30,11 +30,13 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
     user_id = user.get("user_id") if user else None
     is_child = user.get("role") == "child" if user else False
     is_teacher = user.get("role") == "teacher" if user else False
+    is_admin = user.get("role") == "admin" if user else False
     
     if is_teacher and grade is not None:
         user_grade = grade
     
-    if user_grade is None or (user and user.get("role") == "admin"):
+    # Admin sees all content, others see grade-filtered content
+    if user_grade is None or is_admin:
         query = {"parent_id": None}
     else:
         query = {"parent_id": None, "min_grade": {"$lte": user_grade}, "max_grade": {"$gte": user_grade}}
@@ -51,14 +53,22 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
     previous_topic_completed = True
     
     for topic in parent_topics:
-        if user_grade is None or (user and user.get("role") == "admin"):
+        # Grade filter for subtopics
+        if user_grade is None or is_admin:
             subtopic_query = {"parent_id": topic["topic_id"]}
+            content_grade_query = {"topic_id": topic["topic_id"], "is_published": True}
         else:
             subtopic_query = {"parent_id": topic["topic_id"], "min_grade": {"$lte": user_grade}, "max_grade": {"$gte": user_grade}}
+            content_grade_query = {
+                "topic_id": topic["topic_id"], 
+                "is_published": True,
+                "min_grade": {"$lte": user_grade}, 
+                "max_grade": {"$gte": user_grade}
+            }
         
         subtopics = await db.content_topics.find(subtopic_query, {"_id": 0}).sort("order", 1).to_list(100)
         topic["subtopics"] = subtopics
-        topic["content_count"] = await db.content_items.count_documents({"topic_id": topic["topic_id"], "is_published": True})
+        topic["content_count"] = await db.content_items.count_documents(content_grade_query)
         
         if is_child:
             topic["is_unlocked"] = previous_topic_completed
@@ -68,11 +78,18 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
             previous_subtopic_completed = previous_topic_completed
             
             for subtopic in subtopics:
-                subtopic["content_count"] = await db.content_items.count_documents({"topic_id": subtopic["topic_id"], "is_published": True})
+                # Grade filter for subtopic content
+                subtopic_content_query = {
+                    "topic_id": subtopic["topic_id"], 
+                    "is_published": True,
+                    "min_grade": {"$lte": user_grade}, 
+                    "max_grade": {"$gte": user_grade}
+                }
+                subtopic["content_count"] = await db.content_items.count_documents(subtopic_content_query)
                 topic["total_content"] += subtopic["content_count"]
                 
                 subtopic_content = await db.content_items.find(
-                    {"topic_id": subtopic["topic_id"], "is_published": True}, {"content_id": 1}
+                    subtopic_content_query, {"content_id": 1}
                 ).sort("order", 1).to_list(100)
                 
                 subtopic_completed_count = sum(1 for c in subtopic_content if c["content_id"] in completed_content_ids)
@@ -89,7 +106,17 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
             previous_topic_completed = topic["is_completed"]
         else:
             for subtopic in subtopics:
-                subtopic["content_count"] = await db.content_items.count_documents({"topic_id": subtopic["topic_id"], "is_published": True})
+                # Grade filter for teachers/parents viewing content
+                if user_grade is not None and not is_admin:
+                    subtopic_content_query = {
+                        "topic_id": subtopic["topic_id"], 
+                        "is_published": True,
+                        "min_grade": {"$lte": user_grade}, 
+                        "max_grade": {"$gte": user_grade}
+                    }
+                else:
+                    subtopic_content_query = {"topic_id": subtopic["topic_id"], "is_published": True}
+                subtopic["content_count"] = await db.content_items.count_documents(subtopic_content_query)
     
     return parent_topics
 
