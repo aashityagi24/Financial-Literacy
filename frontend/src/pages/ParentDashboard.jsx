@@ -342,35 +342,62 @@ export default function ParentDashboard({ user }) {
             </div>
           </Link>
           
-          {/* Learning Content Link - Shows for first child or dropdown */}
-          {dashboard?.children?.length > 0 && (
-            <div className="bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-xl p-5 border-3 border-[#1D3557]">
-              <div className="flex items-center gap-4 mb-3">
+          {/* Children's Purchases Link */}
+          <button
+            onClick={() => setShowPurchases(true)}
+            className="block bg-gradient-to-r from-[#06D6A0] to-[#42E8B3] rounded-xl p-5 hover:shadow-lg transition-shadow border-3 border-[#1D3557] text-left"
+            data-testid="children-purchases-btn"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-white rounded-xl border-3 border-[#1D3557] flex items-center justify-center">
-                  <BookOpen className="w-6 h-6 text-[#FFD23F]" />
+                  <History className="w-6 h-6 text-[#06D6A0]" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-[#1D3557]">Learning Content</h3>
-                  <p className="text-[#1D3557]/80 text-sm">View lessons for your child&apos;s grade</p>
+                  <h3 className="text-lg font-bold text-white">Children's Purchases</h3>
+                  <p className="text-white/80 text-sm">
+                    View what your children bought
+                    {childrenPurchases.reduce((acc, c) => acc + (c.purchases?.length || 0), 0) > 0 && (
+                      <span className="ml-2 bg-white/20 px-2 py-0.5 rounded-full">
+                        {childrenPurchases.reduce((acc, c) => acc + (c.purchases?.length || 0), 0)} items
+                      </span>
+                    )}
+                  </p>
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {dashboard.children.map((child) => (
-                  <Link
-                    key={child.user_id}
-                    to={`/learn?grade=${child.grade}`}
-                    className="flex items-center gap-2 bg-white hover:bg-[#1D3557] hover:text-white px-3 py-2 rounded-lg border-2 border-[#1D3557] text-[#1D3557] text-sm font-medium transition-colors"
-                    data-testid={`learn-link-${child.user_id}`}
-                  >
-                    <span>{child.name}</span>
-                    <span className="text-xs opacity-70">({gradeLabels[child.grade]})</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </Link>
-                ))}
+              <ChevronRight className="w-6 h-6 text-white" />
+            </div>
+          </button>
+        </div>
+        
+        {/* Learning Content Link */}
+        {dashboard?.children?.length > 0 && (
+          <div className="bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-xl p-5 border-3 border-[#1D3557] mb-6">
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-white rounded-xl border-3 border-[#1D3557] flex items-center justify-center">
+                <BookOpen className="w-6 h-6 text-[#FFD23F]" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-[#1D3557]">Learning Content</h3>
+                <p className="text-[#1D3557]/80 text-sm">View lessons for your child&apos;s grade</p>
               </div>
             </div>
-          )}
-        </div>
+            <div className="flex flex-wrap gap-2">
+              {dashboard.children.map((child) => (
+                <Link
+                  key={child.user_id}
+                  to={`/learn?grade=${child.grade}`}
+                  className="flex items-center gap-2 bg-white hover:bg-[#1D3557] hover:text-white px-3 py-2 rounded-lg border-2 border-[#1D3557] text-[#1D3557] text-sm font-medium transition-colors"
+                  data-testid={`learn-link-${child.user_id}`}
+                >
+                  <span>{child.name}</span>
+                  <span className="text-xs opacity-70">({gradeLabels[child.grade]})</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
         
         {!selectedChild ? (
           <>
