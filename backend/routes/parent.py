@@ -637,14 +637,27 @@ async def create_chore_from_shopping(request: Request):
     # Create the chore in new_quests collection so child can see it
     chore_id = f"chore_{uuid.uuid4().hex[:12]}"
     
-    # Get item details for the description
+    # Get item details for the description AND for the shopping list display
     selected_items = await db.shopping_lists.find(
         {"list_id": {"$in": list_item_ids}, "parent_id": parent["user_id"]},
-        {"_id": 0, "item_name": 1, "quantity": 1}
+        {"_id": 0}
     ).to_list(50)
     
-    items_description = ", ".join([f"{i['item_name']} x{i['quantity']}" for i in selected_items])
+    items_description = ", ".join([f"{i.get('item_name', 'Item')} x{i.get('quantity', 1)}" for i in selected_items])
     full_description = f"{description}\n\nItems: {items_description}" if description else f"Items: {items_description}"
+    
+    # Build shopping_item_details array for child to see checklist
+    shopping_item_details = []
+    for item in selected_items:
+        shopping_item_details.append({
+            "list_id": item.get("list_id"),
+            "item_id": item.get("item_id"),
+            "item_name": item.get("item_name"),
+            "item_price": item.get("item_price", 0),
+            "quantity": item.get("quantity", 1),
+            "image_url": item.get("image_url"),
+            "purchased": False
+        })
     
     await db.new_quests.insert_one({
         "quest_id": chore_id,
@@ -658,7 +671,9 @@ async def create_chore_from_shopping(request: Request):
         "reward_amount": reward_amount,
         "total_points": reward_amount,
         "from_shopping_list": True,
+        "is_shopping_chore": True,  # Flag for child's shopping list display
         "shopping_list_items": list_item_ids,
+        "shopping_item_details": shopping_item_details,  # Full item details for checklist
         "is_active": True,
         "status": "active",
         "questions": [],  # No questions for shopping chores
