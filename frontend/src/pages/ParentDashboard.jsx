@@ -40,12 +40,14 @@ export default function ParentDashboard({ user }) {
   const [allowances, setAllowances] = useState([]);
   const [savingsGoals, setSavingsGoals] = useState([]);
   const [childClassrooms, setChildClassrooms] = useState({});
+  const [childrenPurchases, setChildrenPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedChild, setSelectedChild] = useState(null);
   const [childProgress, setChildProgress] = useState(null);
   const [showChildInsights, setShowChildInsights] = useState(null);
   const [childInsights, setChildInsights] = useState(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
+  const [showPurchases, setShowPurchases] = useState(false);
   
   // Full transactions view state
   const [showAllTransactions, setShowAllTransactions] = useState(false);
