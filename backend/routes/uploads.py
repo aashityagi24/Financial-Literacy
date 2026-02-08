@@ -69,7 +69,7 @@ async def upload_pdf(file: UploadFile = File(...)):
 
 @router.post("/activity")
 async def upload_activity_html(file: UploadFile = File(...)):
-    """Upload an HTML activity (zip file with index.html and assets)"""
+    """Upload an HTML activity (zip file with HTML and assets)"""
     if not file.filename.endswith(".zip"):
         raise HTTPException(status_code=400, detail="File must be a ZIP archive")
     
@@ -88,29 +88,40 @@ async def upload_activity_html(file: UploadFile = File(...)):
             zip_ref.extractall(activity_folder)
         zip_path.unlink()  # Remove the zip file after extraction
         
-        # Check if index.html exists
-        index_path = activity_folder / "index.html"
-        if not index_path.exists():
-            # Check subdirectory
+        # Find any HTML file (not just index.html)
+        html_file = None
+        
+        # First check for index.html
+        if (activity_folder / "index.html").exists():
+            html_file = "index.html"
+        else:
+            # Look for any .html or .htm file
             for item in activity_folder.iterdir():
-                if item.is_dir():
-                    sub_index = item / "index.html"
-                    if sub_index.exists():
-                        # Move contents up
-                        for sub_item in item.iterdir():
-                            shutil.move(str(sub_item), str(activity_folder / sub_item.name))
-                        item.rmdir()
+                if item.is_file() and (item.suffix.lower() == '.html' or item.suffix.lower() == '.htm'):
+                    html_file = item.name
+                    break
+                elif item.is_dir():
+                    # Check subdirectory
+                    for sub_item in item.iterdir():
+                        if sub_item.is_file() and (sub_item.suffix.lower() == '.html' or sub_item.suffix.lower() == '.htm'):
+                            # Move contents up from subdirectory
+                            for move_item in item.iterdir():
+                                shutil.move(str(move_item), str(activity_folder / move_item.name))
+                            item.rmdir()
+                            html_file = sub_item.name
+                            break
+                    if html_file:
                         break
         
-        if not (activity_folder / "index.html").exists():
+        if not html_file:
             shutil.rmtree(activity_folder)
-            raise HTTPException(status_code=400, detail="ZIP must contain an index.html file")
+            raise HTTPException(status_code=400, detail="ZIP must contain an HTML file (.html or .htm)")
             
     except zipfile.BadZipFile:
         shutil.rmtree(activity_folder)
         raise HTTPException(status_code=400, detail="Invalid ZIP file")
     
-    return {"url": f"/api/uploads/activities/{folder_name}/index.html", "folder": folder_name}
+    return {"url": f"/api/uploads/activities/{folder_name}/{html_file}", "folder": folder_name}
 
 @router.post("/html")
 async def upload_html_file(file: UploadFile = File(...)):
