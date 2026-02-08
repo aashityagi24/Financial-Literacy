@@ -6,7 +6,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 ## What's Been Implemented
 
 ### Core MVP ✅
-- User authentication (Google OAuth + Admin login)
+- User authentication (Custom Google OAuth + Admin login + School login)
 - Role-based dashboards (Admin, Teacher, Parent, Child)
 - Content management system with drag-and-drop reordering
 - Virtual store with categories and items
@@ -507,3 +507,22 @@ A gamified financial literacy learning application for children (K-5) with disti
 ### Technical Debt
 - `/app/backend/server.py` - **REFACTORING COMPLETE**: 217 of 222 endpoints (98%) migrated to 19 modular files. Only 5 utility routes remain (root, AI, seed).
 - `/app/frontend/src/pages/ContentManagement.jsx` - Over 1500 lines, needs component decomposition
+
+### Session 11 Updates (February 8, 2026)
+
+**Google OAuth Bug Fix** ✅
+
+1. **Custom Google OAuth Flow Fixed** (P0 BUG FIX)
+   - **Issue**: The primary authentication method (Google Sign-In) was non-functional after implementing custom OAuth
+   - **Root Cause**: Frontend had an incorrect `/auth/google/callback` route that was intercepting backend OAuth callbacks
+   - **Fix Applied**:
+     - Removed incorrect `/auth/google/callback` frontend route from `App.js`
+     - Simplified `AuthCallback.jsx` to only handle `session` query parameter from backend
+     - Backend flow confirmed working: `/api/auth/google/login` → Google → `/api/auth/google/callback` → `/auth/callback?session=TOKEN`
+   - **Testing**: All endpoints verified working by testing agent (iteration_47)
+   - **User Action Required**: Register redirect URI in Google Cloud Console (see below)
+
+**Google Cloud Console Configuration**:
+To complete the OAuth setup, add these redirect URIs to your Google Cloud Console OAuth 2.0 credentials:
+- For Preview: `https://coinquest-kids-2.preview.emergentagent.com/api/auth/google/callback`
+- For Production: `https://coinquest.co.in/api/auth/google/callback`
