@@ -990,6 +990,342 @@ export default function ContentManagement({ user }) {
             </TabsTrigger>
           </TabsList>
           
+          {/* Repository View - All Content at a Glance */}
+          <TabsContent value="repository" className="space-y-4">
+            <div className="bg-white rounded-xl border shadow-sm p-6">
+              <div className="flex flex-col gap-4 mb-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-800">Content Repository</h2>
+                    <p className="text-sm text-gray-500">Browse and search all subtopics and content in one place</p>
+                  </div>
+                </div>
+                
+                {/* Search and Filters */}
+                <div className="flex flex-wrap gap-3 items-center">
+                  <div className="relative flex-1 min-w-[200px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      placeholder="Search by title or description..."
+                      value={repoSearchQuery}
+                      onChange={(e) => setRepoSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  
+                  <Select value={repoTypeFilter} onValueChange={setRepoTypeFilter}>
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="subtopic">Subtopics</SelectItem>
+                      <SelectItem value="content">Content</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={repoTopicFilter} onValueChange={setRepoTopicFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Topic" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Topics</SelectItem>
+                      {topics.map(topic => (
+                        <SelectItem key={topic.topic_id} value={topic.topic_id}>
+                          {topic.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  {(repoSearchQuery || repoTypeFilter !== 'all' || repoTopicFilter !== 'all') && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => { setRepoSearchQuery(''); setRepoTypeFilter('all'); setRepoTopicFilter('all'); }}
+                    >
+                      <X className="w-4 h-4 mr-1" /> Clear Filters
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
+              {/* Repository Table */}
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Type</th>
+                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Title</th>
+                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3 hidden md:table-cell">Topic</th>
+                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3 hidden lg:table-cell">Subtopic</th>
+                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Grade</th>
+                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {/* Subtopics */}
+                    {(repoTypeFilter === 'all' || repoTypeFilter === 'subtopic') && 
+                      topics
+                        .filter(t => repoTopicFilter === 'all' || t.topic_id === repoTopicFilter)
+                        .filter(matchesGradeFilter)
+                        .flatMap(topic => 
+                          (topic.subtopics || [])
+                            .filter(matchesGradeFilter)
+                            .filter(sub => 
+                              !repoSearchQuery || 
+                              sub.title.toLowerCase().includes(repoSearchQuery.toLowerCase()) ||
+                              (sub.description && sub.description.toLowerCase().includes(repoSearchQuery.toLowerCase()))
+                            )
+                            .map(subtopic => ({ ...subtopic, parentTopic: topic }))
+                        )
+                        .map(subtopic => (
+                          <tr key={`sub-${subtopic.topic_id}`} className="hover:bg-gray-50">
+                            <td className="px-4 py-3">
+                              <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700">
+                                <Layers className="w-3 h-3" /> Subtopic
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                {subtopic.thumbnail ? (
+                                  <img src={getAssetUrl(subtopic.thumbnail)} alt="" className="w-10 h-8 rounded object-cover border" />
+                                ) : (
+                                  <div className="w-10 h-8 rounded bg-green-100 flex items-center justify-center">
+                                    <Layers className="w-4 h-4 text-green-500" />
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="font-medium text-gray-800 text-sm">{subtopic.title}</p>
+                                  <p className="text-xs text-gray-500 line-clamp-1">{subtopic.description}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600 hidden md:table-cell">{subtopic.parentTopic.title}</td>
+                            <td className="px-4 py-3 text-sm text-gray-400 hidden lg:table-cell">—</td>
+                            <td className="px-4 py-3">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-medium">
+                                {subtopic.min_grade === 0 ? 'K' : subtopic.min_grade}-{subtopic.max_grade}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-1">
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  onClick={() => { 
+                                    setSelectedTopic(subtopic.parentTopic); 
+                                    openEditSubtopic(subtopic); 
+                                  }}
+                                >
+                                  <Edit2 className="w-3 h-3" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="text-red-500 hover:text-red-600" 
+                                  onClick={() => deleteTopic(subtopic.topic_id, true)}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                    }
+                    
+                    {/* Content Items */}
+                    {(repoTypeFilter === 'all' || repoTypeFilter === 'content') && 
+                      filteredContent
+                        .filter(content => {
+                          // Find parent subtopic and topic
+                          let parentSubtopic = null;
+                          let parentTopic = null;
+                          for (const topic of topics) {
+                            const sub = topic.subtopics?.find(s => s.topic_id === content.topic_id);
+                            if (sub) {
+                              parentSubtopic = sub;
+                              parentTopic = topic;
+                              break;
+                            }
+                          }
+                          
+                          // Filter by topic
+                          if (repoTopicFilter !== 'all' && parentTopic?.topic_id !== repoTopicFilter) {
+                            return false;
+                          }
+                          
+                          // Filter by search
+                          if (repoSearchQuery) {
+                            const query = repoSearchQuery.toLowerCase();
+                            return content.title.toLowerCase().includes(query) || 
+                                   (content.description && content.description.toLowerCase().includes(query));
+                          }
+                          
+                          return true;
+                        })
+                        .map(content => {
+                          // Find parent subtopic and topic
+                          let parentSubtopic = null;
+                          let parentTopic = null;
+                          for (const topic of topics) {
+                            const sub = topic.subtopics?.find(s => s.topic_id === content.topic_id);
+                            if (sub) {
+                              parentSubtopic = sub;
+                              parentTopic = topic;
+                              break;
+                            }
+                          }
+                          
+                          const typeConfig = getContentTypeConfig(content.content_type);
+                          const TypeIcon = typeConfig.icon;
+                          
+                          return (
+                            <tr key={`content-${content.content_id}`} className="hover:bg-gray-50">
+                              <td className="px-4 py-3">
+                                <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${typeConfig.color}`}>
+                                  <TypeIcon className="w-3 h-3" /> {typeConfig.label}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-3">
+                                  {content.thumbnail ? (
+                                    <img src={getAssetUrl(content.thumbnail)} alt="" className="w-10 h-8 rounded object-cover border" />
+                                  ) : (
+                                    <div className={`w-10 h-8 rounded flex items-center justify-center ${typeConfig.color.replace('text-', 'bg-').replace('100', '50')}`}>
+                                      <TypeIcon className="w-4 h-4" />
+                                    </div>
+                                  )}
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <p className="font-medium text-gray-800 text-sm">{content.title}</p>
+                                      {content.is_published ? (
+                                        <Eye className="w-3 h-3 text-green-500" />
+                                      ) : (
+                                        <EyeOff className="w-3 h-3 text-gray-400" />
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-gray-500 line-clamp-1">{content.description}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-600 hidden md:table-cell">{parentTopic?.title || '—'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-600 hidden lg:table-cell">{parentSubtopic?.title || '—'}</td>
+                              <td className="px-4 py-3">
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-medium">
+                                  {content.min_grade === 0 ? 'K' : content.min_grade}-{content.max_grade}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-1">
+                                  {content.content_data?.pdf_url && (
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      className="text-blue-500"
+                                      onClick={() => window.open(getAssetUrl(content.content_data.pdf_url), '_blank')}
+                                    >
+                                      <Eye className="w-3 h-3" />
+                                    </Button>
+                                  )}
+                                  {content.content_data?.html_url && (
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      className="text-blue-500"
+                                      onClick={() => window.open(getAssetUrl(content.content_data.html_url), '_blank')}
+                                    >
+                                      <Eye className="w-3 h-3" />
+                                    </Button>
+                                  )}
+                                  {content.content_data?.video_url && (
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      className="text-blue-500"
+                                      onClick={() => window.open(getAssetUrl(content.content_data.video_url), '_blank')}
+                                    >
+                                      <Eye className="w-3 h-3" />
+                                    </Button>
+                                  )}
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    onClick={() => { 
+                                      if (parentTopic && parentSubtopic) {
+                                        setSelectedTopic(parentTopic);
+                                        setSelectedSubtopic(parentSubtopic);
+                                      }
+                                      openEditContent(content); 
+                                    }}
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="text-red-500 hover:text-red-600" 
+                                    onClick={() => deleteContent(content.content_id)}
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                    }
+                    
+                    {/* Empty State */}
+                    {((repoTypeFilter === 'all' || repoTypeFilter === 'subtopic') && 
+                      topics.filter(t => repoTopicFilter === 'all' || t.topic_id === repoTopicFilter)
+                        .flatMap(t => t.subtopics || [])
+                        .filter(matchesGradeFilter)
+                        .filter(sub => !repoSearchQuery || sub.title.toLowerCase().includes(repoSearchQuery.toLowerCase())).length === 0) &&
+                     ((repoTypeFilter === 'all' || repoTypeFilter === 'content') && 
+                      filteredContent.filter(c => {
+                        if (repoTopicFilter !== 'all') {
+                          const parentTopic = topics.find(t => t.subtopics?.some(s => s.topic_id === c.topic_id));
+                          if (parentTopic?.topic_id !== repoTopicFilter) return false;
+                        }
+                        if (repoSearchQuery) {
+                          return c.title.toLowerCase().includes(repoSearchQuery.toLowerCase());
+                        }
+                        return true;
+                      }).length === 0) && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
+                          <Database className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                          <p>No items found matching your filters</p>
+                          <Button 
+                            variant="link" 
+                            className="mt-2"
+                            onClick={() => { setRepoSearchQuery(''); setRepoTypeFilter('all'); setRepoTopicFilter('all'); setGradeFilter('all'); }}
+                          >
+                            Clear all filters
+                          </Button>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Stats Summary */}
+              <div className="mt-4 flex gap-4 text-sm text-gray-500">
+                <span className="flex items-center gap-1">
+                  <FolderOpen className="w-4 h-4" /> {topics.length} Topics
+                </span>
+                <span className="flex items-center gap-1">
+                  <Layers className="w-4 h-4" /> {topics.reduce((acc, t) => acc + (t.subtopics?.length || 0), 0)} Subtopics
+                </span>
+                <span className="flex items-center gap-1">
+                  <FileText className="w-4 h-4" /> {allContent.length} Content Items
+                </span>
+              </div>
+            </div>
+          </TabsContent>
+          
           {/* Step 1: Topics */}
           <TabsContent value="topics" className="space-y-4">
             <div className="bg-white rounded-xl border shadow-sm p-6">
