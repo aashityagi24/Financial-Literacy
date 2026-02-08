@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 export default function AuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const hasProcessed = useRef(false);
   
   useEffect(() => {
@@ -17,8 +18,21 @@ export default function AuthCallback() {
     const processSession = async () => {
       console.log('=== AuthCallback: Processing session ===');
       console.log('Current URL:', window.location.href);
-      console.log('Hash:', window.location.hash);
+      console.log('Pathname:', location.pathname);
       console.log('Search params:', window.location.search);
+      
+      // Check if this is a Google OAuth callback that hit the frontend
+      // (happens when /api routing isn't set up on custom domain)
+      const googleCode = searchParams.get('code');
+      const googleState = searchParams.get('state');
+      
+      if (googleCode && location.pathname.includes('google')) {
+        console.log('Google OAuth callback detected, redirecting to backend...');
+        // Redirect to backend to complete OAuth flow
+        const backendCallback = `${API}/auth/google/callback?code=${encodeURIComponent(googleCode)}&state=${encodeURIComponent(googleState || '')}`;
+        window.location.href = backendCallback;
+        return;
+      }
       
       // Check for session token from custom Google OAuth (query param)
       const sessionToken = searchParams.get('session');
@@ -120,7 +134,7 @@ export default function AuthCallback() {
     };
     
     processSession();
-  }, [navigate, searchParams]);
+  }, [navigate, searchParams, location.pathname]);
   
   return (
     <div className="min-h-screen bg-[#E0FBFC] flex items-center justify-center">
