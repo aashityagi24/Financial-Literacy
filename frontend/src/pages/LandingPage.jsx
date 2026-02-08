@@ -38,11 +38,10 @@ export default function LandingPage() {
     fetchWalkthroughVideo();
   }, []);
   
-  // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+  // Use custom Google OAuth
   const handleLogin = () => {
-    // Use /auth/callback as the redirect target to ensure proper session handling
-    const redirectUrl = window.location.origin + '/auth/callback';
-    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+    // Redirect to our backend Google OAuth endpoint
+    window.location.href = `${BACKEND_URL}/api/auth/google/login`;
   };
   
   const handleAdminLogin = async (e) => {
