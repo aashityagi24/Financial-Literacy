@@ -962,7 +962,12 @@ export default function ContentManagement({ user }) {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 h-12">
+          <TabsList className="grid w-full grid-cols-5 h-12">
+            <TabsTrigger value="repository" className="flex items-center gap-2">
+              <Database className="w-4 h-4" />
+              <span className="hidden sm:inline">Repository</span>
+              <span className="sm:hidden">Repo</span>
+            </TabsTrigger>
             <TabsTrigger value="topics" className="flex items-center gap-2">
               <FolderOpen className="w-4 h-4" />
               <span className="hidden sm:inline">1. Topics</span>
