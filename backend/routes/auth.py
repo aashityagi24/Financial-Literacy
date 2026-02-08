@@ -207,6 +207,7 @@ async def google_callback(request: Request, response: Response, code: str = None
         print(f"Determined callback_url from host: {callback_url}")
     
     # Exchange code for tokens
+    print(f"Exchanging code with redirect_uri: {callback_url}")
     async with httpx.AsyncClient(timeout=30.0) as client:
         token_response = await client.post(
             GOOGLE_TOKEN_URL,
@@ -220,10 +221,14 @@ async def google_callback(request: Request, response: Response, code: str = None
         )
         
         if token_response.status_code != 200:
-            raise HTTPException(status_code=401, detail="Failed to exchange authorization code")
+            print(f"Token exchange failed: {token_response.status_code}")
+            print(f"Response: {token_response.text}")
+            error_detail = token_response.json().get("error_description", "Failed to exchange authorization code")
+            raise HTTPException(status_code=401, detail=error_detail)
         
         tokens = token_response.json()
         access_token = tokens.get("access_token")
+        print(f"Token exchange successful, got access_token")
         
         # Get user info
         userinfo_response = await client.get(
@@ -235,6 +240,7 @@ async def google_callback(request: Request, response: Response, code: str = None
             raise HTTPException(status_code=401, detail="Failed to get user info")
         
         user_data = userinfo_response.json()
+        print(f"Got user info: {user_data.get('email')}")
     
     email = user_data.get("email")
     user = await db.users.find_one({"email": email}, {"_id": 0})
