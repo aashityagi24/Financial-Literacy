@@ -369,6 +369,11 @@ export default function ContentManagement({ user }) {
   const [loading, setLoading] = useState(true);
   const [gradeFilter, setGradeFilter] = useState('all'); // Grade filter: 'all' or 0-5
   
+  // Repository view states
+  const [repoSearchQuery, setRepoSearchQuery] = useState('');
+  const [repoTypeFilter, setRepoTypeFilter] = useState('all'); // 'all', 'subtopic', 'content'
+  const [repoTopicFilter, setRepoTopicFilter] = useState('all');
+  
   // Selection states
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [selectedSubtopic, setSelectedSubtopic] = useState(null);
