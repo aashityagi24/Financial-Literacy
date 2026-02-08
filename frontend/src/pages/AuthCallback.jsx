@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const hasProcessed = useRef(false);
   
   useEffect(() => {
@@ -17,13 +18,56 @@ export default function AuthCallback() {
       console.log('=== AuthCallback: Processing session ===');
       console.log('Current URL:', window.location.href);
       console.log('Hash:', window.location.hash);
+      console.log('Search params:', window.location.search);
       
-      // Extract session_id from URL fragment
+      // Check for session token from custom Google OAuth (query param)
+      const sessionToken = searchParams.get('session');
+      
+      if (sessionToken) {
+        console.log('Found session token from Google OAuth');
+        
+        // Store session token
+        localStorage.setItem('session_token', sessionToken);
+        
+        try {
+          // Verify the session and get user data
+          const response = await axios.get(`${API}/auth/me`, {
+            withCredentials: true,
+            headers: { Authorization: `Bearer ${sessionToken}` }
+          });
+          
+          console.log('User data:', response.data);
+          const user = response.data;
+          
+          // Clear the search params from URL
+          window.history.replaceState(null, '', window.location.pathname);
+          
+          toast.success(`Welcome${user.name ? ', ' + user.name : ''}!`);
+          
+          // Navigate based on user role
+          if (!user.role) {
+            console.log('User has no role, redirecting to role-selection');
+            navigate('/role-selection', { state: { user }, replace: true });
+          } else {
+            console.log('User has role:', user.role, ', redirecting to dashboard');
+            navigate('/dashboard', { state: { user }, replace: true });
+          }
+          return;
+        } catch (error) {
+          console.error('Failed to verify session:', error);
+          localStorage.removeItem('session_token');
+          toast.error('Sign in failed. Please try again.');
+          navigate('/');
+          return;
+        }
+      }
+      
+      // Fallback: Check for session_id from Emergent auth (hash)
       const hash = window.location.hash;
       const sessionIdMatch = hash.match(/session_id=([^&]+)/);
       
       if (!sessionIdMatch) {
-        console.log('No session_id found in URL');
+        console.log('No session found in URL');
         toast.error('No session found. Please try signing in again.');
         navigate('/');
         return;
@@ -76,7 +120,7 @@ export default function AuthCallback() {
     };
     
     processSession();
-  }, [navigate]);
+  }, [navigate, searchParams]);
   
   return (
     <div className="min-h-screen bg-[#E0FBFC] flex items-center justify-center">
