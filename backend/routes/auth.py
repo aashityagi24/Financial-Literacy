@@ -274,8 +274,15 @@ async def google_callback(request: Request, response: Response, code: str = None
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    # Get frontend URL from state
-    frontend_url = urllib.parse.unquote(state) if state else ""
+    # Determine frontend URL - from state or based on host
+    if state:
+        frontend_url = urllib.parse.unquote(state)
+    else:
+        host = request.headers.get("host", "")
+        if "coinquest.co.in" in host:
+            frontend_url = "https://coinquest.co.in"
+        else:
+            frontend_url = "https://kidbank-learn.preview.emergentagent.com"
     
     # Create redirect response with session cookie
     redirect_url = f"{frontend_url}/auth/callback?session={session_token}"
