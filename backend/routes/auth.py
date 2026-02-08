@@ -170,15 +170,23 @@ async def google_callback(request: Request, response: Response, code: str = None
     """Handle Google OAuth callback"""
     db = get_db()
     
+    # Get frontend URL from state
+    frontend_url = urllib.parse.unquote(state) if state else ""
+    
     if error:
-        frontend_url = urllib.parse.unquote(state) if state else ""
         return RedirectResponse(url=f"{frontend_url}?error={error}")
     
     if not code:
         raise HTTPException(status_code=400, detail="No authorization code received")
     
-    # Use configured redirect URI from environment
-    callback_url = GOOGLE_REDIRECT_URI
+    # Determine the correct callback URL based on the request host
+    host = request.headers.get("host", "")
+    if "coinquest.co.in" in host:
+        callback_url = "https://coinquest.co.in/api/auth/google/callback"
+    elif "kidbank-learn.preview.emergentagent.com" in host:
+        callback_url = "https://kidbank-learn.preview.emergentagent.com/api/auth/google/callback"
+    else:
+        callback_url = GOOGLE_REDIRECT_URI
     
     # Exchange code for tokens
     async with httpx.AsyncClient(timeout=30.0) as client:
