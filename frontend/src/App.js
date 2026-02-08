@@ -58,6 +58,15 @@ export const getAssetUrl = (path) => {
 // Configure axios defaults
 axios.defaults.withCredentials = true;
 
+// Add axios interceptor to include session token in all requests
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('session_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Protected Route Component
 export const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
