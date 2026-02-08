@@ -138,10 +138,12 @@ async def google_login(request: Request):
     origin = request.headers.get("origin") or request.headers.get("referer", "")
     
     # Determine the correct callback URL based on origin
+    # NOTE: For custom domains, the redirect URI must match exactly what's registered in Google Console
     if "coinquest.co.in" in origin:
-        callback_url = "https://coinquest.co.in/api/auth/google/callback"
+        # Production domain - use /auth/google/callback (without /api) as registered in Google Console
+        callback_url = "https://coinquest.co.in/auth/google/callback"
         frontend_url = "https://coinquest.co.in"
-    elif "kidbank-learn.preview.emergentagent.com" in origin:
+    elif "coinquest-kids-2.preview.emergentagent.com" in origin:
         callback_url = "https://coinquest-kids-2.preview.emergentagent.com/api/auth/google/callback"
         frontend_url = "https://coinquest-kids-2.preview.emergentagent.com"
     else:
