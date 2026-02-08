@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 export default function AuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const hasProcessed = useRef(false);
   
   useEffect(() => {
@@ -17,7 +18,22 @@ export default function AuthCallback() {
     const processSession = async () => {
       console.log('=== AuthCallback: Processing session ===');
       console.log('Current URL:', window.location.href);
+      console.log('Pathname:', location.pathname);
       console.log('Search params:', window.location.search);
+      
+      // Check if this is a Google OAuth callback that hit frontend instead of backend
+      // This happens when /api routing isn't configured on custom domains
+      const googleCode = searchParams.get('code');
+      const googleState = searchParams.get('state');
+      
+      if (googleCode && location.pathname.includes('google')) {
+        console.log('Google OAuth callback detected at frontend - redirecting to backend...');
+        // Redirect to backend to complete OAuth flow
+        const backendCallback = `${API}/auth/google/callback?code=${encodeURIComponent(googleCode)}&state=${encodeURIComponent(googleState || '')}`;
+        console.log('Redirecting to:', backendCallback);
+        window.location.href = backendCallback;
+        return;
+      }
       
       // Check for session token from custom Google OAuth (query param)
       // Backend redirects here with ?session=TOKEN after successful Google auth
