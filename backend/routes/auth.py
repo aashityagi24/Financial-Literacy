@@ -166,7 +166,7 @@ async def google_login(request: Request):
     return RedirectResponse(url=auth_url)
 
 @router.get("/google/callback")
-async def google_callback(request: Request, response: Response, code: str = None, state: str = None, error: str = None):
+async def google_callback(request: Request, response: Response, code: str = None, state: str = None, error: str = None, redirect_uri: str = None):
     """Handle Google OAuth callback"""
     db = get_db()
     
@@ -179,14 +179,18 @@ async def google_callback(request: Request, response: Response, code: str = None
     if not code:
         raise HTTPException(status_code=400, detail="No authorization code received")
     
-    # Determine the correct callback URL based on the request host
-    host = request.headers.get("host", "")
-    if "coinquest.co.in" in host:
-        callback_url = "https://coinquest.co.in/api/auth/google/callback"
-    elif "kidbank-learn.preview.emergentagent.com" in host:
-        callback_url = "https://coinquest-kids-2.preview.emergentagent.com/api/auth/google/callback"
+    # Use provided redirect_uri if available (from frontend forwarding)
+    # Otherwise determine based on host
+    if redirect_uri:
+        callback_url = redirect_uri
     else:
-        callback_url = GOOGLE_REDIRECT_URI
+        host = request.headers.get("host", "")
+        if "coinquest.co.in" in host:
+            callback_url = "https://coinquest.co.in/api/auth/google/callback"
+        elif "coinquest-kids-2.preview.emergentagent.com" in host:
+            callback_url = "https://coinquest-kids-2.preview.emergentagent.com/api/auth/google/callback"
+        else:
+            callback_url = GOOGLE_REDIRECT_URI
     
     # Exchange code for tokens
     async with httpx.AsyncClient(timeout=30.0) as client:
