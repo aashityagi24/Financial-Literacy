@@ -165,8 +165,6 @@ function AppRouter() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
-      {/* Handle Google OAuth callback if it hits frontend instead of backend */}
-      <Route path="/auth/google/callback" element={<AuthCallback />} />
       <Route path="/school-login" element={<SchoolLogin />} />
       <Route path="/school-dashboard" element={<SchoolDashboard />} />
       <Route path="/role-selection" element={
