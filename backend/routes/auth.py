@@ -144,11 +144,8 @@ async def google_login(request: Request):
     if "preview.emergentagent.com" in frontend_url or "coinquest.co.in" in frontend_url:
         frontend_url = frontend_url.replace("http://", "https://")
     
-    # Build the OAuth callback URL - must include /api prefix
-    base = str(request.base_url).rstrip("/")
-    if "preview.emergentagent.com" in base or "coinquest.co.in" in base:
-        base = base.replace("http://", "https://")
-    callback_url = f"{base}/api/auth/google/callback"
+    # Use configured redirect URI from environment
+    callback_url = GOOGLE_REDIRECT_URI
     
     # Store the frontend URL in state for redirect after auth
     state = urllib.parse.quote(frontend_url)
