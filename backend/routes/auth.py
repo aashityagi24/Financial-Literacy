@@ -177,10 +177,11 @@ async def google_callback(request: Request, response: Response, code: str = None
     if not code:
         raise HTTPException(status_code=400, detail="No authorization code received")
     
-    # Build callback URL - ensure HTTPS for production
-    callback_url = str(request.base_url).rstrip("/") + "/auth/google/callback"
-    if "preview.emergentagent.com" in callback_url or "localhost" not in callback_url:
-        callback_url = callback_url.replace("http://", "https://")
+    # Build callback URL - must include /api prefix and use HTTPS
+    base = str(request.base_url).rstrip("/")
+    if "preview.emergentagent.com" in base or "coinquest.co.in" in base:
+        base = base.replace("http://", "https://")
+    callback_url = f"{base}/api/auth/google/callback"
     
     # Exchange code for tokens
     async with httpx.AsyncClient(timeout=30.0) as client:
