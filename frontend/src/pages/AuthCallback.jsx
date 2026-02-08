@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 export default function AuthCallback() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const location = useLocation();
   const hasProcessed = useRef(false);
   
   useEffect(() => {
