@@ -1457,13 +1457,23 @@ export default function ContentManagement({ user }) {
                   {/* Video File Upload */}
                   <div className="flex items-center gap-3">
                     {contentForm.content_data.video_url && contentForm.content_data.video_url.startsWith('/api/uploads') && (
-                      <a href={getAssetUrl(contentForm.content_data.video_url)} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline flex items-center gap-1">
-                        <Eye className="w-4 h-4" /> View Video
-                      </a>
+                      <>
+                        <a href={getAssetUrl(contentForm.content_data.video_url)} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline flex items-center gap-1">
+                          <Eye className="w-4 h-4" /> View Video
+                        </a>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50 p-1 h-auto"
+                          onClick={() => setContentForm(p => ({ ...p, content_data: { ...p.content_data, video_url: null } }))}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </>
                     )}
                     <input type="file" className="hidden" id="video-file-upload" accept=".mp4,.webm,.mov" onChange={(e) => e.target.files[0] && uploadVideo(e.target.files[0])} />
                     <Button variant="outline" size="sm" onClick={() => document.getElementById('video-file-upload')?.click()}>
-                      <Upload className="w-4 h-4 mr-2" /> Upload MP4
+                      <Upload className="w-4 h-4 mr-2" /> {contentForm.content_data.video_url?.startsWith('/api/uploads') ? 'Replace' : 'Upload'} MP4
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500">Supports MP4, WebM, MOV formats</p>
