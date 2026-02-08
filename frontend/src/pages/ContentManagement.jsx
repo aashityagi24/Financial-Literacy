@@ -1374,13 +1374,23 @@ export default function ContentManagement({ user }) {
                 <label className="block text-sm font-medium text-gray-700 mb-1">📄 PDF File</label>
                 <div className="flex items-center gap-3">
                   {contentForm.content_data.pdf_url && (
-                    <a href={getAssetUrl(contentForm.content_data.pdf_url)} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline flex items-center gap-1">
-                      <Eye className="w-4 h-4" /> View PDF
-                    </a>
+                    <>
+                      <a href={getAssetUrl(contentForm.content_data.pdf_url)} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline flex items-center gap-1">
+                        <Eye className="w-4 h-4" /> View PDF
+                      </a>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 p-1 h-auto"
+                        onClick={() => setContentForm(p => ({ ...p, content_data: { ...p.content_data, pdf_url: null } }))}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </>
                   )}
                   <input type="file" ref={pdfRef} className="hidden" accept="application/pdf" onChange={(e) => e.target.files[0] && uploadPdf(e.target.files[0])} />
                   <Button variant="outline" size="sm" onClick={() => pdfRef.current?.click()}>
-                    <Upload className="w-4 h-4 mr-2" /> Upload PDF
+                    <Upload className="w-4 h-4 mr-2" /> {contentForm.content_data.pdf_url ? 'Replace' : 'Upload'} PDF
                   </Button>
                 </div>
               </div>
@@ -1390,13 +1400,23 @@ export default function ContentManagement({ user }) {
                 <label className="block text-sm font-medium text-gray-700 mb-1">🌐 HTML File (standalone)</label>
                 <div className="flex items-center gap-3">
                   {contentForm.content_data.html_url && (
-                    <a href={getAssetUrl(contentForm.content_data.html_url)} target="_blank" rel="noopener noreferrer" className="text-sm text-green-600 underline flex items-center gap-1">
-                      <Eye className="w-4 h-4" /> Preview HTML
-                    </a>
+                    <>
+                      <a href={getAssetUrl(contentForm.content_data.html_url)} target="_blank" rel="noopener noreferrer" className="text-sm text-green-600 underline flex items-center gap-1">
+                        <Eye className="w-4 h-4" /> Preview HTML
+                      </a>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 p-1 h-auto"
+                        onClick={() => setContentForm(p => ({ ...p, content_data: { ...p.content_data, html_url: null, html_folder: null } }))}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </>
                   )}
                   <input type="file" className="hidden" id="html-file-upload" accept=".html,.htm" onChange={(e) => e.target.files[0] && uploadHtmlFile(e.target.files[0])} />
                   <Button variant="outline" size="sm" onClick={() => document.getElementById('html-file-upload')?.click()}>
-                    <Upload className="w-4 h-4 mr-2" /> Upload HTML
+                    <Upload className="w-4 h-4 mr-2" /> {contentForm.content_data.html_url ? 'Replace' : 'Upload'} HTML
                   </Button>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">Simple HTML file without external dependencies</p>
@@ -1406,12 +1426,27 @@ export default function ContentManagement({ user }) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">📦 HTML ZIP (with assets)</label>
                 <div className="flex items-center gap-3">
+                  {contentForm.content_data.html_folder && (
+                    <>
+                      <span className="text-sm text-purple-600 flex items-center gap-1">
+                        <Eye className="w-4 h-4" /> ZIP uploaded
+                      </span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 p-1 h-auto"
+                        onClick={() => setContentForm(p => ({ ...p, content_data: { ...p.content_data, html_url: null, html_folder: null } }))}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </>
+                  )}
                   <input type="file" ref={activityRef} className="hidden" accept=".zip" onChange={(e) => e.target.files[0] && uploadActivity(e.target.files[0])} />
                   <Button variant="outline" size="sm" onClick={() => activityRef.current?.click()}>
-                    <Upload className="w-4 h-4 mr-2" /> Upload ZIP
+                    <Upload className="w-4 h-4 mr-2" /> {contentForm.content_data.html_folder ? 'Replace' : 'Upload'} ZIP
                   </Button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">ZIP must contain index.html and all assets (images, CSS, JS)</p>
+                <p className="text-xs text-gray-500 mt-1">ZIP containing HTML file and all assets (images, CSS, JS)</p>
               </div>
               
               {/* Video Upload & URL - only show for video type */}
