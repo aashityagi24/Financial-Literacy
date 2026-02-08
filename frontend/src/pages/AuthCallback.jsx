@@ -136,7 +136,7 @@ export default function AuthCallback() {
     };
     
     processSession();
-  }, [navigate, searchParams]);
+  }, [navigate, searchParams, location.pathname]);
   
   return (
     <div className="min-h-screen bg-[#E0FBFC] flex items-center justify-center">
