@@ -172,27 +172,39 @@ async def google_callback(request: Request, response: Response, code: str = None
     """Handle Google OAuth callback"""
     db = get_db()
     
+    # Log the callback details for debugging
+    print(f"=== Google OAuth Callback ===")
+    print(f"Host: {request.headers.get('host', 'unknown')}")
+    print(f"State: {state}")
+    print(f"Redirect URI param: {redirect_uri}")
+    print(f"Code present: {bool(code)}")
+    
     # Get frontend URL from state
     frontend_url = urllib.parse.unquote(state) if state else ""
+    print(f"Frontend URL from state: {frontend_url}")
     
     if error:
+        print(f"OAuth error: {error}")
         return RedirectResponse(url=f"{frontend_url}?error={error}")
     
     if not code:
         raise HTTPException(status_code=400, detail="No authorization code received")
     
     # Use provided redirect_uri if available (from frontend forwarding)
-    # Otherwise determine based on host
+    # Otherwise determine based on host - MUST match what's registered in Google Console
     if redirect_uri:
         callback_url = redirect_uri
+        print(f"Using provided redirect_uri: {callback_url}")
     else:
         host = request.headers.get("host", "")
+        # For coinquest.co.in, use /auth/google/callback (without /api) as registered in Google Console
         if "coinquest.co.in" in host:
-            callback_url = "https://coinquest.co.in/api/auth/google/callback"
+            callback_url = "https://coinquest.co.in/auth/google/callback"
         elif "coinquest-kids-2.preview.emergentagent.com" in host:
             callback_url = "https://coinquest-kids-2.preview.emergentagent.com/api/auth/google/callback"
         else:
             callback_url = GOOGLE_REDIRECT_URI
+        print(f"Determined callback_url from host: {callback_url}")
     
     # Exchange code for tokens
     async with httpx.AsyncClient(timeout=30.0) as client:
