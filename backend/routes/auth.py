@@ -130,6 +130,154 @@ async def school_login(login_data: SchoolLoginRequest, response: Response):
         "session_token": session_token
     }
 
+@router.get("/google/login")
+async def google_login(request: Request):
+    """Initiate Google OAuth login"""
+    # Get the redirect URI from the frontend URL
+    frontend_url = request.headers.get("referer", "").rstrip("/")
+    if not frontend_url:
+        # Fallback to the backend host
+        frontend_url = str(request.base_url).rstrip("/").replace("/api", "")
+    
+    # Build the OAuth callback URL
+    callback_url = str(request.base_url).rstrip("/") + "/auth/google/callback"
+    
+    # Store the frontend URL in state for redirect after auth
+    state = urllib.parse.quote(frontend_url)
+    
+    params = {
+        "client_id": GOOGLE_CLIENT_ID,
+        "redirect_uri": callback_url,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "access_type": "offline",
+        "state": state,
+        "prompt": "select_account"
+    }
+    
+    auth_url = f"{GOOGLE_AUTH_URL}?{urllib.parse.urlencode(params)}"
+    return RedirectResponse(url=auth_url)
+
+@router.get("/google/callback")
+async def google_callback(request: Request, response: Response, code: str = None, state: str = None, error: str = None):
+    """Handle Google OAuth callback"""
+    db = get_db()
+    
+    if error:
+        frontend_url = urllib.parse.unquote(state) if state else ""
+        return RedirectResponse(url=f"{frontend_url}?error={error}")
+    
+    if not code:
+        raise HTTPException(status_code=400, detail="No authorization code received")
+    
+    # Build callback URL
+    callback_url = str(request.base_url).rstrip("/") + "/auth/google/callback"
+    
+    # Exchange code for tokens
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        token_response = await client.post(
+            GOOGLE_TOKEN_URL,
+            data={
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "code": code,
+                "grant_type": "authorization_code",
+                "redirect_uri": callback_url
+            }
+        )
+        
+        if token_response.status_code != 200:
+            raise HTTPException(status_code=401, detail="Failed to exchange authorization code")
+        
+        tokens = token_response.json()
+        access_token = tokens.get("access_token")
+        
+        # Get user info
+        userinfo_response = await client.get(
+            GOOGLE_USERINFO_URL,
+            headers={"Authorization": f"Bearer {access_token}"}
+        )
+        
+        if userinfo_response.status_code != 200:
+            raise HTTPException(status_code=401, detail="Failed to get user info")
+        
+        user_data = userinfo_response.json()
+    
+    email = user_data.get("email")
+    user = await db.users.find_one({"email": email}, {"_id": 0})
+    
+    if not user:
+        user_id = f"user_{uuid.uuid4().hex[:12]}"
+        user = {
+            "user_id": user_id,
+            "email": email,
+            "name": user_data.get("name", "User"),
+            "picture": user_data.get("picture"),
+            "role": None,
+            "grade": None,
+            "avatar": None,
+            "streak_count": 0,
+            "last_login_date": None,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.users.insert_one(user)
+        user = await db.users.find_one({"email": email}, {"_id": 0})
+    else:
+        # Update streak
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        last_login = user.get("last_login_date")
+        
+        if last_login != today:
+            if last_login:
+                last_date = datetime.strptime(last_login, "%Y-%m-%d")
+                today_date = datetime.strptime(today, "%Y-%m-%d")
+                days_diff = (today_date - last_date).days
+                
+                if days_diff == 1:
+                    new_streak = user.get("streak_count", 0) + 1
+                elif days_diff > 1:
+                    new_streak = 1
+                else:
+                    new_streak = user.get("streak_count", 0)
+            else:
+                new_streak = 1
+            
+            await db.users.update_one(
+                {"user_id": user["user_id"]},
+                {"$set": {"last_login_date": today, "streak_count": new_streak}}
+            )
+            user = await db.users.find_one({"email": email}, {"_id": 0})
+    
+    # Create session
+    session_token = f"sess_{uuid.uuid4().hex}"
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    
+    await db.user_sessions.insert_one({
+        "user_id": user["user_id"],
+        "session_token": session_token,
+        "expires_at": expires_at.isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Get frontend URL from state
+    frontend_url = urllib.parse.unquote(state) if state else ""
+    
+    # Create redirect response with session cookie
+    redirect_url = f"{frontend_url}/auth/callback?session={session_token}"
+    redirect_response = RedirectResponse(url=redirect_url, status_code=302)
+    
+    redirect_response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+        max_age=7 * 24 * 60 * 60
+    )
+    
+    return redirect_response
+
 @router.post("/session")
 async def create_session(request: Request, response: Response):
     """Exchange session_id from Google OAuth for session data"""
