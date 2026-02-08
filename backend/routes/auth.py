@@ -28,6 +28,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
+GOOGLE_REDIRECT_URI = os.environ.get("GOOGLE_REDIRECT_URI")
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
