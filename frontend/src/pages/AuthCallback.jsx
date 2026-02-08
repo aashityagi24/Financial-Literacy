@@ -28,8 +28,9 @@ export default function AuthCallback() {
       
       if (googleCode && location.pathname.includes('google')) {
         console.log('Google OAuth callback detected at frontend - redirecting to backend...');
-        // Redirect to backend to complete OAuth flow
-        const backendCallback = `${API}/auth/google/callback?code=${encodeURIComponent(googleCode)}&state=${encodeURIComponent(googleState || '')}`;
+        // Pass the original redirect_uri so backend uses the same one for token exchange
+        const originalRedirectUri = window.location.origin + location.pathname;
+        const backendCallback = `${API}/auth/google/callback?code=${encodeURIComponent(googleCode)}&state=${encodeURIComponent(googleState || '')}&redirect_uri=${encodeURIComponent(originalRedirectUri)}`;
         console.log('Redirecting to:', backendCallback);
         window.location.href = backendCallback;
         return;
