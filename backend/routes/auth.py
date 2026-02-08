@@ -134,18 +134,20 @@ async def school_login(login_data: SchoolLoginRequest, response: Response):
 @router.get("/google/login")
 async def google_login(request: Request):
     """Initiate Google OAuth login"""
-    # Get the redirect URI from the frontend URL
-    frontend_url = request.headers.get("referer", "").rstrip("/")
-    if not frontend_url:
-        # Fallback to the backend host
-        frontend_url = str(request.base_url).rstrip("/").replace("/api", "")
+    # Get the origin from headers to determine correct redirect URI
+    origin = request.headers.get("origin") or request.headers.get("referer", "")
     
-    # Ensure HTTPS for production
-    if "preview.emergentagent.com" in frontend_url or "coinquest.co.in" in frontend_url:
-        frontend_url = frontend_url.replace("http://", "https://")
-    
-    # Use configured redirect URI from environment
-    callback_url = GOOGLE_REDIRECT_URI
+    # Determine the correct callback URL based on origin
+    if "coinquest.co.in" in origin:
+        callback_url = "https://coinquest.co.in/api/auth/google/callback"
+        frontend_url = "https://coinquest.co.in"
+    elif "kidbank-learn.preview.emergentagent.com" in origin:
+        callback_url = "https://kidbank-learn.preview.emergentagent.com/api/auth/google/callback"
+        frontend_url = "https://kidbank-learn.preview.emergentagent.com"
+    else:
+        # Fallback to environment variable
+        callback_url = GOOGLE_REDIRECT_URI
+        frontend_url = origin.rstrip("/") if origin else ""
     
     # Store the frontend URL in state for redirect after auth
     state = urllib.parse.quote(frontend_url)
