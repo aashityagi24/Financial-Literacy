@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sort the ₹2 Coins!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Bubblegum+Sans&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sunshine: #FFE066;
+            --sky-blue: #7EC8E3;
+            --grass-green: #7ED957;
+            --candy-pink: #FF9ECD;
+            --orange-pop: #FF8C42;
+            --purple-fun: #B47EDE;
+            --cream: #FFF8E7;
+            --brown-soft: #8B6914;
+            --tray-color: #8B4513;
+            --tray-inner: #D2691E;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(180deg, #FFE4C4 0%, #FFDAB9 50%, #DEB887 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            user-select: none;
+        }
+
+        /* Wooden table texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 50px,
+                    rgba(139, 69, 19, 0.03) 50px,
+                    rgba(139, 69, 19, 0.03) 100px
+                );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Mute button */
+        .mute-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .mute-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .mute-btn.muted {
+            background: #f0f0f0;
+            color: #999;
+        }
+
+        /* Decorative coins in corners */
+        .deco-coin {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            opacity: 0.15;
+            z-index: 2;
+        }
+
+        .deco-coin-1 {
+            top: 10%;
+            left: 5%;
+            transform: rotate(-15deg);
+        }
+
+        .deco-coin-2 {
+            top: 20%;
+            right: 8%;
+            transform: rotate(20deg);
+        }
+
+        .deco-coin-3 {
+            bottom: 15%;
+            left: 8%;
+            transform: rotate(10deg);
+        }
+
+        .deco-coin-4 {
+            bottom: 25%;
+            right: 5%;
+            transform: rotate(-25deg);
+        }
+
+        /* Main container */
+        .game-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Title */
+        .title {
+            text-align: center;
+            margin-bottom: 15px;
+            padding-top: 10px;
+        }
+
+        .title h1 {
+            font-family: 'Bubblegum Sans', cursive;
+            font-size: 2.5rem;
+            color: white;
+            text-shadow: 
+                4px 4px 0 var(--orange-pop),
+                -2px -2px 0 var(--candy-pink),
+                2px -2px 0 var(--purple-fun);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .title-coin {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--brown-soft);
+            margin-top: 8px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 8px 20px;
+            border-radius: 30px;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Score board */
+        .score-board {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .score-item {
+            background: white;
+            padding: 10px 25px;
+            border-radius: 20px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: 4px solid var(--grass-green);
+        }
+
+        .score-item span {
+            font-size: 1.5rem;
+        }
+
+        /* Game area */
+        .game-area {
+            background: var(--cream);
+            border-radius: 30px;
+            padding: 25px;
+            box-shadow: 
+                0 15px 40px rgba(0,0,0,0.2),
+                inset 0 -5px 20px rgba(0,0,0,0.05);
+            border: 6px dashed var(--orange-pop);
+            position: relative;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .instruction {
+            text-align: center;
+            font-size: 1.3rem;
+            color: var(--brown-soft);
+            margin-bottom: 20px;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--sunshine) 0%, #FFD54F 100%);
+            border-radius: 20px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(255, 224, 102, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .instruction-coin {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            vertical-align: middle;
+        }
+
+        /* Main game layout */
+        .game-layout {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        /* Coins area */
+        .coins-area {
+            flex: 1;
+            background: rgba(255,255,255,0.5);
+            border-radius: 20px;
+            padding: 20px;
+            min-height: 300px;
+            position: relative;
+            border: 3px dashed #ccc;
+        }
+
+        .coins-area-label {
+            text-align: center;
+            font-size: 1rem;
+            color: #888;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .coins-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-content: flex-start;
+        }
+
+        /* Draggable coin */
+        .coin {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            cursor: grab;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            box-shadow: 
+                0 6px 15px rgba(0,0,0,0.3),
+                inset 0 -3px 8px rgba(0,0,0,0.2),
+                inset 0 3px 8px rgba(255,255,255,0.3);
+            overflow: hidden;
+            border: 3px solid #888;
+            background: #ccc;
+            touch-action: none;
+        }
+
+        .coin img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .coin:hover {
+            transform: scale(1.1);
+            box-shadow: 
+                0 10px 25px rgba(0,0,0,0.35),
+                inset 0 -3px 8px rgba(0,0,0,0.2),
+                inset 0 3px 8px rgba(255,255,255,0.3);
+        }
+
+        .coin.dragging {
+            cursor: grabbing;
+            transform: scale(1.15);
+            box-shadow: 
+                0 15px 35px rgba(0,0,0,0.4),
+                inset 0 -3px 8px rgba(0,0,0,0.2),
+                inset 0 3px 8px rgba(255,255,255,0.3);
+            z-index: 1000;
+            opacity: 0.9;
+        }
+
+        .coin.wrong-drop {
+            animation: wrongShake 0.5s ease;
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-10px) rotate(-5deg); }
+            40% { transform: translateX(10px) rotate(5deg); }
+            60% { transform: translateX(-10px) rotate(-5deg); }
+            80% { transform: translateX(10px) rotate(5deg); }
+        }
+
+        /* Tray area */
+        .tray-area {
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tray-label {
+            font-size: 1.2rem;
+            color: var(--brown-soft);
+            margin-bottom: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tray-label img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+        }
+
+        /* Coin tray */
+        .coin-tray {
+            width: 200px;
+            height: 280px;
+            background: linear-gradient(180deg, var(--tray-inner) 0%, var(--tray-color) 100%);
+            border-radius: 20px 20px 30px 30px;
+            position: relative;
+            box-shadow: 
+                0 10px 30px rgba(0,0,0,0.3),
+                inset 0 5px 15px rgba(255,255,255,0.2),
+                inset 0 -5px 15px rgba(0,0,0,0.3);
+            border: 4px solid #5D3A1A;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .coin-tray.drag-over {
+            transform: scale(1.05);
+            box-shadow: 
+                0 0 0 6px var(--grass-green),
+                0 15px 40px rgba(0,0,0,0.4),
+                inset 0 5px 15px rgba(255,255,255,0.2),
+                inset 0 -5px 15px rgba(0,0,0,0.3);
+        }
+
+        .coin-tray.wrong-hover {
+            box-shadow: 
+                0 0 0 6px var(--orange-pop),
+                0 15px 40px rgba(0,0,0,0.4),
+                inset 0 5px 15px rgba(255,255,255,0.2),
+                inset 0 -5px 15px rgba(0,0,0,0.3);
+        }
+
+        /* Coin stack in tray */
+        .coin-stack {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+        }
+
+        .stacked-coin {
+            width: 70px;
+            height: 18px;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 
+                0 3px 6px rgba(0,0,0,0.4),
+                inset 0 -2px 4px rgba(0,0,0,0.3),
+                inset 0 2px 4px rgba(255,255,255,0.2);
+            overflow: hidden;
+            border: 2px solid #888;
+            background: linear-gradient(180deg, #d4d4d4 0%, #a0a0a0 50%, #888 100%);
+            animation: stackDrop 0.3s ease-out;
+            margin-bottom: -2px;
+        }
+
+        .stacked-coin img {
+            display: none;
+        }
+
+        /* Top coin shows the face */
+        .stacked-coin.top-coin {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            margin-bottom: 0;
+            box-shadow: 
+                0 4px 10px rgba(0,0,0,0.3),
+                inset 0 -2px 5px rgba(0,0,0,0.2);
+            background: #ccc;
+        }
+
+        .stacked-coin.top-coin img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        @keyframes stackDrop {
+            0% {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Stack count */
+        .stack-count {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            color: var(--brown-soft);
+            font-size: 1.2rem;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Tray hint text */
+        .tray-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255,255,255,0.6);
+            font-size: 1rem;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .tray-hint.hidden {
+            display: none;
+        }
+
+        /* Result message */
+        .result-message-inline {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 15px 25px;
+            border-radius: 20px;
+            margin-top: 15px;
+            color: white;
+            font-size: 1.1rem;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            animation: slideUp 0.4s ease;
+        }
+
+        .result-message-inline.show {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-message-inline .result-icon {
+            font-size: 2rem;
+        }
+
+        .result-message-inline .result-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .result-message-inline .result-text strong {
+            font-size: 1.2rem;
+        }
+
+        .audio-btn-small {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .audio-btn-small:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.1);
+        }
+
+        /* Wrong coins display in feedback */
+        .wrong-coins-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .wrong-coins-display > span {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .wrong-coin-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255,255,255,0.3);
+            padding: 8px 12px;
+            border-radius: 12px;
+            gap: 4px;
+        }
+
+        .wrong-coin-item img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+
+        .wrong-coin-item span {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Buttons */
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 35px;
+            font-size: 1.2rem;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, var(--grass-green) 0%, #5BBF3D 100%);
+            color: white;
+        }
+
+        .btn-play:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(126, 217, 87, 0.5);
+        }
+
+        .btn-check {
+            background: linear-gradient(135deg, var(--sky-blue) 0%, #5BA4C9 100%);
+            color: white;
+        }
+
+        .btn-check:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(126, 200, 227, 0.5);
+        }
+
+        .btn-new {
+            background: linear-gradient(135deg, var(--purple-fun) 0%, #9B59B6 100%);
+            color: white;
+        }
+
+        .btn-new:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(180, 126, 222, 0.5);
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: confettiFall 3s ease-out forwards;
+            z-index: 1000;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Bottom decoration */
+        .bottom-deco {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            background: linear-gradient(180deg, transparent 0%, rgba(139, 69, 19, 0.2) 100%);
+            z-index: 5;
+        }
+
+        /* Intro/Home Screen */
+        .intro-screen {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .intro-coin-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            border: 4px solid #888;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        .intro-coin-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .intro-screen h2 {
+            font-family: 'Bubblegum Sans', cursive;
+            font-size: 2rem;
+            color: var(--brown-soft);
+            margin-bottom: 20px;
+        }
+
+        .intro-info {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px auto;
+            max-width: 500px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            text-align: left;
+        }
+
+        .intro-info h3 {
+            color: var(--tray-color);
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .intro-info ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .intro-info li {
+            padding: 10px 0;
+            border-bottom: 1px dashed #eee;
+            font-size: 1.1rem;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .intro-info li:last-child {
+            border-bottom: none;
+        }
+
+        .intro-info li span.icon {
+            font-size: 1.5rem;
+        }
+
+        .intro-coin-preview {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+
+        .intro-coin-preview .preview-coin {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid #888;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .intro-coin-preview .preview-coin img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .intro-coin-preview .preview-coin.target {
+            border-color: var(--grass-green);
+            box-shadow: 0 0 0 3px white, 0 0 0 6px var(--grass-green), 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .target-label {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 600;
+            color: var(--grass-green);
+        }
+
+        /* Game screen hidden by default */
+        .game-content {
+            display: none;
+        }
+
+        .game-content.active {
+            display: block;
+        }
+
+        .intro-screen.hidden {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 700px) {
+            .game-layout {
+                flex-direction: column;
+            }
+
+            .tray-area {
+                width: 100%;
+                order: -1;
+            }
+
+            .coin-tray {
+                width: 100%;
+                max-width: 250px;
+                height: 200px;
+            }
+
+            .coins-area {
+                min-height: 200px;
+            }
+
+            .coin {
+                width: 65px;
+                height: 65px;
+            }
+
+            .title h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mute button -->
+    <button class="mute-btn" id="mute-btn" onClick="toggleMute()" title="Mute/Unmute">🔊</button>
+
+    <!-- Bottom decoration -->
+    <div class="bottom-deco"></div>
+
+    <div class="game-container">
+        <div class="title">
+            <h1>
+                <img src="coins/2.webp" alt="₹2" class="title-coin" onerror="this.style.display='none'">
+                Sort the ₹2 Coins!
+                <img src="coins/2.webp" alt="₹2" class="title-coin" onerror="this.style.display='none'">
+            </h1>
+            <p class="subtitle">Drag the Two Rupee coins into the tray!</p>
+        </div>
+
+        <!-- Intro Screen -->
+        <div class="intro-screen" id="intro-screen">
+            <div class="intro-coin-icon">
+                <img src="coins/2.webp" alt="₹2" onerror="this.parentElement.innerHTML='🪙'">
+            </div>
+            <h2>Welcome to Coin Sorting!</h2>
+
+            <div class="intro-info">
+                <h3>🎮 How to play:</h3>
+                <ul>
+                    <li><span class="icon">👆</span> Drag only the ₹2 coins</li>
+                    <li><span class="icon">📥</span> Drop them into the tray</li>
+                    <li><span class="icon">📚</span> Watch them stack up!</li>
+                    <li><span class="icon">⭐</span> Collect all ₹2 coins to win</li>
+                </ul>
+            </div>
+
+            <div class="buttons" style="margin-top: 30px;">
+                <button class="btn btn-play" id="start-btn" onClick="startGame()">
+                    🎮 Start Game!
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Content (hidden until start) -->
+        <div class="game-content" id="game-content">
+            <div class="score-board">
+                <div class="score-item">
+                    <span>🪙</span>
+                    <div>Collected: <span id="collected-count">0</span></div>
+                </div>
+                <div class="score-item">
+                    <span>🎯</span>
+                    <div>Remaining: <span id="remaining-count">0</span></div>
+                </div>
+            </div>
+
+            <div class="game-area">
+                <div class="instruction" id="instruction">
+                    👆 Drag the
+                    <img src="coins/2.webp" alt="₹2" class="instruction-coin" onerror="this.outerHTML='₹2'">
+                    (Two Rupee) coins into the tray!
+                </div>
+
+                <div class="game-layout">
+                    <div class="coins-area" id="coins-area">
+                        <div class="coins-area-label">Pick coins from here</div>
+                        <div class="coins-container" id="coins-container">
+                            <!-- Coins will be generated here -->
+                        </div>
+                    </div>
+
+                    <div class="tray-area">
+                        <div class="tray-label">
+                            <img src="coins/2.webp" alt="₹2" onerror="this.outerHTML='🪙'">
+                            Coin Tray
+                        </div>
+                        <div class="coin-tray" id="coin-tray">
+                            <div class="stack-count" id="stack-count">0</div>
+                            <div class="tray-hint" id="tray-hint">Drop ₹2 coins here!</div>
+                            <div class="coin-stack" id="coin-stack">
+                                <!-- Stacked coins appear here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-message-inline" id="result-message-inline"></div>
+
+                <div class="buttons">
+                    <button class="btn btn-check" id="check-btn" onClick="checkAnswer()">
+                        ✓ Check!
+                    </button>
+                    <button class="btn btn-new" id="new-round-btn" onClick="newRound()" style="display: none;">
+                        🔄 Play Again!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let currentCoins = [];
+        let collectedCount = 0;
+        let totalTargetCoins = 0;
+        let gameActive = false;
+        let currentResultMessage = '';
+        let selectedVoice = null;
+        let isMuted = false;
+        let draggedCoin = null;
+
+        // Coin data - Rs 2 is the TARGET coin
+        const coinTypes = [
+            { value: 2, image: 'coins/2.webp', name: 'Two Rupees', isTarget: true },
+            { value: 1, image: 'coins/1.webp', name: 'Two Rupee', isTarget: false },
+            { value: 5, image: 'coins/5.webp', name: 'Five Rupees', isTarget: false },
+            { value: 10, image: 'coins/10.webp', name: 'Ten Rupees', isTarget: false }
+        ];
+
+        // Toggle mute
+        function toggleMute() {
+            isMuted = !isMuted;
+            const muteBtn = document.getElementById('mute-btn');
+            
+            if (isMuted) {
+                muteBtn.textContent = '🔇';
+                muteBtn.classList.add('muted');
+                muteBtn.title = 'Unmute';
+                window.speechSynthesis.cancel();
+            } else {
+                muteBtn.textContent = '🔊';
+                muteBtn.classList.remove('muted');
+                muteBtn.title = 'Mute';
+            }
+        }
+
+        // Initialize voice
+        function initVoice() {
+            if ('speechSynthesis' in window) {
+                const loadVoices = () => {
+                    const voices = window.speechSynthesis.getVoices();
+                    selectedVoice = 
+                        voices.find(v => v.name === 'Google हिन्दी' && v.lang === 'hi-IN') ||
+                        voices.find(v => v.name.includes('Heera')) ||
+                        voices.find(v => v.name.includes('Raveena')) ||
+                        voices.find(v => v.name.toLowerCase().includes('aditi')) ||
+                        voices.find(v => v.name.toLowerCase().includes('priya')) ||
+                        voices.find(v => v.name.toLowerCase().includes('neerja')) ||
+                        voices.find(v => v.name.toLowerCase().includes('veena')) ||
+                        voices.find(v => v.lang === 'en-IN' && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman'))) ||
+                        voices.find(v => v.lang === 'hi-IN' && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman'))) ||
+                        voices.find(v => v.name === 'Samantha') ||
+                        voices.find(v => v.name === 'Google UK English Female') ||
+                        voices.find(v => v.name === 'Google US English Female') ||
+                        voices.find(v => v.name.includes('Zira')) ||
+                        voices.find(v => v.name.includes('Susan')) ||
+                        voices.find(v => v.name.includes('Karen')) ||
+                        voices.find(v => v.name.includes('Moira')) ||
+                        voices.find(v => v.name.includes('Fiona')) ||
+                        voices.find(v => v.name.toLowerCase().includes('female') && v.lang.startsWith('en')) ||
+                        voices.find(v => v.name.toLowerCase().includes('woman') && v.lang.startsWith('en')) ||
+                        voices.find(v => v.lang.startsWith('en') && !v.name.toLowerCase().includes('male') && !v.name.toLowerCase().includes('david') && !v.name.toLowerCase().includes('james') && !v.name.toLowerCase().includes('daniel') && !v.name.toLowerCase().includes('george') && !v.name.toLowerCase().includes('rishi')) ||
+                        voices[0];
+                };
+                
+                if (window.speechSynthesis.getVoices().length > 0) {
+                    loadVoices();
+                }
+                window.speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        }
+
+        // Text-to-speech
+        function speak(text, callback) {
+            if (isMuted) {
+                if (callback) callback();
+                return;
+            }
+            
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.85;
+                utterance.pitch = 1.1;
+                utterance.volume = 1;
+                
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                }
+                
+                if (callback) {
+                    utterance.onend = callback;
+                }
+                
+                window.speechSynthesis.speak(utterance);
+            } else if (callback) {
+                callback();
+            }
+        }
+
+        function speakResult() {
+            speak(currentResultMessage);
+        }
+
+        // Generate coins
+        function generateCoins() {
+            const numCoins = Math.floor(Math.random() * 4) + 6; // 6-9 coins
+            const coins = [];
+            
+            const targetCoin = coinTypes.find(c => c.isTarget);
+            const otherCoins = coinTypes.filter(c => !c.isTarget);
+            
+            // 3-5 target coins
+            const numTarget = Math.floor(Math.random() * 3) + 3;
+            
+            for (let i = 0; i < numTarget; i++) {
+                coins.push({ ...targetCoin, id: `coin-${i}` });
+            }
+            
+            // Fill rest with random other coins
+            for (let i = numTarget; i < numCoins; i++) {
+                const randomCoin = otherCoins[Math.floor(Math.random() * otherCoins.length)];
+                coins.push({ ...randomCoin, id: `coin-${i}` });
+            }
+            
+            // Shuffle
+            for (let i = coins.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [coins[i], coins[j]] = [coins[j], coins[i]];
+            }
+            
+            coins.forEach((coin, index) => coin.id = `coin-${index}`);
+            
+            return coins;
+        }
+
+        // Render coins
+        function renderCoins() {
+            const container = document.getElementById('coins-container');
+            container.innerHTML = '';
+            
+            currentCoins.forEach((coin) => {
+                const coinEl = document.createElement('div');
+                coinEl.className = 'coin';
+                coinEl.id = coin.id;
+                coinEl.dataset.value = coin.value;
+                coinEl.dataset.isTarget = coin.isTarget;
+                coinEl.draggable = true;
+                
+                coinEl.innerHTML = `<img src="${coin.image}" alt="₹${coin.value} coin" onerror="this.parentElement.innerHTML='<div style=\\'font-size:1.5rem;font-weight:bold;\\'>₹${coin.value}</div>'">`;
+                
+                // Drag events
+                coinEl.addEventListener('dragstart', handleDragStart);
+                coinEl.addEventListener('dragend', handleDragEnd);
+                
+                // Touch events for mobile
+                coinEl.addEventListener('touchstart', handleTouchStart, { passive: false });
+                coinEl.addEventListener('touchmove', handleTouchMove, { passive: false });
+                coinEl.addEventListener('touchend', handleTouchEnd);
+                
+                container.appendChild(coinEl);
+            });
+        }
+
+        // Drag and drop handlers
+        function handleDragStart(e) {
+            if (!gameActive) return;
+            draggedCoin = e.target.closest('.coin');
+            draggedCoin.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            if (draggedCoin) {
+                draggedCoin.classList.remove('dragging');
+                draggedCoin = null;
+            }
+        }
+
+        // Touch handlers for mobile
+        let touchOffsetX = 0;
+        let touchOffsetY = 0;
+        let touchClone = null;
+
+        function handleTouchStart(e) {
+            if (!gameActive) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            draggedCoin = e.target.closest('.coin');
+            
+            const rect = draggedCoin.getBoundingClientRect();
+            touchOffsetX = touch.clientX - rect.left;
+            touchOffsetY = touch.clientY - rect.top;
+            
+            // Create clone for dragging visual
+            touchClone = draggedCoin.cloneNode(true);
+            touchClone.style.position = 'fixed';
+            touchClone.style.left = (touch.clientX - touchOffsetX) + 'px';
+            touchClone.style.top = (touch.clientY - touchOffsetY) + 'px';
+            touchClone.style.zIndex = '1000';
+            touchClone.style.pointerEvents = 'none';
+            touchClone.classList.add('dragging');
+            document.body.appendChild(touchClone);
+            
+            draggedCoin.style.opacity = '0.3';
+        }
+
+        function handleTouchMove(e) {
+            if (!draggedCoin || !touchClone) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            touchClone.style.left = (touch.clientX - touchOffsetX) + 'px';
+            touchClone.style.top = (touch.clientY - touchOffsetY) + 'px';
+            
+            // Check if over tray
+            const tray = document.getElementById('coin-tray');
+            const trayRect = tray.getBoundingClientRect();
+            
+            if (touch.clientX >= trayRect.left && touch.clientX <= trayRect.right &&
+                touch.clientY >= trayRect.top && touch.clientY <= trayRect.bottom) {
+                tray.classList.add('drag-over');
+            } else {
+                tray.classList.remove('drag-over');
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!draggedCoin) return;
+            
+            const tray = document.getElementById('coin-tray');
+            tray.classList.remove('drag-over');
+            
+            if (touchClone) {
+                const cloneRect = touchClone.getBoundingClientRect();
+                const centerX = cloneRect.left + cloneRect.width / 2;
+                const centerY = cloneRect.top + cloneRect.height / 2;
+                
+                const trayRect = tray.getBoundingClientRect();
+                
+                if (centerX >= trayRect.left && centerX <= trayRect.right &&
+                    centerY >= trayRect.top && centerY <= trayRect.bottom) {
+                    handleDrop(draggedCoin);
+                } else {
+                    draggedCoin.style.opacity = '1';
+                }
+                
+                touchClone.remove();
+                touchClone = null;
+            }
+            
+            draggedCoin = null;
+        }
+
+        // Tray drop handlers
+        const tray = document.getElementById('coin-tray');
+        
+        tray.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!gameActive || !draggedCoin) return;
+            
+            tray.classList.add('drag-over');
+        });
+
+        tray.addEventListener('dragleave', () => {
+            tray.classList.remove('drag-over');
+        });
+
+        tray.addEventListener('drop', (e) => {
+            e.preventDefault();
+            tray.classList.remove('drag-over');
+            
+            if (!gameActive || !draggedCoin) return;
+            handleDrop(draggedCoin);
+        });
+
+        function handleDrop(coinEl) {
+            // Allow any coin to be dropped in the tray
+            addToStack(coinEl);
+            coinEl.remove();
+            
+            if (coinEl.dataset.isTarget === 'true') {
+                collectedCount++;
+            }
+            
+            updateScores();
+        }
+
+        function addToStack(coinEl) {
+            const stack = document.getElementById('coin-stack');
+            const hint = document.getElementById('tray-hint');
+            hint.classList.add('hidden');
+            
+            // Remove top-coin class from previous top
+            const prevTop = stack.querySelector('.top-coin');
+            if (prevTop) {
+                prevTop.classList.remove('top-coin');
+                prevTop.innerHTML = ''; // Remove image from old top
+            }
+            
+            // Create new stacked coin (this will be the new top)
+            const stackedCoin = document.createElement('div');
+            stackedCoin.className = 'stacked-coin top-coin';
+            stackedCoin.innerHTML = coinEl.innerHTML;
+            stackedCoin.dataset.isTarget = coinEl.dataset.isTarget;
+            stackedCoin.dataset.value = coinEl.dataset.value;
+            
+            stack.appendChild(stackedCoin);
+            
+            document.getElementById('stack-count').textContent = stack.children.length;
+        }
+
+        function updateScores() {
+            document.getElementById('collected-count').textContent = collectedCount;
+            document.getElementById('remaining-count').textContent = totalTargetCoins - collectedCount;
+        }
+
+        function checkAnswer() {
+            if (!gameActive) return;
+            gameActive = false;
+            
+            const resultDiv = document.getElementById('result-message-inline');
+            let messageText = '';
+            let tipText = '';
+            let bgColor = '';
+            let wrongCoinsHTML = '';
+            
+            // Count coins in the tray
+            const stackedCoins = document.querySelectorAll('.coin-stack .stacked-coin');
+            let correctInTray = 0;
+            let wrongInTray = 0;
+            let wrongCoinValues = [];
+            
+            stackedCoins.forEach(coin => {
+                if (coin.dataset.isTarget === 'true') {
+                    correctInTray++;
+                } else {
+                    wrongInTray++;
+                    wrongCoinValues.push(coin.dataset.value);
+                }
+            });
+            
+            // Count remaining target coins in the coins area
+            const remainingTargets = document.querySelectorAll('.coins-container .coin[data-is-target="true"]').length;
+            
+            // Build wrong coins display HTML
+            if (wrongCoinValues.length > 0) {
+                wrongCoinsHTML = '<div class="wrong-coins-display"><span>Wrong coins:</span>';
+                wrongCoinValues.forEach(value => {
+                    wrongCoinsHTML += `
+                        <div class="wrong-coin-item">
+                            <img src="coins/${value}.webp" alt="₹${value}" onerror="this.style.display='none'">
+                            <span>₹${value}</span>
+                        </div>
+                    `;
+                });
+                wrongCoinsHTML += '</div>';
+            }
+            
+            if (correctInTray === totalTargetCoins && wrongInTray === 0) {
+                // Perfect - all correct coins collected, no wrong ones!
+                messageText = `Perfect! You collected all ${correctInTray} Two Rupee coins!`;
+                tipText = 'You made a beautiful coin stack!';
+                bgColor = 'var(--grass-green)';
+                
+                // Confetti
+                for (let i = 0; i < 40; i++) {
+                    setTimeout(() => createConfetti(), i * 50);
+                }
+            } else if (wrongInTray > 0 && remainingTargets > 0) {
+                // Has wrong coins and missed some
+                messageText = `Oops! You put ${wrongInTray} wrong coin${wrongInTray > 1 ? 's' : ''} in the tray.`;
+                tipText = `Also missed ${remainingTargets} Two Rupee coin${remainingTargets > 1 ? 's' : ''}. Try again!`;
+                bgColor = 'var(--orange-pop)';
+            } else if (wrongInTray > 0) {
+                // Has wrong coins but got all target coins
+                messageText = `Almost! You found all Two Rupee coins but also added ${wrongInTray} wrong coin${wrongInTray > 1 ? 's' : ''}.`;
+                tipText = 'Only put ₹2 coins in the tray!';
+                bgColor = 'var(--orange-pop)';
+            } else if (remainingTargets > 0) {
+                // No wrong coins but missed some
+                messageText = `Good try! You collected ${correctInTray} out of ${totalTargetCoins} Two Rupee coins.`;
+                tipText = `${remainingTargets} more to find!`;
+                bgColor = 'var(--orange-pop)';
+            } else if (stackedCoins.length === 0) {
+                // None collected
+                messageText = 'No coins in the tray yet!';
+                tipText = 'Drag the ₹2 coins into the tray.';
+                bgColor = 'var(--orange-pop)';
+            }
+            
+            resultDiv.innerHTML = `
+                <span class="result-icon">${correctInTray === totalTargetCoins && wrongInTray === 0 ? '🌟' : '🤔'}</span>
+                <div class="result-text">
+                    <strong>${messageText}</strong>
+                    <span>${tipText}</span>
+                    ${wrongCoinsHTML}
+                </div>
+                <button class="audio-btn-small" onclick="speakResult()" title="Listen">🔊</button>
+            `;
+            resultDiv.style.background = bgColor;
+            resultDiv.classList.add('show');
+            
+            currentResultMessage = messageText + ' ' + tipText;
+            
+            // Speak the result
+            setTimeout(() => speak(currentResultMessage), 300);
+            
+            // Show appropriate button
+            document.getElementById('check-btn').style.display = 'none';
+            document.getElementById('new-round-btn').style.display = 'inline-block';
+        }
+
+        function gameComplete() {
+            // Auto-trigger check when all coins collected
+            checkAnswer();
+        }
+
+        function createConfetti() {
+            const colors = ['#FFE066', '#7ED957', '#FF9ECD', '#7EC8E3', '#B47EDE', '#FF8C42'];
+            
+            for (let i = 0; i < 5; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        function startGame() {
+            // Hide intro, show game
+            document.getElementById('intro-screen').classList.add('hidden');
+            document.getElementById('game-content').classList.add('active');
+            
+            initVoice();
+            newRound();
+        }
+
+        function newRound() {
+            currentCoins = generateCoins();
+            collectedCount = 0;
+            totalTargetCoins = currentCoins.filter(c => c.isTarget).length;
+            gameActive = true;
+            
+            // Reset UI
+            document.getElementById('coin-stack').innerHTML = '';
+            document.getElementById('stack-count').textContent = '0';
+            document.getElementById('tray-hint').classList.remove('hidden');
+            document.getElementById('result-message-inline').classList.remove('show');
+            document.getElementById('check-btn').style.display = 'inline-block';
+            document.getElementById('new-round-btn').style.display = 'none';
+            
+            updateScores();
+            renderCoins();
+            
+            window.speechSynthesis.cancel();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initVoice();
+        });
+    </script>
+</body>
+</html>
