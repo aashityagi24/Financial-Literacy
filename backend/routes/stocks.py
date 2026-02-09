@@ -140,6 +140,10 @@ async def get_portfolio(request: Request):
     total_invested = 0
     total_current = 0
     
+    # Get today's date in IST for daily tracking
+    ist = pytz.timezone('Asia/Kolkata')
+    today_ist = datetime.now(ist).strftime("%Y-%m-%d")
+    
     for holding in holdings:
         # Try investment_stocks first, then admin_stocks
         stock = await db.investment_stocks.find_one(
@@ -156,16 +160,53 @@ async def get_portfolio(request: Request):
             holding["ticker"] = stock.get("ticker")
             holding["current_price"] = stock.get("current_price", 0)
             holding["current_value"] = holding["quantity"] * stock.get("current_price", 0)
+            
+            # Calculate P/L from purchase price
             holding["profit_loss"] = holding["current_value"] - holding.get("total_invested", 0)
+            if holding.get("total_invested", 0) > 0:
+                holding["profit_loss_percent"] = round((holding["profit_loss"] / holding["total_invested"]) * 100, 2)
+            else:
+                holding["profit_loss_percent"] = 0
+            
+            # Calculate daily change
+            history = stock.get("price_history", [])
+            today_history = [h for h in history if h.get("date", "").startswith(today_ist)]
+            if today_history:
+                opening_price = today_history[0].get("price", stock["current_price"])
+            else:
+                opening_price = stock.get("previous_close", stock["current_price"])
+            
+            holding["opening_price"] = opening_price
+            holding["daily_change"] = round(stock["current_price"] - opening_price, 2)
+            holding["daily_change_percent"] = round((holding["daily_change"] / opening_price * 100), 2) if opening_price > 0 else 0
+            holding["daily_change_value"] = round(holding["daily_change"] * holding["quantity"], 2)
+            
+            # Previous close
+            holding["previous_close"] = stock.get("previous_close", stock["current_price"])
+            
+            # Stock details for display
+            holding["stock"] = {
+                "stock_id": stock.get("stock_id"),
+                "ticker": stock.get("ticker"),
+                "name": stock.get("name"),
+                "category_emoji": stock.get("category_emoji"),
+                "current_price": stock.get("current_price"),
+                "opening_price": opening_price,
+                "previous_close": stock.get("previous_close", stock["current_price"])
+            }
             
             total_invested += holding.get("total_invested", 0)
             total_current += holding["current_value"]
+    
+    total_profit_loss = total_current - total_invested
+    total_profit_loss_percent = round((total_profit_loss / total_invested * 100), 2) if total_invested > 0 else 0
     
     return {
         "holdings": holdings,
         "total_invested": round(total_invested, 2),
         "total_current_value": round(total_current, 2),
-        "total_profit_loss": round(total_current - total_invested, 2)
+        "total_profit_loss": round(total_profit_loss, 2),
+        "total_profit_loss_percent": total_profit_loss_percent
     }
 
 @router.get("/portfolio/history")
