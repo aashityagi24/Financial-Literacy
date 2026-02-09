@@ -420,6 +420,7 @@ async def admin_create_item(request: Request):
         "content_type": body.get("content_type", "lesson"),
         "content_data": body.get("content_data", {}),
         "thumbnail": body.get("thumbnail"),
+        "visible_to": body.get("visible_to", ["child"]),
         "order": new_order,
         "min_grade": body.get("min_grade", 0),
         "max_grade": body.get("max_grade", 5),
