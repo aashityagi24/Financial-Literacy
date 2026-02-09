@@ -83,15 +83,43 @@ async def get_stocks_list(request: Request, category_id: str = None):
            (max_g is None and min_g is not None and grade >= min_g):
             filtered_stocks.append(stock)
     
+    # Get today's date in IST for daily tracking
+    ist = pytz.timezone('Asia/Kolkata')
+    today_ist = datetime.now(ist).strftime("%Y-%m-%d")
+    
     for stock in filtered_stocks:
         history = stock.get("price_history", [])[-10:]
         stock["recent_history"] = history
+        
+        # Get today's opening price (first price of the day)
+        today_history = [h for h in history if h.get("date", "").startswith(today_ist)]
+        if today_history:
+            stock["opening_price"] = today_history[0].get("price", stock["current_price"])
+            stock["closing_price"] = stock["current_price"]  # Current price is the latest
+        else:
+            # If no history today, use previous close or current price
+            stock["opening_price"] = stock.get("previous_close", stock["current_price"])
+            stock["closing_price"] = stock["current_price"]
+        
+        # Daily change (from today's opening)
+        stock["daily_change"] = round(stock["current_price"] - stock["opening_price"], 2)
+        stock["daily_change_percent"] = round((stock["daily_change"] / stock["opening_price"] * 100), 2) if stock["opening_price"] > 0 else 0
+        
+        # Previous close for reference
         if len(history) >= 2:
+            # Find the last entry from a previous day
+            prev_day_entries = [h for h in history if not h.get("date", "").startswith(today_ist)]
+            if prev_day_entries:
+                stock["previous_close"] = prev_day_entries[-1].get("close_price", prev_day_entries[-1].get("price", stock["current_price"]))
+            else:
+                stock["previous_close"] = history[-2].get("close_price", history[-2].get("price", stock["current_price"]))
+            
             prev = history[-2].get("price", stock["current_price"])
             curr = stock["current_price"]
             stock["price_change"] = round(curr - prev, 2)
             stock["price_change_percent"] = round((curr - prev) / prev * 100, 2) if prev > 0 else 0
         else:
+            stock["previous_close"] = stock["current_price"]
             stock["price_change"] = 0
             stock["price_change_percent"] = 0
     
