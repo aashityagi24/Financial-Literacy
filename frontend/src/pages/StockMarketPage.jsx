@@ -429,35 +429,88 @@ export default function StockMarketPage({ user }) {
               </div>
             ) : (
               <div className="space-y-3">
-                {portfolio.holdings.map(holding => (
-                  <div 
-                    key={holding.holding_id}
-                    className="bg-[#1F2937] rounded-xl p-4 border border-gray-700 flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-[#374151] rounded-lg flex items-center justify-center text-xl">
-                        {holding.stock?.category_emoji || '📈'}
-                      </div>
-                      <div>
-                        <p className="font-bold">{holding.stock?.ticker}</p>
-                        <p className="text-sm text-gray-400">{holding.quantity} shares @ ₹{holding.average_buy_price?.toFixed(2)}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold">₹{holding.current_value?.toFixed(0)}</p>
-                      <p className={`text-sm ${holding.profit_loss >= 0 ? 'text-[#10B981]' : 'text-red-400'}`}>
-                        {holding.profit_loss >= 0 ? '+' : ''}₹{holding.profit_loss?.toFixed(0)} ({holding.profit_loss_percent?.toFixed(1)}%)
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => { setSelectedStock(holding.stock); setSellQuantity(1); setShowSellDialog(true); }}
-                      disabled={!marketStatus.is_open}
-                      className="px-4 py-2 bg-red-500 hover:bg-red-600 disabled:bg-gray-600 text-white font-bold rounded-lg"
+                {portfolio.holdings.map(holding => {
+                  const dailyIsUp = (holding.daily_change || 0) >= 0;
+                  const totalIsUp = (holding.profit_loss || 0) >= 0;
+                  
+                  return (
+                    <div 
+                      key={holding.holding_id}
+                      className="bg-[#1F2937] rounded-xl p-4 border border-gray-700"
                     >
-                      Sell
-                    </button>
-                  </div>
-                ))}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-[#374151] rounded-lg flex items-center justify-center text-xl">
+                            {holding.stock?.category_emoji || '📈'}
+                          </div>
+                          <div>
+                            <p className="font-bold text-lg">{holding.ticker || holding.stock?.ticker}</p>
+                            <p className="text-sm text-gray-400">{holding.quantity} shares @ ₹{holding.average_buy_price?.toFixed(2)} avg</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-xl">₹{holding.current_value?.toFixed(0)}</p>
+                          <p className="text-sm text-gray-400">Current: ₹{holding.current_price?.toFixed(2)}/share</p>
+                        </div>
+                      </div>
+                      
+                      {/* Two-row stats: Daily Change and Total P/L */}
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        {/* Daily Change */}
+                        <div className="bg-[#374151]/50 rounded-lg p-3">
+                          <p className="text-xs text-gray-500 mb-1">Today's Change</p>
+                          <div className={`flex items-center gap-1 ${dailyIsUp ? 'text-[#10B981]' : 'text-red-400'}`}>
+                            {dailyIsUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                            <span className="font-bold">
+                              {dailyIsUp ? '+' : ''}₹{holding.daily_change_value?.toFixed(2) || 0}
+                            </span>
+                            <span className="text-xs">
+                              ({dailyIsUp ? '+' : ''}{holding.daily_change_percent?.toFixed(1) || 0}%)
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Total P/L from Purchase */}
+                        <div className="bg-[#374151]/50 rounded-lg p-3">
+                          <p className="text-xs text-gray-500 mb-1">Total P/L (from purchase)</p>
+                          <div className={`flex items-center gap-1 ${totalIsUp ? 'text-[#10B981]' : 'text-red-400'}`}>
+                            {totalIsUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                            <span className="font-bold">
+                              {totalIsUp ? '+' : ''}₹{holding.profit_loss?.toFixed(2) || 0}
+                            </span>
+                            <span className="text-xs">
+                              ({totalIsUp ? '+' : ''}{holding.profit_loss_percent?.toFixed(1) || 0}%)
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Open/Previous Close Prices */}
+                      <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
+                        <div className="bg-[#374151]/30 rounded-lg px-2 py-1.5">
+                          <span className="text-gray-500">Open:</span>
+                          <span className="text-white ml-1">₹{holding.opening_price?.toFixed(2)}</span>
+                        </div>
+                        <div className="bg-[#374151]/30 rounded-lg px-2 py-1.5">
+                          <span className="text-gray-500">Prev Close:</span>
+                          <span className="text-white ml-1">₹{holding.previous_close?.toFixed(2)}</span>
+                        </div>
+                        <div className="bg-[#374151]/30 rounded-lg px-2 py-1.5">
+                          <span className="text-gray-500">Avg Buy:</span>
+                          <span className="text-white ml-1">₹{holding.average_buy_price?.toFixed(2)}</span>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() => { setSelectedStock(holding.stock); setSellQuantity(1); setShowSellDialog(true); }}
+                        disabled={!marketStatus.is_open}
+                        className="w-full py-2 bg-red-500 hover:bg-red-600 disabled:bg-gray-600 text-white font-bold rounded-lg"
+                      >
+                        Sell
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
