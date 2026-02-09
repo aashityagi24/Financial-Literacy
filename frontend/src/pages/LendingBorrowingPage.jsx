@@ -121,6 +121,7 @@ export default function LendingBorrowingPage({ user }) {
     return_date: '',
     recipient_ids: []
   });
+  const [recipientSearch, setRecipientSearch] = useState('');
   
   const [responseForm, setResponseForm] = useState({
     action: '',
