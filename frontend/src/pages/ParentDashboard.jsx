@@ -111,14 +111,15 @@ export default function ParentDashboard({ user }) {
   
   const fetchData = async () => {
     try {
-      const [dashRes, choresRes, rpRes, allowRes, goalsRes, choreReqRes, purchasesRes] = await Promise.all([
+      const [dashRes, choresRes, rpRes, allowRes, goalsRes, choreReqRes, purchasesRes, lendingReqRes] = await Promise.all([
         axios.get(`${API}/parent/dashboard`),
         axios.get(`${API}/parent/chores-new`).catch(() => ({ data: [] })),
         axios.get(`${API}/parent/reward-penalty`).catch(() => ({ data: [] })),
         axios.get(`${API}/parent/allowances`),
         axios.get(`${API}/parent/savings-goals`),
         axios.get(`${API}/parent/chore-requests`).catch(() => ({ data: [] })),
-        axios.get(`${API}/parent/children-purchases`).catch(() => ({ data: [] }))
+        axios.get(`${API}/parent/children-purchases`).catch(() => ({ data: [] })),
+        axios.get(`${API}/lending/requests/received`).catch(() => ({ data: [] }))
       ]);
       setDashboard(dashRes.data);
       setChores(choresRes.data);
@@ -127,10 +128,12 @@ export default function ParentDashboard({ user }) {
       setSavingsGoals(goalsRes.data);
       setChoreRequests(choreReqRes.data);
       setChildrenPurchases(purchasesRes.data);
+      setLendingRequests(lendingReqRes.data || []);
       
-      // Fetch classroom info for each child
+      // Fetch classroom info and lending data for each child
       if (dashRes.data?.children) {
         const classroomData = {};
+        const loanData = {};
         await Promise.all(
           dashRes.data.children.map(async (child) => {
             try {
@@ -139,9 +142,20 @@ export default function ParentDashboard({ user }) {
             } catch (err) {
               classroomData[child.user_id] = { has_classroom: false };
             }
+            
+            // Fetch lending data for grade 4-5 children
+            if (child.grade >= 4) {
+              try {
+                const loanRes = await axios.get(`${API}/lending/parent/child-loans/${child.user_id}`);
+                loanData[child.user_id] = loanRes.data;
+              } catch (err) {
+                loanData[child.user_id] = null;
+              }
+            }
           })
         );
         setChildClassrooms(classroomData);
+        setChildrenLoans(loanData);
       }
     } catch (error) {
       toast.error('Failed to load dashboard');
