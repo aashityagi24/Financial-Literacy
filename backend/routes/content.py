@@ -43,15 +43,6 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
     elif is_parent and grade is not None:
         filter_grade = grade
     
-    # Determine visibility filter based on role
-    visibility_filter = None
-    if is_child:
-        visibility_filter = "child"
-    elif is_teacher:
-        visibility_filter = "teacher"
-    elif is_parent:
-        visibility_filter = "parent"
-    
     # Build topic query
     if filter_grade is None or is_admin:
         query = {"parent_id": None}
@@ -84,13 +75,31 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
             }
         
         # Add visibility filter for non-admin users
-        if visibility_filter and not is_admin:
-            content_grade_query["$or"] = [
-                {"visible_to": {"$in": [visibility_filter]}},
-                {"visible_to": {"$exists": False}},
-                {"visible_to": []},
-                {"visible_to": None}
-            ]
+        if not is_admin:
+            if is_child:
+                # Children only see content marked for them
+                content_grade_query["$or"] = [
+                    {"visible_to": {"$in": ["child"]}},
+                    {"visible_to": {"$exists": False}},
+                    {"visible_to": []},
+                    {"visible_to": None}
+                ]
+            elif is_teacher:
+                # Teachers see child content + teacher-specific content
+                content_grade_query["$or"] = [
+                    {"visible_to": {"$in": ["child", "teacher"]}},
+                    {"visible_to": {"$exists": False}},
+                    {"visible_to": []},
+                    {"visible_to": None}
+                ]
+            elif is_parent:
+                # Parents see child content + parent-specific content
+                content_grade_query["$or"] = [
+                    {"visible_to": {"$in": ["child", "parent"]}},
+                    {"visible_to": {"$exists": False}},
+                    {"visible_to": []},
+                    {"visible_to": None}
+                ]
         
         subtopics = await db.content_topics.find(subtopic_query, {"_id": 0}).sort("order", 1).to_list(100)
         topic["subtopics"] = subtopics
