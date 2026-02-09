@@ -108,12 +108,13 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                 subtopic_content_query = {
                     "topic_id": subtopic["topic_id"], 
                     "is_published": True,
-                    "min_grade": {"$lte": user_grade}, 
-                    "max_grade": {"$gte": user_grade},
+                    "min_grade": {"$lte": filter_grade}, 
+                    "max_grade": {"$gte": filter_grade},
                     "$or": [
                         {"visible_to": {"$in": ["child"]}},
                         {"visible_to": {"$exists": False}},
-                        {"visible_to": []}
+                        {"visible_to": []},
+                        {"visible_to": None}
                     ]
                 }
                 subtopic["content_count"] = await db.content_items.count_documents(subtopic_content_query)
@@ -137,7 +138,7 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
             previous_topic_completed = topic["is_completed"]
         else:
             for subtopic in subtopics:
-                # Grade filter for teachers/parents viewing content
+                # Grade and visibility filter for teachers/parents viewing content
                 if user_grade is not None and not is_admin:
                     subtopic_content_query = {
                         "topic_id": subtopic["topic_id"], 

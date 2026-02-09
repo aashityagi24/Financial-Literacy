@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Note Color Quiz - Learn Indian Note Colors! </title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Comic Sans MS', sans-serif;
+            background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #ffecd2, #fcb69f);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Floating notes */
+        .floating-bg {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .float-symbol {
+            position: absolute;
+            font-size: 40px;
+            opacity: 0.15;
+            animation: floatAround 20s infinite ease-in-out;
+        }
+
+        @keyframes floatAround {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(30px, -30px) rotate(90deg);
+            }
+            50% {
+                transform: translate(-20px, -60px) rotate(180deg);
+            }
+            75% {
+                transform: translate(-40px, -30px) rotate(270deg);
+            }
+        }
+
+        /* Main container */
+        .game-container {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 40px;
+            padding: 25px 35px 35px 35px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+            max-width: 1000px;
+            width: 95%;
+            animation: slideIn 0.8s ease-out;
+        }
+
+        /* Game content layout */
+        .game-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: center;
+        }
+
+        /* Left side - Image */
+        .left-side {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Right side - Question and Options */
+        .right-side {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .title {
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            animation: titleBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes titleBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #666;
+            font-weight: 400;
+        }
+
+        /* Score board */
+        .score-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .score-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1.1em;
+            box-shadow: 0 8px 20px rgba(245, 87, 108, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .score-box.correct {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .score-box .emoji {
+            font-size: 1.3em;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Progress bar */
+        .progress-container {
+            background: #e0e0e0;
+            border-radius: 20px;
+            height: 15px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 100%);
+            border-radius: 20px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Image display area */
+        .image-area {
+            background: linear-gradient(135deg, #ffeef8 0%, #fff5e6 100%);
+            border-radius: 25px;
+            padding: 20px;
+            min-height: 400px;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-area::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .currency-image {
+            max-width: 100%;
+            max-height: 360px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            animation: imageAppear 0.6s ease-out;
+            position: relative;
+            z-index: 1;
+            transition: transform 0.3s ease;
+        }
+
+        .currency-image:hover {
+            transform: scale(1.05) rotate(2deg);
+        }
+
+        @keyframes imageAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0.5) rotate(-10deg);
+            }
+            60% {
+                transform: scale(1.1) rotate(5deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        .loading-state {
+            text-align: center;
+            color: #666;
+        }
+
+        .loading-spinner {
+            font-size: 3em;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Question text */
+        .question-text {
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #ff6b9d;
+            margin-bottom: 15px;
+            animation: questionPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes questionPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* MCQ Options */
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .option-btn {
+            background: white;
+            border: 3px solid #e0e0e0;
+            padding: 18px 20px;
+            border-radius: 20px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Fredoka', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            min-height: 70px;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border-color: #ff6b9d;
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .color-circle {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            flex-shrink: 0;
+        }
+
+        /* Modal/Feedback popup */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 40px;
+            padding: 40px;
+            text-align: center;
+            max-width: 650px;
+            width: 90%;
+            animation: modalBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes modalBounce {
+            0% {
+                transform: scale(0.3) rotate(-10deg);
+                opacity: 0;
+            }
+            70% {
+                transform: scale(1.1) rotate(5deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .modal-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: iconBounce 0.8s ease infinite;
+        }
+
+        @keyframes iconBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.1); }
+        }
+
+        .modal-title {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .modal-title.correct {
+            color: #4caf50;
+        }
+
+        .modal-title.incorrect {
+            color: #ff6b6b;
+        }
+
+        .modal-message {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        .modal-message strong {
+            color: #333;
+            font-size: 1.15em;
+        }
+
+        .continue-btn {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-size: 1.3em;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(255, 154, 158, 0.4);
+            transition: all 0.3s ease;
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        .continue-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 154, 158, 0.6);
+        }
+
+        /* Completion screen */
+        .completion-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .completion-icon {
+            font-size: 100px;
+            margin-bottom: 20px;
+            animation: completionSpin 2s ease-in-out infinite;
+        }
+
+        @keyframes completionSpin {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(360deg) scale(1.2); }
+        }
+
+        .completion-title {
+            font-size: 2em;
+            font-weight: 700;
+            color: #ff6b9d;
+            margin-bottom: 20px;
+        }
+
+        .completion-stats {
+            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+            padding: 30px;
+            border-radius: 25px;
+            margin: 20px 0;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #2d6a4f;
+        }
+
+        .home-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-size: 1.3em;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            font-family: 'Fredoka', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .home-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        /* Confetti canvas */
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Question indicator */
+        .question-number {
+            text-align: center;
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .game-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .image-area {
+                min-height: 300px;
+            }
+            
+            .currency-image {
+                max-height: 280px;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .title {
+                font-size: 1.6em;
+            }
+            .subtitle {
+                font-size: 1em;
+            }
+            .game-container {
+                padding: 20px 20px 30px 20px;
+            }
+            .image-area {
+                min-height: 250px;
+                padding: 15px;
+            }
+            .currency-image {
+                max-height: 230px;
+            }
+            .options-container {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .option-btn {
+                padding: 14px 15px;
+                font-size: 0.95em;
+                gap: 8px;
+                min-height: 60px;
+            }
+            .color-circle {
+                width: 28px;
+                height: 28px;
+            }
+            .question-text {
+                font-size: 1.1em;
+                margin-bottom: 15px;
+            }
+            .question-number {
+                font-size: 1em;
+                margin-bottom: 15px;
+            }
+            .score-box {
+                padding: 10px 20px;
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating background elements -->
+    <div class="floating-bg">
+        <div class="float-symbol" style="top: 10%; left: 10%;">🎨</div>
+        <div class="float-symbol" style="top: 20%; left: 80%; animation-delay: 2s;">💵</div>
+        <div class="float-symbol" style="top: 60%; left: 15%; animation-delay: 4s;">🎨</div>
+        <div class="float-symbol" style="top: 70%; left: 75%; animation-delay: 6s;">💵</div>
+        <div class="float-symbol" style="top: 40%; left: 50%; animation-delay: 3s;">🎨</div>
+        <div class="float-symbol" style="top: 85%; left: 40%; animation-delay: 5s;">💵</div>
+    </div>
+
+    <!-- Confetti canvas -->
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- Main game container -->
+    <div class="game-container">
+        <!-- Header -->
+        <div class="header">
+            <h1 class="title">Note Color Quiz </h1>
+            <p class="subtitle">What color is this note?</p>
+        </div>
+
+        <!-- Score board -->
+        <div class="score-container">
+            <div class="score-box">
+                <span class="emoji">🎯</span>
+                <span>Total: <strong id="totalScore">0</strong></span>
+            </div>
+            <div class="score-box correct">
+                <span class="emoji">⭐</span>
+                <span>Correct: <strong id="correctScore">0</strong></span>
+            </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+        </div>
+
+        <!-- Question number -->
+        <div class="question-number" id="questionNumber">Question 1 of 6</div>
+
+        <!-- Game content - Horizontal Layout -->
+        <div class="game-content">
+            <!-- Left side - Image -->
+            <div class="left-side">
+                <div class="image-area" id="imageArea">
+                    <div class="loading-state">
+                        <div class="loading-spinner">⏳</div>
+                        <h3>Loading...</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right side - Question and Options -->
+            <div class="right-side">
+                <!-- Question text -->
+                <div class="question-text">What is the color of this note?</div>
+
+                <!-- Options area -->
+                <div class="options-container" id="optionsContainer">
+                    <!-- Options will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div class="modal" id="feedbackModal">
+        <div class="modal-content">
+            <div class="modal-icon" id="modalIcon"></div>
+            <h2 class="modal-title" id="modalTitle"></h2>
+            <p class="modal-message" id="modalMessage"></p>
+            <button class="continue-btn" id="continueBtn">Continue →</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let currentImageIndex = 0;
+        let totalQuestions = 0;
+        let correctAnswers = 0;
+        let currentCorrectColor = '';
+
+        // Notes database with colors
+        const imageDatabase = [
+            { file: 'note-10.png', value: 10, color: 'Brown', colorCode: '#8B4513', name: '₹10 Note' },
+            { file: 'note-20.png', value: 20, color: 'Green', colorCode: '#2E8B57', name: '₹20 Note' },
+            { file: 'note-50.png', value: 50, color: 'Blue', colorCode: '#4169E1', name: '₹50 Note' },
+            { file: 'note-100.png', value: 100, color: 'Purple', colorCode: '#9370DB', name: '₹100 Note' },
+            { file: 'note-200.png', value: 200, color: 'Yellow', colorCode: '#FFD700', name: '₹200 Note' },
+            { file: 'note-500.png', value: 500, color: 'Grey', colorCode: '#808080', name: '₹500 Note' }
+        ];
+
+        // All possible colors for MCQ
+        const allColors = [
+            { color: 'Brown', colorCode: '#8B4513' },
+            { color: 'Green', colorCode: '#2E8B57' },
+            { color: 'Blue', colorCode: '#4169E1' },
+            { color: 'Purple', colorCode: '#9370DB' },
+            { color: 'Yellow', colorCode: '#FFD700' },
+            { color: 'Grey', colorCode: '#808080' },
+            { color: 'Red', colorCode: '#DC143C' },
+            { color: 'Orange', colorCode: '#FF8C00' }
+        ];
+
+        // Shuffle array for random order
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        const images = shuffleArray(imageDatabase);
+        const totalImages = images.length;
+
+        // DOM elements
+        const imageArea = document.getElementById('imageArea');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const modal = document.getElementById('feedbackModal');
+        const continueBtn = document.getElementById('continueBtn');
+        const canvas = document.getElementById('confettiCanvas');
+        const ctx = canvas.getContext('2d');
+        const progressBar = document.getElementById('progressBar');
+        const questionNumber = document.getElementById('questionNumber');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Generate MCQ options
+        function generateOptions(correctColor) {
+            // Get correct color object
+            const correctColorObj = allColors.find(c => c.color === correctColor);
+            
+            // Get 3 wrong colors
+            const wrongColors = allColors.filter(c => c.color !== correctColor);
+            const shuffledWrong = shuffleArray(wrongColors).slice(0, 3);
+            
+            // Combine and shuffle
+            const options = shuffleArray([correctColorObj, ...shuffledWrong]);
+            
+            return options;
+        }
+
+        // Load image function
+        function loadImage(index) {
+            if (index >= images.length) {
+                showCompletionScreen();
+                return;
+            }
+
+            currentImageIndex = index;
+            const imageData = images[index];
+            currentCorrectColor = imageData.color;
+
+            // Update progress
+            const progress = ((index + 1) / totalImages) * 100;
+            progressBar.style.width = `${progress}%`;
+            questionNumber.textContent = `Question ${index + 1} of ${totalImages}`;
+
+            // Load image
+            imageArea.innerHTML = `<img class="currency-image" src="images/${imageData.file}" alt="Note" onerror="handleImageError()">`;
+            
+            // Generate options
+            const options = generateOptions(currentCorrectColor);
+            optionsContainer.innerHTML = '';
+            
+            options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `
+                    <div class="color-circle" style="background-color: ${option.colorCode};"></div>
+                    <span>${option.color}</span>
+                `;
+                btn.onclick = () => checkAnswer(option.color, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            // Play sound
+            playSound('load');
+        }
+
+        // Handle image error
+        window.handleImageError = function() {
+            imageArea.innerHTML = `
+                <div class="loading-state" style="color: #f44336;">
+                    <div style="font-size: 60px; margin-bottom: 15px;">⚠️</div>
+                    <h3>Image not found!</h3>
+                    <p style="margin-top: 10px; font-size: 0.9em;">Looking for: <strong>${images[currentImageIndex].file}</strong></p>
+                    <p style="margin-top: 10px; font-size: 0.9em;">Make sure images are in the 'images' folder</p>
+                </div>
+            `;
+            
+            // Disable all options
+            const buttons = optionsContainer.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.disabled = true);
+        };
+
+        // Check answer
+        function checkAnswer(selectedColor, clickedBtn) {
+            // Disable all buttons
+            const buttons = optionsContainer.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.disabled = true);
+
+            totalQuestions++;
+            updateScores();
+
+            const isCorrect = selectedColor === currentCorrectColor;
+
+            if (isCorrect) {
+                correctAnswers++;
+                updateScores();
+                clickedBtn.style.background = 'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)';
+                clickedBtn.style.borderColor = '#4caf50';
+                showFeedback(true);
+                playSound('correct');
+                createConfetti();
+            } else {
+                clickedBtn.style.background = 'linear-gradient(135deg, #ffcccb 0%, #ffb3ba 100%)';
+                clickedBtn.style.borderColor = '#ff6b6b';
+                
+                // Highlight correct answer
+                buttons.forEach(btn => {
+                    if (btn.textContent.trim() === currentCorrectColor) {
+                        btn.style.background = 'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)';
+                        btn.style.borderColor = '#4caf50';
+                    }
+                });
+                
+                showFeedback(false, selectedColor);
+                playSound('incorrect');
+            }
+        }
+
+        // Show feedback modal
+        function showFeedback(isCorrect, selectedColor = '') {
+            const modalIcon = document.getElementById('modalIcon');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalContent = document.querySelector('.modal-content');
+            const currentImage = images[currentImageIndex];
+
+            if (isCorrect) {
+                modalIcon.textContent = '🎉';
+                modalTitle.textContent = 'Excellent!';
+                modalTitle.className = 'modal-title correct';
+                modalMessage.innerHTML = `
+                    <strong style="font-size: 1.5em; color: #4caf50;">${currentCorrectColor}</strong><br><br>
+                    That's absolutely correct! 🌟<br>
+                    The <strong>₹${currentImage.value} note</strong> is <strong>${currentCorrectColor}</strong> in color!
+                `;
+                modalContent.style.background = 'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)';
+            } else {
+                modalIcon.textContent = '🤔';
+                modalTitle.textContent = 'Not quite!';
+                modalTitle.className = 'modal-title incorrect';
+                
+                modalMessage.innerHTML = `
+                    <div style="background: #fff3cd; padding: 20px; border-radius: 15px; margin-bottom: 20px;">
+                        <p style="font-size: 1.2em; color: #856404;">
+                            You selected: <strong style="font-size: 1.4em;">${selectedColor}</strong>
+                        </p>
+                    </div>
+                    <div style="background: white; padding: 25px; border-radius: 15px;">
+                        <p style="font-size: 1.2em; margin-bottom: 10px;">The correct answer is:</p>
+                        <p style="font-size: 2.5em; font-weight: 700; color: #4caf50; margin: 15px 0;">${currentCorrectColor}</p>
+                        <p style="font-size: 1.1em; color: #666;">
+                            The <strong>₹${currentImage.value} note</strong> is <strong>${currentCorrectColor}</strong> in color!
+                        </p>
+                    </div>
+                `;
+                modalContent.style.background = 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)';
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        // Continue button
+        continueBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+            currentImageIndex++;
+            if (currentImageIndex < images.length) {
+                loadImage(currentImageIndex);
+            } else {
+                showCompletionScreen();
+            }
+        });
+
+        // Update scores
+        function updateScores() {
+            document.getElementById('totalScore').textContent = totalQuestions;
+            document.getElementById('correctScore').textContent = correctAnswers;
+        }
+
+        // Show completion screen
+        function showCompletionScreen() {
+            const percentage = Math.round((correctAnswers / totalQuestions) * 100);
+            let emoji = '🎉';
+            let message = 'Amazing job!';
+            
+            if (percentage === 100) {
+                emoji = '🏆';
+                message = 'Perfect Score! You know all note colors!';
+            } else if (percentage >= 80) {
+                emoji = '⭐';
+                message = 'Excellent work!';
+            } else if (percentage >= 60) {
+                emoji = '👍';
+                message = 'Good job!';
+            } else {
+                emoji = '💪';
+                message = 'Keep practicing!';
+            }
+
+            // Hide question text and number
+            document.querySelector('.question-text').style.display = 'none';
+            questionNumber.style.display = 'none';
+
+            // Update left side (image area) with completion icon
+            imageArea.innerHTML = `
+                <div style="text-align: center;">
+                    <div class="completion-icon">${emoji}</div>
+                </div>
+            `;
+
+            // Update right side (options area) with completion stats
+            optionsContainer.innerHTML = `
+                <div class="completion-screen" style="grid-column: 1 / -1;">
+                    <h2 class="completion-title">${message}</h2>
+                    <div class="completion-stats">
+                        <p style="font-size: 1.2em; margin-bottom: 10px;">Your Score</p>
+                        <div class="stat-number">${correctAnswers}/${totalQuestions}</div>
+                        <p style="font-size: 2em; font-weight: 700; color: #2d6a4f; margin-top: 10px;">${percentage}%</p>
+                    </div>
+                    <div id="homeBtnContainer"></div>
+                </div>
+            `;
+            
+            // Create and add home button
+            const btnContainer = document.getElementById('homeBtnContainer');
+            const homeBtn = document.createElement('button');
+            homeBtn.className = 'home-btn';
+            homeBtn.innerHTML = '🏠 Home';
+            homeBtn.type = 'button';
+            
+            // Add click handler to restart game
+            homeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Reset game state
+                currentImageIndex = 0;
+                totalQuestions = 0;
+                correctAnswers = 0;
+                
+                // Reshuffle images
+                const shuffledImages = shuffleArray(imageDatabase);
+                images.length = 0;
+                images.push(...shuffledImages);
+                
+                // Reset UI
+                updateScores();
+                document.querySelector('.question-text').style.display = 'block';
+                questionNumber.style.display = 'block';
+                
+                // Restart game
+                loadImage(0);
+            });
+            
+            btnContainer.appendChild(homeBtn);
+            
+            createConfetti();
+            playSound('complete');
+        }
+
+        // Sound effects
+        function playSound(type) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            if (type === 'correct') {
+                oscillator.frequency.value = 523.25;
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.1);
+                
+                setTimeout(() => {
+                    const osc2 = audioContext.createOscillator();
+                    const gain2 = audioContext.createGain();
+                    osc2.connect(gain2);
+                    gain2.connect(audioContext.destination);
+                    osc2.frequency.value = 659.25;
+                    gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    osc2.start();
+                    osc2.stop(audioContext.currentTime + 0.1);
+                }, 100);
+                
+                setTimeout(() => {
+                    const osc3 = audioContext.createOscillator();
+                    const gain3 = audioContext.createGain();
+                    osc3.connect(gain3);
+                    gain3.connect(audioContext.destination);
+                    osc3.frequency.value = 783.99;
+                    gain3.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    osc3.start();
+                    osc3.stop(audioContext.currentTime + 0.2);
+                }, 200);
+            } else if (type === 'incorrect') {
+                oscillator.frequency.value = 200;
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } else if (type === 'load') {
+                oscillator.frequency.value = 440;
+                gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.08);
+            } else if (type === 'complete') {
+                const notes = [523.25, 587.33, 659.25, 783.99];
+                notes.forEach((freq, i) => {
+                    setTimeout(() => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.2, audioContext.currentTime);
+                        osc.start();
+                        osc.stop(audioContext.currentTime + 0.3);
+                    }, i * 150);
+                });
+            }
+        }
+
+        // Confetti animation
+        function createConfetti() {
+            const confettiCount = 200;
+            const confetti = [];
+            const colors = ['#ff9a9e', '#fad0c4', '#ffecd2', '#fcb69f', '#f093fb', '#4facfe'];
+
+            for (let i = 0; i < confettiCount; i++) {
+                confetti.push({
+                    x: Math.random() * canvas.width,
+                    y: -20,
+                    r: Math.random() * 5 + 3,
+                    d: Math.random() * confettiCount,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    tilt: Math.floor(Math.random() * 10) - 10,
+                    tiltAngleIncremental: Math.random() * 0.07 + 0.05,
+                    tiltAngle: 0
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                confetti.forEach((c, index) => {
+                    ctx.beginPath();
+                    ctx.lineWidth = c.r / 2;
+                    ctx.strokeStyle = c.color;
+                    ctx.moveTo(c.x + c.tilt + c.r / 4, c.y);
+                    ctx.lineTo(c.x + c.tilt, c.y + c.tilt + c.r / 4);
+                    ctx.stroke();
+
+                    c.tiltAngle += c.tiltAngleIncremental;
+                    c.y += (Math.cos(c.d) + 3 + c.r / 2) / 2;
+                    c.x += Math.sin(c.d);
+                    c.tilt = Math.sin(c.tiltAngle - index / 3) * 15;
+
+                    if (c.y > canvas.height) {
+                        confetti.splice(index, 1);
+                    }
+                });
+
+                if (confetti.length > 0) {
+                    requestAnimationFrame(draw);
+                }
+            }
+
+            draw();
+        }
+
+        // Resize canvas on window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Start the game
+        window.addEventListener('load', () => {
+            loadImage(0);
+        });
+    </script>
+</body>
+</html>
