@@ -37,6 +37,7 @@ import SchoolDashboard from "@/pages/SchoolDashboard";
 import GiftingPage from "@/pages/GiftingPage";
 import AdminBadgeManagement from "@/pages/AdminBadgeManagement";
 import AdminVideoManagement from "@/pages/AdminVideoManagement";
+import LendingBorrowingPage from "@/pages/LendingBorrowingPage";
 
 // Components
 import OnboardingTour from "@/components/OnboardingTour";
