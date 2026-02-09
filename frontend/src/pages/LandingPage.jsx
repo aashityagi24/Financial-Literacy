@@ -70,6 +70,7 @@ export default function LandingPage() {
     { icon: TrendingUp, title: "Investment Zone", description: "Grow your money! Gardening simulator for K-2, Stock market simulator for 3-5 graders", color: "#06D6A0" },
     { icon: Gift, title: "Virtual Store", description: "Spend your money on your needs and wants and enhance your collection!", color: "#EE6C4D" },
     { icon: Trophy, title: "Quests & Achievements", description: "Complete fun challenges and chores to earn money and badges", color: "#3D5A80" },
+    { icon: HandCoins, title: "Lending & Borrowing", description: "For Grade 4-5: Learn loans, interest, and credit scores by borrowing from parents & classmates", color: "#F59E0B" },
   ];
   
   const grades = ["Kindergarten", "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"];
