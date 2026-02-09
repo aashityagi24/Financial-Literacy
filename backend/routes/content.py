@@ -243,6 +243,13 @@ async def complete_content_item(content_id: str, request: Request):
     if not item:
         raise HTTPException(status_code=404, detail="Content not found")
     
+    # For children, check if content is visible to them
+    is_child = user.get("role") == "child"
+    if is_child:
+        visible_to = item.get("visible_to", [])
+        if visible_to and "child" not in visible_to:
+            raise HTTPException(status_code=404, detail="Content not found")
+    
     user_id = user["user_id"]
     
     existing = await db.user_content_progress.find_one({
