@@ -9255,16 +9255,49 @@ async def stock_price_fluctuation(session_name: str):
             new_price = max(1.0, current_price * (1 + change_percent))  # Minimum price ₹1
             new_price = round(new_price, 2)
             
-            # Update stock price
+            # Create price history entry for embedded array
+            price_entry = {
+                "date": today,
+                "price": new_price,
+                "close_price": new_price,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+            
+            # Update stock price and add to embedded price_history array
             await db.investment_stocks.update_one(
                 {"stock_id": stock["stock_id"]},
-                {"$set": {
-                    "current_price": new_price,
-                    "last_price_update": datetime.now(timezone.utc).isoformat()
-                }}
+                {
+                    "$set": {
+                        "current_price": new_price,
+                        "last_price_update": datetime.now(timezone.utc).isoformat()
+                    },
+                    "$push": {
+                        "price_history": {
+                            "$each": [price_entry],
+                            "$slice": -30  # Keep last 30 entries
+                        }
+                    }
+                }
             )
             
-            # Record in detailed price history
+            # Also update admin_stocks if it exists there
+            await db.admin_stocks.update_one(
+                {"stock_id": stock["stock_id"]},
+                {
+                    "$set": {
+                        "current_price": new_price,
+                        "last_price_update": datetime.now(timezone.utc).isoformat()
+                    },
+                    "$push": {
+                        "price_history": {
+                            "$each": [price_entry],
+                            "$slice": -30
+                        }
+                    }
+                }
+            )
+            
+            # Record in detailed price history collection (for analytics)
             await db.stock_price_history.update_one(
                 {"stock_id": stock["stock_id"], "date": today},
                 {
