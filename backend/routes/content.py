@@ -197,15 +197,6 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
     elif (is_teacher or is_parent) and grade is not None:
         filter_grade = grade
     
-    # Determine visibility filter based on role
-    visibility_filter = None
-    if is_child:
-        visibility_filter = "child"
-    elif is_teacher:
-        visibility_filter = "teacher"
-    elif is_parent:
-        visibility_filter = "parent"
-    
     topic = await db.content_topics.find_one({"topic_id": topic_id}, {"_id": 0})
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
@@ -226,8 +217,31 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
         content_query["max_grade"] = {"$gte": filter_grade}
     
     # Add visibility filter for non-admin users
-    if visibility_filter and not is_admin:
-        content_query["$or"] = [
+    if not is_admin:
+        if is_child:
+            # Children only see content marked for them
+            content_query["$or"] = [
+                {"visible_to": {"$in": ["child"]}},
+                {"visible_to": {"$exists": False}},
+                {"visible_to": []},
+                {"visible_to": None}
+            ]
+        elif is_teacher:
+            # Teachers see child content + teacher-specific content
+            content_query["$or"] = [
+                {"visible_to": {"$in": ["child", "teacher"]}},
+                {"visible_to": {"$exists": False}},
+                {"visible_to": []},
+                {"visible_to": None}
+            ]
+        elif is_parent:
+            # Parents see child content + parent-specific content
+            content_query["$or"] = [
+                {"visible_to": {"$in": ["child", "parent"]}},
+                {"visible_to": {"$exists": False}},
+                {"visible_to": []},
+                {"visible_to": None}
+            ]
             {"visible_to": {"$in": [visibility_filter]}},
             {"visible_to": {"$exists": False}},
             {"visible_to": []},
