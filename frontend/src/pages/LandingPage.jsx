@@ -22,6 +22,7 @@ export default function LandingPage() {
   const [adminPassword, setAdminPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [walkthroughVideo, setWalkthroughVideo] = useState(null);
+  const [selectedGrade, setSelectedGrade] = useState(null);
 
   useEffect(() => {
     // Fetch walkthrough video settings
