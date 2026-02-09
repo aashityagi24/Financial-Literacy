@@ -162,6 +162,15 @@ async def get_topic_detail(topic_id: str, request: Request):
     if user_grade is not None and not is_admin:
         content_query["min_grade"] = {"$lte": user_grade}
         content_query["max_grade"] = {"$gte": user_grade}
+    
+    # For children, only show content visible to them
+    if is_child:
+        content_query["$or"] = [
+            {"visible_to": {"$in": ["child"]}},
+            {"visible_to": {"$exists": False}},
+            {"visible_to": []}
+        ]
+    
     content_items = await db.content_items.find(content_query, {"_id": 0}).sort("order", 1).to_list(100)
     
     if is_child and user_id:
@@ -174,8 +183,16 @@ async def get_topic_detail(topic_id: str, request: Request):
             content["is_completed"] = content["content_id"] in completed_content_ids
         
         for subtopic in subtopics:
-            # Grade filter for subtopic content
-            subtopic_content_query = {"topic_id": subtopic["topic_id"], "is_published": True}
+            # Grade filter for subtopic content - only show content visible to children
+            subtopic_content_query = {
+                "topic_id": subtopic["topic_id"], 
+                "is_published": True,
+                "$or": [
+                    {"visible_to": {"$in": ["child"]}},
+                    {"visible_to": {"$exists": False}},
+                    {"visible_to": []}
+                ]
+            }
             if user_grade is not None:
                 subtopic_content_query["min_grade"] = {"$lte": user_grade}
                 subtopic_content_query["max_grade"] = {"$gte": user_grade}
