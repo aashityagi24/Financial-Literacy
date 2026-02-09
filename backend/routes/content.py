@@ -442,7 +442,7 @@ async def admin_update_item(content_id: str, request: Request):
     
     update_fields = {}
     for field in ["title", "description", "content_type", "content_data", "thumbnail", 
-                  "order", "min_grade", "max_grade", "reward_coins", "is_published"]:
+                  "visible_to", "order", "min_grade", "max_grade", "reward_coins", "is_published"]:
         if field in body:
             update_fields[field] = body[field]
     
