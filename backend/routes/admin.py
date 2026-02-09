@@ -908,22 +908,66 @@ async def admin_get_stock_history(stock_id: str, request: Request, days: int = 3
 async def admin_simulate_fluctuation(request: Request):
     """Manually trigger stock price fluctuation"""
     from services.auth import require_admin
+    from datetime import datetime, timezone
     db = get_db()
     await require_admin(request)
     
     import random
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
     stocks = await db.investment_stocks.find({"is_active": True}).to_list(100)
+    if not stocks:
+        stocks = await db.admin_stocks.find({"is_active": True}).to_list(100)
     
     for stock in stocks:
         volatility = stock.get("volatility", 0.1)
         trend = stock.get("trend", 0)
         change_pct = random.gauss(trend, volatility)
-        new_price = stock["current_price"] * (1 + change_pct)
+        current_price = stock.get("current_price", 10)
+        new_price = current_price * (1 + change_pct)
         new_price = max(stock.get("min_price", 1), min(new_price, stock.get("max_price", 1000)))
+        new_price = round(new_price, 2)
         
+        # Create price history entry
+        price_entry = {
+            "date": today,
+            "price": new_price,
+            "close_price": new_price,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Update investment_stocks
         await db.investment_stocks.update_one(
             {"stock_id": stock["stock_id"]},
-            {"$set": {"current_price": round(new_price, 2)}}
+            {
+                "$set": {
+                    "current_price": new_price,
+                    "last_price_update": datetime.now(timezone.utc).isoformat()
+                },
+                "$push": {
+                    "price_history": {
+                        "$each": [price_entry],
+                        "$slice": -30
+                    }
+                }
+            }
+        )
+        
+        # Also update admin_stocks
+        await db.admin_stocks.update_one(
+            {"stock_id": stock["stock_id"]},
+            {
+                "$set": {
+                    "current_price": new_price,
+                    "last_price_update": datetime.now(timezone.utc).isoformat()
+                },
+                "$push": {
+                    "price_history": {
+                        "$each": [price_entry],
+                        "$slice": -30
+                    }
+                }
+            }
         )
     
     return {"message": f"Simulated fluctuation for {len(stocks)} stocks"}
