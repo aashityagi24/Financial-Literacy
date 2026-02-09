@@ -480,7 +480,7 @@ export default function LandingPage() {
             
             <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">
               <div className="w-20 h-20 mx-auto mb-4 bg-[#06D6A0] rounded-full border-3 border-[#1D3557] flex items-center justify-center">
-                <span className="text-4xl">👨‍👩‍👧</span>
+                <span className="text-4xl">👨‍👩‍👧‍👦</span>
               </div>
               <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Parents</h3>
               <p className="text-[#3D5A80]">Give your child a lifetime advantage with money skills learned early. Fun games, parent dashboard, setting-up chores and allowance and more!</p>
