@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shopping at the Mela</title>
+  <style>
+    :root{
+      --ink:#1f2a44;
+      --muted:#4c5874;
+
+      /* Mela palette */
+      --bg1:#fffbeb;
+      --bg2:#ecfeff;
+      --bg3:#fdf2f8;
+
+      --card: rgba(255,255,255,.92);
+      --line: rgba(0,0,0,.10);
+
+      --good:#16a34a;
+      --bad:#dc2626;
+
+      --accent:#ff3d8d;
+      --accent2:#ff8a00;
+      --accent3:#00b8a9;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      padding:22px;
+      color:var(--ink);
+      display:flex;
+      justify-content:center;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(255,61,141,.18), transparent 40%),
+        radial-gradient(circle at 84% 22%, rgba(255,138,0,.18), transparent 42%),
+        radial-gradient(circle at 18% 86%, rgba(0,184,169,.18), transparent 44%),
+        radial-gradient(circle at 86% 84%, rgba(255,212,0,.18), transparent 42%),
+        linear-gradient(135deg, var(--bg1), var(--bg2) 55%, var(--bg3));
+    }
+
+    .app{max-width:980px; width:100%; display:grid; gap:16px}
+
+    h1{text-align:center; margin:0; font-weight:1000}
+    .sub{text-align:center; color:var(--muted); max-width:820px; margin:8px auto}
+
+    .card{
+      background:var(--card);
+      border-radius:20px;
+      padding:18px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.12);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .pill{
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:7px 12px;
+      background:#fff;
+      font-weight:1000;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .levelSel{
+      appearance:none;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:7px 12px;
+      font-weight:1000;
+      background:#fff;
+      cursor:pointer;
+    }
+
+    .status{
+      text-align:center;
+      font-weight:1000;
+      margin:10px 0 8px;
+      min-height:26px;
+    }
+    .status.good{color:var(--good)}
+    .status.bad{color:var(--bad)}
+
+    .bankHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin:10px 0 6px;
+      flex-wrap:wrap;
+    }
+
+    .bank{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      padding:12px;
+      border:2px dashed rgba(0,0,0,.15);
+      border-radius:16px;
+      background: rgba(255,255,255,.55);
+    }
+
+    .bankHint{color:var(--muted); font-size:13px; margin:6px 0 0}
+
+    .focusPay{
+      margin:14px 0 6px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .payCard{
+      border:2px dashed rgba(0,0,0,.16);
+      background: linear-gradient(135deg, rgba(255,61,141,.10), rgba(255,138,0,.10), rgba(0,184,169,.10));
+      border-radius:18px;
+      padding:10px 14px;
+      font-weight:1000;
+      text-align:center;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+      box-shadow: 0 12px 26px rgba(0,0,0,.10);
+    }
+
+    .payBig{font-size:18px}
+    
+
+    .miniRow{
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin:8px 0 6px;
+    }
+
+    .tray{
+      min-height:120px;
+      border:3px dashed rgba(0,0,0,.15);
+      border-radius:18px;
+      padding:12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+      background: rgba(255,255,255,.55);
+    }
+
+    .piece{
+      position:relative;
+      cursor:grab;
+      background:transparent; /* remove white tile */
+      border:none;            /* remove border */
+      box-shadow:none;        /* remove shadow */
+      overflow:hidden;
+      user-select:none;
+    }
+
+    .coin{width:86px; height:86px; border-radius:50%}
+    .note{width:150px; height:86px}
+
+    .piece img{width:100%; height:100%; display:block}
+    .coin img{object-fit:cover}
+    .note img{object-fit:contain}
+
+    .imgFallback{display:flex; align-items:center; justify-content:center; width:100%; height:100%; font-weight:900}
+
+    .controls{text-align:center; margin-top:12px}
+    .btn{padding:10px 16px; border-radius:14px; border:0; font-weight:900; cursor:pointer}
+    .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2),var(--accent3)); color:#fff}
+    .btn.secondary{background:#fff; border:1px solid var(--line)}
+
+    .btn[disabled]{opacity:.55; cursor:not-allowed}
+
+    /* Results modal */
+    .modalWrap{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background: rgba(0,0,0,.35);
+      z-index:50;
+    }
+    .modal{
+      width:min(560px, 95vw);
+      background:#fff;
+      border-radius:18px;
+      padding:16px;
+      box-shadow: 0 25px 70px rgba(0,0,0,.25);
+      border:1px solid rgba(0,0,0,.10);
+      text-align:center;
+    }
+    .modal h2{margin:6px 0 6px}
+    .modal p{margin:6px 0; color:var(--muted)}
+    .modalGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin:12px 0 14px;
+    }
+    .stat{
+      border:1px solid rgba(0,0,0,.10);
+      border-radius:16px;
+      padding:10px;
+      background: linear-gradient(135deg, rgba(255,61,141,.06), rgba(0,184,169,.06));
+      font-weight:1000;
+    }
+
+    @media (max-width: 520px){
+      .coin{width:74px; height:74px}
+      .note{width:132px; height:78px}
+      .modalGrid{grid-template-columns: 1fr}
+    }
+      .note{width:110px; height:64px}
+      .modalGrid{grid-template-columns: 1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="card">
+    <h1>Shopping at the Mela</h1>
+    <p class="sub"> You are attending the Mela at your town. To buy things or to play certain activities, you will pay money from your wallet. Drag the coins and/or the notes to pay the exact amount.</p>
+
+    <div class="bankHead">
+      <div class="pill">My Wallet</div>
+      <div class="pill" style="opacity:.9">
+        Level
+        <select class="levelSel" id="levelSel" aria-label="Choose level">
+          <option value="A">A (₹1, ₹2, ₹5)</option>
+          <option value="B">B (₹1, ₹2, ₹5, ₹10, ₹20)</option>
+          <option value="C">C (₹1, ₹2, ₹5, ₹10, ₹20, ₹50, ₹100, ₹200, ₹500)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="bank" id="bank"></div>
+    <div class="bankHint">To remove any extra or incorrect coin/note from the tray, you can either click on it or place it back in your wallet.</div>
+
+    <!-- Focus payment task between bank and tray -->
+    <div class="focusPay" aria-live="polite">
+      <div class="payCard">
+        
+        <span class="payBig">Pay for <b><span id="itemName">Jalebi</span></b> – ₹<b><span id="targetAmt">10</span></b></span>
+      </div>
+    </div>
+
+    <div class="miniRow">
+      <span class="pill" aria-label="Collected amount">
+        Collected: ₹<b><span id="collectedAmt">0</span></b>
+        <span style="opacity:.75">|</span>
+        Pieces: <b><span id="pieceCount">0</span></b>
+      </span>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="tray" id="tray"></div>
+
+    <div class="controls">
+      <button class="btn secondary" id="clearBtn" type="button">Clear</button>
+      <button class="btn secondary" id="submitBtn" type="button">Submit</button>
+      <button class="btn primary" id="nextBtn" type="button" disabled>Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- End-of-set modal -->
+<div class="modalWrap" id="modalWrap" role="dialog" aria-modal="true" aria-label="Results">
+  <div class="modal">
+    <div style="font-size:36px">🎪</div>
+    <h2>Set Completed!</h2>
+    <p>Here is your mela payment result.</p>
+
+    <div class="modalGrid">
+      <div class="stat">Questions: <b><span id="statQuestions">5</span></b></div>
+      <div class="stat">Correct payments: <b><span id="statCorrect">0</span></b></div>
+    </div>
+
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap">
+      <button class="btn primary" id="playAgainBtn" type="button">Play Another Set</button>
+      <button class="btn secondary" id="closeModalBtn" type="button">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ----- LEVELS -----
+  var LEVELS = {
+    A: { denoms: [1, 2, 5], range: [3, 25] },
+    B: { denoms: [1, 2, 5, 10, 20], range: [10, 120] },
+    C: { denoms: [1, 2, 5, 10, 20, 50, 100, 200, 500], range: [50, 800] }
+  };
+
+  // Items / services / activities (no emojis)
+  var ITEMS = [
+    'Jalebi',
+    'Lollipop',
+    'Ice Cream Cup',
+    'Candy Floss',
+    'Popcorn Cone',
+    'Toy Car',
+    'Teddy Bear',
+    'Balloon',
+    'Bangle Set',
+    'Hair Clips',
+    'Sticker Sheet',
+    'Whistle Toy',
+    'Paper Mask',
+    'Magic Wand',
+    'Rubber Ball',
+    'Mini Puzzle',
+    'Colouring Book',
+    'Crayons Pack',
+    'Face Painting',
+    'Ring Toss Game',
+    'Lucky Draw Ticket',
+    'Carousel Ride',
+    'Giant Wheel Ride',
+    'Toy Train Ride',
+    'Haunted House Entry',
+    'Mirror Maze Entry',
+    'Shooting Game',
+    'Duck Catch Game',
+    'Can Knockdown Game',
+    'Fish Catch Game',
+    'Snack Plate',
+    'Fruit Chaat',
+    'Lemon Soda',
+    'Cold Drink',
+    'Water Bottle',
+    'Temporary Tattoo',
+    'Key Chain',
+    'Toy Drum',
+    'Glow Stick'
+  ];
+
+  // ----- ELEMENTS -----
+  var bank = document.getElementById('bank');
+  var tray = document.getElementById('tray');
+  var targetEl = document.getElementById('targetAmt');
+  var itemEl = document.getElementById('itemName');
+  
+  var levelSel = document.getElementById('levelSel');
+  var submitBtn = document.getElementById('submitBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var statusEl = document.getElementById('status');
+  var collectedEl = document.getElementById('collectedAmt');
+  var pieceCountEl = document.getElementById('pieceCount');
+
+  // Modal
+  var modalWrap = document.getElementById('modalWrap');
+  var playAgainBtn = document.getElementById('playAgainBtn');
+  var closeModalBtn = document.getElementById('closeModalBtn');
+  var statQuestions = document.getElementById('statQuestions');
+  var statCorrect = document.getElementById('statCorrect');
+
+  // ----- GAME STATE -----
+  var SET_SIZE = 5;
+
+  var currentLevel = 'A';
+  var trayPieces = []; // [{id, val}]
+  var target = 0;
+  var pieceId = 0;
+
+  var qIndex = 1; // backend only
+  var lockedCorrect = false;
+
+  // Stats for the set (only what you want to show)
+  var correctPayments = 0;
+
+  function rand(min, max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+  function isNote(v){
+    return v >= 50;
+  }
+
+  function setStatus(text, kind){
+    statusEl.textContent = text || '';
+    statusEl.className = kind ? ('status ' + kind) : 'status';
+  }
+
+  function generateTarget(){
+    var r = LEVELS[currentLevel].range;
+    return rand(r[0], r[1]);
+  }
+  // --- Currency image setup ---
+  // Put your real currency images in an `images/` folder next to this HTML.
+  // Supported automatic naming (first match wins):
+  //   images/inr_<value>.png  | .jpg | .jpeg | .webp
+  //   images/<value>.png      | .jpg | .jpeg | .webp
+  // Example files:
+  //   images/inr_10.png, images/inr_50.webp, images/2.png
+  // If you prefer custom names, set them in CURRENCY_IMAGE_MAP below.
+  var CURRENCY_IMAGE_MAP = {
+    1: 'images/coin-1.png',
+    2: 'images/coin-2.png',
+    5: 'images/coin-5.png',
+    10: 'images/coin-10.png',
+    20: 'images/coin-20.png',
+    50: 'images/note-50.png',
+    100: 'images/note-100.png',
+    200: 'images/note-200.png',
+    500: 'images/note-500.png'
+  };
+
+  function imageCandidatesForValue(v){
+    var list = [];
+    if (CURRENCY_IMAGE_MAP[v]) list.push(CURRENCY_IMAGE_MAP[v]);
+    var exts = ['png','webp','jpg','jpeg'];
+    for (var i=0;i<exts.length;i++){
+      list.push('images/inr_' + v + '.' + exts[i]);
+    }
+    for (var j=0;j<exts.length;j++){
+      list.push('images/' + v + '.' + exts[j]);
+    }
+    return list;
+  }
+
+  // Image-only currency tile (no labels). Falls back to text if no image is found.
+  function buildMoneyEl(v, source, id){
+    var d = document.createElement('div');
+    d.className = 'piece ' + (isNote(v) ? 'note' : 'coin');
+
+    var img = document.createElement('img');
+    img.alt = '₹' + v;
+
+    var candidates = imageCandidatesForValue(v);
+    var idx = 0;
+
+    function showFallback(){
+      // If image missing, fallback to text so activity still works
+      if (img && img.parentNode) img.parentNode.removeChild(img);
+      var fb = document.createElement('div');
+      fb.className = 'imgFallback';
+      fb.textContent = '₹' + v;
+      d.appendChild(fb);
+    }
+
+    function tryNext(){
+      if (idx >= candidates.length){
+        showFallback();
+        return;
+      }
+      img.src = candidates[idx++];
+    }
+
+    img.onerror = function(){
+      tryNext();
+    };
+
+    d.appendChild(img);
+    tryNext();
+
+    d.draggable = !lockedCorrect;
+    d.addEventListener('dragstart', function(e){
+      e.dataTransfer.setData('source', source);
+      e.dataTransfer.setData('value', String(v));
+      if (id) e.dataTransfer.setData('id', String(id));
+    });
+
+    return d;
+  }
+
+  function renderBank(){
+    bank.innerHTML = '';
+    var denoms = LEVELS[currentLevel].denoms;
+    for (var i=0;i<denoms.length;i++){
+      bank.appendChild(buildMoneyEl(denoms[i], 'bank', null));
+    }
+  }
+
+  function trayTotal(){
+    var s = 0;
+    for (var i=0;i<trayPieces.length;i++) s += trayPieces[i].val;
+    return s;
+  }
+
+  function updateCounters(){
+    collectedEl.textContent = String(trayTotal());
+    pieceCountEl.textContent = String(trayPieces.length);
+  }
+
+  function removeTrayPieceById(id){
+    for (var i=0;i<trayPieces.length;i++){
+      if (String(trayPieces[i].id) === String(id)){
+        trayPieces.splice(i, 1);
+        break;
+      }
+    }
+    renderTray();
+  }
+
+  function renderTray(){
+    tray.innerHTML = '';
+
+    if (trayPieces.length === 0){
+      var hint = document.createElement('div');
+      hint.className = 'pill';
+      hint.style.borderStyle = 'dashed';
+      hint.style.background = 'rgba(255,255,255,.7)';
+      hint.style.fontWeight = '900';
+      hint.textContent = 'Drag money here to pay';
+      tray.appendChild(hint);
+      updateCounters();
+      return;
+    }
+
+    for (var i=0;i<trayPieces.length;i++){
+      (function(piece){
+        var el = buildMoneyEl(piece.val, 'tray', piece.id);
+        el.addEventListener('click', function(){
+          if (lockedCorrect) return;
+          removeTrayPieceById(piece.id);
+          setStatus('', '');
+        });
+        tray.appendChild(el);
+      })(trayPieces[i]);
+    }
+
+    updateCounters();
+  }
+
+  function clearTray(){
+    trayPieces = [];
+    lockedCorrect = false;
+    submitBtn.disabled = false;
+    nextBtn.disabled = true;
+    setStatus('', '');
+    renderTray();
+  }
+
+  function pickItem(){
+    return ITEMS[rand(0, ITEMS.length - 1)];
+  }
+
+  function loadQuestion(){
+    trayPieces = [];
+    pieceId = 0;
+    lockedCorrect = false;
+    submitBtn.disabled = false;
+    nextBtn.disabled = true;
+
+    var item = pickItem();
+    target = generateTarget();
+
+    itemEl.textContent = item;
+    
+    targetEl.textContent = String(target);
+
+    setStatus('', '');
+    renderBank();
+    renderTray();
+  }
+
+  function showResults(){
+    statQuestions.textContent = String(SET_SIZE);
+    statCorrect.textContent = String(correctPayments);
+    modalWrap.style.display = 'flex';
+  }
+
+  function hideResults(){
+    modalWrap.style.display = 'none';
+  }
+
+  function resetSet(){
+    qIndex = 1;
+    correctPayments = 0;
+    loadQuestion();
+  }
+
+  // Tray accepts drops from bank only
+  tray.addEventListener('dragover', function(e){ e.preventDefault(); });
+  tray.addEventListener('drop', function(e){
+    e.preventDefault();
+    if (lockedCorrect) return;
+
+    var source = e.dataTransfer.getData('source');
+    if (source !== 'bank') return;
+
+    var v = Number(e.dataTransfer.getData('value'));
+    if (!isFinite(v)) return;
+
+    pieceId += 1;
+    trayPieces.push({ id: pieceId, val: v });
+    setStatus('', '');
+    renderTray();
+  });
+
+  // Bank accepts drops from tray to remove
+  bank.addEventListener('dragover', function(e){ e.preventDefault(); });
+  bank.addEventListener('drop', function(e){
+    e.preventDefault();
+    if (lockedCorrect) return;
+
+    var source = e.dataTransfer.getData('source');
+    if (source !== 'tray') return;
+
+    var id = e.dataTransfer.getData('id');
+    if (!id) return;
+
+    removeTrayPieceById(id);
+    setStatus('', '');
+  });
+
+  function check(){
+    if (lockedCorrect) return;
+
+    var sum = trayTotal();
+    if (sum === target){
+      lockedCorrect = true;
+      submitBtn.disabled = true;
+      nextBtn.disabled = false;
+      setStatus('Correct! You paid the exact amount.', 'good');
+      correctPayments += 1;
+      renderTray();
+      return;
+    }
+
+    if (sum < target){
+      setStatus('Not enough.You need to pay more money.', 'bad');
+    } else {
+      setStatus('You have paid too much money. Take some back.', 'bad');
+    }
+  }
+
+  function nextQuestion(){
+    if (!lockedCorrect) return;
+
+    if (qIndex >= SET_SIZE){
+      showResults();
+      return;
+    }
+
+    qIndex += 1;
+    loadQuestion();
+  }
+
+  // Level selector affects BOTH: bank denominations + target range
+  levelSel.addEventListener('change', function(e){
+    currentLevel = e.target.value;
+    // Keep progress; just refresh current question with new level
+    loadQuestion();
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', clearTray);
+  submitBtn.addEventListener('click', check);
+  nextBtn.addEventListener('click', nextQuestion);
+
+  // Modal buttons
+  playAgainBtn.addEventListener('click', function(){
+    hideResults();
+    resetSet();
+  });
+  closeModalBtn.addEventListener('click', hideResults);
+  modalWrap.addEventListener('click', function(e){
+    if (e.target === modalWrap) hideResults();
+  });
+
+  // ----- Tiny self-tests -----
+  function assert(cond, msg){
+    if (!cond) throw new Error('Test failed: ' + msg);
+  }
+
+  (function runTests(){
+    // Levels valid
+    var ks = ['A','B','C'];
+    for (var i=0;i<ks.length;i++){
+      var k = ks[i];
+      assert(LEVELS[k].denoms.indexOf(1) !== -1, 'Level ' + k + ' includes ₹1');
+      var r = LEVELS[k].range;
+      assert(r[0] < r[1], 'Level ' + k + ' range valid');
+    }
+
+    // Items
+    assert(ITEMS.length >= 5, 'Has mela items');
+
+    // Totals
+    trayPieces = [{id:1,val:2},{id:2,val:5}];
+    assert(trayTotal() === 7, 'trayTotal sums correctly');
+    trayPieces = [];
+
+    // Set size
+    assert(SET_SIZE === 5, 'Set size is 5');
+
+    // Results should only show questions + correct
+    assert(!!document.getElementById('statQuestions'), 'statQuestions exists');
+    assert(!!document.getElementById('statCorrect'), 'statCorrect exists');
+
+    // Reset
+    correctPayments = 3;
+    qIndex = 4;
+    resetSet();
+    assert(correctPayments === 0, 'resetSet resets correctPayments');
+    assert(qIndex === 1, 'resetSet resets qIndex');
+
+    console.log('✅ Mela pay activity tests passed');
+  })();
+
+  // ----- INIT -----
+  levelSel.value = 'A';
+  currentLevel = 'A';
+  resetSet();
+})();
+</script>
+</body>
+</html>

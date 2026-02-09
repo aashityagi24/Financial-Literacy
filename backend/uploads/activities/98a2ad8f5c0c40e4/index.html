@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shopping With A Budget</title>
+  <style>
+    :root{
+      --ink:#1f2a44;
+      --muted:#5a6786;
+      --bgA:#f7fbff;
+      --bgB:#fff7fb;
+      --card:#ffffffcc;
+      --shadow: 0 12px 30px rgba(0,0,0,.10);
+      --radius:18px;
+      --good:#16a34a;
+      --warn:#ca8a04;
+      --bad:#dc2626;
+      --accent:#3b82f6;
+      --accent2:#7c3aed;
+      --line: rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at 18% 10%, var(--bgB), transparent 45%),
+        radial-gradient(circle at 80% 0%, #f1fffa, transparent 45%),
+        linear-gradient(135deg, var(--bgA), #fff);
+      padding:18px;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+    }
+
+    .app{ width:min(1100px, 100%); display:grid; gap:16px; }
+
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      flex-wrap:wrap;
+      gap:12px;
+    }
+
+    h1{ margin:0; font-size: clamp(22px, 2.6vw, 30px); }
+    .sub{ margin:4px 0 0; color:var(--muted); font-size:14.5px; line-height:1.45; }
+
+    .badges{ display:flex; gap:10px; flex-wrap:wrap; }
+    .badge{
+      padding:8px 14px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid var(--line);
+      font-weight:900;
+      font-size:14px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:16px;
+    }
+    @media (max-width: 980px){ .grid{ grid-template-columns: 1fr; } }
+
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+      border:1px solid rgba(0,0,0,.06);
+    }
+
+    h2{ margin:0 0 6px; font-size:18px; }
+
+    .list{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:12px;
+    }
+
+    .listRow{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      padding:10px;
+      border-bottom:1px solid rgba(0,0,0,.06);
+      font-weight:900;
+      align-items:center;
+    }
+    .listRow:last-child{ border-bottom:0; }
+
+    /* keep order stable + show bought clearly */
+    .listRow .label{ display:inline-block; }
+    .listRow.done .label{ text-decoration: line-through; opacity:.75; }
+
+    .status{
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      font-size:13px;
+    }
+    .status.done{ color:var(--good); }
+    .status.todo{ color:#2b3a5c; }
+
+    .market{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap:14px;
+    }
+
+    .item{
+      background:#fff;
+      border-radius:16px;
+      border:2px solid rgba(0,0,0,.08);
+      padding:14px;
+      cursor:pointer;
+    }
+    /* No greying out for unaffordable items (still clickable) */
+    .item.bought{ opacity:.6; cursor:not-allowed; }
+
+    .itemHeader{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:6px;
+      font-weight:1000;
+    }
+
+    .price{
+      border:1px solid var(--line);
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:13px;
+    }
+
+    .desc{ margin:0; color:var(--muted); font-size:13.5px; }
+
+    .controls{ margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; }
+    .btn{
+      border:0;
+      padding:10px 14px;
+      border-radius:14px;
+      font-weight:950;
+      cursor:pointer;
+      color:#fff;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+    }
+    .btn.secondary{ background:#fff; color:#2b3a5c; border:1px solid var(--line); }
+
+    .message, .summary{
+      margin-top:12px;
+      padding:12px;
+      border-radius:14px;
+      background:#fff;
+      border:1px solid var(--line);
+      display:none;
+      font-weight:900;
+    }
+
+    .summary ul{ margin:6px 0 0; padding-left:18px; line-height:1.5; }
+
+    /* Toast popup (top center) */
+    .toast{
+      position:fixed;
+      top:12px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:9999;
+      max-width:420px; /* smaller width */
+      width:calc(100% - 32px);
+      padding:8px 12px; /* tighter padding */
+      border-radius:12px;
+      background:#fff;
+      border:1px solid var(--line);
+      box-shadow:0 10px 24px rgba(0,0,0,.12);
+      font-weight:900;
+      font-size:14px; /* slightly smaller text */
+      display:none;
+    }
+    .toastRow{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .toastText{ line-height:1.35; }
+    .toastBtn{
+      border:0;
+      background:transparent;
+      cursor:pointer;
+      font-weight:1000;
+      color:var(--muted);
+      padding:2px 6px;
+      border-radius:10px;
+    }
+    .toast.good{ border-left:6px solid var(--good); }
+    .toast.bad{ border-left:6px solid var(--bad); }
+    .toast.warn{ border-left:6px solid var(--warn); }
+  </style>
+</head>
+<body>
+
+  <!-- Toast popup -->
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <div class="toastRow">
+      <div class="toastText" id="toastText"></div>
+      <button class="toastBtn" id="toastClose" aria-label="Close">✕</button>
+    </div>
+  </div>
+
+<div class="app">
+
+  <div class="top">
+    <div>
+      <h1>Shopping With A Budget</h1>
+      <p class="sub">You've come to supermarket to buy some items. Be careful about the choices you make since you have limited money and may not be able to buy everything.</p>
+    </div>
+    <div class="badges">
+      <div class="badge" id="budgetBadge">💰 Money: ₹200</div>
+      <div class="badge" id="spentBadge">🧾 Spent: ₹0</div>
+      <div class="badge" id="dayBadge">Day 1</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Your List</h2>
+      <p class="sub">This is the shopping list that you made last night.</p>
+      <div class="list" id="shoppingList"></div>
+
+      <div class="controls">
+        <button class="btn" id="finishBtn">Finish Day</button>
+        <button class="btn secondary" id="newDayBtn">New Day</button>
+        <button class="btn secondary" id="resetBtn">Reset</button>
+      </div>
+
+      <div class="message" id="message"></div>
+      <div class="summary" id="summary">
+        <h3>Think Back</h3>
+        <ul id="learnList"></ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Market</h2>
+      <p class="sub">Click an item to buy it. However, if you don’t have enough money, you can’t buy it.</p>
+      <div class="market" id="market"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Budget range changes every day (real-life variability)
+const BUDGET_MIN = 150;
+const BUDGET_MAX = 300;
+let START_BUDGET = 200;
+
+// Large item pool with daily price variation
+const ITEM_POOL = [
+  {id:'lunch', name:'Lunch Box Meal', icon:'🍱', min:45, max:70},
+  {id:'water', name:'Water Bottle', icon:'🚰', min:20, max:35},
+  {id:'notebook', name:'Notebook', icon:'📒', min:35, max:60},
+  {id:'pencil', name:'Pencil', icon:'✏️', min:8, max:15},
+  {id:'fruit', name:'Fruit Cup', icon:'🍎', min:20, max:40},
+  {id:'bus', name:'Bus Ticket', icon:'🚌', min:15, max:30},
+  {id:'ice', name:'Ice Cream', icon:'🍦', min:25, max:50},
+  {id:'chips', name:'Chips Packet', icon:'🍟', min:20, max:30},
+  {id:'toy', name:'Small Toy', icon:'🪀', min:50, max:90},
+  {id:'comic', name:'Comic Book', icon:'📖', min:45, max:80},
+  {id:'chocolate', name:'Chocolate', icon:'🍫', min:20, max:40},
+  {id:'balloon', name:'Balloon', icon:'🎈', min:10, max:20},
+  {id:'juice', name:'Juice Box', icon:'🧃', min:20, max:35},
+  {id:'eraser', name:'Eraser', icon:'🧼', min:5, max:10},
+  {id:'pen', name:'Pen', icon:'🖊️', min:15, max:30},
+  {id:'storybook', name:'Story Book', icon:'📘', min:70, max:120},
+  {id:'snack', name:'Healthy Snack', icon:'🥪', min:25, max:45},
+  {id:'cap', name:'Cap', icon:'🧢', min:60, max:100},
+  {id:'toycar', name:'Toy Car', icon:'🚗', min:80, max:140},
+  {id:'colour', name:'Colour Pencils', icon:'🖍️', min:60, max:110}
+];
+
+let TODAY_ITEMS = [];
+let day = 1;
+let spent = 0;
+let bought = {};
+
+const budgetBadge = document.getElementById('budgetBadge');
+const spentBadge = document.getElementById('spentBadge');
+const dayBadge = document.getElementById('dayBadge');
+const shoppingList = document.getElementById('shoppingList');
+const market = document.getElementById('market');
+const message = document.getElementById('message');
+
+// Toast elements
+const toast = document.getElementById('toast');
+const toastText = document.getElementById('toastText');
+const toastClose = document.getElementById('toastClose');
+let toastTimer = null;
+
+function showToast(text, type='warn', ms=2600){
+  toastText.textContent = text;
+  toast.classList.remove('good','bad','warn');
+  toast.classList.add(type);
+  toast.style.display = 'block';
+
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, ms);
+}
+
+function hideToast(){
+  toast.style.display = 'none';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = null;
+}
+
+toastClose.onclick = hideToast;
+// Click anywhere on toast to dismiss quickly
+toast.onclick = (e) => { if (e.target !== toastClose) hideToast(); };
+const summary = document.getElementById('summary');
+const learnList = document.getElementById('learnList');
+
+function left(){ return START_BUDGET - spent; }
+
+function updateBadges(){
+  // ✅ Single Money badge that starts at START_BUDGET and depletes as you spend
+  budgetBadge.textContent = `💰 Money: ₹${left()} (Start: ₹${START_BUDGET})`;
+  spentBadge.textContent = `🧾 Spent: ₹${spent}`;
+  dayBadge.textContent = `Day ${day}`;
+}
+
+function rand(min, max){
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Non-mutating shuffle
+function shuffledCopy(arr){
+  const a = arr.slice();
+  for (let i=a.length-1; i>0; i--){
+    const j = Math.floor(Math.random() * (i+1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildDay(){
+  // Random starting money each day
+  START_BUDGET = rand(BUDGET_MIN, BUDGET_MAX);
+
+  spent = 0;
+  bought = {};
+  message.style.display = 'none';
+  summary.style.display = 'none';
+
+  // Pick 8–10 random items with new prices
+  const count = rand(8, 10);
+  TODAY_ITEMS = shuffledCopy(ITEM_POOL)
+    .slice(0, count)
+    .map(it => ({
+      ...it,
+      price: rand(it.min, it.max)
+    }));
+
+  // ✅ Freeze the order for BOTH list and market for the whole day
+  TODAY_ITEMS.forEach((it, idx) => { it.order = idx; });
+
+  updateBadges();
+  render();
+}
+
+function render(){
+  // ✅ Always render in the frozen day order
+  const ordered = TODAY_ITEMS.slice().sort((a,b) => a.order - b.order);
+
+  // List (stable order)
+  shoppingList.innerHTML = '';
+  ordered.forEach(it => {
+    const row = document.createElement('div');
+    row.className = 'listRow' + (bought[it.id] ? ' done' : '');
+
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = `${it.icon} ${it.name} (₹${it.price})`;
+
+    const st = document.createElement('div');
+    st.className = 'status ' + (bought[it.id] ? 'done' : 'todo');
+    st.textContent = bought[it.id] ? 'Bought' : 'Not bought';
+
+    row.appendChild(label);
+    row.appendChild(st);
+    shoppingList.appendChild(row);
+  });
+
+  // Market (stable order)
+  market.innerHTML = '';
+  ordered.forEach(it => {
+    const card = document.createElement('div');
+    card.className = 'item';
+
+    const isBought = !!bought[it.id];
+    if (isBought) card.classList.add('bought');
+
+    card.innerHTML = `
+      <div class="itemHeader">${it.icon} ${it.name}<span class="price">₹${it.price}</span></div>
+      <p class="desc"> Think before buying.</p>
+    `;
+
+    // ✅ Always clickable unless already bought
+    card.onclick = () => { if (!isBought) buy(it); };
+    market.appendChild(card);
+  });
+
+  updateBadges();
+}
+
+function buy(it){
+  // Already bought
+  if (bought[it.id]) return;
+
+  // Not enough money (still allow click and show popup)
+  if (left() < it.price){
+    const need = it.price - left();
+    showToast(`Not enough money to buy ${it.name}. You need ₹${need} more.`, 'bad', 3200);
+    return;
+  }
+
+  // Purchase
+  spent += it.price;
+  bought[it.id] = true;
+  showToast(`You bought ${it.name}.`, 'good', 2200);
+  render();
+}
+
+function finishDay(){
+  summary.style.display = 'block';
+  learnList.innerHTML = '';
+
+  const boughtItems = TODAY_ITEMS.filter(it => bought[it.id]);
+  const notBought = TODAY_ITEMS.filter(it => !bought[it.id]);
+
+  learnList.innerHTML += `<li>You started the day with ₹${START_BUDGET}.</li>`;
+  learnList.innerHTML += `<li>You spent ₹${spent}.</li>`;
+  learnList.innerHTML += `<li>You have ₹${left()} left.</li>`;
+
+  if (notBought.length > 0){
+    learnList.innerHTML += `<li>You could not buy everything today.</li>`;
+  } else {
+    learnList.innerHTML += `<li>You managed to buy everything today.</li>`;
+  }
+
+  // 🔑 One-line adaptive conclusion (no impossible outcomes)
+  let conclusion = '';
+
+  if (notBought.length > 0 && left() === 0){
+    conclusion = 'You ran out of money — the order of your choices matters.';
+  } else if (notBought.length > 0 && left() > 0){
+    conclusion = 'You saved some money, but not all choices fit in today’s budget.';
+  } else {
+    // Fallback (very rare, but keeps logic safe)
+    conclusion = 'Every day needs a new plan. Try again with different choices.';
+  }
+
+  learnList.innerHTML += `<li><strong>${conclusion}</strong></li>`;
+}
+
+// Buttons
+document.getElementById('finishBtn').onclick = finishDay;
+document.getElementById('newDayBtn').onclick = () => { day++; buildDay(); };
+document.getElementById('resetBtn').onclick = () => { day = 1; buildDay(); };
+
+// -----------------------------
+// Minimal tests (run in console)
+// -----------------------------
+function runTests(){
+  console.group('Budget Game Tests');
+  try{
+    // Test budget range generation
+    buildDay();
+    console.assert(START_BUDGET >= BUDGET_MIN && START_BUDGET <= BUDGET_MAX, 'START_BUDGET should be within budget range');
+
+    // TODAY_ITEMS should exist and be 8–10
+    console.assert(Array.isArray(TODAY_ITEMS), 'TODAY_ITEMS should be an array');
+    console.assert(TODAY_ITEMS.length >= 8 && TODAY_ITEMS.length <= 10, 'TODAY_ITEMS length should be 8–10');
+
+    // Prices should be within min/max
+    const badPrice = TODAY_ITEMS.find(x => typeof x.price !== 'number' || x.price < x.min || x.price > x.max);
+    console.assert(!badPrice, 'All TODAY_ITEMS should have price within [min,max]');
+
+    // Buying an affordable item should reduce left()
+    const before = left();
+    const affordable = TODAY_ITEMS.find(x => x.price <= before);
+    console.assert(!!affordable, 'Should have at least one affordable item on a fresh day');
+    if (affordable){
+      buy(affordable);
+      console.assert(left() === before - affordable.price, 'left() should decrease by the bought price');
+    }
+
+    // finishDay should not throw and should add list items
+    finishDay();
+    console.assert(summary.style.display === 'block', 'Summary should be visible after finishDay');
+    console.assert(learnList.querySelectorAll('li').length >= 4, 'finishDay should populate reflection list');
+
+    console.log('All tests completed. If no assertion failed, you are good.');
+  } finally {
+    console.groupEnd();
+  }
+}
+
+// Uncomment to auto-run tests on load
+// runTests();
+
+buildDay();
+</script>
+</body>
+</html>

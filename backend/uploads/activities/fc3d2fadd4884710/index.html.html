@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Needs & Wants – Flip & Decide</title>
+  <style>
+    :root{
+      --bg:#f4f8ff;
+      --ink:#1f2b3d;
+      --muted:#4f6078;
+      --green:#22c55e;
+      --red:#ef4444;
+      --yellow:#fbbf24;
+      --shadow:0 12px 26px rgba(0,0,0,.12);
+      --radius:18px;
+      --line: rgba(40,60,110,.16);
+    }
+
+    body{
+      margin:0;
+      font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--ink);
+      padding:16px;
+      overflow:hidden; /* no page scroll */
+    }
+
+    /* Top bar */
+    .topbar{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+
+    .titleBlock h1{ margin:0 0 6px; font-size:26px; }
+    .titleBlock p{ margin:0; color:var(--muted); font-size:17px; }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    label{
+      font-size:14px;
+      font-weight:900;
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    select{
+      appearance:none;
+      -webkit-appearance:none;
+      -moz-appearance:none;
+      border:1px solid var(--line);
+      background:white;
+      box-shadow: 0 10px 18px rgba(20,40,90,.08);
+      border-radius:14px;
+      padding:10px 38px 10px 12px;
+      font-size:16px;
+      font-weight:900;
+      color:var(--ink);
+      cursor:pointer;
+      position:relative;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+      background-position:
+        calc(100% - 18px) calc(50% - 2px),
+        calc(100% - 12px) calc(50% - 2px);
+      background-size:6px 6px, 6px 6px;
+      background-repeat:no-repeat;
+    }
+
+    .btnTop{
+      border:none;
+      cursor:pointer;
+      padding:10px 14px;
+      border-radius:14px;
+      font-weight:1000;
+      font-size:16px;
+      color:white;
+      background: linear-gradient(135deg, #3b82f6, #7c3aed);
+      box-shadow: 0 10px 18px rgba(20,40,90,.12);
+      user-select:none;
+    }
+    .btnTop:active{ transform: translateY(1px); }
+
+    /* Fixed 3 x 2 grid (6 cards, no scroll) */
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      grid-template-rows:repeat(2, 1fr);
+      gap:18px;
+      height:calc(100vh - 112px);
+    }
+
+    .flipCard{ perspective:1000px; }
+
+    .flipInner{
+      position:relative;
+      width:100%;
+      height:100%;
+      transform-style:preserve-3d;
+      transition:transform .6s;
+    }
+
+    .flipCard.flipped .flipInner{ transform:rotateY(180deg); }
+
+    .cardFace{
+      position:absolute;
+      inset:0;
+      backface-visibility:hidden;
+      border-radius:var(--radius);
+      background:white;
+      box-shadow:var(--shadow);
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+    }
+
+    /* Image in place of emoji */
+    .cardFront .icon{
+      width:180px;
+      height:180px;
+      object-fit:contain;
+      display:block;
+      filter: drop-shadow(0 12px 18px rgba(20,40,90,.15));
+    }
+
+    .cardFront .name{ font-size:22px; font-weight:900; margin:10px 0 6px; }
+
+    .btnRow{ display:flex; gap:10px; margin-top:10px; width:100%; }
+
+    .btn{
+      flex:1;
+      padding:12px 14px;
+      border:none;
+      border-radius:14px;
+      font-weight:1000;
+      cursor:pointer;
+      font-size:18px;
+      user-select:none;
+    }
+
+    .btn.need{ background:rgba(34,197,94,.15); color:#0f7a35; }
+    .btn.want{ background:rgba(251,191,36,.25); color:#7a4a00; }
+
+    .btn:disabled{
+      cursor:not-allowed;
+      opacity:.55;
+      filter:saturate(.8);
+    }
+
+    .tapHint{
+      margin-top:10px;
+      font-size:14px;
+      font-weight:900;
+      color:var(--muted);
+    }
+
+    .cardBack{
+      transform:rotateY(180deg);
+      justify-content:flex-start;
+      padding:14px;
+    }
+
+    .result{
+      font-weight:1000;
+      padding:8px 14px;
+      border-radius:999px;
+      font-size:18px;
+      margin-bottom:8px;
+      align-self:center;
+    }
+
+    .correct{ background:rgba(34,197,94,.18); color:#0f7a35; }
+    .wrong{ background:rgba(239,68,68,.18); color:#7a1414; }
+
+    .cardBack h3{ margin:6px 0 10px; font-size:20px; }
+
+    .cardBack ul{
+      margin:0;
+      padding-left:22px;
+      text-align:left;
+      font-size:18px;
+      line-height:1.75;
+      color:var(--ink);
+    }
+
+    /* Placeholder cards */
+    .placeholder{
+      background: rgba(255,255,255,.65);
+      border:2px dashed rgba(40,60,110,.18);
+      box-shadow:none;
+    }
+
+    .placeholder .icon{
+      width:96px;
+      height:96px;
+      opacity:.85;
+    }
+
+    .placeholder .name{ font-size:18px; }
+
+    @media (max-width: 980px){
+      body{ overflow:auto; }
+      .grid{ height:auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="titleBlock">
+      <h1>Needs & Wants – Choose & Flip</h1>
+      <p>Pick a group (or Mixed). Choose Need/Want. The card flips and explains. Click a card to flip back.</p>
+    </div>
+
+    <div class="controls">
+      <label>
+        Group
+        <select id="groupSelect" aria-label="Choose a group"></select>
+      </label>
+      <button class="btnTop" id="shuffleBtn" type="button">Shuffle</button>
+    </div>
+  </div>
+
+  <div class="grid" id="cardGrid"></div>
+
+  <script>
+    const ALL = 'all';
+
+    /**
+     * IMPORTANT:
+     * - Put your .webp files inside: images/
+     * - Recommended naming: <id>.webp (e.g., water.webp, home.webp, pizza.webp)
+     * - This code will automatically load: images/<id>.webp for each card.
+     */
+
+    // Each card has a group so we can filter.
+    // NOTE: Only groups that have at least 6 cards will appear in the dropdown.
+    const cards = [
+      // Daily Life: Home & Food
+      { group:'daily', id:'water', name:'Water', type:'need', explain:[
+        'Water keeps your body healthy.',
+        'You need it every day to live.',
+        'It helps you think and stay active.',
+        'Without water, you can get sick.',
+        'That is why water is a NEED.'
+      ]},
+      { group:'daily', id:'home', name:'Home', type:'need', explain:[
+        'A home gives shelter and safety.',
+        'It protects you from heat and rain.',
+        'It is a safe place to rest.',
+        'Everyone needs a place to live.',
+        'That is why home is a NEED.'
+      ]},
+      { group:'daily', id:'utensils', name:'Utensils', type:'need', explain:[
+        'Utensils help us eat properly.',
+        'They keep food clean and safe.',
+        'They are used every day at home.',
+        'Eating safely is important.',
+        'That is why utensils are a NEED.'
+      ]},
+      { group:'daily', id:'food', name:'Healthy Food', type:'need', explain:[
+        'Food gives energy to grow.',
+        'Your body needs food daily.',
+        'Healthy food keeps you strong.',
+        'Without food, you feel weak.',
+        'That is why food is a NEED.'
+      ]},
+      { group:'daily', id:'milk', name:'Milk', type:'need', explain:[
+        'Milk helps your body grow strong.',
+        'It gives nutrients to bones and teeth.',
+        'It is healthy food for many children.',
+        'You can choose healthy drinks daily.',
+        'That is why milk is a NEED.'
+      ]},
+      { group:'daily', id:'bed', name:'Bed', type:'need', explain:[
+        'A bed helps you sleep comfortably.',
+        'Good sleep keeps you healthy.',
+        'Rest helps your brain learn.',
+        'A safe place to sleep is important.',
+        'That is why a bed is a NEED.'
+      ]},
+      { group:'daily', id:'soap', name:'Soap', type:'need', explain:[
+        'Soap washes away germs.',
+        'It keeps hands and body clean.',
+        'Cleanliness prevents illness.',
+        'We use soap regularly.',
+        'That is why soap is a NEED.'
+      ]},
+      { group:'daily', id:'pizza', name:'Pizza', type:'want', explain:[
+        'Pizza is a tasty treat.',
+        'It is not needed every day.',
+        'Healthy meals are more important.',
+        'It is eaten sometimes.',
+        'That is why pizza is a WANT.'
+      ]},
+      { group:'daily', id:'chocolate', name:'Chocolate', type:'want', explain:[
+        'Chocolate is a sweet treat.',
+        'It is eaten sometimes.',
+        'It is not needed for health.',
+        'Healthy food comes first.',
+        'That is why chocolate is a WANT.'
+      ]},
+      { group:'daily', id:'icecream', name:'Ice Cream', type:'want', explain:[
+        'Ice cream is a sweet treat.',
+        'It is fun to eat sometimes.',
+        'You do not need it to be healthy.',
+        'Too much sugar is not good.',
+        'That is why ice cream is a WANT.'
+      ]},
+
+      // School & Learning
+      { group:'school', id:'schoolbag', name:'School Bag', type:'need', explain:[
+        'A school bag carries books.',
+        'It helps you learn every day.',
+        'It keeps school items safe.',
+        'It is needed for school.',
+        'That is why it is a NEED.'
+      ]},
+      { group:'school', id:'textbook', name:'Textbook', type:'need', explain:[
+        'Textbooks help you study.',
+        'They contain lessons to learn.',
+        'They are used in class.',
+        'Learning tools are important.',
+        'That is why textbooks are a NEED.'
+      ]},
+      { group:'school', id:'notebook', name:'Notebook', type:'need', explain:[
+        'A notebook helps you write work.',
+        'You use it in class and homework.',
+        'It helps you practise and learn.',
+        'Writing supports learning daily.',
+        'That is why a notebook is a NEED.'
+      ]},
+      { group:'school', id:'pencil', name:'Pencil', type:'need', explain:[
+        'A pencil helps you write and learn.',
+        'You use it for classwork.',
+        'It helps you practise neatly.',
+        'Writing tools support learning.',
+        'That is why a pencil is a NEED.'
+      ]},
+      { group:'school', id:'uniform', name:'School Uniform', type:'need', explain:[
+        'A uniform is required in many schools.',
+        'It helps students look neat.',
+        'It shows you belong to the school.',
+        'It supports school rules.',
+        'That is why it is a NEED.'
+      ]},
+      { group:'school', id:'eraser', name:'Eraser', type:'need', explain:[
+        'An eraser helps correct mistakes.',
+        'It keeps your work neat.',
+        'It is used with pencils daily.',
+        'It supports learning and practice.',
+        'That is why an eraser is a NEED.'
+      ]},
+      { group:'school', id:'fancypen', name:'Fancy Pen', type:'want', explain:[
+        'Fancy pens look nice.',
+        'Simple pencils also work.',
+        'They are not required to learn.',
+        'They are extra items.',
+        'That is why they are a WANT.'
+      ]},
+      { group:'school', id:'stickers', name:'Sticker Pack', type:'want', explain:[
+        'Stickers are for decoration.',
+        'They are fun but not necessary.',
+        'You can learn without stickers.',
+        'They are an extra item.',
+        'That is why stickers are a WANT.'
+      ]},
+
+      // Health & Personal Care
+      { group:'health', id:'medicine', name:'Medicine', type:'need', explain:[
+        'Medicine helps when you are sick.',
+        'It helps your body recover.',
+        'It keeps you healthy.',
+        'Some people need it daily.',
+        'That is why medicine is a NEED.'
+      ]},
+      { group:'health', id:'firstaid', name:'First Aid Kit', type:'need', explain:[
+        'First aid helps small injuries.',
+        'It stops bleeding quickly.',
+        'It keeps you safe.',
+        'It is used in emergencies.',
+        'That is why it is a NEED.'
+      ]},
+      { group:'health', id:'toothpaste', name:'Toothpaste', type:'need', explain:[
+        'Toothpaste cleans your teeth.',
+        'It prevents cavities and pain.',
+        'Healthy teeth help you eat well.',
+        'You use it every day.',
+        'That is why toothpaste is a NEED.'
+      ]},
+      { group:'health', id:'toothbrush', name:'Toothbrush', type:'need', explain:[
+        'A toothbrush cleans your teeth.',
+        'Brushing removes germs and food bits.',
+        'It keeps your mouth healthy.',
+        'You use it every day.',
+        'That is why it is a NEED.'
+      ]},
+      { group:'health', id:'mask', name:'Mask', type:'need', explain:[
+        'A mask helps stop germs.',
+        'It protects you in crowded places.',
+        'It keeps others safe too.',
+        'It is used for health and safety.',
+        'That is why it is a NEED.'
+      ]},
+      { group:'health', id:'handwash', name:'Handwash', type:'need', explain:[
+        'Handwash cleans your hands.',
+        'It removes germs after play.',
+        'Clean hands prevent sickness.',
+        'It supports good hygiene.',
+        'That is why it is a NEED.'
+      ]},
+      { group:'health', id:'softdrink', name:'Soft Drink', type:'want', explain:[
+        'A soft drink is sugary.',
+        'It is not needed for your body.',
+        'Water and milk are healthier.',
+        'Soft drinks are treats sometimes.',
+        'That is why it is a WANT.'
+      ]},
+
+      // Fun & Entertainment
+      { group:'fun', id:'tv', name:'Television', type:'want', explain:[
+        'TV is used for watching shows.',
+        'It is for fun and entertainment.',
+        'You can live without TV.',
+        'It is not needed for health.',
+        'That is why TV is a WANT.'
+      ]},
+      { group:'fun', id:'videogame', name:'Video Game', type:'want', explain:[
+        'Video games are for playtime.',
+        'They are not needed to live.',
+        'Too much gaming can reduce study time.',
+        'They are an extra for fun.',
+        'That is why it is a WANT.'
+      ]},
+      { group:'fun', id:'headphones', name:'Headphones', type:'want', explain:[
+        'Headphones are for music and videos.',
+        'They are not needed every day.',
+        'You can learn without them.',
+        'They are an extra for entertainment.',
+        'That is why it is a WANT.'
+      ]},
+      { group:'fun', id:'puzzle', name:'Puzzle', type:'want', explain:[
+        'A puzzle is fun and helps thinking.',
+        'But it is not a basic need.',
+        'You can learn in many ways.',
+        'It is an extra activity for fun.',
+        'That is why it is a WANT.'
+      ]},
+      { group:'fun', id:'yoyo', name:'Yo-Yo', type:'want', explain:[
+        'A yo-yo is a toy for fun.',
+        'It is not needed for health.',
+        'You can play without it.',
+        'It is an extra item.',
+        'That is why it is a WANT.'
+      ]},
+      { group:'fun', id:'teddy', name:'Teddy Bear', type:'want', explain:[
+        'A teddy bear is a toy.',
+        'It is for comfort and fun.',
+        'You can live without it.',
+        'It is not required.',
+        'That is why it is a WANT.'
+      ]},
+      { group:'fun', id:'karaoke', name:'Karaoke', type:'want', explain:[
+        'Karaoke is for singing fun.',
+        'It is not needed to live.',
+        'You can enjoy music without it.',
+        'It is an extra activity.',
+        'That is why it is a WANT.'
+      ]},
+      { group:'fun', id:'cupcake', name:'Cupcake', type:'want', explain:[
+        'A cupcake is a sweet treat.',
+        'It is not needed for health.',
+        'Too many sweets are not good.',
+        'It is for fun sometimes.',
+        'That is why it is a WANT.'
+      ]},
+    ];
+
+    const groupsMeta = [
+      { id: ALL, label: 'Mixed (All groups)' },
+      { id: 'daily', label: 'Home & Food (Daily Life)' },
+      { id: 'school', label: 'School & Learning' },
+      { id: 'health', label: 'Health & Personal Care' },
+      { id: 'fun', label: 'Fun & Entertainment' },
+    ];
+
+    const grid = document.getElementById('cardGrid');
+    const groupSelect = document.getElementById('groupSelect');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+
+    const PER_PAGE = 6;
+    let currentGroup = ALL;
+
+    // Build selector (only show groups with at least PER_PAGE cards)
+    function rebuildGroupOptions(){
+      groupSelect.innerHTML = '';
+
+      const eligible = groupsMeta.filter(g=>{
+        if(g.id === ALL) return true;
+        return cards.filter(c=>c.group === g.id).length >= PER_PAGE;
+      });
+
+      eligible.forEach(g=>{
+        const opt = document.createElement('option');
+        opt.value = g.id;
+        opt.textContent = g.label;
+        groupSelect.appendChild(opt);
+      });
+
+      // If current selection is no longer eligible, fall back to Mixed
+      const hasCurrent = [...groupSelect.options].some(o=>o.value === currentGroup);
+      if(!hasCurrent) currentGroup = ALL;
+      groupSelect.value = currentGroup;
+    }
+
+    rebuildGroupOptions();
+
+    groupSelect.addEventListener('change', ()=>{
+      currentGroup = groupSelect.value;
+      renderNewSet();
+    });
+
+    shuffleBtn.addEventListener('click', ()=>{
+      renderNewSet();
+    });
+
+    function shuffled(arr){
+      const a = [...arr];
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function getPool(){
+      if(currentGroup === ALL) return cards;
+      return cards.filter(c=>c.group === currentGroup);
+    }
+
+    function imgTagForId(id, alt){
+      // If an image is missing, we fall back to a simple text tile.
+      // Naming convention expected: images/<id>.webp
+      const src = `images/${id}.webp`;
+      return `<img class="icon" src="${src}" alt="${alt}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'iconText',textContent:'?' }))">`;
+    }
+
+    function renderNewSet(){
+      const pool = shuffled(getPool()); // mix-up within the chosen group
+      const pick = pool.slice(0, Math.min(PER_PAGE, pool.length));
+
+      grid.innerHTML = '';
+
+      pick.forEach(card => grid.appendChild(makeCard(card)));
+
+      // Fill empty slots so the 3x2 layout stays stable
+      for(let i=pick.length;i<PER_PAGE;i++){
+        grid.appendChild(makePlaceholder());
+      }
+    }
+
+    function makePlaceholder(){
+      const wrap = document.createElement('div');
+      wrap.className = 'flipCard';
+      wrap.innerHTML = `
+        <div class="flipInner">
+          <div class="cardFace placeholder">
+            <img class="icon" src="images/placeholder.webp" alt="More cards" loading="lazy" onerror="this.style.display='none'">
+            <div class="name">More cards soon</div>
+            <div class="tapHint">Choose another group</div>
+          </div>
+        </div>
+      `;
+      return wrap;
+    }
+
+    function makeCard(card){
+      const wrap = document.createElement('div');
+      wrap.className = 'flipCard';
+      wrap.dataset.answered = '0';
+
+      wrap.innerHTML = `
+        <div class="flipInner">
+          <div class="cardFace cardFront">
+            ${imgTagForId(card.id, card.name)}
+            <div class="name">${card.name}</div>
+            <div class="btnRow">
+              <button class="btn need" type="button" data-choice="need">NEED</button>
+              <button class="btn want" type="button" data-choice="want">WANT</button>
+            </div>
+          </div>
+          <div class="cardFace cardBack">
+            <div class="result"></div>
+            <h3>Explanation</h3>
+            <ul>${card.explain.map(l=>`<li>${l}</li>`).join('')}</ul>
+          </div>
+        </div>
+      `;
+
+      // Click card to flip back and forth
+      wrap.addEventListener('click', ()=>{
+        wrap.classList.toggle('flipped');
+      });
+
+      // Button handlers
+      wrap.querySelectorAll('button[data-choice]').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          answer(wrap, card.type, btn.dataset.choice);
+        });
+      });
+
+      return wrap;
+    }
+
+    function answer(cardEl, correctType, chosen){
+      if(cardEl.dataset.answered === '1') return;
+
+      const isCorrect = correctType === chosen;
+      const result = cardEl.querySelector('.result');
+
+      result.textContent = isCorrect ? 'Correct!' : 'Not quite';
+      result.className = 'result ' + (isCorrect ? 'correct' : 'wrong');
+
+      // Lock buttons after first answer
+      cardEl.querySelectorAll('button[data-choice]').forEach(b=> b.disabled = true);
+      cardEl.dataset.answered = '1';
+
+      // Flip to show explanation
+      cardEl.classList.add('flipped');
+    }
+
+    // First render
+    renderNewSet();
+  </script>
+</body>
+</html>

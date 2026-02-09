@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shop & Buy – Budget Game</title>
+  <style>
+    :root{
+      --ink:#1f2a44;
+      --muted:#5a6786;
+      --bg:#f7fbff;
+      --card:#ffffff;
+      --line: rgba(0,0,0,.08);
+      --good:#16a34a;
+      --bad:#dc2626;
+      --accent:#3b82f6;
+      --accent2:#7c3aed;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      padding:18px;
+      color:var(--ink);
+      display:flex;
+      justify-content:center;
+    }
+    .app{max-width:950px; width:100%; display:grid; gap:16px}
+    .card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px}
+    h1{margin:0}
+    .sub{color:var(--muted); margin-top:6px; line-height:1.45}
+
+    .top{display:flex; justify-content:space-between; align-items:flex-end; gap:10px; flex-wrap:wrap}
+
+    .pill{border:1px solid var(--line); border-radius:999px; padding:7px 12px; font-weight:950; background:#fff}
+
+    .wallet{margin-top:14px; display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+    .walletBox{
+      padding:14px 18px;
+      border-radius:14px;
+      background:linear-gradient(135deg,#e0ecff,#f5f8ff);
+      border:1px solid var(--line);
+      font-weight:950;
+      font-size:18px;
+    }
+
+    .levelRow{margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    select{padding:8px 12px; border-radius:12px; font-weight:900}
+
+    .items{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:12px;
+    }
+    @media (max-width:800px){
+      .items{grid-template-columns:1fr 1fr}
+    }
+
+    .item{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      background:#fbfdff;
+      cursor:pointer;
+      text-align:center;
+      font-weight:950;
+      transition:transform .15s ease, box-shadow .15s ease;
+    }
+    .item:hover{transform:translateY(-2px); box-shadow:0 6px 14px rgba(0,0,0,.08)}
+    .item.selected{border:3px solid var(--accent)}
+
+    .price{margin-top:6px; font-size:18px}
+
+    .status{margin-top:14px; font-weight:950}
+    .status.good{color:var(--good)}
+    .status.bad{color:var(--bad)}
+
+    .controls{margin-top:14px; display:flex; gap:10px; flex-wrap:wrap}
+    .btn{padding:10px 16px; border-radius:12px; border:0; font-weight:950; color:#fff; background:linear-gradient(135deg,var(--accent),var(--accent2)); cursor:pointer}
+    .btn.secondary{background:#fff; color:var(--ink); border:1px solid var(--line)}
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="card">
+    <div class="top">
+      <div>
+        <h1>🛒 Shop & Buy</h1>
+        <p class="sub" id="taskText"></p>
+      </div>
+      <div class="pill" id="roundPill">🔁 Round 1</div>
+    </div>
+
+    <div class="levelRow">
+      <span class="pill">🎚 Level</span>
+      <select id="levelSelect">
+        <option value="1">Level 1</option>
+        <option value="2">Level 2</option>
+        <option value="3">Level 3</option>
+      </select>
+      <span class="pill" id="buyLimit"></span>
+    </div>
+
+    <div class="wallet">
+      <div class="walletBox">👛 Wallet: ₹<span id="wallet">0</span></div>
+      <div class="pill">Selected: <span id="count">0</span></div>
+    </div>
+
+    <div class="items" id="items"></div>
+
+    <div class="status" id="status"></div>
+
+    <div class="controls">
+      <button class="btn secondary" id="clearBtn">Clear Selection</button>
+      <button class="btn secondary" id="checkBtn">Check</button>
+      <button class="btn" id="nextBtn" style="display:none">Next</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- CONFIG ----------
+const LEVELS = {
+  1: { wallet:[8,12], prices:[1,2,3,4,5], buy:[2,3] },
+  2: { wallet:[15,25], prices:[2,3,5,7,9,10], buy:[2,4] },
+  3: { wallet:[30,60], prices:[5,7,10,12,15,20,25], buy:[3,5] }
+};
+
+const ITEM_NAMES = ['🍎 Apple','🧸 Toy','📘 Book','🎨 Colors','🍪 Biscuit','🧃 Juice','🎧 Headphones','📓 Notebook'];
+
+// ---------- STATE ----------
+let level = 1;
+let wallet = 0;
+let buyTarget = 2;
+let selected = [];
+let items = [];
+let round = 1;
+let checkedThisRound = false;
+
+// ---------- ELEMENTS ----------
+const itemsEl = document.getElementById('items');
+const walletEl = document.getElementById('wallet');
+const countEl = document.getElementById('count');
+const statusEl = document.getElementById('status');
+const clearBtn = document.getElementById('clearBtn');
+const checkBtn = document.getElementById('checkBtn');
+const nextBtn = document.getElementById('nextBtn');
+const levelSelect = document.getElementById('levelSelect');
+const taskText = document.getElementById('taskText');
+const buyLimit = document.getElementById('buyLimit');
+const roundPill = document.getElementById('roundPill');
+
+// ---------- HELPERS ----------
+const rand = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick = arr => arr[rand(0,arr.length-1)];
+
+function newRound(){
+  clearBtn.disabled = false;
+  clearBtn.style.opacity = '1';
+  selected = [];
+  checkedThisRound = false;
+  nextBtn.style.display = 'none';
+  statusEl.textContent = '';
+  statusEl.className = 'status';
+
+  const cfg = LEVELS[level];
+
+  let tries = 0;
+  while(true){
+    tries++;
+    wallet = rand(cfg.wallet[0], cfg.wallet[1]);
+    buyTarget = rand(cfg.buy[0], cfg.buy[1]);
+
+    items = [];
+    const shuffledNames = [...ITEM_NAMES].sort(()=>Math.random()-0.5);
+    for(let i=0;i<5;i++){
+      items.push({ name: shuffledNames[i], price: pick(cfg.prices) });
+    }
+    if (isSolvable(items, wallet, buyTarget)) break;
+    if (tries > 50) break;
+  }
+
+  walletEl.textContent = wallet;
+  buyLimit.textContent = `🎯 Buy ${buyTarget} items`;
+  taskText.innerHTML = `You have <strong>₹${wallet}</strong>. Buy <strong>${buyTarget} items</strong> without crossing your budget.`;
+  roundPill.textContent = `🔁 Round ${round}`;
+
+  renderItems();
+  updateCount();
+}
+
+function isSolvable(items, wallet, buyTarget){
+  const prices = items.map(i=>i.price);
+  function backtrack(start, count, sum){
+    if(count === buyTarget) return sum <= wallet;
+    if(sum > wallet) return false;
+    for(let i=start;i<prices.length;i++){
+      if(backtrack(i+1, count+1, sum + prices[i])) return true;
+    }
+    return false;
+  }
+  return backtrack(0, 0, 0);
+}
+
+function renderItems(){
+  itemsEl.innerHTML = '';
+  items.forEach((item, idx)=>{
+    const div = document.createElement('div');
+    div.className = 'item';
+    if(selected.includes(idx)) div.classList.add('selected');
+    div.innerHTML = `<div>${item.name}</div><div class="price">₹${item.price}</div>`;
+    div.onclick = ()=>toggleItem(idx);
+    itemsEl.appendChild(div);
+  });
+}
+
+function toggleItem(idx){
+  if(checkedThisRound) return;
+  if(selected.includes(idx)){
+    selected = selected.filter(i=>i!==idx);
+  } else {
+    if(selected.length>=buyTarget) return;
+    selected.push(idx);
+  }
+  if(checkedThisRound){
+    checkedThisRound = false;
+    nextBtn.style.display = 'none';
+    statusEl.textContent = '';
+    statusEl.className = 'status';
+  }
+  updateCount();
+  renderItems();
+}
+
+function updateCount(){ countEl.textContent = `${selected.length}/${buyTarget}`; }
+
+function check(){
+  // lock interactions after checking
+  if(selected.length!==buyTarget){
+    statusEl.textContent = `⚠️ Please choose exactly ${buyTarget} items.`;
+    statusEl.className = 'status bad';
+    return;
+  }
+  const spent = selected.reduce((s,i)=>s+items[i].price,0);
+  if(spent>wallet){
+    statusEl.textContent = `❌ You spent ₹${spent}. That is over your budget.`;
+    statusEl.className = 'status bad';
+  } else {
+    statusEl.textContent = `✅ You spent ₹${spent}. You saved ₹${wallet-spent}.`;
+    statusEl.className = 'status good';
+  }
+  checkedThisRound = true;
+  nextBtn.style.display = 'inline-block';
+  clearBtn.disabled = true;
+  clearBtn.style.opacity = '0.5';
+}
+
+function clearSelection(){
+  selected=[];
+  statusEl.textContent='';
+  statusEl.className='status';
+  checkedThisRound = false;
+  nextBtn.style.display = 'none';
+  renderItems();
+  updateCount();
+}
+
+// ---------- EVENTS ----------
+clearBtn.onclick = clearSelection;
+checkBtn.onclick = check;
+nextBtn.onclick = ()=>{ if(!checkedThisRound) return; round++; newRound(); };
+levelSelect.onchange = e=>{ level=Number(e.target.value); round=1; newRound(); };
+
+// ---------- INIT ----------
+newRound();
+</script>
+</body>
+</html>

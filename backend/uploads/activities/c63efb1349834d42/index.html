@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Candy Shop Cashier</title>
+  <style>
+    :root{
+      --ink:#1f2a44;
+      --muted:#44506a;
+      --card:#ffffff;
+      --line: rgba(0,0,0,.10);
+      --good:#16a34a;
+      --bad:#dc2626;
+      --accent:#ff4d8d;
+      --accent2:#7c3aed;
+      --accent3:#22c55e;
+
+      /* token-size responsive variables */
+      --coinSize: 140px;
+      --noteW: 280px;
+      --noteH: 140px;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+
+      /* Candy shop background */
+      background:
+        radial-gradient(circle at 15% 20%, rgba(255,255,255,.8), rgba(255,255,255,0) 42%),
+        radial-gradient(circle at 85% 25%, rgba(255,255,255,.7), rgba(255,255,255,0) 40%),
+        radial-gradient(circle at 40% 85%, rgba(255,255,255,.65), rgba(255,255,255,0) 45%),
+        linear-gradient(135deg, #fff1f6, #f1ecff 42%, #eafff2);
+      background-attachment: fixed;
+    }
+
+    /* subtle candy sprinkles */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.35;
+      background:
+        radial-gradient(circle, rgba(255,77,141,.9) 2px, transparent 3px) 0 0 / 70px 70px,
+        radial-gradient(circle, rgba(124,58,237,.85) 2px, transparent 3px) 20px 10px / 80px 80px,
+        radial-gradient(circle, rgba(34,197,94,.85) 2px, transparent 3px) 10px 25px / 85px 85px,
+        radial-gradient(circle, rgba(59,130,246,.85) 2px, transparent 3px) 30px 35px / 90px 90px;
+      mix-blend-mode: multiply;
+    }
+
+    .app{
+      width:min(980px, 100%);
+      display:grid;
+      gap:18px;
+      position:relative;
+      z-index:1;
+    }
+
+    .headerBlock{
+      text-align:center;
+      padding:8px 10px 0;
+    }
+
+    .title{
+      margin:0;
+      font-size:30px;
+      font-weight:1000;
+      letter-spacing:.2px;
+    }
+
+    .desc{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:16px;
+      font-weight:750;
+      line-height:1.45;
+    }
+
+    /* Top bar: labels + dropdowns */
+    .topbar{
+      display:flex;
+      justify-content:center;
+      gap:14px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .field{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background: rgba(255,255,255,.75);
+      border:1px solid rgba(0,0,0,.08);
+      border-radius:16px;
+      padding:10px 12px;
+      box-shadow: 0 10px 22px rgba(0,0,0,.05);
+      backdrop-filter: blur(6px);
+    }
+
+    .field label{
+      font-weight:950;
+      color:var(--ink);
+      white-space:nowrap;
+    }
+
+    select{
+      border:1px solid rgba(0,0,0,.10);
+      border-radius:14px;
+      padding:10px 12px;
+      font-weight:900;
+      background:#fff;
+      cursor:pointer;
+      font-size:16px;
+      max-width:100%;
+    }
+
+    /* Question card centered */
+    .card{
+      background: rgba(255,255,255,.92);
+      border:1px solid rgba(0,0,0,.08);
+      border-radius:22px;
+      padding:18px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.10);
+      backdrop-filter: blur(6px);
+    }
+
+    .qHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+
+    .qHeader h2{
+      margin:0;
+      font-size:20px;
+      font-weight:1000;
+    }
+
+    .pill{
+      border:1px solid rgba(0,0,0,.10);
+      border-radius:999px;
+      padding:8px 12px;
+      font-weight:950;
+      background:#fff;
+      color:var(--ink);
+      white-space:nowrap;
+      box-shadow: 0 8px 16px rgba(0,0,0,.06);
+    }
+
+    .combo{
+      border:2px dashed rgba(0,0,0,.14);
+      border-radius:18px;
+      padding:16px;
+      display:flex;
+      gap:14px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+      background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.88));
+      min-height:220px;
+
+      /* At most 5 tokens per row (force wrap) */
+      width:100%;
+      max-width: calc(
+        (5 * var(--coinSize)) +
+        (4 * 14px) +
+        (2 * 16px)
+      );
+      margin: 0 auto;
+    }
+
+    .piece{
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+      background:#fff;
+      border:4px solid rgba(255,77,141,.85);
+      box-shadow: 0 12px 22px rgba(0,0,0,.10);
+      overflow:hidden;
+      transform: translateZ(0);
+    }
+
+    .piece img{
+      width:100%;
+      height:100%;
+      object-fit:cover; /* fill the circle completely */
+      display:block;
+    }
+
+    /* valueTag removed since images show denomination */
+    .valueTag{ display:none; }
+
+    .coin{width:var(--coinSize); height:var(--coinSize); border-radius:50%}
+    .note{width:var(--noteW); height:var(--noteH); border-radius:18px}
+
+    @media (max-width: 520px){
+      :root{ --coinSize: 120px; --noteW: 250px; --noteH: 130px; }
+      .combo{min-height:200px}
+    }
+
+    .answerRow{
+      margin-top:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .answerRow label{font-weight:1000; font-size:18px}
+
+    input[type="number"]{
+      width:200px;
+      border:1px solid rgba(0,0,0,.12);
+      border-radius:16px;
+      padding:14px 14px;
+      font-weight:1000;
+      font-size:18px;
+      outline:none;
+      background:#fff;
+      -moz-appearance: textfield;
+      text-align:center;
+      box-shadow: 0 10px 18px rgba(0,0,0,.06);
+    }
+
+    input[type="number"]:focus{
+      border-color: rgba(255,77,141,.65);
+      box-shadow: 0 0 0 6px rgba(255,77,141,.12), 0 12px 24px rgba(0,0,0,.08);
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button{
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .miniStatus{margin-top:10px; font-weight:1000; text-align:center; font-size:16px}
+    .miniStatus.good{color:var(--good)}
+    .miniStatus.bad{color:var(--bad)}
+
+    .controls{
+      margin-top:14px;
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      padding:12px 18px;
+      border-radius:16px;
+      border:0;
+      font-weight:1000;
+      font-size:16px;
+      color:#fff;
+      background:linear-gradient(135deg, var(--accent), var(--accent2));
+      cursor:pointer;
+      box-shadow: 0 14px 28px rgba(124,58,237,.18);
+      transition: transform .08s ease, filter .2s ease;
+    }
+
+    .btn:active{ transform: translateY(1px); }
+
+    .btn.secondary{
+      background:linear-gradient(135deg, #ffffff, #ffffff);
+      color:var(--ink);
+      border:1px solid rgba(0,0,0,.12);
+      box-shadow: 0 12px 22px rgba(0,0,0,.06);
+    }
+
+    .btn:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+      box-shadow:none;
+    }
+
+    /* Modal for explanation */
+    .modalBackdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:50;
+    }
+
+    .modalBackdrop.show{display:flex;}
+
+    .modal{
+      width:min(860px, 100%);
+      background:#fff;
+      border-radius:22px;
+      border:1px solid rgba(0,0,0,.10);
+      box-shadow: 0 22px 60px rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+
+    .modalTop{
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:linear-gradient(135deg, rgba(255,77,141,.18), rgba(124,58,237,.16), rgba(34,197,94,.10));
+      border-bottom:1px solid rgba(0,0,0,.10);
+    }
+
+    .modalTop h3{margin:0; font-size:18px}
+
+    .modalBody{padding:16px; display:grid; gap:12px}
+
+    .explainRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      align-items:start;
+    }
+
+    @media (max-width: 760px){
+      .explainRow{grid-template-columns:1fr;}
+    }
+
+    /* Round complete: single column (no empty left slot) */
+    .modalBackdrop.roundComplete .explainRow{ grid-template-columns: 1fr; }
+    .modalBackdrop.roundComplete #explainTray{ display:none; }
+    .modalBackdrop.roundComplete .stepCard{
+      margin:0 auto;
+      max-width:520px;
+      text-align:center;
+    }
+
+    .explainTray{
+      border:2px dashed rgba(0,0,0,.14);
+      border-radius:18px;
+      padding:14px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      justify-content:center;
+      background:#fff;
+      min-height:180px;
+
+      /* At most 5 tokens per row (force wrap) */
+      width:100%;
+      max-width: calc(
+        (5 * 120px) +
+        (4 * 12px) +
+        (2 * 14px)
+      );
+      margin: 0 auto;
+    }
+
+    .explainPiece{
+      border:4px solid rgba(255,77,141,.85);
+      border-radius:18px;
+      background:#fff;
+      box-shadow: 0 12px 22px rgba(0,0,0,.10);
+      overflow:hidden;
+      position:relative;
+      opacity:.55;
+      transform:scale(.98);
+      transition: transform .2s ease, opacity .2s ease;
+    }
+
+    .explainPiece.active{
+      opacity:1;
+      transform:scale(1.03);
+      outline:5px solid rgba(34,197,94,.22);
+    }
+
+    .explainPiece img{
+      width:100%;
+      height:100%;
+      object-fit:cover; /* fill the explain circle completely */
+      display:block;
+    }
+
+    .explainPiece.coin{width:120px; height:120px; border-radius:50%}
+    .explainPiece.note{width:240px; height:120px; border-radius:18px}
+
+    .stepCard{
+      border:1px solid rgba(0,0,0,.10);
+      border-radius:18px;
+      padding:14px;
+      background:#fbfdff;
+      display:grid;
+      gap:10px;
+    }
+
+    .stepLine{
+      font-weight:1000;
+      font-size:16px;
+      color:var(--ink);
+    }
+
+    .bigTotal{
+      font-size:34px;
+      font-weight:1100;
+      letter-spacing:.2px;
+    }
+
+    .smallMuted{color:var(--muted); font-weight:850}
+
+    .modalControls{
+      padding:14px 16px;
+      border-top:1px solid rgba(0,0,0,.10);
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      background:#fff;
+    }
+
+    .hintList{margin:0; padding-left:18px; color:var(--muted); font-weight:800; line-height:1.45}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="headerBlock">
+      <h1 class="title">Candy Shop Cashier</h1>
+      <p class="desc">You are a cashier at a candy shop. Customers pay you using coins and notes. Count each token and type the total amount.</p>
+    </div>
+
+    <div class="topbar">
+      <div class="field">
+        <label for="levelSelect">Level</label>
+        <select id="levelSelect" aria-label="Choose level">
+          <option value="1">A (₹1, ₹2, ₹5)</option>
+          <option value="2">B (₹1, ₹2, ₹5, ₹10, ₹20)</option>
+          <option value="3">C (Coins + Notes)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="tokenSelect">Token Count</label>
+        <select id="tokenSelect" aria-label="Choose token count">
+          <option value="2" selected>2</option>
+          <option value="3">3</option>
+          <option value="5">5</option>
+          <option value="7">7</option>
+          <option value="10">10</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card" id="questionCard">
+      <div class="qHeader">
+        <h2 id="qTitle">Candy Bill</h2>
+        <span class="pill" id="qCountPill">Bill 1 of 5</span>
+      </div>
+
+      <div class="combo" id="comboTray"></div>
+
+      <div class="answerRow">
+        <label for="ans">Total = ₹</label>
+        <input id="ans" type="number" inputmode="numeric" min="0" placeholder="Type total" />
+      </div>
+
+      <div class="miniStatus" id="mini"></div>
+
+      <div class="controls">
+        <button class="btn secondary" id="submitBtn">Submit</button>
+        <button class="btn" id="nextBtn" disabled>Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Explanation / Round Complete Modal -->
+  <div class="modalBackdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal">
+      <div class="modalTop">
+        <h3 id="modalTitle">Let’s count together</h3>
+        <span class="pill" id="modalBadge">Correct total: ₹0</span>
+      </div>
+      <div class="modalBody">
+        <div class="explainRow">
+          <div>
+            <div class="explainTray" id="explainTray"></div>
+          </div>
+          <div class="stepCard">
+            <div class="stepLine" id="stepLine">Starting from ₹0…</div>
+            <div class="bigTotal" id="runningTotal">₹0</div>
+            <div class="smallMuted" id="stepHint">Watch how the total grows one piece at a time.</div>
+            <ul class="hintList">
+              <li>Count each coin/note once.</li>
+              <li>Add in order: first piece + next piece</li>
+              <li>Input the final total at the end.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modalControls">
+        <button class="btn secondary" id="replayBtn">Replay counting</button>
+        <button class="btn" id="closeModalBtn">Got it</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ==========================
+//   IMAGE PATH + FALLBACK
+// ==========================
+// Images are provided ONLY as .png files in the images folder
+const IMG_EXT = 'png';
+const imgBase = (name) => `images/${name}.${IMG_EXT}`;
+
+function setImgWithFallback(imgEl, fullPath){
+  imgEl.src = fullPath;
+}
+
+// ==========================
+//   LEVEL DATA
+// ==========================
+// Level 3 includes BOTH coins and notes for ₹10 and ₹20 (randomly chosen each time).
+// ₹1, ₹2, ₹5 are coins only. Notes exclude ₹2000.
+const LEVELS = {
+  1: {
+    pieces: [
+      { value: 1, kind: 'coin', src: imgBase('coin-1') },
+      { value: 2, kind: 'coin', src: imgBase('coin-2') },
+      { value: 5, kind: 'coin', src: imgBase('coin-5') },
+    ],
+  },
+  2: {
+    pieces: [
+      { value: 1, kind: 'coin', src: imgBase('coin-1') },
+      { value: 2, kind: 'coin', src: imgBase('coin-2') },
+      { value: 5, kind: 'coin', src: imgBase('coin-5') },
+      { value: 10, kind: 'coin', src: imgBase('coin-10') },
+      { value: 20, kind: 'coin', src: imgBase('coin-20') },
+    ],
+  },
+  3: {
+    pieces: [
+      // coins
+      { value: 1, kind: 'coin', src: imgBase('coin-1') },
+      { value: 2, kind: 'coin', src: imgBase('coin-2') },
+      { value: 5, kind: 'coin', src: imgBase('coin-5') },
+      { value: 10, kind: 'coin', src: imgBase('coin-10') },
+      { value: 20, kind: 'coin', src: imgBase('coin-20') },
+
+      // notes (NO ₹2000)
+      { value: 10, kind: 'note', src: imgBase('note-10') },
+      { value: 20, kind: 'note', src: imgBase('note-20') },
+      { value: 50, kind: 'note', src: imgBase('note-50') },
+      { value: 100, kind: 'note', src: imgBase('note-100') },
+      { value: 200, kind: 'note', src: imgBase('note-200') },
+      { value: 500, kind: 'note', src: imgBase('note-500') },
+    ],
+  },
+};
+
+function rand(min, max){
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function sumValues(arr){
+  return arr.reduce((s,p)=>s+p.value,0);
+}
+
+function applyTokenSizing(count){
+  // Keep pieces readable, but shrink a bit when many tokens are shown.
+  if (count >= 10){
+    document.documentElement.style.setProperty('--coinSize', '100px');
+    document.documentElement.style.setProperty('--noteW', '210px');
+    document.documentElement.style.setProperty('--noteH', '115px');
+    return;
+  }
+  if (count >= 7){
+    document.documentElement.style.setProperty('--coinSize', '115px');
+    document.documentElement.style.setProperty('--noteW', '240px');
+    document.documentElement.style.setProperty('--noteH', '125px');
+    return;
+  }
+  document.documentElement.style.setProperty('--coinSize', '140px');
+  document.documentElement.style.setProperty('--noteW', '280px');
+  document.documentElement.style.setProperty('--noteH', '140px');
+}
+
+function generateCombo(lvl, count){
+  const pieces = LEVELS[lvl].pieces;
+  const picked = [];
+  for(let i=0;i<count;i++) picked.push(pieces[rand(0, pieces.length - 1)]);
+  picked.sort(()=>Math.random() - 0.5);
+  return { pieces: picked, total: sumValues(picked) };
+}
+
+// ==========================
+//   ROUND SETTINGS
+// ==========================
+const ROUND_SIZE = 5;
+
+let level = 1;
+let tokenCount = 2;
+let qIndex = 1; // 1..ROUND_SIZE
+let score = 0;
+let submitted = false;
+let currentCombo;
+
+// ==========================
+//   ELEMENTS
+// ==========================
+const levelSelect = document.getElementById('levelSelect');
+const tokenSelect = document.getElementById('tokenSelect');
+const comboTray = document.getElementById('comboTray');
+const ansInput = document.getElementById('ans');
+const miniEl = document.getElementById('mini');
+const submitBtn = document.getElementById('submitBtn');
+const nextBtn = document.getElementById('nextBtn');
+const qCountPill = document.getElementById('qCountPill');
+
+// Modal
+const modalBackdrop = document.getElementById('modalBackdrop');
+const modalBadge = document.getElementById('modalBadge');
+const explainTray = document.getElementById('explainTray');
+const stepLine = document.getElementById('stepLine');
+const runningTotalEl = document.getElementById('runningTotal');
+const replayBtn = document.getElementById('replayBtn');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const modalTitleEl = document.getElementById('modalTitle');
+
+function setMini(text, kind=''){
+  miniEl.textContent = text;
+  miniEl.className = kind ? `miniStatus ${kind}` : 'miniStatus';
+}
+
+function setBillCount(){
+  qCountPill.textContent = `Bill ${qIndex} of ${ROUND_SIZE}`;
+}
+
+function setNextEnabled(enabled){
+  nextBtn.disabled = !enabled;
+}
+
+function renderPiecesInto(container, pieces, options = {}){
+  const { asExplain = false } = options;
+  container.innerHTML = '';
+
+  pieces.forEach((piece, i) => {
+    const p = document.createElement('div');
+    const clsBase = asExplain ? 'explainPiece' : 'piece';
+    p.className = `${clsBase} ${piece.kind}`;
+    p.dataset.idx = String(i);
+
+    const im = document.createElement('img');
+    im.alt = `₹${piece.value} ${piece.kind}`;
+    im.loading = 'lazy';
+    setImgWithFallback(im, piece.src);
+
+    const fallbackText = () => {
+      p.innerHTML = `₹${piece.value}`;
+      p.style.display = 'flex';
+      p.style.alignItems = 'center';
+      p.style.justifyContent = 'center';
+      p.style.fontWeight = '1100';
+      p.style.fontSize = asExplain ? '20px' : '26px';
+    };
+
+    setTimeout(() => {
+      if (!im.complete || !im.naturalWidth) fallbackText();
+    }, 450);
+
+    if (!asExplain){
+      p.appendChild(im);
+    } else {
+      p.appendChild(im);
+    }
+
+    container.appendChild(p);
+  });
+}
+
+function newBill(){
+  submitted = false;
+  applyTokenSizing(tokenCount);
+  currentCombo = generateCombo(level, tokenCount);
+
+  setBillCount();
+  renderPiecesInto(comboTray, currentCombo.pieces);
+
+  ansInput.value = '';
+  ansInput.disabled = false;
+  submitBtn.disabled = false;
+  setNextEnabled(false);
+  setMini('');
+
+  ansInput.focus();
+}
+
+// ==========================
+//   SOUND
+// ==========================
+let audioCtx;
+function beep(freq, dur=0.12){
+  audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = 'sine';
+  o.frequency.value = freq;
+  g.gain.value = 0.0001;
+  o.connect(g);
+  g.connect(audioCtx.destination);
+
+  const now = audioCtx.currentTime;
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(0.12, now + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+  o.start(now);
+  o.stop(now + dur + 0.02);
+}
+
+function playSubmitSound(ok){
+  if (ok){
+    beep(660, 0.11);
+    setTimeout(()=>beep(880, 0.11), 120);
+  } else {
+    beep(220, 0.16);
+    setTimeout(()=>beep(180, 0.16), 170);
+  }
+}
+
+// ==========================
+//   MODAL + ANIMATION
+// ==========================
+let animStepTimers = [];
+
+function clearExplainAnimation(){
+  animStepTimers.forEach(t => clearTimeout(t));
+  animStepTimers = [];
+}
+
+function showModal(){
+  modalBackdrop.classList.add('show');
+  modalBackdrop.setAttribute('aria-hidden', 'false');
+}
+
+function hideModal(){
+  modalBackdrop.classList.remove('show');
+  modalBackdrop.classList.remove('roundComplete');
+  modalBackdrop.setAttribute('aria-hidden', 'true');
+}
+
+function highlightExplainIndex(i){
+  [...explainTray.children].forEach(el => el.classList.remove('active'));
+  const el = explainTray.querySelector(`[data-idx="${i}"]`);
+  if (el) el.classList.add('active');
+}
+
+function animateCountingExplanation(combo, userAnswer){
+  clearExplainAnimation();
+  modalBackdrop.classList.remove('roundComplete');
+
+  modalTitleEl.textContent = 'Let’s count together';
+  modalBadge.textContent = `Correct total: ₹${combo.total}`;
+  replayBtn.style.display = '';
+  closeModalBtn.textContent = 'Got it';
+
+  renderPiecesInto(explainTray, combo.pieces, { asExplain: true });
+
+  let running = 0;
+  stepLine.textContent = userAnswer !== null
+    ? `You typed ₹${userAnswer}. Now let’s count correctly from ₹0.`
+    : 'Start at ₹0.';
+  runningTotalEl.textContent = '₹0';
+
+  const stepDelay = 850;
+
+  combo.pieces.forEach((piece, idx) => {
+    const t = setTimeout(() => {
+      highlightExplainIndex(idx);
+      const before = running;
+      running += piece.value;
+      stepLine.textContent = `Add ₹${piece.value}: ₹${before} + ₹${piece.value} = ₹${running}`;
+      runningTotalEl.textContent = `₹${running}`;
+      beep(520 + (idx * 20), 0.06);
+
+      if (idx === combo.pieces.length - 1){
+        const tt = setTimeout(() => {
+          stepLine.textContent = `Final total is ₹${running}.`;
+          highlightExplainIndex(idx);
+        }, 520);
+        animStepTimers.push(tt);
+      }
+    }, idx * stepDelay);
+    animStepTimers.push(t);
+  });
+}
+
+function showRoundComplete(){
+  clearExplainAnimation();
+  modalBackdrop.classList.add('roundComplete');
+
+  modalBadge.textContent = `Score: ${score} / ${ROUND_SIZE}`;
+  modalTitleEl.textContent = 'Round complete!';
+
+  // Left slot hidden by CSS in roundComplete; still clear in case
+  explainTray.innerHTML = '';
+
+  stepLine.textContent = 'You finished 5 bills.';
+  runningTotalEl.textContent = `⭐ ${score} / ${ROUND_SIZE}`;
+
+  replayBtn.style.display = 'none';
+  closeModalBtn.textContent = 'Start new round';
+
+  showModal();
+
+  submitBtn.disabled = true;
+  nextBtn.disabled = true;
+  ansInput.disabled = true;
+}
+
+// ==========================
+//   SUBMIT + NEXT LOGIC
+// ==========================
+function submit(){
+  if (submitted) return;
+
+  const raw = ansInput.value;
+  const user = Number(raw);
+  const correct = currentCombo.total;
+
+  if (!raw){
+    setMini('⚠️ Please type the total.', 'bad');
+    playSubmitSound(false);
+    return;
+  }
+
+  const ok = Number.isFinite(user) && user === correct;
+  submitted = true;
+
+  ansInput.disabled = true;
+  submitBtn.disabled = true;
+  setNextEnabled(true);
+
+  if (ok){
+    score += 1;
+    setMini('✅ Correct!', 'good');
+    playSubmitSound(true);
+  } else {
+    setMini('❌ Not quite. Let’s count together.', 'bad');
+    playSubmitSound(false);
+
+    showModal();
+    animateCountingExplanation(currentCombo, user);
+  }
+}
+
+function next(){
+  if (!submitted) return;
+
+  hideModal();
+  clearExplainAnimation();
+
+  if (qIndex >= ROUND_SIZE){
+    showRoundComplete();
+    return;
+  }
+
+  qIndex += 1;
+  newBill();
+}
+
+function resetRound(){
+  qIndex = 1;
+  score = 0;
+  submitted = false;
+  hideModal();
+  clearExplainAnimation();
+  newBill();
+}
+
+function setLevel(newLevel){
+  level = Number(newLevel);
+  resetRound();
+}
+
+function setTokenCount(newCount){
+  tokenCount = Number(newCount);
+  resetRound();
+}
+
+// ==========================
+//   EVENTS
+// ==========================
+submitBtn.addEventListener('click', submit);
+nextBtn.addEventListener('click', next);
+levelSelect.addEventListener('change', (e) => setLevel(e.target.value));
+tokenSelect.addEventListener('change', (e) => setTokenCount(e.target.value));
+
+ansInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter'){
+    if (!submitted) submit();
+    else next();
+  }
+});
+
+replayBtn.addEventListener('click', () => {
+  animateCountingExplanation(currentCombo, null);
+});
+
+closeModalBtn.addEventListener('click', () => {
+  const txt = closeModalBtn.textContent.toLowerCase();
+  if (txt.includes('start')){
+    resetRound();
+    return;
+  }
+  hideModal();
+  clearExplainAnimation();
+});
+
+modalBackdrop.addEventListener('click', (e) => {
+  if (e.target === modalBackdrop && closeModalBtn.textContent === 'Got it'){
+    hideModal();
+    clearExplainAnimation();
+  }
+});
+
+// ==========================
+//   TINY SELF-TESTS
+// ==========================
+function assert(cond, msg){
+  if (!cond) throw new Error('Test failed: ' + msg);
+}
+(function runTests(){
+  // Core helpers
+  assert(typeof imgBase === 'function', 'imgBase defined');
+  assert(typeof setImgWithFallback === 'function', 'setImgWithFallback defined');
+  assert(typeof showRoundComplete === 'function', 'showRoundComplete defined');
+  assert(ROUND_SIZE === 5, 'Round is 5 bills');
+
+  // Ensure no ₹2000 in Level 3
+  const l3Values = LEVELS[3].pieces.map(p => p.value);
+  assert(!l3Values.includes(2000), '₹2000 excluded');
+
+  // Ensure Level 3 has both coin and note for 10 and 20
+  const l3 = LEVELS[3].pieces;
+  assert(l3.some(p => p.value === 10 && p.kind === 'coin'), 'L3 has ₹10 coin');
+  assert(l3.some(p => p.value === 10 && p.kind === 'note'), 'L3 has ₹10 note');
+  assert(l3.some(p => p.value === 20 && p.kind === 'coin'), 'L3 has ₹20 coin');
+  assert(l3.some(p => p.value === 20 && p.kind === 'note'), 'L3 has ₹20 note');
+
+  // Token count respected
+  const q2 = generateCombo(1, 2);
+  const q10 = generateCombo(3, 10);
+  assert(q2.pieces.length === 2, 'tokenCount=2 respected');
+  assert(q10.pieces.length === 10, 'tokenCount=10 respected');
+
+  // Round complete toggles class safely
+  showRoundComplete();
+  assert(modalBackdrop.classList.contains('roundComplete'), 'roundComplete class applied');
+  hideModal();
+  assert(!modalBackdrop.classList.contains('roundComplete'), 'roundComplete class removed on hide');
+
+  console.log('✅ Candy Shop Cashier tests passed');
+})();
+
+// ==========================
+//   INIT
+// ==========================
+levelSelect.value = '1';
+tokenSelect.value = '2';
+level = 1;
+tokenCount = 2;
+resetRound();
+</script>
+</body>
+</html>

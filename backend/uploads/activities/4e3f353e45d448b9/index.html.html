@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Is This A Need or A Want? (Sorting)</title>
+  <style>
+    :root{
+      --bgA:#fff3fb;
+      --bgB:#eff8ff;
+      --bgC:#f0fff5;
+      --card:#ffffff;
+      --ink:#1f2b3d;
+      --muted:#4f6078;
+
+      --purple:#7c3aed;
+      --blue:#3b82f6;
+      --green:#22c55e;
+      --yellow:#fbbf24;
+      --pink:#ff4d6d;
+
+      --line: rgba(40,60,110,.15);
+      --shadow: 0 16px 36px rgba(20,40,90,.14);
+      --radius: 24px;
+
+      --needBg: rgba(34,197,94,.14);
+      --wantBg: rgba(251,191,36,.16);
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink);
+      min-height:100vh;
+      background:
+        radial-gradient(1200px 520px at 15% 10%, rgba(124,58,237,.18), transparent 60%),
+        radial-gradient(1200px 520px at 85% 12%, rgba(59,130,246,.16), transparent 60%),
+        radial-gradient(1000px 520px at 50% 115%, rgba(34,197,94,.14), transparent 60%),
+        linear-gradient(135deg, var(--bgB), var(--bgC));
+      padding:18px;
+    }
+
+    .app{ width:min(1120px, 100%); margin:0 auto; display:grid; gap:16px; }
+
+    /* Top bar */
+    .topbar{
+      background: rgba(255,255,255,.9);
+      backdrop-filter: blur(10px);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:16px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .brand{ display:flex; align-items:center; gap:12px; }
+
+    .logo{
+      width:48px; height:48px;
+      border-radius:18px;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      display:grid; place-items:center;
+      box-shadow: 0 12px 24px rgba(59,130,246,.22);
+      flex:0 0 auto;
+      font-size:14px;
+      font-weight:1000;
+      color:#fff;
+      letter-spacing:.5px;
+      user-select:none;
+    }
+
+    .brand h1{ margin:0; font-size:22px; line-height:1.1; }
+    .brand .small{ margin-top:2px; font-size:14px; color:var(--muted); }
+
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+    .btn{
+      border:none;
+      cursor:pointer;
+      padding:12px 16px;
+      border-radius:18px;
+      font-weight:900;
+      font-size:16px;
+      letter-spacing:.2px;
+      user-select:none;
+      transition: transform .08s ease;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{ color:white; background: linear-gradient(135deg, var(--blue), var(--purple)); box-shadow: 0 10px 22px rgba(20,40,90,.12); }
+    .btn.ghost{ color:var(--ink); background: white; border:1px solid rgba(40,60,110,.18); }
+
+    .chip{
+      padding:10px 12px;
+      border-radius:999px;
+      background: rgba(245,248,255,.92);
+      border:1px solid rgba(40,60,110,.14);
+      font-weight:900;
+      font-size:14px;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      user-select:none;
+      white-space:nowrap;
+    }
+
+    /* Cards */
+    .card{ overflow:visible; }
+
+    .muted{ color:var(--muted); font-size:16px; line-height:1.55; margin:0; }
+
+    /* Screens */
+    .screen{ display:none; }
+    .screen.active{ display:block; }
+
+    /* Home layout */
+    .hero{ display:block; }
+
+    .spark{
+      position:absolute;
+      inset:-90px -90px auto auto;
+      width:300px; height:300px;
+      border-radius:90px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(34,197,94,.32), transparent 55%),
+        radial-gradient(circle at 65% 65%, rgba(59,130,246,.24), transparent 60%),
+        radial-gradient(circle at 30% 80%, rgba(255,77,109,.20), transparent 60%);
+      transform: rotate(18deg);
+      pointer-events:none;
+    }
+
+    .bigTitle{ margin:0; font-size:32px; line-height:1.15; }
+    .sectionTitle{ margin:14px 0 8px; font-size:18px; }
+
+    ul{ margin:8px 0 0; padding-left:20px; color:var(--muted); line-height:1.6; font-size:16px; }
+
+    .pillRow{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+
+    .pill{
+      font-size:14px;
+      font-weight:1000;
+      padding:9px 12px;
+      border-radius:999px;
+      background: rgba(34,197,94,.12);
+      color:#0f7a35;
+      border:1px solid rgba(34,197,94,.22);
+      display:inline-flex;
+      align-items:center;
+      white-space:nowrap;
+    }
+    .pill.yellow{ background: rgba(251,191,36,.16); border-color: rgba(251,191,36,.28); color:#7a4a00; }
+
+    /* Game layout */
+    .grid{ display:block; }
+
+    .activityHead{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
+    /* Cards layout: 3 items per row (wraps into new rows automatically) */
+    .itemsRow{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:12px;
+      padding:6px 2px 10px;
+    }
+    @media (max-width: 900px){
+      .itemsRow{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 520px){
+      .itemsRow{ grid-template-columns: 1fr; }
+    }
+
+    .item{
+      width:100%;
+      min-width:0;
+      padding:14px;
+      border-radius:20px;
+      border:1px solid rgba(40,60,110,.18);
+      background: rgba(255,255,255,.96);
+      cursor: grab;
+      user-select:none;
+      box-shadow: 0 10px 18px rgba(20,40,90,.10);
+      transition: transform .08s ease;
+    }
+    .item:active{ transform: scale(.99); }
+
+    .item .thumb{
+      width:80px;
+      height:80px;
+      border-radius:14px;
+      border:1px solid rgba(40,60,110,.14);
+      background: rgba(240,245,255,.75);
+      overflow:hidden;
+      display:grid;
+      place-items:center;
+    }
+    .item .thumb img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .item .thumb .fallback{
+      font-weight:1000;
+      font-size:14px;
+      color: rgba(31,43,61,.75);
+      letter-spacing:.5px;
+    }
+
+    .item .name{ margin:8px 0 0; font-weight:1000; font-size:18px; }
+
+    .tag{
+      margin-top:10px;
+      display:inline-flex;
+      font-size:13px;
+      font-weight:1000;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(40,60,110,.16);
+      background: rgba(240,245,255,.65);
+      color:var(--muted);
+      white-space:nowrap;
+    }
+
+    .sortZone{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px; align-items:start; }
+    @media (max-width: 740px){ .sortZone{ grid-template-columns:1fr; } }
+
+    .bucket{
+      border-radius: 22px;
+      border:2px dashed rgba(40,60,110,.18);
+      padding:12px;
+      min-height:200px;
+      background: rgba(255,255,255,.55);
+    }
+    .bucket.need{ background: var(--needBg); }
+    .bucket.want{ background: var(--wantBg); }
+
+    .bucketTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .bucketTitle b{ font-size:18px; }
+
+    .countPill{
+      font-size:14px;
+      color:var(--muted);
+      font-weight:1000;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(40,60,110,.14);
+      background: rgba(255,255,255,.78);
+      white-space:nowrap;
+    }
+
+    .feedback{
+      margin-top:12px;
+      border-radius: 18px;
+      border:1px solid rgba(40,60,110,.14);
+      background: rgba(255,255,255,.78);
+      padding:14px;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.45;
+    }
+    .feedback strong{ color:var(--ink); }
+
+    .success{ border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10); }
+    .warn{ border-color: rgba(251,191,36,.40); background: rgba(251,191,36,.10); }
+
+    /* Popup modal */
+    .modalOverlay{
+      position:fixed;
+      inset:0;
+      background: rgba(15, 23, 42, .55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:9999;
+    }
+    .modalOverlay.show{ display:flex; }
+
+    .modal{
+      width:min(560px, 100%);
+      background: rgba(255,255,255,.98);
+      border:1px solid rgba(40,60,110,.18);
+      border-radius: 22px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.22);
+      padding:16px 16px 14px;
+    }
+
+    .modalHeader{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:8px;
+    }
+
+    .modalTitle{
+      margin:0;
+      font-size:20px;
+      line-height:1.2;
+      font-weight:1000;
+    }
+
+    .modalClose{
+      border:none;
+      background: rgba(240,245,255,.9);
+      border:1px solid rgba(40,60,110,.16);
+      border-radius:14px;
+      padding:8px 10px;
+      cursor:pointer;
+      font-weight:1000;
+    }
+
+    .modalItem{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px 12px;
+      border-radius:18px;
+      border:1px solid rgba(40,60,110,.14);
+      background: rgba(245,248,255,.75);
+      margin:10px 0;
+    }
+
+    .modalThumb{
+      width:52px;
+      height:52px;
+      border-radius:16px;
+      border:1px solid rgba(40,60,110,.14);
+      background: rgba(255,255,255,.92);
+      overflow:hidden;
+      display:grid;
+      place-items:center;
+      flex:0 0 auto;
+    }
+    .modalThumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .modalThumb .fallback{ font-weight:1000; font-size:14px; color: rgba(31,43,61,.75); letter-spacing:.5px; }
+
+    .modalName{ font-weight:1000; font-size:18px; margin:0; }
+    .modalBadge{
+      display:inline-flex;
+      margin-top:4px;
+      font-size:13px;
+      font-weight:1000;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(40,60,110,.14);
+      background: rgba(255,255,255,.85);
+      color: var(--muted);
+    }
+
+    .modalLines{
+      margin:8px 0 0;
+      padding-left:18px;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.55;
+    }
+
+    .modalFooter{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .modalFooter .btn{ padding:10px 14px; border-radius:16px; }
+
+    /* Buddy */
+    .buddy{
+      position:absolute;
+      right:-18px;
+      bottom:-20px;
+      width:200px;
+      height:200px;
+      opacity:.95;
+      pointer-events:none;
+      transform: rotate(2deg);
+    }
+    .buddy .bubble{
+      position:absolute;
+      right:90px;
+      bottom:140px;
+      width:210px;
+      padding:10px 12px;
+      background: rgba(255,255,255,.95);
+      border:1px solid rgba(40,60,110,.14);
+      border-radius: 18px;
+      box-shadow: 0 10px 22px rgba(20,40,90,.10);
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.35;
+    }
+    .buddy svg{ position:absolute; right:0; bottom:0; }
+
+    /* Small spacing helpers */
+    p{ margin:0; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">NW</div>
+        <div>
+          <h1>Is This A Need or A Want?</h1>
+          <div class="small">Activity 1: Sorting Needs and Wants</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn ghost" type="button" onclick="showHome()">Home</button>
+        <button class="btn primary" type="button" onclick="newRound()">New Round</button>
+      </div>
+    </header>
+
+    <!-- HOME SCREEN -->
+    <section class="screen active" id="homeScreen">
+      <div class="hero">
+        <div class="card" style="padding:18px;">
+          <div class="spark"></div>
+          <h2 class="bigTitle">Needs vs Wants</h2>
+          <p class="muted" style="margin-top:8px;">
+            Drag each item card into the correct box to classify them as "Need" or "Want".
+          </p>
+
+          <div class="pillRow">
+            <span class="pill">Needs = basic things you must have</span>
+            <span class="pill yellow">Wants = things that are fun to have</span>
+          </div>
+
+          <h3 class="sectionTitle">How To Play</h3>
+          <ul>
+            <li>Read the information on the card.</li>
+            <li>Ask yourself: “Do I need it to stay safe, healthy, or to learn and grow?”</li>
+            <li>Drag it to <b>NEEDS</b> or <b>WANTS</b> based on what you think.</li>
+            <li>Click <b>Check</b> to see your result.</li>
+          </ul>
+
+          <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn primary" type="button" onclick="startGame()">Start Sorting</button>
+            <button class="btn ghost" type="button" onclick="showTip('home')">Quick Tip</button>
+          </div>
+
+          <div class="feedback" id="homeMessage" style="display:none;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GAME SCREEN -->
+    <section class="screen" id="gameScreen">
+      <div class="grid">
+        <!-- LEFT: Sorting area -->
+        <section class="card">
+          <div class="buddy" aria-hidden="true">
+            <div class="bubble" id="buddyBubble">Drag cards. Needs keep us healthy and safe. Wants add fun in our lives.</div>
+            <svg width="200" height="200" viewBox="0 0 200 200" fill="none">
+              <path d="M140 35c25 12 42 37 43 64 1 28-16 57-44 72-29 15-63 10-84-8C35 145 21 121 26 93c6-28 32-53 60-62 20-7 35-6 54 4Z" fill="rgba(59,130,246,.22)"/>
+              <path d="M138 45c22 10 36 32 37 56 1 25-14 51-39 65-26 13-56 9-74-6-18-15-30-37-25-62 5-25 28-47 52-55 18-6 30-5 49 2Z" fill="rgba(34,197,94,.24)"/>
+              <circle cx="110" cy="95" r="7" fill="rgba(31,43,61,.85)"/>
+              <circle cx="140" cy="95" r="7" fill="rgba(31,43,61,.85)"/>
+              <path d="M116 124c10 8 22 8 32 0" stroke="rgba(31,43,61,.85)" stroke-width="6" stroke-linecap="round"/>
+              <path d="M96 78c6-8 12-12 20-12" stroke="rgba(31,43,61,.55)" stroke-width="5" stroke-linecap="round"/>
+              <path d="M154 66c-6-8-12-12-20-12" stroke="rgba(31,43,61,.55)" stroke-width="5" stroke-linecap="round"/>
+            </svg>
+          </div>
+
+          <div class="activityHead">
+            <div>
+              <h2 style="margin:0; font-size:16px;">Sorting Game</h2>
+              <p class="muted" style="margin:6px 0 0;">Drag each card into NEEDS or WANTS. Then press Check.</p>
+            </div>
+            <div class="chip">Cards left: <span id="leftCount" style="font-weight:1000;">0</span></div>
+          </div>
+
+          <div class="itemsRow" id="poolRow"></div>
+          <p class="muted" style="margin-top:6px; font-weight:900;"></p>
+
+          <div class="sortZone">
+            <div class="bucket need" id="needBucket" ondragover="allowDrop(event)" ondrop="dropToBucket(event,'need')">
+              <div class="bucketTitle">
+                <b>NEEDS</b>
+                <span class="countPill"><span id="needCount">0</span> cards</span>
+              </div>
+              <div class="itemsRow" id="needRow"></div>
+            </div>
+
+            <div class="bucket want" id="wantBucket" ondragover="allowDrop(event)" ondrop="dropToBucket(event,'want')">
+              <div class="bucketTitle">
+                <b>WANTS</b>
+                <span class="countPill"><span id="wantCount">0</span> cards</span>
+              </div>
+              <div class="itemsRow" id="wantRow"></div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn primary" type="button" onclick="checkSorting()">Check</button>
+            <button class="btn ghost" type="button" onclick="resetBuckets()">Clear Sorting</button>
+            <button class="btn ghost" type="button" onclick="showTip('game')">Hint</button>
+          </div>
+
+          <div class="feedback" id="gameMessage" style="display:none;"></div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <!-- POPUP MODAL (shows when a child drops a card in the wrong box) -->
+  <div class="modalOverlay" id="mistakeOverlay" role="dialog" aria-modal="true" aria-labelledby="mistakeTitle">
+    <div class="modal">
+      <div class="modalHeader">
+        <h3 class="modalTitle" id="mistakeTitle">Oops! Let’s learn together.</h3>
+        <button class="modalClose" type="button" onclick="closeMistakePopup()">Close</button>
+      </div>
+
+      <div class="modalItem">
+        <div class="modalThumb" id="mistakeThumb">
+          <span class="fallback" id="mistakeFallback">IMG</span>
+        </div>
+        <div>
+          <p class="modalName" id="mistakeName">Item</p>
+          <span class="modalBadge" id="mistakeBadge">Correct: NEED</span>
+        </div>
+      </div>
+
+      <ul class="modalLines" id="mistakeLines"></ul>
+
+      <div class="modalFooter">
+        <button class="btn ghost" type="button" onclick="closeMistakePopup()">Try Again</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /*
+      Single-activity version: SORTING ONLY
+      - No browser popups
+      - All feedback is shown inside the page
+
+      Image rule:
+      - Put item images in: images/<id>.webp
+      - Example: images/water.webp, images/icecream.webp
+    */
+
+    const deck = [
+      // NEEDS
+      {id:'water', name:'Water', type:'need'},
+      {id:'food', name:'Food', type:'need'},
+      {id:'medicine', name:'Medicine', type:'need'},
+      {id:'schoolbag', name:'School Bag', type:'need'},
+      {id:'bus', name:'School Bus', type:'need'},
+      {id:'soap', name:'Soap', type:'need'},
+
+      {id:'home', name:'Home', type:'need'},
+      {id:'clothes', name:'Clothes', type:'need'},
+      {id:'shoes', name:'Shoes', type:'need'},
+      {id:'bed', name:'Bed', type:'need'},
+      {id:'toothpaste', name:'Toothpaste', type:'need'},
+      {id:'uniform', name:'School Uniform', type:'need'},
+      {id:'textbook', name:'Textbook', type:'need'},
+      {id:'pencil', name:'Pencil', type:'need'},
+      {id:'utensils', name:'Plate and Spoon', type:'need'},
+      {id:'firstaid', name:'First Aid Kit', type:'need'},
+      {id:'raincoat', name:'Raincoat', type:'need'},
+
+      // WANTS
+      {id:'icecream', name:'Ice Cream', type:'want'},
+      {id:'toy', name:'Toy Robot', type:'want'},
+      {id:'stickers', name:'Sticker Pack', type:'want'},
+      {id:'comic', name:'Comic Book', type:'want'},
+      {id:'videogame', name:'Video Game', type:'want'},
+      {id:'popcorn', name:'Popcorn', type:'want'},
+
+      {id:'chocolate', name:'Chocolate', type:'want'},
+      {id:'teddy', name:'Teddy Bear', type:'want'},
+      {id:'bicycle', name:'Bicycle', type:'want'},
+      {id:'headphones', name:'Headphones', type:'want'},
+      {id:'mobile', name:'Mobile Phone', type:'want'},
+      {id:'skateboard', name:'Skateboard', type:'want'},
+      {id:'artkit', name:'Art Kit', type:'want'},
+      {id:'pizza', name:'Pizza', type:'want'},
+      {id:'vacation', name:'Vacation', type:'want'},
+      {id:'karaoke', name:'Karaoke', type:'want'},
+      {id:'cupcake', name:'Cupcake', type:'want'},
+      {id:'softdrink', name:'Soft Drink', type:'want'},
+      {id:'puzzle', name:'Puzzle', type:'want'},
+      {id:'yoyo', name:'Yo-Yo', type:'want'},
+    ];
+
+    let state = {
+      pool: [],
+      placed: { need: [], want: [] }
+    };
+
+    function showHome(){
+      document.getElementById('homeScreen').classList.add('active');
+      document.getElementById('gameScreen').classList.remove('active');
+      hideMessage('gameMessage');
+    }
+
+    function startGame(){
+      document.getElementById('homeScreen').classList.remove('active');
+      document.getElementById('gameScreen').classList.add('active');
+      newRound();
+    }
+
+    function showTip(where){
+      if(where === 'home'){
+        setMessage('homeMessage', 'Tip: Needs are must-have things. Wants are for fun.', 'warn');
+      } else {
+        setMessage('gameMessage', 'Hint: Ask “Do I need this to stay safe, healthy, or learn?” If yes, it is a Need.', 'warn');
+      }
+    }
+
+    function newRound(){
+      // pick 8 random cards each round
+      state.pool = shuffle([...deck]).slice(0,8);
+      state.placed.need = [];
+      state.placed.want = [];
+      renderAll();
+      hideMessage('homeMessage');
+      hideMessage('gameMessage');
+      document.getElementById('buddyBubble').textContent = 'Drag cards. Needs keep us safe. Wants are fun extras.';
+    }
+
+    function resetBuckets(){
+      // move everything back to pool
+      const back = [...state.placed.need, ...state.placed.want];
+      const ids = new Set(state.pool.map(x=>x.id));
+
+      back.forEach(it=>{
+        if(!ids.has(it.id)) state.pool.push(it);
+      });
+      state.placed.need = [];
+      state.placed.want = [];
+      renderAll();
+      hideMessage('gameMessage');
+      document.getElementById('buddyBubble').textContent = 'Try again. Needs first. Wants later.';
+    }
+
+    function renderAll(){
+      renderPool();
+      renderBucket('need');
+      renderBucket('want');
+      updateCounts();
+    }
+
+    function renderPool(){
+      const poolRow = document.getElementById('poolRow');
+      poolRow.innerHTML = '';
+
+      // pool = those not placed
+      const placedIds = new Set([...state.placed.need, ...state.placed.want].map(x=>x.id));
+      const unplaced = state.pool.filter(x=>!placedIds.has(x.id));
+
+      unplaced.forEach(item=>{
+        poolRow.appendChild(makeCard(item, 'pool'));
+      });
+
+      document.getElementById('leftCount').textContent = String(unplaced.length);
+    }
+
+    function renderBucket(kind){
+      const row = document.getElementById(kind==='need' ? 'needRow' : 'wantRow');
+      row.innerHTML = '';
+      state.placed[kind].forEach(item=> row.appendChild(makeCard(item, kind)));
+    }
+
+    function imgPath(item){
+      return `images/${item.id}.webp`;
+    }
+
+    function initials(name){
+      return name
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0,2)
+        .map(w=>w[0].toUpperCase())
+        .join('');
+    }
+
+    function makeThumb(item){
+      const wrap = document.createElement('div');
+      wrap.className = 'thumb';
+
+      const img = document.createElement('img');
+      img.src = imgPath(item);
+      img.alt = item.name;
+      img.loading = 'lazy';
+
+      const fb = document.createElement('span');
+      fb.className = 'fallback';
+      fb.textContent = initials(item.name);
+
+      img.onerror = () => {
+        img.remove();
+        wrap.appendChild(fb);
+      };
+
+      wrap.appendChild(img);
+      return wrap;
+    }
+
+    function makeCard(item, location){
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.draggable = true;
+      div.ondragstart = (e)=> drag(e, item.id);
+
+      const label = (location==='pool') ? 'Drag me' : 'In box';
+
+      div.appendChild(makeThumb(item));
+
+      const name = document.createElement('p');
+      name.className = 'name';
+      name.textContent = item.name;
+      div.appendChild(name);
+
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = label;
+      div.appendChild(tag);
+
+      return div;
+    }
+
+    function updateCounts(){
+      document.getElementById('needCount').textContent = String(state.placed.need.length);
+      document.getElementById('wantCount').textContent = String(state.placed.want.length);
+    }
+
+    function allowDrop(ev){ ev.preventDefault(); }
+
+    function drag(ev, id){
+      ev.dataTransfer.setData('text/plain', id);
+    }
+
+    function dropToBucket(ev, bucket){
+      ev.preventDefault();
+      const id = ev.dataTransfer.getData('text/plain');
+
+      // find item from anywhere
+      const item = state.pool.find(x=>x.id===id) ||
+                   state.placed.need.find(x=>x.id===id) ||
+                   state.placed.want.find(x=>x.id===id);
+      if(!item) return;
+
+      // If dropped in the wrong box, show an explanation popup and DO NOT move the card.
+      if(item.type !== bucket){
+        showMistakePopup(item);
+        return;
+      }
+
+      // remove from both buckets first
+      state.placed.need = state.placed.need.filter(x=>x.id!==id);
+      state.placed.want = state.placed.want.filter(x=>x.id!==id);
+
+      // add to target
+      state.placed[bucket].push(item);
+
+      renderAll();
+      hideMessage('gameMessage');
+    }
+
+    function checkSorting(){
+      const placedIds = new Set([...state.placed.need, ...state.placed.want].map(x=>x.id));
+      const total = state.pool.filter(x=>!placedIds.has(x.id)).length + state.placed.need.length + state.placed.want.length;
+      const placed = state.placed.need.length + state.placed.want.length;
+
+      if(placed < total){
+        setMessage('gameMessage', 'Place all cards first, then press Check.', 'warn');
+        document.getElementById('buddyBubble').textContent = 'Almost. Every card needs to be sorted into a box.';
+        return;
+      }
+
+      let correct = 0;
+      state.placed.need.forEach(i=>{ if(i.type==='need') correct++; });
+      state.placed.want.forEach(i=>{ if(i.type==='want') correct++; });
+
+      if(correct === total){
+        setMessage('gameMessage', `Perfect. ${correct}/${total} correct. You know the difference between Needs and Wants.`, 'success');
+        document.getElementById('buddyBubble').textContent = 'Well done. Needs first, then wants.';
+      } else if(correct >= total - 1){
+        setMessage('gameMessage', `So close. ${correct}/${total} correct. Check 1 card again.`, 'warn');
+        document.getElementById('buddyBubble').textContent = 'So close. Think: must-have or just for fun?';
+      } else {
+        setMessage('gameMessage', `Keep practicing. ${correct}/${total} correct. Remember: safe, healthy, learn = Need.`, 'warn');
+        document.getElementById('buddyBubble').textContent = 'Let’s try again. Needs keep us safe.';
+      }
+    }
+
+    const explain = {
+      // NEEDS (5–7 lines each)
+      water: [
+        'Water keeps your body healthy every day.',
+        'You need it to drink and stay hydrated.',
+        'It helps you think and learn better.',
+        'Without water, you can get sick quickly.',
+        'That is why water is a NEED.'
+      ],
+      food: [
+        'Food gives you energy to play and learn.',
+        'It helps your body grow strong.',
+        'Healthy food keeps you from getting weak.',
+        'We need food every day to stay well.',
+        'That is why food is a NEED.'
+      ],
+      medicine: [
+        'Medicine helps when someone is sick.',
+        'It can stop pain and help you recover.',
+        'It keeps your body safe and healthy.',
+        'Some people need it regularly.',
+        'That is why medicine is a NEED.'
+      ],
+      schoolbag: [
+        'A school bag helps carry books safely.',
+        'It keeps your things together and organised.',
+        'It protects notebooks from getting damaged.',
+        'It supports learning every day at school.',
+        'That is why a school bag is a NEED.'
+      ],
+      bus: [
+        'Travel helps you reach school safely.',
+        'It makes sure you can attend classes on time.',
+        'It supports learning and daily routine.',
+        'Safe travel is important for children.',
+        'That is why school travel is a NEED.'
+      ],
+      soap: [
+        'Soap helps wash away germs.',
+        'It keeps hands and body clean.',
+        'Cleanliness prevents many illnesses.',
+        'We use soap regularly for hygiene.',
+        'That is why soap is a NEED.'
+      ],
+      home: [
+        'A home gives you shelter and safety.',
+        'It protects you from heat, cold, and rain.',
+        'It is a safe place to sleep and rest.',
+        'Everyone needs a place to live.',
+        'That is why home is a NEED.'
+      ],
+      clothes: [
+        'Clothes protect your body.',
+        'They keep you warm or cool as needed.',
+        'They help you stay clean and comfortable.',
+        'You need clothes for daily life.',
+        'That is why clothes are a NEED.'
+      ],
+      shoes: [
+        'Shoes protect your feet from injuries.',
+        'They help you walk safely on rough ground.',
+        'They keep feet clean from mud and germs.',
+        'Many places require footwear for safety.',
+        'That is why shoes are a NEED.'
+      ],
+      bed: [
+        'A bed helps you sleep comfortably.',
+        'Good sleep keeps you healthy and active.',
+        'Rest helps your brain learn and remember.',
+        'A safe place to sleep is important.',
+        'That is why a bed is a NEED.'
+      ],
+      toothpaste: [
+        'Toothpaste helps clean your teeth.',
+        'It prevents cavities and tooth pain.',
+        'Healthy teeth help you eat properly.',
+        'Brushing daily keeps germs away.',
+        'That is why toothpaste is a NEED.'
+      ],
+      uniform: [
+        'A uniform is required in many schools.',
+        'It helps students look neat and ready to learn.',
+        'It shows everyone belongs to the school.',
+        'It supports school rules and daily learning.',
+        'That is why a school uniform is a NEED.'
+      ],
+      textbook: [
+        'A textbook helps you study and practise.',
+        'It gives lessons and examples to learn from.',
+        'It supports schoolwork and homework.',
+        'Learning tools are important for education.',
+        'That is why a textbook is a NEED.'
+      ],
+      pencil: [
+        'A pencil helps you write and learn.',
+        'You use it for classwork and homework.',
+        'It helps you practise and improve.',
+        'Writing tools support learning every day.',
+        'That is why a pencil is a NEED.'
+      ],
+      utensils: [
+        'A plate and spoon help you eat properly.',
+        'They keep food clean and hygienic.',
+        'They prevent spills and wastage.',
+        'Eating safely is important every day.',
+        'That is why plate and spoon are a NEED.'
+      ],
+      firstaid: [
+        'A first aid kit helps in small injuries.',
+        'It can clean cuts and stop bleeding.',
+        'It keeps you safe before a doctor visit.',
+        'It is important for quick help at home or school.',
+        'That is why a first aid kit is a NEED.'
+      ],
+      raincoat: [
+        'A raincoat keeps you dry in the rain.',
+        'Staying dry helps prevent fever and cold.',
+        'It protects you while going to school or outside.',
+        'It is useful for safety and health in rainy weather.',
+        'That is why a raincoat is a NEED.'
+      ],
+
+      // WANTS (5–7 lines each)
+      icecream: [
+        'Ice cream is a tasty treat.',
+        'It is fun to eat but not necessary.',
+        'You can be healthy without it.',
+        'It is an extra, not a must-have.',
+        'That is why ice cream is a WANT.'
+      ],
+      toy: [
+        'A toy is fun to play with.',
+        'It is not required to stay healthy or safe.',
+        'You can play many games without this toy.',
+        'It is an extra item for enjoyment.',
+        'That is why it is a WANT.'
+      ],
+      stickers: [
+        'Stickers are fun decorations.',
+        'They are not needed for health or safety.',
+        'You can learn and grow without stickers.',
+        'They are a fun extra for enjoyment.',
+        'That is why stickers are a WANT.'
+      ],
+      comic: [
+        'Comic books are enjoyable to read.',
+        'They are for entertainment.',
+        'You can still learn using school books.',
+        'Comics are extras, not must-haves.',
+        'That is why a comic book is a WANT.'
+      ],
+      videogame: [
+        'Video games are fun for playtime.',
+        'They are not needed for health or safety.',
+        'Too much gaming can reduce study time.',
+        'It is an extra choice for entertainment.',
+        'That is why a video game is a WANT.'
+      ],
+      popcorn: [
+        'Popcorn is a snack for fun.',
+        'It is not needed every day.',
+        'Healthy meals are more important than snacks.',
+        'Snacks are extras, not must-haves.',
+        'That is why popcorn is a WANT.'
+      ],
+      chocolate: [
+        'Chocolate is a sweet treat.',
+        'It tastes good but is not necessary.',
+        'You can be healthy without chocolate.',
+        'It is an extra snack for enjoyment.',
+        'That is why chocolate is a WANT.'
+      ],
+      teddy: [
+        'A teddy bear is a comfort toy.',
+        'It is nice to have, but not required.',
+        'You can sleep and live without it.',
+        'It is an extra for fun and comfort.',
+        'That is why a teddy bear is a WANT.'
+      ],
+      bicycle: [
+        'A bicycle is fun for riding and play.',
+        'You can travel without owning a bicycle.',
+        'It is not required for health or safety.',
+        'It is an extra item for enjoyment.',
+        'That is why a bicycle is a WANT.'
+      ],
+      headphones: [
+        'Headphones are used for music or videos.',
+        'They are not needed for daily life.',
+        'You can learn without headphones.',
+        'They are an extra for entertainment.',
+        'That is why headphones are a WANT.'
+      ],
+      mobile: [
+        'A mobile phone is useful, but not always necessary for children.',
+        'You can learn and play without having your own phone.',
+        'Many needs come first like food, water, and school items.',
+        'A phone is often a comfort or convenience item.',
+        'That is why a mobile phone is a WANT.'
+      ],
+      skateboard: [
+        'A skateboard is for fun and sport.',
+        'It is not needed to stay healthy or safe.',
+        'You can exercise in many other ways.',
+        'It is an extra item for play.',
+        'That is why a skateboard is a WANT.'
+      ],
+      artkit: [
+        'An art kit is fun for creativity.',
+        'It is nice to have but not a basic need.',
+        'You can draw with simple tools too.',
+        'It is an extra item for enjoyment.',
+        'That is why an art kit is a WANT.'
+      ],
+      pizza: [
+        'Pizza is a tasty food, but it is not required.',
+        'Healthy meals can be made at home too.',
+        'Pizza is usually an occasional treat.',
+        'It is a fun extra, not a must-have.',
+        'That is why pizza is a WANT.'
+      ],
+      vacation: [
+        'A vacation is fun and relaxing.',
+        'But you can live safely without traveling.',
+        'Needs like food and home come first.',
+        'Vacations are extra experiences.',
+        'That is why a vacation is a WANT.'
+      ],
+      karaoke: [
+        'Karaoke is for singing and fun.',
+        'It is not needed for health or safety.',
+        'You can enjoy music without karaoke.',
+        'It is an extra activity for enjoyment.',
+        'That is why karaoke is a WANT.'
+      ],
+      cupcake: [
+        'A cupcake is a sweet treat.',
+        'It is not needed to stay healthy.',
+        'Too many sweets are not good for teeth.',
+        'It is an extra snack for fun.',
+        'That is why a cupcake is a WANT.'
+      ],
+      softdrink: [
+        'A soft drink is a sugary drink.',
+        'It is not needed for your body.',
+        'Water is a healthier choice.',
+        'Soft drinks are occasional treats.',
+        'That is why a soft drink is a WANT.'
+      ],
+      puzzle: [
+        'A puzzle is fun and helps thinking skills.',
+        'But it is not required for daily life.',
+        'You can learn using schoolwork and games too.',
+        'It is an extra activity for fun.',
+        'That is why a puzzle is a WANT.'
+      ],
+      yoyo: [
+        'A yo-yo is a toy for fun.',
+        'It is not needed for health or safety.',
+        'You can play without owning a yo-yo.',
+        'It is an extra item for enjoyment.',
+        'That is why a yo-yo is a WANT.'
+      ],
+    };
+
+    function showMistakePopup(item){
+      const overlay = document.getElementById('mistakeOverlay');
+      const title = document.getElementById('mistakeTitle');
+      const name = document.getElementById('mistakeName');
+      const badge = document.getElementById('mistakeBadge');
+      const lines = document.getElementById('mistakeLines');
+      const thumb = document.getElementById('mistakeThumb');
+
+      const correctLabel = (item.type === 'need') ? 'NEED' : 'WANT';
+      title.textContent = 'Oops! This card belongs in the other box.';
+      name.textContent = item.name;
+      badge.textContent = `Correct: ${correctLabel}`;
+
+      // Set modal image
+      thumb.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = imgPath(item);
+      img.alt = item.name;
+      img.onerror = () => {
+        thumb.innerHTML = '';
+        const fb = document.createElement('span');
+        fb.className = 'fallback';
+        fb.textContent = initials(item.name);
+        thumb.appendChild(fb);
+      };
+      thumb.appendChild(img);
+
+      const textLines = explain[item.id] || defaultExplain(item);
+      lines.innerHTML = '';
+      textLines.slice(0,7).forEach(t=>{
+        const li = document.createElement('li');
+        li.textContent = t;
+        lines.appendChild(li);
+      });
+
+      overlay.classList.add('show');
+    }
+
+    function closeMistakePopup(){
+      document.getElementById('mistakeOverlay').classList.remove('show');
+    }
+
+    function defaultExplain(item){
+      if(item.type === 'need'){
+        return [
+          'This helps you stay safe, healthy, or learn.',
+          'It is important for everyday life.',
+          'People usually need it regularly.',
+          'It comes before spending on fun extras.',
+          'That is why it is a NEED.'
+        ];
+      }
+      return [
+        'This is nice to have, but not necessary.',
+        'You can live safely without it.',
+        'It is mainly for fun or comfort.',
+        'Needs come first in a budget.',
+        'That is why it is a WANT.'
+      ];
+    }
+
+    // Close popup when clicking outside the modal
+    document.addEventListener('click', (e)=>{
+      const overlay = document.getElementById('mistakeOverlay');
+      if(!overlay.classList.contains('show')) return;
+      if(e.target === overlay) closeMistakePopup();
+    });
+
+    // Close popup with Escape key
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'Escape') closeMistakePopup();
+    });
+
+    function setMessage(id, html, kind){
+      const el = document.getElementById(id);
+      el.style.display = 'block';
+      el.classList.remove('success','warn');
+      if(kind) el.classList.add(kind);
+      el.innerHTML = `<strong>Message:</strong> ${html}`;
+    }
+
+    function hideMessage(id){
+      const el = document.getElementById(id);
+      el.style.display = 'none';
+      el.classList.remove('success','warn');
+      el.innerHTML = '';
+    }
+
+    function shuffle(arr){
+      for(let i=arr.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    // start ready on home
+    showHome();
+  </script>
+</body>
+</html>

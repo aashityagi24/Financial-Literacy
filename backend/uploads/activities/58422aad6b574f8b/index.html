@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shopping at the Supermarket</title>
+  <style>
+    :root{
+      --ink:#0f2a1d;
+      --muted:#4b6b5a;
+
+      /* Supermarket palette */
+      --bg1:#f0fdf4;   /* light green */
+      --bg2:#ecfeff;   /* light aqua */
+      --bg3:#f8fafc;   /* soft grey */
+
+      --card: rgba(255,255,255,.96);
+      --line: rgba(0,0,0,.12);
+
+      --good:#15803d;  /* green success */
+      --bad:#b91c1c;   /* red error */
+
+      --accent:#16a34a;   /* primary green */
+      --accent2:#22c55e;  /* fresh green */
+      --accent3:#0ea5a5;  /* teal */
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      padding:22px;
+      color:var(--ink);
+      display:flex;
+      justify-content:center;
+      background:
+        linear-gradient(180deg, rgba(34,197,94,.18), transparent 35%),
+        linear-gradient(180deg, rgba(14,165,165,.15), transparent 55%),
+        linear-gradient(135deg, var(--bg1), var(--bg2) 60%, var(--bg3));
+    }
+
+    .app{max-width:980px; width:100%; display:grid; gap:16px}
+
+    h1{text-align:center; margin:0; font-weight:1000}
+    .sub{text-align:center; color:var(--muted); max-width:860px; margin:8px auto}
+
+    .card{
+      background:var(--card);
+      border-radius:20px;
+      padding:18px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.12);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .pill{
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:7px 12px;
+      background:#fff;
+      font-weight:1000;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .levelSel{
+      appearance:none;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:7px 12px;
+      font-weight:1000;
+      background:#fff;
+      cursor:pointer;
+    }
+
+    .status{
+      text-align:center;
+      font-weight:1000;
+      margin:10px 0 8px;
+      min-height:26px;
+    }
+    .status.good{color:var(--good)}
+    .status.bad{color:var(--bad)}
+
+    .bankHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin:10px 0 6px;
+      flex-wrap:wrap;
+    }
+
+    .bank{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      padding:14px;
+      border:2px dashed rgba(22,163,74,.35);
+      border-radius:16px;
+      background: rgba(240,253,244,.7);
+    }
+    }
+
+    .bankHint{color:var(--muted); font-size:13px; margin:6px 0 0}
+
+    .focusPay{
+      margin:14px 0 6px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .payCard{
+      border:2px solid rgba(22,163,74,.35);
+      background: linear-gradient(135deg, rgba(34,197,94,.15), rgba(14,165,165,.15));
+      border-radius:18px;
+      padding:12px 16px;
+      font-weight:1000;
+      text-align:center;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      flex-wrap:wrap;
+      box-shadow: 0 10px 22px rgba(0,0,0,.08);
+    }
+    }
+
+    .payBig{font-size:18px}
+
+    .miniRow{
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin:8px 0 6px;
+    }
+
+    .tray{
+      min-height:120px;
+      border:3px dashed rgba(14,165,165,.45);
+      border-radius:18px;
+      padding:14px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+      background: rgba(236,254,255,.75);
+    }
+    }
+
+    .piece{
+      position:relative;
+      cursor:grab;
+      background:transparent;
+      border:none;
+      box-shadow:none;
+      overflow:hidden;
+      user-select:none;
+    }
+
+    .coin{width:86px; height:86px; border-radius:50%}
+    .note{width:150px; height:86px}
+
+    .piece img{width:100%; height:100%; display:block}
+    .coin img{object-fit:cover}
+    .note img{object-fit:contain}
+
+    .imgFallback{display:flex; align-items:center; justify-content:center; width:100%; height:100%; font-weight:900}
+
+    .controls{text-align:center; margin-top:12px}
+    .btn{padding:10px 16px; border-radius:14px; border:0; font-weight:900; cursor:pointer}
+    .btn.primary{
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#fff;
+    }
+    .btn.secondary{background:#fff; border:1px solid var(--line)}
+    .btn[disabled]{opacity:.55; cursor:not-allowed}
+
+    /* Results modal */
+    .modalWrap{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background: rgba(0,0,0,.35);
+      z-index:50;
+    }
+    .modal{
+      width:min(560px, 95vw);
+      background:#f0fdf4;
+      border-radius:18px;
+      padding:16px;
+      box-shadow: 0 25px 70px rgba(0,0,0,.25);
+      border:1px solid rgba(22,163,74,.25);
+      text-align:center;
+    }
+    .modal h2{margin:6px 0 6px}
+    .modal p{margin:6px 0; color:var(--muted)}
+    .modalGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin:12px 0 14px;
+    }
+    .stat{
+      border:1px solid rgba(0,0,0,.10);
+      border-radius:16px;
+      padding:10px;
+      background: linear-gradient(135deg, rgba(255,61,141,.06), rgba(0,184,169,.06));
+      font-weight:1000;
+    }
+
+    @media (max-width: 520px){
+      .coin{width:74px; height:74px}
+      .note{width:132px; height:78px}
+      .modalGrid{grid-template-columns: 1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="card">
+    <h1>Shopping at the Supermarket</h1>
+    <p class="sub">You are shopping at a supermarket. Pick items from your shopping list and drag coins and notes from your wallet to the tray to pay the exact bill amount.</p>
+
+    <div class="bankHead">
+      <div class="pill">My Wallet</div>
+      <div class="pill" style="opacity:.9">
+        Level
+        <select class="levelSel" id="levelSel" aria-label="Choose level">
+          <option value="A">A (₹1, ₹2, ₹5)</option>
+          <option value="B">B (₹1, ₹2, ₹5, ₹10, ₹20)</option>
+          <option value="C">C (₹1, ₹2, ₹5, ₹10, ₹20, ₹50, ₹100, ₹200, ₹500)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="bank" id="bank"></div>
+    <div class="bankHint">To remove extra money from the tray, click a coin/note or drag it back into your wallet.</div>
+
+    <div class="focusPay" aria-live="polite">
+      <div class="payCard">
+        <span class="payBig">Pay for <b><span id="itemName">Milk Packet</span></b> – ₹<b><span id="targetAmt">10</span></b></span>
+        <span class="pill" id="tokenReq">Use exactly 0 tokens</span>
+      </div>
+    </div>
+
+    <div class="miniRow">
+      <span class="pill" aria-label="Collected amount">
+        Collected: ₹<b><span id="collectedAmt">0</span></b>
+        <span style="opacity:.75">|</span>
+        Pieces: <b><span id="pieceCount">0</span></b>
+      </span>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="tray" id="tray"></div>
+
+    <div class="controls">
+      <button class="btn secondary" id="clearBtn" type="button">Clear</button>
+      <button class="btn secondary" id="submitBtn" type="button">Submit</button>
+      <button class="btn primary" id="nextBtn" type="button" disabled>Next</button>
+    </div>
+  </div>
+</div>
+
+<div class="modalWrap" id="modalWrap" role="dialog" aria-modal="true" aria-label="Results">
+  <div class="modal">
+    <div style="font-size:36px">🎪</div>
+    <h2>Set Completed!</h2>
+    <p>Here is your supermarket payment result.</p>
+
+    <div class="modalGrid">
+      <div class="stat">Questions: <b><span id="statQuestions">5</span></b></div>
+      <div class="stat">Correct payments: <b><span id="statCorrect">0</span></b></div>
+    </div>
+
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap">
+      <button class="btn primary" id="playAgainBtn" type="button">Play Another Set</button>
+      <button class="btn secondary" id="closeModalBtn" type="button">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ----- LEVELS -----
+  var LEVELS = {
+    A: { denoms: [1, 2, 5], range: [3, 25] },
+    B: { denoms: [1, 2, 5, 10, 20], range: [10, 120] },
+    C: { denoms: [1, 2, 5, 10, 20, 50, 100, 200, 500], range: [50, 800] }
+  };
+
+  // Items / services / activities (40, to avoid repetition)
+  var ITEMS = [
+    'Milk Packet','Bread Loaf','Eggs (6-pack)','Rice (1 kg)','Wheat Flour (1 kg)','Sugar (1 kg)','Salt Packet','Cooking Oil','Butter','Cheese Slice Pack',
+    'Yogurt Cup','Biscuits Pack','Chocolate Bar','Breakfast Cereal','Fruit Juice','Soft Drink Bottle','Water Bottle','Apples (1 kg)','Bananas (1 dozen)','Oranges (1 kg)',
+    'Tomatoes (1 kg)','Potatoes (2 kg)','Onions (1 kg)','Carrots (1 kg)','Green Peas','Cooking Spices','Instant Noodles','Pasta Pack','Tomato Ketchup','Jam Bottle',
+    'Peanut Butter','Honey Bottle','Soap Bar','Shampoo Sachet','Toothpaste','Detergent Powder','Dishwash Liquid','Paper Towels','Tissue Box','Garbage Bags'
+  ];
+
+  // ----- ELEMENTS -----
+  var bank = document.getElementById('bank');
+  var tray = document.getElementById('tray');
+  var targetEl = document.getElementById('targetAmt');
+  var itemEl = document.getElementById('itemName');
+  var tokenReqEl = document.getElementById('tokenReq');
+
+  var levelSel = document.getElementById('levelSel');
+  var submitBtn = document.getElementById('submitBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var statusEl = document.getElementById('status');
+  var collectedEl = document.getElementById('collectedAmt');
+  var pieceCountEl = document.getElementById('pieceCount');
+
+  // Modal
+  var modalWrap = document.getElementById('modalWrap');
+  var playAgainBtn = document.getElementById('playAgainBtn');
+  var closeModalBtn = document.getElementById('closeModalBtn');
+  var statQuestions = document.getElementById('statQuestions');
+  var statCorrect = document.getElementById('statCorrect');
+
+  // ----- GAME STATE -----
+  var SET_SIZE = 5;
+  var currentLevel = 'A';
+
+  var trayPieces = []; // [{id, val}]
+  var target = 0;
+  var tokenTarget = 0; // exact number of tokens required (minimum tokens)
+  var pieceId = 0;
+
+  var qIndex = 1; // backend only
+  var lockedCorrect = false;
+  var correctPayments = 0;
+
+  // ----- HELPERS -----
+  function rand(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function isNote(v){ return v >= 50; }
+
+  function setStatus(text, kind){
+    statusEl.textContent = text || '';
+    statusEl.className = kind ? ('status ' + kind) : 'status';
+  }
+
+  function generateTarget(){
+    var r = LEVELS[currentLevel].range;
+    return rand(r[0], r[1]);
+  }
+
+  // Minimum token count using greedy. For Indian currency denominations used here, greedy gives the minimum.
+  function computeMinTokens(amount, denoms){
+    var count = 0;
+    var remaining = amount;
+    var sorted = denoms.slice().sort(function(a,b){ return b - a; });
+
+    for (var i=0;i<sorted.length;i++){
+      var d = sorted[i];
+      if (d <= 0) continue;
+      var take = Math.floor(remaining / d);
+      if (take > 0){
+        count += take;
+        remaining -= take * d;
+      }
+    }
+
+    return remaining === 0 ? count : null;
+  }
+
+  // ----- Currency image mapping (your filenames) -----
+  // Place these images in: ./images/
+  var CURRENCY_IMAGE_MAP = {
+    1: 'images/coin-1.png',
+    2: 'images/coin-2.png',
+    5: 'images/coin-5.png',
+    10: 'images/coin-10.png',
+    20: 'images/coin-20.png',
+    50: 'images/note-50.png',
+    100: 'images/note-100.png',
+    200: 'images/note-200.png',
+    500: 'images/note-500.png'
+  };
+
+  function buildMoneyEl(v, source, id){
+    var d = document.createElement('div');
+    d.className = 'piece ' + (isNote(v) ? 'note' : 'coin');
+
+    var img = document.createElement('img');
+    img.alt = '₹' + v;
+
+    img.onerror = function(){
+      // fallback to text if missing
+      if (img && img.parentNode) img.parentNode.removeChild(img);
+      var fb = document.createElement('div');
+      fb.className = 'imgFallback';
+      fb.textContent = '₹' + v;
+      d.appendChild(fb);
+    };
+
+    img.src = CURRENCY_IMAGE_MAP[v] || '';
+    d.appendChild(img);
+
+    d.draggable = !lockedCorrect;
+    d.addEventListener('dragstart', function(e){
+      e.dataTransfer.setData('source', source);
+      e.dataTransfer.setData('value', String(v));
+      if (id) e.dataTransfer.setData('id', String(id));
+    });
+
+    return d;
+  }
+
+  // ----- RENDER -----
+  function renderBank(){
+    bank.innerHTML = '';
+    var denoms = LEVELS[currentLevel].denoms;
+    for (var i=0;i<denoms.length;i++){
+      bank.appendChild(buildMoneyEl(denoms[i], 'bank', null));
+    }
+  }
+
+  function trayTotal(){
+    var s = 0;
+    for (var i=0;i<trayPieces.length;i++) s += trayPieces[i].val;
+    return s;
+  }
+
+  function updateCounters(){
+    collectedEl.textContent = String(trayTotal());
+    pieceCountEl.textContent = String(trayPieces.length);
+  }
+
+  function removeTrayPieceById(id){
+    for (var i=0;i<trayPieces.length;i++){
+      if (String(trayPieces[i].id) === String(id)){
+        trayPieces.splice(i, 1);
+        break;
+      }
+    }
+    renderTray();
+  }
+
+  function renderTray(){
+    tray.innerHTML = '';
+
+    if (trayPieces.length === 0){
+      var hint = document.createElement('div');
+      hint.className = 'pill';
+      hint.style.borderStyle = 'dashed';
+      hint.style.background = 'rgba(255,255,255,.7)';
+      hint.style.fontWeight = '900';
+      hint.textContent = 'Drag money here to pay';
+      tray.appendChild(hint);
+      updateCounters();
+      return;
+    }
+
+    for (var i=0;i<trayPieces.length;i++){
+      (function(piece){
+        var el = buildMoneyEl(piece.val, 'tray', piece.id);
+        el.addEventListener('click', function(){
+          if (lockedCorrect) return;
+          removeTrayPieceById(piece.id);
+          setStatus('', '');
+        });
+        tray.appendChild(el);
+      })(trayPieces[i]);
+    }
+
+    updateCounters();
+  }
+
+  // ----- FLOW -----
+  function clearTray(){
+    trayPieces = [];
+    lockedCorrect = false;
+    submitBtn.disabled = false;
+    nextBtn.disabled = true;
+    setStatus('', '');
+    renderTray();
+  }
+
+  function pickItem(){
+    return ITEMS[rand(0, ITEMS.length - 1)];
+  }
+
+  function loadQuestion(){
+    trayPieces = [];
+    pieceId = 0;
+    lockedCorrect = false;
+    submitBtn.disabled = false;
+    nextBtn.disabled = true;
+
+    var item = pickItem();
+    var minTokens = null;
+
+    // Generate a solvable target and compute required (minimum) tokens
+    while (minTokens === null){
+      target = generateTarget();
+      minTokens = computeMinTokens(target, LEVELS[currentLevel].denoms);
+    }
+    tokenTarget = minTokens;
+
+    itemEl.textContent = item;
+    targetEl.textContent = String(target);
+    tokenReqEl.textContent = 'Use exactly ' + tokenTarget + ' tokens';
+
+    setStatus('', '');
+    renderBank();
+    renderTray();
+  }
+
+  function showResults(){
+    statQuestions.textContent = String(SET_SIZE);
+    statCorrect.textContent = String(correctPayments);
+    modalWrap.style.display = 'flex';
+  }
+
+  function hideResults(){
+    modalWrap.style.display = 'none';
+  }
+
+  function resetSet(){
+    qIndex = 1;
+    correctPayments = 0;
+    loadQuestion();
+  }
+
+  function check(){
+    if (lockedCorrect) return;
+
+    var sum = trayTotal();
+    var pieces = trayPieces.length;
+
+    if (sum === target && pieces === tokenTarget){
+      lockedCorrect = true;
+      submitBtn.disabled = true;
+      nextBtn.disabled = false;
+      setStatus('Correct! Exact amount and exact tokens used.', 'good');
+      correctPayments += 1;
+      renderTray();
+      return;
+    }
+
+    // Feedback
+    if (sum !== target && pieces !== tokenTarget){
+      setStatus('Both amount and tokens are incorrect. Try again.', 'bad');
+    } else if (sum !== target){
+      if (sum < target){
+        setStatus('Not enough. You need to pay more money.', 'bad');
+      } else {
+        setStatus('Too much. Take some money back.', 'bad');
+      }
+    } else {
+      setStatus('Amount is correct, but use exactly ' + tokenTarget + ' tokens.', 'bad');
+    }
+  }
+
+  function nextQuestion(){
+    if (!lockedCorrect) return;
+
+    if (qIndex >= SET_SIZE){
+      showResults();
+      return;
+    }
+
+    qIndex += 1;
+    loadQuestion();
+  }
+
+  // ----- DND -----
+  tray.addEventListener('dragover', function(e){ e.preventDefault(); });
+  tray.addEventListener('drop', function(e){
+    e.preventDefault();
+    if (lockedCorrect) return;
+
+    var source = e.dataTransfer.getData('source');
+    if (source !== 'bank') return;
+
+    var v = Number(e.dataTransfer.getData('value'));
+    if (!isFinite(v)) return;
+
+    pieceId += 1;
+    trayPieces.push({ id: pieceId, val: v });
+    setStatus('', '');
+    renderTray();
+  });
+
+  bank.addEventListener('dragover', function(e){ e.preventDefault(); });
+  bank.addEventListener('drop', function(e){
+    e.preventDefault();
+    if (lockedCorrect) return;
+
+    var source = e.dataTransfer.getData('source');
+    if (source !== 'tray') return;
+
+    var id = e.dataTransfer.getData('id');
+    if (!id) return;
+
+    removeTrayPieceById(id);
+    setStatus('', '');
+  });
+
+  // ----- EVENTS -----
+  levelSel.addEventListener('change', function(e){
+    currentLevel = e.target.value;
+    // Keep progress; just refresh current question with new level
+    loadQuestion();
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', clearTray);
+  submitBtn.addEventListener('click', check);
+  nextBtn.addEventListener('click', nextQuestion);
+
+  playAgainBtn.addEventListener('click', function(){
+    hideResults();
+    resetSet();
+  });
+  closeModalBtn.addEventListener('click', hideResults);
+  modalWrap.addEventListener('click', function(e){
+    if (e.target === modalWrap) hideResults();
+  });
+
+  // ----- TESTS -----
+  function assert(cond, msg){
+    if (!cond) throw new Error('Test failed: ' + msg);
+  }
+
+  (function runTests(){
+    // Levels valid
+    var ks = ['A','B','C'];
+    for (var i=0;i<ks.length;i++){
+      var k = ks[i];
+      assert(LEVELS[k].denoms.indexOf(1) !== -1, 'Level ' + k + ' includes ₹1');
+      var r = LEVELS[k].range;
+      assert(r[0] < r[1], 'Level ' + k + ' range valid');
+    }
+
+    // Items count
+    assert(ITEMS.length >= 40, 'Has 40+ supermarket items');
+
+    // computeMinTokens
+    assert(computeMinTokens(10, [1,2,5]) === 2, '10 with [1,2,5] uses 2 tokens (5+5)');
+    assert(computeMinTokens(23, [1,2,5,10,20]) === 3, '23 with [1,2,5,10,20] uses 3 tokens (20+2+1)');
+
+    // Totals
+    trayPieces = [{id:1,val:2},{id:2,val:5}];
+    assert(trayTotal() === 7, 'trayTotal sums correctly');
+    trayPieces = [];
+
+    // Set size
+    assert(SET_SIZE === 5, 'Set size is 5');
+
+    // Results elements exist
+    assert(!!document.getElementById('statQuestions'), 'statQuestions exists');
+    assert(!!document.getElementById('statCorrect'), 'statCorrect exists');
+
+    // Currency map
+    assert(CURRENCY_IMAGE_MAP[1] && CURRENCY_IMAGE_MAP[500], 'Currency map includes 1 and 500');
+
+    console.log('✅ Supermarket pay activity tests passed');
+  })();
+
+  // ----- INIT -----
+  levelSel.value = 'A';
+  currentLevel = 'A';
+  resetSet();
+})();
+</script>
+</body>
+</html>
