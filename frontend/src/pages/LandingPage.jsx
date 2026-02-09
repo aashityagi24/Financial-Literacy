@@ -70,7 +70,7 @@ export default function LandingPage() {
     { icon: TrendingUp, title: "Investment Zone", description: "Grow your money! Gardening simulator for K-2, Stock market simulator for 3-5 graders", color: "#06D6A0" },
     { icon: Gift, title: "Virtual Store", description: "Spend your money on your needs and wants and enhance your collection!", color: "#EE6C4D" },
     { icon: Trophy, title: "Quests & Achievements", description: "Complete fun challenges and chores to earn money and badges", color: "#3D5A80" },
-    { icon: HandCoins, title: "Lending & Borrowing", description: "For Grade 4-5: Learn loans, interest, and credit scores by borrowing from parents & classmates", color: "#F59E0B" },
+    { icon: HandCoins, title: "Lending & Borrowing", description: "Learn about lending, interest, and credit scores by borrowing from parents & classmates", color: "#F59E0B" },
   ];
   
   const grades = ["Kindergarten", "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"];
@@ -81,52 +81,51 @@ export default function LandingPage() {
       skills: [
         "Identify and count coins (₹1, ₹2, ₹5, ₹10)",
         "Understand needs vs. wants through fun stories",
-        "Money Garden: Plant seeds and watch them grow!",
         "Learn saving through piggy bank activities",
-        "Simple earning through fun classroom tasks"
+        "Simple earning through fun tasks and activities"
       ],
       color: "#FFD23F"
     },
     "1st Grade": {
-      title: "Earning & Saving Foundations",
+      title: "Earning & Saving",
       skills: [
-        "Count money up to ₹100",
-        "Complete simple chores to earn coins",
-        "Set saving goals for small rewards",
-        "Money Garden: Grow vegetables and fruits",
+        "Recognising and using coins & notes up to ₹500",
+        "Learn how money is earned and used",
+        "Setting saving goals and working towards them",
+        "Understanding the difference between goods & services",
         "Introduction to sharing and giving"
       ],
       color: "#06D6A0"
     },
     "2nd Grade": {
-      title: "Smart Spending Decisions",
+      title: "Sharing & Investing",
       skills: [
-        "Compare prices and find best deals",
-        "Budget for small purchases",
-        "Money Garden: Harvest crops and sell at market",
-        "Understand simple interest on savings",
+        "Learn the history and evolution of money",
+        "Budgeting basics in play for small and big purchases",
+        "Harvest vegetables and sell them at the market for profit",
+        "Introduction to borrowing and lending",
         "Create wish lists and prioritize wants"
       ],
       color: "#EE6C4D"
     },
     "3rd Grade": {
-      title: "Introduction to Investing",
+      title: "Employement & Consumption",
       skills: [
-        "Understand how businesses make money",
-        "Stock Market Basics: Buy your first stocks",
-        "Learn about risk and reward",
-        "Track investments over time",
-        "Introduction to compound growth"
+        "Understand about different forms of employment",
+        "Introduction to the Banking system of India",
+        "Learn about risks, rewards and patience",
+        "Introduction to Consumer Rights & Responsibilities",
+        "Stock Market Basics: Buy your first stocks"
       ],
       color: "#3D5A80"
     },
     "4th Grade": {
-      title: "Portfolio Building",
+      title: "Banking & Investing",
       skills: [
-        "Diversify investments across industries",
-        "Read market news and make predictions",
-        "Understand dividends and earnings",
-        "Set long-term financial goals",
+        "Introduction to money in the digital age",
+        "Basics on bank accounts & types of loans",
+        "Read about different types of investments",
+        "Understand how deals, sales and discounts work",
         "Learn about entrepreneurship basics"
       ],
       color: "#9B5DE5"
@@ -134,7 +133,7 @@ export default function LandingPage() {
     "5th Grade": {
       title: "Advanced Financial Planning",
       skills: [
-        "Create comprehensive budgets",
+        "Learn about currencies and their conversions",
         "Analyze stock performance and trends",
         "Understand economic concepts (inflation, supply/demand)",
         "Plan for bigger goals (college savings simulation)",
