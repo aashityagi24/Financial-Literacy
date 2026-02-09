@@ -9611,8 +9611,16 @@ async def startup_scheduler():
         replace_existing=True
     )
     
+    # Check loan due dates and send reminders at 8:00 AM IST (02:30 UTC)
+    scheduler.add_job(
+        check_loan_due_dates,
+        CronTrigger(hour=2, minute=30),
+        id="check_loan_due_dates",
+        replace_existing=True
+    )
+    
     scheduler.start()
-    logger.info("Schedulers started: stock fluctuations (7:15 AM, 12:00 PM, 4:30 PM IST), plant update (6 AM UTC), quest reminders (7 PM UTC), chore reset (00:30 UTC), allowances (00:30 UTC)")
+    logger.info("Schedulers started: stock fluctuations (7:15 AM, 12:00 PM, 4:30 PM IST), plant update (6 AM UTC), quest reminders (7 PM UTC), chore reset (00:30 UTC), allowances (00:30 UTC), loan checks (8 AM IST)")
     
     # Run opening fluctuation on startup if market just opened
     current_ist_hour = get_ist_hour()
