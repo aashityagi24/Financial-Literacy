@@ -823,23 +823,89 @@ async def get_child_loans_for_parent(child_id: str, request: Request):
 
 # Check and mark overdue loans as bad debt (to be called by scheduler)
 async def check_overdue_loans():
-    """Mark overdue loans as bad debt and notify parents"""
+    """Mark overdue loans as bad debt, send reminders, and notify parents"""
     db = get_db()
     
     now = datetime.now(timezone.utc)
+    today = now.strftime("%Y-%m-%d")
     
-    # Find active loans past due date
-    overdue_loans = await db.loans.find({
-        "status": "active",
-        "return_date": {"$lt": now.isoformat()}
+    # Find all active loans
+    active_loans = await db.loans.find({
+        "status": "active"
     }, {"_id": 0}).to_list(1000)
     
-    for loan in overdue_loans:
-        # Check if more than 7 days overdue
+    for loan in active_loans:
         return_date = datetime.fromisoformat(loan["return_date"].replace("Z", "+00:00"))
-        days_overdue = (now - return_date).days
+        days_until_due = (return_date - now).days
+        days_overdue = -days_until_due if days_until_due < 0 else 0
         
-        if days_overdue > 7:
+        # Send reminder 3 days before due
+        if days_until_due == 3:
+            reminder_key = f"reminder_3d_{loan['loan_id']}_{today}"
+            existing = await db.notifications.find_one({"notification_id": reminder_key})
+            if not existing:
+                notification = {
+                    "notification_id": reminder_key,
+                    "user_id": loan["borrower_id"],
+                    "type": "loan_reminder",
+                    "title": "Loan Due Soon!",
+                    "message": f"Your loan of ₹{loan['total_repayment']} to {loan['lender_name']} is due in 3 days.",
+                    "data": {"loan_id": loan["loan_id"], "days_until_due": 3},
+                    "is_read": False,
+                    "created_at": now.isoformat()
+                }
+                await db.notifications.insert_one(notification)
+        
+        # Send reminder 1 day before due
+        elif days_until_due == 1:
+            reminder_key = f"reminder_1d_{loan['loan_id']}_{today}"
+            existing = await db.notifications.find_one({"notification_id": reminder_key})
+            if not existing:
+                notification = {
+                    "notification_id": reminder_key,
+                    "user_id": loan["borrower_id"],
+                    "type": "loan_reminder",
+                    "title": "Loan Due Tomorrow!",
+                    "message": f"Your loan of ₹{loan['total_repayment']} to {loan['lender_name']} is due tomorrow!",
+                    "data": {"loan_id": loan["loan_id"], "days_until_due": 1},
+                    "is_read": False,
+                    "created_at": now.isoformat()
+                }
+                await db.notifications.insert_one(notification)
+        
+        # Send overdue notification
+        elif days_overdue > 0 and days_overdue <= 7:
+            reminder_key = f"overdue_{loan['loan_id']}_{today}"
+            existing = await db.notifications.find_one({"notification_id": reminder_key})
+            if not existing:
+                # Notify borrower
+                notification = {
+                    "notification_id": reminder_key,
+                    "user_id": loan["borrower_id"],
+                    "type": "loan_overdue",
+                    "title": "Loan Overdue!",
+                    "message": f"Your loan of ₹{loan['total_repayment']} to {loan['lender_name']} is {days_overdue} day(s) overdue!",
+                    "data": {"loan_id": loan["loan_id"], "days_overdue": days_overdue},
+                    "is_read": False,
+                    "created_at": now.isoformat()
+                }
+                await db.notifications.insert_one(notification)
+                
+                # Notify lender
+                lender_notification = {
+                    "notification_id": f"lender_{reminder_key}",
+                    "user_id": loan["lender_id"],
+                    "type": "loan_overdue",
+                    "title": "Loan Payment Overdue",
+                    "message": f"{loan['borrower_name']}'s loan of ₹{loan['total_repayment']} is {days_overdue} day(s) overdue.",
+                    "data": {"loan_id": loan["loan_id"], "days_overdue": days_overdue},
+                    "is_read": False,
+                    "created_at": now.isoformat()
+                }
+                await db.notifications.insert_one(lender_notification)
+        
+        # Mark as bad debt after 7 days
+        elif days_overdue > 7:
             # Mark as bad debt
             await db.loans.update_one(
                 {"loan_id": loan["loan_id"]},
