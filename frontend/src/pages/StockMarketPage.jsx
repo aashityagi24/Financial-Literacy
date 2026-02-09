@@ -588,9 +588,13 @@ export default function StockMarketPage({ user }) {
                 <div className="flex items-center justify-between bg-[#374151] rounded-lg p-4">
                   <div>
                     <p className="text-3xl font-bold">₹{selectedStock.current_price?.toFixed(2)}</p>
-                    <p className={`text-sm ${(selectedStock.price_change || 0) >= 0 ? 'text-[#10B981]' : 'text-red-400'}`}>
-                      {(selectedStock.price_change || 0) >= 0 ? '+' : ''}₹{selectedStock.price_change?.toFixed(2)} ({selectedStock.price_change_percent?.toFixed(1)}%)
-                    </p>
+                    <div className={`flex items-center gap-2 text-sm mt-1 ${(selectedStock.daily_change || 0) >= 0 ? 'text-[#10B981]' : 'text-red-400'}`}>
+                      {(selectedStock.daily_change || 0) >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                      <span className="font-medium">
+                        {(selectedStock.daily_change || 0) >= 0 ? '+' : ''}₹{selectedStock.daily_change?.toFixed(2)} ({selectedStock.daily_change_percent?.toFixed(1)}%)
+                      </span>
+                      <span className="text-gray-400">today</span>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -611,6 +615,59 @@ export default function StockMarketPage({ user }) {
                     )}
                   </div>
                 </div>
+                
+                {/* Daily Stats - Open/Close/Prev */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-[#374151]/50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-gray-400">Today's Open</p>
+                    <p className="font-bold text-lg">₹{selectedStock.opening_price?.toFixed(2)}</p>
+                  </div>
+                  <div className="bg-[#374151]/50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-gray-400">Current (Close)</p>
+                    <p className="font-bold text-lg">₹{selectedStock.current_price?.toFixed(2)}</p>
+                  </div>
+                  <div className="bg-[#374151]/50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-gray-400">Previous Close</p>
+                    <p className="font-bold text-lg">₹{selectedStock.previous_close?.toFixed(2)}</p>
+                  </div>
+                </div>
+                
+                {/* User's Holding Info (if any) */}
+                {(() => {
+                  const holding = getHolding(selectedStock.stock_id);
+                  if (!holding) return null;
+                  
+                  const totalPL = (selectedStock.current_price - holding.average_buy_price) * holding.quantity;
+                  const totalPLPercent = ((selectedStock.current_price - holding.average_buy_price) / holding.average_buy_price * 100);
+                  
+                  return (
+                    <div className="bg-gradient-to-r from-[#10B981]/20 to-[#374151] rounded-lg p-4 border border-[#10B981]/30">
+                      <p className="text-sm text-[#10B981] font-medium mb-2">📊 Your Position</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-gray-400">Shares Owned</p>
+                          <p className="font-bold">{holding.quantity} @ ₹{holding.average_buy_price?.toFixed(2)} avg</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">Current Value</p>
+                          <p className="font-bold">₹{(selectedStock.current_price * holding.quantity).toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">Total P/L (from purchase)</p>
+                          <p className={`font-bold ${totalPL >= 0 ? 'text-[#10B981]' : 'text-red-400'}`}>
+                            {totalPL >= 0 ? '+' : ''}₹{totalPL.toFixed(2)} ({totalPLPercent >= 0 ? '+' : ''}{totalPLPercent.toFixed(1)}%)
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">Today's P/L</p>
+                          <p className={`font-bold ${(selectedStock.daily_change || 0) >= 0 ? 'text-[#10B981]' : 'text-red-400'}`}>
+                            {(selectedStock.daily_change || 0) >= 0 ? '+' : ''}₹{((selectedStock.daily_change || 0) * holding.quantity).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
                 
                 {/* Educational Info */}
                 {selectedStock.what_they_do && (
