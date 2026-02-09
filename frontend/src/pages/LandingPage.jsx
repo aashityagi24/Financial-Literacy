@@ -309,12 +309,33 @@ export default function LandingPage() {
             <p className="text-xl text-[#3D5A80]">Age-appropriate financial education from Kindergarten to 5th Grade</p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
+          {/* First row - 3 cards */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            {features.slice(0, 3).map((feature, index) => (
               <div 
                 key={index}
                 className="card-playful p-6 animate-bounce-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div 
+                  className="w-16 h-16 rounded-2xl border-3 border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] flex items-center justify-center mb-4"
+                  style={{ backgroundColor: feature.color }}
+                >
+                  <feature.icon className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>{feature.title}</h3>
+                <p className="text-[#3D5A80]">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+          
+          {/* Second row - 2 cards, centered */}
+          <div className="flex justify-center gap-6">
+            {features.slice(3).map((feature, index) => (
+              <div 
+                key={index + 3}
+                className="card-playful p-6 animate-bounce-in w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]"
+                style={{ animationDelay: `${(index + 3) * 0.1}s` }}
               >
                 <div 
                   className="w-16 h-16 rounded-2xl border-3 border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] flex items-center justify-center mb-4"
