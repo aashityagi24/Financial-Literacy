@@ -40,6 +40,39 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Role-based visibility (Child, Parent, Teacher)
 - Progressive unlock system for children
 
+### Recent Updates (February 9, 2026)
+
+**Session 11 - Lending & Borrowing Feature Complete:**
+
+1. **Parent Dashboard Lending Section Complete** ✅ (P0 FEATURE)
+   - **Description**: Parents can now manage loan requests from their children (grades 4-5)
+   - **Features Implemented**:
+     - Loan Request Display: Shows incoming loan requests with borrower info, amount, interest, purpose, return date
+     - Accept Action: Parent can approve loan - money transferred from wallet to child's spending jar
+     - Reject Action: Parent can decline loan with optional reason - child notified
+     - Counter-Offer Action: Parent can propose different terms (amount, interest, return date)
+   - **Frontend Changes** (`/app/frontend/src/pages/ParentDashboard.jsx`):
+     - Added Loan Response Dialog with three action modes (accept, reject, counter)
+     - Dialog shows loan details summary, borrower credit score
+     - Accept shows money transfer confirmation
+     - Counter-offer form with validation
+   - **Bug Fixed** (`/app/backend/routes/lending.py`):
+     - Fixed datetime comparison bug for date-only return_date format
+     - Return dates can now be stored as "YYYY-MM-DD" or full ISO datetime
+   - **Result**: Complete parent-child lending loop is now functional
+
+2. **Lending Feature Summary** ✅
+   - **Backend APIs** (`/app/backend/routes/lending.py`):
+     - POST `/api/lending/request` - Create loan request to parents/classmates
+     - POST `/api/lending/requests/{id}/respond` - Accept/Reject/Counter
+     - GET `/api/lending/requests/received` - Get incoming requests
+     - GET `/api/lending/loans/borrowing` - Child's borrowed loans with days_until_due
+     - GET `/api/lending/parent/child-loans/{id}` - Parent views child's loan activity
+   - **Credit Score System**: 0-100 score based on on-time payments, late payments, defaults
+   - **Grade Restriction**: Feature only for grades 4-5 (locked for K-3)
+   - **Loan Limits**: ₹2000 from parents, ₹500 from classmates
+   - **Notifications**: In-app alerts for loan events (request, approval, due dates, overdue)
+
 ### Recent Updates (February 5, 2026)
 
 **Session 10 - Quest Data Isolation, Shopping List, Admin Store & Shopping Chore Enhancement Fixes:**
