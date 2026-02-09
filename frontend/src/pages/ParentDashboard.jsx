@@ -87,6 +87,19 @@ export default function ParentDashboard({ user }) {
   const [goalForm, setGoalForm] = useState({ child_id: '', title: '', target_amount: 50 });
   const [choreRequests, setChoreRequests] = useState([]);
   
+  // Lending state
+  const [lendingRequests, setLendingRequests] = useState([]);
+  const [childrenLoans, setChildrenLoans] = useState({});
+  const [showRespondLoan, setShowRespondLoan] = useState(false);
+  const [selectedLoanRequest, setSelectedLoanRequest] = useState(null);
+  const [loanResponseForm, setLoanResponseForm] = useState({
+    action: '',
+    counter_amount: '',
+    counter_interest: '',
+    counter_return_date: '',
+    message: ''
+  });
+  
   useEffect(() => {
     if (user?.role !== 'parent') {
       toast.error('Parent access required');
