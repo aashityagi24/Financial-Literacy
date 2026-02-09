@@ -579,7 +579,13 @@ async def get_borrowing_loans(request: Request, status: str = None):
     # Calculate days until due for active loans
     for loan in loans:
         if loan["status"] == "active":
-            return_date = datetime.fromisoformat(loan["return_date"].replace("Z", "+00:00"))
+            return_date_str = loan["return_date"]
+            # Handle both date-only and datetime formats
+            if "T" in return_date_str or "+" in return_date_str:
+                return_date = datetime.fromisoformat(return_date_str.replace("Z", "+00:00"))
+            else:
+                # Date-only format - parse as date and convert to datetime
+                return_date = datetime.strptime(return_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
             days_left = (return_date - datetime.now(timezone.utc)).days
             loan["days_until_due"] = days_left
             loan["is_overdue"] = days_left < 0
@@ -606,7 +612,13 @@ async def get_lending_loans(request: Request, status: str = None):
         loan["borrower_credit_score"] = score
         
         if loan["status"] == "active":
-            return_date = datetime.fromisoformat(loan["return_date"].replace("Z", "+00:00"))
+            return_date_str = loan["return_date"]
+            # Handle both date-only and datetime formats
+            if "T" in return_date_str or "+" in return_date_str:
+                return_date = datetime.fromisoformat(return_date_str.replace("Z", "+00:00"))
+            else:
+                # Date-only format - parse as date and convert to datetime
+                return_date = datetime.strptime(return_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
             days_left = (return_date - datetime.now(timezone.utc)).days
             loan["days_until_due"] = days_left
             loan["is_overdue"] = days_left < 0
