@@ -572,25 +572,45 @@ export default function Dashboard({ user, setUser }) {
           </div>
         </div>
         
-        {/* AI Buddy Banner */}
+        {/* AI Buddy or Lending Banner based on grade */}
         <div className={`mt-8 ${showAnimations ? 'animate-bounce-in stagger-5' : ''}`}>
-          <Link 
-            to="/chat"
-            className="block p-6 bg-gradient-to-r from-[#3D5A80] to-[#5A7BA0] rounded-3xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] hover:scale-[1.02] transition-transform"
-          >
-            <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-[#FFD23F] rounded-2xl border-3 border-white flex items-center justify-center">
-                <MessageCircle className="w-8 h-8 text-[#1D3557]" />
+          {grade >= 4 ? (
+            <Link 
+              to="/lending"
+              className="block p-6 bg-gradient-to-r from-amber-500 to-orange-500 rounded-3xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] hover:scale-[1.02] transition-transform"
+            >
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 bg-white rounded-2xl border-3 border-[#1D3557] flex items-center justify-center">
+                  <HandCoins className="w-8 h-8 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'Fredoka' }}>
+                    Lending Center 🤝
+                  </h3>
+                  <p className="text-amber-100">Borrow & lend money to learn about loans and credit!</p>
+                </div>
+                <ChevronRight className="w-8 h-8 text-white" />
               </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'Fredoka' }}>
-                  Chat with Money Buddy! 💬
-                </h3>
-                <p className="text-[#98C1D9]">Ask questions about saving, spending, and growing your money!</p>
+            </Link>
+          ) : (
+            <Link 
+              to="/chat"
+              className="block p-6 bg-gradient-to-r from-[#3D5A80] to-[#5A7BA0] rounded-3xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] hover:scale-[1.02] transition-transform"
+            >
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 bg-[#FFD23F] rounded-2xl border-3 border-white flex items-center justify-center">
+                  <MessageCircle className="w-8 h-8 text-[#1D3557]" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'Fredoka' }}>
+                    Chat with Money Buddy! 💬
+                  </h3>
+                  <p className="text-[#98C1D9]">Ask questions about saving, spending, and growing your money!</p>
+                </div>
+                <ChevronRight className="w-8 h-8 text-white" />
               </div>
-              <ChevronRight className="w-8 h-8 text-white" />
-            </div>
-          </Link>
+            </Link>
+          )}
         </div>
       </main>
     </div>
