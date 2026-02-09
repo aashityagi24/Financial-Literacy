@@ -1157,6 +1157,196 @@ export default function ParentDashboard({ user }) {
                 </div>
               </>
             )}
+            
+            {/* Lending Section - For children in Grade 4-5 */}
+            {(lendingRequests.length > 0 || Object.keys(childrenLoans).length > 0) && (
+              <>
+                <div className="flex items-center gap-3 mb-4 mt-6">
+                  <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
+                    <HandCoins className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                    Lending Center
+                  </h2>
+                </div>
+                
+                {/* Incoming Loan Requests */}
+                {lendingRequests.filter(r => ['pending', 'countered'].includes(r.status)).length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-[#1D3557] mb-3">Loan Requests from Children</h3>
+                    <div className="space-y-3">
+                      {lendingRequests.filter(r => ['pending', 'countered'].includes(r.status)).map(req => (
+                        <div key={req.request_id} className="card-playful p-4 border-l-4 border-amber-500">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                                <span className="text-amber-600 font-bold">{req.borrower_name?.charAt(0)}</span>
+                              </div>
+                              <div>
+                                <p className="font-bold text-[#1D3557]">{req.borrower_name}</p>
+                                <p className="text-xs text-[#3D5A80]">Grade {req.borrower_grade} • Credit Score: <span className={getCreditScoreColor(req.borrower_credit_score)}>{req.borrower_credit_score || 70}</span></p>
+                              </div>
+                            </div>
+                            {getLoanStatusBadge(req.status)}
+                          </div>
+                          
+                          <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                            <div className="grid grid-cols-3 gap-4 text-center">
+                              <div>
+                                <p className="text-xs text-gray-500">Amount</p>
+                                <p className="font-bold text-[#1D3557]">₹{req.amount}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500">Interest</p>
+                                <p className="font-bold text-green-600">₹{req.interest_amount}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500">Return By</p>
+                                <p className="font-bold text-[#1D3557]">{formatDate(req.return_date)}</p>
+                              </div>
+                            </div>
+                            <p className="mt-2 text-sm text-[#3D5A80]">
+                              <span className="font-medium">Purpose:</span> {req.purpose}
+                            </p>
+                          </div>
+                          
+                          {req.status === 'countered' && req.counter_offers?.length > 0 && (
+                            <div className="bg-purple-50 rounded-lg p-2 text-sm mb-3">
+                              <p className="text-purple-700 font-medium">Your counter offer: ₹{req.counter_amount} + ₹{req.counter_interest} interest</p>
+                            </div>
+                          )}
+                          
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              className="flex-1 bg-green-500 hover:bg-green-600"
+                              onClick={() => { 
+                                setSelectedLoanRequest(req); 
+                                setLoanResponseForm({...loanResponseForm, action: 'accept'}); 
+                                setShowRespondLoan(true); 
+                              }}
+                            >
+                              <Check className="w-4 h-4 mr-1" /> Accept
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="flex-1"
+                              onClick={() => { 
+                                setSelectedLoanRequest(req); 
+                                setLoanResponseForm({
+                                  action: 'counter', 
+                                  counter_amount: req.amount, 
+                                  counter_interest: req.interest_amount, 
+                                  counter_return_date: req.return_date,
+                                  message: ''
+                                }); 
+                                setShowRespondLoan(true); 
+                              }}
+                            >
+                              <RefreshCw className="w-4 h-4 mr-1" /> Counter
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="text-red-500 border-red-200 hover:bg-red-50"
+                              onClick={() => { 
+                                setSelectedLoanRequest(req); 
+                                setLoanResponseForm({...loanResponseForm, action: 'reject'}); 
+                                setShowRespondLoan(true); 
+                              }}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Children's Loan Summary */}
+                {Object.entries(childrenLoans).filter(([_, data]) => data).length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-[#1D3557] mb-3">Children's Lending Activity</h3>
+                    <div className="space-y-3">
+                      {Object.entries(childrenLoans).filter(([_, data]) => data).map(([childId, data]) => (
+                        <div key={childId} className="card-playful p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <span className="text-blue-600 font-bold">{data.child_name?.charAt(0)}</span>
+                              </div>
+                              <div>
+                                <p className="font-bold text-[#1D3557]">{data.child_name}</p>
+                                <p className="text-sm text-[#3D5A80]">
+                                  Credit Score: <span className={`font-bold ${getCreditScoreColor(data.credit_score)}`}>{data.credit_score}</span>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-4 gap-2 text-center text-sm">
+                            <div className="bg-blue-50 rounded-lg p-2">
+                              <p className="text-xs text-gray-500">Active Borrowed</p>
+                              <p className="font-bold text-blue-600">{data.summary?.active_borrowed || 0}</p>
+                            </div>
+                            <div className="bg-green-50 rounded-lg p-2">
+                              <p className="text-xs text-gray-500">Loans Repaid</p>
+                              <p className="font-bold text-green-600">{data.summary?.total_borrowed || 0}</p>
+                            </div>
+                            <div className="bg-purple-50 rounded-lg p-2">
+                              <p className="text-xs text-gray-500">Active Lent</p>
+                              <p className="font-bold text-purple-600">{data.summary?.active_lent || 0}</p>
+                            </div>
+                            <div className="bg-red-50 rounded-lg p-2">
+                              <p className="text-xs text-gray-500">Bad Debts</p>
+                              <p className="font-bold text-red-600">{data.summary?.bad_debts || 0}</p>
+                            </div>
+                          </div>
+                          
+                          {/* Active Loans */}
+                          {data.borrowed_loans?.filter(l => l.status === 'active').length > 0 && (
+                            <div className="mt-3">
+                              <p className="text-sm font-medium text-[#1D3557] mb-2">Active Loans (Borrowed):</p>
+                              <div className="space-y-2">
+                                {data.borrowed_loans.filter(l => l.status === 'active').map(loan => (
+                                  <div key={loan.loan_id} className="bg-amber-50 rounded-lg p-2 flex items-center justify-between text-sm">
+                                    <div>
+                                      <p className="font-medium">₹{loan.total_repayment} from {loan.lender_name}</p>
+                                      <p className="text-xs text-gray-500">Due: {formatDate(loan.return_date)}</p>
+                                    </div>
+                                    {getLoanStatusBadge(loan.status)}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Loans Given to Children */}
+                {lendingRequests.filter(r => r.status === 'accepted').length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-[#1D3557] mb-3">Loans You've Given</h3>
+                    <div className="space-y-2">
+                      {lendingRequests.filter(r => r.status === 'accepted').slice(0, 5).map(loan => (
+                        <div key={loan.request_id} className="card-playful p-3 flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-[#1D3557]">₹{loan.amount} to {loan.borrower_name}</p>
+                            <p className="text-xs text-[#3D5A80]">Interest: ₹{loan.interest_amount}</p>
+                          </div>
+                          {getLoanStatusBadge('active')}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </>
         ) : (
           <>
