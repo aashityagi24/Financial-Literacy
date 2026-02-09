@@ -9633,6 +9633,15 @@ async def startup_scheduler():
             logger.info("Running opening stock fluctuation on startup...")
             await stock_price_fluctuation("opening")
 
+async def check_loan_due_dates():
+    """Check loan due dates and send reminders/mark bad debts"""
+    try:
+        from routes.lending import check_overdue_loans
+        await check_overdue_loans()
+        logger.info("Loan due date check completed")
+    except Exception as e:
+        logger.error(f"Error checking loan due dates: {e}")
+
 async def send_quest_reminders():
     """Send reminders to children for quests due tomorrow"""
     try:
