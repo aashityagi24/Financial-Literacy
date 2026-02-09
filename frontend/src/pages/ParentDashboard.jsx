@@ -1934,6 +1934,198 @@ export default function ParentDashboard({ user }) {
             </div>
           </DialogContent>
         </Dialog>
+        
+        {/* Loan Response Dialog */}
+        <Dialog open={showRespondLoan} onOpenChange={(open) => { 
+          setShowRespondLoan(open); 
+          if (!open) {
+            setSelectedLoanRequest(null);
+            setLoanResponseForm({ action: '', counter_amount: '', counter_interest: '', counter_return_date: '', message: '' });
+          }
+        }}>
+          <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-[#1D3557] flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+                <HandCoins className="w-6 h-6 text-amber-500" />
+                {loanResponseForm.action === 'accept' && 'Accept Loan Request'}
+                {loanResponseForm.action === 'reject' && 'Decline Loan Request'}
+                {loanResponseForm.action === 'counter' && 'Make Counter Offer'}
+              </DialogTitle>
+            </DialogHeader>
+            
+            {selectedLoanRequest && (
+              <div className="space-y-4 mt-4">
+                {/* Loan Details Summary */}
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                      <span className="text-amber-600 font-bold">{selectedLoanRequest.borrower_name?.charAt(0)}</span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-[#1D3557]">{selectedLoanRequest.borrower_name}</p>
+                      <p className="text-xs text-[#3D5A80]">Grade {selectedLoanRequest.borrower_grade}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                    <div className="bg-white rounded-lg p-2">
+                      <p className="text-xs text-gray-500">Amount</p>
+                      <p className="font-bold text-[#1D3557]">₹{selectedLoanRequest.amount}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-2">
+                      <p className="text-xs text-gray-500">Interest</p>
+                      <p className="font-bold text-green-600">₹{selectedLoanRequest.interest_amount}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-2">
+                      <p className="text-xs text-gray-500">Total Return</p>
+                      <p className="font-bold text-amber-600">₹{selectedLoanRequest.amount + selectedLoanRequest.interest_amount}</p>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-sm text-[#3D5A80]">
+                    <span className="font-medium">Purpose:</span> {selectedLoanRequest.purpose}
+                  </p>
+                  <p className="text-sm text-[#3D5A80]">
+                    <span className="font-medium">Return By:</span> {formatDate(selectedLoanRequest.return_date)}
+                  </p>
+                </div>
+                
+                {/* Accept Action */}
+                {loanResponseForm.action === 'accept' && (
+                  <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-green-700">You're about to lend money to your child</p>
+                        <p className="text-sm text-green-600 mt-1">
+                          ₹{selectedLoanRequest.amount} will be transferred to {selectedLoanRequest.borrower_name}'s wallet.
+                        </p>
+                        <p className="text-sm text-green-600">
+                          You'll receive ₹{selectedLoanRequest.amount + selectedLoanRequest.interest_amount} when they repay.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Reject Action */}
+                {loanResponseForm.action === 'reject' && (
+                  <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+                    <div className="flex items-start gap-3">
+                      <XCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-red-700">Decline this loan request?</p>
+                        <p className="text-sm text-red-600 mt-1">
+                          {selectedLoanRequest.borrower_name} will be notified that their request was declined.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Reason (optional)</label>
+                      <Textarea
+                        placeholder="You can share why you're declining..."
+                        value={loanResponseForm.message}
+                        onChange={(e) => setLoanResponseForm({...loanResponseForm, message: e.target.value})}
+                        className="text-sm"
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Counter Offer Action */}
+                {loanResponseForm.action === 'counter' && (
+                  <div className="space-y-3">
+                    <div className="bg-purple-50 rounded-xl p-3 border border-purple-200">
+                      <p className="text-sm text-purple-700">
+                        <AlertTriangle className="w-4 h-4 inline mr-1" />
+                        Suggest different terms for this loan
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Amount you'll lend (₹)</label>
+                      <Input
+                        type="number"
+                        value={loanResponseForm.counter_amount}
+                        onChange={(e) => setLoanResponseForm({...loanResponseForm, counter_amount: e.target.value})}
+                        placeholder={selectedLoanRequest.amount.toString()}
+                        className="border-2 border-[#1D3557]/20"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Interest you want (₹)</label>
+                      <Input
+                        type="number"
+                        value={loanResponseForm.counter_interest}
+                        onChange={(e) => setLoanResponseForm({...loanResponseForm, counter_interest: e.target.value})}
+                        placeholder={selectedLoanRequest.interest_amount.toString()}
+                        className="border-2 border-[#1D3557]/20"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Return date</label>
+                      <Input
+                        type="date"
+                        value={loanResponseForm.counter_return_date}
+                        onChange={(e) => setLoanResponseForm({...loanResponseForm, counter_return_date: e.target.value})}
+                        className="border-2 border-[#1D3557]/20"
+                        min={new Date().toISOString().split('T')[0]}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Message (optional)</label>
+                      <Textarea
+                        placeholder="Explain your counter offer..."
+                        value={loanResponseForm.message}
+                        onChange={(e) => setLoanResponseForm({...loanResponseForm, message: e.target.value})}
+                        className="text-sm border-2 border-[#1D3557]/20"
+                        rows={2}
+                      />
+                    </div>
+                    
+                    {loanResponseForm.counter_amount && loanResponseForm.counter_interest && (
+                      <div className="bg-amber-50 rounded-lg p-3 text-center">
+                        <p className="text-sm text-amber-700">
+                          Total repayment: <span className="font-bold">₹{Number(loanResponseForm.counter_amount) + Number(loanResponseForm.counter_interest)}</span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      setShowRespondLoan(false);
+                      setSelectedLoanRequest(null);
+                      setLoanResponseForm({ action: '', counter_amount: '', counter_interest: '', counter_return_date: '', message: '' });
+                    }}
+                    className="flex-1 px-4 py-2 border-2 border-[#1D3557] rounded-xl font-bold text-[#1D3557] hover:bg-[#E0FBFC] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleRespondToLoan}
+                    disabled={loanResponseForm.action === 'counter' && (!loanResponseForm.counter_amount || !loanResponseForm.counter_interest || !loanResponseForm.counter_return_date)}
+                    className={`flex-1 px-4 py-2 rounded-xl font-bold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                      loanResponseForm.action === 'accept' ? 'bg-green-500 hover:bg-green-600' :
+                      loanResponseForm.action === 'reject' ? 'bg-red-500 hover:bg-red-600' :
+                      'bg-purple-500 hover:bg-purple-600'
+                    }`}
+                    data-testid="loan-response-submit-btn"
+                  >
+                    {loanResponseForm.action === 'accept' && 'Send Money'}
+                    {loanResponseForm.action === 'reject' && 'Decline Request'}
+                    {loanResponseForm.action === 'counter' && 'Send Counter Offer'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
