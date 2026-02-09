@@ -74,6 +74,75 @@ export default function LandingPage() {
   
   const grades = ["Kindergarten", "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"];
   
+  const gradeDescriptions = {
+    "Kindergarten": {
+      title: "Money Basics & Counting",
+      skills: [
+        "Identify and count coins (₹1, ₹2, ₹5, ₹10)",
+        "Understand needs vs. wants through fun stories",
+        "Money Garden: Plant seeds and watch them grow!",
+        "Learn saving through piggy bank activities",
+        "Simple earning through fun classroom tasks"
+      ],
+      color: "#FFD23F"
+    },
+    "1st Grade": {
+      title: "Earning & Saving Foundations",
+      skills: [
+        "Count money up to ₹100",
+        "Complete simple chores to earn coins",
+        "Set saving goals for small rewards",
+        "Money Garden: Grow vegetables and fruits",
+        "Introduction to sharing and giving"
+      ],
+      color: "#06D6A0"
+    },
+    "2nd Grade": {
+      title: "Smart Spending Decisions",
+      skills: [
+        "Compare prices and find best deals",
+        "Budget for small purchases",
+        "Money Garden: Harvest crops and sell at market",
+        "Understand simple interest on savings",
+        "Create wish lists and prioritize wants"
+      ],
+      color: "#EE6C4D"
+    },
+    "3rd Grade": {
+      title: "Introduction to Investing",
+      skills: [
+        "Understand how businesses make money",
+        "Stock Market Basics: Buy your first stocks",
+        "Learn about risk and reward",
+        "Track investments over time",
+        "Introduction to compound growth"
+      ],
+      color: "#3D5A80"
+    },
+    "4th Grade": {
+      title: "Portfolio Building",
+      skills: [
+        "Diversify investments across industries",
+        "Read market news and make predictions",
+        "Understand dividends and earnings",
+        "Set long-term financial goals",
+        "Learn about entrepreneurship basics"
+      ],
+      color: "#9B5DE5"
+    },
+    "5th Grade": {
+      title: "Advanced Financial Planning",
+      skills: [
+        "Create comprehensive budgets",
+        "Analyze stock performance and trends",
+        "Understand economic concepts (inflation, supply/demand)",
+        "Plan for bigger goals (college savings simulation)",
+        "Charitable giving and social responsibility"
+      ],
+      color: "#F15BB5"
+    }
+  };
+  
   return (
     <div className="min-h-screen bg-[#E0FBFC]">
       {/* Admin Login Modal */}
