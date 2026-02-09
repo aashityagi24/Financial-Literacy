@@ -7,7 +7,7 @@ import {
   ChevronLeft, HandCoins, PiggyBank, TrendingUp, TrendingDown,
   Clock, CheckCircle2, XCircle, AlertTriangle, Users, User,
   Send, ArrowRight, Calendar, Percent, Target, Scale,
-  Wallet, BadgeCheck, BadgeX, MessageSquare, RefreshCw, Star
+  Wallet, BadgeCheck, BadgeX, MessageSquare, RefreshCw, Star, Search, X
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
