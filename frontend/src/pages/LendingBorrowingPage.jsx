@@ -842,24 +842,6 @@ export default function LendingBorrowingPage({ user }) {
                 </div>
               )}
             </div>
-                            ? 'bg-amber-500 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        <CreditScoreBadge score={mate.credit_score || 70} size="sm" />
-                        {mate.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {requestForm.recipient_ids.length > 0 && (
-                <p className="text-sm text-amber-600 mt-2">
-                  {requestForm.recipient_ids.length} recipient(s) selected
-                </p>
-              )}
-            </div>
             
             <Button 
               onClick={handleCreateRequest}
