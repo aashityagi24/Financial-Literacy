@@ -306,7 +306,7 @@ export default function StockMarketPage({ user }) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {filteredStocks.map(stock => {
                 const holding = getHolding(stock.stock_id);
-                const isUp = stock.price_change >= 0;
+                const isUp = stock.daily_change >= 0;
                 
                 return (
                   <div 
@@ -337,9 +337,23 @@ export default function StockMarketPage({ user }) {
                     
                     <div className="mb-3">
                       <p className="text-2xl font-bold text-white">₹{stock.current_price.toFixed(2)}</p>
+                      {/* Daily Change */}
                       <div className={`flex items-center gap-1 text-sm mt-1 ${isUp ? 'text-[#10B981]' : 'text-red-400'}`}>
                         {isUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                        <span className="font-medium">{isUp ? '+' : ''}{stock.price_change_percent.toFixed(1)}%</span>
+                        <span className="font-medium">{isUp ? '+' : ''}{stock.daily_change?.toFixed(2)} ({stock.daily_change_percent?.toFixed(1)}%)</span>
+                        <span className="text-gray-500 text-xs">today</span>
+                      </div>
+                    </div>
+                    
+                    {/* Open/Close Prices */}
+                    <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+                      <div className="bg-[#374151]/50 rounded-lg px-2 py-1.5">
+                        <span className="text-gray-500">Open:</span>
+                        <span className="text-white ml-1 font-medium">₹{stock.opening_price?.toFixed(2)}</span>
+                      </div>
+                      <div className="bg-[#374151]/50 rounded-lg px-2 py-1.5">
+                        <span className="text-gray-500">Prev:</span>
+                        <span className="text-white ml-1 font-medium">₹{stock.previous_close?.toFixed(2)}</span>
                       </div>
                     </div>
                     
