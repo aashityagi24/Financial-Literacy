@@ -212,6 +212,7 @@ async def get_content_item(content_id: str, request: Request):
     db = get_db()
     user = await get_current_user(request)
     is_admin = user and user.get("role") == "admin"
+    is_child = user and user.get("role") == "child"
     
     item = await db.content_items.find_one({"content_id": content_id}, {"_id": 0})
     if not item:
@@ -219,6 +220,13 @@ async def get_content_item(content_id: str, request: Request):
     
     if not is_admin and not item.get("is_published", False):
         raise HTTPException(status_code=404, detail="Content not found")
+    
+    # For children, check if content is visible to them
+    if is_child:
+        visible_to = item.get("visible_to", [])
+        # If visible_to is set and doesn't include 'child', deny access
+        if visible_to and "child" not in visible_to:
+            raise HTTPException(status_code=404, detail="Content not found")
     
     return item
 
