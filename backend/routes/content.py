@@ -242,11 +242,6 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
                 {"visible_to": []},
                 {"visible_to": None}
             ]
-            {"visible_to": {"$in": [visibility_filter]}},
-            {"visible_to": {"$exists": False}},
-            {"visible_to": []},
-            {"visible_to": None}
-        ]
     
     content_items = await db.content_items.find(content_query, {"_id": 0}).sort("order", 1).to_list(100)
     
