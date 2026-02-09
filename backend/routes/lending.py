@@ -812,11 +812,11 @@ async def get_child_loans_for_parent(child_id: str, request: Request):
         "borrowed_loans": borrowed_loans,
         "lent_loans": lent_loans,
         "summary": {
-            "total_borrowed": len([l for l in borrowed_loans if l["status"] == "paid"]),
-            "active_borrowed": len([l for l in borrowed_loans if l["status"] == "active"]),
-            "total_lent": len([l for l in lent_loans if l["status"] == "paid"]),
-            "active_lent": len([l for l in lent_loans if l["status"] == "active"]),
-            "bad_debts": len([l for l in borrowed_loans if l["status"] == "bad_debt"])
+            "total_borrowed": len([loan for loan in borrowed_loans if loan["status"] == "paid"]),
+            "active_borrowed": len([loan for loan in borrowed_loans if loan["status"] == "active"]),
+            "total_lent": len([loan for loan in lent_loans if loan["status"] == "paid"]),
+            "active_lent": len([loan for loan in lent_loans if loan["status"] == "active"]),
+            "bad_debts": len([loan for loan in borrowed_loans if loan["status"] == "bad_debt"])
         }
     }
 
