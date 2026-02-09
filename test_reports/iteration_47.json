@@ -32,7 +32,7 @@
 
   "google_oauth_configuration_note": {
     "issue": "Google shows 'redirect_uri_mismatch' error when clicking Sign In",
-    "cause": "The redirect URI 'https://coinquest-kids-2.preview.emergentagent.com/api/auth/google/callback' is not registered in Google Cloud Console",
+    "cause": "The redirect URI 'https://kidswallet-2.preview.emergentagent.com/api/auth/google/callback' is not registered in Google Cloud Console",
     "solution": "User needs to add this redirect URI to their Google Cloud Console OAuth 2.0 credentials",
     "is_code_issue": false
   },
@@ -43,7 +43,7 @@
   ],
 
   "action_items": [
-    "EXTERNAL CONFIG: Register redirect URI 'https://coinquest-kids-2.preview.emergentagent.com/api/auth/google/callback' in Google Cloud Console OAuth 2.0 credentials"
+    "EXTERNAL CONFIG: Register redirect URI 'https://kidswallet-2.preview.emergentagent.com/api/auth/google/callback' in Google Cloud Console OAuth 2.0 credentials"
   ],
 
   "critical_code_review_comments": [
