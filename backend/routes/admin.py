@@ -202,6 +202,23 @@ async def delete_user(user_id: str, request: Request):
         await db.reward_penalties.delete_many({"parent_id": user_id})
         await db.chore_submissions.delete_many({"parent_id": user_id})
     
+    # Delete lending/borrowing data
+    await db.loans.delete_many({"$or": [{"borrower_id": user_id}, {"lender_id": user_id}]})
+    await db.loan_requests.delete_many({"$or": [{"borrower_id": user_id}, {"lender_id": user_id}]})
+    await db.credit_scores.delete_many({"user_id": user_id})
+    
+    # Delete stock holdings
+    await db.stock_holdings.delete_many({"user_id": user_id})
+    
+    # If child, also remove from parent's children array and update parent_id references
+    if user.get("role") == "child":
+        parent_id = user.get("parent_id")
+        if parent_id:
+            await db.users.update_one(
+                {"user_id": parent_id},
+                {"$pull": {"children": {"user_id": user_id}}}
+            )
+    
     return {"message": f"User {user.get('name', user_id)} and all related data deleted successfully"}
 
 # Stats
