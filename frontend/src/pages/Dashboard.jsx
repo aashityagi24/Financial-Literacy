@@ -114,7 +114,14 @@ export default function Dashboard({ user, setUser }) {
     return { icon: TrendingUp, label: 'Stocks', path: '/stock-market', color: '#10B981', emoji: '📈' };
   };
   
+  // Lending is only for grades 4-5, replaces AI Buddy
+  const getSpecialFeatureItem = () => {
+    if (grade >= 4) return { icon: HandCoins, label: 'Lending', path: '/lending', color: '#F59E0B', emoji: '🤝' };
+    return { icon: MessageCircle, label: 'AI Buddy', path: '/chat', color: '#FFD23F' };
+  };
+  
   const investmentItem = getInvestmentItem();
+  const specialFeatureItem = getSpecialFeatureItem();
   
   const navItems = [
     { icon: BookOpen, label: 'Learn', path: '/learn', color: '#FFD23F' },
@@ -122,7 +129,7 @@ export default function Dashboard({ user, setUser }) {
     { icon: Store, label: 'Store', path: '/store', color: '#EE6C4D' },
     investmentItem,
     { icon: Target, label: 'Quests', path: '/quests', color: '#9B5DE5' },
-    { icon: MessageCircle, label: 'AI Buddy', path: '/chat', color: '#FFD23F' },
+    specialFeatureItem,
   ].filter(Boolean); // Remove null items
   
   // Grade-based account configuration
