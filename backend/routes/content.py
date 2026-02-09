@@ -274,6 +274,7 @@ async def admin_create_topic(request: Request):
         "topic_id": topic_id,
         "title": body.get("title", "Untitled"),
         "description": body.get("description", ""),
+        "thumbnail": body.get("thumbnail"),
         "icon": body.get("icon", "📚"),
         "parent_id": body.get("parent_id"),
         "order": new_order,
@@ -294,7 +295,7 @@ async def admin_update_topic(topic_id: str, request: Request):
     body = await request.json()
     
     update_fields = {}
-    for field in ["title", "description", "icon", "min_grade", "max_grade", "order"]:
+    for field in ["title", "description", "thumbnail", "icon", "min_grade", "max_grade", "order"]:
         if field in body:
             update_fields[field] = body[field]
     
