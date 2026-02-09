@@ -724,40 +724,123 @@ export default function LendingBorrowingPage({ user }) {
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">Send request to:</label>
               
+              {/* Search input for filtering */}
+              <div className="relative mb-3">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Search parents or classmates..."
+                  value={recipientSearch}
+                  onChange={(e) => setRecipientSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              {/* Selected Recipients */}
+              {requestForm.recipient_ids.length > 0 && (
+                <div className="mb-3 p-2 bg-amber-50 rounded-lg">
+                  <p className="text-xs text-amber-600 mb-2 font-medium">Selected ({requestForm.recipient_ids.length}):</p>
+                  <div className="flex flex-wrap gap-2">
+                    {requestForm.recipient_ids.map(id => {
+                      const recipient = [...parents, ...classmates].find(r => r.user_id === id);
+                      return recipient && (
+                        <span 
+                          key={id} 
+                          className="px-2 py-1 bg-amber-500 text-white text-sm rounded-lg flex items-center gap-1"
+                        >
+                          {recipient.name}
+                          <button onClick={() => toggleRecipient(id)} className="hover:bg-amber-600 rounded">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              
               {/* Parents */}
               {parents.length > 0 && (
                 <div className="mb-3">
-                  <p className="text-xs text-gray-500 mb-2">Parents (Max ₹{limits?.max_loan_parent})</p>
+                  <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                    <User className="w-3 h-3" /> Parents (Max ₹{limits?.max_loan_parent})
+                  </p>
                   <div className="flex flex-wrap gap-2">
-                    {parents.map(parent => (
-                      <button
-                        key={parent.user_id}
-                        onClick={() => toggleRecipient(parent.user_id)}
-                        className={`px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors ${
-                          requestForm.recipient_ids.includes(parent.user_id)
-                            ? 'bg-amber-500 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        <User className="w-4 h-4" />
-                        {parent.name}
-                      </button>
-                    ))}
+                    {parents
+                      .filter(p => !recipientSearch || p.name?.toLowerCase().includes(recipientSearch.toLowerCase()))
+                      .map(parent => (
+                        <button
+                          key={parent.user_id}
+                          onClick={() => toggleRecipient(parent.user_id)}
+                          className={`px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors ${
+                            requestForm.recipient_ids.includes(parent.user_id)
+                              ? 'bg-amber-500 text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          <User className="w-4 h-4" />
+                          {parent.name}
+                        </button>
+                      ))}
                   </div>
                 </div>
               )}
               
               {/* Classmates */}
-              {classmates.length > 0 && (
+              {classmates.length > 0 ? (
                 <div>
-                  <p className="text-xs text-gray-500 mb-2">Classmates (Max ₹{limits?.max_loan_classmate})</p>
-                  <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
-                    {classmates.map(mate => (
-                      <button
-                        key={mate.user_id}
-                        onClick={() => toggleRecipient(mate.user_id)}
-                        className={`px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors ${
-                          requestForm.recipient_ids.includes(mate.user_id)
+                  <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                    <Users className="w-3 h-3" /> Classmates (Max ₹{limits?.max_loan_classmate})
+                  </p>
+                  <div className="border rounded-lg max-h-48 overflow-y-auto">
+                    {classmates
+                      .filter(c => !recipientSearch || c.name?.toLowerCase().includes(recipientSearch.toLowerCase()))
+                      .map(mate => (
+                        <button
+                          key={mate.user_id}
+                          onClick={() => toggleRecipient(mate.user_id)}
+                          className={`w-full px-3 py-2 flex items-center justify-between text-sm border-b last:border-b-0 transition-colors ${
+                            requestForm.recipient_ids.includes(mate.user_id)
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium">
+                              {mate.name?.charAt(0)?.toUpperCase()}
+                            </div>
+                            <span>{mate.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CreditScoreBadge score={mate.credit_score || 70} size="sm" />
+                            {requestForm.recipient_ids.includes(mate.user_id) && (
+                              <CheckCircle2 className="w-4 h-4 text-amber-600" />
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    {classmates.filter(c => !recipientSearch || c.name?.toLowerCase().includes(recipientSearch.toLowerCase())).length === 0 && (
+                      <p className="px-3 py-4 text-center text-gray-500 text-sm">No classmates found matching "{recipientSearch}"</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4 bg-gray-50 rounded-lg">
+                  <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">No classmates available</p>
+                  <p className="text-xs text-gray-400">Ask your teacher to add you to a class</p>
+                </div>
+              )}
+              
+              {parents.length === 0 && classmates.length === 0 && (
+                <div className="text-center py-6 bg-gray-50 rounded-lg">
+                  <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto mb-2" />
+                  <p className="text-gray-600 font-medium">No recipients available</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    You need to be linked to a parent or be in a class to request loans.
+                  </p>
+                </div>
+              )}
+            </div>
                             ? 'bg-amber-500 text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
