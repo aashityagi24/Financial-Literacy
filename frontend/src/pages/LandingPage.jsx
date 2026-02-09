@@ -388,16 +388,74 @@ export default function LandingPage() {
             <p className="text-xl text-[#3D5A80]">Content adapts to your child's age and learning level</p>
           </div>
           
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
             {grades.map((grade, index) => (
               <div 
                 key={index}
-                className="card-playful px-6 py-4 hover:bg-[#FFD23F] transition-colors cursor-pointer"
+                onClick={() => setSelectedGrade(selectedGrade === grade ? null : grade)}
+                className={`card-playful px-6 py-4 cursor-pointer transition-all duration-300 ${
+                  selectedGrade === grade 
+                    ? 'bg-[#FFD23F] scale-105 shadow-[8px_8px_0px_0px_#1D3557]' 
+                    : 'hover:bg-[#FFD23F]/50'
+                }`}
+                style={selectedGrade === grade ? { borderColor: gradeDescriptions[grade].color } : {}}
               >
                 <span className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{grade}</span>
               </div>
             ))}
           </div>
+          
+          {/* Expandable Grade Description */}
+          {selectedGrade && gradeDescriptions[selectedGrade] && (
+            <div 
+              className="max-w-3xl mx-auto animate-in slide-in-from-top-4 duration-300"
+            >
+              <div 
+                className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 overflow-hidden"
+                style={{ borderLeftWidth: '6px', borderLeftColor: gradeDescriptions[selectedGrade].color }}
+              >
+                <div className="flex items-center gap-4 mb-6">
+                  <div 
+                    className="w-16 h-16 rounded-full border-3 border-[#1D3557] flex items-center justify-center text-2xl font-bold text-white"
+                    style={{ backgroundColor: gradeDescriptions[selectedGrade].color, fontFamily: 'Fredoka' }}
+                  >
+                    {selectedGrade === "Kindergarten" ? "K" : selectedGrade.charAt(0)}
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                      {selectedGrade}
+                    </h3>
+                    <p className="text-lg text-[#3D5A80] font-medium">{gradeDescriptions[selectedGrade].title}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <p className="text-sm font-semibold text-[#1D3557] uppercase tracking-wide">What Your Child Will Learn:</p>
+                  <ul className="space-y-2">
+                    {gradeDescriptions[selectedGrade].skills.map((skill, idx) => (
+                      <li key={idx} className="flex items-start gap-3">
+                        <span 
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold mt-0.5 flex-shrink-0"
+                          style={{ backgroundColor: gradeDescriptions[selectedGrade].color }}
+                        >
+                          ✓
+                        </span>
+                        <span className="text-[#3D5A80]">{skill}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <button
+                  onClick={handleLogin}
+                  className="mt-6 w-full py-3 rounded-xl font-bold text-white transition-all hover:-translate-y-1"
+                  style={{ backgroundColor: gradeDescriptions[selectedGrade].color }}
+                >
+                  Start Learning for {selectedGrade}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
       
