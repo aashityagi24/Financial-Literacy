@@ -66,6 +66,14 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                 "max_grade": {"$gte": user_grade}
             }
         
+        # For children, only show content visible to them
+        if is_child:
+            content_grade_query["$or"] = [
+                {"visible_to": {"$in": ["child"]}},
+                {"visible_to": {"$exists": False}},
+                {"visible_to": []}
+            ]
+        
         subtopics = await db.content_topics.find(subtopic_query, {"_id": 0}).sort("order", 1).to_list(100)
         topic["subtopics"] = subtopics
         topic["content_count"] = await db.content_items.count_documents(content_grade_query)
@@ -78,12 +86,17 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
             previous_subtopic_completed = previous_topic_completed
             
             for subtopic in subtopics:
-                # Grade filter for subtopic content
+                # Grade filter for subtopic content - only show content visible to children
                 subtopic_content_query = {
                     "topic_id": subtopic["topic_id"], 
                     "is_published": True,
                     "min_grade": {"$lte": user_grade}, 
-                    "max_grade": {"$gte": user_grade}
+                    "max_grade": {"$gte": user_grade},
+                    "$or": [
+                        {"visible_to": {"$in": ["child"]}},
+                        {"visible_to": {"$exists": False}},
+                        {"visible_to": []}
+                    ]
                 }
                 subtopic["content_count"] = await db.content_items.count_documents(subtopic_content_query)
                 topic["total_content"] += subtopic["content_count"]
