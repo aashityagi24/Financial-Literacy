@@ -212,6 +212,11 @@ function AppRouter() {
           {({ user }) => <ChatBuddy user={user} />}
         </ProtectedRoute>
       } />
+      <Route path="/lending" element={
+        <ProtectedRoute>
+          {({ user }) => <LendingBorrowingPage user={user} />}
+        </ProtectedRoute>
+      } />
       <Route path="/profile" element={
         <ProtectedRoute>
           {({ user, setUser }) => <ProfilePage user={user} setUser={setUser} />}
