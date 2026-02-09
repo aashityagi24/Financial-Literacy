@@ -26,20 +26,37 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
+    user_role = user.get("role") if user else None
     user_grade = user.get("grade") if user else None
     user_id = user.get("user_id") if user else None
-    is_child = user.get("role") == "child" if user else False
-    is_teacher = user.get("role") == "teacher" if user else False
-    is_admin = user.get("role") == "admin" if user else False
+    is_child = user_role == "child"
+    is_teacher = user_role == "teacher"
+    is_parent = user_role == "parent"
+    is_admin = user_role == "admin"
     
-    if is_teacher and grade is not None:
-        user_grade = grade
+    # Determine grade filter based on role
+    filter_grade = None
+    if is_child:
+        filter_grade = user_grade
+    elif is_teacher and grade is not None:
+        filter_grade = grade
+    elif is_parent and grade is not None:
+        filter_grade = grade
     
-    # Admin sees all content, others see grade-filtered content
-    if user_grade is None or is_admin:
+    # Determine visibility filter based on role
+    visibility_filter = None
+    if is_child:
+        visibility_filter = "child"
+    elif is_teacher:
+        visibility_filter = "teacher"
+    elif is_parent:
+        visibility_filter = "parent"
+    
+    # Build topic query
+    if filter_grade is None or is_admin:
         query = {"parent_id": None}
     else:
-        query = {"parent_id": None, "min_grade": {"$lte": user_grade}, "max_grade": {"$gte": user_grade}}
+        query = {"parent_id": None, "min_grade": {"$lte": filter_grade}, "max_grade": {"$gte": filter_grade}}
     
     parent_topics = await db.content_topics.find(query, {"_id": 0}).sort("order", 1).to_list(100)
     
@@ -54,24 +71,25 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
     
     for topic in parent_topics:
         # Grade filter for subtopics
-        if user_grade is None or is_admin:
+        if filter_grade is None or is_admin:
             subtopic_query = {"parent_id": topic["topic_id"]}
             content_grade_query = {"topic_id": topic["topic_id"], "is_published": True}
         else:
-            subtopic_query = {"parent_id": topic["topic_id"], "min_grade": {"$lte": user_grade}, "max_grade": {"$gte": user_grade}}
+            subtopic_query = {"parent_id": topic["topic_id"], "min_grade": {"$lte": filter_grade}, "max_grade": {"$gte": filter_grade}}
             content_grade_query = {
                 "topic_id": topic["topic_id"], 
                 "is_published": True,
-                "min_grade": {"$lte": user_grade}, 
-                "max_grade": {"$gte": user_grade}
+                "min_grade": {"$lte": filter_grade}, 
+                "max_grade": {"$gte": filter_grade}
             }
         
-        # For children, only show content visible to them
-        if is_child:
+        # Add visibility filter for non-admin users
+        if visibility_filter and not is_admin:
             content_grade_query["$or"] = [
-                {"visible_to": {"$in": ["child"]}},
+                {"visible_to": {"$in": [visibility_filter]}},
                 {"visible_to": {"$exists": False}},
-                {"visible_to": []}
+                {"visible_to": []},
+                {"visible_to": None}
             ]
         
         subtopics = await db.content_topics.find(subtopic_query, {"_id": 0}).sort("order", 1).to_list(100)
