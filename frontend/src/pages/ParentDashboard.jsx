@@ -8,7 +8,7 @@ import {
   Check, Clock, X, ChevronRight, Eye, Calendar, Trash2,
   School, Megaphone, Store, LogOut, User, TrendingUp, TrendingDown,
   Sprout, LineChart, BookOpen, Award, CheckCircle, XCircle, History,
-  Filter, ArrowLeft, ArrowRight
+  Filter, ArrowLeft, ArrowRight, HandCoins, AlertTriangle, RefreshCw
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
