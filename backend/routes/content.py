@@ -155,10 +155,17 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                         "min_grade": {"$lte": filter_grade}, 
                         "max_grade": {"$gte": filter_grade}
                     }
-                    # Add visibility filter
-                    if visibility_filter:
+                    # Add visibility filter - teachers/parents see child content + their own
+                    if is_teacher:
                         subtopic_content_query["$or"] = [
-                            {"visible_to": {"$in": [visibility_filter]}},
+                            {"visible_to": {"$in": ["child", "teacher"]}},
+                            {"visible_to": {"$exists": False}},
+                            {"visible_to": []},
+                            {"visible_to": None}
+                        ]
+                    elif is_parent:
+                        subtopic_content_query["$or"] = [
+                            {"visible_to": {"$in": ["child", "parent"]}},
                             {"visible_to": {"$exists": False}},
                             {"visible_to": []},
                             {"visible_to": None}
