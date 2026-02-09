@@ -526,3 +526,66 @@ A gamified financial literacy learning application for children (K-5) with disti
 To complete the OAuth setup, add these redirect URIs to your Google Cloud Console OAuth 2.0 credentials:
 - For Preview: `https://coinquest-kids-2.preview.emergentagent.com/api/auth/google/callback`
 - For Production: `https://coinquest.co.in/api/auth/google/callback`
+
+### Session 12 Updates (February 9, 2026)
+
+**Lending & Borrowing Feature** ✅ (Grade 4-5 Only)
+
+A comprehensive peer-to-peer and parent-to-child lending system for financial literacy education.
+
+**Core Features:**
+1. **Loan Request System**
+   - Children can request loans from parents (max ₹2000) or classmates (max ₹500)
+   - Specify: amount, purpose, return date, interest offered
+   - Can send same request to multiple recipients for comparison
+
+2. **Response Options**
+   - Accept: Send money immediately
+   - Reject: Decline the request  
+   - Counter-offer: Propose different terms
+
+3. **Credit Score (0-100)**
+   - Calculated based on repayment history
+   - On-time payments increase score
+   - Late payments and defaults decrease score
+   - Visible to potential lenders before decision
+
+4. **Loan Limits**
+   - Max 5 ongoing debts at a time
+   - No limit on requests or past loans
+   - Amounts capped by recipient type
+
+5. **Bad Debt Handling**
+   - Loans overdue 7+ days marked as bad debt
+   - Credit score impact
+   - Parent notification
+
+**Dashboard Integration:**
+- Lending Center banner replaces AI Buddy for grades 4-5
+- Navigation shows "Lending" instead of "AI Buddy" for grades 4-5
+- Landing page features section updated
+
+**Files Created/Modified:**
+- `/app/backend/routes/lending.py` - New file (850+ lines)
+- `/app/frontend/src/pages/LendingBorrowingPage.jsx` - New file (700+ lines)
+- `/app/frontend/src/App.js` - Added route
+- `/app/frontend/src/pages/Dashboard.jsx` - Conditional Lending banner
+- `/app/frontend/src/pages/LandingPage.jsx` - Added Lending feature card
+
+**API Endpoints:**
+- GET /api/lending/eligibility
+- GET /api/lending/credit-score
+- GET /api/lending/limits
+- GET /api/lending/summary
+- POST /api/lending/request
+- GET /api/lending/requests/sent
+- GET /api/lending/requests/received
+- POST /api/lending/requests/{id}/respond
+- POST /api/lending/requests/{id}/accept-counter
+- POST /api/lending/requests/{id}/withdraw
+- GET /api/lending/loans/borrowing
+- GET /api/lending/loans/lending
+- POST /api/lending/loans/{id}/repay
+- GET /api/lending/classmates
+- GET /api/lending/parents
+- GET /api/lending/parent/child-loans/{child_id}
