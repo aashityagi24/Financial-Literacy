@@ -620,7 +620,7 @@ export default function StockMarketPage({ user }) {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="bg-[#374151]/50 rounded-lg p-3 text-center">
                     <p className="text-xs text-gray-400">Today's Open</p>
-                    <p className="font-bold text-lg">₹{selectedStock.opening_price?.toFixed(2)}</p>
+                    <p className="font-bold text-lg">₹{(selectedStock.opening_price || selectedStock.current_price)?.toFixed(2)}</p>
                   </div>
                   <div className="bg-[#374151]/50 rounded-lg p-3 text-center">
                     <p className="text-xs text-gray-400">Current (Close)</p>
@@ -628,7 +628,7 @@ export default function StockMarketPage({ user }) {
                   </div>
                   <div className="bg-[#374151]/50 rounded-lg p-3 text-center">
                     <p className="text-xs text-gray-400">Previous Close</p>
-                    <p className="font-bold text-lg">₹{selectedStock.previous_close?.toFixed(2)}</p>
+                    <p className="font-bold text-lg">₹{(selectedStock.previous_close || selectedStock.current_price)?.toFixed(2)}</p>
                   </div>
                 </div>
                 
