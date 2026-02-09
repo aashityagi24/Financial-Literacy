@@ -292,6 +292,46 @@ export default function ParentDashboard({ user }) {
     }
   };
   
+  // Lending handlers
+  const handleRespondToLoan = async () => {
+    if (!selectedLoanRequest || !loanResponseForm.action) return;
+    
+    try {
+      const res = await axios.post(`${API}/lending/requests/${selectedLoanRequest.request_id}/respond`, loanResponseForm);
+      toast.success(res.data.message);
+      setShowRespondLoan(false);
+      setSelectedLoanRequest(null);
+      setLoanResponseForm({ action: '', counter_amount: '', counter_interest: '', counter_return_date: '', message: '' });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to respond');
+    }
+  };
+  
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+  
+  const getLoanStatusBadge = (status) => {
+    const config = {
+      pending: { bg: "bg-yellow-100", text: "text-yellow-700", label: "Pending" },
+      countered: { bg: "bg-purple-100", text: "text-purple-700", label: "Counter Offer" },
+      active: { bg: "bg-blue-100", text: "text-blue-700", label: "Active" },
+      paid: { bg: "bg-green-100", text: "text-green-700", label: "Paid Off" },
+      bad_debt: { bg: "bg-red-100", text: "text-red-700", label: "Bad Debt" },
+    };
+    const c = config[status] || config.pending;
+    return <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.bg} ${c.text}`}>{c.label}</span>;
+  };
+  
+  const getCreditScoreColor = (score) => {
+    if (score >= 80) return "text-green-600";
+    if (score >= 60) return "text-yellow-600";
+    if (score >= 40) return "text-orange-600";
+    return "text-red-600";
+  };
+  
   const choreStatusColors = {
     pending: 'bg-[#FFD23F]/20 text-[#1D3557]',
     completed: 'bg-[#3D5A80]/20 text-[#3D5A80]',
