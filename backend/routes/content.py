@@ -161,23 +161,42 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
     return parent_topics
 
 @router.get("/content/topics/{topic_id}")
-async def get_topic_detail(topic_id: str, request: Request):
+async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int] = None):
     """Get topic details with content items"""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
-    is_admin = user and user.get("role") == "admin"
-    is_child = user and user.get("role") == "child"
+    user_role = user.get("role") if user else None
+    is_admin = user_role == "admin"
+    is_child = user_role == "child"
+    is_teacher = user_role == "teacher"
+    is_parent = user_role == "parent"
     user_id = user.get("user_id") if user else None
     user_grade = user.get("grade") if user else None
+    
+    # Determine grade filter based on role
+    filter_grade = None
+    if is_child:
+        filter_grade = user_grade
+    elif (is_teacher or is_parent) and grade is not None:
+        filter_grade = grade
+    
+    # Determine visibility filter based on role
+    visibility_filter = None
+    if is_child:
+        visibility_filter = "child"
+    elif is_teacher:
+        visibility_filter = "teacher"
+    elif is_parent:
+        visibility_filter = "parent"
     
     topic = await db.content_topics.find_one({"topic_id": topic_id}, {"_id": 0})
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
     
     # Grade filter for subtopics
-    if user_grade is not None and not is_admin:
-        subtopic_query = {"parent_id": topic_id, "min_grade": {"$lte": user_grade}, "max_grade": {"$gte": user_grade}}
+    if filter_grade is not None and not is_admin:
+        subtopic_query = {"parent_id": topic_id, "min_grade": {"$lte": filter_grade}, "max_grade": {"$gte": filter_grade}}
     else:
         subtopic_query = {"parent_id": topic_id}
     subtopics = await db.content_topics.find(subtopic_query, {"_id": 0}).sort("order", 1).to_list(100)
@@ -186,16 +205,17 @@ async def get_topic_detail(topic_id: str, request: Request):
     content_query = {"topic_id": topic_id}
     if not is_admin:
         content_query["is_published"] = True
-    if user_grade is not None and not is_admin:
-        content_query["min_grade"] = {"$lte": user_grade}
-        content_query["max_grade"] = {"$gte": user_grade}
+    if filter_grade is not None and not is_admin:
+        content_query["min_grade"] = {"$lte": filter_grade}
+        content_query["max_grade"] = {"$gte": filter_grade}
     
-    # For children, only show content visible to them
-    if is_child:
+    # Add visibility filter for non-admin users
+    if visibility_filter and not is_admin:
         content_query["$or"] = [
-            {"visible_to": {"$in": ["child"]}},
+            {"visible_to": {"$in": [visibility_filter]}},
             {"visible_to": {"$exists": False}},
-            {"visible_to": []}
+            {"visible_to": []},
+            {"visible_to": None}
         ]
     
     content_items = await db.content_items.find(content_query, {"_id": 0}).sort("order", 1).to_list(100)
@@ -217,12 +237,13 @@ async def get_topic_detail(topic_id: str, request: Request):
                 "$or": [
                     {"visible_to": {"$in": ["child"]}},
                     {"visible_to": {"$exists": False}},
-                    {"visible_to": []}
+                    {"visible_to": []},
+                    {"visible_to": None}
                 ]
             }
-            if user_grade is not None:
-                subtopic_content_query["min_grade"] = {"$lte": user_grade}
-                subtopic_content_query["max_grade"] = {"$gte": user_grade}
+            if filter_grade is not None:
+                subtopic_content_query["min_grade"] = {"$lte": filter_grade}
+                subtopic_content_query["max_grade"] = {"$gte": filter_grade}
             
             subtopic_content = await db.content_items.find(
                 subtopic_content_query, {"content_id": 1}
