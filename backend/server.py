@@ -6300,7 +6300,7 @@ async def _legacy_upload_html_file(file: UploadFile = File(...)):
     
     return {"url": f"/api/uploads/activities/{folder_name}/index.html", "folder": folder_name}
 
-@api_router.get("/uploads/activities/{folder_name}/files")
+@api_router.get("/activity-files/{folder_name}")
 async def get_activity_html_files(folder_name: str):
     """Get all HTML files in an activity folder"""
     activity_folder = ACTIVITIES_DIR / folder_name
