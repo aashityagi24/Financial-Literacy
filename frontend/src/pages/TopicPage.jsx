@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
@@ -22,6 +22,8 @@ const CONTENT_TYPE_CONFIG = {
 export default function TopicPage({ user }) {
   const { topicId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const gradeFilter = searchParams.get('grade');
   const [topic, setTopic] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedContent, setSelectedContent] = useState(null);
@@ -32,12 +34,17 @@ export default function TopicPage({ user }) {
   
   useEffect(() => {
     fetchTopicData();
-  }, [topicId]);
+  }, [topicId, gradeFilter]);
   
   const fetchTopicData = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API}/content/topics/${topicId}`);
+      // Build API URL with grade filter for teachers/parents
+      let url = `${API}/content/topics/${topicId}`;
+      if (gradeFilter !== null && gradeFilter !== undefined) {
+        url += `?grade=${gradeFilter}`;
+      }
+      const res = await axios.get(url);
       setTopic(res.data);
     } catch (error) {
       toast.error('Failed to load topic');
