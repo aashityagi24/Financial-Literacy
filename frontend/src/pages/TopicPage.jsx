@@ -449,6 +449,26 @@ export default function TopicPage({ user }) {
               </div>
             </div>
             
+            {/* HTML Files Navigation (for activities with multiple files) */}
+            {selectedContent.content_type === 'activity' && htmlFiles.length > 1 && (
+              <div className="px-4 py-2 bg-[#E0FBFC] border-b-2 border-[#1D3557] flex items-center gap-2 overflow-x-auto">
+                <span className="text-sm font-medium text-[#1D3557] whitespace-nowrap">Pages:</span>
+                {htmlFiles.map((file, index) => (
+                  <button
+                    key={file.path}
+                    onClick={() => setCurrentHtmlIndex(index)}
+                    className={`px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                      currentHtmlIndex === index 
+                        ? 'bg-[#1D3557] text-white' 
+                        : 'bg-white border-2 border-[#1D3557] text-[#1D3557] hover:bg-[#FFD23F]/30'
+                    }`}
+                  >
+                    {file.name}
+                  </button>
+                ))}
+              </div>
+            )}
+            
             {/* Modal Content */}
             <div className="flex-1 bg-gray-100">
               {(selectedContent.content_type === 'worksheet' || selectedContent.content_type === 'workbook') && (
@@ -460,9 +480,9 @@ export default function TopicPage({ user }) {
               )}
               {selectedContent.content_type === 'activity' && (
                 <iframe 
-                  src={selectedContent.content_data.html_url}
+                  src={htmlFiles.length > 0 ? getAssetUrl(htmlFiles[currentHtmlIndex]?.url) : getAssetUrl(selectedContent.content_data.html_url)}
                   className="w-full h-full"
-                  title={selectedContent.title}
+                  title={htmlFiles.length > 0 ? htmlFiles[currentHtmlIndex]?.name : selectedContent.title}
                   sandbox="allow-scripts allow-same-origin"
                 />
               )}
@@ -481,13 +501,40 @@ export default function TopicPage({ user }) {
             
             {/* Modal Footer */}
             <div className="p-4 border-t-3 border-[#1D3557] flex justify-between items-center bg-[#FFD23F]/20">
-              <span className="text-lg font-bold text-[#06D6A0]">+₹{selectedContent.reward_coins} on completion</span>
-              <button 
-                onClick={() => { handleCompleteContent(selectedContent.content_id); closeViewer(); }}
-                className="btn-primary px-6 py-3 text-lg"
-              >
-                <Check className="w-5 h-5 mr-2 inline" />
-                Mark as Complete
+              {/* Navigation for multi-file activities */}
+              {selectedContent.content_type === 'activity' && htmlFiles.length > 1 ? (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setCurrentHtmlIndex(Math.max(0, currentHtmlIndex - 1))}
+                    disabled={currentHtmlIndex === 0}
+                    className="p-2 rounded-xl border-2 border-[#1D3557] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#E0FBFC]"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <span className="text-sm font-medium text-[#1D3557]">
+                    {currentHtmlIndex + 1} / {htmlFiles.length}
+                  </span>
+                  <button
+                    onClick={() => setCurrentHtmlIndex(Math.min(htmlFiles.length - 1, currentHtmlIndex + 1))}
+                    disabled={currentHtmlIndex === htmlFiles.length - 1}
+                    className="p-2 rounded-xl border-2 border-[#1D3557] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#E0FBFC]"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <span className="text-lg font-bold text-[#06D6A0]">+₹{selectedContent.reward_coins} on completion</span>
+              )}
+              <div className="flex items-center gap-3">
+                {selectedContent.content_type === 'activity' && htmlFiles.length > 1 && (
+                  <span className="text-lg font-bold text-[#06D6A0]">+₹{selectedContent.reward_coins}</span>
+                )}
+                <button 
+                  onClick={() => { handleCompleteContent(selectedContent.content_id); closeViewer(); }}
+                  className="btn-primary px-6 py-3 text-lg"
+                >
+                  <Check className="w-5 h-5 mr-2 inline" />
+                  Mark as Complete
               </button>
             </div>
           </div>
