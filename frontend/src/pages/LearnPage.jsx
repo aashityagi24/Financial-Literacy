@@ -179,7 +179,7 @@ export default function LearnPage({ user }) {
                   </div>
                 ) : (
                 <Link 
-                  to={`/learn/topic/${topic.topic_id}`}
+                  to={`/learn/topic/${topic.topic_id}${gradeFilter !== null ? `?grade=${gradeFilter}` : ''}`}
                   className="flex items-center gap-5 p-5 hover:bg-[#FFD23F]/10 transition-colors"
                 >
                   {topic.thumbnail ? (
