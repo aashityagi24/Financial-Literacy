@@ -6313,8 +6313,11 @@ async def get_activity_html_files(folder_name: str):
     # Find all .html files
     for html_file in activity_folder.rglob("*.html"):
         relative_path = html_file.relative_to(activity_folder)
+        # Clean up the display name
+        display_name = html_file.stem.replace("_", " ").replace("-", " ").replace(".html", "").replace(".htm", "")
+        display_name = display_name.title()
         html_files.append({
-            "name": html_file.stem.replace("_", " ").replace("-", " ").title(),
+            "name": display_name,
             "path": str(relative_path),
             "url": f"/api/uploads/activities/{folder_name}/{relative_path}"
         })
@@ -6322,16 +6325,19 @@ async def get_activity_html_files(folder_name: str):
     # Find all .htm files
     for html_file in activity_folder.rglob("*.htm"):
         relative_path = html_file.relative_to(activity_folder)
+        display_name = html_file.stem.replace("_", " ").replace("-", " ").replace(".html", "").replace(".htm", "")
+        display_name = display_name.title()
         html_files.append({
-            "name": html_file.stem.replace("_", " ").replace("-", " ").title(),
+            "name": display_name,
             "path": str(relative_path),
             "url": f"/api/uploads/activities/{folder_name}/{relative_path}"
         })
     
-    # Sort - index.html/index.htm first, then alphabetically by name
+    # Sort - index files first, then alphabetically by name
     def sort_key(x):
         filename = x["path"].split("/")[-1].lower()
-        is_index = filename in ("index.html", "index.htm")
+        # Check if filename starts with "index" (handles index.html, index.htm, index.html.html, etc.)
+        is_index = filename.startswith("index")
         return (0 if is_index else 1, x["name"].lower())
     
     html_files.sort(key=sort_key)
