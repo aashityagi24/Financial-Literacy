@@ -100,7 +100,25 @@ export default function TopicPage({ user }) {
         toast.info('No video available for this item');
       }
     } else if (content.content_type === 'book') {
-      if (content.content_data?.content_url) {
+      // Books can have pdf_url, html_url, or external content_url
+      if (content.content_data?.pdf_url) {
+        setShowViewer(true);
+      } else if (content.content_data?.html_url) {
+        // Check for multiple HTML files
+        if (content.content_data?.html_files?.length > 0) {
+          setHtmlFiles(content.content_data.html_files);
+        } else if (content.content_data?.html_folder) {
+          try {
+            const res = await axios.get(`${API}/activity-files/${content.content_data.html_folder}`);
+            if (res.data.html_files?.length > 0) {
+              setHtmlFiles(res.data.html_files);
+            }
+          } catch (err) {
+            setHtmlFiles([{ name: 'Book', path: 'index.html', url: content.content_data.html_url }]);
+          }
+        }
+        setShowViewer(true);
+      } else if (content.content_data?.content_url) {
         window.open(content.content_data.content_url, '_blank');
       } else {
         toast.info('No book link available');
