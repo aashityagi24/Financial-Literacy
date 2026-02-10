@@ -1025,13 +1025,45 @@ async def get_child_classroom(child_id: str, request: Request):
         {"_id": 0}
     )
     if not enrollment:
-        return {"classroom": None}
+        return {"has_classroom": False, "classroom": None}
     
     classroom = await db.classrooms.find_one(
         {"classroom_id": enrollment["classroom_id"]},
         {"_id": 0}
     )
-    return {"classroom": classroom}
+    
+    if not classroom:
+        return {"has_classroom": False, "classroom": None}
+    
+    # Get teacher info
+    teacher = None
+    if classroom.get("teacher_id"):
+        teacher = await db.users.find_one(
+            {"user_id": classroom["teacher_id"]},
+            {"_id": 0, "name": 1, "email": 1, "picture": 1}
+        )
+    
+    # Get school info if classroom is linked to a school
+    school = None
+    if classroom.get("school_id"):
+        school = await db.schools.find_one(
+            {"school_id": classroom["school_id"]},
+            {"_id": 0, "name": 1, "school_id": 1}
+        )
+    
+    # Get announcements
+    announcements = await db.classroom_announcements.find(
+        {"classroom_id": classroom["classroom_id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(3).to_list(3)
+    
+    return {
+        "has_classroom": True,
+        "classroom": classroom,
+        "teacher": teacher,
+        "school": school,
+        "announcements": announcements
+    }
 
 @router.post("/chores")
 async def create_chore(request: Request):
