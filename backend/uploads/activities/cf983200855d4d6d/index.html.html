@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What is the value of the coin?</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Fredoka', 'Comic Sans MS', sans-serif;
+      background: linear-gradient(-45deg, #f6d365, #fda085, #f093fb, #f5576c);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Floating background */
+    .floating-bg {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .float-symbol {
+      position: absolute;
+      font-size: 40px;
+      opacity: 0.15;
+      animation: floatAround 20s infinite ease-in-out;
+    }
+
+    @keyframes floatAround {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(30px, -30px) rotate(90deg); }
+      50% { transform: translate(-20px, -60px) rotate(180deg); }
+      75% { transform: translate(-40px, -30px) rotate(270deg); }
+    }
+
+    /* Confetti canvas */
+    #confettiCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* Main container */
+    .game-container {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 40px;
+      padding: 26px 28px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+      max-width: 980px;
+      width: 95%;
+      animation: slideIn 0.8s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-50px) scale(0.9); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .header { text-align: center; margin-bottom: 16px; }
+
+    .title {
+      font-size: 2.2em;
+      font-weight: 700;
+      background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+      animation: titleBounce 2s ease-in-out infinite;
+    }
+
+    @keyframes titleBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    .subtitle { font-size: 1.05em; color: #666; font-weight: 400; }
+
+    .score-container {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 12px 0 14px;
+      flex-wrap: wrap;
+    }
+
+    .score-box {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      padding: 10px 18px;
+      border-radius: 22px;
+      font-weight: 600;
+      font-size: 1em;
+      box-shadow: 0 8px 20px rgba(245, 87, 108, 0.35);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .score-box.correct {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      box-shadow: 0 8px 20px rgba(79, 172, 254, 0.35);
+    }
+
+    .score-box .emoji { font-size: 1.2em; }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    .progress-container {
+      background: #e0e0e0;
+      border-radius: 20px;
+      height: 14px;
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #f6d365 0%, #fda085 100%);
+      border-radius: 20px;
+      transition: width 0.5s ease;
+      position: relative;
+    }
+
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .question-number {
+      text-align: center;
+      font-size: 1.05em;
+      color: #666;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    /* HORIZONTAL LAYOUT */
+    .horizontal-layout {
+      display: flex;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .image-area {
+      flex: 1.15;
+      background: linear-gradient(135deg, #fff9e6 0%, #ffe8cc 100%);
+      border-radius: 25px;
+      padding: 14px;
+      min-height: 320px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .image-area::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+      animation: rotate 10s linear infinite;
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .currency-image {
+      max-width: 100%;
+      max-height: 290px;
+      border-radius: 18px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+      animation: imageAppear 0.6s ease-out;
+      position: relative;
+      z-index: 1;
+      transition: transform 0.3s ease;
+    }
+
+    .currency-image:hover { transform: scale(1.04) rotate(1deg); }
+
+    @keyframes imageAppear {
+      0% { opacity: 0; transform: scale(0.55) rotate(-8deg); }
+      60% { transform: scale(1.08) rotate(4deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+
+    .right-panel {
+      flex: 0.85;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 14px;
+      padding: 10px 6px;
+    }
+
+    .question-text {
+      text-align: center;
+      font-size: 1.35em;
+      font-weight: 700;
+      color: #f6803d;
+      animation: questionPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes questionPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+
+    .input-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .rupee-input-wrapper {
+      display: flex;
+      align-items: center;
+      background: white;
+      border-radius: 18px;
+      padding: 8px 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      border: 3px solid #e0e0e0;
+    }
+
+    .rupee-input-wrapper:focus-within {
+      border-color: #f6803d;
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(246, 128, 61, 0.3);
+    }
+
+    .rupee-symbol {
+      font-size: 2em;
+      font-weight: 700;
+      color: #f6803d;
+      margin-right: 8px;
+    }
+
+    .value-input {
+      border: none;
+      outline: none;
+      font-size: 2em;
+      font-weight: 800;
+      color: #333;
+      width: 150px;
+      font-family: 'Fredoka', sans-serif;
+      text-align: center;
+    }
+
+    .value-input::placeholder { color: #ccc; }
+
+    .submit-btn {
+      background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+      color: white;
+      border: none;
+      padding: 14px 36px;
+      font-size: 1.15em;
+      font-weight: 800;
+      border-radius: 22px;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(246, 128, 61, 0.4);
+      transition: all 0.3s ease;
+      font-family: 'Fredoka', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      transform: translateY(-6px) scale(1.03);
+      box-shadow: 0 15px 40px rgba(246, 128, 61, 0.6);
+    }
+
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.25s ease;
+      padding: 16px;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal-content {
+      background: white;
+      border-radius: 34px;
+      padding: 36px 28px;
+      text-align: center;
+      max-width: 560px;
+      width: 100%;
+      animation: modalBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes modalBounce {
+      0% { transform: scale(0.3) rotate(-8deg); opacity: 0; }
+      70% { transform: scale(1.08) rotate(3deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .modal-icon {
+      font-size: 86px;
+      margin-bottom: 10px;
+      animation: iconBounce 0.9s ease infinite;
+    }
+
+    @keyframes iconBounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-10px) scale(1.08); }
+    }
+
+    .modal-title {
+      font-size: 2.2em;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .modal-title.correct { color: #4caf50; }
+    .modal-title.incorrect { color: #ff6b6b; }
+
+    .modal-message {
+      font-size: 1.12em;
+      line-height: 1.7;
+      color: #555;
+      margin-bottom: 18px;
+    }
+
+    .continue-btn {
+      background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+      color: white;
+      border: none;
+      padding: 14px 34px;
+      font-size: 1.1em;
+      font-weight: 700;
+      border-radius: 26px;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(246, 128, 61, 0.4);
+      transition: all 0.3s ease;
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    .continue-btn:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 15px 40px rgba(246, 128, 61, 0.6);
+    }
+
+    /* Completion */
+    .completion-screen { text-align: center; padding: 16px 10px; }
+
+    .completion-icon {
+      font-size: 110px;
+      margin-bottom: 14px;
+      animation: completionSpin 2s ease-in-out infinite;
+    }
+
+    @keyframes completionSpin {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(360deg) scale(1.15); }
+    }
+
+    .completion-title {
+      font-size: 2.2em;
+      font-weight: 800;
+      color: #f6803d;
+      margin-bottom: 12px;
+    }
+
+    .completion-stats {
+      background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+      padding: 22px;
+      border-radius: 22px;
+      margin: 18px auto 16px;
+      max-width: 420px;
+    }
+
+    .stat-number { font-size: 2.6em; font-weight: 800; color: #2d6a4f; }
+
+    .play-again-btn {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      border: none;
+      padding: 16px 46px;
+      font-size: 1.15em;
+      font-weight: 800;
+      border-radius: 28px;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+      transition: all 0.3s ease;
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    .play-again-btn:hover {
+      transform: translateY(-4px) scale(1.03);
+      box-shadow: 0 15px 40px rgba(245, 87, 108, 0.6);
+    }
+
+    .loading-state { text-align: center; color: #666; }
+    .loading-spinner { font-size: 2.6em; animation: spin 1s linear infinite; }
+
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    @media (max-width: 820px) {
+      .horizontal-layout { flex-direction: column; }
+      .right-panel { padding: 0; }
+      .image-area { min-height: 280px; }
+      .currency-image { max-height: 260px; }
+    }
+
+    @media (max-width: 520px) {
+      .title { font-size: 1.8em; }
+      .value-input { font-size: 1.7em; width: 130px; }
+      .rupee-symbol { font-size: 1.7em; }
+      .submit-btn { padding: 12px 28px; font-size: 1.02em; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating background elements -->
+  <div class="floating-bg">
+    <div class="float-symbol" style="top: 10%; left: 10%;">🪙</div>
+    <div class="float-symbol" style="top: 20%; left: 80%; animation-delay: 2s;">₹</div>
+    <div class="float-symbol" style="top: 60%; left: 15%; animation-delay: 4s;">🪙</div>
+    <div class="float-symbol" style="top: 70%; left: 75%; animation-delay: 6s;">₹</div>
+    <div class="float-symbol" style="top: 40%; left: 50%; animation-delay: 3s;">🪙</div>
+    <div class="float-symbol" style="top: 85%; left: 40%; animation-delay: 5s;">₹</div>
+  </div>
+
+  <canvas id="confettiCanvas"></canvas>
+
+  <div class="game-container">
+    <div class="header">
+      <h1 class="title">What is the value of the coin?</h1>
+      <p class="subtitle">Look at the images and write the value of the coin.</p>
+    </div>
+
+    <div class="score-container">
+      <div class="score-box">
+        <span class="emoji">🎯</span>
+        <span>Total: <strong id="totalScore">0</strong></span>
+      </div>
+      <div class="score-box correct">
+        <span class="emoji">⭐</span>
+        <span>Correct: <strong id="correctScore">0</strong></span>
+      </div>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+    </div>
+
+    <div class="question-number" id="questionNumber">Question 1 of 5</div>
+
+    <div class="horizontal-layout">
+      <div class="image-area" id="imageArea">
+        <div class="loading-state">
+          <div class="loading-spinner">⏳</div>
+          <h3>Loading...</h3>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div class="question-text" id="questionText">What is the value of this coin?</div>
+
+        <div class="input-container" id="inputContainer">
+          <div class="rupee-input-wrapper">
+            <span class="rupee-symbol">₹</span>
+            <input type="number" class="value-input" id="valueInput" placeholder="?" min="1" max="20" />
+          </div>
+          <button class="submit-btn" id="submitBtn" disabled>Check Answer ✓</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback Modal -->
+  <div class="modal" id="feedbackModal">
+    <div class="modal-content" id="modalContent">
+      <div class="modal-icon" id="modalIcon"></div>
+      <h2 class="modal-title" id="modalTitle"></h2>
+      <p class="modal-message" id="modalMessage"></p>
+      <button class="continue-btn" id="continueBtn">Continue →</button>
+    </div>
+  </div>
+
+  <script>
+    // Game state
+    let currentImageIndex = 0;
+    let totalQuestions = 0;
+    let correctAnswers = 0;
+    let currentCorrectValue = 0;
+
+    // Coins database (WEBP in /images)
+    const imageDatabase = [
+      { file: 'coin-1.webp', value: 1, name: '₹1 Coin' },
+      { file: 'coin-2.webp', value: 2, name: '₹2 Coin' },
+      { file: 'coin-5.webp', value: 5, name: '₹5 Coin' },
+      { file: 'coin-10.webp', value: 10, name: '₹10 Coin' },
+      { file: 'coin-20.webp', value: 20, name: '₹20 Coin' }
+    ];
+
+    // Shuffle array for random order
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    let images = shuffleArray(imageDatabase);
+    let totalImages = images.length;
+
+    // DOM elements
+    const imageArea = document.getElementById('imageArea');
+    const valueInput = document.getElementById('valueInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const modal = document.getElementById('feedbackModal');
+    const continueBtn = document.getElementById('continueBtn');
+    const modalContent = document.getElementById('modalContent');
+    const progressBar = document.getElementById('progressBar');
+    const questionNumber = document.getElementById('questionNumber');
+    const questionText = document.getElementById('questionText');
+    const inputContainer = document.getElementById('inputContainer');
+
+    // Confetti
+    const canvas = document.getElementById('confettiCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function sizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    sizeCanvas();
+
+    window.addEventListener('resize', sizeCanvas);
+
+    // Enable submit button when input has value
+    valueInput.addEventListener('input', () => {
+      submitBtn.disabled = !valueInput.value;
+    });
+
+    // Allow Enter key to submit
+    valueInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && valueInput.value) {
+        checkAnswer();
+      }
+    });
+
+    // Load image function
+    function loadImage(index) {
+      if (index >= images.length) {
+        showCompletionScreen();
+        return;
+      }
+
+      currentImageIndex = index;
+      const imageData = images[index];
+      currentCorrectValue = imageData.value;
+
+      // Update progress
+      const progress = ((index + 1) / totalImages) * 100;
+      progressBar.style.width = `${progress}%`;
+      questionNumber.textContent = `Question ${index + 1} of ${totalImages}`;
+
+      // Load image
+      imageArea.innerHTML = `<img class="currency-image" src="images/${imageData.file}" alt="Coin" onerror="handleImageError()">`;
+
+      // Reset input
+      valueInput.value = '';
+      valueInput.disabled = false;
+      submitBtn.disabled = true;
+      valueInput.focus();
+
+      // Play sound
+      playSound('load');
+    }
+
+    // Handle image error
+    window.handleImageError = function () {
+      imageArea.innerHTML = `
+        <div class="loading-state" style="color: #f44336; position: relative; z-index: 1;">
+          <div style="font-size: 60px; margin-bottom: 15px;">⚠️</div>
+          <h3>Image not found!</h3>
+          <p style="margin-top: 10px; font-size: 0.95em;">Looking for: <strong>${images[currentImageIndex].file}</strong></p>
+          <p style="margin-top: 10px; font-size: 0.95em;">Make sure images are in the <strong>images</strong> folder</p>
+        </div>
+      `;
+      valueInput.disabled = true;
+      submitBtn.disabled = true;
+    };
+
+    // Check answer
+    submitBtn.addEventListener('click', checkAnswer);
+
+    function checkAnswer() {
+      const userAnswer = parseInt(valueInput.value, 10);
+      if (!userAnswer) return;
+
+      // Disable input until modal closes
+      valueInput.disabled = true;
+      submitBtn.disabled = true;
+
+      totalQuestions++;
+      const isCorrect = userAnswer === currentCorrectValue;
+
+      if (isCorrect) {
+        correctAnswers++;
+        updateScores();
+        showFeedback(true, userAnswer);
+        playSound('correct');
+        createConfetti();
+      } else {
+        updateScores();
+        // Feedback for wrong attempt (shows correct answer)
+        showFeedback(false, userAnswer);
+        playSound('incorrect');
+      }
+    }
+
+    // Show feedback modal
+    function showFeedback(isCorrect, userAnswer) {
+      const modalIcon = document.getElementById('modalIcon');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalMessage = document.getElementById('modalMessage');
+
+      if (isCorrect) {
+        modalIcon.textContent = '🎉';
+        modalTitle.textContent = 'Excellent!';
+        modalTitle.className = 'modal-title correct';
+        modalMessage.innerHTML = `
+          <strong style="font-size: 1.5em; color: #2d6a4f;">₹${currentCorrectValue}</strong><br><br>
+          That’s correct!<br>
+          This is a <strong>₹${currentCorrectValue} coin</strong>.
+        `;
+        modalContent.style.background = 'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)';
+      } else {
+        modalIcon.textContent = '🤔';
+        modalTitle.textContent = 'Not quite!';
+        modalTitle.className = 'modal-title incorrect';
+        modalMessage.innerHTML = `
+          <div style="background: #fff3cd; padding: 16px; border-radius: 14px; margin-bottom: 14px;">
+            <p style="font-size: 1.12em; color: #856404;">
+              You answered: <strong style="font-size: 1.25em;">₹${userAnswer}</strong>
+            </p>
+          </div>
+          <div style="background: white; padding: 18px; border-radius: 14px;">
+            <p style="font-size: 1.08em; margin-bottom: 8px;">The correct answer is:</p>
+            <p style="font-size: 2.4em; font-weight: 800; color: #4caf50; margin: 10px 0;">₹${currentCorrectValue}</p>
+            <p style="font-size: 1.02em; color: #666;">This is a <strong>₹${currentCorrectValue} coin</strong>.</p>
+          </div>
+        `;
+        modalContent.style.background = 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)';
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    // Continue button
+    continueBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+      currentImageIndex++;
+      if (currentImageIndex < images.length) {
+        loadImage(currentImageIndex);
+      } else {
+        showCompletionScreen();
+      }
+    });
+
+    // Update scores
+    function updateScores() {
+      document.getElementById('totalScore').textContent = totalQuestions;
+      document.getElementById('correctScore').textContent = correctAnswers;
+    }
+
+    // Show completion screen
+    function showCompletionScreen() {
+      const percentage = totalQuestions ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
+      let emoji = '🎉';
+      let message = 'Amazing job!';
+
+      if (percentage === 100) {
+        emoji = '🏆';
+        message = "Perfect Score! You're a coin expert!";
+      } else if (percentage >= 80) {
+        emoji = '⭐';
+        message = 'Excellent work!';
+      } else if (percentage >= 60) {
+        emoji = '👍';
+        message = 'Good job!';
+      } else {
+        emoji = '💪';
+        message = 'Keep practicing!';
+      }
+
+      imageArea.innerHTML = `
+        <div class="completion-screen" style="position: relative; z-index: 1;">
+          <div class="completion-icon">${emoji}</div>
+          <h2 class="completion-title">${message}</h2>
+          <div class="completion-stats">
+            <p style="font-size: 1.15em; margin-bottom: 10px;">Your Score</p>
+            <div class="stat-number">${correctAnswers}/${totalQuestions}</div>
+            <p style="font-size: 1.9em; font-weight: 800; color: #2d6a4f; margin-top: 10px;">${percentage}%</p>
+          </div>
+          <button class="play-again-btn" id="playAgainBtn">Play Again</button>
+        </div>
+      `;
+
+      questionText.style.display = 'none';
+      inputContainer.style.display = 'none';
+      questionNumber.style.display = 'none';
+
+      document.getElementById('playAgainBtn').addEventListener('click', resetGame);
+
+      createConfetti();
+      playSound('complete');
+    }
+
+    // Reset game (NO page reload)
+    function resetGame() {
+      // Reset state
+      currentImageIndex = 0;
+      totalQuestions = 0;
+      correctAnswers = 0;
+
+      // New shuffle
+      images = shuffleArray(imageDatabase);
+      totalImages = images.length;
+
+      // Restore UI
+      questionText.style.display = 'block';
+      inputContainer.style.display = 'flex';
+      questionNumber.style.display = 'block';
+
+      updateScores();
+      progressBar.style.width = '0%';
+
+      loadImage(0);
+    }
+
+    // Sound effects (kept from your original)
+    function playSound(type) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+
+      const audioContext = new AudioContextClass();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      if (type === 'correct') {
+        oscillator.frequency.value = 523.25;
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.1);
+
+        setTimeout(() => {
+          const osc2 = audioContext.createOscillator();
+          const gain2 = audioContext.createGain();
+          osc2.connect(gain2);
+          gain2.connect(audioContext.destination);
+          osc2.frequency.value = 659.25;
+          gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+          osc2.start();
+          osc2.stop(audioContext.currentTime + 0.1);
+        }, 100);
+
+        setTimeout(() => {
+          const osc3 = audioContext.createOscillator();
+          const gain3 = audioContext.createGain();
+          osc3.connect(gain3);
+          gain3.connect(audioContext.destination);
+          osc3.frequency.value = 783.99;
+          gain3.gain.setValueAtTime(0.3, audioContext.currentTime);
+          osc3.start();
+          osc3.stop(audioContext.currentTime + 0.2);
+        }, 200);
+      } else if (type === 'incorrect') {
+        oscillator.frequency.value = 200;
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.3);
+      } else if (type === 'load') {
+        oscillator.frequency.value = 440;
+        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.08);
+      } else if (type === 'complete') {
+        const notes = [523.25, 587.33, 659.25, 783.99];
+        notes.forEach((freq, idx) => {
+          setTimeout(() => {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.2, audioContext.currentTime);
+            osc.start();
+            osc.stop(audioContext.currentTime + 0.3);
+          }, idx * 150);
+        });
+      }
+    }
+
+    // Confetti animation (kept from your original)
+    function createConfetti() {
+      const confettiCount = 200;
+      const confetti = [];
+      const colors = ['#f6d365', '#fda085', '#f093fb', '#f5576c', '#45b7d1', '#4facfe'];
+
+      for (let i = 0; i < confettiCount; i++) {
+        confetti.push({
+          x: Math.random() * canvas.width,
+          y: -20,
+          r: Math.random() * 5 + 3,
+          d: Math.random() * confettiCount,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          tilt: Math.floor(Math.random() * 10) - 10,
+          tiltAngleIncremental: Math.random() * 0.07 + 0.05,
+          tiltAngle: 0
+        });
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        confetti.forEach((c, index) => {
+          ctx.beginPath();
+          ctx.lineWidth = c.r / 2;
+          ctx.strokeStyle = c.color;
+          ctx.moveTo(c.x + c.tilt + c.r / 4, c.y);
+          ctx.lineTo(c.x + c.tilt, c.y + c.tilt + c.r / 4);
+          ctx.stroke();
+
+          c.tiltAngle += c.tiltAngleIncremental;
+          c.y += (Math.cos(c.d) + 3 + c.r / 2) / 2;
+          c.x += Math.sin(c.d);
+          c.tilt = Math.sin(c.tiltAngle - index / 3) * 15;
+
+          if (c.y > canvas.height) {
+            confetti.splice(index, 1);
+          }
+        });
+
+        if (confetti.length > 0) requestAnimationFrame(draw);
+      }
+
+      draw();
+    }
+
+    // Start
+    window.addEventListener('load', () => {
+      updateScores();
+      loadImage(0);
+    });
+  </script>
+</body>
+</html>
