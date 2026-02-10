@@ -26,6 +26,8 @@ export default function TopicPage({ user }) {
   const [loading, setLoading] = useState(true);
   const [selectedContent, setSelectedContent] = useState(null);
   const [showViewer, setShowViewer] = useState(false);
+  const [htmlFiles, setHtmlFiles] = useState([]);
+  const [currentHtmlIndex, setCurrentHtmlIndex] = useState(0);
   const showAnimations = useFirstVisitAnimation(`topic-${topicId}`);
   
   useEffect(() => {
