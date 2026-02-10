@@ -398,7 +398,10 @@ export default function TeacherDashboard({ user }) {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 px-3 py-2 bg-white/20 rounded-xl">
                 <User className="w-4 h-4 text-white" />
-                <span className="text-sm font-medium text-white">{user?.name || 'Teacher'}</span>
+                <span className="text-sm font-medium text-white">
+                  {user?.name || 'Teacher'}
+                  {user?.school_name && <span className="text-white/80"> • {user.school_name}</span>}
+                </span>
               </div>
               <button
                 onClick={handleLogout}
