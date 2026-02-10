@@ -212,36 +212,56 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
     content_query = {"topic_id": topic_id}
     if not is_admin:
         content_query["is_published"] = True
-    if filter_grade is not None and not is_admin:
-        content_query["min_grade"] = {"$lte": filter_grade}
-        content_query["max_grade"] = {"$gte": filter_grade}
     
-    # Add visibility filter for non-admin users
+    # Build the complete query with grade AND visibility filters
     if not is_admin:
+        # Start with base conditions
+        conditions = [content_query]
+        
+        # Add grade filter if applicable
+        if filter_grade is not None:
+            grade_condition = {
+                "min_grade": {"$lte": filter_grade},
+                "max_grade": {"$gte": filter_grade}
+            }
+            conditions.append(grade_condition)
+        
+        # Add visibility filter
         if is_child:
-            # Children only see content marked for them
-            content_query["$or"] = [
-                {"visible_to": {"$in": ["child"]}},
-                {"visible_to": {"$exists": False}},
-                {"visible_to": []},
-                {"visible_to": None}
-            ]
+            visibility_condition = {
+                "$or": [
+                    {"visible_to": {"$in": ["child"]}},
+                    {"visible_to": {"$exists": False}},
+                    {"visible_to": []},
+                    {"visible_to": None}
+                ]
+            }
         elif is_teacher:
-            # Teachers see child content + teacher-specific content
-            content_query["$or"] = [
-                {"visible_to": {"$in": ["child", "teacher"]}},
-                {"visible_to": {"$exists": False}},
-                {"visible_to": []},
-                {"visible_to": None}
-            ]
+            visibility_condition = {
+                "$or": [
+                    {"visible_to": {"$in": ["child", "teacher"]}},
+                    {"visible_to": {"$exists": False}},
+                    {"visible_to": []},
+                    {"visible_to": None}
+                ]
+            }
         elif is_parent:
-            # Parents see child content + parent-specific content
-            content_query["$or"] = [
-                {"visible_to": {"$in": ["child", "parent"]}},
-                {"visible_to": {"$exists": False}},
-                {"visible_to": []},
-                {"visible_to": None}
-            ]
+            visibility_condition = {
+                "$or": [
+                    {"visible_to": {"$in": ["child", "parent"]}},
+                    {"visible_to": {"$exists": False}},
+                    {"visible_to": []},
+                    {"visible_to": None}
+                ]
+            }
+        else:
+            visibility_condition = {}
+        
+        if visibility_condition:
+            conditions.append(visibility_condition)
+        
+        # Combine all conditions with $and
+        content_query = {"$and": conditions}
     
     content_items = await db.content_items.find(content_query, {"_id": 0}).sort("order", 1).to_list(100)
     
