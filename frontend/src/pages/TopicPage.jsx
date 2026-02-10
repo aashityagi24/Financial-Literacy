@@ -534,8 +534,8 @@ export default function TopicPage({ user }) {
             
             {/* Modal Footer */}
             <div className="p-4 border-t-3 border-[#1D3557] flex justify-between items-center bg-[#FFD23F]/20">
-              {/* Navigation for multi-file activities */}
-              {selectedContent.content_type === 'activity' && htmlFiles.length > 1 ? (
+              {/* Navigation for multi-file activities and books */}
+              {((selectedContent.content_type === 'activity' || (selectedContent.content_type === 'book' && selectedContent.content_data?.html_url)) && htmlFiles.length > 1) ? (
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setCurrentHtmlIndex(Math.max(0, currentHtmlIndex - 1))}
