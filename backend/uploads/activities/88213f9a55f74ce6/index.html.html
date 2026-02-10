@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>I Spy in the Forest - Instructions</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: url('currency.png') center/cover no-repeat;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .container {
+      background: rgba(255,255,255,0.95);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 600px;
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2), 0 5px 15px rgba(0,0,0,0.1);
+      transform: rotateX(8deg);
+      transform-origin: top center;
+      backface-visibility: hidden;
+    }
+    h1 {
+      color: #006400;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      font-size: 2.5rem;
+    }
+    p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: #333;
+      margin-bottom: 30px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 30px 0;
+      text-align: left;
+    }
+    ul li {
+      position: relative;
+      padding-left: 40px;
+      margin-bottom: 16px;
+      font-size: 1.1rem;
+      color: #444;
+    }
+    ul li::before {
+      content: '🌿';
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+    .start-btn {
+      display: inline-block;
+      padding: 14px 28px;
+      font-size: 1.2rem;
+      color: #fff;
+      background: #28a745;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: background 0.2s;
+    }
+    .start-btn:hover {
+      background: #218838;
+    }
+    @media (max-width: 600px) {
+      h1 { font-size: 2rem; }
+      .start-btn { width: 100%; box-sizing: border-box; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Money In the Messy Room</h1>
+    <p>You have a very messy sibling and they left money lying around in your room. You have to find and collect all the notes and coins.</p>
+    <ul>
+      <li>Click the <strong>Start The Hunt</strong> on the next page.</li>
+      <li>You will hear the room say <em>“I spy a Rs.10 coin”</em> (or <em>a lion</em>, etc.).</li>
+      <li>Listen carefully and click on the correct animal in the forest scene.</li>
+      <li>If you’re right, the coin/note disappears and you move onto finding the next one.</li>
+      <li>If you’re wrong, try again till you get it right.</li>
+    </ul>
+    <a href="game.html" class="start-btn">Start Game</a>
+  </div>
+</body>
+</html>

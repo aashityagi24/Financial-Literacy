@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>I Spy: Indian Money Hunt</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { margin:0; overflow:hidden; font-family:Arial,sans-serif; }
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: url('currency.png') center center / contain no-repeat;
+      background-color: #cfe8c9; /* soft fill so empty space looks nice */
+    }
+    .money-item { position:absolute; cursor:pointer; transition:opacity .3s; user-select:none; }
+    .money-item:active { transform: scale(0.98); }
+    #start-btn { position:absolute; top:20px; left:50%; transform:translateX(-50%); padding:10px 20px; font-size:1.1rem; background:#fff; border:none; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.3); cursor:pointer; z-index:10; }
+    #message { position:absolute; top:60px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.8); padding:8px 16px; border-radius:8px; font-size:1.1rem; z-index:10; }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <button id="start-btn">Start Money Hunt</button>
+    <div id="message"></div>
+  </div>
+  <script>
+    // Money items (coins + notes) placed on the scene
+    // NOTE: Ensure these image files exist in your project:
+    // images/rs1_coin.png, rs2_coin.png, rs5_coin.png, rs10_coin.png, rs20_coin.png,
+    // images/rs10_note.png, rs20_note.png, rs50_note.png, rs200_note.png
+    // Background image: images/currency.png
+
+    const moneyItems = [
+      // Coins
+      { id: 'rs1-coin',  label: 'Rs. 1 coin',  kind: 'coin', value: 1,  img: 'images/coin-1.webp',  x: 12,  y: 41, size: 7 },
+      { id: 'rs2-coin',  label: 'Rs. 2 coin',  kind: 'coin', value: 2,  img: 'images/coin-2.webp',  x: 70, y: 72, size: 7 },
+      { id: 'rs5-coin',  label: 'Rs. 5 coin',  kind: 'coin', value: 5,  img: 'images/coin-5.webp',  x: 42, y: 89, size: 8 },
+      { id: 'rs10-coin', label: 'Rs. 10 coin', kind: 'coin', value: 10, img: 'images/coin-10.webp', x: 74, y: 10, size: 8 },
+      { id: 'rs20-coin', label: 'Rs. 20 coin', kind: 'coin', value: 20, img: 'images/coin-20.webp', x: 47, y: 44, size: 9 },
+
+      // Notes
+      { id: 'rs10-note',  label: 'Rs. 10 note',  kind: 'note', value: 10,  img: 'images/note-10.webp',  x: 56, y: 20, size: 10 },
+      { id: 'rs20-note',  label: 'Rs. 20 note',  kind: 'note', value: 20,  img: 'images/note-20.webp',  x: 80, y: 54, size: 10 },
+      { id: 'rs50-note',  label: 'Rs. 50 note',  kind: 'note', value: 50,  img: 'images/note-50.webp',  x: 36, y: 61, size: 11 },
+      { id: 'rs100-note', label: 'Rs. 100 note', kind: 'note', value: 100, img: 'images/note-100.webp', x: 21, y: 13, size: 9 },
+      { id: 'rs200-note', label: 'Rs. 200 note', kind: 'note', value: 200, img: 'images/note-200.webp', x: 9, y: 74, size: 12 },
+      { id: 'rs500-note', label: 'Rs. 500 note', kind: 'note', value: 500, img: 'images/note-500.webp', x: 70, y: 85, size: 12 }
+    ];
+
+    const container = document.getElementById('game-container');
+    const startBtn = document.getElementById('start-btn');
+    const message = document.getElementById('message');
+
+    let remaining = [];
+    let currentItem = null;
+
+    function speak(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.9;
+      const v = window.speechSynthesis.getVoices().find(v => /female|woman|girl/i.test(v.name));
+      if (v) u.voice = v;
+      window.speechSynthesis.speak(u);
+    }
+
+    function resetBoard() {
+      // remove old items
+      document.querySelectorAll('.money-item').forEach(el => el.remove());
+
+      // fresh copy
+      remaining = moneyItems.map(m => ({ ...m }));
+      currentItem = null;
+
+      // place items
+      moneyItems.forEach((m) => {
+        const el = document.createElement('img');
+        el.src = m.img;
+        el.alt = m.label;
+        el.className = 'money-item';
+        el.style.left = m.x + 'vw';
+        el.style.top = m.y + 'vh';
+        el.style.height = m.size + 'vh';
+        el.dataset.id = m.id;
+        el.addEventListener('click', onItemClick);
+        container.appendChild(el);
+      });
+
+      message.textContent = '';
+      startBtn.textContent = 'Start Money Hunt';
+      startBtn.style.display = 'block';
+    }
+
+    function onItemClick(e) {
+      if (!currentItem) return;
+      const clickedId = e.target.dataset.id;
+
+      if (clickedId === currentItem.id) {
+        e.target.style.opacity = 0;
+        remaining = remaining.filter(m => m.id !== clickedId);
+        message.textContent = 'Correct!';
+        speak('Correct');
+
+        if (remaining.length) {
+          setTimeout(nextRound, 900);
+        } else {
+          message.textContent = 'You found all the coins and notes!';
+          speak('You found all the coins and notes');
+          startBtn.textContent = 'Play Again';
+          startBtn.style.display = 'block';
+        }
+      } else {
+        message.textContent = 'Try again!';
+        speak('Try again');
+      }
+    }
+
+    function nextRound() {
+      startBtn.style.display = 'none';
+      message.textContent = '';
+
+      const idx = Math.floor(Math.random() * remaining.length);
+      currentItem = remaining[idx];
+
+      const prompt = `I spy ${currentItem.label}`;
+      message.textContent = prompt;
+      speak(prompt);
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (!moneyItems.length) return;
+      if (!remaining.length) resetBoard();
+      nextRound();
+    });
+
+    window.addEventListener('load', () => {
+      // warm up voices (some browsers need this)
+      if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
+      resetBoard();
+    });
+  </script>
+</body>
+</html>
