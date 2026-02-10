@@ -235,8 +235,8 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
     
-    # Grade filter for subtopics
-    if filter_grade is not None and not is_admin:
+    # Grade filter for subtopics - apply if grade param is passed
+    if filter_grade is not None:
         subtopic_query = {"parent_id": topic_id, "min_grade": {"$lte": filter_grade}, "max_grade": {"$gte": filter_grade}}
     else:
         subtopic_query = {"parent_id": topic_id}
