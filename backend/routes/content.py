@@ -228,7 +228,11 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
     if is_child:
         filter_grade = user_grade
     elif (is_teacher or is_parent) and grade is not None:
-        filter_grade = grade
+        filter_grade = int(grade)  # Ensure it's an integer
+    
+    # Debug logging
+    import logging
+    logging.info(f"Topic detail - role: {user_role}, grade param: {grade}, filter_grade: {filter_grade}")
     
     topic = await db.content_topics.find_one({"topic_id": topic_id}, {"_id": 0})
     if not topic:
