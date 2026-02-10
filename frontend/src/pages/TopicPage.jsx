@@ -535,7 +535,8 @@ export default function TopicPage({ user }) {
                 >
                   <Check className="w-5 h-5 mr-2 inline" />
                   Mark as Complete
-              </button>
+                </button>
+              </div>
             </div>
           </div>
         </div>
