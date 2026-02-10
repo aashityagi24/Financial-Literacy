@@ -504,6 +504,21 @@ export default function TopicPage({ user }) {
                   sandbox="allow-scripts allow-same-origin"
                 />
               )}
+              {selectedContent.content_type === 'book' && selectedContent.content_data?.pdf_url && (
+                <iframe 
+                  src={getAssetUrl(selectedContent.content_data.pdf_url)}
+                  className="w-full h-full"
+                  title={selectedContent.title}
+                />
+              )}
+              {selectedContent.content_type === 'book' && selectedContent.content_data?.html_url && !selectedContent.content_data?.pdf_url && (
+                <iframe 
+                  src={htmlFiles.length > 0 ? getAssetUrl(htmlFiles[currentHtmlIndex]?.url) : getAssetUrl(selectedContent.content_data.html_url)}
+                  className="w-full h-full"
+                  title={htmlFiles.length > 0 ? htmlFiles[currentHtmlIndex]?.name : selectedContent.title}
+                  sandbox="allow-scripts allow-same-origin"
+                />
+              )}
               {selectedContent.content_type === 'video' && (
                 <div className="w-full h-full flex items-center justify-center p-4">
                   <iframe 
