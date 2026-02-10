@@ -534,8 +534,8 @@ export default function TopicPage({ user }) {
             
             {/* Modal Footer */}
             <div className="p-4 border-t-3 border-[#1D3557] flex justify-between items-center bg-[#FFD23F]/20">
-              {/* Navigation for multi-file activities and books */}
-              {((selectedContent.content_type === 'activity' || (selectedContent.content_type === 'book' && selectedContent.content_data?.html_url)) && htmlFiles.length > 1) ? (
+              {/* Navigation for multi-file activities and books - only for children */}
+              {user?.role === 'child' && ((selectedContent.content_type === 'activity' || (selectedContent.content_type === 'book' && selectedContent.content_data?.html_url)) && htmlFiles.length > 1) ? (
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setCurrentHtmlIndex(Math.max(0, currentHtmlIndex - 1))}
@@ -556,19 +556,23 @@ export default function TopicPage({ user }) {
                   </button>
                 </div>
               ) : (
-                <span className="text-lg font-bold text-[#06D6A0]">+₹{selectedContent.reward_coins} on completion</span>
+                <span className="text-lg font-bold text-[#06D6A0]">
+                  {user?.role === 'child' ? `+₹${selectedContent.reward_coins} on completion` : `Reward: ₹${selectedContent.reward_coins}`}
+                </span>
               )}
               <div className="flex items-center gap-3">
-                {((selectedContent.content_type === 'activity' || selectedContent.content_type === 'book') && htmlFiles.length > 1) && (
+                {user?.role === 'child' && ((selectedContent.content_type === 'activity' || selectedContent.content_type === 'book') && htmlFiles.length > 1) && (
                   <span className="text-lg font-bold text-[#06D6A0]">+₹{selectedContent.reward_coins}</span>
                 )}
-                <button 
-                  onClick={() => { handleCompleteContent(selectedContent.content_id); closeViewer(); }}
-                  className="btn-primary px-6 py-3 text-lg"
-                >
-                  <Check className="w-5 h-5 mr-2 inline" />
-                  Mark as Complete
-                </button>
+                {user?.role === 'child' && (
+                  <button 
+                    onClick={() => { handleCompleteContent(selectedContent.content_id); closeViewer(); }}
+                    className="btn-primary px-6 py-3 text-lg"
+                  >
+                    <Check className="w-5 h-5 mr-2 inline" />
+                    Mark as Complete
+                  </button>
+                )}
               </div>
             </div>
           </div>
