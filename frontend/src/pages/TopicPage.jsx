@@ -467,8 +467,8 @@ export default function TopicPage({ user }) {
               </div>
             </div>
             
-            {/* HTML Files Navigation (for activities and books with multiple files) */}
-            {(selectedContent.content_type === 'activity' || (selectedContent.content_type === 'book' && selectedContent.content_data?.html_url)) && htmlFiles.length > 1 && (
+            {/* HTML Files Navigation (only for children viewing activities/books with multiple files) */}
+            {user?.role === 'child' && (selectedContent.content_type === 'activity' || (selectedContent.content_type === 'book' && selectedContent.content_data?.html_url)) && htmlFiles.length > 1 && (
               <div className="px-4 py-2 bg-[#E0FBFC] border-b-2 border-[#1D3557] flex items-center gap-2 overflow-x-auto">
                 <span className="text-sm font-medium text-[#1D3557] whitespace-nowrap">Pages:</span>
                 {htmlFiles.map((file, index) => (
