@@ -67,17 +67,52 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
             content_grade_query = {"topic_id": topic["topic_id"], "is_published": True}
         else:
             subtopic_query = {"parent_id": topic["topic_id"], "min_grade": {"$lte": filter_grade}, "max_grade": {"$gte": filter_grade}}
-            content_grade_query = {
+            # Build content query with $and for grade AND visibility
+            base_query = {
                 "topic_id": topic["topic_id"], 
                 "is_published": True,
                 "min_grade": {"$lte": filter_grade}, 
                 "max_grade": {"$gte": filter_grade}
             }
+            content_grade_query = base_query
         
-        # Add visibility filter for non-admin users
-        if not is_admin:
+        # Add visibility filter for non-admin users using $and
+        if not is_admin and filter_grade is not None:
             if is_child:
-                # Children only see content marked for them
+                visibility_condition = {
+                    "$or": [
+                        {"visible_to": {"$in": ["child"]}},
+                        {"visible_to": {"$exists": False}},
+                        {"visible_to": []},
+                        {"visible_to": None}
+                    ]
+                }
+            elif is_teacher:
+                visibility_condition = {
+                    "$or": [
+                        {"visible_to": {"$in": ["child", "teacher"]}},
+                        {"visible_to": {"$exists": False}},
+                        {"visible_to": []},
+                        {"visible_to": None}
+                    ]
+                }
+            elif is_parent:
+                visibility_condition = {
+                    "$or": [
+                        {"visible_to": {"$in": ["child", "parent"]}},
+                        {"visible_to": {"$exists": False}},
+                        {"visible_to": []},
+                        {"visible_to": None}
+                    ]
+                }
+            else:
+                visibility_condition = None
+            
+            if visibility_condition:
+                content_grade_query = {"$and": [base_query, visibility_condition]}
+        elif not is_admin:
+            # No grade filter but still need visibility filter
+            if is_child:
                 content_grade_query["$or"] = [
                     {"visible_to": {"$in": ["child"]}},
                     {"visible_to": {"$exists": False}},
@@ -85,7 +120,6 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                     {"visible_to": None}
                 ]
             elif is_teacher:
-                # Teachers see child content + teacher-specific content
                 content_grade_query["$or"] = [
                     {"visible_to": {"$in": ["child", "teacher"]}},
                     {"visible_to": {"$exists": False}},
@@ -93,7 +127,6 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                     {"visible_to": None}
                 ]
             elif is_parent:
-                # Parents see child content + parent-specific content
                 content_grade_query["$or"] = [
                     {"visible_to": {"$in": ["child", "parent"]}},
                     {"visible_to": {"$exists": False}},
