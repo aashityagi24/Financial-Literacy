@@ -482,9 +482,14 @@ export default function ContentManagement({ user }) {
       });
       setContentForm(prev => ({
         ...prev,
-        content_data: { ...prev.content_data, html_url: res.data.url, html_folder: res.data.folder }
+        content_data: { 
+          ...prev.content_data, 
+          html_url: res.data.url, 
+          html_folder: res.data.folder,
+          html_files: res.data.html_files || []
+        }
       }));
-      toast.success('HTML ZIP uploaded');
+      toast.success(`HTML ZIP uploaded (${res.data.html_files?.length || 1} file${res.data.html_files?.length > 1 ? 's' : ''} found)`);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to upload HTML ZIP');
     }
@@ -499,7 +504,12 @@ export default function ContentManagement({ user }) {
       });
       setContentForm(prev => ({
         ...prev,
-        content_data: { ...prev.content_data, html_url: res.data.url, html_folder: res.data.folder }
+        content_data: { 
+          ...prev.content_data, 
+          html_url: res.data.url, 
+          html_folder: res.data.folder,
+          html_files: [{ name: 'Index', path: 'index.html', url: res.data.url }]
+        }
       }));
       toast.success('HTML file uploaded');
     } catch (error) {
