@@ -151,7 +151,7 @@ export default function TopicPage({ user }) {
       <div className="min-h-screen bg-[#E0FBFC] flex items-center justify-center">
         <div className="text-center">
           <p className="text-[#3D5A80] text-lg">Topic not found</p>
-          <Link to="/learn" className="btn-primary mt-4 inline-block px-6 py-3">Back to Learn</Link>
+          <Link to={`/learn${gradeFilter ? `?grade=${gradeFilter}` : ''}`} className="btn-primary mt-4 inline-block px-6 py-3">Back to Learn</Link>
         </div>
       </div>
     );
@@ -182,7 +182,7 @@ export default function TopicPage({ user }) {
       <header className="bg-white border-b-4 border-[#1D3557]">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Link to="/learn" className="p-2 rounded-xl border-3 border-[#1D3557] bg-white hover:bg-[#FFD23F]/20 transition-colors">
+            <Link to={`/learn${gradeFilter ? `?grade=${gradeFilter}` : ''}`} className="p-2 rounded-xl border-3 border-[#1D3557] bg-white hover:bg-[#FFD23F]/20 transition-colors">
               <ChevronLeft className="w-6 h-6 text-[#1D3557]" />
             </Link>
             <div className="flex items-center gap-3 flex-1 min-w-0">
