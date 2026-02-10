@@ -559,7 +559,7 @@ export default function TopicPage({ user }) {
                 <span className="text-lg font-bold text-[#06D6A0]">+₹{selectedContent.reward_coins} on completion</span>
               )}
               <div className="flex items-center gap-3">
-                {selectedContent.content_type === 'activity' && htmlFiles.length > 1 && (
+                {((selectedContent.content_type === 'activity' || selectedContent.content_type === 'book') && htmlFiles.length > 1) && (
                   <span className="text-lg font-bold text-[#06D6A0]">+₹{selectedContent.reward_coins}</span>
                 )}
                 <button 
