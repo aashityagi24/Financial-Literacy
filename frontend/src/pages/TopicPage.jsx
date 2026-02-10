@@ -567,36 +567,10 @@ export default function TopicPage({ user }) {
             
             {/* Modal Footer */}
             <div className="p-4 border-t-3 border-[#1D3557] flex justify-between items-center bg-[#FFD23F]/20">
-              {/* Navigation for multi-file activities and books - only for children */}
-              {user?.role === 'child' && ((selectedContent.content_type === 'activity' || (selectedContent.content_type === 'book' && selectedContent.content_data?.html_url)) && htmlFiles.length > 1) ? (
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setCurrentHtmlIndex(Math.max(0, currentHtmlIndex - 1))}
-                    disabled={currentHtmlIndex === 0}
-                    className="p-2 rounded-xl border-2 border-[#1D3557] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#E0FBFC]"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <span className="text-sm font-medium text-[#1D3557]">
-                    {currentHtmlIndex + 1} / {htmlFiles.length}
-                  </span>
-                  <button
-                    onClick={() => setCurrentHtmlIndex(Math.min(htmlFiles.length - 1, currentHtmlIndex + 1))}
-                    disabled={currentHtmlIndex === htmlFiles.length - 1}
-                    className="p-2 rounded-xl border-2 border-[#1D3557] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#E0FBFC]"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-              ) : (
-                <span className="text-lg font-bold text-[#06D6A0]">
-                  {user?.role === 'child' ? `+₹${selectedContent.reward_coins} on completion` : `Reward: ₹${selectedContent.reward_coins}`}
-                </span>
-              )}
+              <span className="text-lg font-bold text-[#06D6A0]">
+                {user?.role === 'child' ? `+₹${selectedContent.reward_coins} on completion` : `Reward: ₹${selectedContent.reward_coins}`}
+              </span>
               <div className="flex items-center gap-3">
-                {user?.role === 'child' && ((selectedContent.content_type === 'activity' || selectedContent.content_type === 'book') && htmlFiles.length > 1) && (
-                  <span className="text-lg font-bold text-[#06D6A0]">+₹{selectedContent.reward_coins}</span>
-                )}
                 {user?.role === 'child' && (
                   <button 
                     onClick={() => { handleCompleteContent(selectedContent.content_id); closeViewer(); }}
