@@ -324,7 +324,9 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
                 {"visible_to": None}
             ]
     
+    logging.info(f"TopicDetail: Final content_query={content_query}")
     content_items = await db.content_items.find(content_query, {"_id": 0}).sort("order", 1).to_list(100)
+    logging.info(f"TopicDetail: Found {len(content_items)} content items")
     
     if is_child and user_id:
         completed_docs = await db.user_content_progress.find(
