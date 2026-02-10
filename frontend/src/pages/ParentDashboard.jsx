@@ -553,6 +553,9 @@ export default function ParentDashboard({ user }) {
                           <div className="bg-[#06D6A0]/10 rounded-xl p-3 border-2 border-[#06D6A0]">
                             <p className="font-bold text-[#1D3557]">{classroomInfo.classroom?.name}</p>
                             <p className="text-sm text-[#3D5A80]">Teacher: {classroomInfo.teacher?.name}</p>
+                            {classroomInfo.school && (
+                              <p className="text-sm text-[#3D5A80]">School: {classroomInfo.school.name}</p>
+                            )}
                           </div>
                           
                           {/* Announcements */}
