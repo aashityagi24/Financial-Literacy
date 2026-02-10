@@ -6259,8 +6259,13 @@ async def _legacy_upload_activity_html(file: UploadFile = File(...)):
             shutil.rmtree(activity_folder)
             raise HTTPException(status_code=400, detail="ZIP must contain at least one HTML file")
         
-        # Sort HTML files - index.html first, then alphabetically
-        html_files.sort(key=lambda x: (0 if x["path"] == "index.html" else 1, x["name"]))
+        # Sort HTML files - index.html/index.htm first, then alphabetically by name
+        def sort_key(x):
+            filename = x["path"].split("/")[-1].lower()  # Get just the filename
+            is_index = filename in ("index.html", "index.htm")
+            return (0 if is_index else 1, x["name"].lower())
+        
+        html_files.sort(key=sort_key)
         
         # Primary URL is index.html if it exists, otherwise the first HTML file
         primary_url = f"/api/uploads/activities/{folder_name}/index.html"
