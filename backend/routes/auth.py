@@ -173,7 +173,7 @@ async def google_callback(request: Request, response: Response, code: str = None
     db = get_db()
     
     # Log the callback details for debugging
-    print(f"=== Google OAuth Callback ===")
+    print("=== Google OAuth Callback ===")
     print(f"Host: {request.headers.get('host', 'unknown')}")
     print(f"State: {state}")
     print(f"Redirect URI param: {redirect_uri}")
@@ -228,7 +228,7 @@ async def google_callback(request: Request, response: Response, code: str = None
         
         tokens = token_response.json()
         access_token = tokens.get("access_token")
-        print(f"Token exchange successful, got access_token")
+        print("Token exchange successful, got access_token")
         
         # Get user info
         userinfo_response = await client.get(
