@@ -266,7 +266,7 @@ export default function LearnPage({ user }) {
                         return (
                         <Link
                           key={subtopic.topic_id}
-                          to={`/learn/topic/${subtopic.topic_id}`}
+                          to={`/learn/topic/${subtopic.topic_id}${gradeFilter !== null ? `?grade=${gradeFilter}` : ''}`}
                           className={`flex items-center gap-2 px-4 py-2 bg-white rounded-xl border-2 ${subtopicCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/10' : 'border-[#1D3557]/30 hover:border-[#FFD23F] hover:bg-[#FFD23F]/10'} transition-all`}
                         >
                           {subtopicCompleted ? (
