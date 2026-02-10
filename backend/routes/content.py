@@ -213,6 +213,7 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
 async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int] = None):
     """Get topic details with content items"""
     from services.auth import get_current_user
+    import logging
     db = get_db()
     user = await get_current_user(request)
     user_role = user.get("role") if user else None
@@ -230,6 +231,8 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
         filter_grade = int(grade)
     elif is_child:
         filter_grade = user_grade
+    
+    logging.info(f"TopicDetail: role={user_role}, grade_param={grade}, filter_grade={filter_grade}, topic={topic_id}")
     
     topic = await db.content_topics.find_one({"topic_id": topic_id}, {"_id": 0})
     if not topic:
