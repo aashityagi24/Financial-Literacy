@@ -444,9 +444,10 @@ export default function TopicPage({ user }) {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                {/* Download PDF button for worksheets/workbooks */}
                 {(selectedContent.content_type === 'worksheet' || selectedContent.content_type === 'workbook') && selectedContent.content_data?.pdf_url && (
                   <a 
-                    href={selectedContent.content_data.pdf_url} 
+                    href={getAssetUrl(selectedContent.content_data.pdf_url)} 
                     download 
                     className="p-2 hover:bg-gray-100 rounded-xl border-2 border-[#1D3557]"
                     title="Download PDF"
@@ -454,9 +455,34 @@ export default function TopicPage({ user }) {
                     <Download className="w-5 h-5 text-[#1D3557]" />
                   </a>
                 )}
+                {/* Open in new tab for activities */}
                 {selectedContent.content_type === 'activity' && selectedContent.content_data?.html_url && (
                   <a 
-                    href={selectedContent.content_data.html_url} 
+                    href={getAssetUrl(selectedContent.content_data.html_url)} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 hover:bg-gray-100 rounded-xl border-2 border-[#1D3557]"
+                    title="Open in new tab"
+                  >
+                    <ExternalLink className="w-5 h-5 text-[#1D3557]" />
+                  </a>
+                )}
+                {/* Open in new tab for books with HTML */}
+                {selectedContent.content_type === 'book' && selectedContent.content_data?.html_url && (
+                  <a 
+                    href={getAssetUrl(selectedContent.content_data.html_url)} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 hover:bg-gray-100 rounded-xl border-2 border-[#1D3557]"
+                    title="Open in new tab"
+                  >
+                    <ExternalLink className="w-5 h-5 text-[#1D3557]" />
+                  </a>
+                )}
+                {/* Open in new tab for books with PDF */}
+                {selectedContent.content_type === 'book' && selectedContent.content_data?.pdf_url && (
+                  <a 
+                    href={getAssetUrl(selectedContent.content_data.pdf_url)} 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 hover:bg-gray-100 rounded-xl border-2 border-[#1D3557]"
@@ -474,8 +500,8 @@ export default function TopicPage({ user }) {
               </div>
             </div>
             
-            {/* HTML Files Navigation (only for children viewing activities/books with multiple files) */}
-            {user?.role === 'child' && (selectedContent.content_type === 'activity' || (selectedContent.content_type === 'book' && selectedContent.content_data?.html_url)) && htmlFiles.length > 1 && (
+            {/* HTML Files Navigation - HIDDEN, only backend controls page flow */}
+            {false && user?.role === 'child' && (selectedContent.content_type === 'activity' || (selectedContent.content_type === 'book' && selectedContent.content_data?.html_url)) && htmlFiles.length > 1 && (
               <div className="px-4 py-2 bg-[#E0FBFC] border-b-2 border-[#1D3557] flex items-center gap-2 overflow-x-auto">
                 <span className="text-sm font-medium text-[#1D3557] whitespace-nowrap">Pages:</span>
                 {htmlFiles.map((file, index) => (
