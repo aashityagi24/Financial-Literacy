@@ -6222,10 +6222,10 @@ async def _legacy_upload_activity_html(file: UploadFile = File(...)):
             zip_ref.extractall(activity_folder)
         zip_path.unlink()  # Remove the zip file after extraction
         
-        # Check if index.html exists
+        # Check if index.html exists at root level
         index_path = activity_folder / "index.html"
         if not index_path.exists():
-            # Check subdirectory
+            # Check subdirectory (common when zipping a folder)
             for item in activity_folder.iterdir():
                 if item.is_dir():
                     sub_index = item / "index.html"
@@ -6236,15 +6236,46 @@ async def _legacy_upload_activity_html(file: UploadFile = File(...)):
                         item.rmdir()
                         break
         
-        if not (activity_folder / "index.html").exists():
+        # Find all HTML files in the folder (including subdirectories)
+        html_files = []
+        for html_file in activity_folder.rglob("*.html"):
+            relative_path = html_file.relative_to(activity_folder)
+            html_files.append({
+                "name": html_file.stem.replace("_", " ").replace("-", " ").title(),
+                "path": str(relative_path),
+                "url": f"/api/uploads/activities/{folder_name}/{relative_path}"
+            })
+        
+        # Also check for .htm files
+        for html_file in activity_folder.rglob("*.htm"):
+            relative_path = html_file.relative_to(activity_folder)
+            html_files.append({
+                "name": html_file.stem.replace("_", " ").replace("-", " ").title(),
+                "path": str(relative_path),
+                "url": f"/api/uploads/activities/{folder_name}/{relative_path}"
+            })
+        
+        if not html_files:
             shutil.rmtree(activity_folder)
-            raise HTTPException(status_code=400, detail="ZIP must contain an index.html file")
+            raise HTTPException(status_code=400, detail="ZIP must contain at least one HTML file")
+        
+        # Sort HTML files - index.html first, then alphabetically
+        html_files.sort(key=lambda x: (0 if x["path"] == "index.html" else 1, x["name"]))
+        
+        # Primary URL is index.html if it exists, otherwise the first HTML file
+        primary_url = f"/api/uploads/activities/{folder_name}/index.html"
+        if not (activity_folder / "index.html").exists():
+            primary_url = html_files[0]["url"]
             
     except zipfile.BadZipFile:
         shutil.rmtree(activity_folder)
         raise HTTPException(status_code=400, detail="Invalid ZIP file")
     
-    return {"url": f"/api/uploads/activities/{folder_name}/index.html", "folder": folder_name}
+    return {
+        "url": primary_url, 
+        "folder": folder_name,
+        "html_files": html_files
+    }
 
 # @api_router.post("/upload/html")  # MOVED
 async def _legacy_upload_html_file(file: UploadFile = File(...)):
