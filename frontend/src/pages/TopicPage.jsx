@@ -80,7 +80,7 @@ export default function TopicPage({ user }) {
         } else if (content.content_data?.html_folder) {
           // Fetch HTML files list from the server
           try {
-            const res = await axios.get(`${API}/uploads/activities/${content.content_data.html_folder}/files`);
+            const res = await axios.get(`${API}/activity-files/${content.content_data.html_folder}`);
             if (res.data.html_files?.length > 0) {
               setHtmlFiles(res.data.html_files);
             }
