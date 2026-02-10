@@ -6328,8 +6328,13 @@ async def get_activity_html_files(folder_name: str):
             "url": f"/api/uploads/activities/{folder_name}/{relative_path}"
         })
     
-    # Sort - index.html first, then alphabetically
-    html_files.sort(key=lambda x: (0 if x["path"] == "index.html" else 1, x["name"]))
+    # Sort - index.html/index.htm first, then alphabetically by name
+    def sort_key(x):
+        filename = x["path"].split("/")[-1].lower()
+        is_index = filename in ("index.html", "index.htm")
+        return (0 if is_index else 1, x["name"].lower())
+    
+    html_files.sort(key=sort_key)
     
     return {"html_files": html_files}
 
