@@ -6240,8 +6240,11 @@ async def _legacy_upload_activity_html(file: UploadFile = File(...)):
         html_files = []
         for html_file in activity_folder.rglob("*.html"):
             relative_path = html_file.relative_to(activity_folder)
+            # Clean up the display name
+            display_name = html_file.stem.replace("_", " ").replace("-", " ").replace(".html", "").replace(".htm", "")
+            display_name = display_name.title()
             html_files.append({
-                "name": html_file.stem.replace("_", " ").replace("-", " ").title(),
+                "name": display_name,
                 "path": str(relative_path),
                 "url": f"/api/uploads/activities/{folder_name}/{relative_path}"
             })
@@ -6249,8 +6252,10 @@ async def _legacy_upload_activity_html(file: UploadFile = File(...)):
         # Also check for .htm files
         for html_file in activity_folder.rglob("*.htm"):
             relative_path = html_file.relative_to(activity_folder)
+            display_name = html_file.stem.replace("_", " ").replace("-", " ").replace(".html", "").replace(".htm", "")
+            display_name = display_name.title()
             html_files.append({
-                "name": html_file.stem.replace("_", " ").replace("-", " ").title(),
+                "name": display_name,
                 "path": str(relative_path),
                 "url": f"/api/uploads/activities/{folder_name}/{relative_path}"
             })
@@ -6259,18 +6264,16 @@ async def _legacy_upload_activity_html(file: UploadFile = File(...)):
             shutil.rmtree(activity_folder)
             raise HTTPException(status_code=400, detail="ZIP must contain at least one HTML file")
         
-        # Sort HTML files - index.html/index.htm first, then alphabetically by name
+        # Sort HTML files - index files first (handles index.html, index.htm, index.html.html), then alphabetically
         def sort_key(x):
-            filename = x["path"].split("/")[-1].lower()  # Get just the filename
-            is_index = filename in ("index.html", "index.htm")
+            filename = x["path"].split("/")[-1].lower()
+            is_index = filename.startswith("index")
             return (0 if is_index else 1, x["name"].lower())
         
         html_files.sort(key=sort_key)
         
-        # Primary URL is index.html if it exists, otherwise the first HTML file
-        primary_url = f"/api/uploads/activities/{folder_name}/index.html"
-        if not (activity_folder / "index.html").exists():
-            primary_url = html_files[0]["url"]
+        # Primary URL is the first file in sorted order (index file if exists)
+        primary_url = html_files[0]["url"]
             
     except zipfile.BadZipFile:
         shutil.rmtree(activity_folder)
