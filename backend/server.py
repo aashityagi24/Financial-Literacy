@@ -6295,6 +6295,39 @@ async def _legacy_upload_html_file(file: UploadFile = File(...)):
     
     return {"url": f"/api/uploads/activities/{folder_name}/index.html", "folder": folder_name}
 
+@api_router.get("/uploads/activities/{folder_name}/files")
+async def get_activity_html_files(folder_name: str):
+    """Get all HTML files in an activity folder"""
+    activity_folder = ACTIVITIES_DIR / folder_name
+    
+    if not activity_folder.exists():
+        raise HTTPException(status_code=404, detail="Activity folder not found")
+    
+    html_files = []
+    
+    # Find all .html files
+    for html_file in activity_folder.rglob("*.html"):
+        relative_path = html_file.relative_to(activity_folder)
+        html_files.append({
+            "name": html_file.stem.replace("_", " ").replace("-", " ").title(),
+            "path": str(relative_path),
+            "url": f"/api/uploads/activities/{folder_name}/{relative_path}"
+        })
+    
+    # Find all .htm files
+    for html_file in activity_folder.rglob("*.htm"):
+        relative_path = html_file.relative_to(activity_folder)
+        html_files.append({
+            "name": html_file.stem.replace("_", " ").replace("-", " ").title(),
+            "path": str(relative_path),
+            "url": f"/api/uploads/activities/{folder_name}/{relative_path}"
+        })
+    
+    # Sort - index.html first, then alphabetically
+    html_files.sort(key=lambda x: (0 if x["path"] == "index.html" else 1, x["name"]))
+    
+    return {"html_files": html_files}
+
 # @api_router.post("/upload/video")  # MOVED
 async def _legacy_upload_video_file(file: UploadFile = File(...)):
     """Upload an MP4 video file"""
