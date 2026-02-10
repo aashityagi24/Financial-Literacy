@@ -433,7 +433,15 @@ async def create_session(request: Request, response: Response):
 async def get_me(request: Request):
     """Get current authenticated user"""
     from services.auth import get_current_user
+    db = get_db()
     user = await get_current_user(request)
+    
+    # If teacher has school_id, fetch school name
+    if user and user.get("role") == "teacher" and user.get("school_id"):
+        school = await db.schools.find_one({"school_id": user["school_id"]}, {"_id": 0, "name": 1})
+        if school:
+            user["school_name"] = school.get("name")
+    
     return user
 
 @router.post("/logout")
