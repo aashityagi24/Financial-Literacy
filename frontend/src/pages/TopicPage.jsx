@@ -61,8 +61,10 @@ export default function TopicPage({ user }) {
     }
   };
   
-  const openContent = (content) => {
+  const openContent = async (content) => {
     setSelectedContent(content);
+    setHtmlFiles([]);
+    setCurrentHtmlIndex(0);
     
     if (content.content_type === 'worksheet' || content.content_type === 'workbook') {
       if (content.content_data?.pdf_url) {
@@ -72,6 +74,21 @@ export default function TopicPage({ user }) {
       }
     } else if (content.content_type === 'activity') {
       if (content.content_data?.html_url) {
+        // Check if we have html_files stored, otherwise fetch them
+        if (content.content_data?.html_files?.length > 0) {
+          setHtmlFiles(content.content_data.html_files);
+        } else if (content.content_data?.html_folder) {
+          // Fetch HTML files list from the server
+          try {
+            const res = await axios.get(`${API}/uploads/activities/${content.content_data.html_folder}/files`);
+            if (res.data.html_files?.length > 0) {
+              setHtmlFiles(res.data.html_files);
+            }
+          } catch (err) {
+            // Fallback to single file
+            setHtmlFiles([{ name: 'Activity', path: 'index.html', url: content.content_data.html_url }]);
+          }
+        }
         setShowViewer(true);
       } else {
         toast.info('No activity available for this item');
