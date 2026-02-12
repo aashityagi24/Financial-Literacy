@@ -384,26 +384,43 @@ export default function MoneyGardenPage({ user }) {
                   <div className="relative z-10 text-center w-full px-2">
                     {/* Plant Visual */}
                     <div className={`text-5xl mb-2 ${stage?.sparkle ? 'animate-bounce' : ''}`}>
-                      {stage?.emoji || '🌱'}
+                      {plot.status === 'ready' ? (plot.plant_emoji || '🍅') : (
+                        stage?.stageIndex === 0 ? '🌰' :
+                        stage?.stageIndex === 1 ? '🌱' :
+                        stage?.stageIndex === 2 ? '🌿' : '🌳'
+                      )}
                       {plot.status === 'ready' && <Sparkles className="inline w-6 h-6 text-yellow-400 ml-1" />}
                     </div>
                     
                     {/* Plant Name - White text with shadow for readability */}
                     <p className="font-bold text-white text-sm drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{plot.plant_name}</p>
                     
-                    {/* Growth Progress Bar - Higher contrast */}
+                    {/* Growth Progress Bar - 4 Stage Segmented Bar */}
                     {plot.status !== 'ready' && (
-                      <div className="w-full bg-[#3E2723] rounded-full h-4 mt-2 border-2 border-[#5D4037] overflow-hidden">
-                        <div 
-                          className="bg-gradient-to-r from-[#4CAF50] to-[#8BC34A] h-full rounded-full transition-all duration-500"
-                          style={{ width: `${Math.max(plot.growth_progress, 2)}%` }}
-                        />
+                      <div className="w-full mt-2">
+                        <div className="flex rounded-full h-4 border-2 border-[#5D4037] overflow-hidden bg-[#3E2723]">
+                          {GROWTH_STAGES.map((stageItem, idx) => {
+                            const isActive = stage?.stageIndex >= idx;
+                            const isCurrent = stage?.stageIndex === idx;
+                            return (
+                              <div 
+                                key={idx}
+                                className={`flex-1 h-full transition-all duration-500 ${
+                                  isActive 
+                                    ? `bg-gradient-to-r ${stageItem.bgGradient}` 
+                                    : 'bg-[#3E2723]'
+                                } ${idx < 3 ? 'border-r border-[#5D4037]' : ''}`}
+                                title={stageItem.label}
+                              />
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                     
-                    {/* Growth percentage - White text for visibility */}
+                    {/* Growth Stage Label - White text for visibility */}
                     <p className="text-sm text-white font-bold mt-1 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                      {stage?.label} ({Math.round(plot.growth_progress)}%)
+                      {stage?.label}
                     </p>
                     
                     {/* Water Status - Higher contrast badges */}
