@@ -548,7 +548,9 @@ export default function MoneyGardenPage({ user }) {
                   <Clock className="w-4 h-4" /> Time to Harvest & Projected Returns
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {reportsData.plotReports.map((report) => (
+                  {reportsData.plotReports.map((report) => {
+                    const reportStage = getGrowthStage(report.growth_progress, report.plant_emoji);
+                    return (
                     <div 
                       key={report.plot_id} 
                       className={`rounded-xl p-3 border-2 flex items-center gap-3 ${
@@ -563,7 +565,7 @@ export default function MoneyGardenPage({ user }) {
                         <div className="flex items-center gap-2 text-xs text-[#3D5A80]">
                           <span>Plot #{report.position}</span>
                           <span>•</span>
-                          <span>{Math.round(report.growth_progress)}% grown</span>
+                          <span className="font-medium" style={{ color: reportStage.color }}>{reportStage.label}</span>
                         </div>
                       </div>
                       <div className="text-right">
@@ -578,7 +580,8 @@ export default function MoneyGardenPage({ user }) {
                         </p>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}}
                 </div>
               </div>
             </>
