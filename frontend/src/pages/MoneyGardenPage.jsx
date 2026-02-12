@@ -20,17 +20,24 @@ import {
 } from "@/components/ui/select";
 
 const GROWTH_STAGES = [
-  { min: 0, max: 20, emoji: '🌱', label: 'Tiny sprout' },
-  { min: 20, max: 40, emoji: '🌱', label: 'Small plant' },
-  { min: 40, max: 60, emoji: '🌿', label: 'Growing' },
-  { min: 60, max: 80, emoji: '🌿🌼', label: 'Flowering' },
-  { min: 80, max: 100, emoji: '✨', label: 'Ready!' }
+  { min: 0, max: 25, label: 'Seeding', color: '#8B4513', bgGradient: 'from-amber-700 to-amber-600' },
+  { min: 25, max: 50, label: 'Sprouting', color: '#90EE90', bgGradient: 'from-lime-400 to-lime-500' },
+  { min: 50, max: 75, label: 'Young Plant', color: '#32CD32', bgGradient: 'from-green-500 to-green-600' },
+  { min: 75, max: 100, label: 'Fully Grown', color: '#228B22', bgGradient: 'from-emerald-600 to-emerald-700' }
 ];
 
 const getGrowthStage = (progress, plantEmoji) => {
-  if (progress >= 100) return { emoji: plantEmoji || '🍅', label: 'Ready to harvest!', sparkle: true };
-  const stage = GROWTH_STAGES.find(s => progress >= s.min && progress < s.max);
-  return stage || GROWTH_STAGES[0];
+  if (progress >= 100) return { 
+    stageIndex: 3, 
+    label: 'Ready to harvest!', 
+    emoji: plantEmoji || '🍅', 
+    sparkle: true,
+    color: '#228B22',
+    bgGradient: 'from-emerald-600 to-emerald-700'
+  };
+  const stageIndex = GROWTH_STAGES.findIndex(s => progress >= s.min && progress < s.max);
+  const stage = GROWTH_STAGES[stageIndex] || GROWTH_STAGES[0];
+  return { ...stage, stageIndex: stageIndex >= 0 ? stageIndex : 0, emoji: null, sparkle: false };
 };
 
 const getWaterStatus = (status) => {
