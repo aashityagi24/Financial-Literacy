@@ -581,7 +581,7 @@ export default function MoneyGardenPage({ user }) {
                       </div>
                     </div>
                     );
-                  })}}
+                  })}
                 </div>
               </div>
             </>
