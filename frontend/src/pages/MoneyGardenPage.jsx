@@ -207,7 +207,7 @@ export default function MoneyGardenPage({ user }) {
   
   const accountOptions = [
     { value: 'spending', label: '💳 Spending', balance: spendingBalance },
-    { value: 'savings', label: '🐷 Savings', balance: wallet?.accounts?.find(a => a.account_type === 'savings')?.balance || 0 },
+    { value: 'savings', label: '🐷 Piggy Bank', balance: wallet?.accounts?.find(a => a.account_type === 'savings')?.balance || 0 },
     { value: 'investing', label: '🌱 Farming', balance: farmingBalance },
     { value: 'gifting', label: '❤️ Gifting', balance: wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance || 0 },
   ];
