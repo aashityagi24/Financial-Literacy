@@ -227,37 +227,161 @@ export default function AdminPage({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
-        {/* Management Cards Grid - 2x2 Layout */}
-        <div className="grid md:grid-cols-2 gap-4 mb-6">
+        {/* Management Cards Grid - 4 per row */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
           {/* Content Management Card */}
           <Link 
             to="/admin/content" 
-            className="block bg-gradient-to-r from-[#3D5A80] to-[#5A7BA0] rounded-xl p-5 hover:shadow-lg transition-shadow"
+            className="block bg-gradient-to-r from-[#3D5A80] to-[#5A7BA0] rounded-xl p-4 hover:shadow-lg transition-shadow"
             data-testid="content-management-link"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Library className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">Content Management</h3>
-                  <p className="text-white/80 text-sm">Manage topics, subtopics & content</p>
-                </div>
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <Library className="w-5 h-5 text-white" />
               </div>
-              <ChevronRight className="w-6 h-6 text-white" />
+              <div>
+                <h3 className="text-sm font-bold text-white">Content</h3>
+                <p className="text-white/70 text-xs">Topics & lessons</p>
+              </div>
             </div>
           </Link>
           
           {/* Quest Management Card */}
           <Link 
             to="/admin/quests" 
-            className="block bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-xl p-5 hover:shadow-lg transition-shadow"
+            className="block bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-xl p-4 hover:shadow-lg transition-shadow"
             data-testid="quest-management-link"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-[#1D3557] rounded-xl flex items-center justify-center">
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-10 h-10 bg-[#1D3557] rounded-xl flex items-center justify-center">
+                <Target className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-[#1D3557]">Quests</h3>
+                <p className="text-[#1D3557]/70 text-xs">Q&A challenges</p>
+              </div>
+            </div>
+          </Link>
+          
+          {/* Store Management Card */}
+          <Link 
+            to="/admin/store" 
+            className="block bg-gradient-to-r from-[#EE6C4D] to-[#FF8A6C] rounded-xl p-4 hover:shadow-lg transition-shadow"
+            data-testid="store-management-link"
+          >
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <Store className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Store</h3>
+                <p className="text-white/70 text-xs">Items & categories</p>
+              </div>
+            </div>
+          </Link>
+          
+          {/* Garden Plants Management Card */}
+          <Link 
+            to="/admin/garden" 
+            className="block bg-gradient-to-r from-[#228B22] to-[#32CD32] rounded-xl p-4 hover:shadow-lg transition-shadow"
+            data-testid="garden-management-link"
+          >
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <span className="text-lg">🌱</span>
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Garden</h3>
+                <p className="text-white/70 text-xs">G1-2 plants</p>
+              </div>
+            </div>
+          </Link>
+          
+          {/* Stock Market Management Card */}
+          <Link 
+            to="/admin/stocks" 
+            className="block bg-gradient-to-r from-[#1E40AF] to-[#3B82F6] rounded-xl p-4 hover:shadow-lg transition-shadow"
+            data-testid="stock-management-link"
+          >
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <span className="text-lg">📈</span>
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Stocks</h3>
+                <p className="text-white/70 text-xs">G3-5 market</p>
+              </div>
+            </div>
+          </Link>
+          
+          {/* Badge Management Card */}
+          <Link 
+            to="/admin/badges" 
+            className="block bg-gradient-to-r from-[#9B5DE5] to-[#B07FF0] rounded-xl p-4 hover:shadow-lg transition-shadow"
+            data-testid="badge-management-link"
+          >
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <span className="text-lg">🏆</span>
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Badges</h3>
+                <p className="text-white/70 text-xs">Achievements</p>
+              </div>
+            </div>
+          </Link>
+          
+          {/* Investment Management Card */}
+          <Link 
+            to="/admin/investments" 
+            className="block bg-gradient-to-r from-[#06D6A0] to-[#42E8B3] rounded-xl p-4 hover:shadow-lg transition-shadow"
+            data-testid="investment-management-link"
+          >
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Investments</h3>
+                <p className="text-white/70 text-xs">Plants & stocks</p>
+              </div>
+            </div>
+          </Link>
+          
+          {/* Video Management Card */}
+          <Link 
+            to="/admin/video" 
+            className="block bg-gradient-to-r from-[#EE6C4D] to-[#F4A261] rounded-xl p-4 hover:shadow-lg transition-shadow"
+            data-testid="video-management-link"
+          >
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <Video className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Video</h3>
+                <p className="text-white/70 text-xs">Walkthrough</p>
+              </div>
+            </div>
+          </Link>
+          
+          {/* Word Bank/Glossary Management Card */}
+          <Link 
+            to="/admin/glossary" 
+            className="block bg-gradient-to-r from-[#4A90A4] to-[#6BB5C9] rounded-xl p-4 hover:shadow-lg transition-shadow"
+            data-testid="glossary-management-link"
+          >
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <BookMarked className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Word Bank</h3>
+                <p className="text-white/70 text-xs">Glossary terms</p>
+              </div>
+            </div>
+          </Link>
+        </div>
                   <Target className="w-6 h-6 text-white" />
                 </div>
                 <div>
