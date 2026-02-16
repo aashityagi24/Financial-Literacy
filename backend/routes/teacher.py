@@ -798,6 +798,154 @@ async def delete_teacher_quest(quest_id: str, request: Request):
 })
     return {"message": "Quest deleted"}
 
+@router.get("/quests/{quest_id}/responses")
+async def get_quest_responses(quest_id: str, request: Request):
+    """Get all student responses for a quest with detailed analytics"""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    
+    # Verify teacher owns this quest
+    quest = await db.new_quests.find_one({
+        "quest_id": quest_id,
+        "creator_id": teacher["user_id"],
+        "creator_type": "teacher"
+    }, {"_id": 0})
+    
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    
+    # Get all completions for this quest
+    completions = await db.quest_completions.find(
+        {"quest_id": quest_id},
+        {"_id": 0}
+    ).to_list(500)
+    
+    # Get user details for each completion
+    user_ids = [c["user_id"] for c in completions]
+    users = await db.users.find(
+        {"user_id": {"$in": user_ids}},
+        {"_id": 0, "user_id": 1, "name": 1, "email": 1, "grade": 1, "avatar_url": 1}
+    ).to_list(500)
+    user_map = {u["user_id"]: u for u in users}
+    
+    # Build detailed response data
+    responses = []
+    for completion in completions:
+        user = user_map.get(completion["user_id"], {})
+        
+        # Calculate per-question details
+        question_details = []
+        answers = completion.get("answers", {})
+        total_correct = 0
+        total_questions = len(quest.get("questions", []))
+        
+        for q in quest.get("questions", []):
+            q_id = q.get("question_id")
+            user_answer = answers.get(q_id)
+            correct_answer = q.get("correct_answer")
+            
+            # Handle multi_select answers
+            if q.get("question_type") == "multi_select":
+                if isinstance(user_answer, list) and isinstance(correct_answer, list):
+                    is_correct = set(user_answer) == set(correct_answer)
+                else:
+                    is_correct = user_answer == correct_answer
+            else:
+                is_correct = user_answer == correct_answer
+            
+            if is_correct:
+                total_correct += 1
+            
+            question_details.append({
+                "question_id": q_id,
+                "question_text": q.get("question_text"),
+                "question_type": q.get("question_type"),
+                "options": q.get("options"),
+                "user_answer": user_answer,
+                "correct_answer": correct_answer,
+                "is_correct": is_correct,
+                "points": q.get("points", 0),
+                "points_earned": q.get("points", 0) if is_correct else 0
+            })
+        
+        responses.append({
+            "user_id": completion["user_id"],
+            "student_name": user.get("name", "Unknown"),
+            "student_email": user.get("email", ""),
+            "student_grade": user.get("grade"),
+            "avatar_url": user.get("avatar_url"),
+            "score": completion.get("score", 0),
+            "total_points": completion.get("total_points", quest.get("total_points", 0)),
+            "percentage": round((completion.get("score", 0) / max(completion.get("total_points", 1), 1)) * 100, 1),
+            "total_correct": total_correct,
+            "total_questions": total_questions,
+            "status": completion.get("status", "completed"),
+            "completed_at": completion.get("completed_at"),
+            "submitted_at": completion.get("submitted_at"),
+            "question_details": question_details
+        })
+    
+    # Calculate aggregate analytics
+    if responses:
+        avg_score = sum(r["score"] for r in responses) / len(responses)
+        avg_percentage = sum(r["percentage"] for r in responses) / len(responses)
+        pass_count = sum(1 for r in responses if r["percentage"] >= 60)
+    else:
+        avg_score = 0
+        avg_percentage = 0
+        pass_count = 0
+    
+    # Per-question analytics
+    question_analytics = []
+    for i, q in enumerate(quest.get("questions", [])):
+        q_id = q.get("question_id")
+        correct_count = sum(1 for r in responses for qd in r["question_details"] if qd["question_id"] == q_id and qd["is_correct"])
+        total_attempts = len(responses)
+        
+        # Count answer distribution for MCQ
+        answer_distribution = {}
+        if q.get("question_type") in ["mcq", "true_false"]:
+            for r in responses:
+                for qd in r["question_details"]:
+                    if qd["question_id"] == q_id:
+                        ans = str(qd["user_answer"]) if qd["user_answer"] is not None else "No Answer"
+                        answer_distribution[ans] = answer_distribution.get(ans, 0) + 1
+        
+        question_analytics.append({
+            "question_id": q_id,
+            "question_text": q.get("question_text"),
+            "question_type": q.get("question_type"),
+            "options": q.get("options"),
+            "correct_answer": q.get("correct_answer"),
+            "correct_count": correct_count,
+            "total_attempts": total_attempts,
+            "accuracy_rate": round((correct_count / max(total_attempts, 1)) * 100, 1),
+            "answer_distribution": answer_distribution
+        })
+    
+    return {
+        "quest": {
+            "quest_id": quest["quest_id"],
+            "title": quest["title"],
+            "description": quest.get("description", ""),
+            "total_points": quest.get("total_points", 0),
+            "questions_count": len(quest.get("questions", [])),
+            "due_date": quest.get("due_date"),
+            "created_at": quest.get("created_at")
+        },
+        "summary": {
+            "total_responses": len(responses),
+            "average_score": round(avg_score, 1),
+            "average_percentage": round(avg_percentage, 1),
+            "pass_count": pass_count,
+            "fail_count": len(responses) - pass_count,
+            "pass_rate": round((pass_count / max(len(responses), 1)) * 100, 1)
+        },
+        "question_analytics": question_analytics,
+        "responses": sorted(responses, key=lambda x: x.get("score", 0), reverse=True)
+    }
+
 # ============== ADDITIONAL TEACHER ROUTES ==============
 
 @router.get("/classrooms/{classroom_id}/student/{student_id}/insights")
