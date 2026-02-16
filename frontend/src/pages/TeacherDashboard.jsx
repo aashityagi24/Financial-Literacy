@@ -364,6 +364,21 @@ export default function TeacherDashboard({ user }) {
     }
   };
   
+  const fetchQuestResponses = async (questId) => {
+    setResponsesLoading(true);
+    setShowQuestResponses(true);
+    setSelectedResponseStudent(null);
+    try {
+      const res = await axios.get(`${API}/teacher/quests/${questId}/responses`);
+      setQuestResponses(res.data);
+    } catch (error) {
+      toast.error('Failed to load quest responses');
+      setShowQuestResponses(false);
+    } finally {
+      setResponsesLoading(false);
+    }
+  };
+  
   const copyInviteCode = (code) => {
     navigator.clipboard.writeText(code);
     toast.success('Invite code copied!');
