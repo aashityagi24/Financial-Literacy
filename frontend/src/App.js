@@ -207,11 +207,7 @@ function AppRouter() {
           {({ user }) => <AchievementsPage user={user} />}
         </ProtectedRoute>
       } />
-      <Route path="/chat" element={
-        <ProtectedRoute>
-          {({ user }) => <ChatBuddy user={user} />}
-        </ProtectedRoute>
-      } />
+      {/* AI Buddy chat removed to prevent children from using AI for test answers */}
       <Route path="/lending" element={
         <ProtectedRoute>
           {({ user }) => <LendingBorrowingPage user={user} />}
