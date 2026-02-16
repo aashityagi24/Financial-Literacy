@@ -114,10 +114,10 @@ export default function Dashboard({ user, setUser }) {
     return { icon: TrendingUp, label: 'Stocks', path: '/stock-market', color: '#10B981', emoji: '📈' };
   };
   
-  // Lending is only for grades 4-5, replaces AI Buddy
+  // Lending is only for grades 4-5
   const getSpecialFeatureItem = () => {
     if (grade >= 4) return { icon: HandCoins, label: 'Lending', path: '/lending', color: '#F59E0B', emoji: '🤝' };
-    return { icon: MessageCircle, label: 'AI Buddy', path: '/chat', color: '#FFD23F' };
+    return null; // No special feature for younger grades
   };
   
   const investmentItem = getInvestmentItem();
