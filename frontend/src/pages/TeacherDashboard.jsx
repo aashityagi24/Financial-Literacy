@@ -981,11 +981,18 @@ export default function TeacherDashboard({ user }) {
                       My Quests ({teacherQuests.length})
                     </h3>
                     <div className="space-y-3">
-                      {teacherQuests.map((quest) => (
+                      {teacherQuests.map((quest) => {
+                        const questClassroom = classrooms.find(c => c.classroom_id === quest.classroom_id);
+                        return (
                         <div key={quest.quest_id} className="card-playful p-4 bg-[#06D6A0]/10">
                           <div className="flex items-start justify-between">
                             <div>
                               <h4 className="font-bold text-[#1D3557]">{quest.title}</h4>
+                              {questClassroom && (
+                                <span className="inline-block px-2 py-0.5 bg-[#3D5A80]/10 text-[#3D5A80] text-xs rounded-full mt-1">
+                                  {questClassroom.name} (Grade {questClassroom.grade_level})
+                                </span>
+                              )}
                               <p className="text-sm text-[#3D5A80] mt-1">{quest.description}</p>
                               <div className="flex items-center gap-4 mt-2 text-xs text-[#3D5A80]">
                                 <span>₹{quest.total_points || quest.reward_amount || 0} total</span>
