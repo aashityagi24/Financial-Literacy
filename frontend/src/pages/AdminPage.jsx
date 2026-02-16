@@ -388,6 +388,26 @@ export default function AdminPage({ user }) {
               <ChevronRight className="w-6 h-6 text-white" />
             </div>
           </Link>
+          
+          {/* Word Bank/Glossary Management Card */}
+          <Link 
+            to="/admin/glossary" 
+            className="block bg-gradient-to-r from-[#4A90A4] to-[#6BB5C9] rounded-xl p-5 hover:shadow-lg transition-shadow"
+            data-testid="glossary-management-link"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <BookMarked className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Word Bank / Glossary</h3>
+                  <p className="text-white/80 text-sm">Financial literacy terms</p>
+                </div>
+              </div>
+              <ChevronRight className="w-6 h-6 text-white" />
+            </div>
+          </Link>
         </div>
         
         {/* Tabs */}
