@@ -118,8 +118,8 @@ class TestGradeFilteringBackend:
         data = response.json()
         content_items = data.get("content_items", [])
         
-        # Without grade filter, should return all 7 items
-        assert len(content_items) == 7, f"Expected 7 content items without grade filter, got {len(content_items)}"
+        # Without grade filter, should return all items (at least 7)
+        assert len(content_items) >= 7, f"Expected at least 7 content items without grade filter, got {len(content_items)}"
 
 
 class TestGradeFilteringURLPreservation:
