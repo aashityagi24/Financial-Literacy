@@ -16,12 +16,39 @@ VIDEOS_DIR = UPLOADS_DIR / "videos"
 STORE_IMAGES_DIR = UPLOADS_DIR / "store"
 INVESTMENT_IMAGES_DIR = UPLOADS_DIR / "investments"
 BADGES_DIR = UPLOADS_DIR / "badges"
+GLOSSARY_IMAGES_DIR = UPLOADS_DIR / "glossary"
 
 # Ensure directories exist
-for dir_path in [THUMBNAILS_DIR, PDFS_DIR, ACTIVITIES_DIR, VIDEOS_DIR, STORE_IMAGES_DIR, INVESTMENT_IMAGES_DIR, BADGES_DIR]:
+for dir_path in [THUMBNAILS_DIR, PDFS_DIR, ACTIVITIES_DIR, VIDEOS_DIR, STORE_IMAGES_DIR, INVESTMENT_IMAGES_DIR, BADGES_DIR, GLOSSARY_IMAGES_DIR]:
     dir_path.mkdir(parents=True, exist_ok=True)
 
 router = APIRouter(prefix="/upload", tags=["uploads"])
+
+@router.post("/image")
+async def upload_general_image(file: UploadFile = File(...)):
+    """Upload a general image (for glossary, etc.) - Max recommended size: 500KB, 400x400px"""
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    # Check file size (max 2MB)
+    file.file.seek(0, 2)  # Seek to end
+    size = file.file.tell()
+    file.file.seek(0)  # Reset to start
+    
+    if size > 2 * 1024 * 1024:  # 2MB limit
+        raise HTTPException(status_code=400, detail="Image must be smaller than 2MB")
+    
+    file_ext = file.filename.split(".")[-1].lower() if "." in file.filename else "png"
+    if file_ext not in ["jpg", "jpeg", "png", "gif", "webp"]:
+        file_ext = "png"
+    
+    filename = f"img_{uuid.uuid4().hex[:12]}.{file_ext}"
+    file_path = GLOSSARY_IMAGES_DIR / filename
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    return {"url": f"/api/uploads/glossary/{filename}"}
 
 @router.post("/badge")
 async def upload_badge_image(file: UploadFile = File(...)):
