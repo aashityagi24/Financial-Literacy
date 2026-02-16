@@ -40,6 +40,41 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Role-based visibility (Child, Parent, Teacher)
 - Progressive unlock system for children
 
+### Recent Updates (February 16, 2026)
+
+**Session 13 - Grade Filtering Bug Fix & Word Bank/Glossary Feature:**
+
+1. **Grade Filtering Bug Fixed** ✅ (P0 BUG FIX - RECURRING)
+   - **Issue**: When teachers/parents selected a specific grade to view learning content, the grade filter was lost when navigating to subtopics
+   - **Root Cause**: `TopicPage.jsx` line 264 was not passing the `gradeFilter` query parameter when creating the Link to subtopics
+   - **Fix Applied**: Changed `to={/learn/topic/${subtopic.topic_id}}` to `to={/learn/topic/${subtopic.topic_id}${gradeFilter ? ?grade=${gradeFilter} : }}`
+   - **Testing**: All 8 backend tests and frontend UI flows verified by testing agent (iteration_49)
+   - **Result**: Grade filter now properly preserved throughout the entire navigation flow
+
+2. **Word Bank/Glossary Feature** ✅ (P0 NEW FEATURE)
+   - **Description**: A searchable glossary of financial literacy terms for all users
+   - **Backend APIs** (`/app/backend/routes/glossary.py`):
+     - GET `/api/glossary/words` - List all words with search, letter, category, grade filters
+     - GET `/api/glossary/words/{word_id}` - Get single word
+     - GET `/api/glossary/word-of-day` - Random word of the day based on user's grade
+     - POST `/api/admin/glossary/words` - Create word (admin only)
+     - PUT `/api/admin/glossary/words/{word_id}` - Update word (admin only)
+     - DELETE `/api/admin/glossary/words/{word_id}` - Delete word (admin only)
+     - POST `/api/admin/glossary/bulk-import` - Bulk import words from JSON
+   - **Frontend Pages**:
+     - `/app/frontend/src/pages/AdminGlossaryManagement.jsx` - Admin CRUD interface
+     - `/app/frontend/src/pages/GlossaryPage.jsx` - User-facing glossary with alphabet navigation
+   - **Features**:
+     - Word of the Day section with daily rotating term
+     - Alphabetical navigation (clickable letter buttons)
+     - Category filtering (saving, spending, earning, investing, etc.)
+     - Search functionality
+     - Grade-level filtering
+     - Expandable word cards with examples
+   - **Navigation**: Added "Words" nav item to child dashboard, "Word Bank/Glossary" card to admin dashboard
+   - **Testing**: All 19 backend tests and frontend UI flows verified by testing agent (iteration_50)
+   - **Database Collection**: `glossary_words` with fields: word_id, term, first_letter, meaning, description, examples[], image_url, category, min_grade, max_grade, created_at, updated_at
+
 ### Recent Updates (February 9, 2026)
 
 **Session 11 - Lending & Borrowing Feature Complete:**
