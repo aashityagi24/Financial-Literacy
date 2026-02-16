@@ -76,6 +76,7 @@ export default function TeacherDashboard({ user }) {
     pdf_url: '',
     reward_amount: 0,
     due_date: '',
+    classroom_id: '',
     questions: []
   });
   
@@ -87,6 +88,7 @@ export default function TeacherDashboard({ user }) {
       pdf_url: '',
       reward_amount: 0,
       due_date: '',
+      classroom_id: '',
       questions: []
     });
     setEditingQuest(null);
