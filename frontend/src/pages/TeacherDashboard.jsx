@@ -103,6 +103,7 @@ export default function TeacherDashboard({ user }) {
       pdf_url: quest.pdf_url || '',
       reward_amount: quest.reward_amount || 0,
       due_date: quest.due_date,
+      classroom_id: quest.classroom_id || '',
       questions: quest.questions || []
     });
     setShowCreateQuest(true);
