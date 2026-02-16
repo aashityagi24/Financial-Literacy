@@ -292,17 +292,6 @@ class InvestmentCreate(BaseModel):
     name: str
     amount: float
 
-class ChatMessage(BaseModel):
-    message: str
-    grade: Optional[int] = 3
-
-class ChatResponse(BaseModel):
-    response: str
-
-class FinancialTipRequest(BaseModel):
-    grade: int
-    topic: Optional[str] = None
-
 # ============== LEARNING CONTENT MODELS (NEW HIERARCHICAL STRUCTURE) ==============
 
 class ContentTopic(BaseModel):
