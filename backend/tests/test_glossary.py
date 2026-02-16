@@ -10,7 +10,7 @@ import uuid
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
 # Admin credentials from test setup
-ADMIN_SESSION_TOKEN = "admin_sess_aa2b0f50a7a24324aebb225fdca6e523"
+ADMIN_SESSION_TOKEN = "admin_sess_test_1771242889147"
 
 # Test word prefix for cleanup
 TEST_PREFIX = "TEST_GLOSSARY_"
