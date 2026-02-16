@@ -1481,6 +1481,242 @@ export default function TeacherDashboard({ user }) {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Quest Responses Modal */}
+        <Dialog open={showQuestResponses} onOpenChange={(open) => { setShowQuestResponses(open); if (!open) { setQuestResponses(null); setSelectedResponseStudent(null); }}}>
+          <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-[#1D3557] flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+                <BarChart3 className="w-6 h-6" />
+                Quest Responses: {questResponses?.quest?.title}
+              </DialogTitle>
+            </DialogHeader>
+            
+            {responsesLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1D3557]"></div>
+                <span className="ml-3 text-[#3D5A80]">Loading responses...</span>
+              </div>
+            ) : questResponses ? (
+              <div className="flex-1 overflow-hidden flex flex-col">
+                {/* Summary Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4 p-3 bg-[#E0FBFC] rounded-xl">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-[#1D3557]">{questResponses.summary.total_responses}</div>
+                    <div className="text-xs text-[#3D5A80]">Responses</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-[#06D6A0]">{questResponses.summary.average_percentage}%</div>
+                    <div className="text-xs text-[#3D5A80]">Avg Score</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-[#06D6A0]">{questResponses.summary.pass_count}</div>
+                    <div className="text-xs text-[#3D5A80]">Passed (≥60%)</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-[#EE6C4D]">{questResponses.summary.fail_count}</div>
+                    <div className="text-xs text-[#3D5A80]">Failed</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-[#3D5A80]">{questResponses.summary.pass_rate}%</div>
+                    <div className="text-xs text-[#3D5A80]">Pass Rate</div>
+                  </div>
+                </div>
+
+                {/* Two Column Layout */}
+                <div className="flex-1 overflow-hidden flex gap-4">
+                  {/* Left: Student List */}
+                  <div className="w-1/3 flex flex-col overflow-hidden">
+                    <h4 className="font-bold text-[#1D3557] mb-2 flex items-center gap-2">
+                      <Users className="w-4 h-4" /> Students ({questResponses.responses.length})
+                    </h4>
+                    <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+                      {questResponses.responses.length === 0 ? (
+                        <p className="text-[#3D5A80] text-sm text-center py-4">No responses yet</p>
+                      ) : (
+                        questResponses.responses.map((response) => (
+                          <button
+                            key={response.user_id}
+                            onClick={() => setSelectedResponseStudent(response)}
+                            className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
+                              selectedResponseStudent?.user_id === response.user_id
+                                ? 'border-[#1D3557] bg-[#FFD23F]/20'
+                                : 'border-[#E0FBFC] hover:border-[#3D5A80]/50 bg-white'
+                            }`}
+                            data-testid={`response-student-${response.user_id}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <img 
+                                src={response.avatar_url || getDefaultAvatar('child', response.student_name)} 
+                                alt={response.student_name}
+                                className="w-10 h-10 rounded-full border-2 border-[#1D3557]"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="font-bold text-[#1D3557] truncate">{response.student_name}</div>
+                                <div className="text-xs text-[#3D5A80]">
+                                  {response.total_correct}/{response.total_questions} correct
+                                </div>
+                              </div>
+                              <div className={`text-lg font-bold ${response.percentage >= 60 ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
+                                {response.percentage}%
+                              </div>
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right: Response Details or Question Analytics */}
+                  <div className="w-2/3 flex flex-col overflow-hidden">
+                    {selectedResponseStudent ? (
+                      <>
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-bold text-[#1D3557] flex items-center gap-2">
+                            <Eye className="w-4 h-4" /> {selectedResponseStudent.student_name}'s Answers
+                          </h4>
+                          <button
+                            onClick={() => setSelectedResponseStudent(null)}
+                            className="text-xs text-[#3D5A80] hover:text-[#1D3557]"
+                          >
+                            ← Back to Overview
+                          </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                          {selectedResponseStudent.question_details.map((q, idx) => (
+                            <div 
+                              key={q.question_id} 
+                              className={`p-3 rounded-xl border-2 ${q.is_correct ? 'border-[#06D6A0] bg-[#06D6A0]/10' : 'border-[#EE6C4D] bg-[#EE6C4D]/10'}`}
+                            >
+                              <div className="flex items-start gap-2 mb-2">
+                                {q.is_correct ? (
+                                  <CheckCircle className="w-5 h-5 text-[#06D6A0] flex-shrink-0 mt-0.5" />
+                                ) : (
+                                  <XCircle className="w-5 h-5 text-[#EE6C4D] flex-shrink-0 mt-0.5" />
+                                )}
+                                <div className="flex-1">
+                                  <div className="font-medium text-[#1D3557] text-sm">Q{idx + 1}: {q.question_text}</div>
+                                </div>
+                                <div className="text-xs font-bold text-[#3D5A80]">
+                                  {q.points_earned}/{q.max_points} pts
+                                </div>
+                              </div>
+                              
+                              {/* Show options for MCQ/True-False */}
+                              {q.options && (
+                                <div className="ml-7 space-y-1">
+                                  {q.options.map((opt, optIdx) => {
+                                    const isUserAnswer = q.question_type === 'multi_select' 
+                                      ? (q.user_answer || []).includes(optIdx)
+                                      : q.user_answer === optIdx;
+                                    const isCorrectAnswer = q.question_type === 'multi_select'
+                                      ? (q.correct_answer || []).includes(optIdx)
+                                      : q.correct_answer === optIdx;
+                                    
+                                    return (
+                                      <div 
+                                        key={optIdx}
+                                        className={`text-xs p-1.5 rounded ${
+                                          isCorrectAnswer 
+                                            ? 'bg-[#06D6A0]/30 text-[#1D3557] font-medium' 
+                                            : isUserAnswer && !isCorrectAnswer
+                                              ? 'bg-[#EE6C4D]/30 text-[#1D3557] line-through'
+                                              : 'text-[#3D5A80]'
+                                        }`}
+                                      >
+                                        {isUserAnswer && '→ '}{opt}
+                                        {isCorrectAnswer && ' ✓'}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                              
+                              {/* Show text answer for fill_blank */}
+                              {q.question_type === 'fill_blank' && (
+                                <div className="ml-7 text-sm">
+                                  <div className="text-[#3D5A80]">
+                                    Student's answer: <span className={q.is_correct ? 'text-[#06D6A0] font-medium' : 'text-[#EE6C4D] line-through'}>{q.user_answer || '(no answer)'}</span>
+                                  </div>
+                                  {!q.is_correct && (
+                                    <div className="text-[#06D6A0] font-medium">Correct: {q.correct_answer}</div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <h4 className="font-bold text-[#1D3557] mb-2 flex items-center gap-2">
+                          <Target className="w-4 h-4" /> Question Analytics
+                        </h4>
+                        <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                          {questResponses.question_analytics.map((q, idx) => (
+                            <div key={q.question_id} className="p-3 rounded-xl border-2 border-[#E0FBFC] bg-white">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="font-medium text-[#1D3557] text-sm flex-1">
+                                  Q{idx + 1}: {q.question_text}
+                                </div>
+                                <div className={`text-lg font-bold ${q.accuracy_rate >= 60 ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
+                                  {q.accuracy_rate}%
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-4 text-xs text-[#3D5A80] mb-2">
+                                <span className="flex items-center gap-1">
+                                  <CheckCircle className="w-3 h-3 text-[#06D6A0]" /> {q.correct_count} correct
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <XCircle className="w-3 h-3 text-[#EE6C4D]" /> {q.total_attempts - q.correct_count} incorrect
+                                </span>
+                              </div>
+                              
+                              {/* Progress bar */}
+                              <div className="h-2 bg-[#EE6C4D]/30 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-[#06D6A0] rounded-full transition-all"
+                                  style={{ width: `${q.accuracy_rate}%` }}
+                                />
+                              </div>
+                              
+                              {/* Answer distribution for MCQ */}
+                              {Object.keys(q.answer_distribution).length > 0 && q.options && (
+                                <div className="mt-2 space-y-1">
+                                  <div className="text-xs text-[#3D5A80] font-medium">Answer Distribution:</div>
+                                  {q.options.map((opt, optIdx) => {
+                                    const count = q.answer_distribution[String(optIdx)] || 0;
+                                    const percentage = q.total_attempts > 0 ? (count / q.total_attempts) * 100 : 0;
+                                    const isCorrect = q.question_type === 'multi_select'
+                                      ? (q.correct_answer || []).includes(optIdx)
+                                      : q.correct_answer === optIdx;
+                                    
+                                    return (
+                                      <div key={optIdx} className="flex items-center gap-2 text-xs">
+                                        <div className={`w-3 h-3 rounded ${isCorrect ? 'bg-[#06D6A0]' : 'bg-[#3D5A80]/30'}`}></div>
+                                        <div className="flex-1 truncate">{opt}</div>
+                                        <div className="text-[#3D5A80]">{count} ({percentage.toFixed(0)}%)</div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-[#3D5A80]">
+                No response data available
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
