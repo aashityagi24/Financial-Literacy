@@ -380,7 +380,7 @@ export default function AdminBadgeManagement({ user }) {
             <div>
               <label className="text-sm font-medium mb-1 block">Description</label>
               <Input 
-                placeholder="e.g., Save ₹500 in your savings jar"
+                placeholder="e.g., Save ₹500 in your piggy bank"
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
               />
@@ -513,7 +513,7 @@ export default function AdminBadgeManagement({ user }) {
             <div>
               <label className="text-sm font-medium mb-1 block">Description</label>
               <Input 
-                placeholder="e.g., Save ₹500 in your savings jar"
+                placeholder="e.g., Save ₹500 in your piggy bank"
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
               />
