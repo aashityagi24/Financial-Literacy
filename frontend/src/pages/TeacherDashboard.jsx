@@ -250,6 +250,12 @@ export default function TeacherDashboard({ user }) {
       return;
     }
     
+    // Require classroom selection
+    if (!questForm.classroom_id) {
+      toast.error('Please select a classroom for this quest');
+      return;
+    }
+    
     // Calculate total reward points
     const totalQuestPoints = questForm.questions.reduce((sum, q) => sum + (q.points || 0), 0);
     
