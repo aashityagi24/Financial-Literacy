@@ -315,6 +315,16 @@ function AppRouter() {
           {({ user }) => <AdminVideoManagement user={user} />}
         </ProtectedRoute>
       } />
+      <Route path="/admin/glossary" element={
+        <ProtectedRoute>
+          {({ user }) => <AdminGlossaryManagement user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/glossary" element={
+        <ProtectedRoute>
+          {({ user }) => <GlossaryPage user={user} />}
+        </ProtectedRoute>
+      } />
     </Routes>
   );
 }
