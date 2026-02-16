@@ -1429,7 +1429,7 @@ export default function TeacherDashboard({ user }) {
                       <th className="px-2 py-2 text-left whitespace-nowrap">Student</th>
                       <th className="px-2 py-2 text-right whitespace-nowrap">Total Balance</th>
                       <th className="px-2 py-2 text-center whitespace-nowrap" colSpan="2">Spending</th>
-                      <th className="px-2 py-2 text-center whitespace-nowrap" colSpan="2">Savings</th>
+                      <th className="px-2 py-2 text-center whitespace-nowrap" colSpan="2">Piggy Bank</th>
                       <th className="px-2 py-2 text-center whitespace-nowrap" colSpan="2">Gifting</th>
                       <th className="px-2 py-2 text-center whitespace-nowrap" colSpan="2">Investing</th>
                       <th className="px-2 py-2 text-center whitespace-nowrap">Chores</th>
