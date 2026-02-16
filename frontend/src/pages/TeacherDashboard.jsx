@@ -1042,7 +1042,8 @@ export default function TeacherDashboard({ user }) {
                             </div>
                           </div>
                         </div>
-                      ))}
+                      );
+                      })}
                     </div>
                   </div>
                 )}
