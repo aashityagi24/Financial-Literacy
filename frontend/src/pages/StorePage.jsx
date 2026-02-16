@@ -581,7 +581,7 @@ export default function StorePage({ user }) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="savings">
-                    💰 Savings (₹{wallet?.accounts?.find(a => a.account_type === 'savings')?.balance?.toFixed(0) || 0})
+                    🐷 Piggy Bank (₹{wallet?.accounts?.find(a => a.account_type === 'savings')?.balance?.toFixed(0) || 0})
                   </SelectItem>
                   <SelectItem value="investing">
                     📈 Investing (₹{wallet?.accounts?.find(a => a.account_type === 'investing')?.balance?.toFixed(0) || 0})
