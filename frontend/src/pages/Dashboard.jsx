@@ -129,6 +129,7 @@ export default function Dashboard({ user, setUser }) {
     { icon: Store, label: 'Store', path: '/store', color: '#EE6C4D' },
     investmentItem,
     { icon: Target, label: 'Quests', path: '/quests', color: '#9B5DE5' },
+    { icon: BookMarked, label: 'Words', path: '/glossary', color: '#4A90A4' },
     specialFeatureItem,
   ].filter(Boolean); // Remove null items
   
