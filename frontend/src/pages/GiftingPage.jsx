@@ -638,7 +638,7 @@ export default function GiftingPage({ user }) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="spending">🛒 Spending Jar (₹{getAccountBalance('spending').toFixed(0)})</SelectItem>
-                    <SelectItem value="savings">🏦 Savings Jar (₹{getAccountBalance('savings').toFixed(0)})</SelectItem>
+                    <SelectItem value="savings">🐷 Piggy Bank (₹{getAccountBalance('savings').toFixed(0)})</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
