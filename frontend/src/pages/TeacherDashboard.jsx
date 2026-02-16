@@ -655,6 +655,25 @@ export default function TeacherDashboard({ user }) {
                         <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{editingQuest ? 'Edit Quest' : 'Create Quest'}</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 mt-4">
+                        {/* Classroom Selection */}
+                        <div>
+                          <label className="text-sm font-bold text-[#1D3557] mb-1 block">Select Classroom *</label>
+                          <select
+                            value={questForm.classroom_id}
+                            onChange={(e) => setQuestForm({...questForm, classroom_id: e.target.value})}
+                            className="w-full px-3 py-2 border-3 border-[#1D3557] rounded-lg bg-white text-[#1D3557] focus:ring-2 focus:ring-[#FFD23F]"
+                            data-testid="quest-classroom-select"
+                          >
+                            <option value="">-- Select a classroom --</option>
+                            {classrooms.map(classroom => (
+                              <option key={classroom.classroom_id} value={classroom.classroom_id}>
+                                {classroom.name} (Grade {classroom.grade_level}) - {classroom.student_count || 0} students
+                              </option>
+                            ))}
+                          </select>
+                          <p className="text-xs text-[#3D5A80] mt-1">Only students in this classroom will see this quest</p>
+                        </div>
+                        
                         <Input 
                           placeholder="Quest Title *" 
                           value={questForm.title} 
