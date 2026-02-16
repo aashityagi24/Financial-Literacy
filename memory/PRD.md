@@ -558,6 +558,8 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### P0 - Completed
 - [x] Video Walkthrough Section ✅ (Completed Jan 31, 2026)
+- [x] Grade Filtering Bug Fix ✅ (Completed Feb 16, 2026)
+- [x] Word Bank/Glossary Feature ✅ (Completed Feb 16, 2026)
 
 ### P1 - High Priority
 - [x] School User Role System ✅ (Completed Jan 27, 2026)
