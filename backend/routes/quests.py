@@ -229,15 +229,16 @@ async def get_child_quests(request: Request):
     
     # Get teacher quests for child's classrooms
     classroom_links = await db.classroom_students.find(
-        {"student_id": user["user_id"]},
+        {"student_id": user["user_id"], "status": "active"},
         {"classroom_id": 1}
     ).to_list(10)
     classroom_ids = [c["classroom_id"] for c in classroom_links]
     
+    # Teacher quests are classroom-specific - only show quests for classrooms the child is enrolled in
     teacher_quests = await db.new_quests.find({
         "creator_type": "teacher",
         "is_active": True,
-        "classroom_ids": {"$in": classroom_ids}
+        "classroom_id": {"$in": classroom_ids}  # Match single classroom_id field
     }, {"_id": 0}).to_list(100)
     
     # Get parent chores for this child
