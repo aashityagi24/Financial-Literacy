@@ -261,7 +261,7 @@ export default function TopicPage({ user }) {
                 return (
                 <Link
                   key={subtopic.topic_id}
-                  to={`/learn/topic/${subtopic.topic_id}`}
+                  to={`/learn/topic/${subtopic.topic_id}${gradeFilter ? `?grade=${gradeFilter}` : ''}`}
                   className={`card-playful p-4 hover:scale-[1.02] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0]' : ''}`}
                   style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
                 >
