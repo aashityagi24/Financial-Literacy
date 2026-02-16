@@ -52,6 +52,7 @@ export default function WalletPage({ user }) {
       },
       savings: { 
         icon: '🐷', 
+        label: 'Piggy Bank',
         color: 'from-[#06D6A0] to-[#42E8B3]',
         description: 'Save up for something special!',
         action: { label: 'My Goals', path: '/savings-goals' }
