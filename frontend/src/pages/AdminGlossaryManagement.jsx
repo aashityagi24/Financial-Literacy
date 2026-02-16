@@ -481,6 +481,7 @@ export default function AdminGlossaryManagement({ user }) {
             {/* Image Upload */}
             <div>
               <label className="block text-sm font-medium text-[#1D3557] mb-1">Image (Optional)</label>
+              <p className="text-xs text-[#3D5A80] mb-2">Recommended: 400x400px, max 2MB (JPG, PNG, WebP)</p>
               {form.image_url ? (
                 <div className="flex items-center gap-4">
                   <img 
@@ -497,12 +498,13 @@ export default function AdminGlossaryManagement({ user }) {
                   </Button>
                 </div>
               ) : (
-                <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-[#3D5A80] rounded-xl cursor-pointer hover:bg-[#E0FBFC] transition-colors">
+                <label className="flex flex-col items-center justify-center gap-1 p-4 border-2 border-dashed border-[#3D5A80] rounded-xl cursor-pointer hover:bg-[#E0FBFC] transition-colors">
                   <Upload className="w-5 h-5 text-[#3D5A80]" />
-                  <span className="text-[#3D5A80]">Click to upload image</span>
+                  <span className="text-[#3D5A80] text-sm">Click to upload image</span>
+                  <span className="text-xs text-[#3D5A80]/60">Max 2MB</span>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
                     onChange={handleImageUpload}
                     className="hidden"
                   />
