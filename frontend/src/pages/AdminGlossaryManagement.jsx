@@ -181,15 +181,23 @@ export default function AdminGlossaryManagement({ user }) {
     const file = e.target.files[0];
     if (!file) return;
     
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be smaller than 2MB');
+      return;
+    }
+    
     const formData = new FormData();
     formData.append('file', file);
     
     try {
-      const res = await axios.post(`${API}/upload/image`, formData);
+      const res = await axios.post(`${API}/upload/image`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       setForm({ ...form, image_url: res.data.url });
       toast.success('Image uploaded');
     } catch (error) {
-      toast.error('Failed to upload image');
+      toast.error(error.response?.data?.detail || 'Failed to upload image');
     }
   };
   
