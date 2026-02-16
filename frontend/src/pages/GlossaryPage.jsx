@@ -267,6 +267,17 @@ export default function GlossaryPage({ user }) {
                 {/* Expanded Content */}
                 {expandedWord === word.word_id && (
                   <div className="px-4 pb-4 border-t-2 border-[#1D3557]/10 pt-3">
+                    {/* Large Image Display for Infographics */}
+                    {word.image_url && (
+                      <div className="mb-4">
+                        <img 
+                          src={getAssetUrl(word.image_url)} 
+                          alt={`${word.term} illustration`}
+                          className="w-full max-w-md mx-auto rounded-xl border-3 border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] object-contain bg-white"
+                        />
+                      </div>
+                    )}
+                    
                     {word.description && (
                       <div className="mb-3">
                         <h4 className="text-sm font-bold text-[#1D3557] mb-1">More Info:</h4>
