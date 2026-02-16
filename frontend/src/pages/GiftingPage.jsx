@@ -620,7 +620,7 @@ export default function GiftingPage({ user }) {
                   <span className="font-bold text-[#1D3557]">₹{getAccountBalance('spending').toFixed(0)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-[#3D5A80]">🏦 Savings Jar</span>
+                  <span className="text-sm text-[#3D5A80]">🐷 Piggy Bank</span>
                   <span className="font-bold text-[#1D3557]">₹{getAccountBalance('savings').toFixed(0)}</span>
                 </div>
                 <div className="flex justify-between items-center border-t pt-2">
