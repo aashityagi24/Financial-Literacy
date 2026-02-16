@@ -66,7 +66,7 @@ export default function LandingPage() {
   };
   
   const features = [
-    { icon: Coins, title: "Digital Wallet", description: "Learn to manage money with 4 account types: Spending, Savings, Investing & Gifting", color: "#FFD23F" },
+    { icon: Coins, title: "Digital Wallet", description: "Learn to manage money with 4 account types: Spending, Piggy Bank, Investing & Gifting", color: "#FFD23F" },
     { icon: TrendingUp, title: "Investment Zone", description: "Grow your money! Gardening simulator for K-2, Stock market simulator for 3-5 graders", color: "#06D6A0" },
     { icon: Gift, title: "Virtual Store", description: "Spend your money on your needs and wants and enhance your collection!", color: "#EE6C4D" },
     { icon: Trophy, title: "Quests & Achievements", description: "Complete fun challenges and chores to earn money and badges", color: "#3D5A80" },
