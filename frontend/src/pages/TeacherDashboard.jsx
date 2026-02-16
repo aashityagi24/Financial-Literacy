@@ -60,6 +60,12 @@ export default function TeacherDashboard({ user }) {
   const [comparisonData, setComparisonData] = useState(null);
   const [comparisonLoading, setComparisonLoading] = useState(false);
   
+  // Quest Responses
+  const [showQuestResponses, setShowQuestResponses] = useState(false);
+  const [questResponses, setQuestResponses] = useState(null);
+  const [responsesLoading, setResponsesLoading] = useState(false);
+  const [selectedResponseStudent, setSelectedResponseStudent] = useState(null);
+  
   const [classForm, setClassForm] = useState({ name: '', description: '', grade_level: 3 });
   const [rewardForm, setRewardForm] = useState({ student_ids: [], amount: 10, reason: '' });
   const [announcementForm, setAnnouncementForm] = useState({ title: '', message: '' });
