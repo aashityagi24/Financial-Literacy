@@ -13,7 +13,7 @@ import WalletPage from "@/pages/WalletPage";
 import StorePage from "@/pages/StorePage";
 import QuestsPage from "@/pages/QuestsPage";
 import AchievementsPage from "@/pages/AchievementsPage";
-import ChatBuddy from "@/pages/ChatBuddy";
+// ChatBuddy removed - AI feature disabled to prevent test cheating
 import ProfilePage from "@/pages/ProfilePage";
 import LearnPage from "@/pages/LearnPage";
 import TopicPage from "@/pages/TopicPage";
