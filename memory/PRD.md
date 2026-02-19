@@ -65,6 +65,15 @@ A gamified financial literacy learning application for children (K-5) with disti
    - **Testing**: Verified by testing agent (iteration_51)
    - **Result**: Teachers and parents can now open PDFs in a new tab; children still see only download
 
+3. **Google OAuth Redirect Path Bug Fixed** ✅ (P0 BUG FIX)
+   - **Issue**: After Google sign-in, users were redirected to `/login/auth/callback` instead of `/auth/callback`, causing a blank screen
+   - **Root Cause**: The `state` parameter in Google OAuth stored the full referer URL including the `/login` path, which was then appended to when constructing the callback redirect
+   - **Backend Fix** (`/app/backend/routes/auth.py` lines 254-259, 401-407):
+     - Fixed state encoding to only use the URL origin (scheme + host), not the full path
+     - Added URL parsing in callback handler to extract only the origin from state
+   - **Testing**: Verified with screenshot tests - OAuth now correctly redirects to `/auth/callback`
+   - **Result**: All Google SSO sign-ins now work correctly for all user types
+
 ### Recent Updates (February 16, 2026)
 
 **Session 13 - Grade Filtering Bug Fix & Word Bank/Glossary Feature:**
