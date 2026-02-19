@@ -41,8 +41,7 @@ export default function LandingPage() {
   
   // Use custom Google OAuth
   const handleLogin = () => {
-    // Redirect to our backend Google OAuth endpoint
-    window.location.href = `${BACKEND_URL}/api/auth/google/login`;
+    navigate('/login');
   };
   
   const handleAdminLogin = async (e) => {
