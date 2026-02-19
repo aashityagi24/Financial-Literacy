@@ -1,0 +1,66 @@
+{
+  "summary": "Both P1 and P2 bug fixes verified successfully. P1: School name now displays on child's profile under 'My Connections'. P2: ExternalLink icon shows for parents/teachers on worksheets/workbooks with PDF, but correctly hidden for children.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ Backend: GET /api/student/classrooms returns school_name when teacher has school_id",
+    "✅ Backend: GET /api/student/classrooms returns school_id when teacher has school_id",
+    "✅ Frontend: ProfilePage.jsx displays school_name in 'My Classroom' section with school icon",
+    "✅ Frontend: TopicPage.jsx shows ExternalLink icon for teacher on worksheet modal",
+    "✅ Frontend: TopicPage.jsx shows ExternalLink icon for parent on worksheet modal",
+    "✅ Frontend: TopicPage.jsx correctly hides ExternalLink icon for child on worksheet modal",
+    "✅ Frontend: Download PDF icon visible for all user roles"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_school_name_and_external_link.py"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "P1 fix in student.py lines 106-114 correctly looks up school from teacher.school_id",
+    "P1 fix in ProfilePage.jsx lines 335-338 correctly displays school_name with School icon",
+    "P2 fix in TopicPage.jsx lines 458-469 correctly shows ExternalLink only for non-child users"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_school_name_and_external_link.py - Created test file for P1/P2 verification"
+  ],
+
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "100%"
+  },
+
+  "test_credentials": {
+    "note": "Test data was created and cleaned up during testing",
+    "test_school": "TEST_School_P1 (deleted after test)",
+    "test_teacher": "test_teacher_p1@school.com (deleted after test)",
+    "test_child": "test_child_p1@example.com (deleted after test)"
+  },
+
+  "seed_data_creation": "Created test school, teacher, classroom, and child user for testing. All test data cleaned up after verification.",
+
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+
+  "context_for_next_testing_agent": "P1 and P2 bugs are fixed and verified. P1: School name display works when teacher has school_id - the API returns school_name and school_id, and ProfilePage.jsx displays it with a school icon. P2: ExternalLink icon in TopicPage.jsx modal header is conditionally rendered based on user.role !== 'child' for worksheets/workbooks with PDF. Both fixes are working correctly.",
+
+  "verification_screenshots": {
+    "p1_school_name": "Child profile page shows classroom with school name (TEST_School_P1) displayed with school icon",
+    "p2_teacher_modal": "Teacher worksheet modal shows Download + ExternalLink + Close icons",
+    "p2_parent_modal": "Parent worksheet modal shows Download + ExternalLink + Close icons",
+    "p2_child_modal": "Child worksheet modal shows only Download + Close icons (no ExternalLink)"
+  }
+}
