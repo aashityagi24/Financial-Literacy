@@ -251,8 +251,13 @@ async def google_login(request: Request):
         callback_url = GOOGLE_REDIRECT_URI
         frontend_url = origin.rstrip("/") if origin else ""
     
-    # Store the frontend URL in state for redirect after auth
-    state = urllib.parse.quote(frontend_url)
+    # Store the frontend URL origin (without path) in state for redirect after auth
+    if frontend_url:
+        parsed = urllib.parse.urlparse(frontend_url)
+        frontend_origin = f"{parsed.scheme}://{parsed.netloc}" if parsed.scheme and parsed.netloc else frontend_url
+    else:
+        frontend_origin = ""
+    state = urllib.parse.quote(frontend_origin) if frontend_origin else ""
     
     params = {
         "client_id": GOOGLE_CLIENT_ID,
