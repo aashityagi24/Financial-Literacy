@@ -130,8 +130,14 @@ async def signup(signup_data: SignupRequest, response: Response):
     
     await db.users.insert_one(user)
     
-    # Remove password_hash from response
-    user_response = {k: v for k, v in user.items() if k != "password_hash"}
+    # Remove internal fields from response
+    user_response = {
+        "user_id": user["user_id"],
+        "email": user["email"],
+        "name": user["name"],
+        "role": user["role"],
+        "created_at": user["created_at"]
+    }
     
     return {"message": "Account created successfully", "user": user_response}
 
