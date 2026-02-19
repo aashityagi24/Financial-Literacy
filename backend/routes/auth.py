@@ -401,6 +401,9 @@ async def google_callback(request: Request, response: Response, code: str = None
     # Determine frontend URL - from state or based on host
     if state:
         frontend_url = urllib.parse.unquote(state)
+        # Extract only the origin (scheme + host) from the URL, removing any path
+        parsed = urllib.parse.urlparse(frontend_url)
+        frontend_url = f"{parsed.scheme}://{parsed.netloc}"
     else:
         host = request.headers.get("host", "")
         if "coinquest.co.in" in host:
