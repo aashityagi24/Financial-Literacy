@@ -220,24 +220,8 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center gap-3">
               <button
-                data-testid="school-login-btn"
-                onClick={() => navigate('/school-login')}
-                className="px-4 py-2 text-[#3D5A80] hover:text-[#1D3557] text-sm font-medium flex items-center gap-1"
-              >
-                <School className="w-4 h-4" />
-                School
-              </button>
-              <button
-                data-testid="admin-login-btn"
-                onClick={() => setShowAdminLogin(true)}
-                className="px-4 py-2 text-[#3D5A80] hover:text-[#1D3557] text-sm font-medium flex items-center gap-1"
-              >
-                <Shield className="w-4 h-4" />
-                Admin
-              </button>
-              <button
                 data-testid="login-btn-nav"
-                onClick={handleLogin}
+                onClick={() => navigate('/login')}
                 className="btn-primary px-6 py-3 text-lg"
               >
                 Sign In
