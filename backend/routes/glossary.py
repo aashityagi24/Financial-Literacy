@@ -191,6 +191,8 @@ async def admin_create_word(request: Request):
         "description": body.get("description", ""),
         "examples": body.get("examples", []),
         "image_url": body.get("image_url"),
+        "video_url": body.get("video_url"),
+        "media_type": body.get("media_type", "image"),  # 'image' or 'video'
         "category": body.get("category", "general"),
         "min_grade": body.get("min_grade", 0),
         "max_grade": body.get("max_grade", 5),
