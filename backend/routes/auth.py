@@ -41,6 +41,100 @@ class SchoolLoginRequest(BaseModel):
     username: str
     password: str
 
+class UnifiedLoginRequest(BaseModel):
+    identifier: str  # email or username
+    password: str
+
+class SignupRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+
+@router.post("/login")
+async def unified_login(login_data: UnifiedLoginRequest, response: Response):
+    """Unified login supporting email or username"""
+    db = get_db()
+    identifier = login_data.identifier.strip()
+    password = login_data.password
+    
+    # Hash password for comparison
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    
+    # Try to find user by email or username
+    user = await db.users.find_one({
+        "$or": [
+            {"email": identifier.lower()},
+            {"username": identifier}
+        ],
+        "password_hash": password_hash
+    }, {"_id": 0})
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid email/username or password")
+    
+    # Create session
+    session_token = f"sess_{uuid.uuid4().hex}"
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    
+    await db.user_sessions.insert_one({
+        "user_id": user["user_id"],
+        "session_token": session_token,
+        "expires_at": expires_at.isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+        max_age=7 * 24 * 60 * 60
+    )
+    
+    return {"user": user, "session_token": session_token}
+
+@router.post("/signup")
+async def signup(signup_data: SignupRequest, response: Response):
+    """Create a new user account with email/password"""
+    db = get_db()
+    
+    email = signup_data.email.strip().lower()
+    name = signup_data.name.strip()
+    password = signup_data.password
+    
+    # Validate email format
+    if "@" not in email or "." not in email:
+        raise HTTPException(status_code=400, detail="Invalid email format")
+    
+    # Check if email already exists
+    existing = await db.users.find_one({"email": email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered. Please sign in.")
+    
+    # Hash password
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    
+    # Create user (default role is 'parent' - they can add children later)
+    user_id = f"user_{uuid.uuid4().hex[:12]}"
+    user = {
+        "user_id": user_id,
+        "email": email,
+        "name": name,
+        "password_hash": password_hash,
+        "role": "parent",  # Default to parent role
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "auth_provider": "email"
+    }
+    
+    await db.users.insert_one(user)
+    
+    # Remove password_hash from response
+    user_response = {k: v for k, v in user.items() if k != "password_hash"}
+    
+    return {"message": "Account created successfully", "user": user_response}
+
 @router.post("/admin-login")
 async def admin_login(login_data: AdminLoginRequest, response: Response):
     """Admin login with email and password"""
