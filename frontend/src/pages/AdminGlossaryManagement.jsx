@@ -200,10 +200,35 @@ export default function AdminGlossaryManagement({ user }) {
       const res = await axios.post(`${API}/upload/image`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      setForm({ ...form, image_url: res.data.url });
+      setForm({ ...form, image_url: res.data.url, video_url: '', media_type: 'image' });
       toast.success('Image uploaded');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to upload image');
+    }
+  };
+  
+  const handleVideoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check file size (max 50MB)
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('Video must be smaller than 50MB');
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      toast.info('Uploading video...');
+      const res = await axios.post(`${API}/upload/glossary-video`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setForm({ ...form, video_url: res.data.url, image_url: '', media_type: 'video' });
+      toast.success('Video uploaded');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to upload video');
     }
   };
   
