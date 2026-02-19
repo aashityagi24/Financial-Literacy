@@ -97,6 +97,8 @@ export default function AdminGlossaryManagement({ user }) {
       description: '',
       examples: [''],
       image_url: '',
+      video_url: '',
+      media_type: 'image',
       category: 'general',
       min_grade: 0,
       max_grade: 5
@@ -111,6 +113,8 @@ export default function AdminGlossaryManagement({ user }) {
       description: word.description || '',
       examples: word.examples?.length > 0 ? word.examples : [''],
       image_url: word.image_url || '',
+      video_url: word.video_url || '',
+      media_type: word.media_type || (word.video_url ? 'video' : 'image'),
       category: word.category || 'general',
       min_grade: word.min_grade ?? 0,
       max_grade: word.max_grade ?? 5
