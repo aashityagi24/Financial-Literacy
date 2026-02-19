@@ -40,26 +40,6 @@ export default function LandingPage() {
     navigate('/login');
   };
   
-  const handleAdminLogin = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    try {
-      const response = await axios.post(`${BACKEND_URL}/api/auth/admin-login`, {
-        email: adminEmail,
-        password: adminPassword
-      }, { withCredentials: true });
-      
-      toast.success('Admin login successful!');
-      // Redirect admin directly to admin dashboard
-      navigate('/admin', { state: { user: response.data.user } });
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Invalid credentials');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
   const features = [
     { icon: Coins, title: "Digital Wallet", description: "Learn to manage money with 4 account types: Spending, Piggy Bank, Investing & Gifting", color: "#FFD23F" },
     { icon: TrendingUp, title: "Investment Zone", description: "Grow your money! Gardening simulator for K-2, Stock market simulator for 3-5 graders", color: "#06D6A0" },
