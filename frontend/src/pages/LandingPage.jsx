@@ -17,10 +17,6 @@ const getAssetUrl = (path) => {
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [adminEmail, setAdminEmail] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [walkthroughVideo, setWalkthroughVideo] = useState(null);
   const [selectedGrade, setSelectedGrade] = useState(null);
 
