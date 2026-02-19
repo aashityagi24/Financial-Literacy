@@ -57,6 +57,8 @@ export default function AdminGlossaryManagement({ user }) {
     description: '',
     examples: [''],
     image_url: '',
+    video_url: '',
+    media_type: 'image',
     category: 'general',
     min_grade: 0,
     max_grade: 5
