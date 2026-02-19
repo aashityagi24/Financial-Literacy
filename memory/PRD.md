@@ -40,6 +40,31 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Role-based visibility (Child, Parent, Teacher)
 - Progressive unlock system for children
 
+### Recent Updates (February 19, 2026)
+
+**Session 14 - Profile School Name Display & Content Modal ExternalLink Fixes:**
+
+1. **School Name Display on Child Profile Fixed** ✅ (P1 BUG FIX)
+   - **Issue**: Child's "My Connections" section showed classroom and teacher info, but not the school name
+   - **Root Cause**: The `GET /api/student/classrooms` endpoint didn't include school lookup
+   - **Backend Fix** (`/app/backend/routes/student.py` lines 100-113):
+     - Added teacher `school_id` to the query projection
+     - Added school lookup when teacher has `school_id`
+     - Response now includes `school_name` and `school_id` fields
+   - **Frontend Fix** (`/app/frontend/src/pages/ProfilePage.jsx` lines 335-338):
+     - Added conditional display of school name with School icon when `classroom.school_name` exists
+   - **Testing**: Verified by testing agent (iteration_51) with test data creation
+
+2. **Open in New Tab Icon for Teachers/Parents Fixed** ✅ (P2 BUG FIX)
+   - **Issue**: "Open in new tab" (ExternalLink) icon was missing for parents/teachers when viewing worksheets/workbooks with PDF
+   - **Root Cause**: Only activities and books had the ExternalLink button; worksheets/workbooks only had Download
+   - **Frontend Fix** (`/app/frontend/src/pages/TopicPage.jsx` lines 458-469):
+     - Added ExternalLink icon for worksheets/workbooks with PDF
+     - Conditionally rendered only for non-child users (`user?.role !== 'child'`)
+     - Download icon still available for all users
+   - **Testing**: Verified by testing agent (iteration_51)
+   - **Result**: Teachers and parents can now open PDFs in a new tab; children still see only download
+
 ### Recent Updates (February 16, 2026)
 
 **Session 13 - Grade Filtering Bug Fix & Word Bank/Glossary Feature:**
