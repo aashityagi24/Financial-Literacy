@@ -168,6 +168,8 @@ function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<AuthPage />} />
+      <Route path="/signup" element={<AuthPage />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       {/* Fallback: Handle if Google OAuth callback hits frontend without /api prefix */}
       <Route path="/auth/google/callback" element={<AuthCallback />} />
