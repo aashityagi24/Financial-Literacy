@@ -516,7 +516,7 @@ export default function LandingPage() {
               onClick={handleLogin}
               className="bg-[#1D3557] text-white font-bold text-xl px-10 py-5 rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_white] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_white] transition-all"
             >
-              Sign Up with Google
+              Get Started
             </button>
           </div>
         </div>
