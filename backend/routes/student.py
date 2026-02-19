@@ -99,9 +99,20 @@ async def get_student_classrooms(request: Request):
         if classroom:
             teacher = await db.users.find_one(
                 {"user_id": classroom.get("teacher_id")},
-                {"_id": 0, "name": 1, "picture": 1}
+                {"_id": 0, "name": 1, "picture": 1, "school_id": 1}
             )
             classroom["teacher"] = teacher
+            
+            # Lookup school name if teacher has a school_id
+            if teacher and teacher.get("school_id"):
+                school = await db.schools.find_one(
+                    {"school_id": teacher["school_id"]},
+                    {"_id": 0, "name": 1, "school_id": 1}
+                )
+                if school:
+                    classroom["school_name"] = school.get("name")
+                    classroom["school_id"] = school.get("school_id")
+            
             classrooms.append(classroom)
     
     return classrooms

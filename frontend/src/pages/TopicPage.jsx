@@ -455,6 +455,18 @@ export default function TopicPage({ user }) {
                     <Download className="w-5 h-5 text-[#1D3557]" />
                   </a>
                 )}
+                {/* Open in new tab for worksheets/workbooks (for teachers/parents) */}
+                {user?.role !== 'child' && (selectedContent.content_type === 'worksheet' || selectedContent.content_type === 'workbook') && selectedContent.content_data?.pdf_url && (
+                  <a 
+                    href={getAssetUrl(selectedContent.content_data.pdf_url)} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 hover:bg-gray-100 rounded-xl border-2 border-[#1D3557]"
+                    title="Open in new tab"
+                  >
+                    <ExternalLink className="w-5 h-5 text-[#1D3557]" />
+                  </a>
+                )}
                 {/* Open in new tab for activities */}
                 {selectedContent.content_type === 'activity' && selectedContent.content_data?.html_url && (
                   <a 
