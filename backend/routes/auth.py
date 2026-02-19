@@ -67,7 +67,7 @@ async def unified_login(login_data: UnifiedLoginRequest, response: Response):
             {"username": identifier}
         ],
         "password_hash": password_hash
-    }, {"_id": 0})
+    }, {"_id": 0, "password_hash": 0})  # Exclude sensitive fields
     
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email/username or password")
