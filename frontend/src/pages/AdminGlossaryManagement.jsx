@@ -509,37 +509,104 @@ export default function AdminGlossaryManagement({ user }) {
               </div>
             </div>
             
-            {/* Image Upload */}
+            {/* Media Upload - Choice between Image and Video */}
             <div>
-              <label className="block text-sm font-medium text-[#1D3557] mb-1">Image (Optional)</label>
-              <p className="text-xs text-[#3D5A80] mb-2">Recommended: 800x600px or larger for infographics, max 2MB (JPG, PNG, WebP)</p>
-              {form.image_url ? (
-                <div className="space-y-3">
-                  <img 
-                    src={getAssetUrl(form.image_url)} 
-                    alt="Preview"
-                    className="w-full max-w-sm rounded-xl border-2 border-[#1D3557] object-contain bg-gray-50"
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => setForm({ ...form, image_url: '' })}
-                    className="border-2 border-red-500 text-red-500"
-                  >
-                    Remove Image
-                  </Button>
-                </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center gap-1 p-4 border-2 border-dashed border-[#3D5A80] rounded-xl cursor-pointer hover:bg-[#E0FBFC] transition-colors">
-                  <Upload className="w-5 h-5 text-[#3D5A80]" />
-                  <span className="text-[#3D5A80] text-sm">Click to upload infographic or illustration</span>
-                  <span className="text-xs text-[#3D5A80]/60">Max 2MB - Will display large when word is expanded</span>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </label>
+              <label className="block text-sm font-medium text-[#1D3557] mb-2">Media (Optional)</label>
+              
+              {/* Media Type Toggle */}
+              <div className="flex gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, media_type: 'image' })}
+                  className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium text-sm transition-all ${
+                    form.media_type === 'image'
+                      ? 'border-[#06D6A0] bg-[#06D6A0]/10 text-[#1D3557]'
+                      : 'border-[#1D3557]/30 text-[#3D5A80] hover:border-[#1D3557]/50'
+                  }`}
+                >
+                  🖼️ Image
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, media_type: 'video' })}
+                  className={`flex-1 py-2 px-4 rounded-lg border-2 font-medium text-sm transition-all ${
+                    form.media_type === 'video'
+                      ? 'border-[#06D6A0] bg-[#06D6A0]/10 text-[#1D3557]'
+                      : 'border-[#1D3557]/30 text-[#3D5A80] hover:border-[#1D3557]/50'
+                  }`}
+                >
+                  🎬 Video
+                </button>
+              </div>
+              
+              {/* Image Upload */}
+              {form.media_type === 'image' && (
+                <>
+                  <p className="text-xs text-[#3D5A80] mb-2">Recommended: 800x600px, max 2MB (JPG, PNG, WebP)</p>
+                  {form.image_url ? (
+                    <div className="space-y-3">
+                      <img 
+                        src={getAssetUrl(form.image_url)} 
+                        alt="Preview"
+                        className="w-full max-w-sm rounded-xl border-2 border-[#1D3557] object-contain bg-gray-50"
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => setForm({ ...form, image_url: '' })}
+                        className="border-2 border-red-500 text-red-500"
+                      >
+                        Remove Image
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center gap-1 p-4 border-2 border-dashed border-[#3D5A80] rounded-xl cursor-pointer hover:bg-[#E0FBFC] transition-colors">
+                      <Upload className="w-5 h-5 text-[#3D5A80]" />
+                      <span className="text-[#3D5A80] text-sm">Click to upload image</span>
+                      <span className="text-xs text-[#3D5A80]/60">Max 2MB - WebP recommended for smaller size</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </>
+              )}
+              
+              {/* Video Upload */}
+              {form.media_type === 'video' && (
+                <>
+                  <p className="text-xs text-[#3D5A80] mb-2">Max 50MB (MP4, WebM). Short explainer videos work best!</p>
+                  {form.video_url ? (
+                    <div className="space-y-3">
+                      <video 
+                        src={getAssetUrl(form.video_url)} 
+                        controls
+                        className="w-full max-w-sm rounded-xl border-2 border-[#1D3557]"
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => setForm({ ...form, video_url: '' })}
+                        className="border-2 border-red-500 text-red-500"
+                      >
+                        Remove Video
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center gap-1 p-4 border-2 border-dashed border-[#3D5A80] rounded-xl cursor-pointer hover:bg-[#E0FBFC] transition-colors">
+                      <Upload className="w-5 h-5 text-[#3D5A80]" />
+                      <span className="text-[#3D5A80] text-sm">Click to upload video</span>
+                      <span className="text-xs text-[#3D5A80]/60">Max 50MB - MP4 or WebM</span>
+                      <input
+                        type="file"
+                        accept="video/mp4,video/webm,video/quicktime"
+                        onChange={handleVideoUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </>
               )}
             </div>
             
