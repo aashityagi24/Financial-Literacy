@@ -565,6 +565,41 @@ export default function TopicPage({ user }) {
               )}
             </div>
             
+            {/* Multi-page Navigation for Children - Simple Prev/Next buttons */}
+            {(selectedContent.content_type === 'activity' || (selectedContent.content_type === 'book' && selectedContent.content_data?.html_url)) && htmlFiles.length > 1 && (
+              <div className="px-4 py-3 bg-[#E0FBFC] border-t-2 border-[#1D3557] flex items-center justify-between">
+                <button
+                  onClick={() => setCurrentHtmlIndex(prev => Math.max(0, prev - 1))}
+                  disabled={currentHtmlIndex === 0}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${
+                    currentHtmlIndex === 0
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-white border-2 border-[#1D3557] text-[#1D3557] hover:bg-[#FFD23F]/30'
+                  }`}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                  Previous
+                </button>
+                
+                <span className="text-sm font-bold text-[#1D3557]">
+                  Page {currentHtmlIndex + 1} of {htmlFiles.length}
+                </span>
+                
+                <button
+                  onClick={() => setCurrentHtmlIndex(prev => Math.min(htmlFiles.length - 1, prev + 1))}
+                  disabled={currentHtmlIndex === htmlFiles.length - 1}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all ${
+                    currentHtmlIndex === htmlFiles.length - 1
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-[#06D6A0] border-2 border-[#1D3557] text-white hover:bg-[#05C090]'
+                  }`}
+                >
+                  Next
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+            
             {/* Modal Footer */}
             <div className="p-4 border-t-3 border-[#1D3557] flex justify-between items-center bg-[#FFD23F]/20">
               <span className="text-lg font-bold text-[#06D6A0]">
