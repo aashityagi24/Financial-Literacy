@@ -218,7 +218,7 @@ async def admin_update_word(word_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Word not found")
     
     update_fields = {}
-    allowed_fields = ["term", "meaning", "description", "examples", "image_url", "category", "min_grade", "max_grade"]
+    allowed_fields = ["term", "meaning", "description", "examples", "image_url", "video_url", "media_type", "category", "min_grade", "max_grade"]
     
     for field in allowed_fields:
         if field in body:
