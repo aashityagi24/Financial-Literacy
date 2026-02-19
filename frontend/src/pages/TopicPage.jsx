@@ -500,8 +500,8 @@ export default function TopicPage({ user }) {
               </div>
             </div>
             
-            {/* HTML Files Navigation - HIDDEN, only backend controls page flow */}
-            {false && user?.role === 'child' && (selectedContent.content_type === 'activity' || (selectedContent.content_type === 'book' && selectedContent.content_data?.html_url)) && htmlFiles.length > 1 && (
+            {/* HTML Files Navigation - Only show tabs for non-child roles */}
+            {user?.role !== 'child' && (selectedContent.content_type === 'activity' || (selectedContent.content_type === 'book' && selectedContent.content_data?.html_url)) && htmlFiles.length > 1 && (
               <div className="px-4 py-2 bg-[#E0FBFC] border-b-2 border-[#1D3557] flex items-center gap-2 overflow-x-auto">
                 <span className="text-sm font-medium text-[#1D3557] whitespace-nowrap">Pages:</span>
                 {htmlFiles.map((file, index) => (
