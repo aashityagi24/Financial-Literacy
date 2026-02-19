@@ -332,6 +332,11 @@ export default function ProfilePage({ user, setUser }) {
                     <div key={classroom.classroom_id} className="bg-[#06D6A0]/10 rounded-xl p-3 border-2 border-[#06D6A0]">
                       <p className="font-bold text-[#1D3557]">{classroom.name}</p>
                       <p className="text-sm text-[#3D5A80]">Teacher: {classroom.teacher?.name || classroom.teacher_name || 'Unknown'}</p>
+                      {classroom.school_name && (
+                        <p className="text-sm text-[#3D5A80] flex items-center gap-1 mt-1">
+                          <School className="w-3 h-3" /> {classroom.school_name}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
