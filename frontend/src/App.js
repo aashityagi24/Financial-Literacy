@@ -40,6 +40,7 @@ import AdminVideoManagement from "@/pages/AdminVideoManagement";
 import LendingBorrowingPage from "@/pages/LendingBorrowingPage";
 import AdminGlossaryManagement from "@/pages/AdminGlossaryManagement";
 import GlossaryPage from "@/pages/GlossaryPage";
+import AuthPage from "@/pages/AuthPage";
 
 // Components
 import OnboardingTour from "@/components/OnboardingTour";
