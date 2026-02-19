@@ -26,9 +26,9 @@ router = APIRouter(prefix="/upload", tags=["uploads"])
 
 @router.post("/image")
 async def upload_general_image(file: UploadFile = File(...)):
-    """Upload a general image (for glossary, etc.) - Max recommended size: 500KB, 400x400px"""
+    """Upload a general image (for glossary, etc.) - Max recommended size: 500KB, 400x400px. Supports WebP for lighter files."""
     if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
+        raise HTTPException(status_code=400, detail="File must be an image (JPG, PNG, WebP, GIF)")
     
     # Check file size (max 2MB)
     file.file.seek(0, 2)  # Seek to end
@@ -44,6 +44,33 @@ async def upload_general_image(file: UploadFile = File(...)):
     
     filename = f"img_{uuid.uuid4().hex[:12]}.{file_ext}"
     file_path = GLOSSARY_IMAGES_DIR / filename
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    return {"url": f"/api/uploads/glossary/{filename}"}
+
+@router.post("/glossary-video")
+async def upload_glossary_video(file: UploadFile = File(...)):
+    """Upload a video for glossary terms - Max 50MB. Supports MP4, WebM."""
+    allowed_types = ["video/mp4", "video/webm", "video/quicktime", "video/x-m4v"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="File must be a video (MP4, WebM)")
+    
+    # Check file size (max 50MB)
+    file.file.seek(0, 2)
+    size = file.file.tell()
+    file.file.seek(0)
+    
+    if size > 50 * 1024 * 1024:  # 50MB limit
+        raise HTTPException(status_code=400, detail="Video must be smaller than 50MB")
+    
+    file_ext = file.filename.split(".")[-1].lower() if "." in file.filename else "mp4"
+    if file_ext not in ["mp4", "webm", "m4v", "mov"]:
+        file_ext = "mp4"
+    
+    filename = f"vid_{uuid.uuid4().hex[:12]}.{file_ext}"
+    file_path = GLOSSARY_IMAGES_DIR / filename  # Store in same directory
     
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
