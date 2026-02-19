@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, Shield, X, School, Play, Pause, HandCoins } from 'lucide-react';
+import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, School, Play, Pause, HandCoins } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
