@@ -550,10 +550,14 @@ export default function TopicPage({ user }) {
               )}
               {selectedContent.content_type === 'book' && selectedContent.content_data?.html_url && !selectedContent.content_data?.pdf_url && (
                 <iframe 
-                  src={htmlFiles.length > 0 ? getAssetUrl(htmlFiles[currentHtmlIndex]?.url) : getAssetUrl(selectedContent.content_data.html_url)}
+                  src={
+                    user?.role === 'child'
+                      ? getAssetUrl(htmlFiles.length > 0 ? htmlFiles[0]?.url : selectedContent.content_data.html_url)
+                      : getAssetUrl(htmlFiles.length > 0 ? htmlFiles[currentHtmlIndex]?.url : selectedContent.content_data.html_url)
+                  }
                   className="w-full h-full"
-                  title={htmlFiles.length > 0 ? htmlFiles[currentHtmlIndex]?.name : selectedContent.title}
-                  sandbox="allow-scripts allow-same-origin"
+                  title={selectedContent.title}
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
                 />
               )}
               {selectedContent.content_type === 'video' && (
