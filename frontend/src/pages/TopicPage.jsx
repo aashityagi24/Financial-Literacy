@@ -500,10 +500,10 @@ export default function TopicPage({ user }) {
               </div>
             </div>
             
-            {/* HTML Files Navigation - Only show tabs for non-child roles */}
+            {/* HTML Files Navigation - Only show tabs for teachers/parents to preview specific pages */}
             {user?.role !== 'child' && (selectedContent.content_type === 'activity' || (selectedContent.content_type === 'book' && selectedContent.content_data?.html_url)) && htmlFiles.length > 1 && (
               <div className="px-4 py-2 bg-[#E0FBFC] border-b-2 border-[#1D3557] flex items-center gap-2 overflow-x-auto">
-                <span className="text-sm font-medium text-[#1D3557] whitespace-nowrap">Pages:</span>
+                <span className="text-sm font-medium text-[#1D3557] whitespace-nowrap">Preview Pages:</span>
                 {htmlFiles.map((file, index) => (
                   <button
                     key={file.path}
@@ -531,10 +531,14 @@ export default function TopicPage({ user }) {
               )}
               {selectedContent.content_type === 'activity' && (
                 <iframe 
-                  src={htmlFiles.length > 0 ? getAssetUrl(htmlFiles[currentHtmlIndex]?.url) : getAssetUrl(selectedContent.content_data.html_url)}
+                  src={
+                    user?.role === 'child' 
+                      ? getAssetUrl(htmlFiles.length > 0 ? htmlFiles[0]?.url : selectedContent.content_data.html_url)
+                      : getAssetUrl(htmlFiles.length > 0 ? htmlFiles[currentHtmlIndex]?.url : selectedContent.content_data.html_url)
+                  }
                   className="w-full h-full"
-                  title={htmlFiles.length > 0 ? htmlFiles[currentHtmlIndex]?.name : selectedContent.title}
-                  sandbox="allow-scripts allow-same-origin"
+                  title={selectedContent.title}
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
                 />
               )}
               {selectedContent.content_type === 'book' && selectedContent.content_data?.pdf_url && (
