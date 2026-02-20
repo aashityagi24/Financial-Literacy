@@ -255,6 +255,67 @@ export default function TeacherDashboard({ user }) {
     }
   };
   
+  // Repository functions
+  const fetchRepository = async () => {
+    try {
+      let url = `${API}/teacher/repository?`;
+      if (repoFilterTopic) url += `topic_id=${repoFilterTopic}&`;
+      if (repoFilterSubtopic) url += `subtopic_id=${repoFilterSubtopic}&`;
+      if (repoFilterType) url += `file_type=${repoFilterType}&`;
+      
+      const res = await axios.get(url);
+      setRepositoryItems(res.data.items || []);
+      setRepositoryTopics(res.data.topics || []);
+    } catch (error) {
+      console.error('Failed to fetch repository:', error);
+    }
+  };
+  
+  const fetchRepoSubtopics = async (topicId) => {
+    if (!topicId) {
+      setRepositorySubtopics([]);
+      return;
+    }
+    try {
+      const res = await axios.get(`${API}/teacher/repository/subtopics/${topicId}`);
+      setRepositorySubtopics(res.data.subtopics || []);
+    } catch (error) {
+      console.error('Failed to fetch subtopics:', error);
+    }
+  };
+  
+  const openRepositoryPicker = (forField) => {
+    setPickingFor(forField);
+    setShowRepositoryPicker(true);
+    fetchRepository();
+  };
+  
+  const selectFromRepository = (item) => {
+    if (pickingFor === 'image') {
+      setQuestForm(prev => ({ ...prev, image_url: item.file_url }));
+    } else if (pickingFor === 'pdf') {
+      setQuestForm(prev => ({ ...prev, pdf_url: item.file_url }));
+    }
+    setShowRepositoryPicker(false);
+    setPickingFor(null);
+    toast.success(`${item.file_type === 'image' ? 'Image' : 'PDF'} selected from repository`);
+  };
+  
+  const filteredRepoItems = repositoryItems.filter(item => {
+    // Filter by type based on what we're picking for
+    if (pickingFor === 'image' && item.file_type !== 'image') return false;
+    if (pickingFor === 'pdf' && item.file_type !== 'pdf') return false;
+    
+    // Filter by search
+    if (repoSearch) {
+      const query = repoSearch.toLowerCase();
+      return item.title.toLowerCase().includes(query) ||
+             item.description?.toLowerCase().includes(query) ||
+             item.tags?.some(t => t.toLowerCase().includes(query));
+    }
+    return true;
+  });
+  
   const handleCreateQuest = async () => {
     if (!questForm.title || !questForm.due_date) {
       toast.error('Please fill title and due date');
