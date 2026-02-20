@@ -7,7 +7,8 @@
 -   **Gamified Features:** Virtual store, investment simulations, quests, achievements, and daily rewards.
 -   **Lending & Borrowing (Grades 4-5):** A feature allowing children to request loans from parents and classmates.
 -   **Content System:** A hierarchical content structure manageable by the Admin, including support for various content types (video, PDF, interactive HTML/ZIP).
--   **Data Integrity & Visibility:** Content visibility must be controllable by role (child, parent, teacher) and grade. Data changes (like user deletion) must cascade correctly.
+-   **Teacher Repository:** A repository where admins can upload resources (images, PDFs) tagged by topic/grade for teachers to use in quests.
+-   **Data Integrity & Visibility:** Content visibility must be controllable by role (child, parent, teacher) and grade. Data changes must cascade correctly.
 -   **Word Bank/Glossary:** A section for financial literacy terms, manageable by an Admin and searchable by users.
 -   **Quest Analytics:** Teachers need to see detailed responses for quests to track student performance.
 -   **Unified Login:** A single sign-in/sign-up page for all user types.
@@ -15,47 +16,52 @@
 **User's preferred language**: English
 
 **what currently exists?**
-In this session, the agent fixed two pending bugs (displaying school name on child profile, open in new tab icon for parents) and resolved a critical P0 bug that caused a blank screen after Google SSO login. The root cause was an incorrect redirect URL, which has been fixed in the backend authentication flow. The majority of the session was dedicated to a multi-phase, iterative refactoring of the Money Garden feature based on detailed user feedback. This included removing profit terminology, enforcing whole numbers, adding admin controls for grade visibility, and completely redesigning the UI multiple times to arrive at the current full-screen 2x2 grid layout with a floating Malli the gardener helper.
+The session began by completing the user-requested UX refactor for the Money Garden, implementing features like a single plot, plant/sell dialogs, and visual growth indicators. Several UI naming conventions on the Dashboard and Wallet pages were updated based on user feedback (e.g., Wallet -> My Money).
+
+A major task was disabling the auto-creation of default badges. During this process, the agent inadvertently deleted all admin-created badges. While the badge names and descriptions were restored using a user-provided image, the associated uploaded image URLs were permanently lost.
+
+Finally, the agent built a new Teacher Repository feature. This involved creating backend endpoints for resource management, an admin page for uploading files (images/PDFs), and integrating a resource picker into the teacher's quest creation form. The session ended while fixing a bug in this new feature.
 
 **Last working item**:
-- Last item agent was working: The user provided a new set of requirements for the Money Garden page to improve its usability for children. The agent started implementing these changes by overwriting .
+- Last item agent was working: Fixing a bug where admins receive an Invalid doc type error when trying to upload files to the new Teacher Repository.
 - Status: IN PROGRESS
 - Agent Testing Done: N
 - Which testing method agent to use? both
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: Finalize Money Garden UX Enhancements (P0)
+  - Issue 1: Invalid doc type error when uploading to Teacher Repository (P0)
+  - Issue 2: Badge images are missing and require manual re-upload (P1)
 
   Issues Detail:
   - Issue 1: 
-     - **Description**: The user has requested several final UX improvements for the Money Garden page:
-        1.  Make the growth stages of plants more visually obvious.
-        2.  Use a single large plot instead of two smaller ones to make everything more visible.
-        3.  On clicking the Plant icon, a dialog should appear allowing the child to select which seed to plant.
-        4.  Before a seed is planted, its details should be shown.
-        5.  On selling a harvested crop, a confirmation dialog should appear with user-friendly text (e.g., 5 flowers will be sold at ₹5 each). All sale calculations must result in whole numbers.
-     - **Attempted fixes**: The agent acknowledged the request and overwrote  to begin implementation. No functional code has been written for this set of changes yet.
+     - **Description**: When an admin attempts to upload a resource (image or PDF) in the new Teacher Repository module, the backend incorrectly rejects it with an Invalid document type error.
+     - **Attempted fixes**: The agent modified  to loosen the validation by checking the file's extension in addition to its . This change has not been tested.
      - **Next debug checklist**:
-        1.  Modify  to render one single, large plot component.
-        2.  Create a  component. When the 'Plant' icon is clicked, this dialog should open, fetch available seeds from the market, and allow the user to select one.
-        3.  Modify the  function to accept the selected seed from the dialog.
-        4.  Create a  component. Modify the  function to open this dialog, displaying the item details in the requested sentence format.
-        5.  Review and update the backend  endpoint to ensure all monetary calculations are rounded to whole numbers.
-        6.  Enhance the plot rendering logic to display different images or clear visual indicators for each growth stage (, , ).
-     - **Why fix this issue and what will be achieved with the fix?** This will complete the Money Garden feature refactor, making it more intuitive, engaging, and error-free for young children.
+        1. Restart the backend service (backend: stopped
+backend: started).
+        2. Log in as the admin user.
+        3. Navigate to the Repository section on the admin dashboard.
+        4. Attempt to upload a PNG, a JPG, and a PDF file.
+        5. Verify that the uploads succeed and appear in the resource list.
+     - **Why fix this issue and what will be achieved with the fix?** This is a critical blocker preventing the use of the newly-implemented Teacher Repository feature.
      - **Status:**  IN PROGRESS
      - **Is recurring issue?** N
      - **Should Test frontend/backend/both after fix?** both
      - **Blocked on other issue:** No
 
+  - Issue 2: 
+     - **Description**: The user-uploaded images for all achievement badges are gone. This happened when the agent was disabling the auto-creation of badges and accidentally deleted the  collection. The badge metadata (name, description) was restored, but the image URLs were permanently lost.
+     - **Attempted fixes**: The agent confirmed the data is not recoverable from backups or logs.
+     - **Next debug checklist**: This issue cannot be fixed with code. The agent must inform the user that the admin needs to manually re-upload the images for each badge via the Badge Management section of the admin panel.
+     - **Why fix this issue and what will be achieved with the fix?** The badges are a core gamification element and appear incomplete without their images.
+     - **Status:**  BLOCKED
+     - **Is recurring issue?** Y (Data loss issues can be critical and must be prevented).
+     - **Should Test frontend/backend/both after fix?** NA
+     - **Blocked on other issue:** No
+
 **In progress Task List**:
-  - Task 1: Refactor the Money Garden page based on the latest user feedback. (Same as P0 issue above)
-     - **Where to resume**:  has been overwritten. The agent needs to implement the new layout and dialog-based interaction logic.
-     - **What will be achieved with this?**: A more intuitive and user-friendly Money Garden feature.
-     - **Status**: IN PROGRESS
-     - **Should Test frontend/backend/both after fix?**: both
-     - **Blocked on something**: No
+- None.
 
 **Upcoming and Future Tasks**
  Upcoming Tasks:
@@ -70,85 +76,74 @@ In this session, the agent fixed two pending bugs (displaying school name on chi
  - **P2:** Develop a Tutorial System for new users.
 
 **Completed work in this session**
-- **Bug Fix: Blank Screen on Google SSO Login (P0 - RESOLVED)**
-  - **Identified Root Cause:** The backend was constructing an incorrect callback URL () because the  parameter included the  path from the referer header.
-  - **Fix:** Modified  to use only the origin of the referer URL when creating the  parameter, ensuring the callback is always to .
-- **Feature Enhancement: Money Garden (Multi-phase Refactor)**
-  - Removed profit terminology, added admin grade-level visibility for plants, and enforced whole numbers in all calculations.
-  - Redesigned the UI into a full-screen 2x2 grid layout: Garden Money, My Garden, My Shop, and The Market.
-  - Introduced Malli, a floating gardener mascot who provides a guided tour and contextual tips.
-  - Implemented features for Grade 1 users to have 2 fixed plots with no option to buy more.
-  - Fixed bugs related to planting on dead plots and ensured all garden transactions use the correct investing wallet.
-  - Added a transaction history view to the Garden Money section.
-- **Bug Fix: School Name on Child Profile (P1 - RESOLVED)**
-  - Modified  to look up and include the  in the classroom data response.
-  - Updated  to display the school name. Verified by the testing agent.
-- **Bug Fix: Open in new tab Icon (P2 - RESOLVED)**
-  - Corrected the rendering logic in  to ensure the external link icon is always visible for non-child roles on content with a URL. Verified by the testing agent.
+- **Feature: Money Garden UX Refactor (Completed):** Implemented a single large plot, plant/sell confirmation dialogs, visual growth stage indicators, and whole-number calculations.
+- **UI Refinement: Wallet & Dashboard Naming:** Renamed components and navigation links across  and  per user request (e.g., My Wallet → My Money, Spending → Wallet).
+- **Backend Logic: Disabled Badge Auto-Creation:** Modified  and  to prevent the system from auto-generating default badges.
+- **Feature: Teacher Repository Module (Admin & Teacher):**
+    - Created backend endpoints () for uploading and managing educational resources.
+    - Built an admin UI () for resource management.
+    - Integrated a resource picker () into the teacher's quest creation form ().
+- **Bug Fix:** Resolved a  crash in .
 
 **Earlier issues found/mentioned but not fixed**
-   - None. All pending issues from the previous handoff were addressed in this session.
+   - None.
 
 **Known issue recurrence from previous fork**
-  - None in this session.
+  - None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **OAuth Redirect Handling:** Debugged and fixed a critical bug where the  parameter in the Google OAuth flow was incorrectly constructing the callback URL. The fix involved parsing the  header on the backend to use only the URL's origin.
-- **Iterative UI/UX Development:** The Money Garden feature was built through multiple rapid feedback loops with the user, demonstrating the ability to pivot on UI layout (tabs -> single page -> 2x2 grid -> full-screen 2x2 grid) and interaction models.
-- **Component-Driven State Management:** The  manages complex state including API data, user interactions (planting, selling), and a guided tour (Malli), all within a single component.
-- **Backend Data Integrity:** Ensured financial transactions within the Money Garden correctly use the investing wallet, added a transaction history endpoint, and fixed data serialization bugs.
+- **File Uploads in FastAPI:** Implemented file upload handling using , saving files to a persistent volume (), and serving them statically. The implementation required debugging content-type validation.
+- **Dynamic Component Integration:** A reusable  dialog was created and integrated into the existing  to add new functionality without a full rewrite.
+- **Database Recovery (Partial):** After accidental data deletion, the agent restored badge metadata by cross-referencing user-provided images and hardcoded defaults, demonstrating a partial recovery process when backups are unavailable.
 
 **key DB schema**
-  - ****: Schema was effectively modified to support  and  fields for controlling visibility.
-  - ****: A new endpoint () was created to query this collection for transactions with .
+  - ** (New Collection):** 
+  - **:** Data was deleted and restored. The  field is now empty for all restored badges.
 
 **changes in tech stack**
   - None.
 
 **All files of reference**
--   **/app/frontend/src/pages/MoneyGardenPage.jsx**: The main file for the current in-progress task. It has been heavily modified and is the focus of the user's latest requests.
--   **/app/backend/routes/garden.py**: The backend counterpart to the Money Garden, containing logic for planting, selling, transactions, and fetching farm data.
--   **/app/backend/routes/auth.py**: Contains the critical fix for the Google SSO blank screen bug.
+-   **/app/backend/routes/repository.py**: Core logic for the new Teacher Repository feature and location of the pending bug fix.
+-   **/app/frontend/src/pages/AdminTeacherRepository.jsx**: The new admin page for managing repository resources.
+-   **/app/frontend/src/pages/TeacherDashboard.jsx**: Modified to allow teachers to use the repository.
+-   **/app/backend/routes/achievements.py**: Location where badge logic was changed, leading to the data loss incident.
 
 **Areas that need refactoring**:
-- ****: This file is now extremely large and complex. It urgently needs to be broken down into smaller, manageable components (e.g., , , , ) to improve maintainability.
-- ****: This remains a very large component that could be broken down.
+- ****: This file has grown significantly and is now very complex. It should be broken down into smaller components (e.g., , , ) to improve maintainability.
+- ****: Remains a large, monolithic component that would benefit from being split into smaller, more focused components.
 
 **key api endpoints**
--   ****: Modified to include .
--   ****: Logic modified to correctly handle the  parameter for the redirect URI.
--   ****: Modified to filter seeds by grade and fix bugs.
--   ****: Modified to allow planting on 'dead' plots and use the 'investing' wallet.
--   ****: Modified to credit the 'investing' wallet.
--   ****: New endpoint for fetching garden-specific transaction history.
+-   ****: (New) Upload a new resource for the teacher repository.
+-   ****: (New) List all repository resources.
+-   ****: (New) Static path to serve uploaded repository files.
+-   ****: (Modified) No longer auto-seeds default badges.
 
 **Critical Info for New Agent**
--   The current task is to complete the final set of UX improvements for the **Money Garden** feature as detailed in the Pending/In progress Issue list.  has been overwritten in preparation for this and is not currently in a finished state.
--   The user is highly engaged and provides specific, iterative feedback, especially for child-facing UI/UX. Be prepared to implement detailed visual and interaction-based requests.
--   A critical Google SSO login bug (blank screen) was fixed by correcting the callback URL logic in .
+-   Your immediate priority is to **test the fix** for the Invalid doc type bug in .
+-   A critical piece of data was **permanently lost**: the user-uploaded images for the achievement badges. You must clearly communicate to the user that the admin needs to **manually re-upload** these images via the admin panel. Do not attempt to recover them again.
+-   The Teacher Repository is a brand new feature. After fixing the upload bug, it may require further testing and refinement.
 
 **documents and test reports created in this job**
-  - /app/test_reports/iteration_51.json
-  - /app/backend/tests/test_school_name_and_external_link.py
-  - /app/memory/PRD.md (Updated)
+  - None.
 
 **Last 10 User Messages and any pending HUMAN messages** 
-- 10. The plot says plant died and isn't letting me plant. Use icon buttons for plant/water.
-- 9. Make the 2x2 grid full-screen.
-- 8. Re-iterated several requests: rectangular boxes, larger gardener, click navigation for the tour, and fixed 2 plots for Grade 1.
-- 7. The 2x2 grid is too small.
-- 6. The sections should be a 2x2 grid, with specific content in each.
-- 5. Instead of tabs, break Money Garden into sections on one screen, with a floating gardener popup.
-- 4. The initial large refactor request for Money Garden (remove profit, add grade filtering, whole numbers, 4-section layout, gardener mascot).
-- 3. User reports blank screen after Google sign-in and provides the incorrect URL in a screenshot.
-- 2. no - User declines Razorpay integration for now.
-- 1. User asks about integrating Razorpay for subscriptions.
+- 10. User reported a bug: . (CURRENT P0 BUG)
+- 9. User requested the new Teacher Repository feature.
+- 8. User provided an image of the correct badge data, which was used for restoration.
+- 7. User asked the agent to try and reinstate the deleted badges and their changed names/descriptions.
+- 6. User reported that all uploaded badge images were gone. (DATA LOSS INCIDENT)
+- 5. User reported that all badges were missing from the admin panel after the agent's changes.
+- 4. User requested to disable the automatic creation of default badges.
+- 3. User requested naming changes on the dashboard (My Money not my money jars).
+- 2. User requested naming changes on the wallet page (Heading should be My Money not My Wallet).
+- 1. User requested final UI tweaks for the Money Garden page.
 
 **Project Health Check:**
-- **Broken:** The  was just overwritten to begin the latest refactor. The page is not in a complete or functional state.
+- **Broken:** The new Teacher Repository feature is unusable due to the file upload bug.
 - **Mocked:** None.
 
 **3rd Party Integrations**
@@ -156,16 +151,16 @@ In this session, the agent fixed two pending bugs (displaying school name on chi
 -   **APScheduler**: For running scheduled backend jobs.
 
 **Testing status**
-  - Testing agent used after significant changes: YES, for the initial bug fixes.
+  - Testing agent used after significant changes: NO
   - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created: []
-  - Known regressions: None.
+  - Test files created: None
+  - Known regressions: **Permanent loss of user-uploaded badge images.**
 
 **Credentials to test flow:**
 -   **Admin:**  / 
--   **Teacher:**  (Password unknown, use Google SSO or reset via admin)
--   **School:** (Username/password can be created via Admin panel)
--   **Child (Grade 1):** A test user  with session token  was created for testing the garden. It may have expired. A new one can be created if needed.
+-   **Teacher:**  (Password needs to be set via admin panel or use Google SSO).
+-   **Child (Grade 1):**  / 
 
 **What agent forgot to execute**
-- Nothing was forgotten. The agent was actively working on iterative user feedback when the session ended. The current work-in-progress is the top priority.</analysis>
+- The agent failed to test the bug fix for the Teacher Repository upload before the session ended.
+- Most critically, the agent did not properly safeguard user data, leading to the permanent loss of all badge images. A backup or safer modification procedure should have been used.</analysis>
