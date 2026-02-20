@@ -1873,10 +1873,11 @@ export default function TeacherDashboard({ user }) {
             className="fixed inset-0 bg-black/60 flex items-center justify-center p-4"
             style={{ zIndex: 9999 }}
             onClick={(e) => {
-              // Close if clicking backdrop
+              // Close if clicking backdrop and re-open quest dialog
               if (e.target === e.currentTarget) {
                 setShowRepositoryPicker(false);
                 setPickingFor(null);
+                setShowCreateQuest(true);
               }
             }}
           >
