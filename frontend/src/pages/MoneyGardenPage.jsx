@@ -386,23 +386,41 @@ export default function MoneyGardenPage({ user }) {
             }`} 
             data-testid="wallet-section"
           >
-            <h2 className="text-xl font-bold text-[#8B4513] mb-4 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+            <h2 className="text-xl font-bold text-[#8B4513] mb-3 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
               💰 Garden Money
             </h2>
-            <div className="flex-1 flex items-center justify-center">
-              <div className="flex items-center gap-6">
-                <div className="bg-white rounded-2xl p-6 border-3 border-[#228B22] text-center min-w-[150px]">
-                  <span className="text-5xl">🌱</span>
-                  <p className="text-4xl font-bold text-[#228B22] mt-2">₹{farmingBalance}</p>
-                  <p className="text-sm text-[#8B4513] mt-1">For seeds</p>
-                </div>
-                <button
-                  onClick={() => setShowTransfer(true)}
-                  className="bg-[#FFD700] hover:bg-[#FFC000] text-[#1D3557] px-6 py-4 rounded-xl font-bold flex flex-col items-center gap-2 border-3 border-[#DAA520] text-lg"
-                >
-                  <ArrowRightLeft className="w-8 h-8" />
-                  <span>Add Money</span>
-                </button>
+            
+            {/* Balance and Transfer */}
+            <div className="flex items-center gap-4 mb-4">
+              <div className="bg-white rounded-2xl p-4 border-3 border-[#228B22] text-center flex-1">
+                <span className="text-4xl">🌱</span>
+                <p className="text-3xl font-bold text-[#228B22]">₹{farmingBalance}</p>
+              </div>
+              <button
+                onClick={() => setShowTransfer(true)}
+                className="bg-[#FFD700] hover:bg-[#FFC000] text-[#1D3557] px-4 py-3 rounded-xl font-bold flex flex-col items-center gap-1 border-2 border-[#DAA520]"
+              >
+                <ArrowRightLeft className="w-6 h-6" />
+                <span className="text-sm">Add</span>
+              </button>
+            </div>
+            
+            {/* Transaction History */}
+            <div className="flex-1 overflow-hidden">
+              <p className="text-sm font-bold text-[#8B4513] mb-2">Recent Activity:</p>
+              <div className="space-y-1 overflow-y-auto max-h-[120px]">
+                {transactions.length === 0 ? (
+                  <p className="text-xs text-[#8B4513]/70 text-center py-2">No activity yet</p>
+                ) : (
+                  transactions.slice(0, 5).map((t, idx) => (
+                    <div key={idx} className="bg-white/70 rounded-lg px-3 py-2 flex items-center justify-between text-sm">
+                      <span className="text-xs text-[#3D5A80] truncate flex-1">{t.description}</span>
+                      <span className={`font-bold ${t.amount > 0 ? 'text-[#06D6A0]' : 'text-[#E63946]'}`}>
+                        {t.amount > 0 ? '+' : ''}₹{Math.abs(Math.round(t.amount))}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
