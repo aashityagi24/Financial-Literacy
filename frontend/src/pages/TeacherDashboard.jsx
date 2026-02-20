@@ -264,6 +264,11 @@ export default function TeacherDashboard({ user }) {
       if (repoFilterSubtopic) url += `subtopic_id=${repoFilterSubtopic}&`;
       if (repoFilterType) url += `file_type=${repoFilterType}&`;
       
+      // Filter by classroom grade level
+      if (classroomDetails?.classroom?.grade_level !== undefined) {
+        url += `grade=${classroomDetails.classroom.grade_level}&`;
+      }
+      
       const res = await axios.get(url);
       setRepositoryItems(res.data.items || []);
       setRepositoryTopics(res.data.topics || []);
