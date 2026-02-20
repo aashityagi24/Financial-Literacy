@@ -66,6 +66,21 @@ export default function MoneyGardenPage({ user }) {
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferData, setTransferData] = useState({ from_account: 'spending', to_account: 'investing', amount: '' });
   
+  // Helper function to format cost/earnings display based on grade level
+  // For Kindergarten (0) and Grade 1, use repeated addition instead of multiplication
+  const formatMathDisplay = (qty, price) => {
+    const gradeLevel = user?.grade_level ?? 5; // Default to higher grade if unknown
+    
+    if (gradeLevel <= 1 && qty > 1) {
+      // Use repeated addition for K and Grade 1
+      const additions = Array(qty).fill(`₹${price}`).join(' + ');
+      return { expression: additions, total: qty * price };
+    } else {
+      // Use multiplication for Grade 2+
+      return { expression: `${qty} × ₹${price}`, total: qty * price };
+    }
+  };
+  
   // Plant selection dialog
   const [showPlantDialog, setShowPlantDialog] = useState(false);
   const [selectedSeedForPlanting, setSelectedSeedForPlanting] = useState(null);
