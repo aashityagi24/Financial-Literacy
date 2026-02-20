@@ -145,10 +145,10 @@ export default function Dashboard({ user, setUser }) {
       // Kindergarten: No investing jar
       return baseAccounts;
     } else if (grade <= 2) {
-      // Grade 1-2: Farming jar
+      // Grade 1-2: My Garden jar
       return {
         ...baseAccounts,
-        investing: { bg: 'bg-gradient-to-br from-[#228B22] to-[#32CD32]', icon: '🌱', label: 'Farming', description: 'Money to grow plants' },
+        investing: { bg: 'bg-gradient-to-br from-[#228B22] to-[#32CD32]', icon: '🌱', label: 'My Garden', description: 'Money to grow plants' },
       };
     } else {
       // Grade 3+: Investing jar
