@@ -576,47 +576,58 @@ export default function TeacherDashboard({ user }) {
               </div>
             </div>
             
-            {/* Create Classroom Button */}
-            <Dialog open={showCreateClass} onOpenChange={setShowCreateClass}>
-              <DialogTrigger asChild>
-                <button className="btn-primary w-full py-4 mb-6 flex items-center justify-center gap-2 text-lg">
-                  <Plus className="w-5 h-5" /> Create Classroom
-                </button>
-              </DialogTrigger>
-              <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Create Classroom</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 mt-4">
-                  <Input 
-                    placeholder="Classroom Name" 
-                    value={classForm.name} 
-                    onChange={(e) => setClassForm({...classForm, name: e.target.value})}
-                    className="border-3 border-[#1D3557]"
-                  />
-                  <Textarea 
-                    placeholder="Description (optional)" 
-                    value={classForm.description} 
-                    onChange={(e) => setClassForm({...classForm, description: e.target.value})}
-                    className="border-3 border-[#1D3557]"
-                  />
-                  <Select 
-                    value={classForm.grade_level.toString()} 
-                    onValueChange={(v) => setClassForm({...classForm, grade_level: parseInt(v)})}
-                  >
-                    <SelectTrigger className="border-3 border-[#1D3557]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {gradeLabels.map((label, i) => (
-                        <SelectItem key={i} value={i.toString()}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <button onClick={handleCreateClassroom} className="btn-primary w-full py-3">Create</button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            {/* Create Classroom Button - Only show if teacher is NOT connected to a school */}
+            {!user?.school_id && (
+              <Dialog open={showCreateClass} onOpenChange={setShowCreateClass}>
+                <DialogTrigger asChild>
+                  <button className="btn-primary w-full py-4 mb-6 flex items-center justify-center gap-2 text-lg">
+                    <Plus className="w-5 h-5" /> Create Classroom
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Create Classroom</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <Input 
+                      placeholder="Classroom Name" 
+                      value={classForm.name} 
+                      onChange={(e) => setClassForm({...classForm, name: e.target.value})}
+                      className="border-3 border-[#1D3557]"
+                    />
+                    <Textarea 
+                      placeholder="Description (optional)" 
+                      value={classForm.description} 
+                      onChange={(e) => setClassForm({...classForm, description: e.target.value})}
+                      className="border-3 border-[#1D3557]"
+                    />
+                    <Select 
+                      value={classForm.grade_level.toString()} 
+                      onValueChange={(v) => setClassForm({...classForm, grade_level: parseInt(v)})}
+                    >
+                      <SelectTrigger className="border-3 border-[#1D3557]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {gradeLabels.map((label, i) => (
+                          <SelectItem key={i} value={i.toString()}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <button onClick={handleCreateClassroom} className="btn-primary w-full py-3">Create</button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+            
+            {/* Info message for school-connected teachers */}
+            {user?.school_id && (
+              <div className="bg-[#E0FBFC] border-2 border-[#3D5A80] rounded-xl p-4 mb-6 text-center">
+                <p className="text-[#1D3557] text-sm">
+                  Classrooms are managed by your school ({user?.school_name || 'School'}).
+                </p>
+              </div>
+            )}
             
             {/* Classrooms List */}
             <h2 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>Your Classrooms</h2>
