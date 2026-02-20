@@ -655,7 +655,7 @@ export default function MoneyGardenPage({ user }) {
                       </p>
                       <p className="text-sm text-[#3D5A80]">
                         You get {seed.harvest_yield} {seed.yield_unit}
-                        {seed.harvest_yield > 1 && user?.grade_level <= 1 ? (
+                        {seed.harvest_yield > 1 && (user?.grade ?? user?.grade_level ?? 5) <= 1 ? (
                           <> ({formatMathDisplay(seed.harvest_yield, Math.round(seed.base_sell_price)).expression})</>
                         ) : seed.harvest_yield > 1 ? (
                           <> ({seed.harvest_yield} × ₹{Math.round(seed.base_sell_price)})</>
