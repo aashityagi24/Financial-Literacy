@@ -368,24 +368,6 @@ export default function WalletPage({ user }) {
           })}
         </div>
         
-        {/* Savings Goal Quick Link */}
-        <Link 
-          to="/savings-goals" 
-          className="card-playful p-4 mb-6 flex items-center justify-between bg-gradient-to-r from-[#06D6A0]/10 to-[#42E8B3]/10 border-[#06D6A0] hover:bg-[#06D6A0]/20 transition-colors"
-          data-testid="savings-goals-link"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-[#06D6A0] rounded-xl border-3 border-[#1D3557] flex items-center justify-center text-2xl">
-              🎯
-            </div>
-            <div>
-              <h3 className="font-bold text-[#1D3557] text-lg">My Savings Goals</h3>
-              <p className="text-sm text-[#3D5A80]">Track what you&apos;re saving for!</p>
-            </div>
-          </div>
-          <Target className="w-6 h-6 text-[#06D6A0]" />
-        </Link>
-        
         {/* Transaction History */}
         <div className="card-playful p-6 animate-bounce-in stagger-3">
           <div className="flex items-center justify-between mb-4">
