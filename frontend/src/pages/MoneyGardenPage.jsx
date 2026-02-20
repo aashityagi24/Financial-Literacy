@@ -430,8 +430,8 @@ export default function MoneyGardenPage({ user }) {
                     disabled={!canPlant}
                     className={`flex-1 max-w-[120px] py-3 rounded-xl font-bold text-lg flex items-center justify-center gap-2 border-2 transition-all ${
                       canPlant 
-                        ? 'bg-[#81C784] border-[#388E3C] hover:bg-[#66BB6A] text-white' 
-                        : 'bg-gray-300 border-gray-400 text-gray-500 cursor-not-allowed'
+                        ? 'bg-white border-[#388E3C] hover:bg-[#E8F5E9] text-[#388E3C] shadow-md' 
+                        : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'
                     }`}
                   >
                     🌱
@@ -441,12 +441,12 @@ export default function MoneyGardenPage({ user }) {
                     disabled={!canWater}
                     className={`flex-1 max-w-[120px] py-3 rounded-xl font-bold text-lg flex items-center justify-center gap-2 border-2 transition-all ${
                       plot?.status === 'wilting' 
-                        ? 'bg-red-500 border-red-700 text-white animate-pulse' 
+                        ? 'bg-red-100 border-red-500 text-red-600 animate-pulse shadow-md' 
                         : plot?.status === 'water_needed'
-                          ? 'bg-yellow-400 border-yellow-600 text-[#3E2723]'
+                          ? 'bg-yellow-50 border-yellow-500 text-yellow-600 shadow-md'
                           : canWater
-                            ? 'bg-[#00BCD4] border-[#0097A7] text-white hover:bg-[#00ACC1]'
-                            : 'bg-gray-300 border-gray-400 text-gray-500 cursor-not-allowed'
+                            ? 'bg-white border-[#0097A7] text-[#0097A7] hover:bg-[#E0F7FA] shadow-md'
+                            : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'
                     }`}
                   >
                     💧
@@ -454,7 +454,7 @@ export default function MoneyGardenPage({ user }) {
                   {canHarvest && (
                     <button
                       onClick={handleHarvest}
-                      className="flex-1 max-w-[120px] py-3 rounded-xl font-bold text-lg flex items-center justify-center gap-2 border-2 bg-[#FFD700] border-[#FF8F00] text-[#3E2723] hover:bg-[#FFC107] animate-bounce"
+                      className="flex-1 max-w-[120px] py-3 rounded-xl font-bold text-lg flex items-center justify-center gap-2 border-2 bg-white border-[#FF8F00] text-[#FF8F00] hover:bg-[#FFF8E1] shadow-md animate-bounce"
                     >
                       🎁
                     </button>
