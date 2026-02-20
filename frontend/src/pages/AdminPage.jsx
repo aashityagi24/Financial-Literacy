@@ -381,6 +381,23 @@ export default function AdminPage({ user }) {
               </div>
             </div>
           </Link>
+          
+          {/* Teacher Repository Card */}
+          <Link 
+            to="/admin/repository" 
+            className="block bg-gradient-to-r from-[#F59E0B] to-[#FBBF24] rounded-xl p-4 hover:shadow-lg transition-shadow"
+            data-testid="repository-management-link"
+          >
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <span className="text-lg">📁</span>
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Repository</h3>
+                <p className="text-white/70 text-xs">Teacher resources</p>
+              </div>
+            </div>
+          </Link>
         </div>
         
         {/* Tabs */}
