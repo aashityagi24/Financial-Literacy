@@ -48,6 +48,29 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Recent Updates (February 20, 2026)
 
+**Session 17 - Teacher Repository Bug Fix:**
+
+1. **Teacher Repository Upload Bug Fixed** ✅ (P0 BUG FIX)
+   - **Issue**: Admin received "Invalid doc type" error when trying to upload images/PDFs to the Teacher Repository
+   - **Root Cause**: Upload validation only checked `content_type`, which can be unreliable or missing
+   - **Fix Applied** (`/app/backend/routes/repository.py` lines 127-137):
+     - Added extension-based validation as fallback to content-type checking
+     - Now checks both `file.content_type` AND file extension (.png, .jpg, .pdf, etc.)
+   - **Additional Bug Found & Fixed**: MongoDB ObjectId serialization error in POST /api/admin/repository
+     - After `insert_one()`, MongoDB adds `_id` to the document, which is not JSON serializable
+     - Fixed by adding `item.pop("_id", None)` before returning response
+   - **Testing**: All 11 backend tests pass, frontend UI verified
+   - **Result**: Admin can now upload PNG, JPG, PDF files to the Teacher Repository
+
+2. **Badge Images Permanently Lost** ⚠️ (DATA LOSS - Requires Manual Re-upload)
+   - Previous session accidentally deleted all badge images when disabling auto-creation
+   - Badge metadata (names, descriptions) was restored but image URLs are permanently lost
+   - **Action Required**: Admin must manually re-upload badge images via Badge Management section
+
+**Files Modified:**
+- `/app/backend/routes/repository.py` (upload validation fix, ObjectId serialization fix)
+- `/app/backend/tests/test_teacher_repository.py` (new - comprehensive test file)
+
 **Session 16 - Money Garden UI Refinements:**
 
 1. **Removed % from Growth Stage** ✅
