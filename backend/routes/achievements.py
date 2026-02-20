@@ -337,23 +337,11 @@ FIRST_TIME_BADGES = [
 ]
 
 async def award_badge(db, user_id: str, trigger: str):
-    """Award a badge to a user if they haven't earned it yet"""
-    # First try to find the badge in database
+    """Award a badge to a user if they haven't earned it yet - ONLY for admin-created badges"""
+    # Only look for badges in database (admin-created only)
     badge = await db.achievements.find_one({"trigger": trigger}, {"_id": 0})
     
-    # If not in DB, try to find in defaults
-    if not badge:
-        for b in FIRST_TIME_BADGES:
-            if b["trigger"] == trigger:
-                badge = b
-                # Also save to DB for consistency
-                await db.achievements.update_one(
-                    {"achievement_id": b["achievement_id"]},
-                    {"$set": b},
-                    upsert=True
-                )
-                break
-    
+    # If badge doesn't exist in DB (not created by admin), don't award anything
     if not badge:
         return None
     
