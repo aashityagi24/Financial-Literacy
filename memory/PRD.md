@@ -48,6 +48,25 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Recent Updates (February 20, 2026)
 
+**Session 16 - Money Garden UI Refinements:**
+
+1. **Removed % from Growth Stage** ✅
+   - Simplified stage display from "Stage: Seed (0%)" to just "Stage: Seed"
+   - Cleaner and less confusing for young children
+
+2. **Swapped Layout Positions** ✅
+   - The Market moved to bottom-left
+   - My Shop moved to bottom-right
+   - Better workflow: Buy seeds (left) → Plant → Harvest → Sell (right)
+
+3. **Expanded Recent Activity Section** ✅
+   - Now uses flex-1 to fill remaining wallet section space
+   - Displays up to 8 transactions (was 4)
+   - Larger text and better spacing for readability
+
+**Files Modified:**
+- `/app/frontend/src/pages/MoneyGardenPage.jsx` (layout swap, activity expansion, stage text)
+
 **Session 15 - Money Garden Major Enhancement:**
 
 1. **Gardener Mascot Added** ✅
