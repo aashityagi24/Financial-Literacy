@@ -710,7 +710,7 @@ export default function TeacherDashboard({ user }) {
                 <div className="flex gap-3 mb-6">
                   <Dialog open={showReward} onOpenChange={setShowReward}>
                     <DialogTrigger asChild>
-                      <button className="btn-primary flex-1 py-3 flex items-center justify-center gap-2">
+                      <button className="btn-secondary flex-1 py-3 flex items-center justify-center gap-2">
                         <Gift className="w-5 h-5" /> Reward / Penalty
                       </button>
                     </DialogTrigger>
