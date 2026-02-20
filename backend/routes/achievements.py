@@ -439,23 +439,14 @@ async def get_user_badges(request: Request):
 
 @router.get("/admin/badges")
 async def admin_get_all_badges(request: Request):
-    """Admin: Get all badges for management"""
+    """Admin: Get all badges for management - only shows admin-created badges"""
     from services.auth import require_admin
     db = get_db()
     await require_admin(request)
     
     badges = await db.achievements.find({}, {"_id": 0}).to_list(100)
     
-    # If no badges, seed the defaults
-    if not badges:
-        for badge in FIRST_TIME_BADGES:
-            await db.achievements.update_one(
-                {"achievement_id": badge["achievement_id"]},
-                {"$set": badge},
-                upsert=True
-            )
-        badges = FIRST_TIME_BADGES.copy()
-    
+    # Return only admin-created badges (no auto-seeding)
     return {"badges": badges, "total": len(badges)}
 
 @router.post("/admin/badges")
