@@ -145,12 +145,14 @@ export default function MoneyGardenPage({ user }) {
   
   const fetchData = async () => {
     try {
-      const [farmRes, walletRes] = await Promise.all([
+      const [farmRes, walletRes, transRes] = await Promise.all([
         axios.get(`${API}/garden/farm`),
-        axios.get(`${API}/wallet`)
+        axios.get(`${API}/wallet`),
+        axios.get(`${API}/garden/transactions`).catch(() => ({ data: [] }))
       ]);
       setFarm(farmRes.data);
       setWallet(walletRes.data);
+      setTransactions(transRes.data || []);
     } catch (error) {
       if (error.response?.status === 403) {
         toast.error('Money Garden is for Grade 1-2 only');
