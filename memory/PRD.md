@@ -48,7 +48,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Recent Updates (February 20, 2026)
 
-**Session 17 - Teacher Repository Bug Fix:**
+**Session 17 - Teacher Repository Bug Fixes:**
 
 1. **Teacher Repository Upload Bug Fixed** ✅ (P0 BUG FIX)
    - **Issue**: Admin received "Invalid doc type" error when trying to upload images/PDFs to the Teacher Repository
@@ -62,13 +62,25 @@ A gamified financial literacy learning application for children (K-5) with disti
    - **Testing**: All 11 backend tests pass, frontend UI verified
    - **Result**: Admin can now upload PNG, JPG, PDF files to the Teacher Repository
 
-2. **Badge Images Permanently Lost** ⚠️ (DATA LOSS - Requires Manual Re-upload)
+2. **Teacher Repository Picker Click Bug Fixed** ✅ (P0 BUG FIX)
+   - **Issue**: When teacher clicked "Select from Repository" in Create Quest dialog, the repository picker opened but clicking on images didn't work - instead it would open file upload or show "No PDF available"
+   - **Root Cause**: Radix UI Dialog's focus trap and modal overlay (z-index 50) was intercepting click events, preventing the repository picker items from being clicked even with higher z-index
+   - **Fix Applied** (`/app/frontend/src/pages/TeacherDashboard.jsx`):
+     - Modified `openRepositoryPicker()` to close the Create Quest dialog first
+     - Modified `selectFromRepository()` to re-open the Create Quest dialog after selection
+     - Used `createPortal` to render repository picker outside the React tree
+     - Added proper click handlers with `e.stopPropagation()`
+   - **User Flow**: Teacher clicks "Select from Repository" → Quest dialog closes → Repository picker opens → Teacher selects image → Repository closes → Quest dialog re-opens with selected image
+   - **Result**: Teachers can now select images and PDFs from the repository seamlessly
+
+3. **Badge Images Permanently Lost** ⚠️ (DATA LOSS - Requires Manual Re-upload)
    - Previous session accidentally deleted all badge images when disabling auto-creation
    - Badge metadata (names, descriptions) was restored but image URLs are permanently lost
    - **Action Required**: Admin must manually re-upload badge images via Badge Management section
 
 **Files Modified:**
 - `/app/backend/routes/repository.py` (upload validation fix, ObjectId serialization fix)
+- `/app/frontend/src/pages/TeacherDashboard.jsx` (repository picker dialog interaction fix)
 - `/app/backend/tests/test_teacher_repository.py` (new - comprehensive test file)
 
 **Session 16 - Money Garden UI Refinements:**
