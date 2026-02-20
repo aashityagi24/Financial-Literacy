@@ -1895,7 +1895,7 @@ export default function TeacherDashboard({ user }) {
                 </div>
                 <button 
                   type="button"
-                  onClick={() => { setShowRepositoryPicker(false); setPickingFor(null); }}
+                  onClick={() => { setShowRepositoryPicker(false); setPickingFor(null); setShowCreateQuest(true); }}
                   className="p-2 hover:bg-white/20 rounded-full text-white"
                 >
                   <XCircle className="w-6 h-6" />
