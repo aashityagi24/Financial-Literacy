@@ -1092,7 +1092,7 @@ export default function TeacherDashboard({ user }) {
                     </h3>
                     <div className="space-y-3">
                       {teacherQuests.map((quest) => {
-                        const questClassroom = classrooms.find(c => c.classroom_id === quest.classroom_id);
+                        const questClassroom = (dashboard?.classrooms || []).find(c => c.classroom_id === quest.classroom_id);
                         return (
                         <div key={quest.quest_id} className="card-playful p-4 bg-[#06D6A0]/10">
                           <div className="flex items-start justify-between">
