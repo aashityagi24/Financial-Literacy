@@ -700,12 +700,15 @@ export default function TeacherDashboard({ user }) {
                           </button>
                         </div>
                       </div>
-                      <button 
-                        onClick={() => handleDeleteClassroom(selectedClassroom)}
-                        className="text-white/80 hover:text-white text-sm flex items-center gap-1"
-                      >
-                        <Trash2 className="w-4 h-4" /> Delete
-                      </button>
+                      {/* Delete button - Only show if teacher is NOT connected to a school */}
+                      {!user?.school_id && (
+                        <button 
+                          onClick={() => handleDeleteClassroom(selectedClassroom)}
+                          className="text-white/80 hover:text-white text-sm flex items-center gap-1"
+                        >
+                          <Trash2 className="w-4 h-4" /> Delete
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
