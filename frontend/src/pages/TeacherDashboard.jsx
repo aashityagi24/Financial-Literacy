@@ -1865,8 +1865,8 @@ export default function TeacherDashboard({ user }) {
           </DialogContent>
         </Dialog>
         
-        {/* Repository Picker Dialog - Higher z-index to be above Radix Dialog */}
-        {showRepositoryPicker && (
+        {/* Repository Picker Dialog - Using Portal to render outside Dialog tree */}
+        {showRepositoryPicker && createPortal(
           <div 
             className="fixed inset-0 bg-black/60 flex items-center justify-center p-4"
             style={{ zIndex: 9999 }}
