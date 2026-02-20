@@ -694,14 +694,42 @@ export default function TeacherDashboard({ user }) {
                   <Dialog open={showReward} onOpenChange={setShowReward}>
                     <DialogTrigger asChild>
                       <button className="btn-primary flex-1 py-3 flex items-center justify-center gap-2">
-                        <Gift className="w-5 h-5" /> Give Reward
+                        <Gift className="w-5 h-5" /> Reward / Penalty
                       </button>
                     </DialogTrigger>
                     <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
                       <DialogHeader>
-                        <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Give Reward</DialogTitle>
+                        <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                          {rewardForm.category === 'reward' ? '🌟 Give Reward' : '⚠️ Apply Penalty'}
+                        </DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 mt-4">
+                        {/* Category Toggle */}
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setRewardForm({...rewardForm, category: 'reward'})}
+                            className={`flex-1 py-2 rounded-lg font-bold transition-colors ${
+                              rewardForm.category === 'reward' 
+                                ? 'bg-[#06D6A0] text-white' 
+                                : 'bg-gray-100 text-[#3D5A80]'
+                            }`}
+                          >
+                            🌟 Reward
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setRewardForm({...rewardForm, category: 'penalty'})}
+                            className={`flex-1 py-2 rounded-lg font-bold transition-colors ${
+                              rewardForm.category === 'penalty' 
+                                ? 'bg-[#EE6C4D] text-white' 
+                                : 'bg-gray-100 text-[#3D5A80]'
+                            }`}
+                          >
+                            ⚠️ Penalty
+                          </button>
+                        </div>
+                        
                         <div>
                           <label className="text-sm font-bold text-[#1D3557] mb-2 block">Select Students</label>
                           <div className="max-h-40 overflow-y-auto space-y-2">
@@ -724,6 +752,7 @@ export default function TeacherDashboard({ user }) {
                             ))}
                           </div>
                           <button 
+                            type="button"
                             onClick={() => setRewardForm({...rewardForm, student_ids: classroomDetails.students.map(s => s.user_id)})}
                             className="text-sm text-[#3D5A80] mt-2 hover:text-[#1D3557]"
                           >
@@ -732,13 +761,13 @@ export default function TeacherDashboard({ user }) {
                         </div>
                         <Input 
                           type="number"
-                          placeholder="Amount" 
+                          placeholder="Amount (₹)" 
                           value={rewardForm.amount} 
-                          onChange={(e) => setRewardForm({...rewardForm, amount: parseFloat(e.target.value)})}
+                          onChange={(e) => setRewardForm({...rewardForm, amount: parseFloat(e.target.value) || 0})}
                           className="border-3 border-[#1D3557]"
                         />
                         <Input 
-                          placeholder="Reason" 
+                          placeholder={rewardForm.category === 'reward' ? "Reason for reward *" : "Reason for penalty *"} 
                           value={rewardForm.reason} 
                           onChange={(e) => setRewardForm({...rewardForm, reason: e.target.value})}
                           className="border-3 border-[#1D3557]"
