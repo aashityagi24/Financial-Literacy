@@ -764,26 +764,64 @@ export default function TeacherDashboard({ user }) {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="text-sm font-bold text-[#1D3557] mb-1 block">Image (optional)</label>
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => handleQuestFileUpload(e, 'image_url')}
-                              className="border-2 border-[#1D3557]/30"
-                            />
+                            <div className="space-y-2">
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => handleQuestFileUpload(e, 'image_url')}
+                                className="border-2 border-[#1D3557]/30"
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => openRepositoryPicker('image')}
+                                className="w-full px-3 py-2 text-sm bg-[#E0F7FA] hover:bg-[#B2EBF2] text-[#1D3557] rounded-lg flex items-center justify-center gap-2 border border-[#1D3557]/20"
+                              >
+                                <FolderOpen className="w-4 h-4" />
+                                Select from Repository
+                              </button>
+                            </div>
                             {questForm.image_url && (
-                              <img src={getAssetUrl(questForm.image_url)} alt="Preview" className="mt-2 h-16 rounded-lg" />
+                              <div className="mt-2 relative">
+                                <img src={getAssetUrl(questForm.image_url)} alt="Preview" className="h-16 rounded-lg" />
+                                <button
+                                  type="button"
+                                  onClick={() => setQuestForm(prev => ({ ...prev, image_url: '' }))}
+                                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </button>
+                              </div>
                             )}
                           </div>
                           <div>
                             <label className="text-sm font-bold text-[#1D3557] mb-1 block">PDF (optional)</label>
-                            <Input
-                              type="file"
-                              accept=".pdf"
-                              onChange={(e) => handleQuestFileUpload(e, 'pdf_url')}
-                              className="border-2 border-[#1D3557]/30"
-                            />
+                            <div className="space-y-2">
+                              <Input
+                                type="file"
+                                accept=".pdf"
+                                onChange={(e) => handleQuestFileUpload(e, 'pdf_url')}
+                                className="border-2 border-[#1D3557]/30"
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => openRepositoryPicker('pdf')}
+                                className="w-full px-3 py-2 text-sm bg-[#FFF3E0] hover:bg-[#FFE0B2] text-[#1D3557] rounded-lg flex items-center justify-center gap-2 border border-[#1D3557]/20"
+                              >
+                                <FolderOpen className="w-4 h-4" />
+                                Select from Repository
+                              </button>
+                            </div>
                             {questForm.pdf_url && (
-                              <p className="text-sm text-green-600 mt-1">✓ PDF uploaded</p>
+                              <div className="mt-2 flex items-center gap-2">
+                                <p className="text-sm text-green-600">✓ PDF selected</p>
+                                <button
+                                  type="button"
+                                  onClick={() => setQuestForm(prev => ({ ...prev, pdf_url: '' }))}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </button>
+                              </div>
                             )}
                           </div>
                         </div>
