@@ -46,6 +46,7 @@ export default function WalletPage({ user }) {
     const baseMeta = {
       spending: { 
         icon: '🛒', 
+        label: 'Wallet',
         color: 'from-[#EE6C4D] to-[#FF8A6C]',
         description: 'Use this to buy things!',
         action: { label: 'Go Shopping', path: '/store' }
@@ -220,7 +221,7 @@ export default function WalletPage({ user }) {
                 <div className="w-10 h-10 bg-[#FFD23F] rounded-xl border-3 border-[#1D3557] flex items-center justify-center">
                   <Wallet className="w-6 h-6 text-[#1D3557]" />
                 </div>
-                <h1 className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>My Wallet</h1>
+                <h1 className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>My Money</h1>
               </div>
             </div>
             
@@ -306,7 +307,6 @@ export default function WalletPage({ user }) {
         </div>
         
         {/* Account Cards */}
-        <h2 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>Your Money Jars</h2>
         <div className="grid grid-cols-2 gap-4 mb-8" data-testid="money-jars-grid">
           {filteredAccounts.map((acc, index) => {
             const info = accountInfo[acc.account_type];
