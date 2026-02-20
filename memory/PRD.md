@@ -23,6 +23,11 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Market system with daily price fluctuations
 - Market hours: 7 AM - 5 PM IST
 - Harvest and sell produce at market
+- **Grade visibility controls** for plants (Admin can set min/max grade per plant)
+- **Four-section layout**: My Wallet, My Shop, My Garden, The Market
+- **Gardener mascot** with contextual speech bubbles
+- **Whole numbers only** - no decimals, percentages, or fractions
+- **Child-friendly terminology** - "earnings" instead of "profit"
 
 ### Stock Market System (Grade 3-5) ✅
 - Complete trading system with buy/sell during market hours
