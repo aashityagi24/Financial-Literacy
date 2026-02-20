@@ -405,3 +405,28 @@ async def sell_produce(request: Request, plant_id: str, quantity: int):
         "price_per_unit": market_price["current_price"],
         "badge_earned": badge
     }
+
+
+@router.get("/garden/transactions")
+async def get_garden_transactions(request: Request):
+    """Get garden-related transactions (seed purchases, sales, transfers)"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    
+    # Get garden transactions (seed purchases and sales)
+    garden_transactions = await db.transactions.find({
+        "user_id": user["user_id"],
+        "transaction_type": {"$in": ["garden_seed_purchase", "garden_sell", "transfer"]}
+    }, {"_id": 0}).sort("created_at", -1).to_list(20)
+    
+    # Filter transfers to only include those involving investing account
+    filtered = []
+    for t in garden_transactions:
+        if t["transaction_type"] == "transfer":
+            if t.get("to_account") == "investing" or t.get("from_account") == "investing":
+                filtered.append(t)
+        else:
+            filtered.append(t)
+    
+    return filtered[:10]  # Return latest 10 transactions
