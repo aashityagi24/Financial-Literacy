@@ -352,7 +352,7 @@ export default function MoneyGardenPage({ user }) {
                     <div key={idx} className="bg-white/70 rounded-lg px-3 py-2 flex items-center justify-between text-sm">
                       <span className="text-[#3D5A80] truncate flex-1">{t.description}</span>
                       <span className={`font-bold ml-2 ${t.amount > 0 ? 'text-[#06D6A0]' : 'text-[#E63946]'}`}>
-                        {t.amount > 0 ? '+' : ''}₹{Math.abs(Math.round(t.amount))}
+                        {t.amount > 0 ? '+' : '-'}₹{Math.abs(Math.round(t.amount))}
                       </span>
                     </div>
                   ))
