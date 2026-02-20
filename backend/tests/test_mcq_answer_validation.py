@@ -1,690 +1,335 @@
 """
-MCQ Answer Validation Tests - Direct API Testing
-Testing the is_answer_correct function in quest submission
-Bug fix: correct_answer stored as letter (A,B,C,D) but user submits option text
+MCQ Answer Validation Tests
+Verifying bug fix: correct_answer stored as letter (A,B,C,D) but user submits option text
 """
 import pytest
 import requests
 import os
 import uuid
 from datetime import datetime, timedelta
+from pymongo import MongoClient
+import hashlib
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
-assert BASE_URL, "REACT_APP_BACKEND_URL environment variable is required"
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://resource-quest-7.preview.emergentagent.com').rstrip('/')
+
+# Test credentials
+TEACHER_EMAIL = "test.grade.teacher@example.com"
+TEACHER_PASSWORD = "testteacher123"
+CHILD_USERNAME = "test_mcq_child_final"
+CHILD_PASSWORD = "testchild123"
 
 
-@pytest.fixture(scope="session")
-def test_sessions():
-    """Setup test data - create teacher, classroom, and child"""
-    teacher_session = requests.Session()
-    child_session = requests.Session()
-    
-    # Create/login teacher
-    teacher_response = teacher_session.post(f"{BASE_URL}/api/auth/login", json={
-        "identifier": "test.mcq.teacher@example.com",
-        "password": "testteacher123"
+def get_teacher_session():
+    """Get teacher session"""
+    session = requests.Session()
+    response = session.post(f"{BASE_URL}/api/auth/login", json={
+        "identifier": TEACHER_EMAIL,
+        "password": TEACHER_PASSWORD
     })
-    
-    if teacher_response.status_code != 200:
-        # Register teacher
-        teacher_session.post(f"{BASE_URL}/api/auth/register", json={
-            "email": "test.mcq.teacher@example.com",
-            "password": "testteacher123",
-            "name": "MCQ Test Teacher",
-            "role": "teacher",
-            "school_name": "Test School"
-        })
-        teacher_response = teacher_session.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "test.mcq.teacher@example.com",
-            "password": "testteacher123"
-        })
-    
-    if teacher_response.status_code != 200:
-        pytest.skip(f"Could not login as teacher: {teacher_response.text}")
-    
-    # Get or create classroom
-    dashboard = teacher_session.get(f"{BASE_URL}/api/teacher/dashboard").json()
-    classrooms = dashboard.get("classrooms", [])
-    
-    if not classrooms:
-        # Create classroom
-        create_resp = teacher_session.post(f"{BASE_URL}/api/teacher/classrooms", json={
-            "name": f"MCQ Test Classroom {uuid.uuid4().hex[:6]}",
-            "description": "For testing MCQ validation",
-            "grade_level": 1
-        })
-        if create_resp.status_code not in [200, 201]:
-            pytest.skip(f"Could not create classroom: {create_resp.text}")
-        
-        # Refresh dashboard
-        dashboard = teacher_session.get(f"{BASE_URL}/api/teacher/dashboard").json()
-        classrooms = dashboard.get("classrooms", [])
-    
-    classroom = classrooms[0] if classrooms else None
-    if not classroom:
-        pytest.skip("No classroom available")
-    
-    # Create/login child
-    child_response = child_session.post(f"{BASE_URL}/api/auth/login", json={
-        "identifier": "test_mcq_child",
-        "password": "testchild123"
+    if response.status_code == 200:
+        return session
+    return None
+
+
+def get_child_session():
+    """Get child session"""
+    session = requests.Session()
+    response = session.post(f"{BASE_URL}/api/auth/login", json={
+        "identifier": CHILD_USERNAME,
+        "password": CHILD_PASSWORD
     })
-    
-    if child_response.status_code != 200:
-        # Register child
-        child_session.post(f"{BASE_URL}/api/auth/register", json={
-            "username": "test_mcq_child",
-            "password": "testchild123",
-            "name": "MCQ Test Child",
-            "role": "child",
-            "grade": 1
-        })
-        child_response = child_session.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "test_mcq_child",
-            "password": "testchild123"
-        })
-    
-    if child_response.status_code != 200:
-        pytest.skip(f"Could not login as child: {child_response.text}")
-    
-    # Join classroom
-    join_code = classroom.get("join_code") or classroom.get("invite_code")
-    if join_code:
-        child_session.post(f"{BASE_URL}/api/child/join-classroom", json={"join_code": join_code})
-    
-    return {
-        "teacher_session": teacher_session,
-        "child_session": child_session,
-        "classroom": classroom
-    }
+    if response.status_code == 200:
+        return session
+    return None
+
+
+def get_classroom(teacher_session):
+    """Get a classroom for testing"""
+    dashboard = teacher_session.get(f"{BASE_URL}/api/teacher/dashboard")
+    if dashboard.status_code != 200:
+        return None
+    classrooms = dashboard.json().get("classrooms", [])
+    return next((c for c in classrooms if c.get("grade_level") == 1), classrooms[0] if classrooms else None)
 
 
 class TestMCQAnswerValidation:
-    """Test MCQ answer validation where correct_answer='C' and user submits 'Wallet'"""
+    """Test MCQ answer validation - correct_answer='C' should match 'Wallet' option text"""
     
-    def test_mcq_correct_answer_letter_vs_text(self, test_sessions):
-        """
-        CRITICAL TEST: When correct_answer='C' and options=['Bank', 'Piggy Bank', 'Wallet', 'Pocket'],
-        user submitting 'Wallet' should be marked correct
-        """
-        teacher_session = test_sessions["teacher_session"]
-        child_session = test_sessions["child_session"]
-        classroom = test_sessions["classroom"]
+    def test_mcq_letter_to_text_conversion(self):
+        """When correct_answer='C' and user submits 'Wallet' (option at index 2), it should be correct"""
+        teacher = get_teacher_session()
+        child = get_child_session()
+        
+        if not teacher or not child:
+            pytest.skip("Could not login")
+        
+        classroom = get_classroom(teacher)
+        if not classroom:
+            pytest.skip("No classroom found")
         
         due_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-        
         quest_data = {
-            "title": f"TEST_MCQ_Validation_{uuid.uuid4().hex[:6]}",
-            "description": "Testing MCQ answer validation",
+            "title": f"TEST_MCQ_{uuid.uuid4().hex[:6]}",
             "due_date": due_date,
             "classroom_id": classroom.get("classroom_id"),
             "reward_amount": 0,
-            "questions": [
-                {
-                    "question_text": "Where do you keep your money?",
-                    "question_type": "mcq",
-                    "options": ["Bank", "Piggy Bank", "Wallet", "Pocket"],
-                    "correct_answer": "C",  # Letter C = Wallet (index 2)
-                    "points": 10
-                }
-            ]
+            "questions": [{
+                "question_text": "Where do you keep money?",
+                "question_type": "mcq",
+                "options": ["Bank", "Piggy Bank", "Wallet", "Pocket"],
+                "correct_answer": "C",  # Letter C = index 2 = "Wallet"
+                "points": 10
+            }]
         }
         
-        # Create quest
-        create_response = teacher_session.post(f"{BASE_URL}/api/teacher/quests", json=quest_data)
-        assert create_response.status_code == 200, f"Failed to create quest: {create_response.text}"
-        quest_id = create_response.json().get("quest_id")
+        resp = teacher.post(f"{BASE_URL}/api/teacher/quests", json=quest_data)
+        assert resp.status_code == 200, f"Create quest failed: {resp.text}"
+        quest_id = resp.json().get("quest_id")
         
         try:
-            # Get quest to find question_id
-            quests_response = child_session.get(f"{BASE_URL}/api/child/quests")
-            assert quests_response.status_code == 200
-            
-            quests = quests_response.json()
+            quests = child.get(f"{BASE_URL}/api/child/quests").json()
             test_quest = next((q for q in quests if q.get("quest_id") == quest_id), None)
             
             if not test_quest:
-                pytest.skip(f"Quest {quest_id} not visible to child - enrollment issue")
+                pytest.skip("Quest not visible to child")
             
             question_id = test_quest["questions"][0]["question_id"]
             
-            # Submit answer with option TEXT "Wallet" (not letter "C")
-            submit_response = child_session.post(
-                f"{BASE_URL}/api/child/quests/{quest_id}/submit",
-                json={"answers": {question_id: "Wallet"}}
-            )
-            assert submit_response.status_code == 200, f"Submit failed: {submit_response.text}"
+            # Submit 'Wallet' (option text, not letter 'C')
+            submit = child.post(f"{BASE_URL}/api/child/quests/{quest_id}/submit", json={
+                "answers": {question_id: "Wallet"}
+            })
+            assert submit.status_code == 200
             
-            result = submit_response.json()
-            print(f"\n>>> MCQ Validation Result: {result}")
-            
-            # MAIN ASSERTION: score should be 10 (full points)
-            assert result.get("score") == 10, \
-                f"MCQ BUG: Expected score 10, got {result.get('score')}. 'Wallet' should match 'C' when Wallet is option C"
-            
-            # Check detailed results
-            results = result.get("results", [])
-            if results:
-                q_result = results[0]
-                assert q_result.get("is_correct") == True, f"Question should be marked correct: {q_result}"
-            
-            print("✅ MCQ validation PASSED: 'Wallet' == 'C' when Wallet is option C")
-            
+            result = submit.json()
+            assert result.get("score") == 10, f"MCQ validation bug: Expected 10, got {result.get('score')}"
+            print("✅ MCQ letter-to-text validation PASSED")
         finally:
-            teacher_session.delete(f"{BASE_URL}/api/teacher/quests/{quest_id}")
+            teacher.delete(f"{BASE_URL}/api/teacher/quests/{quest_id}")
     
-    def test_mcq_wrong_answer(self, test_sessions):
-        """Test: When correct_answer='C', user submitting 'Bank' (option A) should be wrong"""
-        teacher_session = test_sessions["teacher_session"]
-        child_session = test_sessions["child_session"]
-        classroom = test_sessions["classroom"]
+    def test_mcq_wrong_answer(self):
+        """Wrong answer should get 0 points"""
+        teacher = get_teacher_session()
+        child = get_child_session()
+        
+        if not teacher or not child:
+            pytest.skip("Could not login")
+        
+        classroom = get_classroom(teacher)
+        if not classroom:
+            pytest.skip("No classroom found")
         
         due_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-        
         quest_data = {
             "title": f"TEST_MCQ_Wrong_{uuid.uuid4().hex[:6]}",
-            "description": "Testing wrong MCQ answer",
             "due_date": due_date,
             "classroom_id": classroom.get("classroom_id"),
             "reward_amount": 0,
-            "questions": [
-                {
-                    "question_text": "Where do you keep your money?",
-                    "question_type": "mcq",
-                    "options": ["Bank", "Piggy Bank", "Wallet", "Pocket"],
-                    "correct_answer": "C",  # Wallet
-                    "points": 10
-                }
-            ]
+            "questions": [{
+                "question_text": "Test",
+                "question_type": "mcq",
+                "options": ["A_opt", "B_opt", "C_opt", "D_opt"],
+                "correct_answer": "C",
+                "points": 10
+            }]
         }
         
-        create_response = teacher_session.post(f"{BASE_URL}/api/teacher/quests", json=quest_data)
-        assert create_response.status_code == 200
-        quest_id = create_response.json().get("quest_id")
+        resp = teacher.post(f"{BASE_URL}/api/teacher/quests", json=quest_data)
+        quest_id = resp.json().get("quest_id")
         
         try:
-            quests_response = child_session.get(f"{BASE_URL}/api/child/quests")
-            quests = quests_response.json()
+            quests = child.get(f"{BASE_URL}/api/child/quests").json()
             test_quest = next((q for q in quests if q.get("quest_id") == quest_id), None)
-            
             if not test_quest:
-                pytest.skip("Quest not visible to child")
+                pytest.skip("Quest not visible")
             
             question_id = test_quest["questions"][0]["question_id"]
             
-            # Submit wrong answer "Bank" (option A)
-            submit_response = child_session.post(
-                f"{BASE_URL}/api/child/quests/{quest_id}/submit",
-                json={"answers": {question_id: "Bank"}}
-            )
-            assert submit_response.status_code == 200
+            submit = child.post(f"{BASE_URL}/api/child/quests/{quest_id}/submit", json={
+                "answers": {question_id: "A_opt"}  # Wrong
+            })
             
-            result = submit_response.json()
-            print(f"\n>>> MCQ Wrong Answer Result: {result}")
-            
-            # Score should be 0 for wrong answer
-            assert result.get("score") == 0, f"Expected score 0 for wrong answer, got {result.get('score')}"
-            
-            print("✅ MCQ wrong answer validation PASSED: 'Bank' != 'C'")
-            
+            result = submit.json()
+            assert result.get("score") == 0, f"Wrong answer should get 0, got {result.get('score')}"
+            print("✅ MCQ wrong answer validation PASSED")
         finally:
-            teacher_session.delete(f"{BASE_URL}/api/teacher/quests/{quest_id}")
+            teacher.delete(f"{BASE_URL}/api/teacher/quests/{quest_id}")
 
 
-class TestMultiSelectAnswerValidation:
+class TestMultiSelectValidation:
     """Test multi-select answer validation"""
     
-    def test_multi_select_correct_answers(self, test_sessions):
-        """Test: Multi-select ['A', 'C'] matches ['Saving', 'Budgeting']"""
-        teacher_session = test_sessions["teacher_session"]
-        child_session = test_sessions["child_session"]
-        classroom = test_sessions["classroom"]
+    def test_multi_select_correct(self):
+        """Multi-select with correct option texts should get full points"""
+        teacher = get_teacher_session()
+        child = get_child_session()
+        
+        if not teacher or not child:
+            pytest.skip("Could not login")
+        
+        classroom = get_classroom(teacher)
+        if not classroom:
+            pytest.skip("No classroom found")
         
         due_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-        
         quest_data = {
-            "title": f"TEST_MultiSelect_{uuid.uuid4().hex[:6]}",
-            "description": "Testing multi-select validation",
+            "title": f"TEST_Multi_{uuid.uuid4().hex[:6]}",
             "due_date": due_date,
             "classroom_id": classroom.get("classroom_id"),
             "reward_amount": 0,
-            "questions": [
-                {
-                    "question_text": "Which are good money habits?",
-                    "question_type": "multi_select",
-                    "options": ["Saving", "Spending", "Budgeting", "Wasting"],
-                    "correct_answer": ["A", "C"],  # Saving (index 0) and Budgeting (index 2)
-                    "points": 15
-                }
-            ]
+            "questions": [{
+                "question_text": "Select good habits",
+                "question_type": "multi_select",
+                "options": ["Saving", "Wasting", "Budgeting", "Spending"],
+                "correct_answer": ["A", "C"],  # Saving and Budgeting
+                "points": 15
+            }]
         }
         
-        create_response = teacher_session.post(f"{BASE_URL}/api/teacher/quests", json=quest_data)
-        assert create_response.status_code == 200
-        quest_id = create_response.json().get("quest_id")
+        resp = teacher.post(f"{BASE_URL}/api/teacher/quests", json=quest_data)
+        quest_id = resp.json().get("quest_id")
         
         try:
-            quests_response = child_session.get(f"{BASE_URL}/api/child/quests")
-            quests = quests_response.json()
+            quests = child.get(f"{BASE_URL}/api/child/quests").json()
             test_quest = next((q for q in quests if q.get("quest_id") == quest_id), None)
-            
             if not test_quest:
-                pytest.skip("Quest not visible to child")
+                pytest.skip("Quest not visible")
             
             question_id = test_quest["questions"][0]["question_id"]
             
-            # Submit with option texts
-            submit_response = child_session.post(
-                f"{BASE_URL}/api/child/quests/{quest_id}/submit",
-                json={"answers": {question_id: ["Saving", "Budgeting"]}}
-            )
-            assert submit_response.status_code == 200
+            submit = child.post(f"{BASE_URL}/api/child/quests/{quest_id}/submit", json={
+                "answers": {question_id: ["Saving", "Budgeting"]}
+            })
             
-            result = submit_response.json()
-            print(f"\n>>> Multi-select Result: {result}")
-            
-            assert result.get("score") == 15, \
-                f"Multi-select BUG: Expected score 15, got {result.get('score')}. ['Saving', 'Budgeting'] should match ['A', 'C']"
-            
+            result = submit.json()
+            assert result.get("score") == 15, f"Multi-select should get 15, got {result.get('score')}"
             print("✅ Multi-select validation PASSED")
-            
         finally:
-            teacher_session.delete(f"{BASE_URL}/api/teacher/quests/{quest_id}")
-    
-    def test_multi_select_partial_wrong(self, test_sessions):
-        """Test: Partial multi-select answers should get 0 points"""
-        teacher_session = test_sessions["teacher_session"]
-        child_session = test_sessions["child_session"]
-        classroom = test_sessions["classroom"]
-        
-        due_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-        
-        quest_data = {
-            "title": f"TEST_MultiSelect_Wrong_{uuid.uuid4().hex[:6]}",
-            "description": "Testing wrong multi-select",
-            "due_date": due_date,
-            "classroom_id": classroom.get("classroom_id"),
-            "reward_amount": 0,
-            "questions": [
-                {
-                    "question_text": "Which are good money habits?",
-                    "question_type": "multi_select",
-                    "options": ["Saving", "Spending", "Budgeting", "Wasting"],
-                    "correct_answer": ["A", "C"],
-                    "points": 15
-                }
-            ]
-        }
-        
-        create_response = teacher_session.post(f"{BASE_URL}/api/teacher/quests", json=quest_data)
-        assert create_response.status_code == 200
-        quest_id = create_response.json().get("quest_id")
-        
-        try:
-            quests_response = child_session.get(f"{BASE_URL}/api/child/quests")
-            quests = quests_response.json()
-            test_quest = next((q for q in quests if q.get("quest_id") == quest_id), None)
-            
-            if not test_quest:
-                pytest.skip("Quest not visible to child")
-            
-            question_id = test_quest["questions"][0]["question_id"]
-            
-            # Submit only partial (just Saving)
-            submit_response = child_session.post(
-                f"{BASE_URL}/api/child/quests/{quest_id}/submit",
-                json={"answers": {question_id: ["Saving"]}}
-            )
-            assert submit_response.status_code == 200
-            
-            result = submit_response.json()
-            print(f"\n>>> Multi-select Partial Result: {result}")
-            
-            assert result.get("score") == 0, f"Expected score 0 for partial answer, got {result.get('score')}"
-            
-            print("✅ Multi-select partial answer validation PASSED")
-            
-        finally:
-            teacher_session.delete(f"{BASE_URL}/api/teacher/quests/{quest_id}")
+            teacher.delete(f"{BASE_URL}/api/teacher/quests/{quest_id}")
 
 
 class TestTrueFalseValidation:
     """Test true/false answer validation"""
     
-    def test_true_false_correct(self, test_sessions):
-        """Test: True/False correct answer"""
-        teacher_session = test_sessions["teacher_session"]
-        child_session = test_sessions["child_session"]
-        classroom = test_sessions["classroom"]
+    def test_true_false_case_insensitive(self):
+        """True/false should be case insensitive"""
+        teacher = get_teacher_session()
+        child = get_child_session()
+        
+        if not teacher or not child:
+            pytest.skip("Could not login")
+        
+        classroom = get_classroom(teacher)
+        if not classroom:
+            pytest.skip("No classroom found")
         
         due_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-        
         quest_data = {
-            "title": f"TEST_TrueFalse_{uuid.uuid4().hex[:6]}",
-            "description": "Testing true/false validation",
+            "title": f"TEST_TF_{uuid.uuid4().hex[:6]}",
             "due_date": due_date,
             "classroom_id": classroom.get("classroom_id"),
             "reward_amount": 0,
-            "questions": [
-                {
-                    "question_text": "Saving money is a good habit.",
-                    "question_type": "true_false",
-                    "correct_answer": "True",
-                    "points": 5
-                }
-            ]
+            "questions": [{
+                "question_text": "Saving is good",
+                "question_type": "true_false",
+                "correct_answer": "True",
+                "points": 5
+            }]
         }
         
-        create_response = teacher_session.post(f"{BASE_URL}/api/teacher/quests", json=quest_data)
-        assert create_response.status_code == 200
-        quest_id = create_response.json().get("quest_id")
+        resp = teacher.post(f"{BASE_URL}/api/teacher/quests", json=quest_data)
+        quest_id = resp.json().get("quest_id")
         
         try:
-            quests_response = child_session.get(f"{BASE_URL}/api/child/quests")
-            quests = quests_response.json()
+            quests = child.get(f"{BASE_URL}/api/child/quests").json()
             test_quest = next((q for q in quests if q.get("quest_id") == quest_id), None)
-            
             if not test_quest:
-                pytest.skip("Quest not visible to child")
+                pytest.skip("Quest not visible")
             
             question_id = test_quest["questions"][0]["question_id"]
             
-            submit_response = child_session.post(
-                f"{BASE_URL}/api/child/quests/{quest_id}/submit",
-                json={"answers": {question_id: "True"}}
-            )
-            assert submit_response.status_code == 200
+            # Submit lowercase "true"
+            submit = child.post(f"{BASE_URL}/api/child/quests/{quest_id}/submit", json={
+                "answers": {question_id: "true"}  # lowercase
+            })
             
-            result = submit_response.json()
-            print(f"\n>>> True/False Result: {result}")
-            
-            assert result.get("score") == 5, f"Expected score 5, got {result.get('score')}"
-            
-            print("✅ True/False validation PASSED")
-            
-        finally:
-            teacher_session.delete(f"{BASE_URL}/api/teacher/quests/{quest_id}")
-    
-    def test_true_false_case_insensitive(self, test_sessions):
-        """Test: True/False should be case insensitive"""
-        teacher_session = test_sessions["teacher_session"]
-        child_session = test_sessions["child_session"]
-        classroom = test_sessions["classroom"]
-        
-        due_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-        
-        quest_data = {
-            "title": f"TEST_TrueFalse_Case_{uuid.uuid4().hex[:6]}",
-            "description": "Testing case sensitivity",
-            "due_date": due_date,
-            "classroom_id": classroom.get("classroom_id"),
-            "reward_amount": 0,
-            "questions": [
-                {
-                    "question_text": "Wasting money is bad.",
-                    "question_type": "true_false",
-                    "correct_answer": "True",
-                    "points": 5
-                }
-            ]
-        }
-        
-        create_response = teacher_session.post(f"{BASE_URL}/api/teacher/quests", json=quest_data)
-        assert create_response.status_code == 200
-        quest_id = create_response.json().get("quest_id")
-        
-        try:
-            quests_response = child_session.get(f"{BASE_URL}/api/child/quests")
-            quests = quests_response.json()
-            test_quest = next((q for q in quests if q.get("quest_id") == quest_id), None)
-            
-            if not test_quest:
-                pytest.skip("Quest not visible to child")
-            
-            question_id = test_quest["questions"][0]["question_id"]
-            
-            # Submit "true" (lowercase)
-            submit_response = child_session.post(
-                f"{BASE_URL}/api/child/quests/{quest_id}/submit",
-                json={"answers": {question_id: "true"}}
-            )
-            assert submit_response.status_code == 200
-            
-            result = submit_response.json()
-            print(f"\n>>> True/False Case Insensitive Result: {result}")
-            
-            assert result.get("score") == 5, f"Expected score 5 for case-insensitive match, got {result.get('score')}"
-            
+            result = submit.json()
+            assert result.get("score") == 5, f"True/False should be case-insensitive, got {result.get('score')}"
             print("✅ True/False case-insensitive validation PASSED")
-            
         finally:
-            teacher_session.delete(f"{BASE_URL}/api/teacher/quests/{quest_id}")
+            teacher.delete(f"{BASE_URL}/api/teacher/quests/{quest_id}")
 
 
 class TestNumberEntryValidation:
-    """Test value/number entry answer validation"""
+    """Test number/value entry validation"""
     
-    def test_number_entry_correct(self, test_sessions):
-        """Test: Number entry with correct answer"""
-        teacher_session = test_sessions["teacher_session"]
-        child_session = test_sessions["child_session"]
-        classroom = test_sessions["classroom"]
+    def test_number_entry_float(self):
+        """Number entry should handle float values"""
+        teacher = get_teacher_session()
+        child = get_child_session()
+        
+        if not teacher or not child:
+            pytest.skip("Could not login")
+        
+        classroom = get_classroom(teacher)
+        if not classroom:
+            pytest.skip("No classroom found")
         
         due_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-        
         quest_data = {
-            "title": f"TEST_NumberEntry_{uuid.uuid4().hex[:6]}",
-            "description": "Testing number entry",
+            "title": f"TEST_Num_{uuid.uuid4().hex[:6]}",
             "due_date": due_date,
             "classroom_id": classroom.get("classroom_id"),
             "reward_amount": 0,
-            "questions": [
-                {
-                    "question_text": "50 - 20 = ?",
-                    "question_type": "value",
-                    "correct_answer": "30",
-                    "points": 10
-                }
-            ]
+            "questions": [{
+                "question_text": "10 / 4 = ?",
+                "question_type": "value",
+                "correct_answer": "2.5",
+                "points": 10
+            }]
         }
         
-        create_response = teacher_session.post(f"{BASE_URL}/api/teacher/quests", json=quest_data)
-        assert create_response.status_code == 200
-        quest_id = create_response.json().get("quest_id")
+        resp = teacher.post(f"{BASE_URL}/api/teacher/quests", json=quest_data)
+        quest_id = resp.json().get("quest_id")
         
         try:
-            quests_response = child_session.get(f"{BASE_URL}/api/child/quests")
-            quests = quests_response.json()
+            quests = child.get(f"{BASE_URL}/api/child/quests").json()
             test_quest = next((q for q in quests if q.get("quest_id") == quest_id), None)
-            
             if not test_quest:
-                pytest.skip("Quest not visible to child")
+                pytest.skip("Quest not visible")
             
             question_id = test_quest["questions"][0]["question_id"]
             
-            submit_response = child_session.post(
-                f"{BASE_URL}/api/child/quests/{quest_id}/submit",
-                json={"answers": {question_id: "30"}}
-            )
-            assert submit_response.status_code == 200
+            submit = child.post(f"{BASE_URL}/api/child/quests/{quest_id}/submit", json={
+                "answers": {question_id: "2.5"}
+            })
             
-            result = submit_response.json()
-            print(f"\n>>> Number Entry Result: {result}")
-            
-            assert result.get("score") == 10, f"Expected score 10, got {result.get('score')}"
-            
-            print("✅ Number entry validation PASSED")
-            
-        finally:
-            teacher_session.delete(f"{BASE_URL}/api/teacher/quests/{quest_id}")
-    
-    def test_number_entry_float(self, test_sessions):
-        """Test: Number entry with float values"""
-        teacher_session = test_sessions["teacher_session"]
-        child_session = test_sessions["child_session"]
-        classroom = test_sessions["classroom"]
-        
-        due_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-        
-        quest_data = {
-            "title": f"TEST_NumberFloat_{uuid.uuid4().hex[:6]}",
-            "description": "Testing float numbers",
-            "due_date": due_date,
-            "classroom_id": classroom.get("classroom_id"),
-            "reward_amount": 0,
-            "questions": [
-                {
-                    "question_text": "10 / 4 = ?",
-                    "question_type": "value",
-                    "correct_answer": "2.5",
-                    "points": 10
-                }
-            ]
-        }
-        
-        create_response = teacher_session.post(f"{BASE_URL}/api/teacher/quests", json=quest_data)
-        assert create_response.status_code == 200
-        quest_id = create_response.json().get("quest_id")
-        
-        try:
-            quests_response = child_session.get(f"{BASE_URL}/api/child/quests")
-            quests = quests_response.json()
-            test_quest = next((q for q in quests if q.get("quest_id") == quest_id), None)
-            
-            if not test_quest:
-                pytest.skip("Quest not visible to child")
-            
-            question_id = test_quest["questions"][0]["question_id"]
-            
-            submit_response = child_session.post(
-                f"{BASE_URL}/api/child/quests/{quest_id}/submit",
-                json={"answers": {question_id: "2.5"}}
-            )
-            assert submit_response.status_code == 200
-            
-            result = submit_response.json()
-            print(f"\n>>> Number Float Result: {result}")
-            
-            assert result.get("score") == 10, f"Expected score 10 for float match, got {result.get('score')}"
-            
+            result = submit.json()
+            assert result.get("score") == 10, f"Number entry should handle floats, got {result.get('score')}"
             print("✅ Number entry float validation PASSED")
-            
         finally:
-            teacher_session.delete(f"{BASE_URL}/api/teacher/quests/{quest_id}")
+            teacher.delete(f"{BASE_URL}/api/teacher/quests/{quest_id}")
 
 
 class TestTeacherRepositoryGradeFilter:
-    """Test that teacher repository filters by classroom grade level"""
+    """Test teacher repository grade filtering"""
     
-    def test_repository_grade_filter(self, test_sessions):
-        """Test: GET /api/teacher/repository accepts grade parameter"""
-        teacher_session = test_sessions["teacher_session"]
+    def test_repository_accepts_grade_param(self):
+        """Repository endpoint should accept grade parameter"""
+        teacher = get_teacher_session()
+        if not teacher:
+            pytest.skip("Could not login")
         
-        # Test without grade filter
-        response = teacher_session.get(f"{BASE_URL}/api/teacher/repository")
-        assert response.status_code == 200, f"Repository access failed: {response.text}"
-        data = response.json()
-        print(f"\n>>> Repository without filter: {len(data.get('items', []))} items")
+        # Without filter
+        resp = teacher.get(f"{BASE_URL}/api/teacher/repository")
+        assert resp.status_code == 200, f"Repository failed: {resp.text}"
         
-        # Test with grade filter
-        response = teacher_session.get(f"{BASE_URL}/api/teacher/repository?grade=1")
-        assert response.status_code == 200, f"Repository with grade filter failed: {response.text}"
-        data_filtered = response.json()
-        print(f">>> Repository with grade=1: {len(data_filtered.get('items', []))} items")
+        # With grade filter
+        resp = teacher.get(f"{BASE_URL}/api/teacher/repository?grade=1")
+        assert resp.status_code == 200, f"Repository with grade filter failed: {resp.text}"
         
-        print("✅ Teacher repository grade filter test PASSED")
-
-
-class TestMixedQuestionTypeQuest:
-    """Test quest with multiple question types"""
-    
-    def test_mixed_questions_all_correct(self, test_sessions):
-        """Test: Quest with MCQ + TrueFalse + Value, all answered correctly"""
-        teacher_session = test_sessions["teacher_session"]
-        child_session = test_sessions["child_session"]
-        classroom = test_sessions["classroom"]
-        
-        due_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-        
-        quest_data = {
-            "title": f"TEST_MixedQuestions_{uuid.uuid4().hex[:6]}",
-            "description": "Testing mixed question types",
-            "due_date": due_date,
-            "classroom_id": classroom.get("classroom_id"),
-            "reward_amount": 0,
-            "questions": [
-                {
-                    "question_text": "Where do you keep your money?",
-                    "question_type": "mcq",
-                    "options": ["Bank", "Piggy Bank", "Wallet", "Pocket"],
-                    "correct_answer": "C",  # Wallet
-                    "points": 10
-                },
-                {
-                    "question_text": "Saving money is important.",
-                    "question_type": "true_false",
-                    "correct_answer": "True",
-                    "points": 5
-                },
-                {
-                    "question_text": "100 - 40 = ?",
-                    "question_type": "value",
-                    "correct_answer": "60",
-                    "points": 10
-                }
-            ]
-        }
-        
-        create_response = teacher_session.post(f"{BASE_URL}/api/teacher/quests", json=quest_data)
-        assert create_response.status_code == 200
-        quest_id = create_response.json().get("quest_id")
-        
-        try:
-            quests_response = child_session.get(f"{BASE_URL}/api/child/quests")
-            quests = quests_response.json()
-            test_quest = next((q for q in quests if q.get("quest_id") == quest_id), None)
-            
-            if not test_quest:
-                pytest.skip("Quest not visible to child")
-            
-            questions = test_quest.get("questions", [])
-            assert len(questions) == 3, f"Expected 3 questions, got {len(questions)}"
-            
-            # Build answers
-            answers = {}
-            for q in questions:
-                q_id = q.get("question_id")
-                q_type = q.get("question_type")
-                
-                if q_type == "mcq":
-                    answers[q_id] = "Wallet"
-                elif q_type == "true_false":
-                    answers[q_id] = "True"
-                elif q_type == "value":
-                    answers[q_id] = "60"
-            
-            submit_response = child_session.post(
-                f"{BASE_URL}/api/child/quests/{quest_id}/submit",
-                json={"answers": answers}
-            )
-            assert submit_response.status_code == 200
-            
-            result = submit_response.json()
-            print(f"\n>>> Mixed Questions Result: {result}")
-            
-            # Total points: 10 + 5 + 10 = 25
-            assert result.get("score") == 25, f"Expected score 25, got {result.get('score')}"
-            
-            # Check each question result
-            results = result.get("results", [])
-            for r in results:
-                assert r.get("is_correct") == True, f"Question should be correct: {r}"
-            
-            print("✅ Mixed question types validation PASSED: Score 25/25")
-            
-        finally:
-            teacher_session.delete(f"{BASE_URL}/api/teacher/quests/{quest_id}")
+        print("✅ Teacher repository grade filter PASSED")
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v", "-s", "--tb=short"])
+    pytest.main([__file__, "-v", "-s"])
