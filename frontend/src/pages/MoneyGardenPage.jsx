@@ -462,39 +462,39 @@ export default function MoneyGardenPage({ user }) {
             }`} 
             data-testid="shop-section"
           >
-            <h2 className="text-xl font-bold text-[#E63946] mb-4 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+            <h2 className="text-xl font-bold text-[#E63946] mb-3 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
               🧺 My Shop
             </h2>
             
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex-1 overflow-y-auto">
               {farm.inventory.length === 0 ? (
-                <div className="text-center">
-                  <span className="text-6xl">🧺</span>
-                  <p className="text-[#E63946] font-bold text-lg mt-3">Empty!</p>
-                  <p className="text-sm text-[#3D5A80]">Harvest crops to sell here</p>
+                <div className="h-full flex flex-col items-center justify-center text-center">
+                  <span className="text-5xl">🧺</span>
+                  <p className="text-[#E63946] font-bold mt-2">Empty!</p>
+                  <p className="text-sm text-[#3D5A80]">Harvest crops to sell</p>
                 </div>
               ) : (
-                <div className="w-full space-y-3">
+                <div className="space-y-2">
                   {farm.inventory.map((item) => {
                     const price = getMarketPrice(item.plant_id);
                     return (
-                      <div key={item.inventory_id} className="bg-white rounded-xl p-4 border-2 border-[#E63946]/30 flex items-center gap-4">
-                        <span className="text-4xl">{item.plant_emoji}</span>
+                      <div key={item.inventory_id} className="bg-white rounded-xl p-3 border-2 border-[#E63946]/30 flex items-center gap-3">
+                        <span className="text-3xl">{item.plant_emoji}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-[#1D3557] text-lg">{item.plant_name}</p>
-                          <p className="text-sm text-[#3D5A80]">{item.quantity} × ₹{price} = <span className="font-bold text-[#06D6A0]">₹{item.quantity * price}</span></p>
+                          <p className="font-bold text-[#1D3557]">{item.plant_name}</p>
+                          <p className="text-sm text-[#3D5A80]">{item.quantity} × ₹{price}</p>
                         </div>
                         <button
                           onClick={() => handleSell(item.plant_id, item.quantity)}
                           disabled={!farm.is_market_open}
-                          className="bg-[#06D6A0] hover:bg-[#05C995] disabled:bg-gray-300 text-white px-6 py-3 rounded-xl font-bold text-lg"
+                          className="bg-[#06D6A0] hover:bg-[#05C995] disabled:bg-gray-300 text-white px-4 py-2 rounded-xl font-bold"
                         >
-                          Sell
+                          ₹{item.quantity * price}
                         </button>
                       </div>
                     );
                   })}
-                  {!farm.is_market_open && <p className="text-sm text-red-500 text-center">🌙 Market closed (7AM-5PM)</p>}
+                  {!farm.is_market_open && <p className="text-xs text-red-500 text-center mt-2">🌙 Closed (7AM-5PM)</p>}
                 </div>
               )}
             </div>
