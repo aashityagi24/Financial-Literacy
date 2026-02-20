@@ -65,6 +65,7 @@ export default function MoneyGardenPage({ user }) {
   const [loading, setLoading] = useState(true);
   const [farm, setFarm] = useState({ plots: [], seeds: [], inventory: [], market_prices: [], is_market_open: false });
   const [wallet, setWallet] = useState(null);
+  const [transactions, setTransactions] = useState([]);
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferData, setTransferData] = useState({ from_account: 'spending', to_account: 'investing', amount: '' });
   const [sellQuantity, setSellQuantity] = useState({});
