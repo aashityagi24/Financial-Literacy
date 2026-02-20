@@ -37,7 +37,7 @@ export default function StorePage({ user }) {
   // Helper function to format cost display based on grade level
   // For Kindergarten (0) and Grade 1, use repeated addition instead of multiplication
   const formatCostDisplay = (qty, price) => {
-    const gradeLevel = user?.grade_level ?? 5; // Default to higher grade if unknown
+    const gradeLevel = user?.grade ?? user?.grade_level ?? 5; // Default to higher grade if unknown
     
     if (gradeLevel <= 1 && qty > 1) {
       // Use repeated addition for K and Grade 1
