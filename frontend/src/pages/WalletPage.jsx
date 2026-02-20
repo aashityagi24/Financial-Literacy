@@ -70,14 +70,14 @@ export default function WalletPage({ user }) {
       // Kindergarten: No investing jar
       return baseMeta;
     } else if (grade <= 2) {
-      // Grade 1-2: Farming jar
+      // Grade 1-2: My Garden jar
       return {
         ...baseMeta,
         investing: { 
           icon: '🌱', 
-          label: 'Farming',
+          label: 'My Garden',
           color: 'from-[#228B22] to-[#32CD32]',
-          description: 'Grow plants and harvest profits!',
+          description: 'Grow plants and harvest!',
           action: { label: 'My Garden', path: '/garden' }
         },
       };
