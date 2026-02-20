@@ -914,12 +914,67 @@ async def get_quest_responses(quest_id: str, request: Request):
     question_analytics = []
     for i, q in enumerate(quest.get("questions", [])):
         q_id = q.get("question_id")
+        question_type = q.get("question_type", "mcq")
         correct_count = sum(1 for r in responses for qd in r["question_details"] if qd["question_id"] == q_id and qd["is_correct"])
         total_attempts = len(responses)
         
-        # Count answer distribution for MCQ
+        # Count answer distribution based on question type
         answer_distribution = {}
-        if q.get("question_type") in ["mcq", "true_false"]:
+        
+        if question_type == "true_false":
+            # Initialize with True/False options
+            answer_distribution = {"True": 0, "False": 0, "No Answer": 0}
+            for r in responses:
+                for qd in r["question_details"]:
+                    if qd["question_id"] == q_id:
+                        ans = str(qd["user_answer"]) if qd["user_answer"] is not None else "No Answer"
+                        if ans in answer_distribution:
+                            answer_distribution[ans] += 1
+                        else:
+                            answer_distribution[ans] = 1
+            # Remove "No Answer" if 0
+            if answer_distribution.get("No Answer", 0) == 0:
+                answer_distribution.pop("No Answer", None)
+                
+        elif question_type == "mcq":
+            # Initialize with all options
+            options = q.get("options", [])
+            for opt in options:
+                answer_distribution[opt] = 0
+            answer_distribution["No Answer"] = 0
+            
+            for r in responses:
+                for qd in r["question_details"]:
+                    if qd["question_id"] == q_id:
+                        ans = str(qd["user_answer"]) if qd["user_answer"] is not None else "No Answer"
+                        if ans in answer_distribution:
+                            answer_distribution[ans] += 1
+                        else:
+                            answer_distribution[ans] = 1
+            # Remove "No Answer" if 0
+            if answer_distribution.get("No Answer", 0) == 0:
+                answer_distribution.pop("No Answer", None)
+                
+        elif question_type == "multi_select":
+            # For multi-select, track each option separately
+            options = q.get("options", [])
+            for opt in options:
+                answer_distribution[opt] = 0
+            
+            for r in responses:
+                for qd in r["question_details"]:
+                    if qd["question_id"] == q_id:
+                        user_answers = qd["user_answer"]
+                        if isinstance(user_answers, list):
+                            for ans in user_answers:
+                                if ans in answer_distribution:
+                                    answer_distribution[ans] += 1
+                        elif user_answers:
+                            if user_answers in answer_distribution:
+                                answer_distribution[user_answers] += 1
+                                
+        elif question_type in ["numeric", "value"]:
+            # For numeric, show all unique answers
             for r in responses:
                 for qd in r["question_details"]:
                     if qd["question_id"] == q_id:
