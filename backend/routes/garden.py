@@ -99,7 +99,12 @@ async def get_farm(request: Request):
                         else:
                             plot["status"] = "growing"
     
-    seeds = await db.investment_plants.find({"is_active": True}, {"_id": 0}).to_list(50)
+    # Filter seeds by user's grade (min_grade <= user_grade <= max_grade)
+    all_seeds = await db.investment_plants.find({"is_active": True}, {"_id": 0}).to_list(50)
+    seeds = [
+        s for s in all_seeds 
+        if s.get("min_grade", 0) <= grade <= s.get("max_grade", 5)
+    ]
     inventory = await db.harvest_inventory.find({"user_id": user["user_id"]}, {"_id": 0}).to_list(100)
     
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
