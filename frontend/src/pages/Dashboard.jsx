@@ -504,7 +504,7 @@ export default function Dashboard({ user, setUser }) {
                         <p className="text-base text-[#3D5A80]">{quest.description}</p>
                       </div>
                       <span className="bg-[#FFD23F] text-[#1D3557] px-2 py-1 rounded-lg text-base font-bold">
-                        +₹{quest.reward_amount}
+                        +₹{quest.total_points || quest.reward_amount || 0}
                       </span>
                     </div>
                     <Progress value={quest.progress || 0} className="h-2" />
