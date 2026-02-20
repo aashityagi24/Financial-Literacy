@@ -66,7 +66,8 @@ async def get_farm(request: Request):
             }
             initial_plots.append(plot)
         await db.farm_plots.insert_many(initial_plots)
-        plots = initial_plots
+        # Re-fetch to get clean documents without _id
+        plots = await db.farm_plots.find({"user_id": user["user_id"]}, {"_id": 0}).to_list(50)
     
     now = datetime.now(timezone.utc)
     for plot in plots:
