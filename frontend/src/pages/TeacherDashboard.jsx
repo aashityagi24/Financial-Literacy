@@ -2019,7 +2019,8 @@ export default function TeacherDashboard({ user }) {
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </main>
     </div>
