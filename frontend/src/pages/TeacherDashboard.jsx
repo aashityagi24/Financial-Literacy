@@ -320,14 +320,27 @@ export default function TeacherDashboard({ user }) {
   });
   
   const handleCreateQuest = async () => {
-    if (!questForm.title || !questForm.due_date) {
-      toast.error('Please fill title and due date');
+    // Debug log
+    console.log('Quest form:', questForm);
+    
+    if (!questForm.title?.trim()) {
+      toast.error('Please fill in the quest title');
       return;
     }
     
-    // Require classroom selection
-    if (!questForm.classroom_id) {
-      toast.error('Please select a classroom for this quest');
+    if (!questForm.due_date) {
+      toast.error('Please select a due date');
+      return;
+    }
+    
+    // Auto-set classroom_id if not set (should be set from selectedClassroom)
+    const formToSubmit = {
+      ...questForm,
+      classroom_id: questForm.classroom_id || selectedClassroom
+    };
+    
+    if (!formToSubmit.classroom_id) {
+      toast.error('Classroom not found. Please try again.');
       return;
     }
     
