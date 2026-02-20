@@ -58,6 +58,17 @@ export default function TeacherDashboard({ user }) {
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
   const [comparisonData, setComparisonData] = useState(null);
+  
+  // Repository picker state
+  const [showRepositoryPicker, setShowRepositoryPicker] = useState(false);
+  const [repositoryItems, setRepositoryItems] = useState([]);
+  const [repositoryTopics, setRepositoryTopics] = useState([]);
+  const [repositorySubtopics, setRepositorySubtopics] = useState([]);
+  const [repoFilterTopic, setRepoFilterTopic] = useState('');
+  const [repoFilterSubtopic, setRepoFilterSubtopic] = useState('');
+  const [repoFilterType, setRepoFilterType] = useState('');
+  const [repoSearch, setRepoSearch] = useState('');
+  const [pickingFor, setPickingFor] = useState(null); // 'image' or 'pdf'
   const [comparisonLoading, setComparisonLoading] = useState(false);
   
   // Quest Responses
