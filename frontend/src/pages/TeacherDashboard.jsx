@@ -219,14 +219,25 @@ export default function TeacherDashboard({ user }) {
       toast.error('Select at least one student');
       return;
     }
+    
+    const isReward = rewardForm.category === 'reward';
+    
     try {
-      await axios.post(`${API}/teacher/classrooms/${selectedClassroom}/reward`, rewardForm);
-      toast.success('Rewards given!');
+      // Use the new reward-penalty endpoint for individual students
+      for (const studentId of rewardForm.student_ids) {
+        await axios.post(`${API}/teacher/reward-penalty`, {
+          student_id: studentId,
+          amount: rewardForm.amount,
+          title: rewardForm.reason,
+          category: rewardForm.category
+        });
+      }
+      toast.success(`${isReward ? 'Rewards' : 'Penalties'} applied to ${rewardForm.student_ids.length} student(s)!`);
       setShowReward(false);
-      setRewardForm({ student_ids: [], amount: 10, reason: '' });
+      setRewardForm({ student_ids: [], amount: 10, reason: '', category: 'reward' });
       fetchClassroomDetails(selectedClassroom);
     } catch (error) {
-      toast.error('Failed to give reward');
+      toast.error(`Failed to apply ${isReward ? 'reward' : 'penalty'}`);
     }
   };
   
