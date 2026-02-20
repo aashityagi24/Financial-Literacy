@@ -197,34 +197,19 @@ export default function QuestsPage({ user }) {
         
         <p className="text-[#1D3557] font-medium mb-3">{question_text}</p>
         
+        {/* Points earned/lost indicator - compact version */}
         {result && (
-          <div className={`mb-3 p-3 rounded-lg ${result.is_correct ? 'bg-[#06D6A0]/20 border-2 border-[#06D6A0]' : 'bg-[#EE6C4D]/10 border-2 border-[#EE6C4D]/50'}`}>
+          <div className={`mb-3 flex items-center gap-2 text-sm ${result.is_correct ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
             {result.is_correct ? (
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-6 h-6 text-[#06D6A0]" />
-                <div>
-                  <span className="text-[#06D6A0] font-bold text-lg">Amazing! +₹{result.points_earned}</span>
-                  <p className="text-[#06D6A0]/80 text-sm">Great job! You got it right! 🎉</p>
-                </div>
-              </div>
+              <>
+                <CheckCircle className="w-4 h-4" />
+                <span className="font-bold">+₹{result.points_earned}</span>
+              </>
             ) : (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <XCircle className="w-6 h-6 text-[#EE6C4D]" />
-                  <div>
-                    <span className="text-[#EE6C4D] font-bold">Not quite right</span>
-                    <p className="text-[#3D5A80] text-sm">Keep learning! You'll get it next time! 📚</p>
-                  </div>
-                </div>
-                {result.correct_answer && (
-                  <div className="mt-2 p-2 bg-[#06D6A0]/20 rounded-lg border border-[#06D6A0]">
-                    <p className="text-sm text-[#1D3557]">
-                      <span className="font-bold text-[#06D6A0]">✓ Correct answer:</span>{' '}
-                      {Array.isArray(result.correct_answer) ? result.correct_answer.join(', ') : result.correct_answer}
-                    </p>
-                  </div>
-                )}
-              </div>
+              <>
+                <XCircle className="w-4 h-4" />
+                <span className="font-medium">0 points</span>
+              </>
             )}
           </div>
         )}
