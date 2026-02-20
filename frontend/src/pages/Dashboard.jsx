@@ -110,7 +110,7 @@ export default function Dashboard({ user, setUser }) {
   const grade = user?.grade ?? 3;
   const getInvestmentItem = () => {
     if (grade === 0) return null; // No investments for Kindergarten
-    if (grade <= 2) return { icon: TrendingUp, label: 'Garden', path: '/garden', color: '#228B22', emoji: '🌻' };
+    if (grade <= 2) return { icon: TrendingUp, label: 'My Garden', path: '/garden', color: '#228B22', emoji: '🌻' };
     return { icon: TrendingUp, label: 'Stocks', path: '/stock-market', color: '#10B981', emoji: '📈' };
   };
   
@@ -342,7 +342,7 @@ export default function Dashboard({ user, setUser }) {
           <div className="card-playful p-4 flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                💰 My Money Jars
+                💰 My Money
               </h2>
               <Link to="/wallet" className="text-sm text-[#3D5A80] hover:text-[#1D3557]">
                 <ChevronRight className="w-4 h-4" />
