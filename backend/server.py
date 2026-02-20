@@ -78,6 +78,7 @@ from routes import content as content_routes
 from routes import student as student_routes
 from routes import lending as lending_routes
 from routes import glossary as glossary_routes
+from routes import repository as repository_routes
 
 # Initialize database in modules
 auth_service.init_db(db)
@@ -100,6 +101,7 @@ content_routes.init_db(db)
 student_routes.init_db(db)
 lending_routes.init_db(db)
 glossary_routes.init_db(db)
+repository_routes.init_db(db)
 
 # Include modular routers
 api_router.include_router(auth_routes.router)
@@ -122,6 +124,7 @@ api_router.include_router(content_routes.router)
 api_router.include_router(student_routes.router)
 api_router.include_router(lending_routes.router)
 api_router.include_router(glossary_routes.router)
+api_router.include_router(repository_routes.router)
 
 # ============== MODELS ==============
 
