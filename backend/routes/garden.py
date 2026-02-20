@@ -182,21 +182,34 @@ async def plant_seed(data: PlantSeedRequest, request: Request):
     plot = await db.farm_plots.find_one({"plot_id": data.plot_id, "user_id": user["user_id"]})
     if not plot:
         raise HTTPException(status_code=404, detail="Plot not found")
-    if plot.get("status") != "empty":
-        raise HTTPException(status_code=400, detail="Plot is not empty")
+    if plot.get("status") not in ["empty", "dead"]:
+        raise HTTPException(status_code=400, detail="Plot is not available for planting")
     
     seed = await db.investment_plants.find_one({"plant_id": data.plant_id, "is_active": True})
     if not seed:
         raise HTTPException(status_code=404, detail="Seed not found")
     
-    spending_acc = await db.wallet_accounts.find_one({"user_id": user["user_id"], "account_type": "spending"})
-    if not spending_acc or spending_acc.get("balance", 0) < seed["seed_cost"]:
-        raise HTTPException(status_code=400, detail=f"Need ₹{seed['seed_cost']} to buy this seed")
+    # Use investing (gardening) account for seed purchases
+    gardening_acc = await db.wallet_accounts.find_one({"user_id": user["user_id"], "account_type": "investing"})
+    if not gardening_acc or gardening_acc.get("balance", 0) < seed["seed_cost"]:
+        raise HTTPException(status_code=400, detail=f"Need ₹{seed['seed_cost']} in your Garden Money to buy this seed")
     
     await db.wallet_accounts.update_one(
-        {"user_id": user["user_id"], "account_type": "spending"},
+        {"user_id": user["user_id"], "account_type": "investing"},
         {"$inc": {"balance": -seed["seed_cost"]}}
     )
+    
+    # Record transaction
+    await db.transactions.insert_one({
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "from_account": "investing",
+        "to_account": None,
+        "amount": -seed["seed_cost"],
+        "transaction_type": "garden_seed_purchase",
+        "description": f"Bought {seed['name']} seed",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
     
     await db.transactions.insert_one({
         "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
