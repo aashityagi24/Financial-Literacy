@@ -136,7 +136,7 @@ export default function Dashboard({ user, setUser }) {
   // Grade-based account configuration
   const getAccountColors = () => {
     const baseAccounts = {
-      spending: { bg: 'bg-gradient-to-br from-[#EE6C4D] to-[#FF8A6C]', icon: '💳', description: 'Money to buy things' },
+      spending: { bg: 'bg-gradient-to-br from-[#EE6C4D] to-[#FF8A6C]', icon: '💳', label: 'Wallet', description: 'Money to buy things' },
       savings: { bg: 'bg-gradient-to-br from-[#06D6A0] to-[#42E8B3]', icon: '🐷', label: 'Piggy Bank', description: 'Money saved for later' },
       gifting: { bg: 'bg-gradient-to-br from-[#9B5DE5] to-[#B47EE5]', icon: '❤️', description: 'Money to help others' },
     };
