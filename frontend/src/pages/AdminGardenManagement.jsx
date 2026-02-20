@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
-import { ChevronLeft, Plus, Edit2, Trash2, LogOut, User } from 'lucide-react';
+import { ChevronLeft, Plus, Edit2, Trash2, LogOut, User, GraduationCap } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -20,6 +20,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const GRADE_OPTIONS = [
+  { value: 0, label: 'Kindergarten' },
+  { value: 1, label: '1st Grade' },
+  { value: 2, label: '2nd Grade' },
+  { value: 3, label: '3rd Grade' },
+  { value: 4, label: '4th Grade' },
+  { value: 5, label: '5th Grade' },
+];
 
 export default function AdminGardenManagement({ user }) {
   const navigate = useNavigate();
@@ -38,6 +47,8 @@ export default function AdminGardenManagement({ user }) {
     base_sell_price: 5,
     price_fluctuation_percent: 10,
     water_frequency_hours: 24,
+    min_grade: 1,
+    max_grade: 2,
     is_active: true
   });
   
@@ -73,6 +84,8 @@ export default function AdminGardenManagement({ user }) {
       base_sell_price: 5,
       price_fluctuation_percent: 10,
       water_frequency_hours: 24,
+      min_grade: 1,
+      max_grade: 2,
       is_active: true
     });
     setEditingPlant(null);
@@ -91,6 +104,8 @@ export default function AdminGardenManagement({ user }) {
       base_sell_price: plant.base_sell_price,
       price_fluctuation_percent: plant.price_fluctuation_percent || 10,
       water_frequency_hours: plant.water_frequency_hours || 24,
+      min_grade: plant.min_grade ?? 1,
+      max_grade: plant.max_grade ?? 2,
       is_active: plant.is_active
     });
     setDialogOpen(true);
@@ -99,6 +114,11 @@ export default function AdminGardenManagement({ user }) {
   const handleSubmit = async () => {
     if (!formData.name || !formData.seed_cost || !formData.base_sell_price) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+    
+    if (formData.min_grade > formData.max_grade) {
+      toast.error('Minimum grade cannot be higher than maximum grade');
       return;
     }
     
@@ -137,6 +157,10 @@ export default function AdminGardenManagement({ user }) {
     } catch (error) {
       navigate('/');
     }
+  };
+  
+  const getGradeLabel = (grade) => {
+    return GRADE_OPTIONS.find(g => g.value === grade)?.label || `Grade ${grade}`;
   };
   
   const EMOJI_OPTIONS = ['🌱', '🍅', '🥕', '🌻', '🌽', '🥬', '🍓', '🍆', '🥒', '🌶️', '🫑', '🧅', '🥔', '🌾', '🌷'];
@@ -182,10 +206,11 @@ export default function AdminGardenManagement({ user }) {
       <main className="container mx-auto px-4 py-6">
         {/* Info Banner */}
         <div className="card-playful p-4 mb-6 bg-[#F0FFF0]">
-          <h2 className="font-bold text-[#228B22] mb-2">🌻 Money Garden Plants (Grade 1-2)</h2>
+          <h2 className="font-bold text-[#228B22] mb-2">🌻 Money Garden Plants</h2>
           <p className="text-sm text-[#3D5A80]">
             Configure seeds that children can plant in their farm. Set growth time, harvest yields, 
-            and market prices. Children will learn about investments through growing plants!
+            market prices, and <strong>which grades can see each plant</strong>. Children will learn about 
+            growing and selling through this feature!
           </p>
         </div>
         
@@ -240,6 +265,45 @@ export default function AdminGardenManagement({ user }) {
                 />
               </div>
               
+              {/* Grade Visibility - NEW */}
+              <div className="bg-[#E8E4F0] rounded-xl p-4">
+                <label className="block text-sm font-bold text-[#845EC2] mb-2 flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4" /> Grade Visibility *
+                </label>
+                <p className="text-xs text-[#3D5A80] mb-3">Select which grades can see and buy this plant:</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-[#3D5A80] mb-1">From Grade</label>
+                    <Select value={formData.min_grade.toString()} onValueChange={(v) => setFormData({...formData, min_grade: parseInt(v)})}>
+                      <SelectTrigger className="border-2 border-[#845EC2]/30 bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {GRADE_OPTIONS.map(grade => (
+                          <SelectItem key={grade.value} value={grade.value.toString()}>{grade.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-[#3D5A80] mb-1">To Grade</label>
+                    <Select value={formData.max_grade.toString()} onValueChange={(v) => setFormData({...formData, max_grade: parseInt(v)})}>
+                      <SelectTrigger className="border-2 border-[#845EC2]/30 bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {GRADE_OPTIONS.map(grade => (
+                          <SelectItem key={grade.value} value={grade.value.toString()}>{grade.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <p className="text-xs text-[#845EC2] mt-2 font-medium">
+                  Visible to: {getGradeLabel(formData.min_grade)} → {getGradeLabel(formData.max_grade)}
+                </p>
+              </div>
+              
               {/* Costs & Growth */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -247,16 +311,19 @@ export default function AdminGardenManagement({ user }) {
                   <Input 
                     type="number"
                     min="1"
+                    step="1"
                     value={formData.seed_cost}
-                    onChange={(e) => setFormData({...formData, seed_cost: parseFloat(e.target.value) || 0})}
+                    onChange={(e) => setFormData({...formData, seed_cost: Math.round(parseFloat(e.target.value)) || 0})}
                     className="border-2 border-[#228B22]/30"
                   />
+                  <p className="text-xs text-[#3D5A80] mt-1">Whole numbers only</p>
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-[#1D3557] mb-1">Growth Time (days) *</label>
                   <Input 
                     type="number"
                     min="1"
+                    step="1"
                     value={formData.growth_days}
                     onChange={(e) => setFormData({...formData, growth_days: parseInt(e.target.value) || 1})}
                     className="border-2 border-[#228B22]/30"
@@ -271,10 +338,12 @@ export default function AdminGardenManagement({ user }) {
                   <Input 
                     type="number"
                     min="1"
+                    step="1"
                     value={formData.harvest_yield}
                     onChange={(e) => setFormData({...formData, harvest_yield: parseInt(e.target.value) || 1})}
                     className="border-2 border-[#228B22]/30"
                   />
+                  <p className="text-xs text-[#3D5A80] mt-1">Whole numbers only</p>
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-[#1D3557] mb-1">Yield Unit *</label>
@@ -294,27 +363,29 @@ export default function AdminGardenManagement({ user }) {
               {/* Market Prices */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-[#1D3557] mb-1">Sell Price (₹/unit) *</label>
+                  <label className="block text-sm font-bold text-[#1D3557] mb-1">Sell Price (₹ each) *</label>
                   <Input 
                     type="number"
-                    min="0.1"
-                    step="0.1"
+                    min="1"
+                    step="1"
                     value={formData.base_sell_price}
-                    onChange={(e) => setFormData({...formData, base_sell_price: parseFloat(e.target.value) || 0})}
+                    onChange={(e) => setFormData({...formData, base_sell_price: Math.round(parseFloat(e.target.value)) || 0})}
                     className="border-2 border-[#228B22]/30"
                   />
+                  <p className="text-xs text-[#3D5A80] mt-1">Whole numbers only</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-[#1D3557] mb-1">Price Fluctuation (±%)</label>
+                  <label className="block text-sm font-bold text-[#1D3557] mb-1">Price Change (daily)</label>
                   <Input 
                     type="number"
                     min="0"
-                    max="50"
+                    max="10"
+                    step="1"
                     value={formData.price_fluctuation_percent}
-                    onChange={(e) => setFormData({...formData, price_fluctuation_percent: parseFloat(e.target.value) || 0})}
+                    onChange={(e) => setFormData({...formData, price_fluctuation_percent: parseInt(e.target.value) || 0})}
                     className="border-2 border-[#228B22]/30"
                   />
-                  <p className="text-xs text-[#3D5A80] mt-1">Market price can vary ±{formData.price_fluctuation_percent}% daily</p>
+                  <p className="text-xs text-[#3D5A80] mt-1">Market price can change by ₹{formData.price_fluctuation_percent} daily</p>
                 </div>
               </div>
               
@@ -324,6 +395,7 @@ export default function AdminGardenManagement({ user }) {
                 <Input 
                   type="number"
                   min="1"
+                  step="1"
                   value={formData.water_frequency_hours}
                   onChange={(e) => setFormData({...formData, water_frequency_hours: parseInt(e.target.value) || 24})}
                   className="border-2 border-[#228B22]/30"
@@ -331,13 +403,13 @@ export default function AdminGardenManagement({ user }) {
                 <p className="text-xs text-[#3D5A80] mt-1">Plant needs water every {formData.water_frequency_hours} hours or it will wilt</p>
               </div>
               
-              {/* Profit Preview */}
+              {/* Earnings Preview - Changed from "Profit" */}
               <div className="bg-[#F0FFF0] rounded-xl p-3">
-                <p className="text-sm font-bold text-[#228B22]">💰 Profit Preview:</p>
+                <p className="text-sm font-bold text-[#228B22]">💰 Earnings Preview:</p>
                 <p className="text-xs text-[#3D5A80]">
-                  Cost: ₹{formData.seed_cost} → Harvest: {formData.harvest_yield} {formData.yield_unit} → 
-                  Sell: ₹{(formData.harvest_yield * formData.base_sell_price).toFixed(2)} → 
-                  <span className="font-bold text-[#06D6A0]"> Profit: ₹{((formData.harvest_yield * formData.base_sell_price) - formData.seed_cost).toFixed(2)}</span>
+                  Cost: ₹{Math.round(formData.seed_cost)} → Harvest: {formData.harvest_yield} {formData.yield_unit} → 
+                  Sell: ₹{Math.round(formData.harvest_yield * formData.base_sell_price)} → 
+                  <span className="font-bold text-[#06D6A0]"> Earn: ₹{Math.round((formData.harvest_yield * formData.base_sell_price) - formData.seed_cost)}</span>
                 </p>
               </div>
               
@@ -351,7 +423,7 @@ export default function AdminGardenManagement({ user }) {
         {/* Plants List */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {plants.map((plant) => {
-            const profit = (plant.harvest_yield * plant.base_sell_price) - plant.seed_cost;
+            const earnings = Math.round((plant.harvest_yield * plant.base_sell_price) - plant.seed_cost);
             return (
               <div key={plant.plant_id} className="card-playful p-4 bg-white">
                 <div className="flex items-start justify-between">
@@ -372,14 +444,20 @@ export default function AdminGardenManagement({ user }) {
                   </div>
                 </div>
                 
+                {/* Grade Visibility Badge */}
+                <div className="mt-2 inline-flex items-center gap-1 bg-[#845EC2]/20 text-[#845EC2] px-2 py-1 rounded-lg text-xs font-bold">
+                  <GraduationCap className="w-3 h-3" />
+                  {getGradeLabel(plant.min_grade ?? 1)} → {getGradeLabel(plant.max_grade ?? 2)}
+                </div>
+                
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                   <div className="bg-[#FFD23F]/20 rounded-lg p-2">
                     <span className="text-[#3D5A80]">Seed Cost:</span>
-                    <span className="font-bold text-[#1D3557] ml-1">₹{plant.seed_cost}</span>
+                    <span className="font-bold text-[#1D3557] ml-1">₹{Math.round(plant.seed_cost)}</span>
                   </div>
                   <div className="bg-[#06D6A0]/20 rounded-lg p-2">
                     <span className="text-[#3D5A80]">Sell Price:</span>
-                    <span className="font-bold text-[#1D3557] ml-1">₹{plant.base_sell_price}/{plant.yield_unit}</span>
+                    <span className="font-bold text-[#1D3557] ml-1">₹{Math.round(plant.base_sell_price)} each</span>
                   </div>
                   <div className="bg-[#3D5A80]/10 rounded-lg p-2">
                     <span className="text-[#3D5A80]">Growth:</span>
@@ -392,11 +470,10 @@ export default function AdminGardenManagement({ user }) {
                 </div>
                 
                 <div className="mt-2 bg-[#F0FFF0] rounded-lg p-2 text-xs">
-                  <span className="text-[#228B22]">💰 Potential Profit:</span>
-                  <span className={`font-bold ml-1 ${profit >= 0 ? 'text-[#06D6A0]' : 'text-red-500'}`}>
-                    ₹{profit.toFixed(2)}
+                  <span className="text-[#228B22]">💰 Can Earn:</span>
+                  <span className={`font-bold ml-1 ${earnings >= 0 ? 'text-[#06D6A0]' : 'text-red-500'}`}>
+                    ₹{earnings}
                   </span>
-                  <span className="text-[#3D5A80] ml-2">(±{plant.price_fluctuation_percent}% market)</span>
                 </div>
                 
                 <div className="mt-2 text-xs text-[#3D5A80]">
