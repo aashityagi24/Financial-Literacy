@@ -620,14 +620,7 @@ export default function TeacherDashboard({ user }) {
               </Dialog>
             )}
             
-            {/* Info message for school-connected teachers */}
-            {user?.school_id && (
-              <div className="bg-[#E0FBFC] border-2 border-[#3D5A80] rounded-xl p-4 mb-6 text-center">
-                <p className="text-[#1D3557] text-sm">
-                  Classrooms are managed by your school ({user?.school_name || 'School'}).
-                </p>
-              </div>
-            )}
+            {/* Info message for school-connected teachers - removed per user request */}
             
             {/* Classrooms List */}
             <h2 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>Your Classrooms</h2>
