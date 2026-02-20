@@ -484,7 +484,7 @@ async def submit_quest(quest_id: str, request: Request):
             q_id = q.get("question_id")
             user_answer = answers.get(q_id)
             correct_answer = q.get("correct_answer")
-            is_correct = user_answer == correct_answer
+            is_correct = is_answer_correct(q, user_answer, correct_answer)
             
             question_results.append({
                 "question_id": q_id,
