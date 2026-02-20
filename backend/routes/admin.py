@@ -543,13 +543,18 @@ async def admin_create_garden_plant(request: Request):
     await db.investment_plants.insert_one({
         "plant_id": plant_id,
         "name": body.get("name", "New Plant"),
+        "emoji": body.get("emoji", "🌱"),
         "description": body.get("description", ""),
-        "seed_cost": body.get("seed_cost", 10),
-        "growth_days": body.get("growth_days", 7),
-        "harvest_value": body.get("harvest_value", 20),
-        "image_url": body.get("image_url"),
-        "min_grade": body.get("min_grade", 0),
-        "max_grade": body.get("max_grade", 2)
+        "seed_cost": int(body.get("seed_cost", 10)),
+        "growth_days": int(body.get("growth_days", 7)),
+        "harvest_yield": int(body.get("harvest_yield", 10)),
+        "yield_unit": body.get("yield_unit", "pieces"),
+        "base_sell_price": int(body.get("base_sell_price", 5)),
+        "price_fluctuation_percent": int(body.get("price_fluctuation_percent", 10)),
+        "water_frequency_hours": int(body.get("water_frequency_hours", 24)),
+        "min_grade": int(body.get("min_grade", 1)),
+        "max_grade": int(body.get("max_grade", 2)),
+        "is_active": body.get("is_active", True)
     })
     return {"message": "Plant created", "plant_id": plant_id}
 
@@ -561,8 +566,18 @@ async def admin_update_garden_plant(plant_id: str, request: Request):
     await require_admin(request)
     body = await request.json()
     
-    fields = ["name", "description", "seed_cost", "growth_days", "harvest_value", "image_url", "min_grade", "max_grade"]
-    update = {k: v for k, v in body.items() if k in fields}
+    fields = ["name", "emoji", "description", "seed_cost", "growth_days", "harvest_yield", 
+              "yield_unit", "base_sell_price", "price_fluctuation_percent", "water_frequency_hours",
+              "min_grade", "max_grade", "is_active"]
+    update = {}
+    for k, v in body.items():
+        if k in fields:
+            # Ensure numeric fields are integers
+            if k in ["seed_cost", "growth_days", "harvest_yield", "base_sell_price", 
+                     "price_fluctuation_percent", "water_frequency_hours", "min_grade", "max_grade"]:
+                update[k] = int(v) if v is not None else v
+            else:
+                update[k] = v
     await db.investment_plants.update_one({"plant_id": plant_id}, {"$set": update})
     return {"message": "Plant updated"}
 
