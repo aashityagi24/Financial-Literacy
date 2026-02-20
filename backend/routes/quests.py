@@ -315,6 +315,61 @@ async def submit_quest(quest_id: str, request: Request):
     earned_points = 0
     correct_answers = {}
     
+    # Helper to check if answer is correct based on question type
+    def is_answer_correct(question, user_answer, correct_answer):
+        q_type = question.get("question_type", "mcq")
+        options = question.get("options", [])
+        
+        if not user_answer:
+            return False
+        
+        if q_type == "mcq":
+            # For MCQ: correct_answer is letter (A,B,C,D), user submits option text
+            # Convert user's option text to letter for comparison
+            letter_map = {'A': 0, 'B': 1, 'C': 2, 'D': 3}
+            if correct_answer in letter_map:
+                correct_index = letter_map[correct_answer]
+                correct_text = options[correct_index] if correct_index < len(options) else None
+                return user_answer == correct_text or user_answer == correct_answer
+            else:
+                # If correct_answer is already text, compare directly
+                return user_answer == correct_answer
+        
+        elif q_type == "multi_select":
+            # For multi-select: both should be arrays, compare sorted
+            # correct_answer is letters (["A", "B"]), user submits option texts
+            if not isinstance(correct_answer, list):
+                correct_answer = [correct_answer]
+            if not isinstance(user_answer, list):
+                user_answer = [user_answer]
+            
+            # Convert correct letters to option texts
+            letter_map = {'A': 0, 'B': 1, 'C': 2, 'D': 3}
+            correct_texts = []
+            for letter in correct_answer:
+                if letter in letter_map:
+                    idx = letter_map[letter]
+                    if idx < len(options):
+                        correct_texts.append(options[idx])
+            
+            # Compare sorted lists
+            return sorted(user_answer) == sorted(correct_texts) or sorted(user_answer) == sorted(correct_answer)
+        
+        elif q_type == "true_false":
+            # Direct string comparison
+            return str(user_answer).lower() == str(correct_answer).lower()
+        
+        elif q_type == "value":
+            # Numeric comparison (handle string numbers)
+            try:
+                return float(user_answer) == float(correct_answer)
+            except (ValueError, TypeError):
+                return str(user_answer).strip() == str(correct_answer).strip()
+        
+        else:
+            # Default: direct comparison
+            return user_answer == correct_answer
+    
     for q in quest.get("questions", []):
         q_id = q.get("question_id")
         points = q.get("points", 0)
@@ -322,7 +377,7 @@ async def submit_quest(quest_id: str, request: Request):
         correct_answers[q_id] = q.get("correct_answer")
         
         if q_id in answers:
-            if answers[q_id] == q.get("correct_answer"):
+            if is_answer_correct(q, answers[q_id], q.get("correct_answer")):
                 earned_points += points
     
     # For chores/quests with no questions, use the reward amount
