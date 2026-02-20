@@ -1849,9 +1849,6 @@ export default function TeacherDashboard({ user }) {
                                   <div className="font-medium text-[#1D3557] text-sm flex-1">
                                     Q{idx + 1}: {q.question_text}
                                   </div>
-                                  <div className={`text-lg font-bold ${q.accuracy_rate >= 60 ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
-                                    {q.accuracy_rate}%
-                                  </div>
                                 </div>
                                 
                                 {/* Question Image/PDF if available */}
@@ -1876,22 +1873,6 @@ export default function TeacherDashboard({ user }) {
                                     )}
                                   </div>
                                 )}
-                                
-                                {/* Correct Answer */}
-                                <div className="flex items-center gap-2 mb-2 p-2 bg-[#06D6A0]/10 rounded-lg border border-[#06D6A0]/30">
-                                  <CheckCircle className="w-4 h-4 text-[#06D6A0]" />
-                                  <span className="text-sm text-[#06D6A0] font-medium">
-                                    Correct: {correctAnswerText}
-                                  </span>
-                                </div>
-                                
-                                {/* Progress bar */}
-                                <div className="h-2 bg-[#EE6C4D]/30 rounded-full overflow-hidden">
-                                  <div 
-                                    className="h-full bg-[#06D6A0] rounded-full transition-all"
-                                    style={{ width: `${q.accuracy_rate}%` }}
-                                  />
-                                </div>
                                 
                                 {/* Answer Distribution based on question type */}
                                 {Object.keys(q.answer_distribution || {}).length > 0 && (
