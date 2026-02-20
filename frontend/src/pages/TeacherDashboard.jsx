@@ -1818,57 +1818,118 @@ export default function TeacherDashboard({ user }) {
                           <Target className="w-4 h-4" /> Question Analytics
                         </h4>
                         <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-                          {questResponses.question_analytics.map((q, idx) => (
-                            <div key={q.question_id} className="p-3 rounded-xl border-2 border-[#E0FBFC] bg-white">
-                              <div className="flex items-start justify-between mb-2">
-                                <div className="font-medium text-[#1D3557] text-sm flex-1">
-                                  Q{idx + 1}: {q.question_text}
+                          {questResponses.question_analytics.map((q, idx) => {
+                            // Determine correct answer text
+                            const letterMap = { 0: 'A', 1: 'B', 2: 'C', 3: 'D' };
+                            let correctAnswerText = '';
+                            if (q.question_type === 'mcq' || q.question_type === 'multi_select') {
+                              if (typeof q.correct_answer === 'string' && ['A', 'B', 'C', 'D'].includes(q.correct_answer)) {
+                                const idx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[q.correct_answer];
+                                correctAnswerText = q.options?.[idx] || q.correct_answer;
+                              } else if (typeof q.correct_answer === 'number') {
+                                correctAnswerText = q.options?.[q.correct_answer] || q.correct_answer;
+                              } else if (Array.isArray(q.correct_answer)) {
+                                correctAnswerText = q.correct_answer.map(ca => {
+                                  if (['A', 'B', 'C', 'D'].includes(ca)) {
+                                    const idx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[ca];
+                                    return q.options?.[idx] || ca;
+                                  }
+                                  return typeof ca === 'number' ? q.options?.[ca] : ca;
+                                }).join(', ');
+                              } else {
+                                correctAnswerText = String(q.correct_answer);
+                              }
+                            } else {
+                              correctAnswerText = String(q.correct_answer || '');
+                            }
+                            
+                            return (
+                              <div key={q.question_id} className="p-3 rounded-xl border-2 border-[#E0FBFC] bg-white">
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="font-medium text-[#1D3557] text-sm flex-1">
+                                    Q{idx + 1}: {q.question_text}
+                                  </div>
+                                  <div className={`text-lg font-bold ${q.accuracy_rate >= 60 ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
+                                    {q.accuracy_rate}%
+                                  </div>
                                 </div>
-                                <div className={`text-lg font-bold ${q.accuracy_rate >= 60 ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
-                                  {q.accuracy_rate}%
+                                
+                                {/* Question Image/PDF if available */}
+                                {(q.image_url || q.pdf_url) && (
+                                  <div className="flex gap-2 mb-2">
+                                    {q.image_url && (
+                                      <img 
+                                        src={getAssetUrl(q.image_url)} 
+                                        alt="Question" 
+                                        className="h-16 w-auto rounded border border-[#1D3557]/20 object-cover"
+                                      />
+                                    )}
+                                    {q.pdf_url && (
+                                      <a 
+                                        href={getAssetUrl(q.pdf_url)} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1 text-xs text-[#3D5A80] hover:text-[#1D3557] bg-[#E0FBFC] px-2 py-1 rounded"
+                                      >
+                                        <FileText className="w-3 h-3" /> PDF
+                                      </a>
+                                    )}
+                                  </div>
+                                )}
+                                
+                                {/* Correct Answer */}
+                                <div className="flex items-center gap-2 mb-2 p-2 bg-[#06D6A0]/10 rounded-lg border border-[#06D6A0]/30">
+                                  <CheckCircle className="w-4 h-4 text-[#06D6A0]" />
+                                  <span className="text-sm text-[#06D6A0] font-medium">
+                                    Correct: {correctAnswerText}
+                                  </span>
                                 </div>
-                              </div>
-                              
-                              <div className="flex items-center gap-4 text-xs text-[#3D5A80] mb-2">
-                                <span className="flex items-center gap-1">
-                                  <CheckCircle className="w-3 h-3 text-[#06D6A0]" /> {q.correct_count} correct
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <XCircle className="w-3 h-3 text-[#EE6C4D]" /> {q.total_attempts - q.correct_count} incorrect
-                                </span>
-                              </div>
-                              
-                              {/* Progress bar */}
-                              <div className="h-2 bg-[#EE6C4D]/30 rounded-full overflow-hidden">
-                                <div 
-                                  className="h-full bg-[#06D6A0] rounded-full transition-all"
-                                  style={{ width: `${q.accuracy_rate}%` }}
-                                />
-                              </div>
-                              
-                              {/* Answer distribution for MCQ */}
-                              {Object.keys(q.answer_distribution).length > 0 && q.options && (
-                                <div className="mt-2 space-y-1">
-                                  <div className="text-xs text-[#3D5A80] font-medium">Answer Distribution:</div>
-                                  {q.options.map((opt, optIdx) => {
-                                    const count = q.answer_distribution[String(optIdx)] || 0;
-                                    const percentage = q.total_attempts > 0 ? (count / q.total_attempts) * 100 : 0;
-                                    const isCorrect = q.question_type === 'multi_select'
-                                      ? (q.correct_answer || []).includes(optIdx)
-                                      : q.correct_answer === optIdx;
-                                    
-                                    return (
-                                      <div key={optIdx} className="flex items-center gap-2 text-xs">
-                                        <div className={`w-3 h-3 rounded ${isCorrect ? 'bg-[#06D6A0]' : 'bg-[#3D5A80]/30'}`}></div>
-                                        <div className="flex-1 truncate">{opt}</div>
-                                        <div className="text-[#3D5A80]">{count} ({percentage.toFixed(0)}%)</div>
-                                      </div>
-                                    );
-                                  })}
+                                
+                                {/* Progress bar */}
+                                <div className="h-2 bg-[#EE6C4D]/30 rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-[#06D6A0] rounded-full transition-all"
+                                    style={{ width: `${q.accuracy_rate}%` }}
+                                  />
                                 </div>
-                              )}
-                            </div>
-                          ))}
+                                
+                                {/* Answer distribution for MCQ */}
+                                {Object.keys(q.answer_distribution).length > 0 && q.options && (
+                                  <div className="mt-2 space-y-1">
+                                    <div className="text-xs text-[#3D5A80] font-medium">Answer Distribution:</div>
+                                    {q.options.map((opt, optIdx) => {
+                                      const count = q.answer_distribution[opt] || q.answer_distribution[String(optIdx)] || 0;
+                                      const percentage = q.total_attempts > 0 ? (count / q.total_attempts) * 100 : 0;
+                                      
+                                      // Check if this option is the correct answer
+                                      let isCorrectOption = false;
+                                      if (typeof q.correct_answer === 'string' && ['A', 'B', 'C', 'D'].includes(q.correct_answer)) {
+                                        const correctIdx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[q.correct_answer];
+                                        isCorrectOption = optIdx === correctIdx;
+                                      } else if (typeof q.correct_answer === 'number') {
+                                        isCorrectOption = optIdx === q.correct_answer;
+                                      } else if (Array.isArray(q.correct_answer)) {
+                                        isCorrectOption = q.correct_answer.includes(optIdx) || 
+                                          q.correct_answer.includes(letterMap[optIdx]);
+                                      }
+                                      
+                                      return (
+                                        <div key={optIdx} className="flex items-center gap-2 text-xs">
+                                          {isCorrectOption ? (
+                                            <CheckCircle className="w-3 h-3 text-[#06D6A0]" />
+                                          ) : (
+                                            <div className="w-3 h-3 rounded-full bg-[#3D5A80]/20"></div>
+                                          )}
+                                          <div className={`flex-1 truncate ${isCorrectOption ? 'text-[#06D6A0] font-medium' : ''}`}>{opt}</div>
+                                          <div className="text-[#3D5A80]">{count} ({percentage.toFixed(0)}%)</div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </>
                     )}
