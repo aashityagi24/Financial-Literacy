@@ -240,6 +240,100 @@ async def reward_students(classroom_id: str, reward: ClassroomReward, request: R
     
     return {"message": f"Rewarded {len(rewarded)} students", "students_rewarded": rewarded}
 
+@router.post("/reward-penalty")
+async def create_teacher_reward_penalty(data: TeacherRewardPenalty, request: Request):
+    """Give instant reward or penalty to student"""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    
+    # Check if student exists
+    student = await db.users.find_one({"user_id": data.student_id, "role": "child"})
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    # Calculate amount (negative for penalty)
+    amount = data.amount if data.category == "reward" else -data.amount
+    
+    # Update student's wallet
+    await db.wallet_accounts.update_one(
+        {"user_id": data.student_id, "account_type": "spending"},
+        {"$inc": {"balance": amount}}
+    )
+    
+    trans_type = "teacher_reward" if data.category == "reward" else "teacher_penalty"
+    
+    # Create transaction record
+    await db.transactions.insert_one({
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": data.student_id,
+        "to_account": "spending",
+        "amount": amount,
+        "transaction_type": trans_type,
+        "description": f"{'Reward' if data.category == 'reward' else 'Penalty'} from {teacher.get('name', 'Teacher')}: {data.title}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Create record for teacher's view
+    record_id = f"rp_{uuid.uuid4().hex[:12]}"
+    await db.teacher_rewards_penalties.insert_one({
+        "record_id": record_id,
+        "teacher_id": teacher["user_id"],
+        "student_id": data.student_id,
+        "student_name": student.get("name", "Student"),
+        "amount": abs(data.amount),
+        "category": data.category,
+        "title": data.title,
+        "description": data.description,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Create notification for student
+    emoji = "🌟" if data.category == "reward" else "⚠️"
+    await db.notifications.insert_one({
+        "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+        "user_id": data.student_id,
+        "type": data.category,
+        "message": f"{emoji} {'Reward' if data.category == 'reward' else 'Penalty'} from {teacher.get('name', 'Teacher')}: {data.title} (₹{abs(amount)})",
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": f"{'Reward' if data.category == 'reward' else 'Penalty'} applied", "record_id": record_id}
+
+@router.get("/reward-penalty")
+async def get_teacher_reward_penalty(request: Request):
+    """Get teacher's reward/penalty history"""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    
+    records = await db.teacher_rewards_penalties.find(
+        {"teacher_id": teacher["user_id"]}
+    ).sort("created_at", -1).to_list(100)
+    
+    for record in records:
+        record.pop("_id", None)
+    
+    return records
+
+@router.delete("/reward-penalty/{record_id}")
+async def delete_teacher_reward_penalty(record_id: str, request: Request):
+    """Delete a reward/penalty record (doesn't reverse the transaction)"""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    
+    result = await db.teacher_rewards_penalties.delete_one({
+        "record_id": record_id,
+        "teacher_id": teacher["user_id"]
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    return {"message": "Record deleted"}
+
 @router.post("/challenges")
 async def create_challenge(challenge: ChallengeCreate, request: Request):
     """Create a classroom challenge"""
