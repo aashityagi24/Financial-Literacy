@@ -374,8 +374,9 @@ async def sell_produce(request: Request, plant_id: str, quantity: int):
             {"$set": {"quantity": new_quantity}}
         )
     
+    # Add earnings to investing (gardening) account
     await db.wallet_accounts.update_one(
-        {"user_id": user["user_id"], "account_type": "spending"},
+        {"user_id": user["user_id"], "account_type": "investing"},
         {"$inc": {"balance": total_earnings}}
     )
     
@@ -386,7 +387,7 @@ async def sell_produce(request: Request, plant_id: str, quantity: int):
         "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
         "user_id": user["user_id"],
         "from_account": None,
-        "to_account": "spending",
+        "to_account": "investing",
         "amount": total_earnings,
         "transaction_type": "garden_sell",
         "description": f"Sold {quantity} {plant_name} at market",
