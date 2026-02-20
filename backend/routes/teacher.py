@@ -772,9 +772,18 @@ async def update_teacher_quest(quest_id: str, request: Request):
     if "questions" in update:
         questions = update["questions"]
         if questions:
-            update["total_points"] = sum(q.get("points", 0) for q in questions)
+            total = sum(q.get("points", 0) for q in questions)
+            update["total_points"] = total
+            # Keep reward_amount in sync with total_points
+            update["reward_amount"] = total
+            update["reward_coins"] = total
         elif "reward_amount" in update:
             update["total_points"] = update["reward_amount"]
+            update["reward_coins"] = update["reward_amount"]
+    elif "reward_amount" in update:
+        # If only reward_amount is updated (no questions), sync total_points
+        update["total_points"] = update["reward_amount"]
+        update["reward_coins"] = update["reward_amount"]
     
     result = await db.new_quests.update_one(
         {"quest_id": quest_id, "creator_id": teacher["user_id"]},
