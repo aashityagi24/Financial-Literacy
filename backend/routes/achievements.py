@@ -288,8 +288,8 @@ FIRST_TIME_BADGES = [
     },
     {
         "achievement_id": "badge_first_stock_profit",
-        "name": "Profit Pro",
-        "description": "Made your first profit from selling stocks!",
+        "name": "Stock Star",
+        "description": "Made money from selling stocks!",
         "icon": "💰",
         "category": "investing",
         "trigger": "stock_profit",
@@ -298,7 +298,7 @@ FIRST_TIME_BADGES = [
     {
         "achievement_id": "badge_first_garden_profit",
         "name": "Harvest Hero",
-        "description": "Made your first profit from selling plants!",
+        "description": "Earned coins from selling your crops!",
         "icon": "🌻",
         "category": "investing",
         "trigger": "garden_profit",
