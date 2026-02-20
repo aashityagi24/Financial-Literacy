@@ -220,6 +220,16 @@ export default function TeacherDashboard({ user }) {
       return;
     }
     
+    if (!rewardForm.reason.trim()) {
+      toast.error(`Please provide a reason for the ${rewardForm.category}`);
+      return;
+    }
+    
+    if (!rewardForm.amount || rewardForm.amount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    
     const isReward = rewardForm.category === 'reward';
     
     try {
