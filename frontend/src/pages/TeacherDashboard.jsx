@@ -719,7 +719,14 @@ export default function TeacherDashboard({ user }) {
                     </DialogContent>
                   </Dialog>
                   
-                  <Dialog open={showCreateQuest} onOpenChange={(open) => { setShowCreateQuest(open); if (!open) resetQuestForm(); }}>
+                  <Dialog open={showCreateQuest} onOpenChange={(open) => { 
+                    setShowCreateQuest(open); 
+                    if (!open) resetQuestForm(); 
+                    // Auto-set classroom_id when opening the dialog
+                    if (open && selectedClassroom) {
+                      setQuestForm(prev => ({ ...prev, classroom_id: selectedClassroom }));
+                    }
+                  }}>
                     <DialogTrigger asChild>
                       <button className="btn-secondary flex-1 py-3 flex items-center justify-center gap-2" data-testid="create-quest-btn">
                         <Target className="w-5 h-5" /> Create Quest
@@ -730,24 +737,15 @@ export default function TeacherDashboard({ user }) {
                         <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{editingQuest ? 'Edit Quest' : 'Create Quest'}</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 mt-4">
-                        {/* Classroom Selection */}
-                        <div>
-                          <label className="text-sm font-bold text-[#1D3557] mb-1 block">Select Classroom *</label>
-                          <select
-                            value={questForm.classroom_id}
-                            onChange={(e) => setQuestForm({...questForm, classroom_id: e.target.value})}
-                            className="w-full px-3 py-2 border-3 border-[#1D3557] rounded-lg bg-white text-[#1D3557] focus:ring-2 focus:ring-[#FFD23F]"
-                            data-testid="quest-classroom-select"
-                          >
-                            <option value="">-- Select a classroom --</option>
-                            {(dashboard?.classrooms || []).map(classroom => (
-                              <option key={classroom.classroom_id} value={classroom.classroom_id}>
-                                {classroom.name} (Grade {classroom.grade_level}) - {classroom.student_count || 0} students
-                              </option>
-                            ))}
-                          </select>
-                          <p className="text-xs text-[#3D5A80] mt-1">Only students in this classroom will see this quest</p>
-                        </div>
+                        {/* Show current classroom info instead of selection */}
+                        {classroomDetails && (
+                          <div className="bg-[#E0FBFC] rounded-lg p-3 border border-[#3D5A80]/20">
+                            <p className="text-sm text-[#3D5A80]">
+                              Creating quest for: <span className="font-bold text-[#1D3557]">{classroomDetails.classroom.name}</span>
+                              {' '}({gradeLabels[classroomDetails.classroom.grade_level]})
+                            </p>
+                          </div>
+                        )}
                         
                         <Input 
                           placeholder="Quest Title *" 
