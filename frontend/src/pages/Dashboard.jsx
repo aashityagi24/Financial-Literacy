@@ -125,7 +125,7 @@ export default function Dashboard({ user, setUser }) {
   
   const navItems = [
     { icon: BookOpen, label: 'Learn', path: '/learn', color: '#FFD23F' },
-    { icon: Wallet, label: 'Wallet', path: '/wallet', color: '#3D5A80' },
+    { icon: Wallet, label: 'My Money', path: '/wallet', color: '#3D5A80' },
     { icon: Store, label: 'Store', path: '/store', color: '#EE6C4D' },
     investmentItem,
     { icon: Target, label: 'Quests', path: '/quests', color: '#9B5DE5' },
