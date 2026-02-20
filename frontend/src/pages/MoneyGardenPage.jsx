@@ -654,7 +654,13 @@ export default function MoneyGardenPage({ user }) {
                         Takes {seed.growth_days} days to grow
                       </p>
                       <p className="text-sm text-[#3D5A80]">
-                        You get {seed.harvest_yield} {seed.yield_unit} and can earn <span className="font-bold text-[#06D6A0]">₹{totalEarnings}</span>
+                        You get {seed.harvest_yield} {seed.yield_unit}
+                        {seed.harvest_yield > 1 && user?.grade_level <= 1 ? (
+                          <> ({formatMathDisplay(seed.harvest_yield, Math.round(seed.base_sell_price)).expression})</>
+                        ) : seed.harvest_yield > 1 ? (
+                          <> ({seed.harvest_yield} × ₹{Math.round(seed.base_sell_price)})</>
+                        ) : null}
+                        {' '}= <span className="font-bold text-[#06D6A0]">₹{totalEarnings}</span>
                       </p>
                     </div>
                     {isSelected && <span className="text-2xl">✓</span>}
