@@ -20,23 +20,17 @@ def get_db():
 router = APIRouter(tags=["achievements"])
 
 async def get_all_badges_with_user_status(db, user_id: str):
-    """Helper to get all badges with user's earned status"""
-    # First, try to get badges from database
+    """Helper to get all badges with user's earned status - ONLY admin-created badges"""
+    # Get badges from database (only admin-created ones)
     db_badges = await db.achievements.find({}, {"_id": 0}).to_list(100)
     
-    logger.warning(f"[BADGES] Found {len(db_badges)} badges in DB")
+    logger.warning(f"[BADGES] Found {len(db_badges)} admin-created badges in DB")
     for b in db_badges[:3]:
         logger.warning(f"[BADGES] Badge: {b.get('name')}, image_url={b.get('image_url', 'NOT SET')}")
     
-    # If no badges in DB, use the default ones and seed them
+    # If no badges in DB, return empty list (admin needs to create badges)
     if not db_badges:
-        for badge in FIRST_TIME_BADGES:
-            await db.achievements.update_one(
-                {"achievement_id": badge["achievement_id"]},
-                {"$set": badge},
-                upsert=True
-            )
-        db_badges = FIRST_TIME_BADGES.copy()
+        return []
     
     # Get user's earned badges
     earned = await db.user_achievements.find(
