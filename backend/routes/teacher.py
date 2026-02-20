@@ -39,6 +39,13 @@ class ChallengeCreate(BaseModel):
     reward_amount: float
     deadline: Optional[str] = None
 
+class TeacherRewardPenalty(BaseModel):
+    student_id: str
+    amount: float
+    title: str
+    description: Optional[str] = None
+    category: str  # 'reward' or 'penalty'
+
 @router.get("/dashboard")
 async def teacher_dashboard(request: Request):
     """Get teacher dashboard data"""
