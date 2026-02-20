@@ -918,6 +918,8 @@ async def get_quest_responses(quest_id: str, request: Request):
             "question_type": q.get("question_type"),
             "options": q.get("options"),
             "correct_answer": q.get("correct_answer"),
+            "image_url": q.get("image_url"),
+            "pdf_url": q.get("pdf_url"),
             "correct_count": correct_count,
             "total_attempts": total_attempts,
             "accuracy_rate": round((correct_count / max(total_attempts, 1)) * 100, 1),
