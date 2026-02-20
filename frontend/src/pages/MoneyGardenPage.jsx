@@ -731,9 +731,15 @@ export default function MoneyGardenPage({ user }) {
               
               <div className="bg-[#F0FFF0] rounded-xl p-4 mt-4">
                 <p className="text-center text-[#1D3557]">
-                  <span className="font-bold text-lg">{sellQuantity} {selectedItemForSale.plant_name}</span> will be sold at{' '}
+                  <span className="font-bold text-lg">{sellQuantity} {selectedItemForSale.plant_name}</span> at{' '}
                   <span className="font-bold text-lg text-[#06D6A0]">₹{getMarketPrice(selectedItemForSale.plant_id)}</span> each
                 </p>
+                {/* Show math based on grade level */}
+                {sellQuantity > 1 && (
+                  <p className="text-center text-sm text-[#3D5A80] mt-1">
+                    {formatMathDisplay(sellQuantity, getMarketPrice(selectedItemForSale.plant_id)).expression}
+                  </p>
+                )}
                 <p className="text-center text-2xl font-bold text-[#228B22] mt-2">
                   You will get ₹{sellQuantity * getMarketPrice(selectedItemForSale.plant_id)}
                 </p>
