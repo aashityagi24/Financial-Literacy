@@ -69,6 +69,11 @@ export default function MoneyGardenPage({ user }) {
   // Helper function to format cost/earnings display based on grade level
   // For Kindergarten (0) and Grade 1, use repeated addition instead of multiplication
   const formatMathDisplay = (qty, price) => {
+    // For single item, just show the price
+    if (qty === 1) {
+      return { expression: `₹${price}`, total: price };
+    }
+    
     const gradeLevel = user?.grade ?? user?.grade_level ?? 5; // Default to higher grade if unknown
     
     if (gradeLevel <= 1 && qty > 1) {
