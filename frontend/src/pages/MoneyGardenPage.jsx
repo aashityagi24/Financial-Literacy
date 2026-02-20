@@ -19,45 +19,42 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Growth stages with clear labels
 const GROWTH_STAGES = [
-  { min: 0, max: 25, label: 'Seeding', bgGradient: 'from-amber-700 to-amber-600' },
-  { min: 25, max: 50, label: 'Sprouting', bgGradient: 'from-lime-400 to-lime-500' },
-  { min: 50, max: 75, label: 'Growing', bgGradient: 'from-green-500 to-green-600' },
-  { min: 75, max: 100, label: 'Ready!', bgGradient: 'from-emerald-600 to-emerald-700' }
+  { min: 0, max: 25, label: 'Seed', emoji: '🌰', color: '#8B4513' },
+  { min: 25, max: 50, label: 'Sprout', emoji: '🌱', color: '#90EE90' },
+  { min: 50, max: 75, label: 'Growing', emoji: '🌿', color: '#32CD32' },
+  { min: 75, max: 100, label: 'Ready!', emoji: '🌻', color: '#228B22' }
 ];
 
-const getGrowthStage = (progress, plantEmoji) => {
-  if (progress >= 100) return { stageIndex: 3, label: 'Ready!', emoji: plantEmoji || '🍅', sparkle: true };
+const getGrowthStage = (progress) => {
+  if (progress >= 100) return { stageIndex: 3, label: 'Ready to Harvest!', emoji: '🎁' };
   const stageIndex = GROWTH_STAGES.findIndex(s => progress >= s.min && progress < s.max);
-  const stage = GROWTH_STAGES[stageIndex] || GROWTH_STAGES[0];
-  return { ...stage, stageIndex: stageIndex >= 0 ? stageIndex : 0, emoji: null, sparkle: false };
+  return { stageIndex: stageIndex >= 0 ? stageIndex : 0, ...GROWTH_STAGES[stageIndex >= 0 ? stageIndex : 0] };
 };
 
 // Gardener mascot
 const GARDENER_IMAGE = "https://customer-assets.emergentagent.com/job_finlit-quest-kids/artifacts/y72iy9xe_Untitled%20design%20%2812%29.png";
 
-// Malli's introduction messages with section targets
+// Malli's messages
 const INTRO_MESSAGES = [
   { id: 'intro', text: "Hello! I'm Malli, your garden friend! 🌻 Let me show you around!", target: null },
   { id: 'wallet', text: "This is your Garden Money! 💰 Move coins here to buy seeds!", target: 'wallet-section' },
-  { id: 'market', text: "The Market has seeds! 🏪 Pick one and plant it in your garden!", target: 'market-section' },
-  { id: 'garden', text: "Your Garden! 🌱 Plant seeds here and water them every day!", target: 'garden-section' },
-  { id: 'shop', text: "Your Shop! 🧺 Sell your vegetables here to earn coins!", target: 'shop-section' },
-  { id: 'done', text: "That's it! Buy a seed, plant it, water it, harvest it, sell it! Have fun! 🎉", target: null }
+  { id: 'market', text: "The Market has seeds! 🏪 Pick one and plant it!", target: 'market-section' },
+  { id: 'garden', text: "Your Garden! 🌱 Plant seeds and water them every day!", target: 'garden-section' },
+  { id: 'shop', text: "Your Shop! 🧺 Sell vegetables here to earn coins!", target: 'shop-section' },
+  { id: 'done', text: "That's it! Buy → Plant → Water → Harvest → Sell! Have fun! 🎉", target: null }
 ];
 
 const getContextTip = (farm, inventory) => {
-  const plots = farm?.plots || [];
-  const readyPlots = plots.filter(p => p.status === 'ready');
-  const wiltingPlots = plots.filter(p => p.status === 'wilting');
-  const growingPlots = plots.filter(p => ['growing', 'water_needed'].includes(p.status));
-  const emptyPlots = plots.filter(p => p.status === 'empty');
+  const plot = farm?.plots?.[0];
+  if (!plot) return { text: "Welcome to your garden! 🌈", target: null };
   
-  if (wiltingPlots.length > 0) return { text: "Oh no! Your plant needs water NOW! 💧", target: 'garden-section' };
-  if (readyPlots.length > 0) return { text: "Yay! Time to harvest! Click the plant! 🎁", target: 'garden-section' };
+  if (plot.status === 'wilting') return { text: "Oh no! Your plant needs water NOW! 💧", target: 'garden-section' };
+  if (plot.status === 'ready') return { text: "Yay! Time to harvest! Click the plant! 🎁", target: 'garden-section' };
   if (inventory?.length > 0) return { text: "You have veggies to sell! 💰", target: 'shop-section' };
-  if (growingPlots.length > 0) return { text: "Your plant is growing! Water it! 🌱", target: 'garden-section' };
-  if (emptyPlots.length > 0) return { text: "Plant a seed from The Market! 🌻", target: 'market-section' };
+  if (plot.status === 'growing' || plot.status === 'water_needed') return { text: "Your plant is growing! Water it! 🌱", target: 'garden-section' };
+  if (plot.status === 'empty' || plot.status === 'dead') return { text: "Plant a seed from The Market! 🌻", target: 'market-section' };
   return { text: "Welcome to your garden! 🌈", target: null };
 };
 
@@ -68,7 +65,15 @@ export default function MoneyGardenPage({ user }) {
   const [transactions, setTransactions] = useState([]);
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferData, setTransferData] = useState({ from_account: 'spending', to_account: 'investing', amount: '' });
-  const [sellQuantity, setSellQuantity] = useState({});
+  
+  // Plant selection dialog
+  const [showPlantDialog, setShowPlantDialog] = useState(false);
+  const [selectedSeedForPlanting, setSelectedSeedForPlanting] = useState(null);
+  
+  // Sell confirmation dialog
+  const [showSellDialog, setShowSellDialog] = useState(false);
+  const [selectedItemForSale, setSelectedItemForSale] = useState(null);
+  const [sellQuantity, setSellQuantity] = useState(1);
   
   // Malli state
   const [malliMessage, setMalliMessage] = useState('');
@@ -77,7 +82,6 @@ export default function MoneyGardenPage({ user }) {
   const [isFirstVisit, setIsFirstVisit] = useState(false);
   const [malliMinimized, setMalliMinimized] = useState(false);
   
-  // Refs for scrolling
   const sectionRefs = {
     'wallet-section': useRef(null),
     'market-section': useRef(null),
@@ -109,7 +113,6 @@ export default function MoneyGardenPage({ user }) {
     }
   }, [farm, loading, isFirstVisit]);
   
-  // Scroll to and highlight target section
   useEffect(() => {
     if (malliTarget && sectionRefs[malliTarget]?.current) {
       sectionRefs[malliTarget].current.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -162,19 +165,31 @@ export default function MoneyGardenPage({ user }) {
     }
   };
   
-  const handlePlantSeed = async (plotId, seedId) => {
+  const handlePlantSeed = async () => {
+    if (!selectedSeedForPlanting) return;
+    const plot = farm.plots[0];
+    if (!plot) return;
+    
     try {
-      await axios.post(`${API}/garden/plant`, { plot_id: plotId, plant_id: seedId });
-      toast.success('Seed planted! 🌱');
+      await axios.post(`${API}/garden/plant`, { 
+        plot_id: plot.plot_id, 
+        plant_id: selectedSeedForPlanting.plant_id 
+      });
+      toast.success(`${selectedSeedForPlanting.name} planted! 🌱`);
+      setShowPlantDialog(false);
+      setSelectedSeedForPlanting(null);
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to plant');
     }
   };
   
-  const handleWater = async (plotId) => {
+  const handleWater = async () => {
+    const plot = farm.plots[0];
+    if (!plot) return;
+    
     try {
-      await axios.post(`${API}/garden/water/${plotId}`);
+      await axios.post(`${API}/garden/water/${plot.plot_id}`);
       toast.success('Watered! 💧');
       fetchData();
     } catch (error) {
@@ -182,9 +197,12 @@ export default function MoneyGardenPage({ user }) {
     }
   };
   
-  const handleHarvest = async (plotId) => {
+  const handleHarvest = async () => {
+    const plot = farm.plots[0];
+    if (!plot) return;
+    
     try {
-      const res = await axios.post(`${API}/garden/harvest/${plotId}`);
+      const res = await axios.post(`${API}/garden/harvest/${plot.plot_id}`);
       toast.success(res.data.message);
       fetchData();
     } catch (error) {
@@ -192,12 +210,16 @@ export default function MoneyGardenPage({ user }) {
     }
   };
   
-  const handleSell = async (plantId, quantity) => {
+  const handleSell = async () => {
+    if (!selectedItemForSale) return;
+    
     try {
-      const res = await axios.post(`${API}/garden/sell?plant_id=${plantId}&quantity=${quantity}`);
+      const res = await axios.post(`${API}/garden/sell?plant_id=${selectedItemForSale.plant_id}&quantity=${sellQuantity}`);
       toast.success(res.data.message);
+      setShowSellDialog(false);
+      setSelectedItemForSale(null);
+      setSellQuantity(1);
       fetchData();
-      setSellQuantity({});
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to sell');
     }
@@ -231,6 +253,12 @@ export default function MoneyGardenPage({ user }) {
     return Math.round(seed?.base_sell_price || 0);
   };
   
+  const openSellDialog = (item) => {
+    setSelectedItemForSale(item);
+    setSellQuantity(1);
+    setShowSellDialog(true);
+  };
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#87CEEB] to-[#90EE90] flex items-center justify-center">
@@ -246,118 +274,13 @@ export default function MoneyGardenPage({ user }) {
   const spendingBalance = Math.round(wallet?.accounts?.find(a => a.account_type === 'spending')?.balance || 0);
   const savingsBalance = Math.round(wallet?.accounts?.find(a => a.account_type === 'savings')?.balance || 0);
   
-  // Grade 1 gets only 2 plots
-  const userGrade = user?.grade || 1;
-  const displayPlots = userGrade === 1 ? farm.plots.slice(0, 2) : farm.plots.slice(0, 2);
+  // Use only the first plot
+  const plot = farm.plots[0];
   const displaySeeds = farm.seeds.slice(0, 3);
-  
-  // Check if any plot is available for planting
-  const hasEmptyPlot = displayPlots.some(p => p.status === 'empty' || p.status === 'dead');
-  
-  const renderPlot = (plot, index) => {
-    if (!plot) return null;
-    const stage = plot.plant_id ? getGrowthStage(plot.growth_progress, plot.plant_emoji) : null;
-    const canPlant = plot.status === 'empty' || plot.status === 'dead';
-    const canWater = plot.status === 'growing' || plot.status === 'water_needed' || plot.status === 'wilting';
-    const canHarvest = plot.status === 'ready';
-    
-    // Find first available seed for quick plant
-    const availableSeed = displaySeeds[0];
-    
-    return (
-      <div
-        key={plot.plot_id}
-        className={`bg-[#5D4037] rounded-2xl border-4 border-[#3E2723] p-4 flex flex-col items-center justify-center shadow-lg aspect-square ${
-          plot.status === 'ready' ? 'ring-4 ring-[#FFD700] animate-pulse' : ''
-        }`}
-      >
-        <div className="bg-[#8D6E63] rounded-xl p-4 w-full h-full flex flex-col items-center justify-between">
-          {/* Plot Content */}
-          <div className="flex-1 flex flex-col items-center justify-center">
-            {plot.status === 'empty' ? (
-              <div className="text-center">
-                <span className="text-5xl">🕳️</span>
-                <p className="text-white font-bold text-sm mt-2">Empty Plot</p>
-              </div>
-            ) : plot.status === 'dead' ? (
-              <div className="text-center">
-                <span className="text-5xl">💀</span>
-                <p className="text-white font-bold text-sm mt-2">Plant Died</p>
-              </div>
-            ) : (
-              <div className="text-center w-full">
-                <div className={`text-5xl ${stage?.sparkle ? 'animate-bounce' : ''}`}>
-                  {plot.status === 'ready' ? (plot.plant_emoji || '🍅') : (
-                    stage?.stageIndex === 0 ? '🌰' :
-                    stage?.stageIndex === 1 ? '🌱' :
-                    stage?.stageIndex === 2 ? '🌿' : plot.plant_emoji
-                  )}
-                  {plot.status === 'ready' && <Sparkles className="inline w-5 h-5 text-yellow-400" />}
-                </div>
-                <p className="text-white font-bold text-sm mt-2">{plot.plant_name}</p>
-                
-                {plot.status !== 'ready' && (
-                  <div className="w-full mt-2 flex rounded-full h-3 overflow-hidden bg-[#3E2723]">
-                    {GROWTH_STAGES.map((stageItem, idx) => (
-                      <div key={idx} className={`flex-1 h-full ${stage?.stageIndex >= idx ? `bg-gradient-to-r ${stageItem.bgGradient}` : 'bg-[#3E2723]'}`} />
-                    ))}
-                  </div>
-                )}
-                
-                {plot.status === 'wilting' && <p className="text-red-400 text-xs font-bold mt-1 animate-pulse">💧 WATER NOW!</p>}
-              </div>
-            )}
-          </div>
-          
-          {/* Action Buttons - Always show water and plant icons */}
-          <div className="flex gap-3 mt-3">
-            {/* Water Button */}
-            <button
-              onClick={() => canWater && handleWater(plot.plot_id)}
-              disabled={!canWater}
-              className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl border-2 transition-all ${
-                plot.status === 'wilting' 
-                  ? 'bg-red-500 border-red-700 animate-pulse hover:bg-red-600' 
-                  : plot.status === 'water_needed'
-                    ? 'bg-yellow-400 border-yellow-600 hover:bg-yellow-500'
-                    : canWater
-                      ? 'bg-[#00BCD4] border-[#0097A7] hover:bg-[#00ACC1]'
-                      : 'bg-gray-400 border-gray-500 opacity-50 cursor-not-allowed'
-              }`}
-              title="Water"
-            >
-              💧
-            </button>
-            
-            {/* Plant Button */}
-            <button
-              onClick={() => canPlant && availableSeed && handlePlantSeed(plot.plot_id, availableSeed.plant_id)}
-              disabled={!canPlant || !availableSeed}
-              className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl border-2 transition-all ${
-                canPlant && availableSeed
-                  ? 'bg-[#81C784] border-[#388E3C] hover:bg-[#66BB6A]'
-                  : 'bg-gray-400 border-gray-500 opacity-50 cursor-not-allowed'
-              }`}
-              title="Plant seed"
-            >
-              🌱
-            </button>
-            
-            {/* Harvest Button - only when ready */}
-            {canHarvest && (
-              <button
-                onClick={() => handleHarvest(plot.plot_id)}
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl border-2 bg-[#FFD700] border-[#FF8F00] hover:bg-[#FFC107] animate-bounce"
-                title="Harvest"
-              >
-                🎁
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const stage = plot?.plant_id ? getGrowthStage(plot.growth_progress) : null;
+  const canPlant = plot?.status === 'empty' || plot?.status === 'dead';
+  const canWater = ['growing', 'water_needed', 'wilting'].includes(plot?.status);
+  const canHarvest = plot?.status === 'ready';
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#87CEEB] to-[#90EE90]" data-testid="money-garden-page">
@@ -374,48 +297,46 @@ export default function MoneyGardenPage({ user }) {
         </div>
       </header>
       
-      {/* Main 2x2 Grid - Full Screen */}
+      {/* Main 2x2 Grid */}
       <main className="flex-1 p-4">
         <div className="grid grid-cols-2 gap-4 h-full" style={{ minHeight: 'calc(100vh - 80px)' }}>
           
           {/* TOP LEFT: Garden Money */}
           <div 
             ref={sectionRefs['wallet-section']}
-            className={`card-playful p-6 bg-[#FFFACD] border-3 border-[#DAA520] transition-all flex flex-col ${
+            className={`card-playful p-5 bg-[#FFFACD] border-3 border-[#DAA520] transition-all flex flex-col ${
               malliTarget === 'wallet-section' ? 'ring-4 ring-[#FFD700] ring-offset-2' : ''
             }`} 
             data-testid="wallet-section"
           >
-            <h2 className="text-xl font-bold text-[#8B4513] mb-3 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+            <h2 className="text-lg font-bold text-[#8B4513] mb-3 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
               💰 Garden Money
             </h2>
             
-            {/* Balance and Transfer */}
-            <div className="flex items-center gap-4 mb-4">
-              <div className="bg-white rounded-2xl p-4 border-3 border-[#228B22] text-center flex-1">
-                <span className="text-4xl">🌱</span>
+            <div className="flex items-center gap-4 mb-3">
+              <div className="bg-white rounded-xl p-4 border-2 border-[#228B22] text-center flex-1">
+                <span className="text-3xl">🌱</span>
                 <p className="text-3xl font-bold text-[#228B22]">₹{farmingBalance}</p>
               </div>
               <button
                 onClick={() => setShowTransfer(true)}
                 className="bg-[#FFD700] hover:bg-[#FFC000] text-[#1D3557] px-4 py-3 rounded-xl font-bold flex flex-col items-center gap-1 border-2 border-[#DAA520]"
               >
-                <ArrowRightLeft className="w-6 h-6" />
-                <span className="text-sm">Add</span>
+                <ArrowRightLeft className="w-5 h-5" />
+                <span className="text-xs">Add</span>
               </button>
             </div>
             
-            {/* Transaction History */}
             <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-bold text-[#8B4513] mb-2">Recent Activity:</p>
-              <div className="space-y-1 overflow-y-auto max-h-[120px]">
+              <p className="text-xs font-bold text-[#8B4513] mb-2">Recent Activity:</p>
+              <div className="space-y-1 overflow-y-auto max-h-[100px]">
                 {transactions.length === 0 ? (
                   <p className="text-xs text-[#8B4513]/70 text-center py-2">No activity yet</p>
                 ) : (
-                  transactions.slice(0, 5).map((t, idx) => (
-                    <div key={idx} className="bg-white/70 rounded-lg px-3 py-2 flex items-center justify-between text-sm">
-                      <span className="text-xs text-[#3D5A80] truncate flex-1">{t.description}</span>
-                      <span className={`font-bold ${t.amount > 0 ? 'text-[#06D6A0]' : 'text-[#E63946]'}`}>
+                  transactions.slice(0, 4).map((t, idx) => (
+                    <div key={idx} className="bg-white/70 rounded-lg px-2 py-1 flex items-center justify-between text-xs">
+                      <span className="text-[#3D5A80] truncate flex-1">{t.description}</span>
+                      <span className={`font-bold ml-2 ${t.amount > 0 ? 'text-[#06D6A0]' : 'text-[#E63946]'}`}>
                         {t.amount > 0 ? '+' : ''}₹{Math.abs(Math.round(t.amount))}
                       </span>
                     </div>
@@ -425,44 +346,133 @@ export default function MoneyGardenPage({ user }) {
             </div>
           </div>
           
-          {/* TOP RIGHT: My Garden (2 Plots) */}
+          {/* TOP RIGHT: My Garden (ONE Plot with clear stages) */}
           <div 
             ref={sectionRefs['garden-section']}
-            className={`card-playful p-6 bg-[#F0FFF0] border-3 border-[#228B22] transition-all flex flex-col ${
+            className={`card-playful p-5 bg-[#F0FFF0] border-3 border-[#228B22] transition-all flex flex-col ${
               malliTarget === 'garden-section' ? 'ring-4 ring-[#228B22] ring-offset-2' : ''
             }`} 
             data-testid="garden-section"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-[#228B22] flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
-                🏡 My Garden
-              </h2>
-              <button
-                onClick={() => {
-                  const plotsToWater = displayPlots.filter(p => ['growing', 'water_needed', 'wilting'].includes(p.status));
-                  plotsToWater.forEach(p => handleWater(p.plot_id));
-                }}
-                className="bg-[#00CED1] text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2"
-              >
-                <Droplets className="w-5 h-5" /> Water All
-              </button>
-            </div>
-            <div className="flex-1 flex items-center justify-center">
-              <div className="grid grid-cols-2 gap-4 w-full max-w-md">
-                {displayPlots.map((plot, idx) => renderPlot(plot, idx))}
+            <h2 className="text-lg font-bold text-[#228B22] mb-3 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+              🏡 My Garden
+            </h2>
+            
+            {plot && (
+              <div className="flex-1 flex flex-col">
+                {/* The Plot */}
+                <div className={`bg-[#5D4037] rounded-2xl border-4 border-[#3E2723] p-4 flex-1 flex flex-col shadow-lg ${
+                  plot.status === 'ready' ? 'ring-4 ring-[#FFD700]' : ''
+                }`}>
+                  <div className="bg-[#8D6E63] rounded-xl p-4 flex-1 flex flex-col items-center justify-center">
+                    {/* Plant Display */}
+                    {canPlant ? (
+                      <div className="text-center">
+                        <span className="text-6xl">{plot.status === 'dead' ? '💀' : '🕳️'}</span>
+                        <p className="text-white font-bold text-lg mt-2">
+                          {plot.status === 'dead' ? 'Plant Died' : 'Empty Plot'}
+                        </p>
+                        <p className="text-white/70 text-sm">Click 🌱 to plant a seed!</p>
+                      </div>
+                    ) : canHarvest ? (
+                      <div className="text-center">
+                        <div className="text-6xl animate-bounce">{plot.plant_emoji || '🍅'}</div>
+                        <Sparkles className="inline w-6 h-6 text-yellow-400 mt-2" />
+                        <p className="text-white font-bold text-lg mt-2">{plot.plant_name}</p>
+                        <p className="text-[#FFD700] font-bold text-lg">Ready to Harvest! 🎁</p>
+                      </div>
+                    ) : (
+                      <div className="text-center w-full">
+                        <div className="text-6xl">{stage?.emoji || '🌱'}</div>
+                        <p className="text-white font-bold text-lg mt-2">{plot.plant_name}</p>
+                        
+                        {/* Growth Stage Indicator - Clear visual */}
+                        <div className="mt-4 w-full">
+                          <div className="flex justify-between mb-2">
+                            {GROWTH_STAGES.map((s, idx) => (
+                              <div 
+                                key={idx} 
+                                className={`text-center flex-1 ${stage?.stageIndex >= idx ? 'opacity-100' : 'opacity-40'}`}
+                              >
+                                <span className="text-2xl">{s.emoji}</span>
+                                <p className={`text-xs font-bold ${stage?.stageIndex === idx ? 'text-[#FFD700]' : 'text-white/70'}`}>
+                                  {s.label}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="w-full h-4 bg-[#3E2723] rounded-full overflow-hidden border-2 border-[#5D4037]">
+                            <div 
+                              className="h-full bg-gradient-to-r from-[#8B4513] via-[#90EE90] to-[#228B22] transition-all duration-500"
+                              style={{ width: `${plot.growth_progress}%` }}
+                            />
+                          </div>
+                          <p className="text-white text-center mt-2 font-bold">
+                            Stage: {stage?.label} ({Math.round(plot.growth_progress)}%)
+                          </p>
+                        </div>
+                        
+                        {plot.status === 'wilting' && (
+                          <p className="text-red-400 font-bold mt-2 animate-pulse">⚠️ NEEDS WATER NOW!</p>
+                        )}
+                        {plot.status === 'water_needed' && (
+                          <p className="text-yellow-300 font-bold mt-2">💧 Water me soon!</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex gap-3 mt-4 justify-center">
+                  <button
+                    onClick={() => setShowPlantDialog(true)}
+                    disabled={!canPlant}
+                    className={`flex-1 max-w-[120px] py-3 rounded-xl font-bold text-lg flex items-center justify-center gap-2 border-2 transition-all ${
+                      canPlant 
+                        ? 'bg-[#81C784] border-[#388E3C] hover:bg-[#66BB6A] text-white' 
+                        : 'bg-gray-300 border-gray-400 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    🌱
+                  </button>
+                  <button
+                    onClick={handleWater}
+                    disabled={!canWater}
+                    className={`flex-1 max-w-[120px] py-3 rounded-xl font-bold text-lg flex items-center justify-center gap-2 border-2 transition-all ${
+                      plot?.status === 'wilting' 
+                        ? 'bg-red-500 border-red-700 text-white animate-pulse' 
+                        : plot?.status === 'water_needed'
+                          ? 'bg-yellow-400 border-yellow-600 text-[#3E2723]'
+                          : canWater
+                            ? 'bg-[#00BCD4] border-[#0097A7] text-white hover:bg-[#00ACC1]'
+                            : 'bg-gray-300 border-gray-400 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    💧
+                  </button>
+                  {canHarvest && (
+                    <button
+                      onClick={handleHarvest}
+                      className="flex-1 max-w-[120px] py-3 rounded-xl font-bold text-lg flex items-center justify-center gap-2 border-2 bg-[#FFD700] border-[#FF8F00] text-[#3E2723] hover:bg-[#FFC107] animate-bounce"
+                    >
+                      🎁
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
           
           {/* BOTTOM LEFT: My Shop */}
           <div 
             ref={sectionRefs['shop-section']}
-            className={`card-playful p-6 bg-[#FFE4E1] border-3 border-[#E63946] transition-all flex flex-col ${
+            className={`card-playful p-5 bg-[#FFE4E1] border-3 border-[#E63946] transition-all flex flex-col ${
               malliTarget === 'shop-section' ? 'ring-4 ring-[#E63946] ring-offset-2' : ''
             }`} 
             data-testid="shop-section"
           >
-            <h2 className="text-xl font-bold text-[#E63946] mb-3 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+            <h2 className="text-lg font-bold text-[#E63946] mb-3 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
               🧺 My Shop
             </h2>
             
@@ -482,14 +492,14 @@ export default function MoneyGardenPage({ user }) {
                         <span className="text-3xl">{item.plant_emoji}</span>
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-[#1D3557]">{item.plant_name}</p>
-                          <p className="text-sm text-[#3D5A80]">{item.quantity} × ₹{price}</p>
+                          <p className="text-sm text-[#3D5A80]">You have {item.quantity}</p>
                         </div>
                         <button
-                          onClick={() => handleSell(item.plant_id, item.quantity)}
+                          onClick={() => openSellDialog(item)}
                           disabled={!farm.is_market_open}
                           className="bg-[#06D6A0] hover:bg-[#05C995] disabled:bg-gray-300 text-white px-4 py-2 rounded-xl font-bold"
                         >
-                          ₹{item.quantity * price}
+                          Sell
                         </button>
                       </div>
                     );
@@ -500,50 +510,52 @@ export default function MoneyGardenPage({ user }) {
             </div>
           </div>
           
-          {/* BOTTOM RIGHT: The Market (3 Seeds) */}
+          {/* BOTTOM RIGHT: The Market */}
           <div 
             ref={sectionRefs['market-section']}
-            className={`card-playful p-6 bg-[#E8E4F0] border-3 border-[#845EC2] transition-all flex flex-col ${
+            className={`card-playful p-5 bg-[#E8E4F0] border-3 border-[#845EC2] transition-all flex flex-col ${
               malliTarget === 'market-section' ? 'ring-4 ring-[#845EC2] ring-offset-2' : ''
             }`} 
             data-testid="market-section"
           >
-            <h2 className="text-xl font-bold text-[#845EC2] mb-4 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+            <h2 className="text-lg font-bold text-[#845EC2] mb-3 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
               🏪 The Market
             </h2>
             
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex-1 overflow-y-auto">
               {displaySeeds.length === 0 ? (
-                <div className="text-center">
-                  <span className="text-6xl">🏪</span>
-                  <p className="text-[#845EC2] font-bold text-lg mt-3">No seeds</p>
-                  <p className="text-sm text-[#3D5A80]">Ask teacher to add plants!</p>
+                <div className="h-full flex flex-col items-center justify-center text-center">
+                  <span className="text-5xl">🏪</span>
+                  <p className="text-[#845EC2] font-bold mt-2">No seeds</p>
+                  <p className="text-sm text-[#3D5A80]">Ask teacher to add!</p>
                 </div>
               ) : (
-                <div className="w-full space-y-3">
-                  {displaySeeds.map((seed) => {
-                    const emptyPlot = displayPlots.find(p => p.status === 'empty' || p.status === 'dead');
-                    return (
-                      <div key={seed.plant_id} className="bg-white rounded-xl p-4 border-2 border-[#845EC2]/30 flex items-center gap-4">
-                        <span className="text-4xl">{seed.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-[#1D3557] text-lg">{seed.name}</p>
-                          <p className="text-sm text-[#3D5A80]">
-                            Cost: ₹{Math.round(seed.seed_cost)} • {seed.growth_days} days • Earn: ₹{Math.round(seed.harvest_yield * seed.base_sell_price)}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => emptyPlot && handlePlantSeed(emptyPlot.plot_id, seed.plant_id)}
-                          disabled={!emptyPlot}
-                          className={`px-6 py-3 rounded-xl font-bold text-lg ${
-                            emptyPlot ? 'bg-[#845EC2] hover:bg-[#6F42C1] text-white' : 'bg-gray-200 text-gray-400'
-                          }`}
-                        >
-                          {emptyPlot ? '🌱 Plant' : '✓ Full'}
-                        </button>
+                <div className="space-y-2">
+                  {displaySeeds.map((seed) => (
+                    <div key={seed.plant_id} className="bg-white rounded-xl p-3 border-2 border-[#845EC2]/30 flex items-center gap-3">
+                      <span className="text-3xl">{seed.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-[#1D3557]">{seed.name}</p>
+                        <p className="text-xs text-[#3D5A80]">
+                          ₹{Math.round(seed.seed_cost)} • {seed.growth_days} days
+                        </p>
                       </div>
-                    );
-                  })}
+                      <button
+                        onClick={() => {
+                          setSelectedSeedForPlanting(seed);
+                          setShowPlantDialog(true);
+                        }}
+                        disabled={!canPlant}
+                        className={`px-4 py-2 rounded-xl font-bold ${
+                          canPlant 
+                            ? 'bg-[#845EC2] hover:bg-[#6F42C1] text-white' 
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        Buy
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -551,7 +563,7 @@ export default function MoneyGardenPage({ user }) {
         </div>
       </main>
       
-      {/* Malli - Floating Helper (Larger) */}
+      {/* Malli - Floating Helper */}
       <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2" data-testid="malli-helper">
         {!malliMinimized && (
           <div className="bg-white rounded-2xl p-4 shadow-2xl border-3 border-[#228B22] max-w-[280px] animate-fadeIn">
@@ -566,9 +578,7 @@ export default function MoneyGardenPage({ user }) {
             <p className="text-[#1D3557] text-sm leading-relaxed">{malliMessage}</p>
             
             {malliTarget && (
-              <p className="text-xs text-[#845EC2] mt-2 font-medium">
-                👆 Look at the highlighted box!
-              </p>
+              <p className="text-xs text-[#845EC2] mt-2 font-medium">👆 Look at the highlighted box!</p>
             )}
             
             {isFirstVisit && introStep < INTRO_MESSAGES.length - 1 && (
@@ -589,18 +599,149 @@ export default function MoneyGardenPage({ user }) {
         )}
         
         <button onClick={() => setMalliMinimized(!malliMinimized)} className="relative group">
-          <img 
-            src={GARDENER_IMAGE} 
-            alt="Malli" 
-            className="w-24 h-24 object-contain drop-shadow-lg hover:scale-105 transition-transform cursor-pointer"
-          />
+          <img src={GARDENER_IMAGE} alt="Malli" className="w-24 h-24 object-contain drop-shadow-lg hover:scale-105 transition-transform cursor-pointer" />
           {malliMinimized && (
-            <div className="absolute -top-2 -left-2 bg-[#228B22] text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold animate-bounce shadow-lg">
-              💬
-            </div>
+            <div className="absolute -top-2 -left-2 bg-[#228B22] text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold animate-bounce shadow-lg">💬</div>
           )}
         </button>
       </div>
+      
+      {/* Plant Selection Dialog */}
+      <Dialog open={showPlantDialog} onOpenChange={(open) => { setShowPlantDialog(open); if (!open) setSelectedSeedForPlanting(null); }}>
+        <DialogContent className="bg-[#F0FFF0] border-4 border-[#228B22] rounded-3xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#228B22]" style={{ fontFamily: 'Fredoka' }}>
+              🌱 Choose a Seed to Plant
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-3 mt-4">
+            {farm.seeds.slice(0, 5).map((seed) => {
+              const isSelected = selectedSeedForPlanting?.plant_id === seed.plant_id;
+              const totalEarnings = Math.round(seed.harvest_yield * seed.base_sell_price);
+              
+              return (
+                <div 
+                  key={seed.plant_id} 
+                  onClick={() => setSelectedSeedForPlanting(seed)}
+                  className={`bg-white rounded-xl p-4 border-3 cursor-pointer transition-all ${
+                    isSelected ? 'border-[#228B22] ring-2 ring-[#228B22]' : 'border-gray-200 hover:border-[#228B22]/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-4xl">{seed.emoji}</span>
+                    <div className="flex-1">
+                      <p className="font-bold text-[#1D3557] text-lg">{seed.name}</p>
+                      <p className="text-sm text-[#3D5A80]">
+                        Cost: <span className="font-bold text-[#E63946]">₹{Math.round(seed.seed_cost)}</span>
+                      </p>
+                      <p className="text-sm text-[#3D5A80]">
+                        Takes {seed.growth_days} days to grow
+                      </p>
+                      <p className="text-sm text-[#3D5A80]">
+                        You get {seed.harvest_yield} {seed.yield_unit} and can earn <span className="font-bold text-[#06D6A0]">₹{totalEarnings}</span>
+                      </p>
+                    </div>
+                    {isSelected && <span className="text-2xl">✓</span>}
+                  </div>
+                </div>
+              );
+            })}
+            
+            {selectedSeedForPlanting && (
+              <div className="bg-[#FFD700]/20 rounded-xl p-4 mt-4">
+                <p className="text-center font-bold text-[#8B4513]">
+                  You will spend ₹{Math.round(selectedSeedForPlanting.seed_cost)} to plant {selectedSeedForPlanting.name}
+                </p>
+                <p className="text-center text-sm text-[#3D5A80] mt-1">
+                  Your Garden Money: ₹{farmingBalance}
+                </p>
+              </div>
+            )}
+            
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => setShowPlantDialog(false)}
+                className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-[#1D3557] font-bold rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePlantSeed}
+                disabled={!selectedSeedForPlanting || farmingBalance < (selectedSeedForPlanting?.seed_cost || 0)}
+                className="flex-1 py-3 bg-[#228B22] hover:bg-[#1D7A1D] disabled:bg-gray-300 text-white font-bold rounded-xl"
+              >
+                🌱 Plant Now
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Sell Confirmation Dialog */}
+      <Dialog open={showSellDialog} onOpenChange={(open) => { setShowSellDialog(open); if (!open) { setSelectedItemForSale(null); setSellQuantity(1); } }}>
+        <DialogContent className="bg-[#FFE4E1] border-4 border-[#E63946] rounded-3xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#E63946]" style={{ fontFamily: 'Fredoka' }}>
+              🧺 Sell Your Harvest
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedItemForSale && (
+            <div className="mt-4">
+              <div className="bg-white rounded-xl p-4 border-2 border-[#E63946]/30 text-center">
+                <span className="text-5xl">{selectedItemForSale.plant_emoji}</span>
+                <p className="font-bold text-[#1D3557] text-xl mt-2">{selectedItemForSale.plant_name}</p>
+                <p className="text-[#3D5A80] mt-1">You have {selectedItemForSale.quantity} to sell</p>
+              </div>
+              
+              <div className="mt-4">
+                <label className="block text-sm font-bold text-[#1D3557] mb-2">How many do you want to sell?</label>
+                <div className="flex items-center gap-4">
+                  <button 
+                    onClick={() => setSellQuantity(Math.max(1, sellQuantity - 1))}
+                    className="w-12 h-12 bg-[#E63946] text-white rounded-xl font-bold text-2xl"
+                  >
+                    -
+                  </button>
+                  <span className="text-3xl font-bold text-[#1D3557] flex-1 text-center">{sellQuantity}</span>
+                  <button 
+                    onClick={() => setSellQuantity(Math.min(selectedItemForSale.quantity, sellQuantity + 1))}
+                    className="w-12 h-12 bg-[#06D6A0] text-white rounded-xl font-bold text-2xl"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              
+              <div className="bg-[#F0FFF0] rounded-xl p-4 mt-4">
+                <p className="text-center text-[#1D3557]">
+                  <span className="font-bold text-lg">{sellQuantity} {selectedItemForSale.plant_name}</span> will be sold at{' '}
+                  <span className="font-bold text-lg text-[#06D6A0]">₹{getMarketPrice(selectedItemForSale.plant_id)}</span> each
+                </p>
+                <p className="text-center text-2xl font-bold text-[#228B22] mt-2">
+                  You will get ₹{sellQuantity * getMarketPrice(selectedItemForSale.plant_id)}
+                </p>
+              </div>
+              
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={() => setShowSellDialog(false)}
+                  className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-[#1D3557] font-bold rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSell}
+                  className="flex-1 py-3 bg-[#06D6A0] hover:bg-[#05C995] text-white font-bold rounded-xl"
+                >
+                  💰 Sell Now
+                </button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       
       {/* Transfer Dialog */}
       <Dialog open={showTransfer} onOpenChange={setShowTransfer}>
