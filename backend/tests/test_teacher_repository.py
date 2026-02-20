@@ -22,9 +22,8 @@ class TestRepositoryUpload:
     def setup(self):
         """Setup session and get admin authentication"""
         self.session = requests.Session()
-        self.session.headers.update({"Content-Type": "application/json"})
         
-        # Admin login
+        # Admin login (don't set Content-Type header globally - it interferes with multipart uploads)
         response = self.session.post(f"{BASE_URL}/api/auth/admin-login", json={
             "email": ADMIN_EMAIL,
             "password": ADMIN_PASSWORD
@@ -208,7 +207,6 @@ class TestAdminRepository:
     def setup(self):
         """Setup session and get admin authentication"""
         self.session = requests.Session()
-        self.session.headers.update({"Content-Type": "application/json"})
         
         # Admin login
         response = self.session.post(f"{BASE_URL}/api/auth/admin-login", json={
