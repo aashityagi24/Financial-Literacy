@@ -1864,19 +1864,33 @@ export default function TeacherDashboard({ user }) {
           </DialogContent>
         </Dialog>
         
-        {/* Repository Picker Dialog */}
+        {/* Repository Picker Dialog - Higher z-index to be above Radix Dialog */}
         {showRepositoryPicker && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
-            <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col">
+          <div 
+            className="fixed inset-0 bg-black/60 flex items-center justify-center p-4"
+            style={{ zIndex: 9999 }}
+            onClick={(e) => {
+              // Close if clicking backdrop
+              if (e.target === e.currentTarget) {
+                setShowRepositoryPicker(false);
+                setPickingFor(null);
+              }
+            }}
+          >
+            <div 
+              className="bg-white rounded-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-[#1D3557] to-[#3D5A80]">
                 <div>
                   <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>
                     <FolderOpen className="w-5 h-5 inline mr-2" />
                     Select {pickingFor === 'image' ? 'Image' : 'PDF'} from Repository
                   </h2>
-                  <p className="text-white/70 text-sm">Browse resources uploaded by admin</p>
+                  <p className="text-white/70 text-sm">Click on a resource to select it</p>
                 </div>
                 <button 
+                  type="button"
                   onClick={() => { setShowRepositoryPicker(false); setPickingFor(null); }}
                   className="p-2 hover:bg-white/20 rounded-full text-white"
                 >
@@ -1939,7 +1953,7 @@ export default function TeacherDashboard({ user }) {
                   <div className="text-center py-12">
                     <FolderOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-[#1D3557] mb-2">
-                      No {pickingFor === 'image' ? 'Images' : 'PDFs'} Found
+                      No {pickingFor === 'image' ? 'Images' : 'PDFs'} Available
                     </h3>
                     <p className="text-[#3D5A80] text-sm">
                       {repoSearch || repoFilterTopic ? 'Try different filters' : 'Admin needs to upload resources first'}
@@ -1948,12 +1962,18 @@ export default function TeacherDashboard({ user }) {
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {filteredRepoItems.map(item => (
-                      <div 
-                        key={item.item_id} 
-                        className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden hover:border-[#06D6A0] hover:shadow-lg transition-all cursor-pointer group"
-                        onClick={() => selectFromRepository(item)}
+                      <button 
+                        key={item.item_id}
+                        type="button"
+                        className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden hover:border-[#06D6A0] hover:shadow-lg transition-all cursor-pointer group text-left"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          selectFromRepository(item);
+                        }}
+                        data-testid={`repo-item-${item.item_id}`}
                       >
-                        <div className="h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
+                        <div className="h-32 bg-gray-100 flex items-center justify-center overflow-hidden pointer-events-none">
                           {item.file_type === 'image' ? (
                             <img 
                               src={getAssetUrl(item.file_url)} 
@@ -1964,9 +1984,10 @@ export default function TeacherDashboard({ user }) {
                             <FileText className="w-12 h-12 text-red-500" />
                           )}
                         </div>
-                        <div className="p-3">
+                        <div className="p-3 pointer-events-none">
                           <h4 className="font-bold text-[#1D3557] text-sm truncate">{item.title}</h4>
                           <p className="text-xs text-[#3D5A80] truncate">{item.topic_name} &gt; {item.subtopic_name}</p>
+                          <p className="text-xs text-[#3D5A80]/60 mt-1">Grade {item.min_grade}-{item.max_grade}</p>
                           {item.tags?.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-2">
                               {item.tags.slice(0, 2).map((tag, idx) => (
@@ -1977,7 +1998,7 @@ export default function TeacherDashboard({ user }) {
                             </div>
                           )}
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -1986,9 +2007,10 @@ export default function TeacherDashboard({ user }) {
               {/* Footer */}
               <div className="p-4 border-t bg-gray-50 flex items-center justify-between">
                 <span className="text-sm text-[#3D5A80]">
-                  {filteredRepoItems.length} {pickingFor === 'image' ? 'images' : 'PDFs'} available
+                  {filteredRepoItems.length} {pickingFor === 'image' ? 'image(s)' : 'PDF(s)'} available
                 </span>
                 <button 
+                  type="button"
                   onClick={() => { setShowRepositoryPicker(false); setPickingFor(null); }}
                   className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-[#1D3557] font-medium"
                 >
