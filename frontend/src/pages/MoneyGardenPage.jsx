@@ -371,13 +371,13 @@ export default function MoneyGardenPage({ user }) {
           {/* TOP RIGHT: My Garden (2 Plots) */}
           <div 
             ref={sectionRefs['garden-section']}
-            className={`card-playful p-4 bg-[#F0FFF0] border-3 border-[#228B22] transition-all ${
+            className={`card-playful p-6 bg-[#F0FFF0] border-3 border-[#228B22] transition-all flex flex-col ${
               malliTarget === 'garden-section' ? 'ring-4 ring-[#228B22] ring-offset-2' : ''
             }`} 
             data-testid="garden-section"
           >
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-base font-bold text-[#228B22] flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-[#228B22] flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
                 🏡 My Garden
               </h2>
               <button
@@ -385,13 +385,15 @@ export default function MoneyGardenPage({ user }) {
                   const plotsToWater = displayPlots.filter(p => ['growing', 'water_needed', 'wilting'].includes(p.status));
                   plotsToWater.forEach(p => handleWater(p.plot_id));
                 }}
-                className="bg-[#00CED1] text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1"
+                className="bg-[#00CED1] text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2"
               >
-                <Droplets className="w-3 h-3" /> All
+                <Droplets className="w-5 h-5" /> Water All
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {displayPlots.map((plot, idx) => renderPlot(plot, idx))}
+            <div className="flex-1 flex items-center justify-center">
+              <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+                {displayPlots.map((plot, idx) => renderPlot(plot, idx))}
+              </div>
             </div>
           </div>
           
