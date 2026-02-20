@@ -446,48 +446,50 @@ export default function MoneyGardenPage({ user }) {
           {/* BOTTOM RIGHT: The Market (3 Seeds) */}
           <div 
             ref={sectionRefs['market-section']}
-            className={`card-playful p-4 bg-[#E8E4F0] border-3 border-[#845EC2] transition-all ${
+            className={`card-playful p-6 bg-[#E8E4F0] border-3 border-[#845EC2] transition-all flex flex-col ${
               malliTarget === 'market-section' ? 'ring-4 ring-[#845EC2] ring-offset-2' : ''
             }`} 
             data-testid="market-section"
           >
-            <h2 className="text-base font-bold text-[#845EC2] mb-2 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+            <h2 className="text-xl font-bold text-[#845EC2] mb-4 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
               🏪 The Market
             </h2>
             
-            {displaySeeds.length === 0 ? (
-              <div className="flex items-center gap-3 py-2">
-                <span className="text-4xl">🏪</span>
-                <div>
-                  <p className="text-[#845EC2] font-bold text-sm">No seeds</p>
-                  <p className="text-xs text-[#3D5A80]">Ask teacher to add!</p>
+            <div className="flex-1 flex items-center justify-center">
+              {displaySeeds.length === 0 ? (
+                <div className="text-center">
+                  <span className="text-6xl">🏪</span>
+                  <p className="text-[#845EC2] font-bold text-lg mt-3">No seeds</p>
+                  <p className="text-sm text-[#3D5A80]">Ask teacher to add plants!</p>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {displaySeeds.map((seed) => {
-                  const emptyPlot = displayPlots.find(p => p.status === 'empty' || p.status === 'dead');
-                  return (
-                    <div key={seed.plant_id} className="bg-white rounded-lg p-2 border border-[#845EC2]/30 flex items-center gap-2">
-                      <span className="text-2xl">{seed.emoji}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-[#1D3557] text-sm truncate">{seed.name}</p>
-                        <p className="text-xs text-[#3D5A80]">₹{Math.round(seed.seed_cost)} • {seed.growth_days}d</p>
+              ) : (
+                <div className="w-full space-y-3">
+                  {displaySeeds.map((seed) => {
+                    const emptyPlot = displayPlots.find(p => p.status === 'empty' || p.status === 'dead');
+                    return (
+                      <div key={seed.plant_id} className="bg-white rounded-xl p-4 border-2 border-[#845EC2]/30 flex items-center gap-4">
+                        <span className="text-4xl">{seed.emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-[#1D3557] text-lg">{seed.name}</p>
+                          <p className="text-sm text-[#3D5A80]">
+                            Cost: ₹{Math.round(seed.seed_cost)} • {seed.growth_days} days • Earn: ₹{Math.round(seed.harvest_yield * seed.base_sell_price)}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => emptyPlot && handlePlantSeed(emptyPlot.plot_id, seed.plant_id)}
+                          disabled={!emptyPlot}
+                          className={`px-6 py-3 rounded-xl font-bold text-lg ${
+                            emptyPlot ? 'bg-[#845EC2] hover:bg-[#6F42C1] text-white' : 'bg-gray-200 text-gray-400'
+                          }`}
+                        >
+                          {emptyPlot ? '🌱 Plant' : '✓ Full'}
+                        </button>
                       </div>
-                      <button
-                        onClick={() => emptyPlot && handlePlantSeed(emptyPlot.plot_id, seed.plant_id)}
-                        disabled={!emptyPlot}
-                        className={`px-3 py-1 rounded-lg font-bold text-xs ${
-                          emptyPlot ? 'bg-[#845EC2] hover:bg-[#6F42C1] text-white' : 'bg-gray-200 text-gray-400'
-                        }`}
-                      >
-                        {emptyPlot ? '🌱' : '✓'}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
