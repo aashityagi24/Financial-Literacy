@@ -517,7 +517,7 @@ export default function StorePage({ user }) {
                 
                 {/* Minus sign and cost */}
                 <div className="flex justify-between items-center py-2 border-t border-[#1D3557]/20">
-                  <span className="text-[#EE6C4D] font-medium">➖ Cost ({quantity}x ₹{selectedItem.price}):</span>
+                  <span className="text-[#EE6C4D] font-medium">➖ Cost ({formatCostDisplay(quantity, selectedItem.price)}):</span>
                   <span className="text-xl font-bold text-[#EE6C4D]">- ₹{totalCost.toFixed(0)}</span>
                 </div>
                 
