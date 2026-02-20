@@ -335,9 +335,9 @@ export default function MoneyGardenPage({ user }) {
         </div>
       </header>
       
-      {/* Main 2x2 Grid */}
-      <main className="container mx-auto px-4 py-4">
-        <div className="grid grid-cols-2 gap-3 max-w-3xl mx-auto">
+      {/* Main 2x2 Grid - Full Screen */}
+      <main className="flex-1 p-4">
+        <div className="grid grid-cols-2 gap-4 h-full" style={{ minHeight: 'calc(100vh - 80px)' }}>
           
           {/* TOP LEFT: Garden Money */}
           <div 
