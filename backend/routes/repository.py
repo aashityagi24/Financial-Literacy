@@ -118,6 +118,9 @@ async def create_repository_item(request: Request):
     
     await db.teacher_repository.insert_one(item)
     
+    # Remove MongoDB _id before returning (it's not JSON serializable)
+    item.pop("_id", None)
+    
     return {"message": "Repository item created", "item": item}
 
 @router.post("/upload/repository")
