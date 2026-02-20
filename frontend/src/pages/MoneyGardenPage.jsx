@@ -258,58 +258,60 @@ export default function MoneyGardenPage({ user }) {
     return (
       <div
         key={plot.plot_id}
-        className={`bg-[#5D4037] rounded-xl border-3 border-[#3E2723] p-3 flex flex-col items-center justify-center shadow-lg min-h-[120px] ${
-          plot.status === 'ready' ? 'ring-3 ring-[#FFD700] animate-pulse' : ''
+        className={`bg-[#5D4037] rounded-2xl border-4 border-[#3E2723] p-4 flex flex-col items-center justify-center shadow-lg aspect-square ${
+          plot.status === 'ready' ? 'ring-4 ring-[#FFD700] animate-pulse' : ''
         }`}
       >
-        <div className="bg-[#8D6E63] rounded-lg p-2 w-full h-full flex flex-col items-center justify-center min-h-[80px]">
+        <div className="bg-[#8D6E63] rounded-xl p-4 w-full h-full flex flex-col items-center justify-center">
           {plot.status === 'empty' ? (
             <div className="text-center">
-              <span className="text-3xl">🕳️</span>
-              <p className="text-white font-bold text-xs mt-1">Empty</p>
+              <span className="text-5xl">🕳️</span>
+              <p className="text-white font-bold text-sm mt-2">Empty Plot</p>
+              <p className="text-white/70 text-xs">Pick a seed!</p>
             </div>
           ) : plot.status === 'dead' ? (
             <div className="text-center">
-              <span className="text-3xl">💀</span>
-              <p className="text-white font-bold text-xs mt-1">Died</p>
+              <span className="text-5xl">💀</span>
+              <p className="text-white font-bold text-sm mt-2">Plant Died</p>
             </div>
           ) : (
             <div className="text-center w-full">
-              <div className={`text-3xl ${stage?.sparkle ? 'animate-bounce' : ''}`}>
+              <div className={`text-5xl ${stage?.sparkle ? 'animate-bounce' : ''}`}>
                 {plot.status === 'ready' ? (plot.plant_emoji || '🍅') : (
                   stage?.stageIndex === 0 ? '🌰' :
                   stage?.stageIndex === 1 ? '🌱' :
                   stage?.stageIndex === 2 ? '🌿' : plot.plant_emoji
                 )}
-                {plot.status === 'ready' && <Sparkles className="inline w-4 h-4 text-yellow-400" />}
+                {plot.status === 'ready' && <Sparkles className="inline w-5 h-5 text-yellow-400" />}
               </div>
-              <p className="text-white font-bold text-xs mt-1 truncate">{plot.plant_name}</p>
+              <p className="text-white font-bold text-sm mt-2">{plot.plant_name}</p>
               
               {plot.status !== 'ready' && (
-                <div className="w-full mt-1 flex rounded-full h-2 overflow-hidden bg-[#3E2723]">
+                <div className="w-full mt-2 flex rounded-full h-3 overflow-hidden bg-[#3E2723]">
                   {GROWTH_STAGES.map((stageItem, idx) => (
                     <div key={idx} className={`flex-1 h-full ${stage?.stageIndex >= idx ? `bg-gradient-to-r ${stageItem.bgGradient}` : 'bg-[#3E2723]'}`} />
                   ))}
                 </div>
               )}
               
-              {plot.status === 'wilting' && <p className="text-red-400 text-xs font-bold mt-1 animate-pulse">💧!</p>}
+              {plot.status === 'wilting' && <p className="text-red-400 text-xs font-bold mt-1 animate-pulse">💧 WATER NOW!</p>}
+              {plot.status === 'water_needed' && <p className="text-yellow-300 text-xs font-bold mt-1">💧 Water soon</p>}
               
-              <div className="mt-2">
+              <div className="mt-3">
                 {plot.status === 'ready' ? (
-                  <button onClick={() => handleHarvest(plot.plot_id)} className="bg-[#FFD700] text-[#3E2723] px-3 py-1 rounded-lg font-bold text-xs">
-                    🎁 Pick
+                  <button onClick={() => handleHarvest(plot.plot_id)} className="bg-[#FFD700] text-[#3E2723] px-4 py-2 rounded-xl font-bold text-sm">
+                    🎁 Harvest!
                   </button>
                 ) : (
                   <button
                     onClick={() => handleWater(plot.plot_id)}
-                    className={`px-3 py-1 rounded-lg font-bold text-xs ${
+                    className={`px-4 py-2 rounded-xl font-bold text-sm ${
                       plot.status === 'wilting' ? 'bg-red-500 text-white animate-pulse' :
                       plot.status === 'water_needed' ? 'bg-yellow-400 text-[#3E2723]' :
                       'bg-[#00BCD4] text-white'
                     }`}
                   >
-                    💧
+                    💧 Water
                   </button>
                 )}
               </div>
