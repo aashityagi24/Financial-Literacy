@@ -235,27 +235,53 @@ export default function QuestsPage({ user }) {
             {(question_type === 'mcq' || question_type === 'true_false') && (
               <div className="space-y-2">
                 {(question_type === 'true_false' ? ['True', 'False'] : options)?.map((option, i) => {
-                  const isCorrect = result?.correct_answer === option || 
-                    (Array.isArray(result?.correct_answer) && result.correct_answer.includes(option));
-                  const wasSelected = result?.user_answer === option ||
-                    (Array.isArray(result?.user_answer) && result.user_answer.includes(option));
-                  const isWrongSelection = wasSelected && !isCorrect;
+                  // For MCQ, correct_answer is stored as letter (A,B,C,D), convert to index
+                  const letterMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
+                  let isCorrectOption = false;
+                  
+                  if (question_type === 'mcq') {
+                    // Check if this option index matches the correct answer letter
+                    const correctLetter = result?.correct_answer;
+                    if (correctLetter && letterMap[correctLetter] !== undefined) {
+                      isCorrectOption = i === letterMap[correctLetter];
+                    } else {
+                      // Fallback: direct text comparison
+                      isCorrectOption = result?.correct_answer === option;
+                    }
+                  } else {
+                    // For true/false, direct comparison
+                    isCorrectOption = result?.correct_answer === option;
+                  }
+                  
+                  const wasSelected = result?.user_answer === option;
+                  const isWrongSelection = wasSelected && !isCorrectOption;
                   
                   return (
                     <div 
                       key={i}
                       className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-colors ${
-                        isCorrect 
-                          ? 'border-[#06D6A0] bg-[#06D6A0]/20' 
-                          : isWrongSelection
-                            ? 'border-[#EE6C4D] bg-[#EE6C4D]/10'
-                            : 'border-[#1D3557]/20 bg-gray-50'
+                        wasSelected && isCorrectOption
+                          ? 'border-[#06D6A0] bg-[#06D6A0]/20'  // Correct selection - green
+                          : isCorrectOption && !wasSelected
+                            ? 'border-[#06D6A0] bg-[#06D6A0]/10'  // Correct but not selected (show correct answer)
+                            : isWrongSelection
+                              ? 'border-[#EE6C4D] bg-[#EE6C4D]/10'  // Wrong selection - red
+                              : 'border-[#1D3557]/20 bg-gray-50'  // Neutral
                       }`}
                     >
-                      {isCorrect && <CheckCircle className="w-5 h-5 text-[#06D6A0]" />}
+                      {wasSelected && isCorrectOption && <CheckCircle className="w-5 h-5 text-[#06D6A0]" />}
+                      {isCorrectOption && !wasSelected && <CheckCircle className="w-5 h-5 text-[#06D6A0]/50" />}
                       {isWrongSelection && <XCircle className="w-5 h-5 text-[#EE6C4D]" />}
-                      {!isCorrect && !isWrongSelection && <div className="w-5 h-5" />}
-                      <span className={`${isCorrect ? 'text-[#06D6A0] font-bold' : isWrongSelection ? 'text-[#EE6C4D]' : 'text-[#3D5A80]'}`}>
+                      {!isCorrectOption && !wasSelected && <div className="w-5 h-5" />}
+                      <span className={`${
+                        wasSelected && isCorrectOption 
+                          ? 'text-[#06D6A0] font-bold' 
+                          : isCorrectOption 
+                            ? 'text-[#06D6A0]' 
+                            : isWrongSelection 
+                              ? 'text-[#EE6C4D]' 
+                              : 'text-[#3D5A80]'
+                      }`}>
                         {option}
                       </span>
                     </div>
@@ -267,18 +293,22 @@ export default function QuestsPage({ user }) {
             {question_type === 'multi_select' && (
               <div className="space-y-2">
                 {options?.map((option, i) => {
-                  const correctAnswers = Array.isArray(result?.correct_answer) ? result.correct_answer : [result?.correct_answer];
+                  // For multi_select, correct_answer is array of letters (A,B,C,D)
+                  const letterMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
+                  const correctLetters = Array.isArray(result?.correct_answer) ? result.correct_answer : [result?.correct_answer];
+                  const correctIndices = correctLetters.map(l => letterMap[l]).filter(idx => idx !== undefined);
+                  
+                  const isCorrectOption = correctIndices.includes(i) || correctLetters.includes(option);
                   const userAnswers = Array.isArray(result?.user_answer) ? result.user_answer : [result?.user_answer];
-                  const isCorrect = correctAnswers.includes(option);
                   const wasSelected = userAnswers.includes(option);
-                  const isWrongSelection = wasSelected && !isCorrect;
-                  const isMissed = isCorrect && !wasSelected;
+                  const isWrongSelection = wasSelected && !isCorrectOption;
+                  const isMissed = isCorrectOption && !wasSelected;
                   
                   return (
                     <div 
                       key={i}
                       className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-colors ${
-                        isCorrect && wasSelected
+                        isCorrectOption && wasSelected
                           ? 'border-[#06D6A0] bg-[#06D6A0]/20' 
                           : isWrongSelection
                             ? 'border-[#EE6C4D] bg-[#EE6C4D]/10'
@@ -287,11 +317,11 @@ export default function QuestsPage({ user }) {
                               : 'border-[#1D3557]/20 bg-gray-50'
                       }`}
                     >
-                      {isCorrect && wasSelected && <CheckCircle className="w-5 h-5 text-[#06D6A0]" />}
+                      {isCorrectOption && wasSelected && <CheckCircle className="w-5 h-5 text-[#06D6A0]" />}
                       {isWrongSelection && <XCircle className="w-5 h-5 text-[#EE6C4D]" />}
                       {isMissed && <span className="text-[#FFD23F] text-xs font-bold">MISSED</span>}
-                      {!isCorrect && !isWrongSelection && !isMissed && <div className="w-5 h-5" />}
-                      <span className={`${isCorrect ? 'text-[#06D6A0] font-bold' : isWrongSelection ? 'text-[#EE6C4D]' : 'text-[#3D5A80]'}`}>
+                      {!isCorrectOption && !isWrongSelection && !isMissed && <div className="w-5 h-5" />}
+                      <span className={`${isCorrectOption ? 'text-[#06D6A0] font-bold' : isWrongSelection ? 'text-[#EE6C4D]' : 'text-[#3D5A80]'}`}>
                         {option}
                       </span>
                     </div>
