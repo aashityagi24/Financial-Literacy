@@ -79,7 +79,7 @@ export default function TeacherDashboard({ user }) {
   const [selectedResponseStudent, setSelectedResponseStudent] = useState(null);
   
   const [classForm, setClassForm] = useState({ name: '', description: '', grade_level: 3 });
-  const [rewardForm, setRewardForm] = useState({ student_ids: [], amount: 10, reason: '' });
+  const [rewardForm, setRewardForm] = useState({ student_ids: [], amount: 10, reason: '', category: 'reward' });
   const [announcementForm, setAnnouncementForm] = useState({ title: '', message: '' });
   const [questForm, setQuestForm] = useState({
     title: '',
