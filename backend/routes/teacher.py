@@ -661,12 +661,17 @@ async def create_teacher_quest(request: Request):
         })
     
     questions_points = sum(q["points"] for q in processed_questions)
-    base_reward = body.get("reward_coins", 10) or body.get("reward_amount", 10)
+    base_reward = body.get("reward_coins", 0) or body.get("reward_amount", 0)
     
     if len(processed_questions) > 0:
+        # For quests with questions, total_points is sum of question points
         total_points = questions_points
+        # Set reward_amount to match total_points for consistency
+        actual_reward = questions_points if questions_points > 0 else (base_reward or 10)
     else:
-        total_points = base_reward
+        # For simple quests without questions, use base reward (default 10 if not specified)
+        total_points = base_reward or 10
+        actual_reward = total_points
     
     quest_doc = {
         "quest_id": quest_id,
@@ -675,8 +680,8 @@ async def create_teacher_quest(request: Request):
         "image_url": body.get("image_url"),
         "pdf_url": body.get("pdf_url"),
         "due_date": body.get("due_date"),
-        "reward_amount": base_reward,
-        "reward_coins": base_reward,
+        "reward_amount": actual_reward,
+        "reward_coins": actual_reward,
         "total_points": total_points,
         "questions": processed_questions,
         "creator_type": "teacher",
