@@ -45,6 +45,43 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Role-based visibility (Child, Parent, Teacher)
 - Progressive unlock system for children
 
+### Recent Updates (February 20, 2026)
+
+**Session 15 - Money Garden Major Enhancement:**
+
+1. **Gardener Mascot Added** ✅
+   - Added friendly gardener character with contextual speech bubbles
+   - Messages change based on active section and garden state
+   - Guides children through the Money Garden experience
+
+2. **Four-Section Layout** ✅
+   - **My Wallet**: View balances and transfer money to Farming jar
+   - **My Shop**: Display and sell harvested crops (renamed from "Harvest Basket")
+   - **My Garden**: Plant and water seeds, harvest ready crops
+   - **The Market**: Browse and buy seeds to plant
+
+3. **Removed "Profit" Terminology** ✅
+   - Replaced all instances of "profit" with "earnings" or "can earn"
+   - Updated achievement descriptions to be child-friendly
+   - No financial jargon that kids might not understand
+
+4. **Admin Grade Visibility for Plants** ✅
+   - Plants now have `min_grade` and `max_grade` fields
+   - Admin can configure which grades see which plants
+   - Backend filters seeds based on child's grade
+
+5. **Whole Numbers Only** ✅
+   - All prices, costs, and earnings display as whole numbers
+   - No decimals, percentages, or fractions shown
+   - Using `Math.round()` throughout the UI
+
+**Files Modified:**
+- `/app/frontend/src/pages/MoneyGardenPage.jsx` (complete rewrite)
+- `/app/frontend/src/pages/AdminGardenManagement.jsx` (added grade controls)
+- `/app/backend/routes/garden.py` (grade filtering, ObjectId fix)
+- `/app/backend/routes/admin.py` (updated plant management)
+- `/app/backend/routes/achievements.py` (removed "profit" from descriptions)
+
 ### Recent Updates (February 19, 2026)
 
 **Session 14 - Profile School Name Display & Content Modal ExternalLink Fixes:**
