@@ -287,6 +287,7 @@ export default function TeacherDashboard({ user }) {
   
   const openRepositoryPicker = (forField) => {
     setPickingFor(forField);
+    setShowCreateQuest(false); // Close parent dialog to allow repository picker interaction
     setShowRepositoryPicker(true);
     fetchRepository();
   };
@@ -299,6 +300,7 @@ export default function TeacherDashboard({ user }) {
     }
     setShowRepositoryPicker(false);
     setPickingFor(null);
+    setShowCreateQuest(true); // Re-open the create quest dialog
     toast.success(`${item.file_type === 'image' ? 'Image' : 'PDF'} selected from repository`);
   };
   
