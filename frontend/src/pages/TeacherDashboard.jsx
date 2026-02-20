@@ -1893,38 +1893,120 @@ export default function TeacherDashboard({ user }) {
                                   />
                                 </div>
                                 
-                                {/* Answer distribution for MCQ */}
-                                {Object.keys(q.answer_distribution).length > 0 && q.options && (
+                                {/* Answer Distribution based on question type */}
+                                {Object.keys(q.answer_distribution || {}).length > 0 && (
                                   <div className="mt-2 space-y-1">
                                     <div className="text-xs text-[#3D5A80] font-medium">Answer Distribution:</div>
-                                    {q.options.map((opt, optIdx) => {
-                                      const count = q.answer_distribution[opt] || q.answer_distribution[String(optIdx)] || 0;
-                                      const percentage = q.total_attempts > 0 ? (count / q.total_attempts) * 100 : 0;
-                                      
-                                      // Check if this option is the correct answer
-                                      let isCorrectOption = false;
-                                      if (typeof q.correct_answer === 'string' && ['A', 'B', 'C', 'D'].includes(q.correct_answer)) {
-                                        const correctIdx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[q.correct_answer];
-                                        isCorrectOption = optIdx === correctIdx;
-                                      } else if (typeof q.correct_answer === 'number') {
-                                        isCorrectOption = optIdx === q.correct_answer;
-                                      } else if (Array.isArray(q.correct_answer)) {
-                                        isCorrectOption = q.correct_answer.includes(optIdx) || 
-                                          q.correct_answer.includes(letterMap[optIdx]);
-                                      }
-                                      
-                                      return (
-                                        <div key={optIdx} className="flex items-center gap-2 text-xs">
-                                          {isCorrectOption ? (
-                                            <CheckCircle className="w-3 h-3 text-[#06D6A0]" />
-                                          ) : (
-                                            <div className="w-3 h-3 rounded-full bg-[#3D5A80]/20"></div>
-                                          )}
-                                          <div className={`flex-1 truncate ${isCorrectOption ? 'text-[#06D6A0] font-medium' : ''}`}>{opt}</div>
-                                          <div className="text-[#3D5A80]">{count} ({percentage.toFixed(0)}%)</div>
-                                        </div>
-                                      );
-                                    })}
+                                    
+                                    {/* True/False Questions */}
+                                    {q.question_type === 'true_false' && (
+                                      <>
+                                        {['True', 'False'].map((opt) => {
+                                          const count = q.answer_distribution[opt] || 0;
+                                          const percentage = q.total_attempts > 0 ? (count / q.total_attempts) * 100 : 0;
+                                          const isCorrectOption = q.correct_answer === opt || String(q.correct_answer).toLowerCase() === opt.toLowerCase();
+                                          
+                                          return (
+                                            <div key={opt} className="flex items-center gap-2 text-xs">
+                                              {isCorrectOption ? (
+                                                <CheckCircle className="w-3 h-3 text-[#06D6A0]" />
+                                              ) : (
+                                                <div className="w-3 h-3 rounded-full bg-[#3D5A80]/20"></div>
+                                              )}
+                                              <div className={`flex-1 ${isCorrectOption ? 'text-[#06D6A0] font-medium' : ''}`}>{opt}</div>
+                                              <div className="text-[#3D5A80]">{count} ({percentage.toFixed(0)}%)</div>
+                                            </div>
+                                          );
+                                        })}
+                                      </>
+                                    )}
+                                    
+                                    {/* MCQ Questions */}
+                                    {q.question_type === 'mcq' && q.options && (
+                                      <>
+                                        {q.options.map((opt, optIdx) => {
+                                          const count = q.answer_distribution[opt] || 0;
+                                          const percentage = q.total_attempts > 0 ? (count / q.total_attempts) * 100 : 0;
+                                          
+                                          // Check if this option is the correct answer
+                                          let isCorrectOption = false;
+                                          if (typeof q.correct_answer === 'string' && ['A', 'B', 'C', 'D'].includes(q.correct_answer)) {
+                                            const correctIdx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[q.correct_answer];
+                                            isCorrectOption = optIdx === correctIdx;
+                                          } else if (typeof q.correct_answer === 'number') {
+                                            isCorrectOption = optIdx === q.correct_answer;
+                                          } else {
+                                            isCorrectOption = q.correct_answer === opt;
+                                          }
+                                          
+                                          return (
+                                            <div key={optIdx} className="flex items-center gap-2 text-xs">
+                                              {isCorrectOption ? (
+                                                <CheckCircle className="w-3 h-3 text-[#06D6A0]" />
+                                              ) : (
+                                                <div className="w-3 h-3 rounded-full bg-[#3D5A80]/20"></div>
+                                              )}
+                                              <div className={`flex-1 truncate ${isCorrectOption ? 'text-[#06D6A0] font-medium' : ''}`}>{opt}</div>
+                                              <div className="text-[#3D5A80]">{count} ({percentage.toFixed(0)}%)</div>
+                                            </div>
+                                          );
+                                        })}
+                                      </>
+                                    )}
+                                    
+                                    {/* Multi-select Questions */}
+                                    {q.question_type === 'multi_select' && q.options && (
+                                      <>
+                                        {q.options.map((opt, optIdx) => {
+                                          const count = q.answer_distribution[opt] || 0;
+                                          const percentage = q.total_attempts > 0 ? (count / q.total_attempts) * 100 : 0;
+                                          
+                                          // Check if this option is part of correct answers
+                                          const correctAnswers = Array.isArray(q.correct_answer) ? q.correct_answer : [q.correct_answer];
+                                          const correctIndices = correctAnswers.map(ca => {
+                                            if (['A', 'B', 'C', 'D'].includes(ca)) return { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[ca];
+                                            return ca;
+                                          });
+                                          const isCorrectOption = correctIndices.includes(optIdx) || correctAnswers.includes(opt);
+                                          
+                                          return (
+                                            <div key={optIdx} className="flex items-center gap-2 text-xs">
+                                              {isCorrectOption ? (
+                                                <CheckCircle className="w-3 h-3 text-[#06D6A0]" />
+                                              ) : (
+                                                <div className="w-3 h-3 rounded-full bg-[#3D5A80]/20"></div>
+                                              )}
+                                              <div className={`flex-1 truncate ${isCorrectOption ? 'text-[#06D6A0] font-medium' : ''}`}>{opt}</div>
+                                              <div className="text-[#3D5A80]">{count} selected ({percentage.toFixed(0)}%)</div>
+                                            </div>
+                                          );
+                                        })}
+                                      </>
+                                    )}
+                                    
+                                    {/* Numeric/Value Questions - Show all submitted answers */}
+                                    {(q.question_type === 'numeric' || q.question_type === 'value') && (
+                                      <>
+                                        {Object.entries(q.answer_distribution).map(([answer, count]) => {
+                                          const percentage = q.total_attempts > 0 ? (count / q.total_attempts) * 100 : 0;
+                                          const isCorrectAnswer = String(answer) === String(q.correct_answer);
+                                          
+                                          return (
+                                            <div key={answer} className="flex items-center gap-2 text-xs">
+                                              {isCorrectAnswer ? (
+                                                <CheckCircle className="w-3 h-3 text-[#06D6A0]" />
+                                              ) : (
+                                                <XCircle className="w-3 h-3 text-[#EE6C4D]" />
+                                              )}
+                                              <div className={`flex-1 ${isCorrectAnswer ? 'text-[#06D6A0] font-medium' : 'text-[#EE6C4D]'}`}>
+                                                {answer}
+                                              </div>
+                                              <div className="text-[#3D5A80]">{count} ({percentage.toFixed(0)}%)</div>
+                                            </div>
+                                          );
+                                        })}
+                                      </>
+                                    )}
                                   </div>
                                 )}
                               </div>
