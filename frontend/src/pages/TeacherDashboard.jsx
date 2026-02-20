@@ -737,7 +737,7 @@ export default function TeacherDashboard({ user }) {
                             data-testid="quest-classroom-select"
                           >
                             <option value="">-- Select a classroom --</option>
-                            {classrooms.map(classroom => (
+                            {(dashboard?.classrooms || []).map(classroom => (
                               <option key={classroom.classroom_id} value={classroom.classroom_id}>
                                 {classroom.name} (Grade {classroom.grade_level}) - {classroom.student_count || 0} students
                               </option>
