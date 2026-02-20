@@ -48,40 +48,44 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 ### Recent Updates (February 20, 2026)
 
-**Session 17 - Teacher Repository Bug Fixes:**
+**Session 17 - Teacher Repository & Quest Answer Bugs:**
 
-1. **Teacher Repository Upload Bug Fixed** ✅ (P0 BUG FIX)
-   - **Issue**: Admin received "Invalid doc type" error when trying to upload images/PDFs to the Teacher Repository
-   - **Root Cause**: Upload validation only checked `content_type`, which can be unreliable or missing
-   - **Fix Applied** (`/app/backend/routes/repository.py` lines 127-137):
-     - Added extension-based validation as fallback to content-type checking
-     - Now checks both `file.content_type` AND file extension (.png, .jpg, .pdf, etc.)
-   - **Additional Bug Found & Fixed**: MongoDB ObjectId serialization error in POST /api/admin/repository
-     - After `insert_one()`, MongoDB adds `_id` to the document, which is not JSON serializable
-     - Fixed by adding `item.pop("_id", None)` before returning response
-   - **Testing**: All 11 backend tests pass, frontend UI verified
-   - **Result**: Admin can now upload PNG, JPG, PDF files to the Teacher Repository
+1. **MCQ Answer Validation Bug Fixed** ✅ (P0 BUG FIX)
+   - **Issue**: Child's correct MCQ answer marked wrong - user submits option text (e.g., "Wallet") but correct_answer stored as letter (e.g., "C")
+   - **Root Cause**: Direct string comparison `user_answer == correct_answer` failed because formats differ
+   - **Fix Applied** (`/app/backend/routes/quests.py` lines 319-371):
+     - Added `is_answer_correct()` helper function that handles all question types:
+       - **MCQ**: Converts letter (A,B,C,D) to option index, compares with user's option text
+       - **Multi-select**: Converts letter array to option texts array, compares sorted lists
+       - **True/False**: Case-insensitive string comparison
+       - **Number Entry**: Float comparison with string fallback
+   - **Testing**: 8/8 question type validation tests pass
+   - **Result**: All answer types now validate correctly
 
-2. **Teacher Repository Picker Click Bug Fixed** ✅ (P0 BUG FIX)
-   - **Issue**: When teacher clicked "Select from Repository" in Create Quest dialog, the repository picker opened but clicking on images didn't work - instead it would open file upload or show "No PDF available"
-   - **Root Cause**: Radix UI Dialog's focus trap and modal overlay (z-index 50) was intercepting click events, preventing the repository picker items from being clicked even with higher z-index
+2. **Repository Grade Filtering for Teachers** ✅ (P0 BUG FIX)
+   - **Issue**: Teachers saw all repository resources regardless of classroom grade
+   - **Root Cause**: Frontend wasn't passing grade parameter to API
    - **Fix Applied** (`/app/frontend/src/pages/TeacherDashboard.jsx`):
-     - Modified `openRepositoryPicker()` to close the Create Quest dialog first
-     - Modified `selectFromRepository()` to re-open the Create Quest dialog after selection
-     - Used `createPortal` to render repository picker outside the React tree
-     - Added proper click handlers with `e.stopPropagation()`
-   - **User Flow**: Teacher clicks "Select from Repository" → Quest dialog closes → Repository picker opens → Teacher selects image → Repository closes → Quest dialog re-opens with selected image
-   - **Result**: Teachers can now select images and PDFs from the repository seamlessly
+     - Modified `fetchRepository()` to include `grade=${classroomDetails.classroom.grade_level}`
+   - **Result**: Teachers only see resources tagged for their current classroom's grade
 
-3. **Badge Images Permanently Lost** ⚠️ (DATA LOSS - Requires Manual Re-upload)
-   - Previous session accidentally deleted all badge images when disabling auto-creation
-   - Badge metadata (names, descriptions) was restored but image URLs are permanently lost
-   - **Action Required**: Admin must manually re-upload badge images via Badge Management section
+3. **Create Quest UX Improvements** ✅
+   - Removed classroom dropdown (auto-selected based on current classroom)
+   - Shows info banner: "Creating quest for: [Classroom Name] ([Grade])"
+   - Fixed due date validation to give clearer error messages
+
+4. **Teacher Repository Upload Bug Fixed** ✅ (P0 BUG FIX)
+   - Admin "Invalid doc type" error when uploading - fixed with extension-based validation
+   - MongoDB ObjectId serialization error - fixed by removing `_id` before response
+
+5. **Teacher Repository Picker Click Bug Fixed** ✅ (P0 BUG FIX)
+   - Repository picker clicks being intercepted by Radix Dialog - fixed using React Portal
 
 **Files Modified:**
-- `/app/backend/routes/repository.py` (upload validation fix, ObjectId serialization fix)
-- `/app/frontend/src/pages/TeacherDashboard.jsx` (repository picker dialog interaction fix)
-- `/app/backend/tests/test_teacher_repository.py` (new - comprehensive test file)
+- `/app/backend/routes/quests.py` (added is_answer_correct() helper function)
+- `/app/backend/routes/repository.py` (upload validation fix)
+- `/app/frontend/src/pages/TeacherDashboard.jsx` (repository picker, grade filtering, quest form improvements)
+- `/app/backend/tests/test_mcq_answer_validation.py` (new - comprehensive test file)
 
 **Session 16 - Money Garden UI Refinements:**
 
