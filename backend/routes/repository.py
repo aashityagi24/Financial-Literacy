@@ -123,12 +123,18 @@ async def create_repository_item(request: Request):
 @router.post("/upload/repository")
 async def upload_repository_file(file: UploadFile = File(...)):
     """Upload a file (image or PDF) for the repository"""
-    # Determine file type
-    is_image = file.content_type.startswith("image/")
-    is_pdf = file.content_type == "application/pdf"
+    # Get file extension
+    file_ext = file.filename.split(".")[-1].lower() if "." in file.filename else ""
+    
+    # Determine file type by content_type OR extension
+    image_extensions = {'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'}
+    pdf_extensions = {'pdf'}
+    
+    is_image = file.content_type and file.content_type.startswith("image/") or file_ext in image_extensions
+    is_pdf = file.content_type == "application/pdf" or file_ext in pdf_extensions
     
     if not is_image and not is_pdf:
-        raise HTTPException(status_code=400, detail="File must be an image (JPG, PNG, WebP) or PDF")
+        raise HTTPException(status_code=400, detail=f"File must be an image (JPG, PNG, WebP) or PDF. Got: {file.content_type}, ext: {file_ext}")
     
     # Check file size (max 10MB for PDFs, 5MB for images)
     file.file.seek(0, 2)
@@ -140,7 +146,8 @@ async def upload_repository_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=f"File must be smaller than {max_size // (1024*1024)}MB")
     
     # Generate filename
-    file_ext = file.filename.split(".")[-1].lower() if "." in file.filename else ("pdf" if is_pdf else "png")
+    if not file_ext or file_ext not in (image_extensions | pdf_extensions):
+        file_ext = "pdf" if is_pdf else "png"
     file_type = "pdf" if is_pdf else "image"
     filename = f"repo_{uuid.uuid4().hex[:12]}.{file_ext}"
     file_path = REPOSITORY_DIR / filename
