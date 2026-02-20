@@ -342,26 +342,29 @@ export default function MoneyGardenPage({ user }) {
           {/* TOP LEFT: Garden Money */}
           <div 
             ref={sectionRefs['wallet-section']}
-            className={`card-playful p-4 bg-[#FFFACD] border-3 border-[#DAA520] transition-all ${
+            className={`card-playful p-6 bg-[#FFFACD] border-3 border-[#DAA520] transition-all flex flex-col ${
               malliTarget === 'wallet-section' ? 'ring-4 ring-[#FFD700] ring-offset-2' : ''
             }`} 
             data-testid="wallet-section"
           >
-            <h2 className="text-base font-bold text-[#8B4513] mb-2 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+            <h2 className="text-xl font-bold text-[#8B4513] mb-4 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
               💰 Garden Money
             </h2>
-            <div className="flex items-center gap-3">
-              <div className="bg-white rounded-xl p-3 border-2 border-[#228B22] flex-1 text-center">
-                <span className="text-3xl">🌱</span>
-                <p className="text-2xl font-bold text-[#228B22]">₹{farmingBalance}</p>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="flex items-center gap-6">
+                <div className="bg-white rounded-2xl p-6 border-3 border-[#228B22] text-center min-w-[150px]">
+                  <span className="text-5xl">🌱</span>
+                  <p className="text-4xl font-bold text-[#228B22] mt-2">₹{farmingBalance}</p>
+                  <p className="text-sm text-[#8B4513] mt-1">For seeds</p>
+                </div>
+                <button
+                  onClick={() => setShowTransfer(true)}
+                  className="bg-[#FFD700] hover:bg-[#FFC000] text-[#1D3557] px-6 py-4 rounded-xl font-bold flex flex-col items-center gap-2 border-3 border-[#DAA520] text-lg"
+                >
+                  <ArrowRightLeft className="w-8 h-8" />
+                  <span>Add Money</span>
+                </button>
               </div>
-              <button
-                onClick={() => setShowTransfer(true)}
-                className="bg-[#FFD700] hover:bg-[#FFC000] text-[#1D3557] px-4 py-3 rounded-xl font-bold flex flex-col items-center gap-1 border-2 border-[#DAA520]"
-              >
-                <ArrowRightLeft className="w-5 h-5" />
-                <span className="text-xs">Add</span>
-              </button>
             </div>
           </div>
           
