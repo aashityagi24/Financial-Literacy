@@ -772,7 +772,16 @@ export default function TeacherDashboard({ user }) {
                           onChange={(e) => setRewardForm({...rewardForm, reason: e.target.value})}
                           className="border-3 border-[#1D3557]"
                         />
-                        <button onClick={handleGiveReward} className="btn-primary w-full py-3">Give Reward</button>
+                        <button 
+                          onClick={handleGiveReward} 
+                          className={`w-full py-3 font-bold rounded-xl transition-colors ${
+                            rewardForm.category === 'reward' 
+                              ? 'bg-[#06D6A0] hover:bg-[#05c795] text-white' 
+                              : 'bg-[#EE6C4D] hover:bg-[#e55939] text-white'
+                          }`}
+                        >
+                          {rewardForm.category === 'reward' ? '🌟 Give Reward' : '⚠️ Apply Penalty'}
+                        </button>
                       </div>
                     </DialogContent>
                   </Dialog>
