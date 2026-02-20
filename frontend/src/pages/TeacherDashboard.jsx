@@ -376,10 +376,10 @@ export default function TeacherDashboard({ user }) {
     
     try {
       if (editingQuest) {
-        await axios.put(`${API}/teacher/quests/${editingQuest.quest_id}`, questForm);
+        await axios.put(`${API}/teacher/quests/${editingQuest.quest_id}`, formToSubmit);
         toast.success('Quest updated!');
       } else {
-        await axios.post(`${API}/teacher/quests`, questForm);
+        await axios.post(`${API}/teacher/quests`, formToSubmit);
         toast.success('Quest created! Students will be notified.');
       }
       setShowCreateQuest(false);
