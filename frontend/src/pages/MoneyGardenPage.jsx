@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
-import { ChevronLeft, Droplets, ArrowRightLeft, Sparkles, X, Plus } from 'lucide-react';
+import { ChevronLeft, Droplets, ArrowRightLeft, Sparkles, X } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -27,7 +27,7 @@ const GROWTH_STAGES = [
 ];
 
 const getGrowthStage = (progress, plantEmoji) => {
-  if (progress >= 100) return { stageIndex: 3, label: 'Ready to harvest!', emoji: plantEmoji || '🍅', sparkle: true };
+  if (progress >= 100) return { stageIndex: 3, label: 'Ready!', emoji: plantEmoji || '🍅', sparkle: true };
   const stageIndex = GROWTH_STAGES.findIndex(s => progress >= s.min && progress < s.max);
   const stage = GROWTH_STAGES[stageIndex] || GROWTH_STAGES[0];
   return { ...stage, stageIndex: stageIndex >= 0 ? stageIndex : 0, emoji: null, sparkle: false };
@@ -36,14 +36,14 @@ const getGrowthStage = (progress, plantEmoji) => {
 // Gardener mascot
 const GARDENER_IMAGE = "https://customer-assets.emergentagent.com/job_finlit-quest-kids/artifacts/y72iy9xe_Untitled%20design%20%2812%29.png";
 
-// Malli's introduction messages
+// Malli's introduction messages with section targets
 const INTRO_MESSAGES = [
-  { id: 'intro', text: "Hello! I'm Malli, your garden friend! 🌻 Let me show you around!" },
-  { id: 'wallet', text: "This is your Garden Money! 💰 Move coins here to buy seeds!" },
-  { id: 'market', text: "The Market has seeds! 🏪 Pick one and plant it in your garden!" },
-  { id: 'garden', text: "Your Garden! 🌱 Plant seeds here and water them every day!" },
-  { id: 'shop', text: "Your Shop! 🧺 Sell your vegetables here to earn coins!" },
-  { id: 'done', text: "That's it! Buy a seed, plant it, water it, harvest it, sell it! Have fun! 🎉" }
+  { id: 'intro', text: "Hello! I'm Malli, your garden friend! 🌻 Let me show you around!", target: null },
+  { id: 'wallet', text: "This is your Garden Money! 💰 Move coins here to buy seeds!", target: 'wallet-section' },
+  { id: 'market', text: "The Market has seeds! 🏪 Pick one and plant it in your garden!", target: 'market-section' },
+  { id: 'garden', text: "Your Garden! 🌱 Plant seeds here and water them every day!", target: 'garden-section' },
+  { id: 'shop', text: "Your Shop! 🧺 Sell your vegetables here to earn coins!", target: 'shop-section' },
+  { id: 'done', text: "That's it! Buy a seed, plant it, water it, harvest it, sell it! Have fun! 🎉", target: null }
 ];
 
 const getContextTip = (farm, inventory) => {
@@ -53,12 +53,12 @@ const getContextTip = (farm, inventory) => {
   const growingPlots = plots.filter(p => ['growing', 'water_needed'].includes(p.status));
   const emptyPlots = plots.filter(p => p.status === 'empty');
   
-  if (wiltingPlots.length > 0) return "Oh no! Your plant needs water NOW! 💧";
-  if (readyPlots.length > 0) return "Yay! Time to harvest! Click the plant! 🎁";
-  if (inventory?.length > 0) return "You have veggies to sell! 💰";
-  if (growingPlots.length > 0) return "Your plant is growing! Water it! 🌱";
-  if (emptyPlots.length > 0) return "Plant a seed from The Market! 🌻";
-  return "Welcome to your garden! 🌈";
+  if (wiltingPlots.length > 0) return { text: "Oh no! Your plant needs water NOW! 💧", target: 'garden-section' };
+  if (readyPlots.length > 0) return { text: "Yay! Time to harvest! Click the plant! 🎁", target: 'garden-section' };
+  if (inventory?.length > 0) return { text: "You have veggies to sell! 💰", target: 'shop-section' };
+  if (growingPlots.length > 0) return { text: "Your plant is growing! Water it! 🌱", target: 'garden-section' };
+  if (emptyPlots.length > 0) return { text: "Plant a seed from The Market! 🌻", target: 'market-section' };
+  return { text: "Welcome to your garden! 🌈", target: null };
 };
 
 export default function MoneyGardenPage({ user }) {
@@ -71,9 +71,18 @@ export default function MoneyGardenPage({ user }) {
   
   // Malli state
   const [malliMessage, setMalliMessage] = useState('');
+  const [malliTarget, setMalliTarget] = useState(null);
   const [introStep, setIntroStep] = useState(0);
   const [isFirstVisit, setIsFirstVisit] = useState(false);
   const [malliMinimized, setMalliMinimized] = useState(false);
+  
+  // Refs for scrolling
+  const sectionRefs = {
+    'wallet-section': useRef(null),
+    'market-section': useRef(null),
+    'garden-section': useRef(null),
+    'shop-section': useRef(null),
+  };
   
   useEffect(() => {
     fetchData();
@@ -87,26 +96,39 @@ export default function MoneyGardenPage({ user }) {
       setIsFirstVisit(true);
       setIntroStep(0);
       setMalliMessage(INTRO_MESSAGES[0].text);
+      setMalliTarget(INTRO_MESSAGES[0].target);
     }
   }, []);
   
   useEffect(() => {
     if (!isFirstVisit && !loading) {
-      setMalliMessage(getContextTip(farm, farm.inventory));
+      const tip = getContextTip(farm, farm.inventory);
+      setMalliMessage(tip.text);
+      setMalliTarget(tip.target);
     }
   }, [farm, loading, isFirstVisit]);
+  
+  // Scroll to and highlight target section
+  useEffect(() => {
+    if (malliTarget && sectionRefs[malliTarget]?.current) {
+      sectionRefs[malliTarget].current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [malliTarget]);
   
   const handleNextIntro = () => {
     const nextStep = introStep + 1;
     if (nextStep < INTRO_MESSAGES.length) {
       setIntroStep(nextStep);
       setMalliMessage(INTRO_MESSAGES[nextStep].text);
+      setMalliTarget(INTRO_MESSAGES[nextStep].target);
     }
     if (nextStep >= INTRO_MESSAGES.length - 1) {
       localStorage.setItem('malli_intro_complete', 'true');
       setTimeout(() => {
         setIsFirstVisit(false);
-        setMalliMessage(getContextTip(farm, farm.inventory));
+        const tip = getContextTip(farm, farm.inventory);
+        setMalliMessage(tip.text);
+        setMalliTarget(tip.target);
       }, 4000);
     }
   };
@@ -114,7 +136,10 @@ export default function MoneyGardenPage({ user }) {
   const handleSkipIntro = () => {
     localStorage.setItem('malli_intro_complete', 'true');
     setIsFirstVisit(false);
-    setMalliMessage(getContextTip(farm, farm.inventory));
+    setMalliTarget(null);
+    const tip = getContextTip(farm, farm.inventory);
+    setMalliMessage(tip.text);
+    setMalliTarget(tip.target);
   };
   
   const fetchData = async () => {
@@ -175,16 +200,6 @@ export default function MoneyGardenPage({ user }) {
     }
   };
   
-  const handleBuyPlot = async () => {
-    try {
-      await axios.post(`${API}/garden/buy-plot`);
-      toast.success('New plot! 🎉');
-      fetchData();
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to buy plot');
-    }
-  };
-  
   const handleTransfer = async () => {
     const amount = Math.floor(parseFloat(transferData.amount));
     if (!amount || amount <= 0) {
@@ -228,281 +243,281 @@ export default function MoneyGardenPage({ user }) {
   const spendingBalance = Math.round(wallet?.accounts?.find(a => a.account_type === 'spending')?.balance || 0);
   const savingsBalance = Math.round(wallet?.accounts?.find(a => a.account_type === 'savings')?.balance || 0);
   
-  // Get first plot and first 3 seeds
-  const plot = farm.plots[0];
+  // Grade 1 gets only 2 plots
+  const userGrade = user?.grade || 1;
+  const displayPlots = userGrade === 1 ? farm.plots.slice(0, 2) : farm.plots.slice(0, 2);
   const displaySeeds = farm.seeds.slice(0, 3);
   
-  const stage = plot?.plant_id ? getGrowthStage(plot.growth_progress, plot.plant_emoji) : null;
+  // Check if any plot is available for planting
+  const hasEmptyPlot = displayPlots.some(p => p.status === 'empty' || p.status === 'dead');
+  
+  const renderPlot = (plot, index) => {
+    if (!plot) return null;
+    const stage = plot.plant_id ? getGrowthStage(plot.growth_progress, plot.plant_emoji) : null;
+    
+    return (
+      <div
+        key={plot.plot_id}
+        className={`bg-[#5D4037] rounded-xl border-3 border-[#3E2723] p-3 flex flex-col items-center justify-center shadow-lg min-h-[120px] ${
+          plot.status === 'ready' ? 'ring-3 ring-[#FFD700] animate-pulse' : ''
+        }`}
+      >
+        <div className="bg-[#8D6E63] rounded-lg p-2 w-full h-full flex flex-col items-center justify-center min-h-[80px]">
+          {plot.status === 'empty' ? (
+            <div className="text-center">
+              <span className="text-3xl">🕳️</span>
+              <p className="text-white font-bold text-xs mt-1">Empty</p>
+            </div>
+          ) : plot.status === 'dead' ? (
+            <div className="text-center">
+              <span className="text-3xl">💀</span>
+              <p className="text-white font-bold text-xs mt-1">Died</p>
+            </div>
+          ) : (
+            <div className="text-center w-full">
+              <div className={`text-3xl ${stage?.sparkle ? 'animate-bounce' : ''}`}>
+                {plot.status === 'ready' ? (plot.plant_emoji || '🍅') : (
+                  stage?.stageIndex === 0 ? '🌰' :
+                  stage?.stageIndex === 1 ? '🌱' :
+                  stage?.stageIndex === 2 ? '🌿' : plot.plant_emoji
+                )}
+                {plot.status === 'ready' && <Sparkles className="inline w-4 h-4 text-yellow-400" />}
+              </div>
+              <p className="text-white font-bold text-xs mt-1 truncate">{plot.plant_name}</p>
+              
+              {plot.status !== 'ready' && (
+                <div className="w-full mt-1 flex rounded-full h-2 overflow-hidden bg-[#3E2723]">
+                  {GROWTH_STAGES.map((stageItem, idx) => (
+                    <div key={idx} className={`flex-1 h-full ${stage?.stageIndex >= idx ? `bg-gradient-to-r ${stageItem.bgGradient}` : 'bg-[#3E2723]'}`} />
+                  ))}
+                </div>
+              )}
+              
+              {plot.status === 'wilting' && <p className="text-red-400 text-xs font-bold mt-1 animate-pulse">💧!</p>}
+              
+              <div className="mt-2">
+                {plot.status === 'ready' ? (
+                  <button onClick={() => handleHarvest(plot.plot_id)} className="bg-[#FFD700] text-[#3E2723] px-3 py-1 rounded-lg font-bold text-xs">
+                    🎁 Pick
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleWater(plot.plot_id)}
+                    className={`px-3 py-1 rounded-lg font-bold text-xs ${
+                      plot.status === 'wilting' ? 'bg-red-500 text-white animate-pulse' :
+                      plot.status === 'water_needed' ? 'bg-yellow-400 text-[#3E2723]' :
+                      'bg-[#00BCD4] text-white'
+                    }`}
+                  >
+                    💧
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#87CEEB] to-[#90EE90]" data-testid="money-garden-page">
       {/* Header */}
       <header className="bg-[#228B22] border-b-4 border-[#1D3557]">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Link to="/dashboard" className="p-2 hover:bg-white/20 rounded-xl">
-                <ChevronLeft className="w-6 h-6 text-white" />
-              </Link>
-              <span className="text-3xl">🌻</span>
-              <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>Money Garden</h1>
-            </div>
+          <div className="flex items-center gap-3">
+            <Link to="/dashboard" className="p-2 hover:bg-white/20 rounded-xl">
+              <ChevronLeft className="w-6 h-6 text-white" />
+            </Link>
+            <span className="text-3xl">🌻</span>
+            <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>Money Garden</h1>
           </div>
         </div>
       </header>
       
       {/* Main 2x2 Grid */}
-      <main className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-2 gap-4 max-w-4xl mx-auto">
+      <main className="container mx-auto px-4 py-4">
+        <div className="grid grid-cols-2 gap-3 max-w-3xl mx-auto">
           
-          {/* TOP LEFT: My Wallet (Garden Money) */}
-          <div className="card-playful p-5 bg-[#FFFACD] border-3 border-[#DAA520] flex flex-col" data-testid="wallet-section">
-            <h2 className="text-lg font-bold text-[#8B4513] mb-3 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+          {/* TOP LEFT: Garden Money */}
+          <div 
+            ref={sectionRefs['wallet-section']}
+            className={`card-playful p-4 bg-[#FFFACD] border-3 border-[#DAA520] transition-all ${
+              malliTarget === 'wallet-section' ? 'ring-4 ring-[#FFD700] ring-offset-2' : ''
+            }`} 
+            data-testid="wallet-section"
+          >
+            <h2 className="text-base font-bold text-[#8B4513] mb-2 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
               💰 Garden Money
             </h2>
-            
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <div className="bg-white rounded-2xl p-6 border-3 border-[#228B22] text-center w-full">
-                <span className="text-5xl">🌱</span>
-                <p className="text-4xl font-bold text-[#228B22] mt-2">₹{farmingBalance}</p>
-                <p className="text-sm text-[#8B4513] mt-1">For seeds & plots</p>
+            <div className="flex items-center gap-3">
+              <div className="bg-white rounded-xl p-3 border-2 border-[#228B22] flex-1 text-center">
+                <span className="text-3xl">🌱</span>
+                <p className="text-2xl font-bold text-[#228B22]">₹{farmingBalance}</p>
               </div>
+              <button
+                onClick={() => setShowTransfer(true)}
+                className="bg-[#FFD700] hover:bg-[#FFC000] text-[#1D3557] px-4 py-3 rounded-xl font-bold flex flex-col items-center gap-1 border-2 border-[#DAA520]"
+              >
+                <ArrowRightLeft className="w-5 h-5" />
+                <span className="text-xs">Add</span>
+              </button>
             </div>
-            
-            <button
-              onClick={() => setShowTransfer(true)}
-              className="mt-4 w-full bg-[#FFD700] hover:bg-[#FFC000] text-[#1D3557] py-3 rounded-xl font-bold flex items-center justify-center gap-2 border-2 border-[#DAA520]"
-            >
-              <ArrowRightLeft className="w-5 h-5" /> Add Money
-            </button>
           </div>
           
-          {/* TOP RIGHT: My Garden (One Plot) */}
-          <div className="card-playful p-5 bg-[#F0FFF0] border-3 border-[#228B22] flex flex-col" data-testid="garden-section">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-bold text-[#228B22] flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+          {/* TOP RIGHT: My Garden (2 Plots) */}
+          <div 
+            ref={sectionRefs['garden-section']}
+            className={`card-playful p-4 bg-[#F0FFF0] border-3 border-[#228B22] transition-all ${
+              malliTarget === 'garden-section' ? 'ring-4 ring-[#228B22] ring-offset-2' : ''
+            }`} 
+            data-testid="garden-section"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-base font-bold text-[#228B22] flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
                 🏡 My Garden
               </h2>
-              {farm.plots.length > 1 && (
-                <span className="text-xs bg-[#228B22] text-white px-2 py-1 rounded-full">
-                  {farm.plots.length} plots
-                </span>
-              )}
-            </div>
-            
-            {plot ? (
-              <div className="flex-1 flex flex-col items-center justify-center">
-                <div className={`bg-[#5D4037] rounded-2xl border-4 border-[#3E2723] p-6 w-full max-w-[200px] aspect-square flex flex-col items-center justify-center shadow-lg ${
-                  plot.status === 'ready' ? 'ring-4 ring-[#FFD700] animate-pulse' : ''
-                }`}>
-                  <div className="bg-[#8D6E63] rounded-xl p-4 w-full h-full flex flex-col items-center justify-center">
-                    {plot.status === 'empty' ? (
-                      <div className="text-center">
-                        <span className="text-5xl">🕳️</span>
-                        <p className="text-white font-bold text-sm mt-2">Empty Plot</p>
-                        <p className="text-white/70 text-xs">Pick a seed below!</p>
-                      </div>
-                    ) : plot.status === 'dead' ? (
-                      <div className="text-center">
-                        <span className="text-5xl">💀</span>
-                        <p className="text-white font-bold text-sm mt-2">Plant died</p>
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        <div className={`text-5xl ${stage?.sparkle ? 'animate-bounce' : ''}`}>
-                          {plot.status === 'ready' ? (plot.plant_emoji || '🍅') : (
-                            stage?.stageIndex === 0 ? '🌰' :
-                            stage?.stageIndex === 1 ? '🌱' :
-                            stage?.stageIndex === 2 ? '🌿' : plot.plant_emoji
-                          )}
-                          {plot.status === 'ready' && <Sparkles className="inline w-5 h-5 text-yellow-400" />}
-                        </div>
-                        <p className="text-white font-bold text-sm mt-2">{plot.plant_name}</p>
-                        
-                        {plot.status !== 'ready' && (
-                          <div className="w-full mt-2 flex rounded-full h-3 overflow-hidden bg-[#3E2723] border border-[#5D4037]">
-                            {GROWTH_STAGES.map((stageItem, idx) => (
-                              <div 
-                                key={idx}
-                                className={`flex-1 h-full ${stage?.stageIndex >= idx ? `bg-gradient-to-r ${stageItem.bgGradient}` : 'bg-[#3E2723]'}`}
-                              />
-                            ))}
-                          </div>
-                        )}
-                        
-                        {plot.status === 'wilting' && (
-                          <p className="text-red-400 text-xs font-bold mt-1 animate-pulse">💧 NEEDS WATER!</p>
-                        )}
-                        {plot.status === 'water_needed' && (
-                          <p className="text-yellow-300 text-xs font-bold mt-1">💧 Water soon</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Action Button */}
-                <div className="mt-4 w-full max-w-[200px]">
-                  {plot.status === 'ready' ? (
-                    <button
-                      onClick={() => handleHarvest(plot.plot_id)}
-                      className="w-full bg-[#FFD700] hover:bg-[#FFC107] text-[#3E2723] py-3 rounded-xl font-bold border-2 border-[#FF8F00]"
-                    >
-                      🎁 Harvest!
-                    </button>
-                  ) : plot.status !== 'empty' && plot.status !== 'dead' ? (
-                    <button
-                      onClick={() => handleWater(plot.plot_id)}
-                      className={`w-full py-3 rounded-xl font-bold border-2 ${
-                        plot.status === 'wilting' 
-                          ? 'bg-red-500 text-white border-red-700 animate-pulse'
-                          : plot.status === 'water_needed'
-                            ? 'bg-yellow-400 text-[#3E2723] border-yellow-600'
-                            : 'bg-[#00BCD4] text-white border-[#0097A7]'
-                      }`}
-                    >
-                      💧 Water
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <p className="text-[#3D5A80]">No plots yet</p>
-              </div>
-            )}
-            
-            {farm.plots.length < 9 && (
               <button
-                onClick={handleBuyPlot}
-                className="mt-3 text-sm text-[#228B22] font-bold hover:underline flex items-center justify-center gap-1"
+                onClick={() => {
+                  const plotsToWater = displayPlots.filter(p => ['growing', 'water_needed', 'wilting'].includes(p.status));
+                  plotsToWater.forEach(p => handleWater(p.plot_id));
+                }}
+                className="bg-[#00CED1] text-white px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1"
               >
-                <Plus className="w-4 h-4" /> Buy more plots (₹{farm.plot_cost})
+                <Droplets className="w-3 h-3" /> All
               </button>
-            )}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {displayPlots.map((plot, idx) => renderPlot(plot, idx))}
+            </div>
           </div>
           
           {/* BOTTOM LEFT: My Shop */}
-          <div className="card-playful p-5 bg-[#FFE4E1] border-3 border-[#E63946] flex flex-col" data-testid="shop-section">
-            <h2 className="text-lg font-bold text-[#E63946] mb-3 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+          <div 
+            ref={sectionRefs['shop-section']}
+            className={`card-playful p-4 bg-[#FFE4E1] border-3 border-[#E63946] transition-all ${
+              malliTarget === 'shop-section' ? 'ring-4 ring-[#E63946] ring-offset-2' : ''
+            }`} 
+            data-testid="shop-section"
+          >
+            <h2 className="text-base font-bold text-[#E63946] mb-2 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
               🧺 My Shop
             </h2>
             
-            <div className="flex-1">
-              {farm.inventory.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center py-4">
-                  <span className="text-5xl">🧺</span>
-                  <p className="text-[#E63946] font-bold mt-2">Empty!</p>
-                  <p className="text-xs text-[#3D5A80]">Harvest crops to sell here</p>
+            {farm.inventory.length === 0 ? (
+              <div className="flex items-center gap-3 py-2">
+                <span className="text-4xl">🧺</span>
+                <div>
+                  <p className="text-[#E63946] font-bold text-sm">Empty!</p>
+                  <p className="text-xs text-[#3D5A80]">Harvest crops to sell</p>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {farm.inventory.map((item) => {
-                    const price = getMarketPrice(item.plant_id);
-                    const qty = sellQuantity[item.inventory_id] || item.quantity;
-                    return (
-                      <div key={item.inventory_id} className="bg-white rounded-xl p-3 border-2 border-[#E63946]/30">
-                        <div className="flex items-center gap-3">
-                          <span className="text-3xl">{item.plant_emoji}</span>
-                          <div className="flex-1">
-                            <p className="font-bold text-[#1D3557] text-sm">{item.plant_name}</p>
-                            <p className="text-xs text-[#3D5A80]">{item.quantity} × ₹{price} = <span className="font-bold text-[#06D6A0]">₹{item.quantity * price}</span></p>
-                          </div>
-                          <button
-                            onClick={() => handleSell(item.plant_id, item.quantity)}
-                            disabled={!farm.is_market_open}
-                            className="bg-[#06D6A0] hover:bg-[#05C995] disabled:bg-gray-300 text-white px-4 py-2 rounded-lg font-bold text-sm"
-                          >
-                            Sell
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {!farm.is_market_open && (
-                    <p className="text-xs text-red-500 text-center">🌙 Market closed (7AM-5PM)</p>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* BOTTOM RIGHT: The Market (3 Seeds) */}
-          <div className="card-playful p-5 bg-[#E8E4F0] border-3 border-[#845EC2] flex flex-col" data-testid="market-section">
-            <h2 className="text-lg font-bold text-[#845EC2] mb-3 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
-              🏪 The Market
-            </h2>
-            
-            <div className="flex-1 space-y-2">
-              {displaySeeds.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center py-4">
-                  <span className="text-5xl">🏪</span>
-                  <p className="text-[#845EC2] font-bold mt-2">No seeds</p>
-                  <p className="text-xs text-[#3D5A80]">Ask teacher to add plants!</p>
-                </div>
-              ) : (
-                displaySeeds.map((seed) => {
-                  const canPlant = plot?.status === 'empty' || plot?.status === 'dead';
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {farm.inventory.map((item) => {
+                  const price = getMarketPrice(item.plant_id);
                   return (
-                    <div key={seed.plant_id} className="bg-white rounded-xl p-3 border-2 border-[#845EC2]/30 flex items-center gap-3">
-                      <span className="text-3xl">{seed.emoji}</span>
+                    <div key={item.inventory_id} className="bg-white rounded-lg p-2 border border-[#E63946]/30 flex items-center gap-2">
+                      <span className="text-2xl">{item.plant_emoji}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-[#1D3557] text-sm truncate">{seed.name}</p>
-                        <p className="text-xs text-[#3D5A80]">
-                          ₹{Math.round(seed.seed_cost)} • {seed.growth_days}d • Earn ₹{Math.round(seed.harvest_yield * seed.base_sell_price)}
-                        </p>
+                        <p className="font-bold text-[#1D3557] text-sm truncate">{item.plant_name}</p>
+                        <p className="text-xs text-[#3D5A80]">{item.quantity} × ₹{price}</p>
                       </div>
                       <button
-                        onClick={() => canPlant && handlePlantSeed(plot.plot_id, seed.plant_id)}
-                        disabled={!canPlant}
-                        className={`px-3 py-2 rounded-lg font-bold text-sm whitespace-nowrap ${
-                          canPlant 
-                            ? 'bg-[#845EC2] hover:bg-[#6F42C1] text-white' 
-                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        }`}
+                        onClick={() => handleSell(item.plant_id, item.quantity)}
+                        disabled={!farm.is_market_open}
+                        className="bg-[#06D6A0] hover:bg-[#05C995] disabled:bg-gray-300 text-white px-3 py-1 rounded-lg font-bold text-xs"
                       >
-                        {canPlant ? '🌱 Plant' : 'Full'}
+                        ₹{item.quantity * price}
                       </button>
                     </div>
                   );
-                })
-              )}
-            </div>
+                })}
+                {!farm.is_market_open && <p className="text-xs text-red-500 text-center">🌙 Closed (7AM-5PM)</p>}
+              </div>
+            )}
+          </div>
+          
+          {/* BOTTOM RIGHT: The Market (3 Seeds) */}
+          <div 
+            ref={sectionRefs['market-section']}
+            className={`card-playful p-4 bg-[#E8E4F0] border-3 border-[#845EC2] transition-all ${
+              malliTarget === 'market-section' ? 'ring-4 ring-[#845EC2] ring-offset-2' : ''
+            }`} 
+            data-testid="market-section"
+          >
+            <h2 className="text-base font-bold text-[#845EC2] mb-2 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+              🏪 The Market
+            </h2>
             
-            {farm.seeds.length > 3 && (
-              <p className="text-xs text-[#845EC2] text-center mt-2">
-                +{farm.seeds.length - 3} more seeds available
-              </p>
+            {displaySeeds.length === 0 ? (
+              <div className="flex items-center gap-3 py-2">
+                <span className="text-4xl">🏪</span>
+                <div>
+                  <p className="text-[#845EC2] font-bold text-sm">No seeds</p>
+                  <p className="text-xs text-[#3D5A80]">Ask teacher to add!</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {displaySeeds.map((seed) => {
+                  const emptyPlot = displayPlots.find(p => p.status === 'empty' || p.status === 'dead');
+                  return (
+                    <div key={seed.plant_id} className="bg-white rounded-lg p-2 border border-[#845EC2]/30 flex items-center gap-2">
+                      <span className="text-2xl">{seed.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-[#1D3557] text-sm truncate">{seed.name}</p>
+                        <p className="text-xs text-[#3D5A80]">₹{Math.round(seed.seed_cost)} • {seed.growth_days}d</p>
+                      </div>
+                      <button
+                        onClick={() => emptyPlot && handlePlantSeed(emptyPlot.plot_id, seed.plant_id)}
+                        disabled={!emptyPlot}
+                        className={`px-3 py-1 rounded-lg font-bold text-xs ${
+                          emptyPlot ? 'bg-[#845EC2] hover:bg-[#6F42C1] text-white' : 'bg-gray-200 text-gray-400'
+                        }`}
+                      >
+                        {emptyPlot ? '🌱' : '✓'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         </div>
       </main>
       
-      {/* Malli - Floating Helper */}
+      {/* Malli - Floating Helper (Larger) */}
       <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2" data-testid="malli-helper">
         {!malliMinimized && (
-          <div className="bg-white rounded-2xl p-4 shadow-2xl border-3 border-[#228B22] max-w-[250px] animate-fadeIn">
+          <div className="bg-white rounded-2xl p-4 shadow-2xl border-3 border-[#228B22] max-w-[280px] animate-fadeIn">
             <div className="flex items-start justify-between gap-2 mb-2">
-              <p className="font-bold text-[#228B22] text-sm" style={{ fontFamily: 'Fredoka' }}>
-                {isFirstVisit ? '👋 Malli:' : '💡 Tip:'}
+              <p className="font-bold text-[#228B22]" style={{ fontFamily: 'Fredoka' }}>
+                {isFirstVisit ? '👋 Malli says:' : '💡 Malli\'s Tip:'}
               </p>
               <button onClick={() => setMalliMinimized(true)} className="text-gray-400 hover:text-gray-600">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-[#1D3557] text-sm">{malliMessage}</p>
+            <p className="text-[#1D3557] text-sm leading-relaxed">{malliMessage}</p>
+            
+            {malliTarget && (
+              <p className="text-xs text-[#845EC2] mt-2 font-medium">
+                👆 Look at the highlighted box!
+              </p>
+            )}
             
             {isFirstVisit && introStep < INTRO_MESSAGES.length - 1 && (
               <div className="flex gap-2 mt-3">
-                <button onClick={handleSkipIntro} className="flex-1 text-xs text-[#3D5A80] py-2">Skip</button>
-                <button onClick={handleNextIntro} className="flex-1 bg-[#228B22] text-white py-2 rounded-lg font-bold text-xs">Next →</button>
+                <button onClick={handleSkipIntro} className="flex-1 text-sm text-[#3D5A80] py-2 hover:underline">Skip</button>
+                <button onClick={handleNextIntro} className="flex-1 bg-[#228B22] text-white py-2 rounded-xl font-bold text-sm">Next →</button>
               </div>
             )}
             
             {isFirstVisit && (
-              <div className="flex justify-center gap-1 mt-2">
+              <div className="flex justify-center gap-1.5 mt-3">
                 {INTRO_MESSAGES.map((_, idx) => (
-                  <div key={idx} className={`w-1.5 h-1.5 rounded-full ${idx === introStep ? 'bg-[#228B22]' : 'bg-gray-300'}`} />
+                  <div key={idx} className={`w-2 h-2 rounded-full ${idx === introStep ? 'bg-[#228B22]' : 'bg-gray-300'}`} />
                 ))}
               </div>
             )}
@@ -510,9 +525,15 @@ export default function MoneyGardenPage({ user }) {
         )}
         
         <button onClick={() => setMalliMinimized(!malliMinimized)} className="relative group">
-          <img src={GARDENER_IMAGE} alt="Malli" className="w-16 h-16 object-contain drop-shadow-lg hover:scale-110 transition-transform" />
+          <img 
+            src={GARDENER_IMAGE} 
+            alt="Malli" 
+            className="w-24 h-24 object-contain drop-shadow-lg hover:scale-105 transition-transform cursor-pointer"
+          />
           {malliMinimized && (
-            <div className="absolute -top-1 -left-1 bg-[#228B22] text-white w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold animate-bounce">💬</div>
+            <div className="absolute -top-2 -left-2 bg-[#228B22] text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold animate-bounce shadow-lg">
+              💬
+            </div>
           )}
         </button>
       </div>
