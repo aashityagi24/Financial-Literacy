@@ -2015,7 +2015,7 @@ export default function TeacherDashboard({ user }) {
                 </span>
                 <button 
                   type="button"
-                  onClick={() => { setShowRepositoryPicker(false); setPickingFor(null); }}
+                  onClick={() => { setShowRepositoryPicker(false); setPickingFor(null); setShowCreateQuest(true); }}
                   className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-[#1D3557] font-medium"
                 >
                   Cancel
