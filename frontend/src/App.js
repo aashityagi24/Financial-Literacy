@@ -324,6 +324,11 @@ function AppRouter() {
           {({ user }) => <AdminGlossaryManagement user={user} />}
         </ProtectedRoute>
       } />
+      <Route path="/admin/repository" element={
+        <ProtectedRoute>
+          {({ user }) => <AdminTeacherRepository user={user} />}
+        </ProtectedRoute>
+      } />
       <Route path="/glossary" element={
         <ProtectedRoute>
           {({ user }) => <GlossaryPage user={user} />}
