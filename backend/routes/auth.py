@@ -60,6 +60,10 @@ async def unified_login(login_data: UnifiedLoginRequest, response: Response):
     # Hash password for comparison
     password_hash = hashlib.sha256(password.encode()).hexdigest()
     
+    # Debug: log the query
+    import logging
+    logging.info(f"Login attempt: identifier={identifier}, hash_prefix={password_hash[:10]}...")
+    
     # Try to find user by email or username
     user = await db.users.find_one({
         "$or": [
@@ -68,6 +72,8 @@ async def unified_login(login_data: UnifiedLoginRequest, response: Response):
         ],
         "password_hash": password_hash
     }, {"_id": 0, "password_hash": 0})  # Exclude sensitive fields
+    
+    logging.info(f"Login result: user_found={user is not None}")
     
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email/username or password")
