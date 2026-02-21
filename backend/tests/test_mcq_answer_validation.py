@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from pymongo import MongoClient
 import hashlib
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://resource-quest-7.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://literate-kids.preview.emergentagent.com').rstrip('/')
 
 # Test credentials
 TEACHER_EMAIL = "test.grade.teacher@example.com"

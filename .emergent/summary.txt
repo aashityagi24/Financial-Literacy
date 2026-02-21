@@ -16,47 +16,52 @@
 **User's preferred language**: English
 
 **what currently exists?**
-The session began by completing the user-requested UX refactor for the Money Garden, implementing features like a single plot, plant/sell dialogs, and visual growth indicators. Several UI naming conventions on the Dashboard and Wallet pages were updated based on user feedback (e.g., Wallet -> My Money).
+The session focused heavily on fixing a large number of UI/UX bugs and implementing user-requested refinements. The Teacher Repository upload bug was fixed and comprehensively tested. Several issues in the teacher's quest creation flow were resolved, including a complex modal interaction bug, incorrect due date validation, and redundant classroom selection. A critical bug preventing correct validation of children's multiple-choice answers was fixed in the backend.
 
-A major task was disabling the auto-creation of default badges. During this process, the agent inadvertently deleted all admin-created badges. While the badge names and descriptions were restored using a user-provided image, the associated uploaded image URLs were permanently lost.
-
-Finally, the agent built a new Teacher Repository feature. This involved creating backend endpoints for resource management, an admin page for uploading files (images/PDFs), and integrating a resource picker into the teacher's quest creation form. The session ended while fixing a bug in this new feature.
+Numerous UI enhancements were made across the application based on user feedback:
+-   The child's quest result page was restyled for clarity.
+-   The teacher's quest analytics view was refined to show relevant data and handle different question types correctly.
+-   A reward amount discrepancy on the child's dashboard was resolved.
+-   For younger students (K-1), multiplication visuals were replaced with repeated addition in the Store and Money Garden.
+-   The Recent Activity view was updated to correctly display expenses with a minus sign.
+-   A new feature allowing teachers to apply penalties was added.
+-   The glossary search was restricted to search by term title only.
+-   Various other small UI tweaks were implemented, such as hiding classroom management buttons for school-affiliated teachers and ensuring button color consistency.
 
 **Last working item**:
-- Last item agent was working: Fixing a bug where admins receive an Invalid doc type error when trying to upload files to the new Teacher Repository.
+- Last item agent was working: The agent modified the backend logic for the Glossary/Word Bank search feature. The user requested that the search functionality only query the  (the title of the word) and not the  or . The agent updated the MongoDB query to reflect this change.
 - Status: IN PROGRESS
 - Agent Testing Done: N
-- Which testing method agent to use? both
+- Which testing method agent to use? backend testing agent
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: Invalid doc type error when uploading to Teacher Repository (P0)
+  - Issue 1: Test the glossary search functionality fix (P0)
   - Issue 2: Badge images are missing and require manual re-upload (P1)
 
   Issues Detail:
   - Issue 1: 
-     - **Description**: When an admin attempts to upload a resource (image or PDF) in the new Teacher Repository module, the backend incorrectly rejects it with an Invalid document type error.
-     - **Attempted fixes**: The agent modified  to loosen the validation by checking the file's extension in addition to its . This change has not been tested.
+     - **Description**: The fix to restrict glossary search to the  field in  has been implemented but not tested.
+     - **Attempted fixes**: The agent removed the  operator from the MongoDB query, leaving only the filter on the  field.
      - **Next debug checklist**:
-        1. Restart the backend service (backend: stopped
-backend: started).
-        2. Log in as the admin user.
-        3. Navigate to the Repository section on the admin dashboard.
-        4. Attempt to upload a PNG, a JPG, and a PDF file.
-        5. Verify that the uploads succeed and appear in the resource list.
-     - **Why fix this issue and what will be achieved with the fix?** This is a critical blocker preventing the use of the newly-implemented Teacher Repository feature.
+        1. Restart the backend service.
+        2. Log in as any user (e.g., child).
+        3. Navigate to the Word Bank / Glossary page.
+        4. Perform a search for a word that appears in a term's *description* but not its *title*. Verify that no results are returned.
+        5. Perform a search for a word that appears in a term's *title*. Verify that the correct result is returned.
+     - **Why fix this issue and what will be achieved with the fix?** To confirm the last user-requested change is working as expected.
      - **Status:**  IN PROGRESS
      - **Is recurring issue?** N
-     - **Should Test frontend/backend/both after fix?** both
+     - **Should Test frontend/backend/both after fix?** backend
      - **Blocked on other issue:** No
 
   - Issue 2: 
-     - **Description**: The user-uploaded images for all achievement badges are gone. This happened when the agent was disabling the auto-creation of badges and accidentally deleted the  collection. The badge metadata (name, description) was restored, but the image URLs were permanently lost.
-     - **Attempted fixes**: The agent confirmed the data is not recoverable from backups or logs.
-     - **Next debug checklist**: This issue cannot be fixed with code. The agent must inform the user that the admin needs to manually re-upload the images for each badge via the Badge Management section of the admin panel.
+     - **Description**: The user-uploaded images for all achievement badges are gone. This happened in a previous session when the agent was disabling the auto-creation of badges and accidentally deleted the  collection. The badge metadata (name, description) was restored, but the image URLs were permanently lost.
+     - **Attempted fixes**: None possible via code. Data is confirmed to be unrecoverable.
+     - **Next debug checklist**: This is not a coding issue. The agent must inform the user that the admin needs to manually re-upload the images for each badge via the Badge Management section of the admin panel.
      - **Why fix this issue and what will be achieved with the fix?** The badges are a core gamification element and appear incomplete without their images.
-     - **Status:**  BLOCKED
-     - **Is recurring issue?** Y (Data loss issues can be critical and must be prevented).
+     - **Status:**  BLOCKED (requires user action)
+     - **Is recurring issue?** Y (Data loss incidents are critical).
      - **Should Test frontend/backend/both after fix?** NA
      - **Blocked on other issue:** No
 
@@ -76,74 +81,90 @@ backend: started).
  - **P2:** Develop a Tutorial System for new users.
 
 **Completed work in this session**
-- **Feature: Money Garden UX Refactor (Completed):** Implemented a single large plot, plant/sell confirmation dialogs, visual growth stage indicators, and whole-number calculations.
-- **UI Refinement: Wallet & Dashboard Naming:** Renamed components and navigation links across  and  per user request (e.g., My Wallet → My Money, Spending → Wallet).
-- **Backend Logic: Disabled Badge Auto-Creation:** Modified  and  to prevent the system from auto-generating default badges.
-- **Feature: Teacher Repository Module (Admin & Teacher):**
-    - Created backend endpoints () for uploading and managing educational resources.
-    - Built an admin UI () for resource management.
-    - Integrated a resource picker () into the teacher's quest creation form ().
-- **Bug Fix:** Resolved a  crash in .
+- **Feature: Teacher Repository (Completed):** Fixed Invalid doc type bug and a related ObjectId serialization bug. The feature is now fully functional and tested.
+- **Bugfix: Repository Grade Filtering (Completed):** Repository items are now correctly filtered based on the teacher's current classroom grade.
+- **Bugfix: Quest Answer Validation (Completed):** Fixed a critical bug where multiple-choice answers were incorrectly marked as wrong.
+- **Bugfix: Teacher Quest Creation UX (Completed):** Fixed multiple issues including a modal click interception bug, due date validation, and made classroom selection automatic.
+- **Bugfix: Reward Discrepancy (Completed):** Ensured the reward amount shown on the child's dashboard is consistent with the actual quest reward.
+- **Feature: Teacher Penalties (Completed):** Implemented a feature for teachers to apply penalties to students, mirroring the parent functionality.
+- **UI/UX Refinements (Completed):**
+    - **Repeated Addition:** Implemented for K-1 students in the Store and Money Garden to replace multiplication visuals.
+    - **Quest Analytics:** Redesigned the teacher's analytics view for clarity and correctness across all question types.
+    - **Child Quest Results:** Improved the UI for displaying answers after a child completes a quest.
+    - **Wallet Page:** Fixed recent activity to show a minus sign for expenses.
+    - **Teacher Dashboard:** Hid classroom management buttons for school-affiliated teachers.
+    - **Glossary Search:** Modified search to be title-only as per user request.
+    - **UI Consistency:** Standardized button colors and fixed icon visibility issues.
 
 **Earlier issues found/mentioned but not fixed**
    - None.
 
 **Known issue recurrence from previous fork**
-  - None.
+  - **Issue recurrence in previous fork:** Permanent loss of user-uploaded badge images due to accidental database collection deletion.
+  - **Recurrence count:** 1
+  - **Status:** BLOCKED (requires manual data re-entry by the user).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **File Uploads in FastAPI:** Implemented file upload handling using , saving files to a persistent volume (), and serving them statically. The implementation required debugging content-type validation.
-- **Dynamic Component Integration:** A reusable  dialog was created and integrated into the existing  to add new functionality without a full rewrite.
-- **Database Recovery (Partial):** After accidental data deletion, the agent restored badge metadata by cross-referencing user-provided images and hardcoded defaults, demonstrating a partial recovery process when backups are unavailable.
+- **Event Interception in Modals:** Diagnosed and fixed a complex z-index/focus-trap issue between a custom modal () and a Radix UI-based  component by programmatically closing the parent dialog.
+- **Conditional Rendering based on User Data:** Implemented logic to change UI/behavior based on user grade () and school affiliation ().
+- **Data Consistency Across Components:** Traced and fixed a bug where different components displayed different reward values for the same quest by ensuring they all referenced the correct data field ().
+- **Backend Search Logic Modification:** Modified a MongoDB query in FastAPI to restrict search scope based on user requirements.
+- **Data-Driven UI for Analytics:** Refactored the Teacher Quest Analytics component to dynamically render different answer distribution charts based on the question type (MCQ, True/False, Numeric, etc.).
 
 **key DB schema**
-  - ** (New Collection):** 
-  - **:** Data was deleted and restored. The  field is now empty for all restored badges.
+  - **:** Creation logic in  was updated to ensure  is consistent with  when questions are present.
+  - **:** A new  transaction type was implicitly added for the teacher penalty feature.
 
 **changes in tech stack**
   - None.
 
 **All files of reference**
--   **/app/backend/routes/repository.py**: Core logic for the new Teacher Repository feature and location of the pending bug fix.
--   **/app/frontend/src/pages/AdminTeacherRepository.jsx**: The new admin page for managing repository resources.
--   **/app/frontend/src/pages/TeacherDashboard.jsx**: Modified to allow teachers to use the repository.
--   **/app/backend/routes/achievements.py**: Location where badge logic was changed, leading to the data loss incident.
+-   **/app/backend/routes/glossary.py**: Contains the last implemented (but untested) change.
+-   **/app/frontend/src/pages/TeacherDashboard.jsx**: A central file that was heavily modified for multiple features and bug fixes.
+-   **/app/backend/routes/quests.py**: Contains the critical fix for answer validation.
+-   **/app/frontend/src/pages/QuestsPage.jsx**: Contains the UI fix for displaying quest results to children.
+-   **/app/frontend/src/pages/StorePage.jsx**: Contains the repeated addition logic.
+-   **/app/frontend/src/pages/MoneyGardenPage.jsx**: Contains the repeated addition logic.
 
 **Areas that need refactoring**:
-- ****: This file has grown significantly and is now very complex. It should be broken down into smaller components (e.g., , , ) to improve maintainability.
-- ****: Remains a large, monolithic component that would benefit from being split into smaller, more focused components.
+- ****: This file has become extremely large and complex. It manages state for classroom views, student lists, quest creation, repository picking, and reward/penalty dialogs. It should be broken down into smaller, more manageable components.
+- ****: Remains a large, monolithic component that handles all game logic, state, and UI dialogs.
 
 **key api endpoints**
--   ****: (New) Upload a new resource for the teacher repository.
--   ****: (New) List all repository resources.
--   ****: (New) Static path to serve uploaded repository files.
--   ****: (Modified) No longer auto-seeds default badges.
+-   ****: (New) For teachers to issue rewards or penalties to students.
+-   ****: (Modified) Search logic now only queries the  field.
+-   ****: (Modified) Backend answer validation logic fixed for MCQs.
+-   ****: (Modified) Quest creation logic fixed to ensure  is calculated correctly.
+-   **GET **: (Modified) The frontend now passes the classroom grade to filter resources.
 
 **Critical Info for New Agent**
--   Your immediate priority is to **test the fix** for the Invalid doc type bug in .
--   A critical piece of data was **permanently lost**: the user-uploaded images for the achievement badges. You must clearly communicate to the user that the admin needs to **manually re-upload** these images via the admin panel. Do not attempt to recover them again.
--   The Teacher Repository is a brand new feature. After fixing the upload bug, it may require further testing and refinement.
+-   Your immediate priority is to **test the fix** for the glossary search in .
+-   The user is very attentive to UI/UX details. Expect specific feedback on layout, wording, and interaction flows. Any UI changes should be tested carefully.
+-   The data loss of badge images from the previous fork is a **permanent issue** that requires user action (manual re-upload). Do not attempt to fix this with code.
+-   The  component is very fragile due to its size and complexity. Be extra cautious when making changes to this file.
 
 **documents and test reports created in this job**
-  - None.
+  - /app/memory/PRD.md (updated)
+  - /app/test_reports/iteration_1.json
+  - /app/backend/tests/test_api.py
 
 **Last 10 User Messages and any pending HUMAN messages** 
-- 10. User reported a bug: . (CURRENT P0 BUG)
-- 9. User requested the new Teacher Repository feature.
-- 8. User provided an image of the correct badge data, which was used for restoration.
-- 7. User asked the agent to try and reinstate the deleted badges and their changed names/descriptions.
-- 6. User reported that all uploaded badge images were gone. (DATA LOSS INCIDENT)
-- 5. User reported that all badges were missing from the admin panel after the agent's changes.
-- 4. User requested to disable the automatic creation of default badges.
-- 3. User requested naming changes on the dashboard (My Money not my money jars).
-- 2. User requested naming changes on the wallet page (Heading should be My Money not My Wallet).
-- 1. User requested final UI tweaks for the Money Garden page.
+- 10. **Request:** Glossary search should only be by title, not meaning/description. (Implemented, pending testing)
+- 9. **Request:** Make three specific buttons on the teacher dashboard the same blue color. (Completed)
+- 8. **Request:** Remove the informational message shown to school-affiliated teachers. (Completed)
+- 7. **Request:** If a teacher is connected to a school, hide the create/delete classroom buttons. (Completed)
+- 6. **Request:** For a quantity of 1, just show the price (e.g., ₹20) instead of the calculation (1 x ₹20). (Completed)
+- 5. **Bug Report:** Recent activity for expenses should show a minus sign. And the repeated addition logic is still showing multiplication. (Completed)
+- 4. **Request:** For K-1 students, replace multiplication visuals with repeated addition in the Store and Money Garden. (Completed)
+- 3. **Request:** Fix icon visibility on two buttons in the Money Garden. (Completed)
+- 2. **Request:** Allow teachers to give penalties, just like parents can. (Completed)
+- 1. **Bug Report:** Teacher quest analytics page has UI issues (redundant percentages, incorrect highlighting). (Completed)
 
 **Project Health Check:**
-- **Broken:** The new Teacher Repository feature is unusable due to the file upload bug.
+- **Broken:** None.
 - **Mocked:** None.
 
 **3rd Party Integrations**
@@ -151,16 +172,15 @@ backend: started).
 -   **APScheduler**: For running scheduled backend jobs.
 
 **Testing status**
-  - Testing agent used after significant changes: NO
+  - Testing agent used after significant changes: YES (For Teacher Repository feature)
   - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created: None
+  - Test files created: ['/app/backend/tests/test_api.py']
   - Known regressions: **Permanent loss of user-uploaded badge images.**
 
 **Credentials to test flow:**
 -   **Admin:**  / 
--   **Teacher:**  (Password needs to be set via admin panel or use Google SSO).
+-   **Teacher:**  / 
 -   **Child (Grade 1):**  / 
 
 **What agent forgot to execute**
-- The agent failed to test the bug fix for the Teacher Repository upload before the session ended.
-- Most critically, the agent did not properly safeguard user data, leading to the permanent loss of all badge images. A backup or safer modification procedure should have been used.</analysis>
+- The agent implemented the user's final request to modify the glossary search logic but did not test it before the session ended.</analysis>
