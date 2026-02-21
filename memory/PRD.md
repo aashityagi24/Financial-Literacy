@@ -794,3 +794,24 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - GET /api/lending/classmates
 - GET /api/lending/parents
 - GET /api/lending/parent/child-loans/{child_id}
+
+### Session 18 Updates (February 21, 2026)
+
+**Glossary Search Fix Verified** ✅
+
+1. **Glossary Search - Title Only** ✅ (P0 FIX VERIFICATION)
+   - **Requirement**: User requested that glossary search only query the term/title field, not the meaning or description
+   - **Implementation**: Modified MongoDB query in `/app/backend/routes/glossary.py` to use `{"term": {"$regex": search, "$options": "i"}}` instead of `$or` with meaning
+   - **Verification Tests Passed**:
+     - ✅ Search "Budget" → Found 1 word (term match)
+     - ✅ Search "wealth" → Found 0 words (only in description, correctly excluded)
+     - ✅ Search "valuable" → Found 0 words (only in meaning of "Asset", correctly excluded)
+     - ✅ Search "Savings" → Found 1 word (term match)
+     - ✅ Search "sav" → Found 1 word (partial term match works)
+   - **Result**: Search now correctly queries only the term field as requested
+
+**Files Verified:**
+- `/app/backend/routes/glossary.py` - Search logic confirmed working (line 40)
+
+**Known Issue (User Action Required):**
+- **Badge Images Missing**: User-uploaded badge images were lost in a previous session. Admin must manually re-upload images via Admin Panel → Badge Management.
