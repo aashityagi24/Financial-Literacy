@@ -35,13 +35,9 @@ async def get_glossary_words(
     # Build query
     query = {}
     
-    # Search by term or meaning
+    # Search by term only (not meaning or description)
     if search:
-        query["$or"] = [
-            {"term": {"$regex": search, "$options": "i"}},
-            {"meaning": {"$regex": search, "$options": "i"}},
-            {"description": {"$regex": search, "$options": "i"}}
-        ]
+        query["term"] = {"$regex": search, "$options": "i"}
     
     # Filter by starting letter
     if letter and len(letter) == 1:
