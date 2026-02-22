@@ -47,7 +47,7 @@ export default function LandingPage() {
     { icon: HandCoins, title: "Lending & Borrowing", description: "Learn about lending, interest, and credit scores by borrowing from parents & classmates", color: "#F59E0B" },
   ];
   
-  const grades = ["Kindergarten", "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"];
+  const grades = ["Kindergarten", "1st Grade", "2nd Grade"];
   
   const gradeDescriptions = {
     "Kindergarten": {
@@ -153,7 +153,7 @@ export default function LandingPage() {
                 Learn Money Skills <span className="text-[#EE6C4D]">While Having Fun!</span>
               </h1>
               <p className="text-xl text-[#3D5A80] mb-8 leading-relaxed">
-                CoinQuest teaches K-5 kids about saving, spending, investing, and gifting through exciting games, quests, and real-world simulations!
+                CoinQuest teaches K-2 kids about saving, spending, investing, and gifting through exciting games, quests, and real-world simulations!
               </p>
               <div className="flex flex-wrap gap-4">
                 <button
