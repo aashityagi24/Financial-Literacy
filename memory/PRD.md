@@ -815,3 +815,11 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 
 **Known Issue (User Action Required):**
 - **Badge Images Missing**: User-uploaded badge images were lost in a previous session. Admin must manually re-upload images via Admin Panel → Badge Management.
+
+**Grade Selection Hidden (3rd-5th Grade)** ✅
+- **Requirement**: Hide grades 3-5 from user-facing pages
+- **Changes Made**:
+  1. **LandingPage.jsx**: Reduced grade tabs from 6 (K-5) to 3 (K-2)
+  2. **LandingPage.jsx**: Updated hero text from "K-5 kids" to "K-2 kids"
+  3. **ProfilePage.jsx**: Reduced grade selection dropdown from 6 options to 3 (K, 1st, 2nd)
+- **Result**: Users can only see and select Kindergarten, 1st Grade, or 2nd Grade
