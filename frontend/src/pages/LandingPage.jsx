@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, School, Play, Pause, HandCoins } from 'lucide-react';
+import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, School, Play, Pause } from 'lucide-react';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
