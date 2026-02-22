@@ -206,7 +206,7 @@ export default function LandingPage() {
             <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
               Everything Kids Need to Learn About Money
             </h2>
-            <p className="text-xl text-[#3D5A80]">Age-appropriate financial education from Kindergarten to 5th Grade</p>
+            <p className="text-xl text-[#3D5A80]">Age-appropriate financial education from Kindergarten to 2nd Grade</p>
           </div>
           
           {/* First row - 3 cards */}
