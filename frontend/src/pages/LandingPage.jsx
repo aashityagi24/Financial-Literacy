@@ -76,7 +76,6 @@ export default function LandingPage() {
         "Learn the history and evolution of money",
         "Budgeting basics in play for small and big purchases",
         "Harvest vegetables and sell them at the market for profit",
-        "Introduction to borrowing and lending",
         "Create wish lists and prioritize wants"
       ],
       color: "#EE6C4D"
