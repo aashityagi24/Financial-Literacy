@@ -386,9 +386,19 @@ export default function ParentShoppingList({ user }) {
               <p className="text-sm text-[#3D5A80] mb-2">Selected Items ({selectedItems.length}):</p>
               <ul className="text-sm text-[#1D3557]">
                 {childList.filter(i => selectedItems.includes(i.list_id)).map(item => (
-                  <li key={item.list_id}>• {item.item_name} × {item.quantity}</li>
+                  <li key={item.list_id}>• {item.item_name} × {item.quantity} = ₹{item.item_price * item.quantity}</li>
                 ))}
               </ul>
+              {selectedItems.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-[#3D5A80]/20">
+                  <p className="text-sm font-bold text-[#1D3557]">
+                    Total Cost: ₹{getSelectedItemsTotalCost()}
+                  </p>
+                  <p className="text-xs text-[#EE6C4D] mt-1">
+                    Minimum reward should be ₹{getSelectedItemsTotalCost()} so your child can buy these items
+                  </p>
+                </div>
+              )}
             </div>
             
             <div>
