@@ -536,9 +536,10 @@ export default function TopicPage({ user }) {
             <div className="flex-1 bg-gray-100">
               {(selectedContent.content_type === 'worksheet' || selectedContent.content_type === 'workbook') && (
                 <iframe 
-                  src={selectedContent.content_data.pdf_url}
+                  src={selectedContent.content_data.pdf_url + '#toolbar=0&navpanes=0&scrollbar=1'}
                   className="w-full h-full"
                   title={selectedContent.title}
+                  sandbox="allow-scripts allow-same-origin"
                 />
               )}
               {selectedContent.content_type === 'activity' && (
@@ -550,14 +551,15 @@ export default function TopicPage({ user }) {
                   }
                   className="w-full h-full"
                   title={selectedContent.title}
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  sandbox="allow-scripts allow-same-origin allow-forms"
                 />
               )}
               {selectedContent.content_type === 'book' && selectedContent.content_data?.pdf_url && (
                 <iframe 
-                  src={getAssetUrl(selectedContent.content_data.pdf_url)}
+                  src={getAssetUrl(selectedContent.content_data.pdf_url) + '#toolbar=0&navpanes=0&scrollbar=1'}
                   className="w-full h-full"
                   title={selectedContent.title}
+                  sandbox="allow-scripts allow-same-origin"
                 />
               )}
               {selectedContent.content_type === 'book' && selectedContent.content_data?.html_url && !selectedContent.content_data?.pdf_url && (
@@ -569,7 +571,7 @@ export default function TopicPage({ user }) {
                   }
                   className="w-full h-full"
                   title={selectedContent.title}
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  sandbox="allow-scripts allow-same-origin allow-forms"
                 />
               )}
               {selectedContent.content_type === 'video' && (
