@@ -634,14 +634,24 @@ async def create_chore_from_shopping(request: Request):
     if not list_item_ids:
         raise HTTPException(status_code=400, detail="At least one list item must be selected")
     
-    # Create the chore in new_quests collection so child can see it
-    chore_id = f"chore_{uuid.uuid4().hex[:12]}"
-    
-    # Get item details for the description AND for the shopping list display
+    # Get item details for validation and the chore
     selected_items = await db.shopping_lists.find(
         {"list_id": {"$in": list_item_ids}, "parent_id": parent["user_id"]},
         {"_id": 0}
     ).to_list(50)
+    
+    # Calculate total cost of selected items
+    total_cost = sum(item.get("item_price", 0) * item.get("quantity", 1) for item in selected_items)
+    
+    # Validate reward amount is at least equal to total cost
+    if reward_amount < total_cost:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Reward amount (₹{reward_amount}) must be at least ₹{total_cost} (total cost of items) so your child can afford to buy them"
+        )
+    
+    # Create the chore in new_quests collection so child can see it
+    chore_id = f"chore_{uuid.uuid4().hex[:12]}"
     
     items_description = ", ".join([f"{i.get('item_name', 'Item')} x{i.get('quantity', 1)}" for i in selected_items])
     full_description = f"{description}\n\nItems: {items_description}" if description else f"Items: {items_description}"
