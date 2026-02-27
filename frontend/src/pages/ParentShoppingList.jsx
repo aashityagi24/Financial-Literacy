@@ -412,16 +412,32 @@ export default function ParentShoppingList({ user }) {
             </div>
             
             <div>
-              <label className="block text-sm font-bold text-[#1D3557] mb-1">Reward Amount (₹) *</label>
+              <label className="block text-sm font-bold text-[#1D3557] mb-1">
+                Reward Amount (₹) * 
+                {selectedItems.length > 0 && (
+                  <span className="font-normal text-[#EE6C4D]"> (min: ₹{getSelectedItemsTotalCost()})</span>
+                )}
+              </label>
               <Input 
                 type="number"
-                min="1"
-                placeholder="Enter reward money in Rupees" 
+                min={getSelectedItemsTotalCost() || 1}
+                placeholder={selectedItems.length > 0 ? `Minimum ₹${getSelectedItemsTotalCost()}` : "Enter reward money in Rupees"}
                 value={choreForm.reward_amount} 
                 onChange={(e) => setChoreForm({...choreForm, reward_amount: e.target.value})}
                 className="border-3 border-[#1D3557]"
               />
-              <p className="text-xs text-[#3D5A80] mt-1">This is the money your child will earn for completing this chore</p>
+              <div className="flex justify-between items-center mt-1">
+                <p className="text-xs text-[#3D5A80]">Reward must cover item costs so your child can buy them</p>
+                {selectedItems.length > 0 && !choreForm.reward_amount && (
+                  <button 
+                    type="button"
+                    onClick={() => setChoreForm({...choreForm, reward_amount: getSelectedItemsTotalCost().toString()})}
+                    className="text-xs text-[#06D6A0] font-bold hover:underline"
+                  >
+                    Use minimum (₹{getSelectedItemsTotalCost()})
+                  </button>
+                )}
+              </div>
             </div>
             
             <div>
