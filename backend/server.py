@@ -9208,6 +9208,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ============== CONTENT PROTECTION MIDDLEWARE ==============
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    
+    # Add security headers to all responses
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    
+    # For uploaded content, add extra protection
+    if "/api/uploads/" in str(request.url.path):
+        # Prevent content from being downloaded directly
+        response.headers["Content-Disposition"] = "inline"
+        # Prevent caching of sensitive content
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        # Content Security Policy for HTML content
+        if request.url.path.endswith('.html'):
+            response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+    
+    return response
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
