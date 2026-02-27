@@ -117,6 +117,13 @@ export default function ParentShoppingList({ user }) {
       return;
     }
     
+    // Validate reward amount is at least equal to total item cost
+    const totalCost = getSelectedItemsTotalCost();
+    if (parseFloat(choreForm.reward_amount) < totalCost) {
+      toast.error(`Reward must be at least ₹${totalCost} (total cost of items) so your child can afford to buy them`);
+      return;
+    }
+    
     try {
       const res = await axios.post(`${API}/parent/shopping-list/create-chore`, {
         child_id: selectedChild,
