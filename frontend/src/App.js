@@ -42,6 +42,7 @@ import AdminGlossaryManagement from "@/pages/AdminGlossaryManagement";
 import AdminTeacherRepository from "@/pages/AdminTeacherRepository";
 import GlossaryPage from "@/pages/GlossaryPage";
 import AuthPage from "@/pages/AuthPage";
+import ContentProtection from "@/components/ContentProtection";
 
 // Components
 import OnboardingTour from "@/components/OnboardingTour";
@@ -341,6 +342,7 @@ function AppRouter() {
 function App() {
   return (
     <div className="min-h-screen">
+      <ContentProtection />
       <BrowserRouter>
         <AppRouter />
       </BrowserRouter>
