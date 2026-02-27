@@ -148,6 +148,14 @@ export default function ParentShoppingList({ user }) {
     return childData?.items?.filter(i => i.status === 'pending') || [];
   };
   
+  // Calculate total cost of selected items
+  const getSelectedItemsTotalCost = () => {
+    const childList = getChildShoppingList();
+    return childList
+      .filter(i => selectedItems.includes(i.list_id))
+      .reduce((sum, item) => sum + (item.item_price * item.quantity), 0);
+  };
+  
   const filteredStoreItems = selectedCategory === 'all' 
     ? storeItems 
     : storeItems.filter(item => item.category_id === selectedCategory);
