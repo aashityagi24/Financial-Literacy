@@ -536,10 +536,9 @@ export default function TopicPage({ user }) {
             <div className="flex-1 bg-gray-100">
               {(selectedContent.content_type === 'worksheet' || selectedContent.content_type === 'workbook') && (
                 <iframe 
-                  src={selectedContent.content_data.pdf_url + '#toolbar=0&navpanes=0&scrollbar=1'}
+                  src={selectedContent.content_data.pdf_url}
                   className="w-full h-full"
                   title={selectedContent.title}
-                  sandbox="allow-scripts allow-same-origin"
                 />
               )}
               {selectedContent.content_type === 'activity' && (
@@ -556,10 +555,9 @@ export default function TopicPage({ user }) {
               )}
               {selectedContent.content_type === 'book' && selectedContent.content_data?.pdf_url && (
                 <iframe 
-                  src={getAssetUrl(selectedContent.content_data.pdf_url) + '#toolbar=0&navpanes=0&scrollbar=1'}
+                  src={getAssetUrl(selectedContent.content_data.pdf_url)}
                   className="w-full h-full"
                   title={selectedContent.title}
-                  sandbox="allow-scripts allow-same-origin"
                 />
               )}
               {selectedContent.content_type === 'book' && selectedContent.content_data?.html_url && !selectedContent.content_data?.pdf_url && (
