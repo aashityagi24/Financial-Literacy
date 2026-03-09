@@ -167,8 +167,7 @@ async def admin_login(login_data: AdminLoginRequest, response: Response):
         await db.users.insert_one(admin_user)
         admin_user = await db.users.find_one({"email": ADMIN_EMAIL}, {"_id": 0})
     
-    # Single device login: Invalidate ALL previous sessions for admin
-    await db.user_sessions.delete_many({"user_id": admin_user["user_id"]})
+    # Admin allows multiple simultaneous logins - no session invalidation
     
     # Create new session
     session_token = f"sess_{uuid.uuid4().hex}"
