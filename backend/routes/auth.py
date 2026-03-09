@@ -72,7 +72,10 @@ async def unified_login(login_data: UnifiedLoginRequest, response: Response):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email/username or password")
     
-    # Create session
+    # Single device login: Invalidate ALL previous sessions for this user
+    await db.user_sessions.delete_many({"user_id": user["user_id"]})
+    
+    # Create new session
     session_token = f"sess_{uuid.uuid4().hex}"
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     
@@ -164,7 +167,10 @@ async def admin_login(login_data: AdminLoginRequest, response: Response):
         await db.users.insert_one(admin_user)
         admin_user = await db.users.find_one({"email": ADMIN_EMAIL}, {"_id": 0})
     
-    # Create session
+    # Single device login: Invalidate ALL previous sessions for admin
+    await db.user_sessions.delete_many({"user_id": admin_user["user_id"]})
+    
+    # Create new session
     session_token = f"sess_{uuid.uuid4().hex}"
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     
@@ -200,6 +206,10 @@ async def school_login(login_data: SchoolLoginRequest, response: Response):
     if school.get("password_hash") != password_hash:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
+    # Single device login: Invalidate ALL previous sessions for this school
+    await db.user_sessions.delete_many({"user_id": school["school_id"]})
+    
+    # Create new session
     session_token = f"school_sess_{uuid.uuid4().hex}"
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     
@@ -392,7 +402,10 @@ async def google_callback(request: Request, response: Response, code: str = None
             )
             user = await db.users.find_one({"email": email}, {"_id": 0})
     
-    # Create session
+    # Single device login: Invalidate ALL previous sessions for this user
+    await db.user_sessions.delete_many({"user_id": user["user_id"]})
+    
+    # Create new session
     session_token = f"sess_{uuid.uuid4().hex}"
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     
@@ -515,6 +528,10 @@ async def create_session(request: Request, response: Response):
             )
             user = await db.users.find_one({"email": email}, {"_id": 0})
     
+    # Single device login: Invalidate ALL previous sessions for this user
+    await db.user_sessions.delete_many({"user_id": user["user_id"]})
+    
+    # Create new session
     session_token = f"sess_{uuid.uuid4().hex}"
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
     

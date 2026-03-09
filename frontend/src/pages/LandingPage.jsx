@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, School, Play, Pause } from 'lucide-react';
 import axios from 'axios';
+import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -16,10 +17,20 @@ const getAssetUrl = (path) => {
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [walkthroughVideo, setWalkthroughVideo] = useState(null);
   const [selectedGrade, setSelectedGrade] = useState(null);
 
   useEffect(() => {
+    // Check if redirected due to session expiry
+    if (searchParams.get('session_expired') === 'true') {
+      toast.error('Your session has ended. You may have logged in on another device.', {
+        duration: 5000
+      });
+      // Clean up URL
+      window.history.replaceState({}, '', '/');
+    }
+    
     // Fetch walkthrough video settings
     const fetchWalkthroughVideo = async () => {
       try {
@@ -32,7 +43,7 @@ export default function LandingPage() {
       }
     };
     fetchWalkthroughVideo();
-  }, []);
+  }, [searchParams]);
   
   // Use custom Google OAuth
   const handleLogin = () => {

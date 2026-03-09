@@ -73,6 +73,24 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
+// Add response interceptor to handle session invalidation (single device login)
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Session is invalid - user may have logged in on another device
+      const currentPath = window.location.pathname;
+      // Don't redirect if already on auth pages
+      if (currentPath !== '/' && currentPath !== '/auth' && currentPath !== '/auth/callback') {
+        localStorage.removeItem('session_token');
+        // Show message and redirect
+        window.location.href = '/?session_expired=true';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Protected Route Component
 export const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
