@@ -1069,47 +1069,86 @@ async def admin_get_scheduler_status(request: Request):
 
 @router.get("/settings/walkthrough-video")
 async def get_walkthrough_video(request: Request):
-    """Get the walkthrough video URL (public endpoint)"""
+    """Get all walkthrough videos (public endpoint)"""
     db = get_db()
-    setting = await db.site_settings.find_one({"key": "walkthrough_video"}, {"_id": 0})
-    if setting:
-        return {"url": setting.get("value"), "title": setting.get("title", ""), "description": setting.get("description", "")}
-    return {"url": None, "title": "", "description": ""}
+    # Get all walkthrough videos for different user types
+    videos = {}
+    for user_type in ['child', 'parent', 'teacher']:
+        setting = await db.site_settings.find_one({"key": f"walkthrough_video_{user_type}"}, {"_id": 0})
+        if setting:
+            videos[user_type] = {
+                "url": setting.get("value"),
+                "title": setting.get("title", ""),
+                "description": setting.get("description", "")
+            }
+        else:
+            videos[user_type] = {"url": None, "title": "", "description": ""}
+    
+    # Also return global title/description for the section
+    global_setting = await db.site_settings.find_one({"key": "walkthrough_video_global"}, {"_id": 0})
+    videos["global"] = {
+        "title": global_setting.get("title", "See CoinQuest in Action") if global_setting else "See CoinQuest in Action",
+        "description": global_setting.get("description", "Watch how kids learn financial literacy through fun games and activities") if global_setting else "Watch how kids learn financial literacy through fun games and activities"
+    }
+    
+    return videos
 
 @router.put("/settings/walkthrough-video")
 async def update_walkthrough_video(request: Request):
-    """Update the walkthrough video URL"""
+    """Update a walkthrough video for a specific user type"""
     from services.auth import require_admin
     db = get_db()
     await require_admin(request)
     body = await request.json()
     
-    await db.site_settings.update_one(
-        {"key": "walkthrough_video"},
-        {"$set": {
-            "key": "walkthrough_video",
-            "value": body.get("url"),
-            "title": body.get("title", "See CoinQuest in Action"),
-            "description": body.get("description", "Watch how kids learn financial literacy through fun games and activities"),
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }},
-        upsert=True
-    )
-    return {"message": "Walkthrough video updated"}
+    user_type = body.get("user_type", "child")  # child, parent, teacher, or global
+    
+    if user_type == "global":
+        # Update global settings (title/description for the section)
+        await db.site_settings.update_one(
+            {"key": "walkthrough_video_global"},
+            {"$set": {
+                "key": "walkthrough_video_global",
+                "title": body.get("title", "See CoinQuest in Action"),
+                "description": body.get("description", "Watch how kids learn financial literacy through fun games and activities"),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+    else:
+        # Update video for specific user type
+        await db.site_settings.update_one(
+            {"key": f"walkthrough_video_{user_type}"},
+            {"$set": {
+                "key": f"walkthrough_video_{user_type}",
+                "value": body.get("url"),
+                "title": body.get("title", ""),
+                "description": body.get("description", ""),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+    return {"message": f"Walkthrough video for {user_type} updated"}
 
 @router.delete("/settings/walkthrough-video")
 async def delete_walkthrough_video(request: Request):
-    """Delete the walkthrough video"""
+    """Delete a walkthrough video for a specific user type"""
     from services.auth import require_admin
     db = get_db()
     await require_admin(request)
     
+    # Get user_type from query params
+    from urllib.parse import parse_qs
+    query_string = str(request.url.query)
+    params = parse_qs(query_string)
+    user_type = params.get("user_type", ["child"])[0]
+    
     # Get current video URL to delete the file
-    setting = await db.site_settings.find_one({"key": "walkthrough_video"})
+    setting = await db.site_settings.find_one({"key": f"walkthrough_video_{user_type}"})
     if setting and setting.get("value"):
         video_path = UPLOADS_DIR / "videos" / setting["value"].split("/")[-1]
         if video_path.exists():
             video_path.unlink()
     
-    await db.site_settings.delete_one({"key": "walkthrough_video"})
-    return {"message": "Walkthrough video deleted"}
+    await db.site_settings.delete_one({"key": f"walkthrough_video_{user_type}"})
+    return {"message": f"Walkthrough video for {user_type} deleted"}

@@ -215,21 +215,24 @@ async def upload_video_file(file: UploadFile = File(...)):
     return {"url": f"/api/uploads/videos/{filename}"}
 
 @router.post("/walkthrough-video")
-async def upload_walkthrough_video(file: UploadFile = File(...)):
-    """Upload the product walkthrough video for the landing page"""
+async def upload_walkthrough_video(file: UploadFile = File(...), user_type: str = "child"):
+    """Upload a walkthrough video for a specific user type (child, parent, teacher)"""
     allowed_extensions = [".mp4", ".webm", ".mov"]
     file_ext = os.path.splitext(file.filename)[1].lower()
     
     if file_ext not in allowed_extensions:
         raise HTTPException(status_code=400, detail=f"File must be a video ({', '.join(allowed_extensions)})")
     
-    # Use a consistent filename for the walkthrough video
-    filename = f"walkthrough{file_ext}"
+    if user_type not in ["child", "parent", "teacher"]:
+        raise HTTPException(status_code=400, detail="user_type must be child, parent, or teacher")
+    
+    # Use user_type in filename for walkthrough video
+    filename = f"walkthrough_{user_type}{file_ext}"
     file_path = VIDEOS_DIR / filename
     
-    # Remove any existing walkthrough video with different extension
+    # Remove any existing walkthrough video for this user type with different extension
     for ext in allowed_extensions:
-        existing = VIDEOS_DIR / f"walkthrough{ext}"
+        existing = VIDEOS_DIR / f"walkthrough_{user_type}{ext}"
         if existing.exists() and existing != file_path:
             existing.unlink()
     

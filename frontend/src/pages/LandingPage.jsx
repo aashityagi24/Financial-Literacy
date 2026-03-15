@@ -18,7 +18,8 @@ const getAssetUrl = (path) => {
 export default function LandingPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [walkthroughVideo, setWalkthroughVideo] = useState(null);
+  const [walkthroughVideos, setWalkthroughVideos] = useState(null);
+  const [selectedVideoTab, setSelectedVideoTab] = useState('child');
   const [selectedGrade, setSelectedGrade] = useState(null);
 
   useEffect(() => {
@@ -32,17 +33,18 @@ export default function LandingPage() {
     }
     
     // Fetch walkthrough video settings
-    const fetchWalkthroughVideo = async () => {
+    const fetchWalkthroughVideos = async () => {
       try {
         const response = await axios.get(`${API}/admin/settings/walkthrough-video`);
-        if (response.data.url) {
-          setWalkthroughVideo(response.data);
+        // Check if any video exists
+        if (response.data.child?.url || response.data.parent?.url || response.data.teacher?.url) {
+          setWalkthroughVideos(response.data);
         }
       } catch (error) {
         console.log('No walkthrough video configured');
       }
     };
-    fetchWalkthroughVideo();
+    fetchWalkthroughVideos();
   }, [searchParams]);
   
   // Use custom Google OAuth
@@ -243,46 +245,75 @@ export default function LandingPage() {
       </section>
       
       {/* Video Walkthrough Section */}
-      {walkthroughVideo?.url && (
+      {walkthroughVideos?.child?.url && (
         <section className="py-20 bg-[#F8F9FA]" data-testid="walkthrough-video-section">
           <div className="container mx-auto px-6">
             <div className="text-center mb-12">
               <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
-                {walkthroughVideo.title || 'See CoinQuest in Action'}
+                {walkthroughVideos.global?.title || 'See CoinQuest in Action'}
               </h2>
               <p className="text-xl text-[#3D5A80] max-w-2xl mx-auto">
-                {walkthroughVideo.description || 'Watch how kids learn financial literacy through fun games and activities'}
+                {walkthroughVideos.global?.description || 'Watch how kids learn financial literacy through fun games and activities'}
               </p>
             </div>
             
             <div className="max-w-4xl mx-auto">
+              {/* User Type Tabs */}
+              <div className="flex flex-wrap justify-center gap-4 mb-8">
+                <button
+                  onClick={() => setSelectedVideoTab('child')}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-full border-2 transition-all cursor-pointer ${
+                    selectedVideoTab === 'child'
+                      ? 'bg-[#06D6A0] border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] text-white'
+                      : 'bg-white border-[#1D3557] hover:shadow-[2px_2px_0px_0px_#1D3557] text-[#1D3557]'
+                  }`}
+                >
+                  <Play className={`w-4 h-4 ${selectedVideoTab === 'child' ? 'text-white' : 'text-[#06D6A0]'}`} />
+                  <span className="text-sm font-bold">Child</span>
+                </button>
+                
+                {walkthroughVideos.parent?.url && (
+                  <button
+                    onClick={() => setSelectedVideoTab('parent')}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-full border-2 transition-all cursor-pointer ${
+                      selectedVideoTab === 'parent'
+                        ? 'bg-[#FFD23F] border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] text-[#1D3557]'
+                        : 'bg-white border-[#1D3557] hover:shadow-[2px_2px_0px_0px_#1D3557] text-[#1D3557]'
+                    }`}
+                  >
+                    <Star className={`w-4 h-4 ${selectedVideoTab === 'parent' ? 'text-[#1D3557]' : 'text-[#FFD23F]'}`} />
+                    <span className="text-sm font-bold">Parent</span>
+                  </button>
+                )}
+                
+                {walkthroughVideos.teacher?.url && (
+                  <button
+                    onClick={() => setSelectedVideoTab('teacher')}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-full border-2 transition-all cursor-pointer ${
+                      selectedVideoTab === 'teacher'
+                        ? 'bg-[#EE6C4D] border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] text-white'
+                        : 'bg-white border-[#1D3557] hover:shadow-[2px_2px_0px_0px_#1D3557] text-[#1D3557]'
+                    }`}
+                  >
+                    <Trophy className={`w-4 h-4 ${selectedVideoTab === 'teacher' ? 'text-white' : 'text-[#EE6C4D]'}`} />
+                    <span className="text-sm font-bold">Teacher</span>
+                  </button>
+                )}
+              </div>
+              
+              {/* Video Player */}
               <div className="card-playful p-4 bg-white">
                 <div className="relative rounded-2xl overflow-hidden border-3 border-[#1D3557] bg-black aspect-video">
                   <video
+                    key={selectedVideoTab}
                     controls
                     className="w-full h-full"
                     poster=""
                     data-testid="walkthrough-video-player"
                   >
-                    <source src={getAssetUrl(walkthroughVideo.url)} type="video/mp4" />
+                    <source src={getAssetUrl(walkthroughVideos[selectedVideoTab]?.url || walkthroughVideos.child?.url)} type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
-                </div>
-              </div>
-              
-              {/* Video highlight badges */}
-              <div className="flex flex-wrap justify-center gap-4 mt-8">
-                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border-2 border-[#1D3557] shadow-[2px_2px_0px_0px_#1D3557]">
-                  <Play className="w-4 h-4 text-[#06D6A0]" />
-                  <span className="text-sm font-bold text-[#1D3557]">Interactive Demos</span>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border-2 border-[#1D3557] shadow-[2px_2px_0px_0px_#1D3557]">
-                  <Star className="w-4 h-4 text-[#FFD23F]" />
-                  <span className="text-sm font-bold text-[#1D3557]">Real Features</span>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border-2 border-[#1D3557] shadow-[2px_2px_0px_0px_#1D3557]">
-                  <Trophy className="w-4 h-4 text-[#EE6C4D]" />
-                  <span className="text-sm font-bold text-[#1D3557]">Fun Learning</span>
                 </div>
               </div>
             </div>
