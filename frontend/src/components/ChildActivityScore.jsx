@@ -19,15 +19,14 @@ export default function ChildActivityScore({ contentId, user }) {
     try {
       const response = await axios.get(`${API}/activity/scores/me?limit=100`);
       const myScores = response.data.scores || [];
-      // Find the best score for this content
       const contentScores = myScores.filter(s => s.content_id === contentId);
       if (contentScores.length > 0) {
-        // Pick the one with the best percentage
         const best = contentScores.reduce((a, b) => (a.percentage || 0) >= (b.percentage || 0) ? a : b);
         setScoreData({
           correctAnswers: best.correct_answers || best.score || 0,
           totalQuestions: best.total_questions || 0,
-          percentage: best.percentage || 0
+          percentage: best.percentage || 0,
+          attempts: contentScores.length
         });
       }
     } catch (error) {
@@ -48,14 +47,20 @@ export default function ChildActivityScore({ contentId, user }) {
   };
 
   const style = getScoreStyle();
+  const showStar = scoreData.percentage >= 80;
   const displayScore = scoreData.totalQuestions > 0
     ? `${scoreData.correctAnswers}/${scoreData.totalQuestions}`
     : `${scoreData.percentage}%`;
 
   return (
-    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${style.bg} text-white text-sm font-bold shadow-md`}>
-      <Star className="w-4 h-4 fill-white" />
-      <span>{displayScore}</span>
+    <div className="flex items-center gap-1.5">
+      <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${style.bg} text-white text-sm font-bold shadow-md`}>
+        {showStar && <Star className="w-4 h-4 fill-white" />}
+        <span>{displayScore}</span>
+      </div>
+      {scoreData.attempts > 1 && (
+        <span className="text-xs text-[#3D5A80] font-medium">{scoreData.attempts} attempts</span>
+      )}
     </div>
   );
 }
