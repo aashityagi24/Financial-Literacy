@@ -5,7 +5,7 @@ import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
   Shield, ChevronLeft, ChevronRight, Users, BookOpen, BarChart3,
-  Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus, School, Video, BookMarked
+  Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus, School, Video, BookMarked, Eye, EyeOff
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,7 @@ export default function AdminPage({ user }) {
     role: 'child',
     grade: 0
   });
+  const [showNewUserPassword, setShowNewUserPassword] = useState(false);
   const [newSchoolForm, setNewSchoolForm] = useState({
     name: '',
     username: '',
@@ -47,6 +48,7 @@ export default function AdminPage({ user }) {
     address: '',
     contact_email: ''
   });
+  const [showNewSchoolPassword, setShowNewSchoolPassword] = useState(false);
   
   // Filters for user management
   const [filters, setFilters] = useState({
@@ -512,12 +514,22 @@ export default function AdminPage({ user }) {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
-                      <Input 
-                        type="password"
-                        placeholder="Minimum 6 characters" 
-                        value={newUserForm.password}
-                        onChange={(e) => setNewUserForm({...newUserForm, password: e.target.value})}
-                      />
+                      <div className="relative">
+                        <Input 
+                          type={showNewUserPassword ? "text" : "password"}
+                          placeholder="Minimum 6 characters" 
+                          value={newUserForm.password}
+                          onChange={(e) => setNewUserForm({...newUserForm, password: e.target.value})}
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewUserPassword(!showNewUserPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                          {showNewUserPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                       <p className="text-xs text-gray-500 mt-1">User will use this password to login</p>
                     </div>
                     <div>
@@ -796,13 +808,23 @@ export default function AdminPage({ user }) {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
-                      <Input 
-                        type="password"
-                        placeholder="Set a secure password" 
-                        value={newSchoolForm.password}
-                        onChange={(e) => setNewSchoolForm({...newSchoolForm, password: e.target.value})}
-                        data-testid="school-password-input"
-                      />
+                      <div className="relative">
+                        <Input 
+                          type={showNewSchoolPassword ? "text" : "password"}
+                          placeholder="Set a secure password" 
+                          value={newSchoolForm.password}
+                          onChange={(e) => setNewSchoolForm({...newSchoolForm, password: e.target.value})}
+                          data-testid="school-password-input"
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewSchoolPassword(!showNewSchoolPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                          {showNewSchoolPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
