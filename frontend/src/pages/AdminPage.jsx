@@ -153,12 +153,22 @@ export default function AdminPage({ user }) {
     }
     
     try {
-      await axios.post(`${API}/admin/users`, newUserForm);
-      toast.success(`User ${newUserForm.name} created with password`);
+      // Prepare data - only include grade for child role
+      const userData = {
+        name: newUserForm.name.trim(),
+        email: newUserForm.email.trim().toLowerCase(),
+        password: newUserForm.password,
+        role: newUserForm.role,
+        grade: newUserForm.role === 'child' ? newUserForm.grade : null
+      };
+      
+      await axios.post(`${API}/admin/users`, userData);
+      toast.success(`User ${newUserForm.name} created successfully!`);
       setShowCreateUser(false);
       setNewUserForm({ name: '', email: '', password: '', role: 'child', grade: 0 });
       fetchData();
     } catch (error) {
+      console.error('Create user error:', error.response?.data);
       toast.error(error.response?.data?.detail || 'Failed to create user');
     }
   };
