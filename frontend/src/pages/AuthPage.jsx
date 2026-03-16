@@ -1,15 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { 
   Eye, EyeOff, ArrowLeft, Mail, Lock, User, School, Shield,
-  Sparkles, BookOpen, Coins
+  Sparkles, BookOpen, Coins, RefreshCw
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+// Generate a simple math captcha
+const generateCaptcha = () => {
+  const num1 = Math.floor(Math.random() * 10) + 1;
+  const num2 = Math.floor(Math.random() * 10) + 1;
+  const operators = ['+', '-'];
+  const operator = operators[Math.floor(Math.random() * operators.length)];
+  let answer;
+  
+  if (operator === '+') {
+    answer = num1 + num2;
+  } else {
+    // Ensure positive result for subtraction
+    const max = Math.max(num1, num2);
+    const min = Math.min(num1, num2);
+    answer = max - min;
+    return { question: `${max} - ${min}`, answer };
+  }
+  
+  return { question: `${num1} ${operator} ${num2}`, answer };
+};
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -20,6 +41,23 @@ export default function AuthPage() {
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Captcha state
+  const [captcha, setCaptcha] = useState(generateCaptcha());
+  const [captchaAnswer, setCaptchaAnswer] = useState('');
+  
+  // Regenerate captcha when switching to signup mode
+  useEffect(() => {
+    if (mode === 'signup') {
+      setCaptcha(generateCaptcha());
+      setCaptchaAnswer('');
+    }
+  }, [mode]);
+  
+  const refreshCaptcha = () => {
+    setCaptcha(generateCaptcha());
+    setCaptchaAnswer('');
+  };
 
   const handleGoogleLogin = () => {
     window.location.href = `${BACKEND_URL}/api/auth/google/login`;
@@ -110,6 +148,13 @@ export default function AuthPage() {
       return;
     }
     
+    // Validate captcha
+    if (parseInt(captchaAnswer) !== captcha.answer) {
+      toast.error('Incorrect captcha answer. Please try again.');
+      refreshCaptcha();
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -128,8 +173,10 @@ export default function AuthPage() {
       setPassword('');
       setConfirmPassword('');
       setName('');
+      setCaptchaAnswer('');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to create account');
+      refreshCaptcha();
     } finally {
       setIsLoading(false);
     }
@@ -274,6 +321,40 @@ export default function AuthPage() {
                       data-testid="auth-confirm-password-input"
                     />
                   </div>
+                </div>
+              )}
+              
+              {/* Captcha for signup */}
+              {mode === 'signup' && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Verify you're human
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-[#E0FBFC] to-[#F0F9FF] rounded-xl border-2 border-[#1D3557]/20">
+                      <Shield className="w-5 h-5 text-[#1D3557]" />
+                      <span className="text-lg font-bold text-[#1D3557]">
+                        {captcha.question} = ?
+                      </span>
+                      <button
+                        type="button"
+                        onClick={refreshCaptcha}
+                        className="ml-auto p-1 text-[#3D5A80] hover:text-[#1D3557] transition-colors"
+                        title="Get new question"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <Input
+                      type="number"
+                      value={captchaAnswer}
+                      onChange={(e) => setCaptchaAnswer(e.target.value)}
+                      placeholder="?"
+                      className="w-20 h-12 text-center text-lg font-bold border-2 border-[#1D3557]/30 focus:border-[#1D3557] rounded-xl"
+                      data-testid="auth-captcha-input"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Solve the math problem above</p>
                 </div>
               )}
               
