@@ -1168,15 +1168,15 @@ export default function TeacherDashboard({ user }) {
                   </div>
                 </Link>
                 
-                {/* My Quests Section */}
-                {teacherQuests.length > 0 && (
+                {/* My Quests Section - filtered by current classroom */}
+                {teacherQuests.filter(q => q.classroom_id === selectedClassroom).length > 0 && (
                   <div className="mb-6">
                     <h3 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
                       <Target className="w-5 h-5 inline mr-2" />
-                      My Quests ({teacherQuests.length})
+                      My Quests ({teacherQuests.filter(q => q.classroom_id === selectedClassroom).length})
                     </h3>
                     <div className="space-y-3">
-                      {teacherQuests.map((quest) => {
+                      {teacherQuests.filter(q => q.classroom_id === selectedClassroom).map((quest) => {
                         const questClassroom = (dashboard?.classrooms || []).find(c => c.classroom_id === quest.classroom_id);
                         return (
                         <div key={quest.quest_id} className="card-playful p-4 bg-[#06D6A0]/10">
