@@ -1003,7 +1003,7 @@ export default function ParentDashboard({ user }) {
                             <div className="flex items-center gap-2">
                               <span className="text-lg">🌟</span>
                               <h4 className="font-bold text-[#1D3557]">{record.title}</h4>
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-[#06D6A0]/20 text-[#1D3557] font-bold">{(dashboard?.children?.find(c => c.user_id === record.child_id)?.name || 'Child').split(' ')[0]}</span>
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-[#06D6A0]/20 text-[#1D3557] font-bold">{(record.child_name || dashboard?.children?.find(c => c.user_id === record.child_id)?.name || 'Child').split(' ')[0]}</span>
                             </div>
                             <p className="text-sm text-[#3D5A80]">
                               <span className="text-[#06D6A0] font-bold">+₹{Math.abs(record.amount)}</span>
@@ -1031,7 +1031,7 @@ export default function ParentDashboard({ user }) {
                             <div className="flex items-center gap-2">
                               <span className="text-lg">⚠️</span>
                               <h4 className="font-bold text-[#1D3557]">{record.title}</h4>
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-[#EE6C4D]/20 text-[#1D3557] font-bold">{(dashboard?.children?.find(c => c.user_id === record.child_id)?.name || 'Child').split(' ')[0]}</span>
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-[#EE6C4D]/20 text-[#1D3557] font-bold">{(record.child_name || dashboard?.children?.find(c => c.user_id === record.child_id)?.name || 'Child').split(' ')[0]}</span>
                             </div>
                             <p className="text-sm text-[#3D5A80]">
                               <span className="text-[#EE6C4D] font-bold">-₹{Math.abs(record.amount)}</span>

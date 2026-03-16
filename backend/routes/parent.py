@@ -145,6 +145,8 @@ async def create_reward_penalty(data: RewardPenaltyCreate, request: Request):
     if not link:
         raise HTTPException(status_code=403, detail="Not authorized for this child")
     
+    child = await db.users.find_one({"user_id": data.child_id}, {"_id": 0, "name": 1})
+    
     amount = data.amount if data.category == "reward" else -data.amount
     
     await db.wallet_accounts.update_one(
@@ -160,6 +162,19 @@ async def create_reward_penalty(data: RewardPenaltyCreate, request: Request):
         "amount": amount,
         "transaction_type": trans_type,
         "description": f"{data.title}: {data.description or ''}",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    record_id = f"rp_{uuid.uuid4().hex[:12]}"
+    await db.reward_penalties.insert_one({
+        "record_id": record_id,
+        "parent_id": parent["user_id"],
+        "child_id": data.child_id,
+        "child_name": child.get("name", "Child") if child else "Child",
+        "category": data.category,
+        "title": data.title,
+        "description": data.description or "",
+        "amount": data.amount,
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     

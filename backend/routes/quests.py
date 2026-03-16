@@ -562,6 +562,19 @@ async def get_parent_chores(request: Request):
         {"creator_type": "parent", "creator_id": user["user_id"]},
         {"_id": 0}
     ).sort("created_at", -1).to_list(200)
+    
+    # Enrich with child names
+    child_ids = list(set(c.get("child_id") for c in chores if c.get("child_id")))
+    if child_ids:
+        children = await db.users.find(
+            {"user_id": {"$in": child_ids}},
+            {"_id": 0, "user_id": 1, "name": 1}
+        ).to_list(50)
+        child_map = {c["user_id"]: c.get("name", "Child") for c in children}
+        for chore in chores:
+            if not chore.get("child_name"):
+                chore["child_name"] = child_map.get(chore.get("child_id"), "Child")
+    
     return chores
 
 @router.delete("/parent/chores-new/{chore_id}")
