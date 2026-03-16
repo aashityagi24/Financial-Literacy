@@ -4,7 +4,7 @@ import { API } from '@/App';
 import { Star } from 'lucide-react';
 
 export default function ChildActivityScore({ contentId, user }) {
-  const [score, setScore] = useState(null);
+  const [scoreData, setScoreData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,8 +22,13 @@ export default function ChildActivityScore({ contentId, user }) {
       // Find the best score for this content
       const contentScores = myScores.filter(s => s.content_id === contentId);
       if (contentScores.length > 0) {
-        const bestScore = Math.max(...contentScores.map(s => s.percentage || 0));
-        setScore(bestScore);
+        // Pick the one with the best percentage
+        const best = contentScores.reduce((a, b) => (a.percentage || 0) >= (b.percentage || 0) ? a : b);
+        setScoreData({
+          correctAnswers: best.correct_answers || best.score || 0,
+          totalQuestions: best.total_questions || 0,
+          percentage: best.percentage || 0
+        });
       }
     } catch (error) {
       console.error('Failed to fetch score:', error);
@@ -32,22 +37,25 @@ export default function ChildActivityScore({ contentId, user }) {
     }
   };
 
-  if (loading || score === null) {
+  if (loading || scoreData === null) {
     return null;
   }
 
   const getScoreStyle = () => {
-    if (score >= 80) return { bg: 'bg-[#06D6A0]', text: 'Great!' };
-    if (score >= 60) return { bg: 'bg-[#FFD23F]', text: 'Good!' };
-    return { bg: 'bg-[#EE6C4D]', text: 'Try again!' };
+    if (scoreData.percentage >= 80) return { bg: 'bg-[#06D6A0]' };
+    if (scoreData.percentage >= 60) return { bg: 'bg-[#FFD23F]' };
+    return { bg: 'bg-[#EE6C4D]' };
   };
 
   const style = getScoreStyle();
+  const displayScore = scoreData.totalQuestions > 0
+    ? `${scoreData.correctAnswers}/${scoreData.totalQuestions}`
+    : `${scoreData.percentage}%`;
 
   return (
     <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${style.bg} text-white text-sm font-bold shadow-md`}>
       <Star className="w-4 h-4 fill-white" />
-      <span>{score}%</span>
+      <span>{displayScore}</span>
     </div>
   );
 }

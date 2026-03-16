@@ -831,3 +831,9 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - Created corrected version at `/app/equation-relation-quiz-fixed.html`
 - Properly integrated `postMessage` score reporting at the end of `finishQuiz()` function
 - Removed the placeholder script with hardcoded values and non-existent `submitBtn`
+
+#### Bugfix: Score Display & Completion UX (March 16, 2026)
+- Changed ChildActivityScore badge from percentage (20%) to actual score format (2/10)
+- Fixed "Completed! +₹undefined" → `response.data.coins_awarded` (was `response.data.reward`)
+- Fixed `selectedContent.completed` → `selectedContent.is_completed` (property name mismatch)
+- Consolidated double toast into single combined toast on activity completion

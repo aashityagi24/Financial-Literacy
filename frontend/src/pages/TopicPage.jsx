@@ -61,13 +61,22 @@ export default function TopicPage({ user }) {
             extraData: extraData || {}
           });
           
-          toast.success(`Great job! Score: ${percentage || score}% 🎉`, {
-            duration: 4000
-          });
+          // Show a single combined toast with score info
+          const scoreText = totalQuestions ? `${correctAnswers || 0}/${totalQuestions}` : `${score || 0}`;
           
           // Auto-complete the content if not already completed
-          if (!selectedContent.completed) {
-            handleCompleteContent(selectedContent.content_id);
+          if (!selectedContent.is_completed) {
+            try {
+              const response = await axios.post(`${API}/content/items/${selectedContent.content_id}/complete`);
+              const coins = response.data.coins_awarded || 0;
+              toast.success(`Score: ${scoreText} — Earned ₹${coins}!`, { duration: 4000 });
+              fetchTopicData();
+            } catch (completeError) {
+              // Already completed or other error — just show the score
+              toast.success(`Score: ${scoreText}`, { duration: 4000 });
+            }
+          } else {
+            toast.success(`Score: ${scoreText}`, { duration: 4000 });
           }
         } catch (error) {
           console.error('Failed to save activity score:', error);
@@ -106,7 +115,7 @@ export default function TopicPage({ user }) {
   const handleCompleteContent = async (contentId) => {
     try {
       const response = await axios.post(`${API}/content/items/${contentId}/complete`);
-      toast.success(`Completed! +₹${response.data.reward} 🎉`);
+      toast.success(`Completed! +₹${response.data.coins_awarded || 0}`);
       fetchTopicData();
     } catch (error) {
       if (error.response?.data?.message === 'Already completed') {
