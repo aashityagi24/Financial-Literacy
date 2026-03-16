@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { 
   Shield, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   Plus, Trash2, Edit2, Save, X, FolderOpen, FileText, BookOpen,
-  FileSpreadsheet, Gamepad2, Upload, Image, Eye, EyeOff,
+  FileSpreadsheet, Gamepad2, Upload, Image, Eye, EyeOff, Download,
   Video, Book, Layers, ListOrdered, Library, Settings, Info, GripVertical, MoveRight, Database, Search
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
@@ -1248,6 +1248,33 @@ export default function ContentManagement({ user }) {
                                       <Eye className="w-3 h-3" />
                                     </Button>
                                   )}
+                                  {content.content_data?.html_folder && (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="text-green-600"
+                                      title="Download activity files"
+                                      onClick={() => window.open(`${API}/download/activity/${content.content_data.html_folder}`, '_blank')}
+                                    >
+                                      <Download className="w-3 h-3" />
+                                    </Button>
+                                  )}
+                                  {content.content_data?.html_url && !content.content_data?.html_folder && (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="text-green-600"
+                                      title="Download HTML file"
+                                      onClick={() => {
+                                        const a = document.createElement('a');
+                                        a.href = getAssetUrl(content.content_data.html_url);
+                                        a.download = `${content.title || 'activity'}.html`;
+                                        a.click();
+                                      }}
+                                    >
+                                      <Download className="w-3 h-3" />
+                                    </Button>
+                                  )}
                                   {content.content_data?.video_url && (
                                     <Button 
                                       size="sm" 
@@ -1760,6 +1787,15 @@ export default function ContentManagement({ user }) {
                       <a href={getAssetUrl(contentForm.content_data.html_url)} target="_blank" rel="noopener noreferrer" className="text-sm text-green-600 underline flex items-center gap-1">
                         <Eye className="w-4 h-4" /> Preview HTML
                       </a>
+                      {contentForm.content_data.html_folder ? (
+                        <a href={`${API}/download/activity/${contentForm.content_data.html_folder}`} className="text-sm text-blue-600 underline flex items-center gap-1">
+                          <Download className="w-4 h-4" /> Download
+                        </a>
+                      ) : (
+                        <a href={getAssetUrl(contentForm.content_data.html_url)} download className="text-sm text-blue-600 underline flex items-center gap-1">
+                          <Download className="w-4 h-4" /> Download
+                        </a>
+                      )}
                       <Button 
                         variant="ghost" 
                         size="sm" 
@@ -1787,6 +1823,9 @@ export default function ContentManagement({ user }) {
                       <span className="text-sm text-purple-600 flex items-center gap-1">
                         <Eye className="w-4 h-4" /> ZIP uploaded
                       </span>
+                      <a href={`${API}/download/activity/${contentForm.content_data.html_folder}`} className="text-sm text-blue-600 underline flex items-center gap-1">
+                        <Download className="w-4 h-4" /> Download ZIP
+                      </a>
                       <Button 
                         variant="ghost" 
                         size="sm" 

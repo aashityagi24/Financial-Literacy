@@ -6267,6 +6267,31 @@ async def get_activity_html_files(folder_name: str):
     
     return {"html_files": html_files}
 
+@api_router.get("/download/activity/{folder_name}")
+async def download_activity_folder(folder_name: str, request: Request):
+    """Download an activity folder as a ZIP file (admin only)"""
+    from services.auth import get_current_user
+    user = await get_current_user(request)
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    activity_folder = ACTIVITIES_DIR / folder_name
+    if not activity_folder.exists():
+        raise HTTPException(status_code=404, detail="Activity folder not found")
+    
+    # Create a zip in /tmp
+    zip_path = Path(f"/tmp/activity_{folder_name}.zip")
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for file_path in activity_folder.rglob("*"):
+            if file_path.is_file():
+                zf.write(file_path, file_path.relative_to(activity_folder))
+    
+    return FileResponse(
+        path=str(zip_path),
+        filename=f"activity_{folder_name}.zip",
+        media_type="application/zip"
+    )
+
 # @api_router.post("/upload/video")  # MOVED
 async def _legacy_upload_video_file(file: UploadFile = File(...)):
     """Upload an MP4 video file"""
