@@ -729,7 +729,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 **Google Cloud Console Configuration**:
 To complete the OAuth setup, add these redirect URIs to your Google Cloud Console OAuth 2.0 credentials:
-- For Preview: `https://literate-kids.preview.emergentagent.com/api/auth/google/callback`
+- For Preview: `https://coinquest-learn.preview.emergentagent.com/api/auth/google/callback`
 - For Production: `https://coinquest.co.in/api/auth/google/callback`
 
 ### Session 12 Updates (February 9, 2026)
@@ -823,3 +823,11 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   2. **LandingPage.jsx**: Updated hero text from "K-5 kids" to "K-2 kids"
   3. **ProfilePage.jsx**: Reduced grade selection dropdown from 6 options to 3 (K, 1st, 2nd)
 - **Result**: Users can only see and select Kindergarten, 1st Grade, or 2nd Grade
+
+### Session Update (February 2026 - Fork)
+
+#### Fixed: equation-relation-quiz.html
+- User had broken their HTML activity file by pasting agent instructions (including raw English text) inside JavaScript code
+- Created corrected version at `/app/equation-relation-quiz-fixed.html`
+- Properly integrated `postMessage` score reporting at the end of `finishQuiz()` function
+- Removed the placeholder script with hardcoded values and non-existent `submitBtn`

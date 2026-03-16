@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Equation & Relations • MCQ Quiz</title>
+<style>
+  :root{
+    --bg1:#e8f7ee; /* pastel green */
+    --bg2:#ffe6f7; /* pastel pink */
+    --bg3:#e8f3ff; /* pastel blue */
+    --panel:#ffffff;
+    --ink:#0f172a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;
+    background:linear-gradient(135deg,var(--bg1),var(--bg2) 55%,var(--bg3));
+    color:var(--ink);
+  }
+  .container{
+    max-width:980px;
+    margin:auto;
+    padding:24px 16px 40px;
+    text-align:center;
+  }
+  h1{
+    margin:0 0 8px;
+    font-size:28px;
+    text-shadow:0 1px 0 #fff;
+  }
+  .hidden{display:none}
+  .panel{
+    position:relative;
+    margin:14px auto;
+    padding:18px 18px 16px;
+    border-radius:18px;
+    background:var(--panel);
+    border:1px solid #e5e7eb;
+    box-shadow:
+      0 14px 26px rgba(15,23,42,.18),
+      inset 0 2px 0 rgba(255,255,255,.9);
+  }
+  .panel-title{
+    margin:0 0 8px;
+    font-size:18px;
+    font-weight:800;
+  }
+  ul.instructions{
+    text-align:left;
+    max-width:820px;
+    margin:8px auto 4px;
+    padding-left:18px;
+  }
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:14px;
+    margin-top:10px;
+  }
+  label{
+    display:block;
+    font-weight:700;
+    color:#334155;
+    margin-bottom:6px;
+    font-size:14px;
+  }
+  select{
+    appearance:none;
+    -webkit-appearance:none;
+    padding:10px 14px;
+    border-radius:12px;
+    border:1px solid #d1d5db;
+    background:linear-gradient(180deg,#fff,#f3f4f6);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.95),
+      0 6px 12px rgba(15,23,42,.20);
+    min-width:170px;
+    font-weight:600;
+    padding-right:40px;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M5 7l5 6 5-6" stroke="%236b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+    background-size:15px;
+    transition:border-color .15s ease, box-shadow .15s ease, transform .1s ease;
+  }
+  select:hover{
+    border-color:#94a3b8;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.98),
+      0 10px 18px rgba(15,23,42,.30);
+    transform:translateY(-1px);
+  }
+  select:focus{
+    outline:none;
+    border-color:#60a5fa;
+    box-shadow:
+      0 0 0 3px rgba(96,165,250,.35),
+      inset 0 1px 0 rgba(255,255,255,.98),
+      0 10px 18px rgba(15,23,42,.30);
+  }
+
+  /* 3D buttons */
+  button{
+    padding:10px 20px;
+    border:none;
+    border-radius:16px;
+    cursor:pointer;
+    font-size:16px;
+    font-weight:800;
+    margin:6px;
+    color:#0f172a;
+    background:linear-gradient(to bottom,#ffffff,#e5e7eb);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.95),
+      0 10px 18px rgba(15,23,42,.35);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  button.brand{
+    background:linear-gradient(to bottom,#bef264,#34d399);
+  }
+  button.pink{
+    background:linear-gradient(to bottom,#fbcfe8,#f472b6);
+  }
+  button.blue{
+    background:linear-gradient(to bottom,#bfdbfe,#60a5fa);
+  }
+  button:hover{
+    transform:translateY(-2px);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.98),
+      0 14px 22px rgba(15,23,42,.45);
+  }
+  button:disabled{
+    opacity:.4;
+    cursor:default;
+    transform:none;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.9),
+      0 4px 8px rgba(15,23,42,.20);
+  }
+
+  .top-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  #progress{
+    font-weight:800;
+    font-size:16px;
+  }
+  .alert{
+    margin:8px auto;
+    padding:8px 10px;
+    border-radius:10px;
+    background:#fee2e2;
+    border:1px solid #fecaca;
+    color:#7f1d1d;
+    font-weight:600;
+    max-width:820px;
+  }
+
+  .qtext{
+    font-size:16px;
+    margin:4px 0 8px;
+  }
+  .options-wrap{
+    max-width:820px;
+    margin:0 auto;
+  }
+
+  /* CHANGED: options are now vertical (one per line) */
+  .options-grid{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top:6px;
+  }
+
+  .option-card{
+    position:relative;
+    padding:11px 12px;
+    border-radius:14px;
+    border:1px solid #e5e7eb;
+    background:linear-gradient(180deg,#ffffff,#f3f4f6);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.9),
+      0 7px 14px rgba(15,23,42,.25);
+    cursor:pointer;
+    text-align:left;
+    font-weight:600;
+    font-size:15px;
+  }
+  .option-card.selected{
+    border-color:#4b5563;
+    background:linear-gradient(180deg,#fff7d6,#fde68a);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.98),
+      0 11px 20px rgba(180,83,9,.45);
+  }
+  .option-radio{
+    width:16px;
+    height:16px;
+    border-radius:999px;
+    border:2px solid #9ca3af;
+    display:inline-block;
+    margin-right:8px;
+    vertical-align:middle;
+    background:#fff;
+  }
+  .option-card.selected .option-radio{
+    border-color:#16a34a;
+    background:radial-gradient(circle at center,#22c55e 0,#22c55e 45%,#fff 50%);
+  }
+
+  .statements-box{
+    margin-top:4px;
+    padding:8px 10px;
+    border-radius:10px;
+    background:#f8fafc;
+    border:1px dashed #e5e7eb;
+    color:#111827;
+    text-align:left;
+    font-size:14px;
+  }
+
+  /* Result / review */
+  #score{
+    margin-top:4px;
+    margin-bottom:4px;
+  }
+  #reviewIntro{
+    font-size:15px;
+    color:#374151;
+  }
+  .review-item{
+    margin:14px auto;
+    padding:12px 12px 10px;
+    border-radius:14px;
+    border:1px dashed #d1d5db;
+    background:#ffffff;
+    max-width:860px;
+    text-align:left;
+  }
+  .review-question{
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  .review-options{
+    list-style:none;
+    padding-left:0;
+    margin:6px 0 0;
+  }
+  .review-options li{
+    padding:6px 9px;
+    margin:5px 0;
+    border-radius:8px;
+    border:1px solid #e5e7eb;
+    background:#f9fafb;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:14px;
+  }
+  .opt-correct{
+    border-color:#10b981;
+    background:#ecfdf5;
+  }
+  .opt-wrong{
+    border-color:#ef4444;
+    background:#fef2f2;
+  }
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:20px;
+    height:20px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:800;
+  }
+  .badge.ok{
+    background:#22c55e;
+    color:#ffffff;
+  }
+  .badge.no{
+    background:#ef4444;
+    color:#ffffff;
+  }
+  .tag{
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    padding:2px 6px;
+    border-radius:999px;
+    background:#e5e7eb;
+    color:#4b5563;
+    margin-left:4px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Equation & Relations • MCQ Quiz</h1>
+
+  <!-- HOME PAGE -->
+  <div id="home">
+    <div class="panel">
+      <h3 class="panel-title">Instructions</h3>
+      <ul class="instructions">
+        <li>Choose difficulty and mode (multiplication, division, division algorithm, or relations).</li>
+        <li>Each run creates <b>10 fresh questions</b> from your original generator logic (no decimals, no negatives).</li>
+        <li>Use <b>Previous</b> and <b>Next</b> to move between questions. Your choices stay saved.</li>
+        <li>No instant feedback. At the end, you will see a detailed review with ✔ for correct and ✘ for wrong answers.</li>
+      </ul>
+      <div class="controls">
+        <div>
+          <label for="difficulty">Difficulty</label>
+          <select id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="difficult">Difficult</option>
+          </select>
+        </div>
+        <div>
+          <label for="operation">Mode</label>
+          <select id="operation">
+            <option value="both">All (Mix)</option>
+            <option value="mul">Multiplication only</option>
+            <option value="div">Division only</option>
+            <option value="divalg">Division Algorithm</option>
+            <option value="rel">Relations (basic)</option>
+          </select>
+        </div>
+        <div>
+          <label for="form">Form / Pattern</label>
+          <select id="form">
+            <option value="all">All forms</option>
+            <!-- Mul/Div -->
+            <option value="a_times_b_eq_q">a × b = ?</option>
+            <option value="a_times_x_eq_b">a × ___ = b</option>
+            <option value="a_div_b_eq_q">a ÷ b = ?</option>
+            <option value="a_div_x_eq_b">a ÷ ___ = b</option>
+            <option value="x_div_a_eq_b">___ ÷ a = b</option>
+            <!-- DivAlg -->
+            <option value="divalg_find_D">D = Q × d + r → find D</option>
+            <option value="divalg_find_Q">D = Q × d + r → find Q</option>
+            <option value="divalg_find_d">D = Q × d + r → find d</option>
+            <option value="divalg_find_r">D = Q × d + r → find r</option>
+            <!-- Relations -->
+            <option value="rel_compare_numbers">Fill ◻ : A ◻ B</option>
+            <option value="rel_compare_expressions">Fill ◻ : expr ◻ expr</option>
+            <option value="rel_transitivity">Transitivity</option>
+            <option value="rel_property_name">Name the property</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <button id="startBtn" class="brand">Start Quiz</button>
+  </div>
+
+  <!-- QUIZ PAGE -->
+  <div id="quiz" class="hidden">
+    <div class="top-bar">
+      <button id="homeBtn" class="blue">Home</button>
+      <span id="progress">Question 1 / 10</span>
+      <div>
+        <button id="prevBtn" class="blue">Previous</button>
+        <button id="nextBtn" class="pink">Next</button>
+      </div>
+    </div>
+
+    <div id="inlineAlert" class="alert hidden">Please choose an option before moving to the next question.</div>
+
+    <div id="questionArea"></div>
+    <div id="optionsArea" class="options-wrap"></div>
+  </div>
+
+  <!-- RESULT PAGE -->
+  <div id="result" class="hidden">
+    <h2 id="score"></h2>
+    <div id="reviewIntro" class="hidden">Review your incorrect answers:</div>
+    <div id="reviewList"></div>
+    <div style="margin-top:10px;">
+      <button id="newSetBtn" class="brand">New 10 Questions (same settings)</button>
+      <button id="restartBtn" class="blue">Back to Home</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =========================
+// ENGINE (same as before)
+// =========================
+function Engine() {
+  const rand = (() => {
+    let seed = Date.now() % 2147483647 || 1;
+    function srand(s){ seed = (s>>>0)%2147483647 || 1; }
+    function rnd(){ return (seed = (seed*48271)%2147483647)/2147483647; }
+    function choice(a){ return a[Math.floor(rnd()*a.length)]; }
+    function randint(min,max){ return Math.floor(rnd()*(max-min+1))+min; }
+    return { srand, rnd, choice, randint };
+  })();
+
+  const uniquePush=(arr,item)=>{ if(!arr.includes(item)) arr.push(item); };
+  const id=()=>Math.random().toString(36).slice(2,10);
+
+  const ranges = {
+    easy:    { f:[2,12], q:[2,12], d:[2,12], n:[0,30] },
+    medium:  { f:[6,25], q:[3,20], d:[3,15], n:[0,120] },
+    difficult:{ f:[12,50], q:[10,40], d:[5,25], n:[0,999] }
+  };
+  const pick = ([lo,hi]) => rand.randint(lo,hi);
+
+  function distractorsMul(a,b,correct,{range:[lo,hi]=[0,5000]}={}){
+    const ds=[];
+    [correct+1, correct-1, correct+2, correct-2, correct+10, correct-10].forEach(v=>{
+      if(v>=lo && v<=hi && v!==correct) uniquePush(ds,''+v);
+    });
+    const add = a + b;
+    if(add!==correct && add>=lo && add<=hi) uniquePush(ds,''+add);
+    const aUp = (a+1)*b; if(aUp!==correct && aUp<=hi) uniquePush(ds,''+aUp);
+    const bUp = a*(b+1); if(bUp!==correct && bUp<=hi) uniquePush(ds,''+bUp);
+    return ds.slice(0,3);
+  }
+  function distractorsDiv(dividend, divisor, correct,{range:[lo,hi]=[0,5000]}={}){
+    const ds=[];
+    [correct+1, correct-1, correct+2].forEach(v=>{
+      if(v>=lo && v<=hi && v!==correct) uniquePush(ds,''+v);
+    });
+    if(divisor!==correct && divisor>=lo && divisor<=hi) uniquePush(ds,''+divisor);
+    const plus = correct + pick([2,9]); if(plus<=hi) uniquePush(ds,''+plus);
+    return ds.slice(0,3);
+  }
+  const fillOptions=(correct, candidates, min=0)=>{
+    const set = Array.from(new Set([''+correct, ...candidates]));
+    while(set.length<4){
+      const pad = Math.max(min, correct + (rand.rnd()<0.5?-1:1)*rand.randint(2,15));
+      if(!set.includes(''+pad)) set.push(''+pad);
+    }
+    return set.slice(0,4).sort(()=>rand.rnd()-.5);
+  };
+
+  function make_times_direct(level){
+    const R=ranges[level];
+    const a=pick(R.f), b=pick(R.f), q=a*b;
+    const stem=`Solve: ${a} × ${b} = ?`;
+    const opts = fillOptions(q, distractorsMul(a,b,q,{range:[0,5000]}));
+    return pack(stem, opts, q, 'mul', 'a_times_b_eq_q', {a,b});
+  }
+  function make_times_missing(level){
+    const R=ranges[level];
+    const a=pick(R.f), x=pick(R.q), b=a*x;
+    const stem=`Find the missing number: ${a} × ___ = ${b}`;
+    const correct=x;
+    const cand=[a+x, b-a, x+pick([2,9])];
+    const opts = fillOptions(correct, cand, 1);
+    return pack(stem, opts, correct, 'mul', 'a_times_x_eq_b', {a,b});
+  }
+  function make_div_direct(level){
+    const R=ranges[level];
+    const b=pick(R.d), q=pick(R.q), a=b*q;
+    const stem=`Solve: ${a} ÷ ${b} = ?`;
+    const opts = fillOptions(q, distractorsDiv(a,b,q,{range:[0,5000]}), 1);
+    return pack(stem, opts, q, 'div', 'a_div_b_eq_q', {a:b*q,b});
+  }
+  function make_div_missing_den(level){
+    const R=ranges[level];
+    const b=pick(R.q), x=pick(R.d), a=b*x;
+    const stem=`Find the missing number: ${a} ÷ ___ = ${b}`;
+    const correct = x;
+    const cand=[b+x, a-b, Math.max(1, x-1)];
+    const opts = fillOptions(correct, cand, 1);
+    return pack(stem, opts, correct, 'div', 'a_div_x_eq_b', {a,b});
+  }
+  function make_div_missing_num(level){
+    const R=ranges[level];
+    const a=pick(R.d), b=pick(R.q), x=a*b;
+    const stem=`Find the missing number: ___ ÷ ${a} = ${b}`;
+    const correct = x;
+    const cand=[x+a, x-b, a+b];
+    const opts = fillOptions(correct, cand, 1);
+    return pack(stem, opts, correct, 'div', 'x_div_a_eq_b', {a,b});
+  }
+
+  function genDivAlgTriplet(level){
+    const R=ranges[level];
+    const d = pick(R.d);
+    const q = pick(R.q);
+    const r = rand.randint(0, Math.max(0, d-1));
+    const D = q*d + r;
+    return {D,q,d,r};
+  }
+  function make_divalg_find_D(level){
+    const {D,q,d,r} = genDivAlgTriplet(level);
+    const stem = `Using D = Q × d + r with Q=${q}, d=${d}, r=${r}, find D.`;
+    const correct = D;
+    const cand = [ q+d+r, q*d, (q+1)*d + Math.max(0,r-1) ];
+    const opts = fillOptions(correct, cand, 0);
+    return pack(stem, opts, correct, 'divalg', 'divalg_find_D', {Q:q,d,r});
+  }
+  function make_divalg_find_Q(level){
+    const {D,q,d,r} = genDivAlgTriplet(level);
+    const stem = `Using D = Q × d + r with D=${D}, d=${d}, r=${r}, find Q.`;
+    const correct = q;
+    const cand = [ Math.floor(D/d), q+1, Math.max(1,q-1) ];
+    const opts = fillOptions(correct, cand, 1);
+    return pack(stem, opts, correct, 'divalg', 'divalg_find_Q', {D,d,r});
+  }
+  function make_divalg_find_d(level){
+    const {D,q,d,r} = genDivAlgTriplet(level);
+    const stem = `Using D = Q × d + r with D=${D}, Q=${q}, r=${r}, find d.`;
+    const correct = d;
+    const cand = [ d+1, Math.max(r+1, d-1), q ];
+    const opts = fillOptions(correct, cand, r+1);
+    return pack(stem, opts, correct, 'divalg', 'divalg_find_d', {D,Q:q,r});
+  }
+  function make_divalg_find_r(level){
+    const {D,q,d,r} = genDivAlgTriplet(level);
+    const stem = `Using D = Q × d + r with D=${D}, Q=${q}, d=${d}, find r.`;
+    const correct = r;
+    const cand = [ d - r, (q*d)%d, Math.max(0, r + (r>0?-1:1)) ]
+      .map(x=> Math.min(Math.max(0,x), d-1));
+    const opts = fillOptions(correct, cand, 0);
+    return pack(stem, opts, correct, 'divalg', 'divalg_find_r', {D,Q:q,d});
+  }
+
+  function evalSimple(expr){
+    const cleaned = expr.replace(/−/g,'-');
+    const parts = cleaned.split(/\s+/);
+    const A = parseInt(parts[0],10), op = parts[1], B = parseInt(parts[2],10);
+    return op==='+'? A+B : A-B;
+  }
+  function shuffleArray(arr){ return arr.slice().sort(()=>rand.rnd()-.5); }
+  function shuffleSymbols(correct){
+    const base = ["<", ">", "=", "Cannot be determined"];
+    let options = shuffleArray(base);
+    if(!options.includes(correct)) options[0] = correct;
+    return options.sort(()=>rand.rnd()-.5);
+  }
+
+  function rel_compare_numbers(level){
+    const R=ranges[level];
+    const A = pick(R.n), B = pick(R.n);
+    const correctSym = A<B ? "<" : (A>B?">":"=");
+    const stem = `Fill the correct symbol to make a true statement: ${A} ◻ ${B}`;
+    const options = shuffleSymbols(correctSym);
+    return pack(stem, options, options.indexOf(correctSym), 'rel', 'rel_compare_numbers', {A,B});
+  }
+  function rel_compare_expressions(level){
+    const R=ranges[level];
+    const a = pick(R.n), m = pick(R.n), n = pick(R.n);
+    const useAdd = rand.rnd() < 0.5;
+    let left,right;
+    if(useAdd){
+      left = `${a} + ${m}`;
+      right = `${a} + ${n}`;
+    } else {
+      const A = Math.max(a,Math.max(m,n));
+      left = `${A} − ${m}`;
+      right = `${A} − ${n}`;
+    }
+    const valL = evalSimple(left), valR = evalSimple(right);
+    const correctSym = valL<valR ? "<" : (valL>valR?">":"=");
+    const stem = `Fill the correct symbol to make a true statement: ${left} ◻ ${right}`;
+    const options = shuffleSymbols(correctSym);
+    return pack(stem, options, options.indexOf(correctSym), 'rel', 'rel_compare_expressions', {});
+  }
+  function rel_transitivity(level){
+    const t = rand.choice([1,2]);
+    if(t===1){
+      const stem = `Given a > b and b > c, which statement is always true?`;
+      const opts = ["a > c","a < c","a = c","Cannot be determined"];
+      return pack(stem, opts, 0, 'rel', 'rel_transitivity', {});
+    } else {
+      const stem = `If x = y and y > z, which statement is true?`;
+      const opts = ["x > z","x < z","x = z","Cannot be determined"];
+      return pack(stem, opts, 0, 'rel', 'rel_transitivity', {});
+    }
+  }
+  function rel_property_name(level){
+    const props = [
+      { stem:`a + b = b + a`, correct:'Commutative (Addition)', distractors:['Associative (Addition)','Distributive','Identity (Addition)'] },
+      { stem:`(a + b) + c = a + (b + c)`, correct:'Associative (Addition)', distractors:['Commutative (Addition)','Distributive','Identity (Addition)'] },
+      { stem:`a × (b + c) = a×b + a×c`, correct:'Distributive', distractors:['Commutative (Multiplication)','Associative (Multiplication)','Zero Property (Multiplication)'] },
+      { stem:`a × 1 = a`, correct:'Identity (Multiplication)', distractors:['Zero Property (Multiplication)','Commutative (Multiplication)','Associative (Multiplication)'] },
+      { stem:`a × 0 = 0`, correct:'Zero Property (Multiplication)', distractors:['Identity (Multiplication)','Distributive','Commutative (Multiplication)'] }
+    ];
+    const p = props[Math.floor(rand.rnd()*props.length)];
+    const stem = `Name the property shown: ${p.stem}`;
+    const wrong = shuffleArray(p.distractors).slice(0,3);
+    const options = shuffleArray([p.correct, ...wrong]).slice(0,4);
+    const correctIndex = options.indexOf(p.correct);
+    return pack(stem, options, correctIndex, 'rel', 'rel_property_name', {});
+  }
+
+  function pack(stem, options, correct, op, form, vars){
+    let correctIndex = typeof correct === 'number' ? correct : options.indexOf(''+correct);
+    return {
+      id:id(),
+      difficulty:'',
+      type:'equation',
+      stem,
+      options,
+      correctIndex,
+      correctAnswer:''+options[correctIndex],
+      meta:{op, form, ...vars}
+    };
+  }
+
+  const pools = {
+    mul:{
+      easy:[make_times_direct, make_times_missing],
+      medium:[make_times_direct, make_times_missing],
+      difficult:[make_times_direct, make_times_missing]
+    },
+    div:{
+      easy:[make_div_direct, make_div_missing_den, make_div_missing_num],
+      medium:[make_div_direct, make_div_missing_den, make_div_missing_num],
+      difficult:[make_div_direct, make_div_missing_den, make_div_missing_num]
+    },
+    divalg:{
+      easy:[make_divalg_find_D, make_divalg_find_Q, make_divalg_find_d, make_divalg_find_r],
+      medium:[make_divalg_find_D, make_divalg_find_Q, make_divalg_find_d, make_divalg_find_r],
+      difficult:[make_divalg_find_D, make_divalg_find_Q, make_divalg_find_d, make_divalg_find_r]
+    },
+    rel:{
+      easy:[rel_compare_numbers, rel_compare_expressions, rel_transitivity, rel_property_name],
+      medium:[rel_compare_numbers, rel_compare_expressions, rel_transitivity, rel_property_name],
+      difficult:[rel_compare_numbers, rel_compare_expressions, rel_transitivity, rel_property_name]
+    }
+  };
+
+  function pickPool(level, operation, form){
+    let candidates=[];
+    if(operation==='mul'){
+      if(form==='a_times_b_eq_q') candidates=[make_times_direct];
+      else if(form==='a_times_x_eq_b') candidates=[make_times_missing];
+      else candidates = pools.mul[level];
+    } else if(operation==='div'){
+      if(form==='a_div_b_eq_q') candidates=[make_div_direct];
+      else if(form==='a_div_x_eq_b') candidates=[make_div_missing_den];
+      else if(form==='x_div_a_eq_b') candidates=[make_div_missing_num];
+      else candidates = pools.div[level];
+    } else if(operation==='divalg'){
+      if(form==='divalg_find_D') candidates=[make_divalg_find_D];
+      else if(form==='divalg_find_Q') candidates=[make_divalg_find_Q];
+      else if(form==='divalg_find_d') candidates=[make_divalg_find_d];
+      else if(form==='divalg_find_r') candidates=[make_divalg_find_r];
+      else candidates = pools.divalg[level];
+    } else if(operation==='rel'){
+      if(form==='rel_compare_numbers') candidates=[rel_compare_numbers];
+      else if(form==='rel_compare_expressions') candidates=[rel_compare_expressions];
+      else if(form==='rel_transitivity') candidates=[rel_transitivity];
+      else if(form==='rel_property_name') candidates=[rel_property_name];
+      else candidates = pools.rel[level];
+    } else {
+      const all=[
+        ...pools.mul[level],
+        ...pools.div[level],
+        ...pools.divalg[level],
+        ...pools.rel[level]
+      ];
+      candidates = all;
+    }
+    return candidates;
+  }
+
+  function generateOne(level, operation, form){
+    const cand = pickPool(level, operation, form);
+    const f = rand.choice(cand);
+    const item = f(level);
+    item.difficulty = level;
+    return item;
+  }
+
+  function generate({count=10, difficulty='easy', operation='both', form='all'}={}){
+    const out=[];
+    for(let i=0;i<count;i++) out.push(generateOne(difficulty, operation, form));
+    return out;
+  }
+
+  return { generate };
+}
+
+// =========================
+// QUIZ FLOW
+// =========================
+const engine = Engine();
+let questions = [];
+let answers  = [];
+let current  = 0;
+let lastSettings = { difficulty:'easy', operation:'both', form:'all' };
+
+const homeDiv    = document.getElementById('home');
+const quizDiv    = document.getElementById('quiz');
+const resultDiv  = document.getElementById('result');
+const questionEl = document.getElementById('questionArea');
+const optionsEl  = document.getElementById('optionsArea');
+const progressEl = document.getElementById('progress');
+const alertEl    = document.getElementById('inlineAlert');
+
+function buildQuestions(){
+  const diff = document.getElementById('difficulty').value;
+  const op   = document.getElementById('operation').value;
+  const form = document.getElementById('form').value;
+  lastSettings = { difficulty:diff, operation:op, form };
+  const raw = engine.generate({count:10, difficulty:diff, operation:op, form});
+  questions = raw.map(q => ({
+    text: q.stem,
+    options: q.options.slice(0,4),
+    answer: q.correctIndex
+  }));
+  answers = new Array(questions.length).fill(null);
+  current = 0;
+}
+
+function startQuiz(){
+  buildQuestions();
+  homeDiv.classList.add('hidden');
+  resultDiv.classList.add('hidden');
+  quizDiv.classList.remove('hidden');
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = questions[current];
+  progressEl.textContent = `Question ${current+1} / ${questions.length}`;
+  alertEl.classList.add('hidden');
+
+  questionEl.innerHTML = `
+    <div class="panel">
+      <h4 class="panel-title">Question</h4>
+      <div class="qtext">${q.text}</div>
+    </div>
+  `;
+
+  const optsHtml = q.options.map((opt,idx)=>{
+    const selected = answers[current] === idx ? 'selected' : '';
+    return `
+      <div class="option-card ${selected}" data-index="${idx}">
+        <span class="option-radio"></span>${opt}
+      </div>
+    `;
+  }).join('');
+
+  optionsEl.innerHTML = `
+    <div class="panel">
+      <h4 class="panel-title">Choose the correct answer</h4>
+      <div class="options-grid">
+        ${optsHtml}
+      </div>
+    </div>
+  `;
+
+  document.querySelectorAll('.option-card').forEach(card=>{
+    card.onclick = () => {
+      const idx = Number(card.dataset.index);
+      answers[current] = idx;
+      document.querySelectorAll('.option-card').forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+      alertEl.classList.add('hidden');
+    };
+  });
+
+  document.getElementById('prevBtn').disabled = (current===0);
+  document.getElementById('nextBtn').textContent =
+    (current === questions.length-1) ? 'Submit' : 'Next';
+}
+
+function goNext(){
+  if(answers[current] == null){
+    alertEl.classList.remove('hidden');
+    return;
+  }
+  if(current < questions.length-1){
+    current++;
+    renderQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+function goPrev(){
+  if(current>0){
+    current--;
+    renderQuestion();
+  }
+}
+
+function finishQuiz(){
+  quizDiv.classList.add('hidden');
+  resultDiv.classList.remove('hidden');
+
+  let score = 0;
+  const wrongBlocks = [];
+
+  for(let i=0;i<questions.length;i++){
+    const q = questions[i];
+    const ua = answers[i];
+    const ca = q.answer;
+    if(ua === ca){
+      score++;
+      continue;
+    }
+    const itemsHtml = q.options.map((opt,idx)=>{
+      const isCorrect = idx===ca;
+      const isUser    = idx===ua;
+      const cls = isCorrect ? 'opt-correct' : (isUser ? 'opt-wrong' : '');
+      const badge = isCorrect ? `<span class="badge ok">✔</span>` :
+                    (isUser ? `<span class="badge no">✘</span>` : `<span style="width:20px;display:inline-block;"></span>`);
+      const tag = isCorrect ? `<span class="tag">Correct</span>` :
+                  (isUser ? `<span class="tag">Your answer</span>` : '');
+      return `<li class="${cls}">${badge} ${opt} ${tag}</li>`;
+    }).join('');
+
+    wrongBlocks.push(`
+      <div class="review-item">
+        <div class="review-question">Q${i+1}. ${q.text}</div>
+        <ul class="review-options">
+          ${itemsHtml}
+        </ul>
+      </div>
+    `);
+    // ADD THIS AT THE END of finishQuiz():
+    // Send score to CoinQuest
+    try {
+        window.parent.postMessage({
+            type: 'ACTIVITY_COMPLETE',
+            score: score,                    // Use your actual score variable
+            percentage: Math.round((score / questions.length) * 100),
+            timeSpent: 0,                    // Set to 0 since not time-bound
+            correctAnswers: score,
+            totalQuestions: questions.length
+        }, '*');
+        console.log('Score sent to CoinQuest:', score, '/', questions.length);
+    } catch(e) {
+        console.error('Failed to send score:', e);
+    }
+}
+Also, REMOVE the placeholder script at the bottom that has:
+
+document.getElementById('submitBtn').onclick = function() {
+    onActivityComplete();
+};
+  }
+
+  document.getElementById('score').textContent =
+    `Your Score: ${score} / ${questions.length}`;
+
+  if(wrongBlocks.length){
+    document.getElementById('reviewIntro').classList.remove('hidden');
+    document.getElementById('reviewList').innerHTML = wrongBlocks.join('');
+  } else {
+    document.getElementById('reviewIntro').classList.add('hidden');
+    document.getElementById('reviewList').innerHTML =
+      `<div class="review-item">Perfect! All answers are correct.</div>`;
+  }
+}
+
+function backToHome(){
+  quizDiv.classList.add('hidden');
+  resultDiv.classList.add('hidden');
+  homeDiv.classList.remove('hidden');
+}
+
+function newSetSameSettings(){
+  const raw = engine.generate({
+    count:10,
+    difficulty:lastSettings.difficulty,
+    operation:lastSettings.operation,
+    form:lastSettings.form
+  });
+  questions = raw.map(q => ({
+    text: q.stem,
+    options: q.options.slice(0,4),
+    answer: q.correctIndex
+  }));
+  answers = new Array(questions.length).fill(null);
+  current = 0;
+  resultDiv.classList.add('hidden');
+  quizDiv.classList.remove('hidden');
+  renderQuestion();
+}
+
+// Wiring
+document.getElementById('startBtn').onclick = startQuiz;
+document.getElementById('homeBtn').onclick  = backToHome;
+document.getElementById('prevBtn').onclick  = goPrev;
+document.getElementById('nextBtn').onclick  = goNext;
+document.getElementById('restartBtn').onclick = backToHome;
+document.getElementById('newSetBtn').onclick  = newSetSameSettings;
+</script>
+<!-- At the END of your HTML file, inside a <script> tag -->
+<script>
+    // Your existing activity/game logic here...
+    
+    // When the activity is COMPLETE, call this function:
+    function onActivityComplete() {
+        // Calculate your scores
+        var correctAnswers = 8;      // How many they got right
+        var totalQuestions = 10;     // Total questions
+        var percentage = (correctAnswers / totalQuestions) * 100;
+        var timeSpentSeconds = 120;  // How long it took
+        
+        // Send to CoinQuest
+        window.parent.postMessage({
+            type: 'ACTIVITY_COMPLETE',
+            score: correctAnswers,
+            percentage: percentage,
+            timeSpent: timeSpentSeconds,
+            correctAnswers: correctAnswers,
+            totalQuestions: totalQuestions
+        }, '*');
+    }
+    
+    // Call onActivityComplete() when user finishes
+    // For example, on a "Submit" button click:
+    document.getElementById('submitBtn').onclick = function() {
+        onActivityComplete();
+    };
+</script>
+</body>
+</html>
