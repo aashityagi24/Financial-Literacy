@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API } from '@/App';
 import { Star } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function ChildActivityScore({ contentId, user }) {
   const [scoreData, setScoreData] = useState(null);
@@ -53,20 +54,24 @@ export default function ChildActivityScore({ contentId, user }) {
     : `${scoreData.percentage}%`;
 
   return (
-    <>
-      <span
-        className={`text-xs px-3 py-1 rounded-full font-medium ${style.bg} ${style.text} inline-flex items-center gap-1 cursor-default`}
-        title="Your highest score from all the attempts"
-      >
-        {showStar && <Star className="w-3 h-3 fill-current" />}
-        {displayScore}
-      </span>
-      <span
-        className="text-xs px-3 py-1 rounded-full font-medium bg-[#98C1D9]/30 text-[#3D5A80] cursor-default"
-        title="Number of times you did the activity"
-      >
-        {scoreData.attempts} {scoreData.attempts === 1 ? 'attempt' : 'attempts'}
-      </span>
-    </>
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className={`text-xs px-3 py-1 rounded-full font-medium ${style.bg} ${style.text} inline-flex items-center gap-1 cursor-default`}>
+            {showStar && <Star className="w-3 h-3 fill-current" />}
+            {displayScore}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>Your highest score from all attempts</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="text-xs px-3 py-1 rounded-full font-medium bg-[#98C1D9]/30 text-[#3D5A80] cursor-default">
+            {scoreData.attempts} {scoreData.attempts === 1 ? 'attempt' : 'attempts'}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>Number of times you did the activity</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
