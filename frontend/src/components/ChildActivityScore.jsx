@@ -41,9 +41,9 @@ export default function ChildActivityScore({ contentId, user }) {
   }
 
   const getScoreStyle = () => {
-    if (scoreData.percentage >= 80) return { bg: 'bg-[#06D6A0]' };
-    if (scoreData.percentage >= 60) return { bg: 'bg-[#FFD23F]' };
-    return { bg: 'bg-[#EE6C4D]' };
+    if (scoreData.percentage >= 80) return { bg: 'bg-[#06D6A0]', text: 'text-white' };
+    if (scoreData.percentage >= 40) return { bg: 'bg-[#FFD23F]', text: 'text-[#1D3557]' };
+    return { bg: 'bg-[#EE6C4D]', text: 'text-white' };
   };
 
   const style = getScoreStyle();
@@ -53,14 +53,20 @@ export default function ChildActivityScore({ contentId, user }) {
     : `${scoreData.percentage}%`;
 
   return (
-    <div className="flex items-center gap-1.5">
-      <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${style.bg} text-white text-sm font-bold shadow-md`}>
-        {showStar && <Star className="w-4 h-4 fill-white" />}
-        <span>{displayScore}</span>
-      </div>
-      {scoreData.attempts > 1 && (
-        <span className="text-xs text-[#3D5A80] font-medium">{scoreData.attempts} attempts</span>
-      )}
-    </div>
+    <>
+      <span
+        className={`text-xs px-3 py-1 rounded-full font-medium ${style.bg} ${style.text} inline-flex items-center gap-1 cursor-default`}
+        title="Your highest score from all the attempts"
+      >
+        {showStar && <Star className="w-3 h-3 fill-current" />}
+        {displayScore}
+      </span>
+      <span
+        className="text-xs px-3 py-1 rounded-full font-medium bg-[#98C1D9]/30 text-[#3D5A80] cursor-default"
+        title="Number of times you did the activity"
+      >
+        {scoreData.attempts} {scoreData.attempts === 1 ? 'attempt' : 'attempts'}
+      </span>
+    </>
   );
 }
