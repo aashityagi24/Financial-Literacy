@@ -92,7 +92,7 @@ export default function QuestsPage({ user }) {
   
   const getSourceLabel = (creatorType) => {
     switch (creatorType) {
-      case 'admin': return 'Admin';
+      case 'admin': return 'CoinQuest';
       case 'teacher': return 'Teacher';
       case 'parent': return 'Chore';
       default: return 'Quest';
@@ -469,25 +469,25 @@ export default function QuestsPage({ user }) {
               All
             </TabsTrigger>
             <TabsTrigger 
-              value="admin" 
-              className="rounded-lg data-[state=active]:bg-[#3D5A80] data-[state=active]:text-white"
-              data-testid="tab-admin"
-            >
-              Admin
-            </TabsTrigger>
-            <TabsTrigger 
               value="teacher" 
               className="rounded-lg data-[state=active]:bg-[#EE6C4D] data-[state=active]:text-white"
               data-testid="tab-teacher"
             >
-              Teacher
+              Teachers
             </TabsTrigger>
             <TabsTrigger 
               value="parent" 
               className="rounded-lg data-[state=active]:bg-[#06D6A0] data-[state=active]:text-white"
               data-testid="tab-parent"
             >
-              Chores
+              Parents
+            </TabsTrigger>
+            <TabsTrigger 
+              value="admin" 
+              className="rounded-lg data-[state=active]:bg-[#3D5A80] data-[state=active]:text-white"
+              data-testid="tab-admin"
+            >
+              CoinQuest
             </TabsTrigger>
           </TabsList>
         </Tabs>
