@@ -43,6 +43,7 @@ import AdminTeacherRepository from "@/pages/AdminTeacherRepository";
 import GlossaryPage from "@/pages/GlossaryPage";
 import AuthPage from "@/pages/AuthPage";
 import ContentProtection from "@/components/ContentProtection";
+import ActivityScoresPage from "@/pages/ActivityScoresPage";
 
 // Components
 import OnboardingTour from "@/components/OnboardingTour";
@@ -351,6 +352,16 @@ function AppRouter() {
       <Route path="/glossary" element={
         <ProtectedRoute>
           {({ user }) => <GlossaryPage user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/activity-scores" element={
+        <ProtectedRoute>
+          {({ user }) => <ActivityScoresPage user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/activity-scores/:childId" element={
+        <ProtectedRoute>
+          {({ user }) => <ActivityScoresPage user={user} />}
         </ProtectedRoute>
       } />
     </Routes>

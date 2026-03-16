@@ -36,6 +36,53 @@ export default function TopicPage({ user }) {
     fetchTopicData();
   }, [topicId, gradeFilter]);
   
+  // Listen for activity score messages from iframes
+  useEffect(() => {
+    const handleActivityMessage = async (event) => {
+      // Validate message structure
+      if (!event.data || typeof event.data !== 'object') return;
+      
+      const { type, score, timeSpent, correctAnswers, totalQuestions, maxScore, percentage, extraData } = event.data;
+      
+      // Handle activity completion message
+      if (type === 'ACTIVITY_COMPLETE' && selectedContent && user?.role === 'child') {
+        try {
+          await axios.post(`${API}/activity/score`, {
+            content_id: selectedContent.content_id,
+            score: score || 0,
+            max_score: maxScore || 100,
+            percentage: percentage || score || 0,
+            timeSpent: timeSpent || 0,
+            correctAnswers: correctAnswers || 0,
+            totalQuestions: totalQuestions || 0,
+            completed: true,
+            extraData: extraData || {}
+          });
+          
+          toast.success(`Great job! Score: ${percentage || score}% 🎉`, {
+            duration: 4000
+          });
+          
+          // Auto-complete the content if not already completed
+          if (!selectedContent.completed) {
+            handleCompleteContent(selectedContent.content_id);
+          }
+        } catch (error) {
+          console.error('Failed to save activity score:', error);
+        }
+      }
+      
+      // Handle progress update (for partial saves)
+      if (type === 'ACTIVITY_PROGRESS' && selectedContent && user?.role === 'child') {
+        console.log('Activity progress:', event.data);
+        // Could be used for auto-save functionality
+      }
+    };
+    
+    window.addEventListener('message', handleActivityMessage);
+    return () => window.removeEventListener('message', handleActivityMessage);
+  }, [selectedContent, user]);
+  
   const fetchTopicData = async () => {
     setLoading(true);
     try {

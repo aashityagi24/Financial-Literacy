@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoinQuest Activity Template</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #E0FBFC 0%, #C2F0FF 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1D3557;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        .question {
+            background: #F8F9FA;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #E0FBFC;
+        }
+        .question h3 {
+            color: #3D5A80;
+            margin-bottom: 15px;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option {
+            padding: 15px 20px;
+            background: white;
+            border: 2px solid #1D3557;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.1em;
+        }
+        .option:hover {
+            background: #E0FBFC;
+            transform: translateX(5px);
+        }
+        .option.selected {
+            background: #FFD23F;
+            border-color: #1D3557;
+        }
+        .option.correct {
+            background: #06D6A0;
+            color: white;
+        }
+        .option.wrong {
+            background: #EE6C4D;
+            color: white;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #06D6A0;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #05c090;
+            transform: scale(1.02);
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            text-align: center;
+            padding: 40px;
+        }
+        .result h2 {
+            font-size: 3em;
+            color: #06D6A0;
+            margin-bottom: 10px;
+        }
+        .result p {
+            font-size: 1.5em;
+            color: #3D5A80;
+            margin-bottom: 20px;
+        }
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FFD23F 0%, #FF9F43 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 3em;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 10px 30px rgba(255, 159, 67, 0.4);
+        }
+        .hidden {
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #E0FBFC;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #06D6A0, #3D5A80);
+            border-radius: 5px;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Activity Content -->
+        <div id="activity">
+            <h1>Money Quiz</h1>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress" style="width: 0%"></div>
+            </div>
+            
+            <div id="questions-container">
+                <!-- Questions will be loaded here -->
+            </div>
+            
+            <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" disabled>
+                Next Question
+            </button>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result" class="result hidden">
+            <div class="score-circle" id="scoreDisplay">0%</div>
+            <h2>Great Job!</h2>
+            <p id="resultText">You answered 0 out of 0 correctly!</p>
+            <button class="btn btn-primary" onclick="restartQuiz()">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // COINQUEST ACTIVITY TEMPLATE
+        // ============================================
+        // 
+        // INSTRUCTIONS FOR CONTENT CREATORS:
+        // 1. Modify the 'questions' array below with your own questions
+        // 2. Each question needs: text, options array, and correctIndex
+        // 3. The score will automatically be sent to CoinQuest when complete
+        // 4. You can customize the styling in the <style> section
+        //
+        // ============================================
+
+        // CUSTOMIZE YOUR QUESTIONS HERE
+        const questions = [
+            {
+                text: "What is the best way to save money?",
+                options: [
+                    "Spend it all immediately",
+                    "Put some aside regularly",
+                    "Hide it under your bed",
+                    "Give it all away"
+                ],
+                correctIndex: 1
+            },
+            {
+                text: "What is a budget?",
+                options: [
+                    "A type of bird",
+                    "A video game",
+                    "A plan for spending money",
+                    "A type of candy"
+                ],
+                correctIndex: 2
+            },
+            {
+                text: "Why is it good to save money?",
+                options: [
+                    "To buy things you need later",
+                    "Money is boring",
+                    "Saving is bad",
+                    "You should spend everything"
+                ],
+                correctIndex: 0
+            },
+            {
+                text: "What should you do before buying something expensive?",
+                options: [
+                    "Buy it immediately",
+                    "Ask if you really need it",
+                    "Buy two of them",
+                    "Ignore the price"
+                ],
+                correctIndex: 1
+            },
+            {
+                text: "What is interest at a bank?",
+                options: [
+                    "A boring meeting",
+                    "Extra money the bank pays you for saving",
+                    "A type of loan",
+                    "A video game"
+                ],
+                correctIndex: 1
+            }
+        ];
+
+        // ============================================
+        // ACTIVITY LOGIC (Don't modify unless needed)
+        // ============================================
+        
+        let currentQuestion = 0;
+        let correctAnswers = 0;
+        let startTime = Date.now();
+        let selectedAnswer = null;
+
+        function loadQuestion() {
+            const container = document.getElementById('questions-container');
+            const question = questions[currentQuestion];
+            const progress = ((currentQuestion) / questions.length) * 100;
+            
+            document.getElementById('progress').style.width = progress + '%';
+            document.getElementById('nextBtn').disabled = true;
+            selectedAnswer = null;
+
+            container.innerHTML = `
+                <div class="question">
+                    <h3>Question ${currentQuestion + 1} of ${questions.length}</h3>
+                    <p style="font-size: 1.2em; margin-bottom: 15px; color: #1D3557;">${question.text}</p>
+                    <div class="options">
+                        ${question.options.map((opt, i) => `
+                            <div class="option" onclick="selectAnswer(${i})" data-index="${i}">
+                                ${opt}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectAnswer(index) {
+            const options = document.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            options[index].classList.add('selected');
+            selectedAnswer = index;
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function nextQuestion() {
+            const question = questions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            
+            // Show correct/wrong
+            options.forEach((opt, i) => {
+                if (i === question.correctIndex) {
+                    opt.classList.add('correct');
+                } else if (i === selectedAnswer && selectedAnswer !== question.correctIndex) {
+                    opt.classList.add('wrong');
+                }
+                opt.style.pointerEvents = 'none';
+            });
+
+            if (selectedAnswer === question.correctIndex) {
+                correctAnswers++;
+            }
+
+            // Wait a moment then go to next question
+            setTimeout(() => {
+                currentQuestion++;
+                if (currentQuestion < questions.length) {
+                    loadQuestion();
+                } else {
+                    showResult();
+                }
+            }, 1000);
+        }
+
+        function showResult() {
+            const timeSpent = Math.round((Date.now() - startTime) / 1000);
+            const percentage = Math.round((correctAnswers / questions.length) * 100);
+            
+            document.getElementById('activity').classList.add('hidden');
+            document.getElementById('result').classList.remove('hidden');
+            document.getElementById('progress').style.width = '100%';
+            
+            document.getElementById('scoreDisplay').textContent = percentage + '%';
+            document.getElementById('resultText').textContent = 
+                `You answered ${correctAnswers} out of ${questions.length} correctly!`;
+
+            // ============================================
+            // SEND SCORE TO COINQUEST
+            // This is the important part that sends data to the app
+            // ============================================
+            sendScoreToCoinQuest({
+                score: correctAnswers,
+                maxScore: questions.length,
+                percentage: percentage,
+                timeSpent: timeSpent,
+                correctAnswers: correctAnswers,
+                totalQuestions: questions.length,
+                completed: true
+            });
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            correctAnswers = 0;
+            selectedAnswer = null;
+            startTime = Date.now();
+            
+            document.getElementById('activity').classList.remove('hidden');
+            document.getElementById('result').classList.add('hidden');
+            loadQuestion();
+        }
+
+        // ============================================
+        // COINQUEST INTEGRATION FUNCTION
+        // This sends the score to the parent CoinQuest app
+        // ============================================
+        function sendScoreToCoinQuest(data) {
+            try {
+                // Send message to parent window (CoinQuest app)
+                window.parent.postMessage({
+                    type: 'ACTIVITY_COMPLETE',
+                    score: data.score,
+                    maxScore: data.maxScore,
+                    percentage: data.percentage,
+                    timeSpent: data.timeSpent,
+                    correctAnswers: data.correctAnswers,
+                    totalQuestions: data.totalQuestions,
+                    completed: data.completed,
+                    extraData: {
+                        activityType: 'quiz',
+                        timestamp: new Date().toISOString()
+                    }
+                }, '*');
+                
+                console.log('Score sent to CoinQuest:', data);
+            } catch (error) {
+                console.error('Failed to send score:', error);
+            }
+        }
+
+        // Optional: Send progress updates during the activity
+        function sendProgressToCoinQuest(currentQ, totalQ) {
+            try {
+                window.parent.postMessage({
+                    type: 'ACTIVITY_PROGRESS',
+                    currentQuestion: currentQ,
+                    totalQuestions: totalQ,
+                    percentComplete: Math.round((currentQ / totalQ) * 100)
+                }, '*');
+            } catch (error) {
+                console.error('Failed to send progress:', error);
+            }
+        }
+
+        // Start the quiz
+        loadQuestion();
+    </script>
+</body>
+</html>
