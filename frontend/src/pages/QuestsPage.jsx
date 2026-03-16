@@ -192,6 +192,7 @@ export default function QuestsPage({ user }) {
             src={getAssetUrl(image_url)} 
             alt="Question" 
             className="w-full max-w-xs mx-auto rounded-lg border-2 border-[#1D3557] mb-3"
+            onError={(e) => { e.target.style.display = 'none'; }}
           />
         )}
         
@@ -544,7 +545,7 @@ export default function QuestsPage({ user }) {
                       ) : isPendingApproval ? (
                         <Clock className="w-8 h-8 text-[#1D3557]" />
                       ) : quest.image_url ? (
-                        <img src={getAssetUrl(quest.image_url)} alt="" className="w-full h-full object-cover rounded-lg" />
+                        <img src={getAssetUrl(quest.image_url)} alt="" className="w-full h-full object-cover rounded-lg" onError={(e) => { e.target.style.display = 'none'; }} />
                       ) : (
                         <Target className="w-8 h-8 text-[#1D3557]" />
                       )}
@@ -669,6 +670,7 @@ export default function QuestsPage({ user }) {
                     src={getAssetUrl(selectedQuest.image_url)} 
                     alt="Quest" 
                     className="w-full rounded-xl border-2 border-[#1D3557]"
+                    onError={(e) => { e.target.style.display = 'none'; }}
                   />
                 )}
                 {selectedQuest.pdf_url && (

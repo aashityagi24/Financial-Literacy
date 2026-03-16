@@ -476,6 +476,22 @@ export default function TeacherDashboard({ user }) {
     }));
   };
   
+  const handleQuestionImageUpload = async (e, qIndex) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formDataUpload = new FormData();
+    formDataUpload.append('file', file);
+    try {
+      const res = await axios.post(`${API}/upload/quest-asset`, formDataUpload, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      updateQuestion(qIndex, 'image_url', res.data.url);
+      toast.success('Question image uploaded!');
+    } catch (error) {
+      toast.error('Image upload failed');
+    }
+  };
+  
   const handleDeleteQuest = async (questId) => {
     if (!window.confirm('Delete this quest?')) return;
     try {
@@ -967,6 +983,24 @@ export default function TeacherDashboard({ user }) {
                                   onChange={(e) => updateQuestion(qIndex, 'question_text', e.target.value)}
                                   className="border-2 border-[#1D3557]/30 mb-2"
                                 />
+                                
+                                {/* Per-question image upload */}
+                                <div className="mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <Input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={(e) => handleQuestionImageUpload(e, qIndex)}
+                                      className="border-2 border-[#1D3557]/30 text-xs h-8"
+                                    />
+                                    {q.image_url && (
+                                      <div className="relative flex-shrink-0">
+                                        <img src={getAssetUrl(q.image_url)} alt="" className="h-10 w-10 rounded object-cover border border-[#1D3557]/20" onError={(e) => { e.target.style.display = 'none'; }} />
+                                        <button type="button" onClick={() => updateQuestion(qIndex, 'image_url', '')} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">×</button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
                                 
                                 <div className="grid grid-cols-2 gap-2 mb-2">
                                   <Select value={q.question_type} onValueChange={(v) => {
