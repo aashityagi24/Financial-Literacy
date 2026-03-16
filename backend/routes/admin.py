@@ -5,6 +5,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 from pathlib import Path
 import uuid
+import hashlib
 
 _db = None
 UPLOADS_DIR = Path("/app/backend/uploads")
