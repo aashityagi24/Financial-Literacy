@@ -6,10 +6,11 @@ import { toast } from 'sonner';
 import { 
   BookOpen, ChevronLeft, ChevronRight, Check, Download,
   FileText, FileSpreadsheet, Gamepad2, FolderOpen, ExternalLink, X,
-  Video, Book, Play, Lock, CheckCircle
+  Video, Book, Play, Lock, CheckCircle, BarChart3
 } from 'lucide-react';
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
 import { Progress } from "@/components/ui/progress";
+import ActivityScoresBadge from "@/components/ActivityScoresBadge";
 
 const CONTENT_TYPE_CONFIG = {
   worksheet: { icon: FileSpreadsheet, color: 'text-orange-600', bg: 'bg-orange-100', label: 'Worksheet' },
@@ -438,12 +439,30 @@ export default function TopicPage({ user }) {
                               ✓ DONE
                             </span>
                           )}
+                          {/* Teacher Analytics Link */}
+                          {user?.role === 'teacher' && content.content_type === 'activity' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/activity-analytics/${content.content_id}`);
+                              }}
+                              className="text-xs px-2 py-1 rounded-full font-bold bg-[#3D5A80] text-white hover:bg-[#1D3557] flex items-center gap-1"
+                            >
+                              <BarChart3 className="w-3 h-3" />
+                              Analytics
+                            </button>
+                          )}
                         </div>
                         <h3 className={`text-lg font-bold ${isCompleted ? 'text-[#06D6A0]' : 'text-[#1D3557]'}`} style={{ fontFamily: 'Fredoka' }}>{content.title}</h3>
                         <p className="text-base text-[#3D5A80] line-clamp-1">{content.description}</p>
                         <p className={`text-base font-bold mt-1 ${isCompleted ? 'text-[#06D6A0]' : 'text-[#06D6A0]'}`}>
                           {isCompleted ? '✓ Earned' : '+'} ₹{content.reward_coins}
                         </p>
+                        
+                        {/* Activity Scores for Parents/Teachers */}
+                        {['parent', 'teacher'].includes(user?.role) && content.content_type === 'activity' && (
+                          <ActivityScoresBadge contentId={content.content_id} user={user} />
+                        )}
                       </div>
                       
                       <div className="flex items-center">
