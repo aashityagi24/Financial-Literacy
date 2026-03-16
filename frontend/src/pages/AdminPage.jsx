@@ -36,6 +36,7 @@ export default function AdminPage({ user }) {
   const [newUserForm, setNewUserForm] = useState({
     name: '',
     email: '',
+    password: '',
     role: 'child',
     grade: 0
   });
@@ -144,12 +145,16 @@ export default function AdminPage({ user }) {
       toast.error('Name and email are required');
       return;
     }
+    if (!newUserForm.password || newUserForm.password.length < 6) {
+      toast.error('Password is required (minimum 6 characters)');
+      return;
+    }
     
     try {
       await axios.post(`${API}/admin/users`, newUserForm);
-      toast.success(`User ${newUserForm.name} created`);
+      toast.success(`User ${newUserForm.name} created with password`);
       setShowCreateUser(false);
-      setNewUserForm({ name: '', email: '', role: 'child', grade: 0 });
+      setNewUserForm({ name: '', email: '', password: '', role: 'child', grade: 0 });
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to create user');
@@ -504,6 +509,16 @@ export default function AdminPage({ user }) {
                         value={newUserForm.email}
                         onChange={(e) => setNewUserForm({...newUserForm, email: e.target.value})}
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                      <Input 
+                        type="password"
+                        placeholder="Minimum 6 characters" 
+                        value={newUserForm.password}
+                        onChange={(e) => setNewUserForm({...newUserForm, password: e.target.value})}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">User will use this password to login</p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>

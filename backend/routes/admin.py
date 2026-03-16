@@ -23,6 +23,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 class UserCreateAdmin(BaseModel):
     name: str
     email: str
+    password: str
     role: str
     grade: Optional[int] = None
 
@@ -69,7 +70,7 @@ async def get_users(request: Request):
 
 @router.post("/users")
 async def create_user(data: UserCreateAdmin, request: Request):
-    """Create a new user"""
+    """Create a new user with password"""
     from services.auth import require_admin
     db = get_db()
     await require_admin(request)
@@ -78,11 +79,20 @@ async def create_user(data: UserCreateAdmin, request: Request):
     if existing:
         raise HTTPException(status_code=400, detail="User already exists")
     
+    # Validate password
+    if len(data.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    # Hash the password
+    password_hash = hashlib.sha256(data.password.encode()).hexdigest()
+    
     user_id = f"user_{uuid.uuid4().hex[:12]}"
     user_doc = {
         "user_id": user_id,
         "name": data.name,
+        "username": data.email.split('@')[0],  # Create username from email
         "email": data.email.lower(),
+        "password_hash": password_hash,
         "role": data.role,
         "grade": data.grade,
         "streak_count": 0,
