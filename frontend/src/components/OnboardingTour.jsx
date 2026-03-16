@@ -3,7 +3,7 @@ import axios from 'axios';
 import { API } from '@/App';
 import { 
   Wallet, Target, ShoppingCart, TrendingUp, 
-  Users, BookOpen, Gift, ChevronRight, ChevronLeft, X, Sparkles
+  Users, BookOpen, Gift, ChevronRight, ChevronLeft, Sparkles
 } from 'lucide-react';
 import {
   Dialog,
@@ -132,21 +132,12 @@ export default function OnboardingTour({ user, onComplete }) {
   const StepIcon = step.icon;
   
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleSkip(); }}>
       <DialogContent 
         className="bg-white border-2 border-[#1D3557] rounded-2xl max-w-md p-0 overflow-hidden"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        {/* Skip button */}
-        <button
-          onClick={handleSkip}
-          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 z-10"
-          data-testid="onboarding-skip"
-        >
-          <X className="w-5 h-5" />
-        </button>
-        
         {/* Header with icon */}
         <div className={`bg-gradient-to-r ${step.color} px-6 py-5`}>
           <div className="flex items-center gap-4">
