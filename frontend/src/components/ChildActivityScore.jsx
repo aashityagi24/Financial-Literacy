@@ -57,36 +57,34 @@ export default function ChildActivityScore({ contentId, user }) {
 
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="flex items-center gap-2 mt-1.5">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span
-              className={`text-xs px-3 py-1 rounded-full font-bold ${style.bg} ${style.text} inline-flex items-center gap-1 cursor-default`}
-              data-testid="child-activity-score"
-            >
-              {showStar && <Star className="w-3.5 h-3.5 fill-current" />}
-              {displayScore}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="top" sideOffset={8} className={tooltipClass}>
-            Your best score from all attempts
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span
-              className="text-xs px-3 py-1 rounded-full font-bold bg-[#3D5A80]/15 text-[#3D5A80] inline-flex items-center gap-1 cursor-default"
-              data-testid="child-activity-attempts"
-            >
-              <RotateCw className="w-3 h-3" />
-              {scoreData.attempts} {scoreData.attempts === 1 ? 'attempt' : 'attempts'}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="top" sideOffset={8} className={tooltipClass}>
-            Number of times you did the activity
-          </TooltipContent>
-        </Tooltip>
-      </div>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            className={`text-xs px-3 py-1 rounded-full font-bold ${style.bg} ${style.text} inline-flex items-center gap-1 cursor-default`}
+            data-testid="child-activity-score"
+          >
+            {showStar && <Star className="w-3.5 h-3.5 fill-current" />}
+            {displayScore}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="top" sideOffset={8} className={tooltipClass}>
+          Your best score from all attempts
+        </TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            className="text-xs px-3 py-1 rounded-full font-bold bg-[#3D5A80]/15 text-[#3D5A80] inline-flex items-center gap-1 cursor-default"
+            data-testid="child-activity-attempts"
+          >
+            <RotateCw className="w-3 h-3" />
+            {scoreData.attempts} {scoreData.attempts === 1 ? 'attempt' : 'attempts'}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="top" sideOffset={8} className={tooltipClass}>
+          Number of times you did the activity
+        </TooltipContent>
+      </Tooltip>
     </TooltipProvider>
   );
 }
