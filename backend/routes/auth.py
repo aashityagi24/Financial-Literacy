@@ -75,6 +75,12 @@ async def unified_login(login_data: UnifiedLoginRequest, response: Response):
     # Single device login: Invalidate ALL previous sessions for this user
     await db.user_sessions.delete_many({"user_id": user["user_id"]})
     
+    # Update last login timestamp
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {"last_login_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
     # Create new session
     session_token = f"sess_{uuid.uuid4().hex}"
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
@@ -404,6 +410,12 @@ async def google_callback(request: Request, response: Response, code: str = None
     # Single device login: Invalidate ALL previous sessions for this user
     await db.user_sessions.delete_many({"user_id": user["user_id"]})
     
+    # Update last login timestamp
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {"last_login_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
     # Create new session
     session_token = f"sess_{uuid.uuid4().hex}"
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
@@ -529,6 +541,12 @@ async def create_session(request: Request, response: Response):
     
     # Single device login: Invalidate ALL previous sessions for this user
     await db.user_sessions.delete_many({"user_id": user["user_id"]})
+    
+    # Update last login timestamp
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {"last_login_at": datetime.now(timezone.utc).isoformat()}}
+    )
     
     # Create new session
     session_token = f"sess_{uuid.uuid4().hex}"

@@ -621,7 +621,8 @@ export default function AdminPage({ user }) {
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Role</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Grade</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">School</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600">Sign Up Date</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Sign Up</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Last Login</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Actions</th>
                   </tr>
                 </thead>
@@ -692,6 +693,34 @@ export default function AdminPage({ user }) {
                           month: 'short',
                           year: 'numeric'
                         }) : '-'}
+                      </td>
+                      <td className="py-3 px-4 text-sm">
+                        {u.last_login_at ? (
+                          <div>
+                            <span className={`${
+                              // Highlight if logged in within last 24 hours
+                              (new Date() - new Date(u.last_login_at)) < 24 * 60 * 60 * 1000
+                                ? 'text-green-600 font-medium'
+                                : (new Date() - new Date(u.last_login_at)) < 7 * 24 * 60 * 60 * 1000
+                                  ? 'text-gray-600'
+                                  : 'text-orange-500'
+                            }`}>
+                              {new Date(u.last_login_at).toLocaleDateString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </span>
+                            <span className="block text-xs text-gray-400">
+                              {new Date(u.last_login_at).toLocaleTimeString('en-IN', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">Never</span>
+                        )}
                       </td>
                       <td className="py-3 px-4">
                         <button
