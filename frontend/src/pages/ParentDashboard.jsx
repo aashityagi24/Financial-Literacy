@@ -928,6 +928,7 @@ export default function ParentDashboard({ user }) {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <h4 className="font-bold text-[#1D3557]">{chore.title}</h4>
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-[#98C1D9]/30 text-[#3D5A80] font-bold">{(chore.child_name || '').split(' ')[0]}</span>
                                 {pendingRequest ? (
                                   <span className="bg-[#06D6A0] text-white text-xs px-2 py-1 rounded-full font-bold">
                                     ✓ {chore.child_name} marked complete
@@ -1002,10 +1003,10 @@ export default function ParentDashboard({ user }) {
                             <div className="flex items-center gap-2">
                               <span className="text-lg">🌟</span>
                               <h4 className="font-bold text-[#1D3557]">{record.title}</h4>
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-[#06D6A0]/20 text-[#1D3557] font-bold">{(dashboard?.children?.find(c => c.user_id === record.child_id)?.name || 'Child').split(' ')[0]}</span>
                             </div>
                             <p className="text-sm text-[#3D5A80]">
-                              {dashboard?.children?.find(c => c.user_id === record.child_id)?.name || 'Child'} • 
-                              <span className="text-[#06D6A0] font-bold"> +₹{Math.abs(record.amount)}</span>
+                              <span className="text-[#06D6A0] font-bold">+₹{Math.abs(record.amount)}</span>
                             </p>
                             {record.description && <p className="text-xs text-[#3D5A80] mt-1">{record.description}</p>}
                             <p className="text-xs text-[#98C1D9] mt-1">{new Date(record.created_at).toLocaleDateString()}</p>
@@ -1030,10 +1031,10 @@ export default function ParentDashboard({ user }) {
                             <div className="flex items-center gap-2">
                               <span className="text-lg">⚠️</span>
                               <h4 className="font-bold text-[#1D3557]">{record.title}</h4>
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-[#EE6C4D]/20 text-[#1D3557] font-bold">{(dashboard?.children?.find(c => c.user_id === record.child_id)?.name || 'Child').split(' ')[0]}</span>
                             </div>
                             <p className="text-sm text-[#3D5A80]">
-                              {dashboard?.children?.find(c => c.user_id === record.child_id)?.name || 'Child'} • 
-                              <span className="text-[#EE6C4D] font-bold"> -₹{Math.abs(record.amount)}</span>
+                              <span className="text-[#EE6C4D] font-bold">-₹{Math.abs(record.amount)}</span>
                             </p>
                             {record.description && <p className="text-xs text-[#3D5A80] mt-1">{record.description}</p>}
                             <p className="text-xs text-[#98C1D9] mt-1">{new Date(record.created_at).toLocaleDateString()}</p>
@@ -1059,6 +1060,7 @@ export default function ParentDashboard({ user }) {
                             <div className="flex items-center gap-2">
                               <span className="text-lg">✅</span>
                               <h4 className="font-bold text-[#1D3557] line-through">{chore.title}</h4>
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-[#06D6A0]/20 text-[#1D3557] font-bold">{(chore.child_name || '').split(' ')[0]}</span>
                             </div>
                             <p className="text-sm text-[#3D5A80]">
                               {chore.child_name} • <span className="text-[#06D6A0] font-bold">+₹{chore.reward_amount}</span> earned
@@ -1113,7 +1115,10 @@ export default function ParentDashboard({ user }) {
                     <div key={allowance.allowance_id} className="card-playful p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h4 className="font-bold text-[#1D3557]">{allowance.child_name}</h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-[#1D3557]">{allowance.child_name}</h4>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-[#FFD23F]/30 text-[#1D3557] font-bold">{(allowance.child_name || '').split(' ')[0]}</span>
+                          </div>
                           <p className="text-sm text-[#3D5A80]">₹{allowance.amount} {allowance.frequency} • Next: {allowance.next_date}</p>
                         </div>
                         <button onClick={() => handleCancelAllowance(allowance.allowance_id)} className="text-[#EE6C4D] text-sm hover:underline">
