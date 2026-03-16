@@ -523,13 +523,15 @@ async def get_parent_savings_goals(request: Request):
 
 @router.get("/reward-penalty")
 async def get_reward_penalties(request: Request):
-    """Get reward/penalty history"""
+    """Get reward/penalty history (last 15 days only)"""
     from services.auth import require_parent
     db = get_db()
     parent = await require_parent(request)
     
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=15)).isoformat()
+    
     records = await db.reward_penalties.find(
-        {"parent_id": parent["user_id"]},
+        {"parent_id": parent["user_id"], "created_at": {"$gte": cutoff}},
         {"_id": 0}
     ).sort("created_at", -1).to_list(100)
     

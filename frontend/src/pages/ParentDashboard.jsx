@@ -357,6 +357,12 @@ export default function ParentDashboard({ user }) {
     );
   }
   
+  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+  const recentRewards = rewardPenalties.filter(r => r.category === 'reward' && new Date(r.created_at) >= threeDaysAgo);
+  const recentPenalties = rewardPenalties.filter(r => r.category === 'penalty' && new Date(r.created_at) >= threeDaysAgo);
+  const historyRP = rewardPenalties.filter(r => new Date(r.created_at) < threeDaysAgo);
+
+
   return (
     <div className="min-h-screen bg-[#E0FBFC]" data-testid="parent-dashboard">
       {/* Header */}
@@ -888,7 +894,7 @@ export default function ParentDashboard({ user }) {
                       : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
                   }`}
                 >
-                  🌟 Rewards ({rewardPenalties.filter(r => r.category === 'reward').length})
+                  🌟 Rewards ({recentRewards.length})
                 </button>
                 <button
                   onClick={() => setActiveRPTab('penalties')}
@@ -898,7 +904,7 @@ export default function ParentDashboard({ user }) {
                       : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
                   }`}
                 >
-                  ⚠️ Penalties ({rewardPenalties.filter(r => r.category === 'penalty').length})
+                  ⚠️ Penalties ({recentPenalties.length})
                 </button>
                 <button
                   onClick={() => setActiveRPTab('history')}
@@ -909,7 +915,7 @@ export default function ParentDashboard({ user }) {
                   }`}
                 >
                   <History className="w-4 h-4 inline mr-1" />
-                  History ({chores.filter(c => c.status === 'approved' || c.status === 'completed').length})
+                  History ({chores.filter(c => c.status === 'approved' || c.status === 'completed').length + historyRP.length})
                 </button>
               </div>
               
@@ -993,10 +999,10 @@ export default function ParentDashboard({ user }) {
               {/* Rewards Tab */}
               {activeRPTab === 'rewards' && (
                 <div className="space-y-3">
-                  {rewardPenalties.filter(r => r.category === 'reward').length === 0 ? (
-                    <p className="text-center text-[#3D5A80] py-4">No rewards given yet. Use &quot;Quick Reward/Penalty&quot; to give one!</p>
+                  {recentRewards.length === 0 ? (
+                    <p className="text-center text-[#3D5A80] py-4">No recent rewards. Use &quot;Quick Reward/Penalty&quot; to give one!</p>
                   ) : (
-                    rewardPenalties.filter(r => r.category === 'reward').map((record) => (
+                    recentRewards.map((record) => (
                       <div key={record.record_id} className="card-playful p-4 border-l-4 border-[#06D6A0]">
                         <div className="flex items-center justify-between">
                           <div>
@@ -1021,10 +1027,10 @@ export default function ParentDashboard({ user }) {
               {/* Penalties Tab */}
               {activeRPTab === 'penalties' && (
                 <div className="space-y-3">
-                  {rewardPenalties.filter(r => r.category === 'penalty').length === 0 ? (
-                    <p className="text-center text-[#3D5A80] py-4">No penalties applied yet.</p>
+                  {recentPenalties.length === 0 ? (
+                    <p className="text-center text-[#3D5A80] py-4">No recent penalties.</p>
                   ) : (
-                    rewardPenalties.filter(r => r.category === 'penalty').map((record) => (
+                    recentPenalties.map((record) => (
                       <div key={record.record_id} className="card-playful p-4 border-l-4 border-[#EE6C4D]">
                         <div className="flex items-center justify-between">
                           <div>
@@ -1073,10 +1079,10 @@ export default function ParentDashboard({ user }) {
                   )}
                   
                   <h3 className="text-lg font-bold text-[#1D3557] mb-3 mt-6">Reward & Penalty History</h3>
-                  {rewardPenalties.length === 0 ? (
-                    <p className="text-center text-[#3D5A80] py-4">No rewards or penalties applied yet.</p>
+                  {historyRP.length === 0 ? (
+                    <p className="text-center text-[#3D5A80] py-4">No rewards or penalties older than 3 days.</p>
                   ) : (
-                    rewardPenalties.map((record) => (
+                    historyRP.map((record) => (
                       <div 
                         key={record.record_id} 
                         className={`card-playful p-4 opacity-80 border-l-4 ${
