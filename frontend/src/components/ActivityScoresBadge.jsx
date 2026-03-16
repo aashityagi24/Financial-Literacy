@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API } from '@/App';
-import { Trophy, Users, TrendingUp, Clock } from 'lucide-react';
+import { Trophy, Star } from 'lucide-react';
 
 export default function ActivityScoresBadge({ contentId, user }) {
   const [scores, setScores] = useState(null);
@@ -46,7 +46,7 @@ export default function ActivityScoresBadge({ contentId, user }) {
     <div className="mt-3 pt-3 border-t border-gray-200">
       <div className="flex items-center gap-2 mb-2">
         <Trophy className="w-4 h-4 text-[#FFD23F]" />
-        <span className="text-xs font-bold text-[#3D5A80]">Activity Scores</span>
+        <span className="text-xs font-bold text-[#3D5A80]">Scores</span>
       </div>
       
       <div className="space-y-2">
@@ -64,21 +64,13 @@ export default function ActivityScoresBadge({ contentId, user }) {
               {child.scores?.slice(0, 2).map((score, i) => (
                 <div 
                   key={i}
-                  className={`w-8 h-6 rounded flex items-center justify-center text-xs font-bold text-white ${getScoreColor(score.percentage)}`}
-                  title={`Attempt ${i + 1}: ${score.percentage}%`}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold text-white ${getScoreColor(score.percentage)}`}
                 >
+                  <Star className="w-3 h-3 fill-white" />
                   {score.percentage}%
                 </div>
               ))}
             </div>
-            
-            {/* Best score indicator */}
-            {child.best_score && (
-              <div className="flex items-center gap-1 text-xs text-[#06D6A0]">
-                <TrendingUp className="w-3 h-3" />
-                <span className="font-bold">{child.best_score}%</span>
-              </div>
-            )}
           </div>
         ))}
       </div>

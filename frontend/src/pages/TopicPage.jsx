@@ -11,6 +11,7 @@ import {
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
 import { Progress } from "@/components/ui/progress";
 import ActivityScoresBadge from "@/components/ActivityScoresBadge";
+import ChildActivityScore from "@/components/ChildActivityScore";
 
 const CONTENT_TYPE_CONFIG = {
   worksheet: { icon: FileSpreadsheet, color: 'text-orange-600', bg: 'bg-orange-100', label: 'Worksheet' },
@@ -430,7 +431,7 @@ export default function TopicPage({ user }) {
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <span className={`text-xs px-3 py-1 rounded-full font-medium ${isCompleted ? 'bg-[#06D6A0]/20 text-[#06D6A0]' : config.bg + ' ' + config.color}`}>
                             {config.label}
                           </span>
@@ -438,6 +439,10 @@ export default function TopicPage({ user }) {
                             <span className="text-xs px-2 py-1 rounded-full font-bold bg-[#06D6A0] text-white">
                               ✓ DONE
                             </span>
+                          )}
+                          {/* Child's Activity Score */}
+                          {user?.role === 'child' && content.content_type === 'activity' && (
+                            <ChildActivityScore contentId={content.content_id} user={user} />
                           )}
                           {/* Teacher Analytics Link */}
                           {user?.role === 'teacher' && content.content_type === 'activity' && (
