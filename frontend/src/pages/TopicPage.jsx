@@ -444,10 +444,6 @@ export default function TopicPage({ user }) {
                           <span className={`text-xs px-3 py-1 rounded-full font-medium ${config.bg} ${config.color}`}>
                             {config.label}
                           </span>
-                          {/* Child's Activity Score */}
-                          {user?.role === 'child' && content.content_type === 'activity' && (
-                            <ChildActivityScore contentId={content.content_id} user={user} />
-                          )}
                           {/* Teacher Analytics Link */}
                           {user?.role === 'teacher' && content.content_type === 'activity' && (
                             <button
@@ -463,6 +459,10 @@ export default function TopicPage({ user }) {
                           )}
                         </div>
                         <h3 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{content.title}</h3>
+                        {/* Child's Activity Score - own row for readability */}
+                        {user?.role === 'child' && content.content_type === 'activity' && (
+                          <ChildActivityScore contentId={content.content_id} user={user} />
+                        )}
                         <p className="text-base text-[#3D5A80] line-clamp-1">{content.description}</p>
                         <p className={`text-base font-bold mt-1 ${isCompleted ? 'text-[#06D6A0]' : 'text-[#06D6A0]'}`}>
                           {isCompleted ? '✓ Earned' : '+'} ₹{content.reward_coins}

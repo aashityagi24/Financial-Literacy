@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API } from '@/App';
-import { Star } from 'lucide-react';
+import { Star, RotateCw } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function ChildActivityScore({ contentId, user }) {
@@ -53,25 +53,40 @@ export default function ChildActivityScore({ contentId, user }) {
     ? `${scoreData.correctAnswers}/${scoreData.totalQuestions}`
     : `${scoreData.percentage}%`;
 
+  const tooltipClass = "z-[100] rounded-xl bg-[#1D3557] text-white px-4 py-2 text-sm font-medium shadow-lg border-2 border-[#FFD23F]";
+
   return (
-    <TooltipProvider delayDuration={200}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className={`text-xs px-3 py-1 rounded-full font-medium ${style.bg} ${style.text} inline-flex items-center gap-1 cursor-default`}>
-            {showStar && <Star className="w-3 h-3 fill-current" />}
-            {displayScore}
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>Your highest score from all attempts</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="text-xs px-3 py-1 rounded-full font-medium bg-[#98C1D9]/30 text-[#3D5A80] cursor-default">
-            {scoreData.attempts} {scoreData.attempts === 1 ? 'attempt' : 'attempts'}
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>Number of times you did the activity</TooltipContent>
-      </Tooltip>
+    <TooltipProvider delayDuration={150}>
+      <div className="flex items-center gap-2 mt-1.5">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              className={`text-xs px-3 py-1 rounded-full font-bold ${style.bg} ${style.text} inline-flex items-center gap-1 cursor-default`}
+              data-testid="child-activity-score"
+            >
+              {showStar && <Star className="w-3.5 h-3.5 fill-current" />}
+              {displayScore}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" sideOffset={8} className={tooltipClass}>
+            Your best score from all attempts
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              className="text-xs px-3 py-1 rounded-full font-bold bg-[#3D5A80]/15 text-[#3D5A80] inline-flex items-center gap-1 cursor-default"
+              data-testid="child-activity-attempts"
+            >
+              <RotateCw className="w-3 h-3" />
+              {scoreData.attempts} {scoreData.attempts === 1 ? 'attempt' : 'attempts'}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" sideOffset={8} className={tooltipClass}>
+            Number of times you did the activity
+          </TooltipContent>
+        </Tooltip>
+      </div>
     </TooltipProvider>
   );
 }
