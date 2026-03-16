@@ -432,14 +432,9 @@ export default function TopicPage({ user }) {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className={`text-xs px-3 py-1 rounded-full font-medium ${isCompleted ? 'bg-[#06D6A0]/20 text-[#06D6A0]' : config.bg + ' ' + config.color}`}>
+                          <span className={`text-xs px-3 py-1 rounded-full font-medium ${config.bg} ${config.color}`}>
                             {config.label}
                           </span>
-                          {isCompleted && (
-                            <span className="text-xs px-2 py-1 rounded-full font-bold bg-[#06D6A0] text-white">
-                              ✓ DONE
-                            </span>
-                          )}
                           {/* Child's Activity Score */}
                           {user?.role === 'child' && content.content_type === 'activity' && (
                             <ChildActivityScore contentId={content.content_id} user={user} />
@@ -458,7 +453,7 @@ export default function TopicPage({ user }) {
                             </button>
                           )}
                         </div>
-                        <h3 className={`text-lg font-bold ${isCompleted ? 'text-[#06D6A0]' : 'text-[#1D3557]'}`} style={{ fontFamily: 'Fredoka' }}>{content.title}</h3>
+                        <h3 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{content.title}</h3>
                         <p className="text-base text-[#3D5A80] line-clamp-1">{content.description}</p>
                         <p className={`text-base font-bold mt-1 ${isCompleted ? 'text-[#06D6A0]' : 'text-[#06D6A0]'}`}>
                           {isCompleted ? '✓ Earned' : '+'} ₹{content.reward_coins}
