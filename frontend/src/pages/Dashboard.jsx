@@ -484,11 +484,23 @@ export default function Dashboard({ user, setUser }) {
             </div>
             
             {(myJobs.family_jobs.length + myJobs.payday_jobs.length) === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center py-4">
-                <Briefcase className="w-10 h-10 text-[#98C1D9] mb-2" />
-                <p className="text-sm text-[#3D5A80]">No jobs yet</p>
-                <Link to="/my-jobs" className="text-sm font-bold text-[#06D6A0] hover:underline mt-1">
-                  Add Jobs →
+              <div className="flex-1 space-y-2 py-1">
+                <Link to="/my-jobs" className="flex items-center gap-2 bg-rose-50/60 rounded-lg p-2.5 border border-rose-100 hover:bg-rose-50 transition-colors">
+                  <Heart className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-[#1D3557]">Family Jobs</p>
+                    <p className="text-[10px] text-[#3D5A80]">Things I do as part of my family</p>
+                  </div>
+                </Link>
+                <Link to="/my-jobs" className="flex items-center gap-2 bg-amber-50/60 rounded-lg p-2.5 border border-amber-100 hover:bg-amber-50 transition-colors">
+                  <Briefcase className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-[#1D3557]">Payday Jobs</p>
+                    <p className="text-[10px] text-[#3D5A80]">Extra tasks that earn me money</p>
+                  </div>
+                </Link>
+                <Link to="/my-jobs" className="text-xs text-center text-[#06D6A0] hover:text-[#05C493] block font-bold mt-1">
+                  Set up My Jobs →
                 </Link>
               </div>
             ) : (
