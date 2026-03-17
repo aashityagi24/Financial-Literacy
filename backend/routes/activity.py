@@ -28,7 +28,7 @@ async def save_activity_score(request: Request):
     child_id = user.get("user_id")
     
     # Get content details
-    content = await db.content.find_one({"content_id": content_id}, {"_id": 0})
+    content = await db.content_items.find_one({"content_id": content_id}, {"_id": 0})
     
     new_percentage = body.get("percentage", body.get("score", 0))
     new_correct = body.get("correctAnswers", 0)
@@ -177,7 +177,7 @@ async def get_content_scores(request: Request, content_id: str):
     ).sort("created_at", -1).to_list(100)
     
     # Get content info
-    content = await db.content.find_one({"content_id": content_id}, {"_id": 0})
+    content = await db.content_items.find_one({"content_id": content_id}, {"_id": 0})
     
     # Calculate stats
     if scores:
@@ -222,7 +222,12 @@ async def get_classroom_activity_analytics(request: Request, classroom_id: str):
     if user.get("role") == "teacher" and classroom.get("teacher_id") != user.get("user_id"):
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    student_ids = classroom.get("student_ids", [])
+    # Get students from classroom_students collection
+    enrollments = await db.classroom_students.find(
+        {"classroom_id": classroom_id, "status": "active"},
+        {"_id": 0, "student_id": 1}
+    ).to_list(500)
+    student_ids = [e["student_id"] for e in enrollments]
     
     # Get all scores for students in this classroom
     scores = await db.activity_scores.find(
@@ -277,20 +282,23 @@ async def get_teacher_content_overview(request: Request, content_id: str):
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Get content info
-    content = await db.content.find_one({"content_id": content_id}, {"_id": 0})
+    content = await db.content_items.find_one({"content_id": content_id}, {"_id": 0})
     if not content:
         raise HTTPException(status_code=404, detail="Content not found")
     
     # Get teacher's classrooms
     classrooms = await db.classrooms.find(
         {"teacher_id": user.get("user_id")},
-        {"_id": 0}
+        {"_id": 0, "classroom_id": 1}
     ).to_list(50)
+    classroom_ids = [c["classroom_id"] for c in classrooms]
     
-    all_student_ids = []
-    for classroom in classrooms:
-        all_student_ids.extend(classroom.get("student_ids", []))
-    all_student_ids = list(set(all_student_ids))
+    # Get students from classroom_students collection
+    enrollments = await db.classroom_students.find(
+        {"classroom_id": {"$in": classroom_ids}, "status": "active"},
+        {"_id": 0, "student_id": 1}
+    ).to_list(500)
+    all_student_ids = list(set(e["student_id"] for e in enrollments))
     
     # Get all students info
     students = await db.users.find(
@@ -466,15 +474,17 @@ async def get_scores_by_content(request: Request, content_id: str):
             {"_id": 0, "user_id": 1, "name": 1, "username": 1, "grade": 1}
         ).to_list(20)
     elif role == "teacher":
-        # Get students from classrooms
+        # Get students from classroom_students collection
         classrooms = await db.classrooms.find(
             {"teacher_id": user.get("user_id")},
-            {"_id": 0, "student_ids": 1}
+            {"_id": 0, "classroom_id": 1}
         ).to_list(50)
-        child_ids = []
-        for c in classrooms:
-            child_ids.extend(c.get("student_ids", []))
-        child_ids = list(set(child_ids))
+        classroom_ids = [c["classroom_id"] for c in classrooms]
+        enrollments = await db.classroom_students.find(
+            {"classroom_id": {"$in": classroom_ids}, "status": "active"},
+            {"_id": 0, "student_id": 1}
+        ).to_list(500)
+        child_ids = list(set(e["student_id"] for e in enrollments))
         
         children = await db.users.find(
             {"user_id": {"$in": child_ids}},
