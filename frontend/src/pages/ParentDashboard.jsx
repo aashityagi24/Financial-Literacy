@@ -99,6 +99,11 @@ export default function ParentDashboard({ user }) {
   // Jobs state
   const [childJobs, setChildJobs] = useState([]);
   const [showApproveJob, setShowApproveJob] = useState(null);
+  
+  // Subscription state
+  const [subscription, setSubscription] = useState(null);
+  const [secondParentEmail, setSecondParentEmail] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
   const [approveJobForm, setApproveJobForm] = useState({
     payment_amount: 10,
     payment_type: 'digital',
@@ -144,6 +149,11 @@ export default function ParentDashboard({ user }) {
       setChildrenPurchases(purchasesRes.data);
       setLendingRequests(lendingReqRes.data || []);
       setChildJobs(jobsRes.data?.jobs || []);
+      
+      // Fetch subscription info
+      axios.get(`${API}/subscriptions/my-subscription`)
+        .then(res => setSubscription(res.data?.subscription))
+        .catch(() => {});
       
       // Fetch classroom info and lending data for each child
       if (dashRes.data?.children) {
@@ -563,6 +573,78 @@ export default function ParentDashboard({ user }) {
             <span className="text-[11px] font-bold text-white text-center leading-tight">Jobs</span>
           </button>
         </div>
+        
+        {/* Invite Second Parent - only for two_parents plan */}
+        {subscription?.plan_type === 'two_parents' && subscription?.parent_emails?.length < 2 && (
+          <div className="bg-[#FFF3E0] border-2 border-[#EE6C4D]/30 rounded-xl p-4 mb-5 flex flex-col sm:flex-row items-start sm:items-center gap-3" data-testid="invite-second-parent">
+            <div className="flex-1">
+              <p className="text-sm font-bold text-[#1D3557]">Invite Second Parent</p>
+              <p className="text-xs text-[#3D5A80]">Your plan includes 2 parent logins. Add the other parent's email below.</p>
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Input
+                data-testid="second-parent-email"
+                type="email"
+                placeholder="parent@email.com"
+                value={secondParentEmail}
+                onChange={(e) => setSecondParentEmail(e.target.value)}
+                className="text-sm h-9"
+              />
+              <Button
+                data-testid="invite-parent-btn"
+                size="sm"
+                disabled={inviteLoading || !secondParentEmail.includes('@')}
+                onClick={async () => {
+                  setInviteLoading(true);
+                  try {
+                    await axios.post(`${API}/subscriptions/add-parent`, { email: secondParentEmail });
+                    toast.success('Second parent added! They can now sign in with Google.');
+                    setSecondParentEmail('');
+                    const res = await axios.get(`${API}/subscriptions/my-subscription`);
+                    setSubscription(res.data?.subscription);
+                  } catch (err) {
+                    toast.error(err.response?.data?.detail || 'Failed to add parent');
+                  } finally {
+                    setInviteLoading(false);
+                  }
+                }}
+                className="bg-[#EE6C4D] hover:bg-[#E05A3A] text-white whitespace-nowrap h-9"
+              >
+                {inviteLoading ? '...' : 'Invite'}
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {/* Show second parent info if already added */}
+        {subscription?.plan_type === 'two_parents' && subscription?.parent_emails?.length >= 2 && (
+          <div className="bg-[#D1FAE5] border border-[#06D6A0]/30 rounded-xl p-3 mb-5 flex items-center justify-between" data-testid="second-parent-info">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-[#06D6A0]" />
+              <span className="text-sm text-[#1D3557]">
+                <span className="font-bold">Second Parent:</span> {subscription.parent_emails.find(e => e !== user?.email?.toLowerCase())}
+              </span>
+            </div>
+            <button
+              data-testid="remove-second-parent-btn"
+              onClick={async () => {
+                const otherEmail = subscription.parent_emails.find(e => e !== user?.email?.toLowerCase());
+                if (!otherEmail) return;
+                try {
+                  await axios.delete(`${API}/subscriptions/remove-parent?email=${encodeURIComponent(otherEmail)}`);
+                  toast.success('Second parent removed');
+                  const res = await axios.get(`${API}/subscriptions/my-subscription`);
+                  setSubscription(res.data?.subscription);
+                } catch (err) {
+                  toast.error(err.response?.data?.detail || 'Failed to remove');
+                }
+              }}
+              className="text-xs text-red-500 hover:text-red-700 font-medium"
+            >
+              Remove
+            </button>
+          </div>
+        )}
         
         {/* Learning Content - Compact */}
         {dashboard?.children?.length > 0 && (

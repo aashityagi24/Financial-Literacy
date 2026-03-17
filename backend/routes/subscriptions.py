@@ -289,6 +289,106 @@ async def check_subscription_access(email: str):
     return {"has_access": False}
 
 
+# ============== PARENT ROUTES ==============
+
+class AddParentRequest(BaseModel):
+    email: str
+
+@router.get("/my-subscription")
+async def get_my_subscription(request: Request):
+    """Get the current parent's subscription details"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    email = user.get("email", "").strip().lower()
+    now = datetime.now(timezone.utc).isoformat()
+    
+    sub = await db.subscriptions.find_one({
+        "parent_emails": email,
+        "payment_status": "completed",
+        "is_active": True,
+        "end_date": {"$gt": now}
+    }, {"_id": 0})
+    
+    if not sub:
+        return {"subscription": None}
+    
+    return {"subscription": sub}
+
+
+@router.post("/add-parent")
+async def add_second_parent(request: Request, body: AddParentRequest):
+    """Add a second parent email to a two_parents subscription"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    email = user.get("email", "").strip().lower()
+    second_email = body.email.strip().lower()
+    now = datetime.now(timezone.utc).isoformat()
+    
+    if not second_email or "@" not in second_email:
+        raise HTTPException(status_code=400, detail="Please enter a valid email")
+    
+    if second_email == email:
+        raise HTTPException(status_code=400, detail="Cannot add your own email")
+    
+    # Find the parent's active subscription
+    sub = await db.subscriptions.find_one({
+        "parent_emails": email,
+        "payment_status": "completed",
+        "is_active": True,
+        "end_date": {"$gt": now}
+    })
+    
+    if not sub:
+        raise HTTPException(status_code=404, detail="No active subscription found")
+    
+    if sub.get("plan_type") != "two_parents":
+        raise HTTPException(status_code=400, detail="Your plan only supports a single parent login")
+    
+    if len(sub.get("parent_emails", [])) >= 2:
+        raise HTTPException(status_code=400, detail="Second parent already added")
+    
+    # Add the second parent email
+    await db.subscriptions.update_one(
+        {"subscription_id": sub["subscription_id"]},
+        {"$addToSet": {"parent_emails": second_email}}
+    )
+    
+    return {"message": f"Second parent ({second_email}) added successfully"}
+
+
+@router.delete("/remove-parent")
+async def remove_second_parent(request: Request, email: str):
+    """Remove the second parent from the subscription"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    owner_email = user.get("email", "").strip().lower()
+    target_email = email.strip().lower()
+    now = datetime.now(timezone.utc).isoformat()
+    
+    sub = await db.subscriptions.find_one({
+        "parent_emails": owner_email,
+        "payment_status": "completed",
+        "is_active": True,
+        "end_date": {"$gt": now}
+    })
+    
+    if not sub:
+        raise HTTPException(status_code=404, detail="No active subscription found")
+    
+    if target_email == sub.get("subscriber_email", ""):
+        raise HTTPException(status_code=400, detail="Cannot remove the primary subscriber")
+    
+    await db.subscriptions.update_one(
+        {"subscription_id": sub["subscription_id"]},
+        {"$pull": {"parent_emails": target_email}}
+    )
+    
+    return {"message": "Second parent removed"}
+
+
 # ============== ADMIN ROUTES ==============
 
 @router.get("/admin/list")
