@@ -42,16 +42,13 @@ export default function ChildActivityScore({ contentId, user }) {
   }
 
   const getScoreStyle = () => {
-    if (scoreData.percentage >= 80) return { bg: 'bg-[#06D6A0]', text: 'text-white' };
-    if (scoreData.percentage >= 40) return { bg: 'bg-[#FFD23F]', text: 'text-[#1D3557]' };
-    return { bg: 'bg-[#EE6C4D]', text: 'text-white' };
+    if (scoreData.percentage >= 80) return { bg: 'bg-[#06D6A0]', text: 'text-white', label: 'Great job!' };
+    if (scoreData.percentage >= 50) return { bg: 'bg-[#FFD23F]', text: 'text-[#1D3557]', label: 'Almost there!' };
+    return { bg: 'bg-[#EE6C4D]', text: 'text-white', label: 'Keep practicing!' };
   };
 
   const style = getScoreStyle();
   const showStar = scoreData.percentage >= 80;
-  const displayScore = scoreData.totalQuestions > 0
-    ? `${scoreData.correctAnswers}/${scoreData.totalQuestions}`
-    : `${scoreData.percentage}%`;
 
   const tooltipClass = "z-[100] rounded-xl bg-[#1D3557] text-white px-4 py-2 text-sm font-medium shadow-lg border-2 border-[#FFD23F]";
 
@@ -64,7 +61,7 @@ export default function ChildActivityScore({ contentId, user }) {
             data-testid="child-activity-score"
           >
             {showStar && <Star className="w-3.5 h-3.5 fill-current" />}
-            {displayScore}
+            {style.label}
           </span>
         </TooltipTrigger>
         <TooltipContent side="top" sideOffset={8} className={tooltipClass}>
