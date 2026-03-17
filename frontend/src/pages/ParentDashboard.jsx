@@ -50,6 +50,7 @@ export default function ParentDashboard({ user }) {
   const [childInsights, setChildInsights] = useState(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [showPurchases, setShowPurchases] = useState(false);
+  const [parentSection, setParentSection] = useState('overview');
   
   // Full transactions view state
   const [showAllTransactions, setShowAllTransactions] = useState(false);
@@ -453,6 +454,61 @@ export default function ParentDashboard({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
+        {/* Section Navigation */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide" data-testid="parent-section-nav">
+          {[
+            { id: 'overview', label: 'Overview', icon: Users },
+            { id: 'chores', label: 'Chores & Rewards', icon: Target },
+            { id: 'jobs', label: 'Jobs', icon: Briefcase },
+            { id: 'savings', label: 'Money & Goals', icon: Wallet },
+            { id: 'lending', label: 'Lending', icon: HandCoins },
+          ].map(sec => (
+            <button
+              key={sec.id}
+              onClick={() => setParentSection(sec.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
+                parentSection === sec.id
+                  ? 'bg-[#1D3557] text-white shadow-md'
+                  : 'bg-white text-[#3D5A80] border-2 border-[#1D3557]/15 hover:border-[#1D3557]/30'
+              }`}
+              data-testid={`parent-nav-${sec.id}`}
+            >
+              <sec.icon className="w-4 h-4" />
+              {sec.label}
+            </button>
+          ))}
+        </div>
+        
+        {!selectedChild ? (
+          <>
+        {/* Section Navigation */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide" data-testid="parent-section-nav">
+          {[
+            { id: 'overview', label: 'Overview', icon: Users },
+            { id: 'chores', label: 'Chores & Rewards', icon: Target },
+            { id: 'jobs', label: 'Jobs', icon: Briefcase },
+            { id: 'savings', label: 'Money & Goals', icon: Wallet },
+            { id: 'lending', label: 'Lending', icon: HandCoins },
+          ].map(sec => (
+            <button
+              key={sec.id}
+              onClick={() => setParentSection(sec.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
+                parentSection === sec.id
+                  ? 'bg-[#1D3557] text-white shadow-md'
+                  : 'bg-white text-[#3D5A80] border-2 border-[#1D3557]/15 hover:border-[#1D3557]/30'
+              }`}
+              data-testid={`parent-nav-${sec.id}`}
+            >
+              <sec.icon className="w-4 h-4" />
+              {sec.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ===== OVERVIEW SECTION ===== */}
+        {parentSection === 'overview' && (
+        <>
         {/* Quick Links - Shopping List & Learning Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {/* Shopping List Link */}
@@ -532,8 +588,6 @@ export default function ParentDashboard({ user }) {
           </div>
         )}
         
-        {!selectedChild ? (
-          <>
             {/* Children Overview */}
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>My Children</h2>
@@ -653,178 +707,35 @@ export default function ParentDashboard({ user }) {
             
             {/* Quick Actions */}
             {dashboard?.children?.length > 0 && (
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <Dialog open={showGiveMoney} onOpenChange={setShowGiveMoney}>
-                  <DialogTrigger asChild>
-                    <button className="card-playful p-4 text-center hover:bg-[#FFD23F]/10">
-                      <Gift className="w-8 h-8 mx-auto text-[#FFD23F] mb-2" />
-                      <span className="font-bold text-[#1D3557]">Give Money</span>
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Give Money</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 mt-4">
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
-                        <Select value={giveMoneyForm.child_id} onValueChange={(v) => setGiveMoneyForm({...giveMoneyForm, child_id: v})}>
-                          <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Choose a child" /></SelectTrigger>
-                          <SelectContent>
-                            {dashboard?.children?.map((c) => (
-                              <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Amount (₹) *</label>
-                        <Input type="number" placeholder="Enter amount in Rupees" value={giveMoneyForm.amount} onChange={(e) => setGiveMoneyForm({...giveMoneyForm, amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Reason (Optional)</label>
-                        <Input placeholder="e.g., Birthday gift, Good grades" value={giveMoneyForm.reason} onChange={(e) => setGiveMoneyForm({...giveMoneyForm, reason: e.target.value})} className="border-3 border-[#1D3557]" />
-                      </div>
-                      <button onClick={handleGiveMoney} className="btn-primary w-full py-3">Give Money</button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <button onClick={() => setParentSection('savings')} className="card-playful p-4 text-center hover:bg-[#FFD23F]/10">
+                  <Gift className="w-8 h-8 mx-auto text-[#FFD23F] mb-2" />
+                  <span className="font-bold text-[#1D3557] text-sm">Give Money</span>
+                </button>
                 
-                <Dialog open={showCreateChore} onOpenChange={setShowCreateChore}>
-                  <DialogTrigger asChild>
-                    <button className="card-playful p-4 text-center hover:bg-[#06D6A0]/10">
-                      <Target className="w-8 h-8 mx-auto text-[#06D6A0] mb-2" />
-                      <span className="font-bold text-[#1D3557]">Add Chore</span>
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Create Chore</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 mt-4">
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
-                        <Select value={choreForm.child_id} onValueChange={(v) => setChoreForm({...choreForm, child_id: v})}>
-                          <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Choose a child" /></SelectTrigger>
-                          <SelectContent>
-                            {dashboard?.children?.map((c) => (
-                              <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Chore Title *</label>
-                        <Input placeholder="e.g., Clean your room" value={choreForm.title} onChange={(e) => setChoreForm({...choreForm, title: e.target.value})} className="border-3 border-[#1D3557]" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Description (Optional)</label>
-                        <Textarea placeholder="Add more details about the chore" value={choreForm.description} onChange={(e) => setChoreForm({...choreForm, description: e.target.value})} className="border-3 border-[#1D3557]" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-sm font-bold text-[#1D3557] mb-1">Reward (₹) *</label>
-                          <Input type="number" placeholder="Amount" value={choreForm.reward_amount} onChange={(e) => setChoreForm({...choreForm, reward_amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-bold text-[#1D3557] mb-1">Frequency *</label>
-                          <Select value={choreForm.frequency} onValueChange={(v) => setChoreForm({...choreForm, frequency: v})}>
-                            <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="once">One-time</SelectItem>
-                              <SelectItem value="daily">Daily</SelectItem>
-                              <SelectItem value="weekly">Weekly</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <p className="text-xs text-[#3D5A80]">Your child will need to complete this chore and request approval. You&apos;ll need to validate it before the reward is credited.</p>
-                      <button onClick={handleCreateChore} className="btn-primary w-full py-3">Create Chore</button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <button onClick={() => setParentSection('chores')} className="card-playful p-4 text-center hover:bg-[#06D6A0]/10">
+                  <Target className="w-8 h-8 mx-auto text-[#06D6A0] mb-2" />
+                  <span className="font-bold text-[#1D3557] text-sm">Chores & Rewards</span>
+                </button>
                 
-                <Dialog open={showAllowance} onOpenChange={setShowAllowance}>
-                  <DialogTrigger asChild>
-                    <button className="card-playful p-4 text-center hover:bg-[#3D5A80]/10">
-                      <Calendar className="w-8 h-8 mx-auto text-[#3D5A80] mb-2" />
-                      <span className="font-bold text-[#1D3557]">Allowance</span>
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Set Up Allowance</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 mt-4">
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
-                        <Select value={allowanceForm.child_id} onValueChange={(v) => setAllowanceForm({...allowanceForm, child_id: v})}>
-                          <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Choose a child" /></SelectTrigger>
-                          <SelectContent>
-                            {dashboard?.children?.map((c) => (
-                              <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Allowance Amount (₹) *</label>
-                        <Input type="number" placeholder="Enter amount per period" value={allowanceForm.amount} onChange={(e) => setAllowanceForm({...allowanceForm, amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Frequency *</label>
-                        <Select value={allowanceForm.frequency} onValueChange={(v) => setAllowanceForm({...allowanceForm, frequency: v})}>
-                          <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="weekly">Weekly</SelectItem>
-                            <SelectItem value="biweekly">Bi-weekly</SelectItem>
-                            <SelectItem value="monthly">Monthly</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <button onClick={handleSetAllowance} className="btn-primary w-full py-3">Set Allowance</button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <button onClick={() => setParentSection('jobs')} className="card-playful p-4 text-center hover:bg-[#3D5A80]/10">
+                  <Briefcase className="w-8 h-8 mx-auto text-[#3D5A80] mb-2" />
+                  <span className="font-bold text-[#1D3557] text-sm">My Jobs</span>
+                </button>
                 
-                <Dialog open={showSavingsGoal} onOpenChange={setShowSavingsGoal}>
-                  <DialogTrigger asChild>
-                    <button className="card-playful p-4 text-center hover:bg-[#EE6C4D]/10">
-                      <Wallet className="w-8 h-8 mx-auto text-[#EE6C4D] mb-2" />
-                      <span className="font-bold text-[#1D3557]">Savings Goal</span>
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Create Savings Goal</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 mt-4">
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
-                        <Select value={goalForm.child_id} onValueChange={(v) => setGoalForm({...goalForm, child_id: v})}>
-                          <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Choose a child" /></SelectTrigger>
-                          <SelectContent>
-                            {dashboard?.children?.map((c) => (
-                              <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Goal Title *</label>
-                        <Input placeholder="e.g., New Bike, Video Game" value={goalForm.title} onChange={(e) => setGoalForm({...goalForm, title: e.target.value})} className="border-3 border-[#1D3557]" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Target Amount (₹) *</label>
-                        <Input type="number" placeholder="How much to save" value={goalForm.target_amount} onChange={(e) => setGoalForm({...goalForm, target_amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
-                      </div>
-                      <button onClick={handleCreateGoal} className="btn-primary w-full py-3">Create Goal</button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <button onClick={() => setParentSection('savings')} className="card-playful p-4 text-center hover:bg-[#EE6C4D]/10">
+                  <Wallet className="w-8 h-8 mx-auto text-[#EE6C4D] mb-2" />
+                  <span className="font-bold text-[#1D3557] text-sm">Savings Goals</span>
+                </button>
               </div>
             )}
             
+            </>
+            )}
+            {/* ===== END OVERVIEW, START CHORES ===== */}
+
+            {parentSection === 'chores' && (
+            <>
             {/* Rewards & Penalties Section */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
@@ -1170,7 +1081,42 @@ export default function ParentDashboard({ user }) {
                 </div>
               )}
             </div>
-            
+            </>
+            )}
+            {/* ===== END CHORES, START MONEY & GOALS ===== */}
+
+            {parentSection === 'savings' && (
+            <>
+            {/* Quick Actions for Money */}
+            {dashboard?.children?.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <Dialog open={showGiveMoney} onOpenChange={setShowGiveMoney}>
+                  <DialogTrigger asChild>
+                    <button className="card-playful p-4 text-center hover:bg-[#FFD23F]/10">
+                      <Gift className="w-8 h-8 mx-auto text-[#FFD23F] mb-2" />
+                      <span className="font-bold text-[#1D3557]">Give Money</span>
+                    </button>
+                  </DialogTrigger>
+                </Dialog>
+                <Dialog open={showAllowance} onOpenChange={setShowAllowance}>
+                  <DialogTrigger asChild>
+                    <button className="card-playful p-4 text-center hover:bg-[#3D5A80]/10">
+                      <Calendar className="w-8 h-8 mx-auto text-[#3D5A80] mb-2" />
+                      <span className="font-bold text-[#1D3557]">Allowance</span>
+                    </button>
+                  </DialogTrigger>
+                </Dialog>
+                <Dialog open={showSavingsGoal} onOpenChange={setShowSavingsGoal}>
+                  <DialogTrigger asChild>
+                    <button className="card-playful p-4 text-center hover:bg-[#EE6C4D]/10">
+                      <Wallet className="w-8 h-8 mx-auto text-[#EE6C4D] mb-2" />
+                      <span className="font-bold text-[#1D3557]">Savings Goal</span>
+                    </button>
+                  </DialogTrigger>
+                </Dialog>
+              </div>
+            )}
+
             {/* Allowances */}
             {allowances.length > 0 && (
               <>
@@ -1231,16 +1177,21 @@ export default function ParentDashboard({ user }) {
                 </div>
               </>
             )}
-            
+            </>
+            )}
+            {/* ===== END SAVINGS, START JOBS ===== */}
+
+            {parentSection === 'jobs' && (
+            <>
             {/* My Jobs Section */}
-            {childJobs.length > 0 && (
+            {childJobs.length > 0 ? (
               <>
                 <div className="flex items-center gap-3 mb-4 mt-6">
                   <div className="w-10 h-10 bg-[#3D5A80] rounded-xl flex items-center justify-center">
                     <Briefcase className="w-5 h-5 text-white" />
                   </div>
                   <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                    Children's Jobs
+                    Children&apos;s Jobs
                   </h2>
                 </div>
                 
@@ -1333,7 +1284,7 @@ export default function ParentDashboard({ user }) {
                               {job.job_type === 'payday' && job.payment_amount > 0 && (
                                 <div className="flex items-center gap-3 mt-2 text-sm">
                                   <span className="text-[#06D6A0] font-bold flex items-center gap-1">
-                                    <DollarSign className="w-3 h-3" /> ₹{job.payment_amount}/week
+                                    ₹{job.payment_amount}/week
                                   </span>
                                   <span className="text-[#3D5A80] flex items-center gap-1">
                                     {job.payment_type === 'digital' ? <CreditCard className="w-3 h-3" /> : <Banknote className="w-3 h-3" />}
@@ -1359,7 +1310,7 @@ export default function ParentDashboard({ user }) {
                                 onClick={() => handlePayJob(job)}
                                 data-testid={`pay-job-${job.job_id}`}
                               >
-                                <DollarSign className="w-4 h-4 mr-1" /> Pay ₹{job.payment_amount}
+                                Pay ₹{job.payment_amount}
                               </Button>
                             )}
                           </div>
@@ -1368,15 +1319,13 @@ export default function ParentDashboard({ user }) {
                     </div>
                   </div>
                 )}
-              </>
-            )}
-            
-            {/* Approve Payday Job Dialog */}
-            <Dialog open={!!showApproveJob} onOpenChange={(open) => { if (!open) setShowApproveJob(null); }}>
-              <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
-                <DialogHeader>
-                  <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                    Set Payment for "{showApproveJob?.activity}"
+              
+              {/* Approve Payday Job Dialog */}
+              <Dialog open={!!showApproveJob} onOpenChange={(open) => { if (!open) setShowApproveJob(null); }}>
+                <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                      Set Payment for &quot;{showApproveJob?.activity}&quot;
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
@@ -1434,7 +1383,20 @@ export default function ParentDashboard({ user }) {
                 </div>
               </DialogContent>
             </Dialog>
-            
+              </>
+            ) : (
+              <div className="card-playful p-8 text-center">
+                <Briefcase className="w-12 h-12 mx-auto text-[#98C1D9] mb-3" />
+                <h3 className="text-lg font-bold text-[#1D3557] mb-1">No Jobs Yet</h3>
+                <p className="text-sm text-[#3D5A80]">When your children add jobs from their dashboard, they&apos;ll appear here for your approval.</p>
+              </div>
+            )}
+            </>
+            )}
+            {/* ===== END JOBS, START LENDING ===== */}
+
+            {parentSection === 'lending' && (
+            <>
             {/* Lending Section - For children in Grade 4-5 */}
             {(lendingRequests.length > 0 || Object.keys(childrenLoans).length > 0) && (
               <>
@@ -1624,6 +1586,18 @@ export default function ParentDashboard({ user }) {
                 )}
               </>
             )}
+
+            {/* End of lending loan lists */}
+            {lendingRequests.length === 0 && Object.keys(childrenLoans).length === 0 && (
+              <div className="card-playful p-8 text-center">
+                <HandCoins className="w-12 h-12 mx-auto text-[#98C1D9] mb-3" />
+                <h3 className="text-lg font-bold text-[#1D3557] mb-1">No Lending Activity</h3>
+                <p className="text-sm text-[#3D5A80]">Lending features are available for children in Grade 4-5.</p>
+              </div>
+            )}
+            </>
+            )}
+
           </>
         ) : (
           <>
@@ -1637,7 +1611,6 @@ export default function ParentDashboard({ user }) {
             
             {childProgress && (
               <>
-                {/* Child Header */}
                 <div className="card-playful p-6 mb-6 bg-gradient-to-r from-[#06D6A0] to-[#42E8B3] text-white">
                   <div className="flex items-center gap-4">
                     <img 
@@ -1651,34 +1624,28 @@ export default function ParentDashboard({ user }) {
                     </div>
                   </div>
                 </div>
-                
-                {/* Wallet */}
-                <h3 className="text-lg font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Wallet</h3>
-                <div className="grid grid-cols-4 gap-3 mb-6">
+                <div className="grid grid-cols-3 gap-3 mb-6">
                   {childProgress.wallet.map((acc) => (
-                    <div key={acc.account_type} className="card-playful p-3 text-center">
+                    <div key={acc.type} className="card-playful p-4 text-center">
                       <p className="text-lg font-bold text-[#1D3557]">₹{acc.balance.toFixed(0)}</p>
-                      <p className="text-xs text-[#3D5A80] capitalize">{acc.account_type}</p>
+                      <p className="text-xs text-[#3D5A80] capitalize">{acc.type}</p>
                     </div>
                   ))}
                 </div>
-                
-                {/* Learning Progress */}
-                <h3 className="text-lg font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Learning Progress</h3>
-                <div className="space-y-3 mb-6">
+                <div className="card-playful p-4 mb-6">
+                  <h3 className="font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Learning Progress</h3>
                   {childProgress.topic_progress.map((topic) => (
-                    <div key={topic.topic} className="card-playful p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-[#1D3557]">{topic.icon} {topic.topic}</span>
-                        <span className="text-sm text-[#3D5A80]">{topic.completed}/{topic.total}</span>
+                    <div key={topic.topic} className="mb-3">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-[#3D5A80]">{topic.topic}</span>
+                        <span className="font-bold text-[#1D3557]">{topic.completion}%</span>
                       </div>
-                      <Progress value={topic.total > 0 ? (topic.completed / topic.total) * 100 : 0} className="h-2" />
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-[#06D6A0] h-2 rounded-full" style={{ width: `${topic.completion}%` }} />
+                      </div>
                     </div>
                   ))}
                 </div>
-                
-                {/* Recent Activity */}
-                <h3 className="text-lg font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Recent Activity</h3>
                 <div className="card-playful p-4">
                   {childProgress.transactions.length === 0 ? (
                     <p className="text-[#3D5A80] text-center">No recent activity</p>
@@ -1700,7 +1667,6 @@ export default function ParentDashboard({ user }) {
           </>
         )}
         
-        {/* Child Insights Modal */}
         <Dialog open={!!showChildInsights} onOpenChange={() => { setShowChildInsights(null); setChildInsights(null); }}>
           <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -2401,6 +2367,155 @@ export default function ParentDashboard({ user }) {
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Give Money Dialog */}
+        <Dialog open={showGiveMoney} onOpenChange={setShowGiveMoney}>
+          <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Give Money</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div>
+                <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
+                <Select value={giveMoneyForm.child_id} onValueChange={(v) => setGiveMoneyForm({...giveMoneyForm, child_id: v})}>
+                  <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Choose a child" /></SelectTrigger>
+                  <SelectContent>
+                    {dashboard?.children?.map((c) => (
+                      <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-[#1D3557] mb-1">Amount (₹) *</label>
+                <Input type="number" placeholder="Enter amount in Rupees" value={giveMoneyForm.amount} onChange={(e) => setGiveMoneyForm({...giveMoneyForm, amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-[#1D3557] mb-1">Reason (Optional)</label>
+                <Input placeholder="e.g., Birthday gift, Good grades" value={giveMoneyForm.reason} onChange={(e) => setGiveMoneyForm({...giveMoneyForm, reason: e.target.value})} className="border-3 border-[#1D3557]" />
+              </div>
+              <button onClick={handleGiveMoney} className="btn-primary w-full py-3">Give Money</button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Chore Dialog */}
+        <Dialog open={showCreateChore} onOpenChange={setShowCreateChore}>
+          <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Create Chore</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div>
+                <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
+                <Select value={choreForm.child_id} onValueChange={(v) => setChoreForm({...choreForm, child_id: v})}>
+                  <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Choose a child" /></SelectTrigger>
+                  <SelectContent>
+                    {dashboard?.children?.map((c) => (
+                      <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-[#1D3557] mb-1">Chore Title *</label>
+                <Input placeholder="e.g., Clean your room" value={choreForm.title} onChange={(e) => setChoreForm({...choreForm, title: e.target.value})} className="border-3 border-[#1D3557]" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-[#1D3557] mb-1">Description (Optional)</label>
+                <Textarea placeholder="Add more details about the chore" value={choreForm.description} onChange={(e) => setChoreForm({...choreForm, description: e.target.value})} className="border-3 border-[#1D3557]" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-bold text-[#1D3557] mb-1">Reward (₹) *</label>
+                  <Input type="number" placeholder="Amount" value={choreForm.reward_amount} onChange={(e) => setChoreForm({...choreForm, reward_amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-[#1D3557] mb-1">Frequency *</label>
+                  <Select value={choreForm.frequency} onValueChange={(v) => setChoreForm({...choreForm, frequency: v})}>
+                    <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="once">One-time</SelectItem>
+                      <SelectItem value="daily">Daily</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <p className="text-xs text-[#3D5A80]">Your child will need to complete this chore and request approval. You&apos;ll need to validate it before the reward is credited.</p>
+              <button onClick={handleCreateChore} className="btn-primary w-full py-3">Create Chore</button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Allowance Dialog */}
+        <Dialog open={showAllowance} onOpenChange={setShowAllowance}>
+          <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Set Up Allowance</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div>
+                <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
+                <Select value={allowanceForm.child_id} onValueChange={(v) => setAllowanceForm({...allowanceForm, child_id: v})}>
+                  <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Choose a child" /></SelectTrigger>
+                  <SelectContent>
+                    {dashboard?.children?.map((c) => (
+                      <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-[#1D3557] mb-1">Allowance Amount (₹) *</label>
+                <Input type="number" placeholder="Enter amount per period" value={allowanceForm.amount} onChange={(e) => setAllowanceForm({...allowanceForm, amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-[#1D3557] mb-1">Frequency *</label>
+                <Select value={allowanceForm.frequency} onValueChange={(v) => setAllowanceForm({...allowanceForm, frequency: v})}>
+                  <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="biweekly">Bi-weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <button onClick={handleSetAllowance} className="btn-primary w-full py-3">Set Allowance</button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Savings Goal Dialog */}
+        <Dialog open={showSavingsGoal} onOpenChange={setShowSavingsGoal}>
+          <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Create Savings Goal</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div>
+                <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
+                <Select value={goalForm.child_id} onValueChange={(v) => setGoalForm({...goalForm, child_id: v})}>
+                  <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Choose a child" /></SelectTrigger>
+                  <SelectContent>
+                    {dashboard?.children?.map((c) => (
+                      <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-[#1D3557] mb-1">Goal Title *</label>
+                <Input placeholder="e.g., New Bike, Video Game" value={goalForm.title} onChange={(e) => setGoalForm({...goalForm, title: e.target.value})} className="border-3 border-[#1D3557]" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-[#1D3557] mb-1">Target Amount (₹) *</label>
+                <Input type="number" placeholder="How much to save" value={goalForm.target_amount} onChange={(e) => setGoalForm({...goalForm, target_amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
+              </div>
+              <button onClick={handleCreateGoal} className="btn-primary w-full py-3">Create Goal</button>
+            </div>
           </DialogContent>
         </Dialog>
       </main>
