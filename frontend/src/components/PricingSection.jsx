@@ -185,7 +185,7 @@ export default function PricingSection() {
               }`}
             >
               <User className="w-4 h-4" />
-              Single Parent
+              Single Parent Login Login
             </button>
             <button
               data-testid="plan-type-two"
@@ -197,7 +197,7 @@ export default function PricingSection() {
               }`}
             >
               <Users className="w-4 h-4" />
-              Two Parents
+              Double Parent Login
             </button>
           </div>
         </div>
