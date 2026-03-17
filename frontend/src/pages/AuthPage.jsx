@@ -124,7 +124,11 @@ export default function AuthPage() {
       
     } catch (error) {
       const message = error.response?.data?.detail || 'Invalid credentials';
-      toast.error(message);
+      if (error.response?.status === 403) {
+        toast.error(message, { duration: 6000 });
+      } else {
+        toast.error(message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -175,7 +179,8 @@ export default function AuthPage() {
       setName('');
       setCaptchaAnswer('');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to create account');
+      const detail = error.response?.data?.detail || 'Failed to create account';
+      toast.error(detail);
       refreshCaptcha();
     } finally {
       setIsLoading(false);

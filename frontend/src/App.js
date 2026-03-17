@@ -137,14 +137,6 @@ export const ProtectedRoute = ({ children }) => {
         setIsAuthenticated(true);
         hasChecked.current = true;
         
-        // Check subscription status - redirect if no subscription
-        const subStatus = response.data.subscription_status;
-        if (subStatus === 'none') {
-          localStorage.removeItem('session_token');
-          window.location.href = '/?no_subscription=true';
-          return;
-        }
-        
         // If user has no role, redirect to role selection
         if (!response.data.role && location.pathname !== '/role-selection') {
           navigate('/role-selection', { state: { user: response.data } });

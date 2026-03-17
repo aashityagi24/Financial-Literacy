@@ -72,6 +72,20 @@ async def unified_login(login_data: UnifiedLoginRequest, response: Response):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email/username or password")
     
+    # Check subscription for D2C parent users (not admin/teacher/school)
+    user_role = user.get("role")
+    if user_role in ["parent"] and not user.get("school_id"):
+        login_now = datetime.now(timezone.utc).isoformat()
+        login_email = user.get("email", "").lower()
+        login_sub = await db.subscriptions.find_one({
+            "parent_emails": login_email,
+            "payment_status": "completed",
+            "is_active": True,
+            "end_date": {"$gt": login_now}
+        })
+        if not login_sub:
+            raise HTTPException(status_code=403, detail="Your subscription has expired or is inactive. Please purchase a plan to continue.")
+    
     # Single device login: Invalidate ALL previous sessions for this user
     await db.user_sessions.delete_many({"user_id": user["user_id"]})
     
@@ -121,6 +135,17 @@ async def signup(signup_data: SignupRequest, response: Response):
     existing = await db.users.find_one({"email": email})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered. Please sign in.")
+    
+    # Check subscription - must have active subscription to create account
+    now_check = datetime.now(timezone.utc).isoformat()
+    sub = await db.subscriptions.find_one({
+        "parent_emails": email,
+        "payment_status": "completed",
+        "is_active": True,
+        "end_date": {"$gt": now_check}
+    })
+    if not sub:
+        raise HTTPException(status_code=403, detail="No active subscription found for this email. Please purchase a plan first.")
     
     # Hash password
     password_hash = hashlib.sha256(password.encode()).hexdigest()
@@ -406,6 +431,31 @@ async def google_callback(request: Request, response: Response, code: str = None
                 {"$set": {"last_login_date": today, "streak_count": new_streak}}
             )
             user = await db.users.find_one({"email": email}, {"_id": 0})
+    
+    # --- Subscription gate for D2C users (Google OAuth) ---
+    _user_role = user.get("role")
+    if _user_role not in ["admin", "teacher"] and not user.get("school_id"):
+        if _user_role in ["parent", "child", None]:
+            _now = datetime.now(timezone.utc).isoformat()
+            _sub = await db.subscriptions.find_one({
+                "$or": [
+                    {"parent_emails": email.lower()},
+                    {"child_user_ids": user.get("user_id", "")}
+                ],
+                "payment_status": "completed",
+                "is_active": True,
+                "end_date": {"$gt": _now}
+            })
+            if not _sub:
+                if state:
+                    _fe = urllib.parse.unquote(state)
+                    _p = urllib.parse.urlparse(_fe)
+                    _fe = f"{_p.scheme}://{_p.netloc}"
+                else:
+                    _h = request.headers.get("host", "")
+                    _fe = "https://coinquest.co.in" if "coinquest.co.in" in _h else "https://coinquest-preview.preview.emergentagent.com"
+                return RedirectResponse(url=f"{_fe}/?no_subscription=true", status_code=302)
+
     
     # Single device login: Invalidate ALL previous sessions for this user
     await db.user_sessions.delete_many({"user_id": user["user_id"]})
