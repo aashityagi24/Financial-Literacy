@@ -89,6 +89,8 @@ export default function MoneyGardenPage({ user }) {
   // Plant selection dialog
   const [showPlantDialog, setShowPlantDialog] = useState(false);
   const [selectedSeedForPlanting, setSelectedSeedForPlanting] = useState(null);
+  const [seedPage, setSeedPage] = useState(0);
+  const [seedDetailView, setSeedDetailView] = useState(null);
   
   // Sell confirmation dialog
   const [showSellDialog, setShowSellDialog] = useState(false);
@@ -185,19 +187,22 @@ export default function MoneyGardenPage({ user }) {
     }
   };
   
-  const handlePlantSeed = async () => {
-    if (!selectedSeedForPlanting) return;
+  const handlePlantSeed = async (seedOverride) => {
+    const seed = seedOverride || selectedSeedForPlanting;
+    if (!seed) return;
     const plot = farm.plots[0];
     if (!plot) return;
     
     try {
       await axios.post(`${API}/garden/plant`, { 
         plot_id: plot.plot_id, 
-        plant_id: selectedSeedForPlanting.plant_id 
+        plant_id: seed.plant_id 
       });
-      toast.success(`${selectedSeedForPlanting.name} planted! 🌱`);
+      toast.success(`${seed.name} planted! 🌱`);
       setShowPlantDialog(false);
       setSelectedSeedForPlanting(null);
+      setSeedDetailView(null);
+      setSeedPage(0);
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to plant');
@@ -627,80 +632,108 @@ export default function MoneyGardenPage({ user }) {
       </div>
       
       {/* Plant Selection Dialog */}
-      <Dialog open={showPlantDialog} onOpenChange={(open) => { setShowPlantDialog(open); if (!open) setSelectedSeedForPlanting(null); }}>
+      <Dialog open={showPlantDialog} onOpenChange={(open) => { setShowPlantDialog(open); if (!open) { setSelectedSeedForPlanting(null); setSeedPage(0); setSeedDetailView(null); } }}>
         <DialogContent className="bg-[#F0FFF0] border-4 border-[#228B22] rounded-3xl max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-[#228B22]" style={{ fontFamily: 'Fredoka' }}>
-              🌱 Choose a Seed to Plant
+              {seedDetailView ? `${seedDetailView.emoji} ${seedDetailView.name}` : '🌱 Choose a Seed'}
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-3 mt-4">
-            {farm.seeds.slice(0, 5).map((seed) => {
-              const isSelected = selectedSeedForPlanting?.plant_id === seed.plant_id;
-              const totalEarnings = Math.round(seed.harvest_yield * seed.base_sell_price);
-              
-              return (
-                <div 
-                  key={seed.plant_id} 
-                  onClick={() => setSelectedSeedForPlanting(seed)}
-                  className={`bg-white rounded-xl p-4 border-3 cursor-pointer transition-all ${
-                    isSelected ? 'border-[#228B22] ring-2 ring-[#228B22]' : 'border-gray-200 hover:border-[#228B22]/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="text-4xl">{seed.emoji}</span>
-                    <div className="flex-1">
-                      <p className="font-bold text-[#1D3557] text-lg">{seed.name}</p>
-                      <p className="text-sm text-[#3D5A80]">
-                        Cost: <span className="font-bold text-[#E63946]">₹{Math.round(seed.seed_cost)}</span>
-                      </p>
-                      <p className="text-sm text-[#3D5A80]">
-                        Takes {seed.growth_days} days to grow
-                      </p>
-                      <p className="text-sm text-[#3D5A80]">
-                        You get {seed.harvest_yield} {seed.yield_unit}
-                        {seed.harvest_yield > 1 && (user?.grade ?? user?.grade_level ?? 5) <= 1 ? (
-                          <> ({formatMathDisplay(seed.harvest_yield, Math.round(seed.base_sell_price)).expression})</>
-                        ) : seed.harvest_yield > 1 ? (
-                          <> ({seed.harvest_yield} × ₹{Math.round(seed.base_sell_price)})</>
-                        ) : null}
-                        {' '}= <span className="font-bold text-[#06D6A0]">₹{totalEarnings}</span>
-                      </p>
-                    </div>
-                    {isSelected && <span className="text-2xl">✓</span>}
+          {!seedDetailView ? (
+            /* Grid View */
+            <div className="mt-2">
+              <div className="grid grid-cols-2 gap-3">
+                {farm.seeds.slice(seedPage * 4, seedPage * 4 + 4).map((seed) => (
+                  <div 
+                    key={seed.plant_id} 
+                    onClick={() => setSeedDetailView(seed)}
+                    className="bg-white rounded-xl p-4 border-2 border-gray-200 cursor-pointer hover:border-[#228B22] hover:shadow-md transition-all text-center"
+                    data-testid={`seed-card-${seed.plant_id}`}
+                  >
+                    <span className="text-4xl block mb-2">{seed.emoji}</span>
+                    <p className="font-bold text-[#1D3557] text-sm">{seed.name}</p>
+                    <p className="text-sm font-bold text-[#E63946]">₹{Math.round(seed.seed_cost)}</p>
+                  </div>
+                ))}
+              </div>
+              {/* Pagination */}
+              {farm.seeds.length > 4 && (
+                <div className="flex items-center justify-center gap-3 mt-4">
+                  <button
+                    onClick={() => setSeedPage(Math.max(0, seedPage - 1))}
+                    disabled={seedPage === 0}
+                    className="px-3 py-1.5 bg-[#228B22] text-white rounded-lg text-sm font-bold disabled:bg-gray-300 disabled:text-gray-500"
+                  >
+                    Prev
+                  </button>
+                  <span className="text-sm text-[#3D5A80] font-medium">
+                    {seedPage + 1} / {Math.ceil(farm.seeds.length / 4)}
+                  </span>
+                  <button
+                    onClick={() => setSeedPage(Math.min(Math.ceil(farm.seeds.length / 4) - 1, seedPage + 1))}
+                    disabled={seedPage >= Math.ceil(farm.seeds.length / 4) - 1}
+                    className="px-3 py-1.5 bg-[#228B22] text-white rounded-lg text-sm font-bold disabled:bg-gray-300 disabled:text-gray-500"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+              <p className="text-center text-xs text-[#3D5A80] mt-3">
+                Garden Money: <span className="font-bold">₹{farmingBalance}</span>
+              </p>
+            </div>
+          ) : (
+            /* Detail View */
+            <div className="mt-2">
+              <div className="bg-white rounded-xl p-5 border-2 border-[#228B22]/30">
+                <div className="text-center mb-4">
+                  <span className="text-5xl">{seedDetailView.emoji}</span>
+                  <p className="font-bold text-[#1D3557] text-xl mt-2">{seedDetailView.name}</p>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between py-1.5 border-b border-gray-100">
+                    <span className="text-[#3D5A80]">Cost</span>
+                    <span className="font-bold text-[#E63946]">₹{Math.round(seedDetailView.seed_cost)}</span>
+                  </div>
+                  <div className="flex justify-between py-1.5 border-b border-gray-100">
+                    <span className="text-[#3D5A80]">Growth Time</span>
+                    <span className="font-bold text-[#1D3557]">{seedDetailView.growth_days} days</span>
+                  </div>
+                  <div className="flex justify-between py-1.5 border-b border-gray-100">
+                    <span className="text-[#3D5A80]">Harvest Yield</span>
+                    <span className="font-bold text-[#1D3557]">{seedDetailView.harvest_yield} {seedDetailView.yield_unit}</span>
+                  </div>
+                  <div className="flex justify-between py-1.5">
+                    <span className="text-[#3D5A80]">Total Income</span>
+                    <span className="font-bold text-[#06D6A0]">₹{Math.round(seedDetailView.harvest_yield * seedDetailView.base_sell_price)}</span>
                   </div>
                 </div>
-              );
-            })}
-            
-            {selectedSeedForPlanting && (
-              <div className="bg-[#FFD700]/20 rounded-xl p-4 mt-4">
-                <p className="text-center font-bold text-[#8B4513]">
-                  You will spend ₹{Math.round(selectedSeedForPlanting.seed_cost)} to plant {selectedSeedForPlanting.name}
-                </p>
-                <p className="text-center text-sm text-[#3D5A80] mt-1">
-                  Your Garden Money: ₹{farmingBalance}
+              </div>
+              
+              <div className="bg-[#FFD700]/20 rounded-xl p-3 mt-3 text-center">
+                <p className="text-sm text-[#3D5A80]">
+                  Garden Money: <span className="font-bold">₹{farmingBalance}</span>
                 </p>
               </div>
-            )}
-            
-            <div className="flex gap-3 mt-4">
-              <button
-                onClick={() => setShowPlantDialog(false)}
-                className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-[#1D3557] font-bold rounded-xl"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handlePlantSeed}
-                disabled={!selectedSeedForPlanting || farmingBalance < (selectedSeedForPlanting?.seed_cost || 0)}
-                className="flex-1 py-3 bg-[#228B22] hover:bg-[#1D7A1D] disabled:bg-gray-300 text-white font-bold rounded-xl"
-              >
-                🌱 Plant Now
-              </button>
+
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={() => setSeedDetailView(null)}
+                  className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-[#1D3557] font-bold rounded-xl"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={() => handlePlantSeed(seedDetailView)}
+                  disabled={farmingBalance < (seedDetailView?.seed_cost || 0)}
+                  className="flex-1 py-3 bg-[#228B22] hover:bg-[#1D7A1D] disabled:bg-gray-300 text-white font-bold rounded-xl"
+                >
+                  Plant Now
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
       
