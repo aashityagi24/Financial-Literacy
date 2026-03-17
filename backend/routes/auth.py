@@ -762,3 +762,56 @@ async def complete_onboarding(request: Request):
     )
     
     return {"message": "Onboarding completed", "has_completed_onboarding": True}
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = ""
+    new_password: str
+
+@router.put("/change-password")
+async def change_password(request: Request, body: ChangePasswordRequest):
+    """Change user password (for email-auth users, or set password for Google-auth users)"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    
+    full_user = await db.users.find_one({"user_id": user["user_id"]})
+    if not full_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if len(body.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    # If user has existing password, verify current password
+    if full_user.get("password_hash"):
+        current_hash = hashlib.sha256(body.current_password.encode()).hexdigest()
+        if current_hash != full_user["password_hash"]:
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    new_hash = hashlib.sha256(body.new_password.encode()).hexdigest()
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {"password_hash": new_hash}}
+    )
+    
+    return {"message": "Password updated successfully"}
+
+@router.put("/update-picture")
+async def update_picture(request: Request):
+    """Update user profile picture URL"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    body = await request.json()
+    
+    picture_url = body.get("picture", "")
+    if not picture_url:
+        raise HTTPException(status_code=400, detail="Picture URL is required")
+    
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {"picture": picture_url}}
+    )
+    
+    updated = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "password_hash": 0})
+    return updated
+
