@@ -42,6 +42,12 @@ export default function SavingsGoalsPage({ user }) {
   const [allocateOpen, setAllocateOpen] = useState(false);
   const [allocateData, setAllocateData] = useState({ goal_id: '', amount: '' });
   
+  // Edit goal
+  const [editOpen, setEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ goal_id: '', title: '', description: '', target_amount: '', deadline: '', image_url: '' });
+  const [editImagePreview, setEditImagePreview] = useState(null);
+  const [editImageFile, setEditImageFile] = useState(null);
+  
   // Transfer
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferData, setTransferData] = useState({ from_account: 'spending', amount: '' });
@@ -139,6 +145,53 @@ export default function SavingsGoalsPage({ user }) {
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to add to goal');
+    }
+  };
+
+  const openEditGoal = (goal) => {
+    setEditForm({
+      goal_id: goal.goal_id,
+      title: goal.title || '',
+      description: goal.description || '',
+      target_amount: goal.target_amount?.toString() || '',
+      deadline: goal.deadline || '',
+      image_url: goal.image_url || ''
+    });
+    setEditImagePreview(goal.image_url ? getAssetUrl(goal.image_url) : null);
+    setEditImageFile(null);
+    setEditOpen(true);
+  };
+
+  const handleEditGoal = async () => {
+    if (!editForm.title || !editForm.target_amount) {
+      toast.error('Goal name and target amount are required');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      let imageUrl = editForm.image_url;
+      if (editImageFile) {
+        const formData = new FormData();
+        formData.append('file', editImageFile);
+        const uploadRes = await axios.post(`${API}/upload/goal-image`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        imageUrl = uploadRes.data.url;
+      }
+      await axios.put(`${API}/child/savings-goals/${editForm.goal_id}`, {
+        title: editForm.title,
+        description: editForm.description,
+        target_amount: parseFloat(editForm.target_amount),
+        deadline: editForm.deadline || null,
+        image_url: imageUrl
+      });
+      toast.success('Goal updated!');
+      setEditOpen(false);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update goal');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -306,17 +359,26 @@ export default function SavingsGoalsPage({ user }) {
                               )}
                             </div>
                             
-                            {savingsBalance > 0 && (
+                            <div className="flex gap-2 mt-3">
                               <button
-                                onClick={() => {
-                                  setAllocateData({ goal_id: goal.goal_id, amount: '' });
-                                  setAllocateOpen(true);
-                                }}
-                                className="mt-3 px-4 py-2 bg-[#06D6A0] text-white text-sm font-bold rounded-xl hover:bg-[#05b88a]"
+                                onClick={() => openEditGoal(goal)}
+                                className="px-4 py-2 bg-[#E0FBFC] text-[#1D3557] text-sm font-bold rounded-xl hover:bg-[#B2EBF2] border border-[#1D3557]/20"
+                                data-testid={`edit-goal-${goal.goal_id}`}
                               >
-                                Add Money 💰
+                                Edit
                               </button>
-                            )}
+                              {savingsBalance > 0 && (
+                                <button
+                                  onClick={() => {
+                                    setAllocateData({ goal_id: goal.goal_id, amount: '' });
+                                    setAllocateOpen(true);
+                                  }}
+                                  className="px-4 py-2 bg-[#06D6A0] text-white text-sm font-bold rounded-xl hover:bg-[#05b88a]"
+                                >
+                                  Add Money
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -586,6 +648,96 @@ export default function SavingsGoalsPage({ user }) {
                 className="flex-1 btn-primary py-3 disabled:opacity-50"
               >
                 Transfer
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Goal Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+              <Target className="w-5 h-5 inline mr-2 text-[#3D5A80]" />
+              Edit Savings Goal
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="text-center">
+              <label className="cursor-pointer">
+                {editImagePreview ? (
+                  <img src={editImagePreview} alt="Goal" className="w-24 h-24 mx-auto rounded-xl border-3 border-[#1D3557] object-cover" />
+                ) : (
+                  <div className="w-24 h-24 mx-auto rounded-xl border-3 border-dashed border-[#3D5A80] flex items-center justify-center bg-[#E0FBFC]">
+                    <span className="text-3xl">📷</span>
+                  </div>
+                )}
+                <input type="file" accept="image/*" onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    setEditImageFile(file);
+                    const reader = new FileReader();
+                    reader.onloadend = () => setEditImagePreview(reader.result);
+                    reader.readAsDataURL(file);
+                  }
+                }} className="hidden" />
+                <p className="text-xs text-[#3D5A80] mt-1">Tap to change photo</p>
+              </label>
+            </div>
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Goal Name</label>
+              <Input
+                data-testid="edit-goal-title"
+                value={editForm.title}
+                onChange={(e) => setEditForm({...editForm, title: e.target.value})}
+                className="border-3 border-[#1D3557] rounded-xl"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Description</label>
+              <Textarea
+                data-testid="edit-goal-desc"
+                value={editForm.description}
+                onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                className="border-3 border-[#1D3557] rounded-xl"
+                rows={2}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Target Amount (₹)</label>
+              <Input
+                data-testid="edit-goal-amount"
+                type="number"
+                value={editForm.target_amount}
+                onChange={(e) => setEditForm({...editForm, target_amount: e.target.value})}
+                className="border-3 border-[#1D3557] rounded-xl"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Target Date</label>
+              <Input
+                data-testid="edit-goal-deadline"
+                type="date"
+                value={editForm.deadline}
+                onChange={(e) => setEditForm({...editForm, deadline: e.target.value})}
+                className="border-3 border-[#1D3557] rounded-xl"
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setEditOpen(false)}
+                className="flex-1 py-3 font-bold rounded-xl border-3 border-[#1D3557] bg-white text-[#1D3557] hover:bg-[#E0FBFC]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditGoal}
+                disabled={submitting}
+                data-testid="save-edit-goal-btn"
+                className="flex-1 btn-primary py-3 disabled:opacity-50"
+              >
+                {submitting ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>

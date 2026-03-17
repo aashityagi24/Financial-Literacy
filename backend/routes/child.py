@@ -263,6 +263,59 @@ async def contribute_to_goal(goal_id: str, request: Request):
         "goal_badge_earned": goal_achieved_badge
     }
 
+class SavingsGoalUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    target_amount: Optional[float] = None
+    deadline: Optional[str] = None
+
+@router.put("/savings-goals/{goal_id}")
+async def update_savings_goal(goal_id: str, data: SavingsGoalUpdate, request: Request):
+    """Edit a savings goal"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can edit savings goals")
+    
+    goal = await db.savings_goals.find_one({"goal_id": goal_id, "child_id": user["user_id"]})
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    
+    if goal.get("completed"):
+        raise HTTPException(status_code=400, detail="Cannot edit a completed goal")
+    
+    update_fields = {}
+    if data.title is not None:
+        update_fields["title"] = data.title
+    if data.description is not None:
+        update_fields["description"] = data.description
+    if data.image_url is not None:
+        update_fields["image_url"] = data.image_url
+    if data.target_amount is not None:
+        if data.target_amount < goal.get("current_amount", 0):
+            raise HTTPException(status_code=400, detail="Target amount cannot be less than amount already saved")
+        update_fields["target_amount"] = data.target_amount
+    if data.deadline is not None:
+        update_fields["deadline"] = data.deadline
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.savings_goals.update_one(
+        {"goal_id": goal_id, "child_id": user["user_id"]},
+        {"$set": update_fields}
+    )
+    
+    updated = await db.savings_goals.find_one({"goal_id": goal_id}, {"_id": 0})
+    return updated
+
+
+
 # Parents
 @router.post("/add-parent")
 async def add_parent(request: Request):
