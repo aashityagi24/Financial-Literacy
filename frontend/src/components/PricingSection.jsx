@@ -275,11 +275,6 @@ export default function PricingSection() {
                     <p className="text-xs text-gray-500">
                       {planMeta[selectedPlanType].max_parents} parent{planMeta[selectedPlanType].max_parents > 1 ? 's' : ''} + {numChildren} child{numChildren > 1 ? 'ren' : ''}
                     </p>
-                    {numChildren > 1 && (
-                      <p className="text-xs text-[#EE6C4D]/80 mt-1">
-                        +₹{plan.per_child_price * (numChildren - 1)} for extra
-                      </p>
-                    )}
                   </div>
 
                   {/* Button area - white bg, same for all */}
