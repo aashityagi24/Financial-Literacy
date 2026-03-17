@@ -64,6 +64,17 @@ async def get_repository_items(
         "topics": topics
     }
 
+@router.get("/admin/repository/schools")
+async def get_schools_for_repository(request: Request):
+    """Get list of schools for visibility selection"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    schools = await db.schools.find({}, {"_id": 0, "school_id": 1, "name": 1}).to_list(100)
+    return {"schools": schools}
+
+
 @router.get("/admin/repository/subtopics/{topic_id}")
 async def get_subtopics_for_topic(request: Request, topic_id: str):
     """Get subtopics for a specific topic"""
@@ -111,6 +122,8 @@ async def create_repository_item(request: Request):
         "min_grade": int(data["min_grade"]),
         "max_grade": int(data["max_grade"]),
         "tags": data.get("tags", []),
+        "school_visibility": data.get("school_visibility", "all"),  # 'all' or 'specific'
+        "visible_to_schools": data.get("visible_to_schools", []),   # list of school_ids
         "is_active": True,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
@@ -179,7 +192,7 @@ async def update_repository_item(request: Request, item_id: str):
     }
     
     allowed_fields = ["title", "description", "file_url", "thumbnail_url", "topic_id", "subtopic_id", 
-                      "min_grade", "max_grade", "tags", "is_active"]
+                      "min_grade", "max_grade", "tags", "is_active", "school_visibility", "visible_to_schools"]
     
     for field in allowed_fields:
         if field in data:
@@ -239,6 +252,15 @@ async def teacher_get_repository(
     
     query = {"is_active": True}
     
+    # Filter by school visibility
+    teacher_school_id = user.get("school_id", "")
+    if teacher_school_id:
+        query["$or"] = [
+            {"school_visibility": "all"},
+            {"school_visibility": {"$exists": False}},
+            {"visible_to_schools": teacher_school_id}
+        ]
+    
     if topic_id:
         query["topic_id"] = topic_id
     if subtopic_id:
@@ -251,11 +273,20 @@ async def teacher_get_repository(
     if file_type:
         query["file_type"] = file_type
     if search:
-        query["$or"] = [
+        search_conditions = [
             {"title": {"$regex": search, "$options": "i"}},
             {"description": {"$regex": search, "$options": "i"}},
             {"tags": {"$in": [search]}}
         ]
+        if "$or" in query:
+            # Already have school visibility $or, wrap in $and
+            query = {"$and": [
+                {"$or": query["$or"]},
+                {"$or": search_conditions},
+                {k: v for k, v in query.items() if k != "$or"}
+            ]}
+        else:
+            query["$or"] = search_conditions
     
     items = await db.teacher_repository.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
     
