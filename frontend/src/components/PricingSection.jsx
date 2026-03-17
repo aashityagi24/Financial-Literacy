@@ -35,7 +35,7 @@ export default function PricingSection() {
   const [plans, setPlans] = useState(null);
   const [planMeta, setPlanMeta] = useState(null);
   const [selectedPlanType, setSelectedPlanType] = useState('single_parent');
-  const [selectedDuration, setSelectedDuration] = useState('1_month');
+  const [selectedDuration, setSelectedDuration] = useState('6_months');
   const [numChildren, setNumChildren] = useState(1);
   const [showCheckout, setShowCheckout] = useState(false);
   const [checkoutForm, setCheckoutForm] = useState({ name: '', email: '', phone: '' });
@@ -161,24 +161,24 @@ export default function PricingSection() {
   };
 
   return (
-    <section id="pricing" className="py-20 bg-white" data-testid="pricing-section">
+    <section id="pricing" className="py-16 bg-white" data-testid="pricing-section">
       <div className="container mx-auto px-6">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
+        <div className="text-center mb-8">
+          <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>
             Choose Your Plan
           </h2>
-          <p className="text-lg text-[#3D5A80] max-w-2xl mx-auto">
-            Start your child's financial literacy journey today. Pick a plan that works for your family.
+          <p className="text-base text-[#3D5A80] max-w-xl mx-auto">
+            Start your child's financial literacy journey today.
           </p>
         </div>
 
         {/* Plan Type Toggle */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex bg-[#E0FBFC] rounded-full p-1.5 border-2 border-[#1D3557]">
+        <div className="flex justify-center mb-5">
+          <div className="inline-flex bg-[#E0FBFC] rounded-full p-1 border-2 border-[#1D3557]">
             <button
               data-testid="plan-type-single"
               onClick={() => setSelectedPlanType('single_parent')}
-              className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm transition-all ${
                 selectedPlanType === 'single_parent'
                   ? 'bg-[#1D3557] text-white shadow-lg'
                   : 'text-[#1D3557] hover:bg-white/50'
@@ -190,7 +190,7 @@ export default function PricingSection() {
             <button
               data-testid="plan-type-two"
               onClick={() => setSelectedPlanType('two_parents')}
-              className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm transition-all ${
                 selectedPlanType === 'two_parents'
                   ? 'bg-[#1D3557] text-white shadow-lg'
                   : 'text-[#1D3557] hover:bg-white/50'
@@ -203,16 +203,16 @@ export default function PricingSection() {
         </div>
 
         {/* Children Selector */}
-        <div className="flex justify-center mb-10">
-          <div className="flex items-center gap-3 bg-[#FFF3E0] rounded-full px-6 py-3 border-2 border-[#EE6C4D]/40">
-            <span className="text-sm font-bold text-[#1D3557]">Number of Children:</span>
-            <div className="flex gap-2">
+        <div className="flex justify-center mb-6">
+          <div className="flex items-center gap-3 bg-[#FFF3E0] rounded-full px-5 py-2 border border-[#EE6C4D]/30">
+            <span className="text-sm font-bold text-[#1D3557]">Children:</span>
+            <div className="flex gap-1.5">
               {[1, 2, 3, 4, 5].map((n) => (
                 <button
                   key={n}
                   data-testid={`children-count-${n}`}
                   onClick={() => setNumChildren(n)}
-                  className={`w-9 h-9 rounded-full font-bold text-sm transition-all ${
+                  className={`w-8 h-8 rounded-full font-bold text-sm transition-all ${
                     numChildren === n
                       ? 'bg-[#EE6C4D] text-white shadow-md scale-110'
                       : 'bg-white text-[#1D3557] hover:bg-[#EE6C4D]/20 border border-[#1D3557]/20'
@@ -225,93 +225,65 @@ export default function PricingSection() {
           </div>
         </div>
 
-        {/* Duration Cards */}
-        <div className="grid md:grid-cols-4 gap-4 max-w-5xl mx-auto mb-8">
+        {/* Duration Cards with Buy Now */}
+        <div className="grid md:grid-cols-4 gap-4 max-w-5xl mx-auto">
           {DURATION_ORDER.map((dur) => {
             const plan = plans[selectedPlanType]?.[dur];
             if (!plan) return null;
             const price = plan.base_price + Math.max(0, numChildren - 1) * plan.per_child_price;
-            const isSelected = selectedDuration === dur;
-            const isPopular = dur === '1_month';
+            const isPopular = dur === '6_months';
 
             return (
               <div
                 key={dur}
                 data-testid={`plan-card-${dur}`}
-                onClick={() => setSelectedDuration(dur)}
-                className={`relative cursor-pointer rounded-2xl border-3 p-6 transition-all duration-200 ${
-                  isSelected
-                    ? 'bg-[#1D3557] text-white border-[#FFD23F] shadow-[6px_6px_0px_0px_#FFD23F] scale-[1.02]'
-                    : 'bg-white text-[#1D3557] border-[#1D3557] hover:shadow-[4px_4px_0px_0px_#1D3557] hover:-translate-y-1'
+                className={`relative rounded-2xl border-3 p-5 transition-all duration-200 flex flex-col ${
+                  isPopular
+                    ? 'bg-[#1D3557] text-white border-[#FFD23F] shadow-[5px_5px_0px_0px_#FFD23F] scale-[1.03]'
+                    : 'bg-white text-[#1D3557] border-[#1D3557] hover:shadow-[3px_3px_0px_0px_#1D3557]'
                 }`}
               >
                 {isPopular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#FFD23F] text-[#1D3557] text-xs font-bold px-3 py-1 rounded-full border-2 border-[#1D3557]">
                     <Star className="w-3 h-3 inline mr-1" />
-                    Popular
+                    Best Value
                   </div>
                 )}
-                <div className="text-center">
-                  <p className={`text-sm font-medium mb-1 ${isSelected ? 'text-[#FFD23F]' : 'text-[#3D5A80]'}`}>
+                <div className="text-center flex-1">
+                  <p className={`text-sm font-medium mb-1 ${isPopular ? 'text-[#FFD23F]' : 'text-[#3D5A80]'}`}>
                     {DURATION_LABELS[dur].short}
                   </p>
-                  <p className="text-3xl font-bold mb-1" style={{ fontFamily: 'Fredoka' }}>
+                  <p className="text-3xl font-bold" style={{ fontFamily: 'Fredoka' }}>
                     ₹{price.toLocaleString('en-IN')}
                   </p>
-                  <p className={`text-xs ${isSelected ? 'text-gray-300' : 'text-gray-500'}`}>
-                    {dur === '1_day' ? 'one-time' : `for ${DURATION_LABELS[dur].short.toLowerCase()}`}
+                  <p className={`text-xs mb-1 ${isPopular ? 'text-gray-300' : 'text-gray-500'}`}>
+                    {planMeta[selectedPlanType].max_parents} parent{planMeta[selectedPlanType].max_parents > 1 ? 's' : ''} + {numChildren} child{numChildren > 1 ? 'ren' : ''}
                   </p>
                   {numChildren > 1 && (
-                    <p className={`text-xs mt-2 ${isSelected ? 'text-[#FFD23F]/80' : 'text-[#EE6C4D]'}`}>
-                      Base ₹{plan.base_price} + {numChildren - 1} extra child{numChildren > 2 ? 'ren' : ''}
+                    <p className={`text-xs ${isPopular ? 'text-[#FFD23F]/70' : 'text-[#EE6C4D]/80'}`}>
+                      +₹{plan.per_child_price * (numChildren - 1)} for extra
                     </p>
                   )}
                 </div>
-                {isSelected && (
-                  <div className="absolute top-3 right-3">
-                    <div className="w-6 h-6 bg-[#06D6A0] rounded-full flex items-center justify-center">
-                      <Check className="w-4 h-4 text-white" />
-                    </div>
-                  </div>
-                )}
+                <button
+                  data-testid={`buy-now-${dur}`}
+                  onClick={() => { setSelectedDuration(dur); handleBuyNow(); }}
+                  className={`w-full mt-3 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                    isPopular
+                      ? 'bg-[#FFD23F] text-[#1D3557] hover:bg-[#FFE066]'
+                      : 'bg-[#06D6A0] text-white hover:bg-[#05C090]'
+                  }`}
+                >
+                  Buy Now
+                </button>
               </div>
             );
           })}
         </div>
 
-        {/* Summary + Buy Button */}
-        <div className="max-w-md mx-auto text-center">
-          <div className="bg-[#E0FBFC] rounded-2xl border-2 border-[#1D3557]/20 p-6 mb-4">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-[#3D5A80]">{planMeta[selectedPlanType].label}</span>
-              <span className="text-sm font-medium text-[#1D3557]">{DURATION_LABELS[selectedDuration].short}</span>
-            </div>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-[#3D5A80]">
-                {planMeta[selectedPlanType].max_parents} Parent{planMeta[selectedPlanType].max_parents > 1 ? 's' : ''} + {numChildren} Child{numChildren > 1 ? 'ren' : ''}
-              </span>
-            </div>
-            <div className="border-t border-[#1D3557]/20 pt-3 mt-3">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-bold text-[#1D3557]">Total</span>
-                <span className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                  ₹{totalPrice.toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
-          </div>
-          <Button
-            data-testid="buy-now-btn"
-            onClick={handleBuyNow}
-            className="w-full py-6 text-lg font-bold bg-[#06D6A0] hover:bg-[#05C090] text-white rounded-xl border-2 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] hover:-translate-y-1 transition-all"
-          >
-            <CreditCard className="w-5 h-5 mr-2" />
-            Buy Now - ₹{totalPrice.toLocaleString('en-IN')}
-          </Button>
-          <div className="flex items-center justify-center gap-4 mt-4 text-xs text-[#3D5A80]">
-            <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure Payment</span>
-            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Instant Access</span>
-          </div>
+        <div className="flex items-center justify-center gap-4 mt-5 text-xs text-[#3D5A80]">
+          <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure Payment</span>
+          <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Instant Access</span>
         </div>
       </div>
 
