@@ -234,63 +234,56 @@ export default function PricingSection() {
             const isPopular = dur === '6_months';
             const isSelected = selectedDuration === dur;
 
-            // Card header colors per duration
             const headerColors = {
-              '1_day': 'bg-[#E0FBFC]',
-              '1_month': 'bg-[#D1FAE5]',
-              '6_months': 'bg-[#FFD23F]',
-              '1_year': 'bg-[#E0E7FF]',
+              '1_day': 'bg-[#E0FBFC] text-[#1D3557]',
+              '1_month': 'bg-[#D1FAE5] text-[#1D3557]',
+              '6_months': 'bg-[#1D3557] text-[#FFD23F]',
+              '1_year': 'bg-[#E0E7FF] text-[#1D3557]',
             };
 
             return (
-              <div key={dur} className={`flex flex-col ${isPopular ? 'pt-0' : 'pt-6'}`}>
-                {/* Best Value badge above card */}
-                {isPopular && (
-                  <div className="flex justify-center mb-2">
+              <div key={dur} className="flex flex-col">
+                {/* Best Value badge - always reserve space for alignment */}
+                <div className="flex justify-center mb-2 h-7">
+                  {isPopular && (
                     <span className="bg-[#FFD23F] text-[#1D3557] text-xs font-bold px-4 py-1.5 rounded-full border-2 border-[#1D3557] flex items-center gap-1">
                       <Star className="w-3 h-3" />
                       Best Value
                     </span>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 <div
                   data-testid={`plan-card-${dur}`}
                   onClick={() => setSelectedDuration(dur)}
-                  className={`relative cursor-pointer rounded-2xl overflow-hidden flex flex-col flex-1 transition-all duration-200 ${
-                    isSelected && isPopular
-                      ? 'border-3 border-[#FFD23F] shadow-[4px_4px_0px_0px_#FFD23F] scale-[1.02]'
-                      : isSelected
-                      ? 'border-3 border-[#06D6A0] shadow-[4px_4px_0px_0px_#06D6A0] scale-[1.02]'
-                      : isPopular
-                      ? 'border-3 border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557]'
-                      : 'border-2 border-[#1D3557]/25 shadow-sm hover:border-[#1D3557]/50 hover:shadow-md'
+                  className={`relative cursor-pointer rounded-2xl overflow-hidden flex flex-col border-2 transition-all duration-200 ${
+                    isSelected
+                      ? 'border-[#06D6A0] shadow-[3px_3px_0px_0px_#06D6A0]'
+                      : 'border-[#1D3557]/20 hover:border-[#1D3557]/40 shadow-sm hover:shadow-md'
                   }`}
                 >
                   {/* Colored header strip */}
-                  <div className={`${isPopular ? 'bg-[#1D3557]' : headerColors[dur]} px-4 py-2.5 text-center`}>
-                    <p className={`text-sm font-bold ${isPopular ? 'text-[#FFD23F]' : 'text-[#1D3557]'}`}>
-                      {DURATION_LABELS[dur].short}
-                    </p>
+                  <div className={`${headerColors[dur]} px-4 py-3 text-center`}>
+                    <p className="text-sm font-bold">{DURATION_LABELS[dur].short}</p>
                   </div>
 
-                  {/* Card body */}
-                  <div className={`px-4 py-5 text-center flex-1 flex flex-col justify-center ${isPopular ? 'bg-[#1D3557]' : 'bg-white'}`}>
-                    <p className="text-3xl font-bold mb-1" style={{ fontFamily: 'Fredoka', color: isPopular ? '#fff' : '#1D3557' }}>
+                  {/* White body - same for all */}
+                  <div className="bg-white px-4 py-6 text-center flex-1 flex flex-col justify-center">
+                    <p className="text-3xl font-bold text-[#1D3557] mb-1" style={{ fontFamily: 'Fredoka' }}>
                       ₹{price.toLocaleString('en-IN')}
                     </p>
-                    <p className={`text-xs ${isPopular ? 'text-gray-300' : 'text-gray-500'}`}>
+                    <p className="text-xs text-gray-500">
                       {planMeta[selectedPlanType].max_parents} parent{planMeta[selectedPlanType].max_parents > 1 ? 's' : ''} + {numChildren} child{numChildren > 1 ? 'ren' : ''}
                     </p>
                     {numChildren > 1 && (
-                      <p className={`text-xs mt-1 ${isPopular ? 'text-[#FFD23F]/70' : 'text-[#EE6C4D]/80'}`}>
+                      <p className="text-xs text-[#EE6C4D]/80 mt-1">
                         +₹{plan.per_child_price * (numChildren - 1)} for extra
                       </p>
                     )}
                   </div>
 
-                  {/* Buy Now button */}
-                  <div className={`px-4 pb-4 ${isPopular ? 'bg-[#1D3557]' : 'bg-white'}`}>
+                  {/* Button area - white bg, same for all */}
+                  <div className="bg-white px-4 pb-4">
                     <button
                       data-testid={`buy-now-${dur}`}
                       onClick={(e) => { e.stopPropagation(); setSelectedDuration(dur); handleBuyNow(); }}
@@ -304,11 +297,11 @@ export default function PricingSection() {
                     </button>
                   </div>
 
-                  {/* Selected indicator */}
+                  {/* Selected checkmark */}
                   {isSelected && (
-                    <div className="absolute top-2 right-2">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isPopular ? 'bg-[#FFD23F]' : 'bg-[#06D6A0]'}`}>
-                        <Check className={`w-4 h-4 ${isPopular ? 'text-[#1D3557]' : 'text-white'}`} />
+                    <div className="absolute top-2.5 right-2.5">
+                      <div className="w-6 h-6 bg-[#06D6A0] rounded-full flex items-center justify-center">
+                        <Check className="w-4 h-4 text-white" />
                       </div>
                     </div>
                   )}
