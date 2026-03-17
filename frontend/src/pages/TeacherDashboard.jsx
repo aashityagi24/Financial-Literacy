@@ -70,6 +70,7 @@ export default function TeacherDashboard({ user }) {
   const [repoFilterType, setRepoFilterType] = useState('');
   const [repoSearch, setRepoSearch] = useState('');
   const [pickingFor, setPickingFor] = useState(null); // 'image' or 'pdf'
+  const [hasRepoAccess, setHasRepoAccess] = useState(false);
   const [comparisonLoading, setComparisonLoading] = useState(false);
   
   // Quest Responses
@@ -128,6 +129,9 @@ export default function TeacherDashboard({ user }) {
       return;
     }
     fetchDashboard();
+    axios.get(`${API}/teacher/repository/access-check`)
+      .then(res => setHasRepoAccess(res.data.has_access))
+      .catch(() => setHasRepoAccess(false));
   }, [user, navigate]);
   
   const fetchDashboard = async () => {
@@ -872,6 +876,7 @@ export default function TeacherDashboard({ user }) {
                                 onChange={(e) => handleQuestFileUpload(e, 'image_url')}
                                 className="border-2 border-[#1D3557]/30"
                               />
+                              {hasRepoAccess && (
                               <button 
                                 type="button"
                                 onClick={() => openRepositoryPicker('image')}
@@ -880,6 +885,7 @@ export default function TeacherDashboard({ user }) {
                                 <FolderOpen className="w-4 h-4" />
                                 Select from Repository
                               </button>
+                              )}
                             </div>
                             {questForm.image_url && (
                               <div className="mt-2 relative">
@@ -903,6 +909,7 @@ export default function TeacherDashboard({ user }) {
                                 onChange={(e) => handleQuestFileUpload(e, 'pdf_url')}
                                 className="border-2 border-[#1D3557]/30"
                               />
+                              {hasRepoAccess && (
                               <button 
                                 type="button"
                                 onClick={() => openRepositoryPicker('pdf')}
@@ -911,6 +918,7 @@ export default function TeacherDashboard({ user }) {
                                 <FolderOpen className="w-4 h-4" />
                                 Select from Repository
                               </button>
+                              )}
                             </div>
                             {questForm.pdf_url && (
                               <div className="mt-2 flex items-center gap-2">

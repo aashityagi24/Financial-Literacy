@@ -729,7 +729,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 **Google Cloud Console Configuration**:
 To complete the OAuth setup, add these redirect URIs to your Google Cloud Console OAuth 2.0 credentials:
-- For Preview: `https://earn-and-learn-4.preview.emergentagent.com/api/auth/google/callback`
+- For Preview: `https://coinquest-preview.preview.emergentagent.com/api/auth/google/callback`
 - For Production: `https://coinquest.co.in/api/auth/google/callback`
 
 ### Session 12 Updates (February 9, 2026)
@@ -856,3 +856,14 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - `/app/frontend/src/pages/MyJobsPage.jsx` - Added rejected status badge/delete support
 - `/app/frontend/src/pages/ParentDashboard.jsx` - Added complete jobs management section
 - `/app/frontend/src/pages/AdminPage.jsx` - Added guidebook management tab
+
+#### Bugfix: Repository Access Control - Frontend Enforcement ✅ (P0, March 17, 2026)
+- **Issue**: "Select from Repository" buttons were always visible to teachers in the quest creation form, even when their school's repository access was disabled by admin.
+- **Fix** (`TeacherDashboard.jsx`):
+  - Added `hasRepoAccess` state variable (default `false`)
+  - Added API call to `/api/teacher/repository/access-check` on component mount
+  - Wrapped both "Select from Repository" buttons (image & PDF) in `{hasRepoAccess && (...)}` conditional renders
+- **Result**: Teachers at schools without repository access no longer see the repository buttons in the quest creation form.
+
+**Files Modified:**
+- `/app/frontend/src/pages/TeacherDashboard.jsx` - Added repository access check and conditional rendering
