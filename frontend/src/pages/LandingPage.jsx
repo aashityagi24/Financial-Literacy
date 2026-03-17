@@ -413,6 +413,27 @@ export default function LandingPage() {
         </div>
       </section>
       
+      {/* CTA Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="card-playful p-12 bg-[#FFD23F] text-center">
+            <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-6" style={{ fontFamily: 'Fredoka' }}>
+              Ready to Start the Adventure?
+            </h2>
+            <p className="text-xl text-[#1D3557] mb-8 max-w-2xl mx-auto">
+              Give your child the gift of financial literacy. Try our 1-day plan to explore!
+            </p>
+            <button
+              data-testid="cta-get-started-btn"
+              onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+              className="bg-[#1D3557] text-white font-bold text-xl px-10 py-5 rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_white] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_white] transition-all"
+            >
+              Choose a Plan
+            </button>
+          </div>
+        </div>
+      </section>
+      
       {/* User Types Section */}
       <section className="py-20 bg-[#3D5A80]">
         <div className="container mx-auto px-6">
@@ -453,27 +474,6 @@ export default function LandingPage() {
       
       {/* Pricing Section */}
       <PricingSection />
-      
-      {/* CTA Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-6">
-          <div className="card-playful p-12 bg-[#FFD23F] text-center">
-            <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-6" style={{ fontFamily: 'Fredoka' }}>
-              Ready to Start the Adventure?
-            </h2>
-            <p className="text-xl text-[#1D3557] mb-8 max-w-2xl mx-auto">
-              Give your child the gift of financial literacy. Try our 1-day plan to explore!
-            </p>
-            <button
-              data-testid="cta-get-started-btn"
-              onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
-              className="bg-[#1D3557] text-white font-bold text-xl px-10 py-5 rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_white] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_white] transition-all"
-            >
-              Choose a Plan
-            </button>
-          </div>
-        </div>
-      </section>
       
       {/* Footer */}
       <footer className="bg-[#1D3557] py-8">
