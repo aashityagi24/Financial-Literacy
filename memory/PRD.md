@@ -837,3 +837,22 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - Fixed "Completed! +₹undefined" → `response.data.coins_awarded` (was `response.data.reward`)
 - Fixed `selectedContent.completed` → `selectedContent.is_completed` (property name mismatch)
 - Consolidated double toast into single combined toast on activity completion
+
+### Session Update (March 17, 2026 - Fork)
+
+#### Feature: My Jobs - Complete Implementation ✅ (P0)
+- **Child UI** (`MyJobsPage.jsx`): Children can view, add, and delete family jobs (unpaid) and payday jobs (paid), max 3 each. Jobs show status badges (Approved, Waiting, Not Approved) and payment amounts. Guide button shows admin-configurable guidebook.
+- **Parent UI** (`ParentDashboard.jsx`): New "Children's Jobs" section shows pending jobs requiring approval and active approved jobs. Parents can:
+  - Approve family jobs with one click
+  - Set payment details (amount, digital/cash, review day) for payday jobs via dialog
+  - Reject jobs (sends notification to child)
+  - Pay weekly for approved payday jobs (digital transfers to child's wallet)
+- **Admin UI** (`AdminPage.jsx`): New "Jobs Guide" tab with textarea editors for child and parent guidebook content.
+- **Backend** (`jobs.py`): Complete API with child CRUD, parent approve/reject/pay, admin guidebook, and teacher view endpoints. Payment creates wallet transactions and notifications.
+- **Testing**: 14/14 backend tests passed, all frontend UI verified.
+
+**Files Modified:**
+- `/app/backend/routes/jobs.py` - Added reject endpoint, allow deleting rejected jobs
+- `/app/frontend/src/pages/MyJobsPage.jsx` - Added rejected status badge/delete support
+- `/app/frontend/src/pages/ParentDashboard.jsx` - Added complete jobs management section
+- `/app/frontend/src/pages/AdminPage.jsx` - Added guidebook management tab
