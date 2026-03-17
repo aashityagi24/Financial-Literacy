@@ -185,7 +185,7 @@ export default function PricingSection() {
               }`}
             >
               <User className="w-4 h-4" />
-              Single Parent Login Login
+              Single Parent Login
             </button>
             <button
               data-testid="plan-type-two"
