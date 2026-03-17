@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find the 1 Rupee Coin!</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Bubblegum+Sans&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sunshine: #FFE066;
+      --sky-blue: #7EC8E3;
+      --grass-green: #7ED957;
+      --candy-pink: #FF9ECD;
+      --orange-pop: #FF8C42;
+      --purple-fun: #B47EDE;
+      --cream: #FFF8E7;
+      --brown-soft: #8B6914;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 100%;
+      max-width: 960px;
+      min-height: 100vh;
+      margin: 0 auto;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: 6px;
+      font-family: 'Fredoka', sans-serif;
+      background: linear-gradient(180deg, var(--sky-blue) 0%, #B8E4F0 50%, var(--grass-green) 100%);
+      position: relative;
+    }
+
+    .cloud {
+      position: absolute;
+      background: white;
+      border-radius: 50px;
+      opacity: 0.9;
+      animation: float 20s ease-in-out infinite;
+      z-index: 0;
+    }
+
+    .cloud::before, .cloud::after {
+      content: '';
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+    }
+
+    .cloud-1 { width: 100px; height: 40px; top: 4%; left: 6%; }
+    .cloud-1::before { width: 50px; height: 50px; top: -25px; left: 15px; }
+    .cloud-1::after { width: 35px; height: 35px; top: -15px; left: 50px; }
+
+    .cloud-2 { width: 120px; height: 45px; top: 7%; right: 8%; animation-delay: -5s; }
+    .cloud-2::before { width: 60px; height: 60px; top: -30px; left: 20px; }
+    .cloud-2::after { width: 40px; height: 40px; top: -20px; left: 65px; }
+
+    .cloud-3 { width: 80px; height: 35px; top: 13%; left: 48%; animation-delay: -10s; }
+    .cloud-3::before { width: 40px; height: 40px; top: -20px; left: 10px; }
+    .cloud-3::after { width: 30px; height: 30px; top: -12px; left: 40px; }
+
+    @keyframes float {
+      0%, 100% { transform: translateX(0) translateY(0); }
+      25% { transform: translateX(20px) translateY(-10px); }
+      50% { transform: translateX(40px) translateY(5px); }
+      75% { transform: translateX(20px) translateY(-5px); }
+    }
+
+    .grass {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 50px;
+      background: linear-gradient(180deg, transparent 0%, var(--grass-green) 30%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .mute-btn {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: white;
+      font-size: 1.25rem;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      z-index: 100;
+      transition: all 0.3s ease;
+    }
+
+    .mute-btn:hover { transform: scale(1.08); }
+    .mute-btn.muted { background: #f0f0f0; color: #999; }
+
+    .game-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 8px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .title {
+      text-align: center;
+      margin-bottom: 10px;
+      padding-top: 8px;
+    }
+
+    .title h1 {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: clamp(1.8rem, 4vw, 2.2rem);
+      line-height: 1.2;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 6px 0 4px;
+    }
+
+    .title-coin {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .subtitle {
+      font-size: 1.05rem;
+      color: var(--brown-soft);
+      margin-top: 6px;
+      background: rgba(255,255,255,0.9);
+      padding: 6px 14px;
+      border-radius: 20px;
+      display: block;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .game-area {
+      background: var(--cream);
+      border-radius: 26px;
+      padding: 18px 16px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.18), inset 0 -5px 20px rgba(0,0,0,0.05);
+      border: 5px dashed var(--orange-pop);
+      position: relative;
+      min-height: 320px;
+    }
+
+    .instruction {
+      text-align: center;
+      font-size: 1.1rem;
+      color: var(--brown-soft);
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      background: linear-gradient(135deg, var(--sunshine) 0%, #FFD54F 100%);
+      border-radius: 18px;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(255, 224, 102, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      line-height: 1.25;
+    }
+
+    .instruction-coin {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .coins-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 8px 4px;
+      margin: 4px 0 6px;
+    }
+
+    .coin-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .coin {
+      width: 95px;
+      height: 95px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.28), inset 0 -4px 10px rgba(0,0,0,0.2), inset 0 4px 10px rgba(255,255,255,0.3);
+      animation: coinAppear 0.5s ease-out backwards;
+      overflow: hidden;
+      border: 4px solid #888;
+      background: #ccc;
+    }
+
+    .coin img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .coin:nth-child(1) { animation-delay: 0.1s; }
+    .coin:nth-child(2) { animation-delay: 0.2s; }
+    .coin:nth-child(3) { animation-delay: 0.3s; }
+    .coin:nth-child(4) { animation-delay: 0.4s; }
+    .coin:nth-child(5) { animation-delay: 0.5s; }
+
+    @keyframes coinAppear {
+      0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+
+    .coin:hover { transform: scale(1.08); }
+    .coin:active { transform: scale(0.95); }
+
+    .coin.selected {
+      border: 6px solid var(--purple-fun);
+      box-shadow: 0 0 0 3px white, 0 0 0 7px var(--purple-fun), 0 15px 35px rgba(0,0,0,0.3);
+      transform: scale(1.04);
+    }
+
+    .coin.selected::after {
+      content: '✓';
+      position: absolute;
+      top: -9px;
+      right: -9px;
+      width: 28px;
+      height: 28px;
+      background: var(--purple-fun);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: bold;
+      border: 3px solid white;
+    }
+
+    .coin.correct-result, .coin.missed {
+      border-color: var(--grass-green) !important;
+      box-shadow: 0 0 0 3px white, 0 0 0 7px var(--grass-green), 0 15px 35px rgba(0,0,0,0.3) !important;
+    }
+
+    .coin.wrong-result {
+      border-color: var(--orange-pop) !important;
+      box-shadow: 0 0 0 3px white, 0 0 0 7px var(--orange-pop), 0 15px 35px rgba(0,0,0,0.3) !important;
+      animation: shake 0.5s ease-in-out;
+    }
+
+    .feedback-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+      opacity: 0;
+      transform: scale(0);
+      transition: all 0.3s ease;
+    }
+
+    .feedback-icon.show { opacity: 1; transform: scale(1); }
+    .feedback-icon.correct, .feedback-icon.missed { background: var(--grass-green); color: white; }
+    .feedback-icon.wrong { background: var(--orange-pop); color: white; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0) scale(1.04); }
+      20% { transform: translateX(-8px) scale(1.04); }
+      40% { transform: translateX(8px) scale(1.04); }
+      60% { transform: translateX(-8px) scale(1.04); }
+      80% { transform: translateX(8px) scale(1.04); }
+    }
+
+    .result-message-inline {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 18px;
+      margin-top: 10px;
+      color: white;
+      font-size: 1rem;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+      animation: slideUp 0.4s ease;
+    }
+
+    .result-message-inline.show { display: flex; flex-wrap: wrap; }
+    .result-message-inline .result-icon { font-size: 1.7rem; }
+    .result-message-inline .result-text { display: flex; flex-direction: column; gap: 2px; }
+    .result-message-inline .result-text strong { font-size: 1.05rem; }
+    .result-message-inline .result-text span { font-size: 0.9rem; opacity: 0.95; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .audio-btn-small {
+      background: rgba(255,255,255,0.28);
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      min-height: 42px;
+      font-size: 1rem;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+      transition: left 0.5s;
+    }
+    .btn:hover::before { left: 100%; }
+
+    .btn-play { background: linear-gradient(135deg, var(--grass-green) 0%, #5BBF3D 100%); color: white; }
+    .btn-check { background: linear-gradient(135deg, var(--sky-blue) 0%, #5BA4C9 100%); color: white; }
+    .btn-new { background: linear-gradient(135deg, var(--purple-fun) 0%, #9B59B6 100%); color: white; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      top: -10px;
+      animation: confettiFall 3s ease-out forwards;
+      z-index: 150;
+    }
+
+    @keyframes confettiFall {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 4px; }
+      .title-coin { width: 34px; height: 34px; }
+      .coin { width: 84px; height: 84px; }
+      .instruction { font-size: 1rem; }
+      .btn { padding: 9px 14px; font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+  <button class="mute-btn" id="mute-btn" onclick="toggleMute()" title="Mute/Unmute">🔊</button>
+
+  <div class="cloud cloud-1"></div>
+  <div class="cloud cloud-2"></div>
+  <div class="cloud cloud-3"></div>
+  <div class="grass"></div>
+
+  <div class="game-container">
+    <div class="title">
+      <h1>
+        <img src="coins/1.webp" alt="₹1" class="title-coin" onerror="this.style.display='none'">
+        Find the ₹1 Coin!
+        <img src="coins/1.webp" alt="₹1" class="title-coin" onerror="this.style.display='none'">
+      </h1>
+      <p class="subtitle">Can you find all the One Rupee coins?</p>
+    </div>
+
+    <div class="game-area">
+      <div class="instruction" id="instruction">
+        👆 Tap to select all the
+        <img src="coins/1.webp" alt="₹1" class="instruction-coin" onerror="this.outerHTML='₹1'">
+        (One Rupee) coins, then click Check!
+      </div>
+
+      <div class="coins-container" id="coins-container"></div>
+
+      <div class="result-message-inline" id="result-message-inline"></div>
+
+      <div class="buttons">
+        <button class="btn btn-play" id="start-btn" onclick="startGame()">🎮 Start Game!</button>
+        <button class="btn btn-check" id="check-btn" onclick="checkAnswers()" style="display:none;">✓ Check!</button>
+        <button class="btn btn-new" id="new-round-btn" onclick="newRound()" style="display:none;">🔄 Next Round!</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let correctScore = 0;
+    let wrongScore = 0;
+    let currentCoins = [];
+    let selectedCoins = new Set();
+    let gameActive = false;
+    let currentResultMessage = '';
+    let selectedVoice = null;
+    let isMuted = false;
+
+    const coinTypes = [
+      { value: 1, image: 'coins/1.webp', name: 'One Rupee' },
+      { value: 2, image: 'coins/2.webp', name: 'Two Rupees' },
+      { value: 5, image: 'coins/5.webp', name: 'Five Rupees' },
+      { value: 10, image: 'coins/10.webp', name: 'Ten Rupees' }
+    ];
+
+    function initVoice() {
+      if ('speechSynthesis' in window) {
+        const loadVoices = () => {
+          const voices = window.speechSynthesis.getVoices();
+          selectedVoice =
+            voices.find(v => v.name.includes('Heera')) ||
+            voices.find(v => v.lang === 'en-IN') ||
+            voices.find(v => v.name === 'Google UK English Female') ||
+            voices.find(v => v.name === 'Google US English Female') ||
+            voices.find(v => v.name.includes('Zira')) ||
+            voices.find(v => v.lang.startsWith('en')) ||
+            voices[0];
+        };
+        if (window.speechSynthesis.getVoices().length > 0) loadVoices();
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+      }
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      const muteBtn = document.getElementById('mute-btn');
+      if (isMuted) {
+        muteBtn.textContent = '🔇';
+        muteBtn.classList.add('muted');
+        window.speechSynthesis.cancel();
+      } else {
+        muteBtn.textContent = '🔊';
+        muteBtn.classList.remove('muted');
+      }
+    }
+
+    function speak(text, callback) {
+      if (isMuted) {
+        if (callback) callback();
+        return;
+      }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.85;
+        utterance.pitch = 1.1;
+        if (selectedVoice) utterance.voice = selectedVoice;
+        if (callback) utterance.onend = callback;
+        window.speechSynthesis.speak(utterance);
+      } else if (callback) {
+        callback();
+      }
+    }
+
+    function speakResult() {
+      speak(currentResultMessage);
+    }
+
+    function generateCoins() {
+      const numCoins = Math.floor(Math.random() * 3) + 3;
+      const coins = [];
+      const numOneRupee = Math.floor(Math.random() * 2) + 1;
+
+      for (let i = 0; i < numOneRupee; i++) {
+        coins.push({ ...coinTypes[0], id: i, isOneRupee: true });
+      }
+      for (let i = numOneRupee; i < numCoins; i++) {
+        const randomCoin = coinTypes[Math.floor(Math.random() * 3) + 1];
+        coins.push({ ...randomCoin, id: i, isOneRupee: false });
+      }
+      for (let i = coins.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [coins[i], coins[j]] = [coins[j], coins[i]];
+      }
+      coins.forEach((coin, index) => coin.id = index);
+      return coins;
+    }
+
+    function renderCoins() {
+      const container = document.getElementById('coins-container');
+      container.innerHTML = '';
+
+      currentCoins.forEach((coin) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'coin-wrapper';
+        wrapper.dataset.id = coin.id;
+
+        const coinEl = document.createElement('div');
+        coinEl.className = 'coin';
+        coinEl.dataset.id = coin.id;
+        coinEl.dataset.value = coin.value;
+        coinEl.innerHTML = `<img src="${coin.image}" alt="₹${coin.value} coin" onerror="this.parentElement.innerHTML='<div style=\\'font-size:1.5rem;font-weight:bold;\\'>₹${coin.value}</div>'">`;
+        coinEl.onclick = () => toggleCoinSelection(coin.id);
+
+        const feedbackIcon = document.createElement('div');
+        feedbackIcon.className = 'feedback-icon';
+        feedbackIcon.dataset.id = coin.id;
+
+        wrapper.appendChild(coinEl);
+        wrapper.appendChild(feedbackIcon);
+        container.appendChild(wrapper);
+      });
+    }
+
+    function toggleCoinSelection(coinId) {
+      if (!gameActive) return;
+      const coinEl = document.querySelector(`.coin[data-id="${coinId}"]`);
+      if (selectedCoins.has(coinId)) {
+        selectedCoins.delete(coinId);
+        coinEl.classList.remove('selected');
+      } else {
+        selectedCoins.add(coinId);
+        coinEl.classList.add('selected');
+      }
+      updateCheckButton();
+    }
+
+    function updateCheckButton() {
+      const checkBtn = document.getElementById('check-btn');
+      checkBtn.disabled = selectedCoins.size === 0;
+    }
+
+    function checkAnswers() {
+      if (!gameActive) return;
+      gameActive = false;
+
+      const oneRupeeCoins = currentCoins.filter(c => c.isOneRupee);
+      const totalOneRupee = oneRupeeCoins.length;
+
+      let correctSelections = 0;
+      let wrongSelections = 0;
+      let missedCoins = 0;
+
+      currentCoins.forEach(coin => {
+        const coinEl = document.querySelector(`.coin[data-id="${coin.id}"]`);
+        const feedbackIcon = document.querySelector(`.feedback-icon[data-id="${coin.id}"]`);
+        const wasSelected = selectedCoins.has(coin.id);
+
+        if (coin.isOneRupee && wasSelected) {
+          coinEl.classList.remove('selected');
+          coinEl.classList.add('correct-result');
+          feedbackIcon.classList.add('correct', 'show');
+          feedbackIcon.textContent = '✓';
+          correctSelections++;
+        } else if (coin.isOneRupee && !wasSelected) {
+          coinEl.classList.add('missed');
+          feedbackIcon.classList.add('missed', 'show');
+          feedbackIcon.textContent = '✓';
+          missedCoins++;
+        } else if (!coin.isOneRupee && wasSelected) {
+          coinEl.classList.remove('selected');
+          coinEl.classList.add('wrong-result');
+          feedbackIcon.classList.add('wrong', 'show');
+          feedbackIcon.textContent = '✗';
+          wrongSelections++;
+        }
+      });
+
+      const penalizedCorrectAnswers = Math.max(0, correctSelections - wrongSelections);
+      correctScore += penalizedCorrectAnswers;
+      if (wrongSelections > 0 || missedCoins > 0) wrongScore++;
+      updateScores();
+      showInlineResult(correctSelections, wrongSelections, missedCoins, totalOneRupee);
+
+      document.getElementById('check-btn').style.display = 'none';
+      document.getElementById('new-round-btn').style.display = 'inline-block';
+
+      try {
+        window.parent.postMessage({
+          type: 'ACTIVITY_COMPLETE',
+          score: penalizedCorrectAnswers,
+          percentage: Math.round((penalizedCorrectAnswers / totalOneRupee) * 100),
+          timeSpent: 0,
+          correctAnswers: penalizedCorrectAnswers,
+          totalQuestions: totalOneRupee
+        }, '*');
+      } catch (e) {
+        console.error('Failed to send score:', e);
+      }
+    }
+
+    function showInlineResult(correct, wrong, missed, total) {
+      const resultDiv = document.getElementById('result-message-inline');
+      let messageText = '';
+      let tipText = '';
+      let icon = '';
+      let bgColor = '';
+
+      if (correct === total && wrong === 0) {
+        icon = '🌟';
+        messageText = `Perfect! You found all ${total} One Rupee coin${total > 1 ? 's' : ''}!`;
+        tipText = 'You are a coin expert!';
+        bgColor = 'var(--grass-green)';
+        for (let i = 0; i < 30; i++) setTimeout(() => createConfetti(), i * 40);
+      } else {
+        icon = '🤔';
+        let parts = [];
+        if (correct > 0) parts.push(`found ${correct} correct`);
+        if (missed > 0) parts.push(`missed ${missed}`);
+        if (wrong > 0) parts.push(`${wrong} wrong`);
+        messageText = 'Almost! ' + parts.join(', ') + '.';
+        tipText = 'Green ✓ = One Rupee coins. Try again!';
+        bgColor = 'var(--orange-pop)';
+      }
+
+      resultDiv.innerHTML = `
+        <span class="result-icon">${icon}</span>
+        <div class="result-text">
+          <strong>${messageText}</strong>
+          <span>${tipText}</span>
+        </div>
+        <button class="audio-btn-small" onclick="speakResult()" title="Listen">🔊</button>
+      `;
+      resultDiv.style.background = bgColor;
+      resultDiv.classList.add('show');
+      currentResultMessage = messageText + ' ' + tipText;
+      setTimeout(() => speak(currentResultMessage), 250);
+    }
+
+    function createConfetti() {
+      const colors = ['#FFE066', '#7ED957', '#FF9ECD', '#7EC8E3', '#B47EDE', '#FF8C42'];
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = Math.random() * 100 + 'vw';
+      confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+      confetti.style.animationDelay = Math.random() * 0.3 + 's';
+      document.body.appendChild(confetti);
+      setTimeout(() => confetti.remove(), 3000);
+    }
+
+    function updateScores() {
+      // Scores are stored in the game logic only and not shown on the frontend.
+    }
+
+    function startGame() {
+      document.getElementById('start-btn').style.display = 'none';
+      initVoice();
+      setTimeout(() => newRound(), 100);
+    }
+
+    function newRound() {
+      currentCoins = generateCoins();
+      selectedCoins.clear();
+      gameActive = true;
+
+      document.getElementById('instruction').style.display = 'flex';
+      document.getElementById('check-btn').style.display = 'inline-block';
+      document.getElementById('check-btn').disabled = true;
+      document.getElementById('new-round-btn').style.display = 'none';
+
+      const resultDiv = document.getElementById('result-message-inline');
+      resultDiv.classList.remove('show');
+      resultDiv.innerHTML = '';
+
+      window.speechSynthesis.cancel();
+      renderCoins();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => initVoice());
+  </script>
+</body>
+</html>
