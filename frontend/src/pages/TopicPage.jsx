@@ -518,17 +518,21 @@ export default function TopicPage({ user }) {
       
       {/* Content Viewer Modal */}
       {showViewer && selectedContent && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col border-4 border-[#1D3557]">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b-3 border-[#1D3557]">
-              <div className="flex items-center gap-3">
-                {getContentIcon(selectedContent.content_type)}
-                <div>
-                  <h3 className="font-bold text-[#1D3557] text-lg">{selectedContent.title}</h3>
-                  <p className="text-sm text-[#3D5A80]">{selectedContent.content_data?.instructions || selectedContent.description}</p>
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-2">
+          <div className="bg-white rounded-2xl w-full max-w-5xl h-[96vh] flex flex-col border-4 border-[#1D3557]">
+            {/* Modal Header - compact for children */}
+            <div className="flex items-center justify-between px-3 py-2 border-b-2 border-[#1D3557]">
+              {user?.role === 'child' ? (
+                <span className="text-sm font-bold text-[#1D3557] truncate">{selectedContent.title}</span>
+              ) : (
+                <div className="flex items-center gap-3">
+                  {getContentIcon(selectedContent.content_type)}
+                  <div>
+                    <h3 className="font-bold text-[#1D3557] text-lg">{selectedContent.title}</h3>
+                    <p className="text-sm text-[#3D5A80]">{selectedContent.content_data?.instructions || selectedContent.description}</p>
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="flex items-center gap-2">
                 {/* Download PDF button for worksheets/workbooks */}
                 {(selectedContent.content_type === 'worksheet' || selectedContent.content_type === 'workbook') && selectedContent.content_data?.pdf_url && (
@@ -671,19 +675,19 @@ export default function TopicPage({ user }) {
               )}
             </div>
             
-            {/* Modal Footer */}
-            <div className="p-4 border-t-3 border-[#1D3557] flex justify-between items-center bg-[#FFD23F]/20">
-              <span className="text-lg font-bold text-[#06D6A0]">
-                {user?.role === 'child' ? `+₹${selectedContent.reward_coins} on completion` : `Reward: ₹${selectedContent.reward_coins}`}
+            {/* Modal Footer - compact */}
+            <div className="px-3 py-1.5 border-t-2 border-[#1D3557] flex justify-between items-center bg-[#FFD23F]/20">
+              <span className="text-sm font-bold text-[#06D6A0]">
+                {user?.role === 'child' ? `+₹${selectedContent.reward_coins}` : `Reward: ₹${selectedContent.reward_coins}`}
               </span>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 {user?.role === 'child' && (
                   <button 
                     onClick={() => { handleCompleteContent(selectedContent.content_id); closeViewer(); }}
-                    className="btn-primary px-6 py-3 text-lg"
+                    className="btn-primary px-3 py-1.5 text-sm"
                   >
-                    <Check className="w-5 h-5 mr-2 inline" />
-                    Mark as Complete
+                    <Check className="w-4 h-4 mr-1 inline" />
+                    Done
                   </button>
                 )}
               </div>
