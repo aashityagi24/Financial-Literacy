@@ -867,3 +867,30 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 
 **Files Modified:**
 - `/app/frontend/src/pages/TeacherDashboard.jsx` - Added repository access check and conditional rendering
+
+#### Feature: Razorpay Subscription System ✅ (P0, March 17, 2026)
+- **Backend** (`/app/backend/routes/subscriptions.py`):
+  - Plan pricing API: configurable plans (Single Parent / Two Parents) x 4 durations (1 Day, 1 Month, 6 Months, 1 Year)
+  - Razorpay order creation with amount calculation (base + per-child pricing)
+  - Payment signature verification and subscription activation
+  - Email-based subscription access check
+  - Admin: list subscriptions, update plan pricing, toggle subscription active status
+- **Frontend**:
+  - `PricingSection.jsx`: Interactive pricing cards on homepage with plan type toggle, children selector (1-5), duration cards, checkout dialog with Razorpay integration
+  - `AdminSubscriptionManagement.jsx`: Admin page for viewing subscriptions (search, stats, toggle), configuring plan pricing
+  - Subscription access gate in `ProtectedRoute` — users without active subscription redirected to pricing
+- **Pricing defaults**: Single Parent ₹500/month base, Two Parents ₹700/month base, +₹200/additional child
+- **Testing**: 13/13 backend tests passed, all frontend UI verified
+- **Razorpay keys**: Test mode configured (rzp_test_SSGIAk3wJBTtJl)
+
+**Files Created/Modified:**
+- `/app/backend/routes/subscriptions.py` (NEW) - All subscription + payment endpoints
+- `/app/frontend/src/components/PricingSection.jsx` (NEW) - Homepage pricing section
+- `/app/frontend/src/pages/AdminSubscriptionManagement.jsx` (NEW) - Admin subscription management
+- `/app/backend/server.py` - Registered subscription routes
+- `/app/backend/.env` - Added RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET
+- `/app/frontend/.env` - Added REACT_APP_RAZORPAY_KEY_ID
+- `/app/frontend/src/App.js` - Added subscription route, subscription check in ProtectedRoute
+- `/app/frontend/src/pages/LandingPage.jsx` - Added PricingSection, updated CTAs
+- `/app/frontend/src/pages/AdminPage.jsx` - Added Subscriptions management card
+- `/app/backend/routes/auth.py` - Added subscription_status to /auth/me response
