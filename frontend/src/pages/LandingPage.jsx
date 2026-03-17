@@ -414,9 +414,9 @@ export default function LandingPage() {
       </section>
       
       {/* CTA Section */}
-      <section className="py-20">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-6">
-          <div className="card-playful p-12 bg-[#FFD23F] text-center">
+          <div className="card-playful p-12 bg-[#E0FBFC] text-center">
             <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-6" style={{ fontFamily: 'Fredoka' }}>
               Ready to Start the Adventure?
             </h2>
@@ -426,7 +426,7 @@ export default function LandingPage() {
             <button
               data-testid="cta-get-started-btn"
               onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
-              className="bg-[#1D3557] text-white font-bold text-xl px-10 py-5 rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_white] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_white] transition-all"
+              className="bg-[#1D3557] text-white font-bold text-xl px-10 py-5 rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#FFD23F] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_#FFD23F] transition-all"
             >
               Choose a Plan
             </button>
