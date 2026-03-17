@@ -442,6 +442,23 @@ export default function AdminPage({ user }) {
               </div>
             </div>
           </button>
+          
+          {/* Subscription Management Card */}
+          <Link 
+            to="/admin/subscriptions" 
+            className="block bg-gradient-to-r from-[#06D6A0] to-[#34D399] rounded-xl p-4 hover:shadow-lg transition-shadow"
+            data-testid="subscription-management-link"
+          >
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <span className="text-lg">💳</span>
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Subscriptions</h3>
+                <p className="text-white/70 text-xs">Plans & Payments</p>
+              </div>
+            </div>
+          </Link>
         </div>
         
         {/* Tabs */}

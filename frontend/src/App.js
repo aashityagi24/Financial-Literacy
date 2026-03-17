@@ -46,6 +46,7 @@ import AuthPage from "@/pages/AuthPage";
 import ContentProtection from "@/components/ContentProtection";
 import ActivityScoresPage from "@/pages/ActivityScoresPage";
 import TeacherActivityAnalytics from "@/pages/TeacherActivityAnalytics";
+import AdminSubscriptionManagement from "@/pages/AdminSubscriptionManagement";
 
 // Components
 import OnboardingTour from "@/components/OnboardingTour";
@@ -135,6 +136,14 @@ export const ProtectedRoute = ({ children }) => {
         setUser(response.data);
         setIsAuthenticated(true);
         hasChecked.current = true;
+        
+        // Check subscription status - redirect if no subscription
+        const subStatus = response.data.subscription_status;
+        if (subStatus === 'none') {
+          localStorage.removeItem('session_token');
+          window.location.href = '/?no_subscription=true';
+          return;
+        }
         
         // If user has no role, redirect to role selection
         if (!response.data.role && location.pathname !== '/role-selection') {
@@ -374,6 +383,11 @@ function AppRouter() {
       <Route path="/activity-analytics/:contentId" element={
         <ProtectedRoute>
           {({ user }) => <TeacherActivityAnalytics user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/subscriptions" element={
+        <ProtectedRoute>
+          {({ user }) => <AdminSubscriptionManagement user={user} />}
         </ProtectedRoute>
       } />
     </Routes>

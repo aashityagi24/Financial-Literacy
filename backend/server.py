@@ -81,6 +81,7 @@ from routes import glossary as glossary_routes
 from routes import repository as repository_routes
 from routes import activity as activity_routes
 from routes import jobs as jobs_routes
+from routes import subscriptions as subscription_routes
 
 # Initialize database in modules
 auth_service.init_db(db)
@@ -105,6 +106,7 @@ lending_routes.init_db(db)
 glossary_routes.init_db(db)
 repository_routes.init_db(db)
 jobs_routes.init_db(db)
+subscription_routes.init_db(db)
 
 # Include modular routers
 api_router.include_router(auth_routes.router)
@@ -130,6 +132,7 @@ api_router.include_router(glossary_routes.router)
 api_router.include_router(repository_routes.router)
 api_router.include_router(activity_routes.router)
 api_router.include_router(jobs_routes.router)
+api_router.include_router(subscription_routes.router)
 
 # ============== MODELS ==============
 

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, School, Play, Pause } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import PricingSection from '@/components/PricingSection';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -28,8 +29,18 @@ export default function LandingPage() {
       toast.error('Your session has ended. You may have logged in on another device.', {
         duration: 5000
       });
-      // Clean up URL
       window.history.replaceState({}, '', '/');
+    }
+    
+    // Check if redirected due to no subscription
+    if (searchParams.get('no_subscription') === 'true') {
+      toast.error('You need an active subscription to access CoinQuest. Please purchase a plan below.', {
+        duration: 8000
+      });
+      window.history.replaceState({}, '', '/');
+      setTimeout(() => {
+        document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+      }, 500);
     }
     
     // Fetch walkthrough video settings
@@ -169,11 +180,11 @@ export default function LandingPage() {
               <div className="flex flex-wrap gap-4">
                 <button
                   data-testid="get-started-btn"
-                  onClick={handleLogin}
+                  onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
                   className="btn-primary px-8 py-4 text-xl flex items-center gap-2"
                 >
                   <Sparkles className="w-6 h-6" />
-                  Start Your Adventure
+                  View Plans
                 </button>
                 <a
                   href="#features"
@@ -440,6 +451,9 @@ export default function LandingPage() {
         </div>
       </section>
       
+      {/* Pricing Section */}
+      <PricingSection />
+      
       {/* CTA Section */}
       <section className="py-20">
         <div className="container mx-auto px-6">
@@ -448,14 +462,14 @@ export default function LandingPage() {
               Ready to Start the Adventure?
             </h2>
             <p className="text-xl text-[#1D3557] mb-8 max-w-2xl mx-auto">
-              Join thousands of kids learning financial literacy through play. It's free to start!
+              Give your child the gift of financial literacy. Try our 1-day plan to explore!
             </p>
             <button
               data-testid="cta-get-started-btn"
-              onClick={handleLogin}
+              onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
               className="bg-[#1D3557] text-white font-bold text-xl px-10 py-5 rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_white] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_white] transition-all"
             >
-              Get Started
+              Choose a Plan
             </button>
           </div>
         </div>

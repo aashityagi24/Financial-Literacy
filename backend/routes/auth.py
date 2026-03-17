@@ -584,6 +584,35 @@ async def get_me(request: Request):
         if school:
             user["school_name"] = school.get("name")
     
+    # Check subscription status for non-school D2C users
+    role = user.get("role")
+    if role in ["admin", "teacher"] or user.get("school_id"):
+        user["subscription_status"] = "active"
+    elif role in ["parent", "child", None]:
+        now = datetime.now(timezone.utc).isoformat()
+        email = user.get("email", "").lower()
+        user_id = user.get("user_id", "")
+        
+        # Check by parent email or child user_id
+        sub = await db.subscriptions.find_one({
+            "$or": [
+                {"parent_emails": email},
+                {"child_user_ids": user_id}
+            ],
+            "payment_status": "completed",
+            "is_active": True,
+            "end_date": {"$gt": now}
+        }, {"_id": 0, "subscription_id": 1, "end_date": 1, "plan_type": 1, "num_children": 1, "num_parents": 1})
+        
+        if sub:
+            user["subscription_status"] = "active"
+            user["subscription_id"] = sub["subscription_id"]
+            user["subscription_end_date"] = sub["end_date"]
+        else:
+            user["subscription_status"] = "none"
+    else:
+        user["subscription_status"] = "active"
+    
     return user
 
 @router.post("/logout")
