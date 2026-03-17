@@ -583,10 +583,6 @@ export default function ProfilePage({ user, setUser }) {
                 {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
               </span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-[#1D3557]/20">
-              <span className="text-[#3D5A80]">User ID</span>
-              <span className="font-mono text-xs text-[#3D5A80]">{user?.user_id?.slice(0, 12)}...</span>
-            </div>
           </div>
         </div>
         
