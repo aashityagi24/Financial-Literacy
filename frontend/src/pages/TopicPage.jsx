@@ -377,7 +377,7 @@ export default function TopicPage({ user }) {
                 const Icon = config.icon;
                 const isChild = user?.role === 'child';
                 const isLocked = isChild && content.is_unlocked === false;
-                const isCompleted = isChild && content.is_completed;
+                const isCompleted = (isChild || user?.role === 'parent') && content.is_completed;
                 
                 if (isLocked) {
                   return (
@@ -475,9 +475,11 @@ export default function TopicPage({ user }) {
                         </div>
                         <h3 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{content.title}</h3>
                         <p className="text-base text-[#3D5A80] line-clamp-1">{content.description}</p>
-                        <p className={`text-base font-bold mt-1 ${isCompleted ? 'text-[#06D6A0]' : 'text-[#06D6A0]'}`}>
-                          {isCompleted ? '✓ Earned' : '+'} ₹{content.reward_coins}
-                        </p>
+                        {user?.role === 'child' && (
+                          <p className={`text-base font-bold mt-1 text-[#06D6A0]`}>
+                            {isCompleted ? '✓ Earned' : '+'} ₹{content.reward_coins}
+                          </p>
+                        )}
                         
                         {/* Activity Scores for Parents/Teachers */}
                         {['parent', 'teacher'].includes(user?.role) && content.content_type === 'activity' && (

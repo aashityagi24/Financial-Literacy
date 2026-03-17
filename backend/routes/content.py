@@ -336,6 +336,19 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
         
         for content in content_items:
             content["is_completed"] = content["content_id"] in completed_content_ids
+    elif is_parent and user_id:
+        # For parents: show completion status based on their children's progress
+        links = await db.parent_child_links.find(
+            {"parent_id": user_id, "status": "active"}, {"child_id": 1}
+        ).to_list(20)
+        child_ids = [lnk["child_id"] for lnk in links]
+        if child_ids:
+            completed_docs = await db.user_content_progress.find(
+                {"user_id": {"$in": child_ids}, "completed": True}, {"content_id": 1}
+            ).to_list(1000)
+            completed_content_ids = {doc["content_id"] for doc in completed_docs}
+            for content in content_items:
+                content["is_completed"] = content["content_id"] in completed_content_ids
         
         for subtopic in subtopics:
             # Grade filter for subtopic content - only show content visible to children
