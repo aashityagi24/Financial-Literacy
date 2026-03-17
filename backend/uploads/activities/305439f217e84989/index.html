@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find the 1 Rupee Coin!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Bubblegum+Sans&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            max-width: 960px;
+            min-height: 100vh;
+            margin: 0 auto;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        h1, .main-title, .game-title {
+            font-size: clamp(1.6rem, 3.2vw, 2.3rem) !important;
+            line-height: 1.15 !important;
+            word-break: break-word;
+            text-align: center;
+        }
+
+* {
+            box-sizing: border-box;
+        }
+
+        
+
+:root {
+            --sunshine: #FFE066;
+            --sky-blue: #7EC8E3;
+            --grass-green: #7ED957;
+            --candy-pink: #FF9ECD;
+            --orange-pop: #FF8C42;
+            --purple-fun: #B47EDE;
+            --cream: #FFF8E7;
+            --brown-soft: #8B6914;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        
+
+        /* Floating clouds */
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50px;
+            opacity: 0.9;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .cloud-1 {
+            width: 100px;
+            height: 40px;
+            top: 5%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .cloud-1::before {
+            width: 50px;
+            height: 50px;
+            top: -25px;
+            left: 15px;
+        }
+
+        .cloud-1::after {
+            width: 35px;
+            height: 35px;
+            top: -15px;
+            left: 50px;
+        }
+
+        .cloud-2 {
+            width: 120px;
+            height: 45px;
+            top: 8%;
+            right: 15%;
+            animation-delay: -5s;
+        }
+
+        .cloud-2::before {
+            width: 60px;
+            height: 60px;
+            top: -30px;
+            left: 20px;
+        }
+
+        .cloud-2::after {
+            width: 40px;
+            height: 40px;
+            top: -20px;
+            left: 65px;
+        }
+
+        .cloud-3 {
+            width: 80px;
+            height: 35px;
+            top: 15%;
+            left: 50%;
+            animation-delay: -10s;
+        }
+
+        .cloud-3::before {
+            width: 40px;
+            height: 40px;
+            top: -20px;
+            left: 10px;
+        }
+
+        .cloud-3::after {
+            width: 30px;
+            height: 30px;
+            top: -12px;
+            left: 40px;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateX(0) translateY(0); }
+            25% { transform: translateX(20px) translateY(-10px); }
+            50% { transform: translateX(40px) translateY(5px); }
+            75% { transform: translateX(20px) translateY(-5px); }
+        }
+
+        /* Mute button */
+        .mute-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .mute-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .mute-btn.muted {
+            background: #f0f0f0;
+            color: #999;
+        }
+
+        /* Main container */
+        .game-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Title */
+        .title {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-top: 20px;
+        }
+
+        .title h1 {
+            font-family: 'Bubblegum Sans', cursive;
+            font-size: 3rem;
+            color: white;
+            text-shadow: 
+                4px 4px 0 var(--orange-pop),
+                -2px -2px 0 var(--candy-pink),
+                2px -2px 0 var(--purple-fun);
+            animation: bounce 2s ease-in-out infinite;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .title-coin {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .subtitle {
+            font-size: 1.4rem;
+            color: var(--brown-soft);
+            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px 25px;
+            border-radius: 30px;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Score board */
+        .score-board {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .score-item {
+            padding: 8px 12px !important;
+            min-width: 90px !important;
+            background: white;
+            padding: 15px 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            border: 4px solid var(--sunshine);
+        }
+
+        .score-item.correct {
+            border-color: var(--grass-green);
+        }
+
+        .score-item.wrong {
+            border-color: var(--candy-pink);
+        }
+
+        .score-item span {
+            font-size: 2rem;
+        }
+
+        /* Game area */
+        .game-area {
+            background: var(--cream);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 
+                0 15px 40px rgba(0,0,0,0.2),
+                inset 0 -5px 20px rgba(0,0,0,0.05);
+            border: 6px dashed var(--orange-pop);
+            position: relative;
+            min-height: 350px;
+        }
+
+        .instruction {
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--brown-soft);
+            margin-bottom: 30px;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--sunshine) 0%, #FFD54F 100%);
+            border-radius: 20px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(255, 224, 102, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .instruction-coin {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            object-fit: cover;
+            vertical-align: middle;
+        }
+
+        /* Coins container */
+        .coins-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 25px;
+            padding: 20px;
+        }
+
+        /* Coin styles */
+        .coin {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            box-shadow: 
+                0 8px 20px rgba(0,0,0,0.3),
+                inset 0 -4px 10px rgba(0,0,0,0.2),
+                inset 0 4px 10px rgba(255,255,255,0.3);
+            animation: coinAppear 0.5s ease-out backwards;
+            overflow: hidden;
+            border: 4px solid #888;
+            background: #ccc;
+        }
+
+        .coin img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .coin:nth-child(1) { animation-delay: 0.1s; }
+        .coin:nth-child(2) { animation-delay: 0.2s; }
+        .coin:nth-child(3) { animation-delay: 0.3s; }
+        .coin:nth-child(4) { animation-delay: 0.4s; }
+        .coin:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes coinAppear {
+            0% {
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) rotate(0);
+                opacity: 1;
+            }
+        }
+
+        .coin:hover {
+            transform: scale(1.1);
+            box-shadow: 
+                0 15px 35px rgba(0,0,0,0.35),
+                inset 0 -4px 10px rgba(0,0,0,0.2),
+                inset 0 4px 10px rgba(255,255,255,0.3);
+        }
+
+        .coin:active {
+            transform: scale(0.95);
+        }
+
+        /* Selected state */
+        .coin.selected {
+            border: 6px solid var(--purple-fun);
+            box-shadow: 
+                0 0 0 4px white,
+                0 0 0 8px var(--purple-fun),
+                0 15px 35px rgba(0,0,0,0.35);
+            transform: scale(1.05);
+        }
+
+        .coin.selected::after {
+            content: '✓';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 30px;
+            height: 30px;
+            background: var(--purple-fun);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: 3px solid white;
+        }
+
+        .coin.correct-result {
+            border-color: var(--grass-green) !important;
+            box-shadow: 
+                0 0 0 4px white,
+                0 0 0 8px var(--grass-green),
+                0 15px 35px rgba(0,0,0,0.35) !important;
+        }
+
+        .coin.wrong-result {
+            border-color: var(--orange-pop) !important;
+            box-shadow: 
+                0 0 0 4px white,
+                0 0 0 8px var(--orange-pop),
+                0 15px 35px rgba(0,0,0,0.35) !important;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .coin.missed {
+            border-color: var(--grass-green) !important;
+            box-shadow: 
+                0 0 0 4px white,
+                0 0 0 8px var(--grass-green),
+                0 15px 35px rgba(0,0,0,0.35) !important;
+        }
+
+        /* Feedback icons below coins */
+        .coin-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feedback-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s ease;
+        }
+
+        .feedback-icon.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .feedback-icon.correct {
+            background: var(--grass-green);
+            color: white;
+            box-shadow: 0 4px 15px rgba(126, 217, 87, 0.5);
+        }
+
+        .feedback-icon.wrong {
+            background: var(--orange-pop);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 140, 66, 0.5);
+        }
+
+        .feedback-icon.missed {
+            background: var(--grass-green);
+            color: white;
+            box-shadow: 0 4px 15px rgba(126, 217, 87, 0.5);
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) scale(1.05); }
+            20% { transform: translateX(-10px) scale(1.05); }
+            40% { transform: translateX(10px) scale(1.05); }
+            60% { transform: translateX(-10px) scale(1.05); }
+            80% { transform: translateX(10px) scale(1.05); }
+        }
+
+        /* Buttons */
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 18px 40px;
+            font-size: 1.3rem;
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, var(--grass-green) 0%, #5BBF3D 100%);
+            color: white;
+        }
+
+        .btn-play:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(126, 217, 87, 0.5);
+        }
+
+        .btn-check {
+            background: linear-gradient(135deg, var(--sky-blue) 0%, #5BA4C9 100%);
+            color: white;
+        }
+
+        .btn-check:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(126, 200, 227, 0.5);
+        }
+
+        .btn-check:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn-new {
+            background: linear-gradient(135deg, var(--purple-fun) 0%, #9B59B6 100%);
+            color: white;
+        }
+
+        .btn-new:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(180, 126, 222, 0.5);
+        }
+
+        /* Audio button */
+        .audio-btn {
+            background: var(--sunshine);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .audio-btn:hover {
+            transform: scale(1.1);
+            background: #FFD54F;
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: confettiFall 3s ease-out forwards;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Round complete message */
+        .round-complete {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .round-complete.show {
+            display: block;
+            animation: popIn 0.5s ease;
+        }
+
+        .round-complete h2 {
+            font-family: 'Bubblegum Sans', cursive;
+            font-size: 2.5rem;
+            color: var(--grass-green);
+            margin-bottom: 15px;
+        }
+
+        .round-complete .big-emoji {
+            font-size: 6rem;
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        /* Grass decoration at bottom */
+        .grass {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: linear-gradient(180deg, transparent 0%, var(--grass-green) 30%);
+            z-index: 5;
+        }
+
+        /* Selection hint */
+        .selection-hint {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #888;
+            margin-top: 15px;
+            font-style: italic;
+        }
+
+        /* Inline result message */
+        .result-message-inline {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 15px 25px;
+            border-radius: 20px;
+            margin-top: 20px;
+            color: white;
+            font-size: 1.1rem;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            animation: slideUp 0.4s ease;
+        }
+
+        .result-message-inline.show {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-message-inline .result-icon {
+            font-size: 2rem;
+        }
+
+        .result-message-inline .result-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .result-message-inline .result-text strong {
+            font-size: 1.2rem;
+        }
+
+        .result-message-inline .result-text span {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .audio-btn-small {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .audio-btn-small:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.1);
+        }
+
+        /* Found counter */
+        .found-counter {
+            background: rgba(255,255,255,0.9);
+            padding: 10px 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            color: var(--brown-soft);
+        }
+
+        .found-counter span {
+            color: var(--purple-fun);
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .title h1 {
+                font-size: 2rem;
+            }
+
+            .title-coin {
+                width: 35px;
+                height: 35px;
+            }
+
+            .subtitle {
+                font-size: 1.1rem;
+            }
+
+            .coin {
+                width: 90px;
+                height: 90px;
+            }
+
+            .game-area {
+                padding: 25px 15px;
+            }
+
+            .instruction {
+                font-size: 1.2rem;
+            }
+
+            .score-item {
+            padding: 8px 12px !important;
+            min-width: 90px !important;
+                padding: 10px 20px;
+                font-size: 1.1rem;
+            }
+
+            .btn {
+                padding: 14px 30px;
+                font-size: 1.1rem;
+            }
+
+            .sun {
+                width: 50px;
+                height: 50px;
+                top: 10px;
+                right: 15px;
+            }
+
+            .sun::before {
+                font-size: 25px;
+            }
+        }
+
+        /* Compact score / tries section */
+        .score-board,
+        .score-container,
+        .stats-container,
+        .status-bar,
+        .header-stats {
+            gap: 8px !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+        }
+
+        .score-box,
+        .score-card,
+        .score-item,
+        .tries-box,
+        .stats-box,
+        .stat-box {
+            padding: 8px 12px !important;
+            min-width: 88px !important;
+            border-radius: 10px !important;
+        }
+
+        .score-box div:first-child,
+        .score-card div:first-child,
+        .score-item div:first-child,
+        .tries-box div:first-child,
+        .stats-box div:first-child,
+        .stat-box div:first-child {
+            font-size: 0.85rem !important;
+        }
+
+        .score-box div:last-child,
+        .score-card div:last-child,
+        .score-item div:last-child,
+        .tries-box div:last-child,
+        .stats-box div:last-child,
+        .stat-box div:last-child {
+            font-size: 1.15rem !important;
+        }
+
+        button, .btn {
+            font-size: 0.95rem !important;
+            padding: 10px 16px !important;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 6px;
+            }
+
+            h1, .main-title, .game-title {
+                font-size: clamp(1.4rem, 5vw, 1.9rem) !important;
+            }
+        }
+
+        /* Extra compact top section so Check button appears sooner */
+        body {
+            padding-top: 4px !important;
+            padding-bottom: 6px !important;
+        }
+
+        .container,
+        .game-container,
+        .main-container,
+        .wrapper {
+            padding-top: 6px !important;
+            padding-bottom: 8px !important;
+        }
+
+        h1, .main-title, .game-title {
+            margin: 4px 0 6px !important;
+        }
+
+        p, .subtitle, .instruction-text, .game-instruction {
+            margin: 4px 0 !important;
+            font-size: 0.95rem !important;
+            line-height: 1.25 !important;
+        }
+
+        .score-board,
+        .score-container,
+        .stats-container,
+        .status-bar,
+        .header-stats {
+            margin: 6px 0 !important;
+            gap: 6px !important;
+        }
+
+        .score-box,
+        .score-card,
+        .score-item,
+        .tries-box,
+        .stats-box,
+        .stat-box {
+            padding: 6px 10px !important;
+            min-width: 78px !important;
+        }
+
+        .coins-grid,
+        .coin-grid,
+        .game-grid,
+        .coin-container {
+            margin-top: 6px !important;
+            margin-bottom: 8px !important;
+            gap: 8px !important;
+        }
+
+        .coin {
+            transform: scale(0.94);
+            transform-origin: center;
+        }
+
+        .button-row,
+        .controls,
+        .action-buttons {
+            margin-top: 8px !important;
+            gap: 8px !important;
+        }
+
+        button, .btn {
+            padding: 8px 14px !important;
+            min-height: 40px !important;
+        }
+
+        .result-message,
+        .feedback-panel,
+        .inline-result {
+            margin-top: 6px !important;
+            padding: 8px 10px !important;
+        }
+
+        @media (max-width: 768px) {
+            .coin {
+                transform: scale(0.9);
+            }
+
+            .score-box,
+            .score-card,
+            .score-item,
+            .tries-box,
+            .stats-box,
+            .stat-box {
+                min-width: 72px !important;
+                padding: 6px 8px !important;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Mute button -->
+    <button class="mute-btn" id="mute-btn" onClick="toggleMute()" title="Mute/Unmute">🔊</button>
+
+    <!-- Decorations -->
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+    <div class="grass"></div>
+
+    <div class="game-container">
+        <div class="title">
+            <h1>
+                <img src="coins/1.webp" alt="₹1" class="title-coin" onerror="this.style.display='none'">
+                Find the ₹1 Coin!
+                <img src="coins/1.webp" alt="₹1" class="title-coin" onerror="this.style.display='none'">
+            </h1>
+            <p class="subtitle">Can you find all the One Rupee coins?</p>
+        </div>
+
+        <div class="score-board">
+            <div class="score-item correct">
+                <span>⭐</span>
+                <div>Correct: <span id="correct-score">0</span></div>
+            </div>
+            <div class="score-item wrong">
+                <span>💫</span>
+                <div>Tries: <span id="wrong-score">0</span></div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="instruction" id="instruction">
+                👆 Tap to select all the
+                <img src="coins/1.webp" alt="₹1" class="instruction-coin" onerror="this.outerHTML='₹1'">
+                (One Rupee) coins, then click Check!
+            </div>
+            
+            <div class="found-counter" id="found-counter" style="display: none;">
+                Selected: <span id="selected-count">0</span> coins
+            </div>
+
+            <div class="coins-container" id="coins-container">
+                <!-- Coins will be generated here -->
+            </div>
+
+            <p class="selection-hint" id="selection-hint" style="display: none;">
+                Tap coins to select them, then press Check! ✓
+            </p>
+
+            <div class="result-message-inline" id="result-message-inline"></div>
+
+            <div class="round-complete" id="round-complete">
+                <div class="big-emoji">🎉</div>
+                <h2>Wonderful Job!</h2>
+                <p>You found all the ₹1 coins!</p>
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-play" id="start-btn" onClick="startGame()">
+                    🎮 Start Game!
+                </button>
+                <button class="btn btn-check" id="check-btn" onClick="checkAnswers()" style="display: none;">
+                    ✓ Check!
+                </button>
+                <button class="btn btn-new" id="new-round-btn" onClick="newRound()" style="display: none;">
+                    🔄 Next Round!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let correctScore = 0;
+        let wrongScore = 0;
+        let currentCoins = [];
+        let selectedCoins = new Set();
+        let gameActive = false;
+        let currentResultMessage = '';
+        let selectedVoice = null;
+        let isMuted = false;
+
+        // Coin data - images will be loaded from 'coins' folder
+        const coinTypes = [
+            { value: 1, image: 'coins/1.webp', name: 'One Rupee' },
+            { value: 2, image: 'coins/2.webp', name: 'Two Rupees' },
+            { value: 5, image: 'coins/5.webp', name: 'Five Rupees' },
+            { value: 10, image: 'coins/10.webp', name: 'Ten Rupees' }
+        ];
+
+        // Initialize voice - select ONE consistent voice (Indian English Female preferred)
+        function initVoice() {
+            if ('speechSynthesis' in window) {
+                const loadVoices = () => {
+                    const voices = window.speechSynthesis.getVoices();
+                    
+                    console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
+                    
+                    // Priority order: Indian English Female first
+                    selectedVoice = 
+                        // Specific Indian female voices
+                        voices.find(v => v.name === 'Google हिन्दी' && v.lang === 'hi-IN') ||
+                        voices.find(v => v.name.includes('Heera')) || // Microsoft Heera - Indian Female
+                        voices.find(v => v.name.includes('Raveena')) || // AWS Polly Indian Female
+                        voices.find(v => v.name.toLowerCase().includes('aditi')) || // AWS Polly Indian Female
+                        voices.find(v => v.name.toLowerCase().includes('priya')) || // Common Indian female name
+                        voices.find(v => v.name.toLowerCase().includes('neerja')) || // Indian female
+                        voices.find(v => v.name.toLowerCase().includes('veena')) || // Microsoft Veena
+                        // Indian English with female indicator
+                        voices.find(v => v.lang === 'en-IN' && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman'))) ||
+                        // Any female voice in Hindi
+                        voices.find(v => v.lang === 'hi-IN' && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('woman'))) ||
+                        // Fallback to specific known female voices
+                        voices.find(v => v.name === 'Samantha') || // iOS female
+                        voices.find(v => v.name === 'Google UK English Female') ||
+                        voices.find(v => v.name === 'Google US English Female') ||
+                        voices.find(v => v.name.includes('Zira')) || // Microsoft Zira - Female
+                        voices.find(v => v.name.includes('Susan')) || // Female
+                        voices.find(v => v.name.includes('Karen')) || // Australian Female
+                        voices.find(v => v.name.includes('Moira')) || // Irish Female
+                        voices.find(v => v.name.includes('Fiona')) || // Scottish Female
+                        // Generic female search
+                        voices.find(v => v.name.toLowerCase().includes('female') && v.lang.startsWith('en')) ||
+                        voices.find(v => v.name.toLowerCase().includes('woman') && v.lang.startsWith('en')) ||
+                        // Last resort - any English voice (avoid male-named ones)
+                        voices.find(v => v.lang.startsWith('en') && !v.name.toLowerCase().includes('male') && !v.name.toLowerCase().includes('david') && !v.name.toLowerCase().includes('james') && !v.name.toLowerCase().includes('daniel') && !v.name.toLowerCase().includes('george') && !v.name.toLowerCase().includes('rishi')) ||
+                        voices[0];
+                    
+                    console.log('Selected voice:', selectedVoice?.name, selectedVoice?.lang);
+                };
+                
+                // Load voices immediately if available
+                if (window.speechSynthesis.getVoices().length > 0) {
+                    loadVoices();
+                }
+                // Also listen for voices to be loaded
+                window.speechSynthesis.onvoiceschanged = loadVoices;
+            }
+        }
+
+        // Toggle mute
+        function toggleMute() {
+            isMuted = !isMuted;
+            const muteBtn = document.getElementById('mute-btn');
+            
+            if (isMuted) {
+                muteBtn.textContent = '🔇';
+                muteBtn.classList.add('muted');
+                muteBtn.title = 'Unmute';
+                window.speechSynthesis.cancel();
+            } else {
+                muteBtn.textContent = '🔊';
+                muteBtn.classList.remove('muted');
+                muteBtn.title = 'Mute';
+            }
+        }
+
+        // Text-to-speech function - uses the SAME voice every time
+        function speak(text, callback) {
+            // Don't speak if muted
+            if (isMuted) {
+                if (callback) callback();
+                return;
+            }
+            
+            if ('speechSynthesis' in window) {
+                // Cancel any ongoing speech
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.85; // Slower for children
+                utterance.pitch = 1.1; // Slightly higher, friendly tone
+                utterance.volume = 1;
+                
+                // Always use the same selected voice
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                }
+                
+                if (callback) {
+                    utterance.onend = callback;
+                }
+                
+                window.speechSynthesis.speak(utterance);
+            } else if (callback) {
+                callback();
+            }
+        }
+
+        function speakResult() {
+            speak(currentResultMessage);
+        }
+
+        // Generate random coins
+        function generateCoins() {
+            const numCoins = Math.floor(Math.random() * 3) + 3; // 3-5 coins
+            const coins = [];
+            
+            // Ensure at least 1-2 one rupee coins
+            const numOneRupee = Math.floor(Math.random() * 2) + 1;
+            
+            for (let i = 0; i < numOneRupee; i++) {
+                coins.push({ ...coinTypes[0], id: i, isOneRupee: true });
+            }
+            
+            // Fill rest with random other coins
+            for (let i = numOneRupee; i < numCoins; i++) {
+                const randomCoin = coinTypes[Math.floor(Math.random() * 3) + 1];
+                coins.push({ ...randomCoin, id: i, isOneRupee: false });
+            }
+            
+            // Shuffle array
+            for (let i = coins.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [coins[i], coins[j]] = [coins[j], coins[i]];
+            }
+            
+            // Reassign IDs after shuffle
+            coins.forEach((coin, index) => coin.id = index);
+            
+            return coins;
+        }
+
+        // Render coins
+        function renderCoins() {
+            const container = document.getElementById('coins-container');
+            container.innerHTML = '';
+            
+            currentCoins.forEach((coin) => {
+                // Create wrapper for coin + feedback
+                const wrapper = document.createElement('div');
+                wrapper.className = 'coin-wrapper';
+                wrapper.dataset.id = coin.id;
+                
+                // Create coin element
+                const coinEl = document.createElement('div');
+                coinEl.className = 'coin';
+                coinEl.dataset.id = coin.id;
+                coinEl.dataset.value = coin.value;
+                
+                coinEl.innerHTML = `<img src="${coin.image}" alt="₹${coin.value} coin" onerror="this.parentElement.innerHTML='<div style=\\'font-size:2rem;font-weight:bold;\\'>₹${coin.value}</div>'">`;
+                
+                coinEl.onclick = () => toggleCoinSelection(coin.id);
+                
+                // Create feedback icon (hidden initially)
+                const feedbackIcon = document.createElement('div');
+                feedbackIcon.className = 'feedback-icon';
+                feedbackIcon.dataset.id = coin.id;
+                
+                wrapper.appendChild(coinEl);
+                wrapper.appendChild(feedbackIcon);
+                container.appendChild(wrapper);
+            });
+        }
+
+        // Toggle coin selection
+        function toggleCoinSelection(coinId) {
+            if (!gameActive) return;
+            
+            const coinEl = document.querySelector(`.coin[data-id="${coinId}"]`);
+            
+            if (selectedCoins.has(coinId)) {
+                selectedCoins.delete(coinId);
+                coinEl.classList.remove('selected');
+            } else {
+                selectedCoins.add(coinId);
+                coinEl.classList.add('selected');
+            }
+            
+            updateSelectedCount();
+            updateCheckButton();
+        }
+
+        // Update selected count
+        function updateSelectedCount() {
+            document.getElementById('selected-count').textContent = selectedCoins.size;
+        }
+
+        // Update check button state
+        function updateCheckButton() {
+            const checkBtn = document.getElementById('check-btn');
+            checkBtn.disabled = selectedCoins.size === 0;
+        }
+
+        // Check answers - show inline feedback
+        function checkAnswers() {
+            if (!gameActive) return;
+            gameActive = false;
+
+            const oneRupeeCoins = currentCoins.filter(c => c.isOneRupee);
+            const totalOneRupee = oneRupeeCoins.length;
+
+            let correctSelections = 0;
+            let wrongSelections = 0;
+            let missedCoins = 0;
+
+            // Check each coin and show inline feedback
+            currentCoins.forEach(coin => {
+                const coinEl = document.querySelector(`.coin[data-id="${coin.id}"]`);
+                const feedbackIcon = document.querySelector(`.feedback-icon[data-id="${coin.id}"]`);
+                const wasSelected = selectedCoins.has(coin.id);
+
+                if (coin.isOneRupee && wasSelected) {
+                    // Correctly selected ₹1 coin
+                    coinEl.classList.remove('selected');
+                    coinEl.classList.add('correct-result');
+                    feedbackIcon.classList.add('correct', 'show');
+                    feedbackIcon.textContent = '✓';
+                    correctSelections++;
+                } else if (coin.isOneRupee && !wasSelected) {
+                    // Missed ₹1 coin - show it was correct
+                    coinEl.classList.add('missed');
+                    feedbackIcon.classList.add('missed', 'show');
+                    feedbackIcon.textContent = '✓';
+                    missedCoins++;
+                } else if (!coin.isOneRupee && wasSelected) {
+                    // Wrongly selected non-₹1 coin
+                    coinEl.classList.remove('selected');
+                    coinEl.classList.add('wrong-result');
+                    feedbackIcon.classList.add('wrong', 'show');
+                    feedbackIcon.textContent = '✗';
+                    wrongSelections++;
+                }
+            });
+
+            // Penalize wrong selections so extra wrong clicks reduce the score
+            const penalizedCorrectAnswers = Math.max(0, correctSelections - wrongSelections);
+
+            // Update scores
+            correctScore += penalizedCorrectAnswers;
+            if (wrongSelections > 0 || missedCoins > 0) {
+                wrongScore++;
+            }
+            updateScores();
+
+            // Show result message inline
+            showInlineResult(correctSelections, wrongSelections, missedCoins, totalOneRupee);
+
+            // Hide check button, show next round button
+            document.getElementById('check-btn').style.display = 'none';
+            document.getElementById('new-round-btn').style.display = 'inline-block';
+// Send score to CoinQuest
+            try {
+                window.parent.postMessage({
+                    type: 'ACTIVITY_COMPLETE',
+                    score: penalizedCorrectAnswers,
+                    percentage: Math.round((penalizedCorrectAnswers / totalOneRupee) * 100),
+                    timeSpent: 0,
+                    correctAnswers: penalizedCorrectAnswers,
+                    totalQuestions: totalOneRupee
+                }, '*');
+                console.log('Score sent to CoinQuest:', penalizedCorrectAnswers, '/', totalOneRupee);
+            } catch(e) {
+                console.error('Failed to send score:', e);
+            }
+        }
+
+        // Show inline result message
+        function showInlineResult(correct, wrong, missed, total) {
+            const resultDiv = document.getElementById('result-message-inline');
+            let messageText = '';
+            let tipText = '';
+            let icon = '';
+            let bgColor = '';
+            
+            if (correct === total && wrong === 0) {
+                // Perfect!
+                icon = '🌟';
+                messageText = `Perfect! You found all ${total} One Rupee coin${total > 1 ? 's' : ''}!`;
+                tipText = 'You are a coin expert!';
+                bgColor = 'var(--grass-green)';
+                
+                // Confetti celebration
+                for (let i = 0; i < 30; i++) {
+                    setTimeout(() => createConfetti(), i * 50);
+                }
+            } else {
+                // Some mistakes
+                icon = '🤔';
+                
+                let parts = [];
+                if (correct > 0) parts.push(`found ${correct} correct`);
+                if (missed > 0) parts.push(`missed ${missed}`);
+                if (wrong > 0) parts.push(`${wrong} wrong`);
+                
+                messageText = 'Almost! ' + parts.join(', ') + '.';
+                tipText = 'Green ✓ = One Rupee coins. Try again!';
+                bgColor = 'var(--orange-pop)';
+            }
+            
+            resultDiv.innerHTML = `
+                <span class="result-icon">${icon}</span>
+                <div class="result-text">
+                    <strong>${messageText}</strong>
+                    <span>${tipText}</span>
+                </div>
+                <button class="audio-btn-small" onclick="speakResult()" title="Listen">🔊</button>
+            `;
+            resultDiv.style.background = bgColor;
+            resultDiv.classList.add('show');
+            
+            currentResultMessage = messageText + ' ' + tipText;
+            
+            // Speak the result
+            setTimeout(() => speak(currentResultMessage), 300);
+        }
+
+        // Create confetti
+        function createConfetti() {
+            const colors = ['#FFE066', '#7ED957', '#FF9ECD', '#7EC8E3', '#B47EDE', '#FF8C42'];
+            
+            for (let i = 0; i < 5; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        // Update scores
+        function updateScores() {
+            document.getElementById('correct-score').textContent = correctScore;
+            document.getElementById('wrong-score').textContent = wrongScore;
+        }
+
+        // Start game
+        function startGame() {
+            document.getElementById('start-btn').style.display = 'none';
+            initVoice();
+            
+            // Small delay to ensure voice is loaded before speaking
+            setTimeout(() => {
+                newRound();
+            }, 100);
+        }
+
+        // New round
+        function newRound() {
+            currentCoins = generateCoins();
+            selectedCoins.clear();
+            gameActive = true;
+            
+            document.getElementById('coins-container').style.display = 'flex';
+            document.getElementById('instruction').style.display = 'flex';
+            document.getElementById('round-complete').classList.remove('show');
+            document.getElementById('check-btn').style.display = 'inline-block';
+            document.getElementById('check-btn').disabled = true;
+            document.getElementById('new-round-btn').style.display = 'none';
+// Hide and reset inline result message
+            const resultDiv = document.getElementById('result-message-inline');
+            resultDiv.classList.remove('show');
+            resultDiv.innerHTML = '';
+            
+            // Show and update counter
+            document.getElementById('found-counter').style.display = 'block';
+            document.getElementById('selected-count').textContent = '0';
+            
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            renderCoins();
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initVoice();
+        });
+    </script>
+</body>
+</html>
