@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
@@ -39,6 +39,9 @@ export default function TopicPage({ user }) {
   }, [topicId, gradeFilter]);
   
   // Listen for activity score messages from iframes
+  // Track last score save time to debounce rapid postMessage events
+  const lastScoreSaveRef = useRef(0);
+  
   useEffect(() => {
     const handleActivityMessage = async (event) => {
       // Validate message structure
@@ -48,6 +51,11 @@ export default function TopicPage({ user }) {
       
       // Handle activity completion message
       if (type === 'ACTIVITY_COMPLETE' && selectedContent && user?.role === 'child') {
+        // Debounce: ignore if a score was saved within last 3 seconds
+        const now = Date.now();
+        if (now - lastScoreSaveRef.current < 3000) return;
+        lastScoreSaveRef.current = now;
+        
         try {
           await axios.post(`${API}/activity/score`, {
             content_id: selectedContent.content_id,

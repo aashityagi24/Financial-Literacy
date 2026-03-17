@@ -11,7 +11,7 @@ def get_db():
 
 @router.post("/score")
 async def save_activity_score(request: Request):
-    """Save a child's activity score"""
+    """Save a child's activity score. Deduplicates within a 5-minute session window."""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
@@ -25,22 +25,54 @@ async def save_activity_score(request: Request):
     if not content_id:
         raise HTTPException(status_code=400, detail="content_id is required")
     
+    child_id = user.get("user_id")
+    
     # Get content details
     content = await db.content.find_one({"content_id": content_id}, {"_id": 0})
     
+    new_percentage = body.get("percentage", body.get("score", 0))
+    new_correct = body.get("correctAnswers", 0)
+    new_total = body.get("totalQuestions", 0)
+    
+    # Check for an existing score from the same child+content within last 5 minutes (same session)
+    from datetime import timedelta
+    session_cutoff = (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat()
+    
+    existing = await db.activity_scores.find_one(
+        {"child_id": child_id, "content_id": content_id, "created_at": {"$gte": session_cutoff}},
+        {"_id": 1, "percentage": 1, "correct_answers": 1}
+    )
+    
+    if existing:
+        # Update the existing record if the new score is better
+        if new_percentage >= (existing.get("percentage") or 0):
+            await db.activity_scores.update_one(
+                {"_id": existing["_id"]},
+                {"$set": {
+                    "score": body.get("score", 0),
+                    "percentage": new_percentage,
+                    "correct_answers": new_correct,
+                    "total_questions": new_total,
+                    "time_spent_seconds": body.get("timeSpent", 0),
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+        return {"message": "Score updated", "score_id": "updated"}
+    
+    # New session — insert fresh record
     score_record = {
         "score_id": f"score_{uuid.uuid4().hex[:12]}",
-        "child_id": user.get("user_id"),
+        "child_id": child_id,
         "child_name": user.get("name", user.get("username", "Unknown")),
         "content_id": content_id,
         "content_title": content.get("title", "Activity") if content else "Activity",
         "topic_id": content.get("topic_id") if content else None,
         "score": body.get("score", 0),
         "max_score": body.get("max_score", 100),
-        "percentage": body.get("percentage", body.get("score", 0)),
+        "percentage": new_percentage,
         "time_spent_seconds": body.get("timeSpent", 0),
-        "correct_answers": body.get("correctAnswers", 0),
-        "total_questions": body.get("totalQuestions", 0),
+        "correct_answers": new_correct,
+        "total_questions": new_total,
         "attempts": body.get("attempts", 1),
         "completed": body.get("completed", True),
         "extra_data": body.get("extraData", {}),
@@ -51,7 +83,7 @@ async def save_activity_score(request: Request):
     
     # Update child's activity completion count
     await db.users.update_one(
-        {"user_id": user.get("user_id")},
+        {"user_id": child_id},
         {"$inc": {"activities_completed": 1}}
     )
     
