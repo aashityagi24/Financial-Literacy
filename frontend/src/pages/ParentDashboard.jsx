@@ -534,47 +534,47 @@ export default function ParentDashboard({ user }) {
         <>
         {/* Compact Action Grid - All actions in one place */}
         <div className="grid grid-cols-3 md:grid-cols-7 gap-2 mb-5">
-          <Link to="/parent/shopping-list" className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#EE6C4D]/10 hover:bg-[#EE6C4D]/20 transition-colors" data-testid="parent-shopping-link">
-            <Store className="w-5 h-5 text-[#EE6C4D]" />
-            <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Shopping List</span>
+          <Link to="/parent/shopping-list" className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#EE6C4D] hover:bg-[#E05A3A] transition-colors shadow-sm" data-testid="parent-shopping-link">
+            <Store className="w-5 h-5 text-white" />
+            <span className="text-[11px] font-bold text-white text-center leading-tight">Shopping List</span>
           </Link>
-          <button onClick={() => setShowPurchases(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#06D6A0]/10 hover:bg-[#06D6A0]/20 transition-colors" data-testid="children-purchases-btn">
-            <History className="w-5 h-5 text-[#06D6A0]" />
-            <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Purchases</span>
+          <button onClick={() => setShowPurchases(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#06D6A0] hover:bg-[#05C493] transition-colors shadow-sm" data-testid="children-purchases-btn">
+            <History className="w-5 h-5 text-white" />
+            <span className="text-[11px] font-bold text-white text-center leading-tight">Purchases</span>
           </button>
-          <button onClick={() => setShowGiveMoney(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#FFD23F]/15 hover:bg-[#FFD23F]/30 transition-colors">
-            <Gift className="w-5 h-5 text-[#FFD23F]" />
+          <button onClick={() => setShowGiveMoney(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#FFD23F] hover:bg-[#F0C430] transition-colors shadow-sm">
+            <Gift className="w-5 h-5 text-[#1D3557]" />
             <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Give Money</span>
           </button>
-          <button onClick={() => setShowCreateChore(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#06D6A0]/10 hover:bg-[#06D6A0]/20 transition-colors">
-            <Target className="w-5 h-5 text-[#06D6A0]" />
-            <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Add Chore</span>
+          <button onClick={() => setShowCreateChore(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#3D5A80] hover:bg-[#2D4A6F] transition-colors shadow-sm">
+            <Target className="w-5 h-5 text-white" />
+            <span className="text-[11px] font-bold text-white text-center leading-tight">Add Chore</span>
           </button>
-          <button onClick={() => setShowAllowance(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#3D5A80]/10 hover:bg-[#3D5A80]/20 transition-colors">
-            <Calendar className="w-5 h-5 text-[#3D5A80]" />
-            <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Allowance</span>
+          <button onClick={() => setShowAllowance(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#9B5DE5] hover:bg-[#8A4DD4] transition-colors shadow-sm">
+            <Calendar className="w-5 h-5 text-white" />
+            <span className="text-[11px] font-bold text-white text-center leading-tight">Allowance</span>
           </button>
-          <button onClick={() => setShowSavingsGoal(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#EE6C4D]/10 hover:bg-[#EE6C4D]/20 transition-colors">
-            <Wallet className="w-5 h-5 text-[#EE6C4D]" />
-            <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Savings Goal</span>
+          <button onClick={() => setShowSavingsGoal(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#F15BB5] hover:bg-[#E04AA4] transition-colors shadow-sm">
+            <Wallet className="w-5 h-5 text-white" />
+            <span className="text-[11px] font-bold text-white text-center leading-tight">Savings Goal</span>
           </button>
-          <button onClick={() => setParentSection('jobs')} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#1D3557]/8 hover:bg-[#1D3557]/15 transition-colors">
-            <Briefcase className="w-5 h-5 text-[#1D3557]" />
-            <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Jobs</span>
+          <button onClick={() => setParentSection('jobs')} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#1D3557] hover:bg-[#152A45] transition-colors shadow-sm">
+            <Briefcase className="w-5 h-5 text-white" />
+            <span className="text-[11px] font-bold text-white text-center leading-tight">Jobs</span>
           </button>
         </div>
         
         {/* Learning Content - Compact */}
         {dashboard?.children?.length > 0 && (
-          <div className="bg-[#FFD23F]/15 rounded-xl p-3 mb-5 border border-[#FFD23F]/30">
+          <div className="bg-[#1D3557] rounded-xl p-3 mb-5">
             <div className="flex items-center gap-2 flex-wrap">
-              <BookOpen className="w-4 h-4 text-[#1D3557]" />
-              <span className="text-sm font-bold text-[#1D3557]">Learning:</span>
+              <BookOpen className="w-4 h-4 text-[#FFD23F]" />
+              <span className="text-sm font-bold text-white">Learning:</span>
               {dashboard.children.map((child) => (
                 <Link
                   key={child.user_id}
                   to={`/learn?grade=${child.grade}`}
-                  className="flex items-center gap-1 bg-white hover:bg-[#1D3557] hover:text-white px-2.5 py-1 rounded-lg border border-[#1D3557]/20 text-[#1D3557] text-xs font-medium transition-colors"
+                  className="flex items-center gap-1 bg-white/15 hover:bg-white/25 px-2.5 py-1 rounded-lg text-white text-xs font-medium transition-colors"
                   data-testid={`learn-link-${child.user_id}`}
                 >
                   {child.name} <span className="opacity-60">({gradeLabels[child.grade]})</span>
