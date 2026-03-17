@@ -69,22 +69,25 @@ export default function TopicPage({ user }) {
             extraData: extraData || {}
           });
           
-          // Show a single combined toast with score info
-          const scoreText = totalQuestions ? `${correctAnswers || 0}/${totalQuestions}` : `${score || 0}`;
+          // Show encouraging feedback based on percentage
+          const pct = totalQuestions ? Math.round(((correctAnswers || 0) / totalQuestions) * 100) : (percentage || 0);
+          let feedback, toastFn;
+          if (pct >= 80) { feedback = 'Great job!'; toastFn = toast.success; }
+          else if (pct >= 50) { feedback = 'Almost there!'; toastFn = toast.info; }
+          else { feedback = 'Keep practicing!'; toastFn = toast.warning; }
           
           // Auto-complete the content if not already completed
           if (!selectedContent.is_completed) {
             try {
               const response = await axios.post(`${API}/content/items/${selectedContent.content_id}/complete`);
               const coins = response.data.coins_awarded || 0;
-              toast.success(`Score: ${scoreText} — Earned ₹${coins}!`, { duration: 4000 });
+              toastFn(`${feedback} Earned ₹${coins}!`, { duration: 4000 });
               fetchTopicData();
             } catch (completeError) {
-              // Already completed or other error — just show the score
-              toast.success(`Score: ${scoreText}`, { duration: 4000 });
+              toastFn(feedback, { duration: 4000 });
             }
           } else {
-            toast.success(`Score: ${scoreText}`, { duration: 4000 });
+            toastFn(feedback, { duration: 4000 });
           }
         } catch (error) {
           console.error('Failed to save activity score:', error);
