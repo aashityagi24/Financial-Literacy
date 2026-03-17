@@ -51,6 +51,7 @@ export default function ParentDashboard({ user }) {
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [showPurchases, setShowPurchases] = useState(false);
   const [parentSection, setParentSection] = useState('overview');
+  const [selectedTabChild, setSelectedTabChild] = useState('all');
   
   // Full transactions view state
   const [showAllTransactions, setShowAllTransactions] = useState(false);
@@ -409,6 +410,45 @@ export default function ParentDashboard({ user }) {
     friday: 'Fri', saturday: 'Sat', sunday: 'Sun'
   };
   
+  const ChildFilter = () => {
+    if (!dashboard?.children?.length) return null;
+    return (
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+        <span className="text-xs font-bold text-[#3D5A80] whitespace-nowrap">Show for:</span>
+        <button
+          onClick={() => setSelectedTabChild('all')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+            selectedTabChild === 'all' ? 'bg-[#1D3557] text-white' : 'bg-[#1D3557]/8 text-[#3D5A80] hover:bg-[#1D3557]/15'
+          }`}
+        >
+          All Children
+        </button>
+        {dashboard.children.map(c => (
+          <button
+            key={c.user_id}
+            onClick={() => setSelectedTabChild(c.user_id)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+              selectedTabChild === c.user_id ? 'bg-[#1D3557] text-white' : 'bg-[#1D3557]/8 text-[#3D5A80] hover:bg-[#1D3557]/15'
+            }`}
+            data-testid={`filter-child-${c.user_id}`}
+          >
+            {c.name.split(' ')[0]}
+          </button>
+        ))}
+      </div>
+    );
+  };
+  
+  const filterByChild = (items, childIdField = 'child_id') => {
+    if (selectedTabChild === 'all') return items;
+    return items.filter(item => item[childIdField] === selectedTabChild);
+  };
+  
+  const filteredChores = filterByChild(chores);
+  const filteredJobs = filterByChild(childJobs);
+  const filteredAllowances = filterByChild(allowances);
+  const filteredGoals = filterByChild(savingsGoals);
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-[#E0FBFC] flex items-center justify-center">
@@ -421,6 +461,9 @@ export default function ParentDashboard({ user }) {
   const recentRewards = rewardPenalties.filter(r => r.category === 'reward' && new Date(r.created_at) >= threeDaysAgo);
   const recentPenalties = rewardPenalties.filter(r => r.category === 'penalty' && new Date(r.created_at) >= threeDaysAgo);
   const historyRP = rewardPenalties.filter(r => new Date(r.created_at) < threeDaysAgo);
+  const filteredRecentRewards = filterByChild(recentRewards);
+  const filteredRecentPenalties = filterByChild(recentPenalties);
+  const filteredHistoryRP = filterByChild(historyRP);
 
 
   return (
@@ -459,22 +502,25 @@ export default function ParentDashboard({ user }) {
         {!selectedChild ? (
           <>
         {/* Section Navigation */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide" data-testid="parent-section-nav">
+        <div className="flex gap-2 mb-5 overflow-x-auto pb-1 scrollbar-hide" data-testid="parent-section-nav">
           {[
-            { id: 'overview', label: 'Overview', icon: Users },
-            { id: 'chores', label: 'Chores & Rewards', icon: Target },
-            { id: 'jobs', label: 'Jobs', icon: Briefcase },
-            { id: 'savings', label: 'Money & Goals', icon: Wallet },
-            { id: 'lending', label: 'Lending', icon: HandCoins },
+            { id: 'overview', label: 'Overview', icon: Users, color: '#1D3557', bg: '#1D3557' },
+            { id: 'chores', label: 'Chores & Rewards', icon: Target, color: '#06D6A0', bg: '#06D6A0' },
+            { id: 'jobs', label: 'Jobs', icon: Briefcase, color: '#EE6C4D', bg: '#EE6C4D' },
+            { id: 'savings', label: 'Money & Goals', icon: Wallet, color: '#FFD23F', bg: '#B8860B' },
           ].map(sec => (
             <button
               key={sec.id}
-              onClick={() => setParentSection(sec.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
+              onClick={() => { setParentSection(sec.id); setSelectedTabChild('all'); }}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all border-2 ${
                 parentSection === sec.id
-                  ? 'bg-[#1D3557] text-white shadow-md'
-                  : 'bg-white text-[#3D5A80] border-2 border-[#1D3557]/15 hover:border-[#1D3557]/30'
+                  ? 'text-white shadow-lg'
+                  : 'bg-white hover:shadow-md'
               }`}
+              style={parentSection === sec.id
+                ? { backgroundColor: sec.bg, borderColor: sec.bg }
+                : { borderColor: `${sec.color}40`, color: sec.color }
+              }
               data-testid={`parent-nav-${sec.id}`}
             >
               <sec.icon className="w-4 h-4" />
@@ -662,6 +708,7 @@ export default function ParentDashboard({ user }) {
 
             {parentSection === 'chores' && (
             <>
+            <ChildFilter />
             {/* Rewards & Penalties Section */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
@@ -780,7 +827,7 @@ export default function ParentDashboard({ user }) {
                       : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
                   }`}
                 >
-                  📋 Active Chores ({chores.filter(c => c.status !== 'approved' && c.status !== 'completed').length})
+                  📋 Active Chores ({filteredChores.filter(c => c.status !== 'approved' && c.status !== 'completed').length})
                 </button>
                 <button
                   onClick={() => setActiveRPTab('rewards')}
@@ -790,7 +837,7 @@ export default function ParentDashboard({ user }) {
                       : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
                   }`}
                 >
-                  🌟 Rewards ({recentRewards.length})
+                  🌟 Rewards ({filteredRecentRewards.length})
                 </button>
                 <button
                   onClick={() => setActiveRPTab('penalties')}
@@ -800,7 +847,7 @@ export default function ParentDashboard({ user }) {
                       : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
                   }`}
                 >
-                  ⚠️ Penalties ({recentPenalties.length})
+                  ⚠️ Penalties ({filteredRecentPenalties.length})
                 </button>
                 <button
                   onClick={() => setActiveRPTab('history')}
@@ -811,17 +858,17 @@ export default function ParentDashboard({ user }) {
                   }`}
                 >
                   <History className="w-4 h-4 inline mr-1" />
-                  History ({chores.filter(c => c.status === 'approved' || c.status === 'completed').length + historyRP.length})
+                  History ({filteredChores.filter(c => c.status === 'approved' || c.status === 'completed').length + filteredHistoryRP.length})
                 </button>
               </div>
               
               {/* Chores Tab - Active Only */}
               {activeRPTab === 'chores' && (
                 <div className="space-y-3">
-                  {chores.filter(c => c.status !== 'approved' && c.status !== 'completed').length === 0 ? (
+                  {filteredChores.filter(c => c.status !== 'approved' && c.status !== 'completed').length === 0 ? (
                     <p className="text-center text-[#3D5A80] py-4">No active chores. Create one using the button above!</p>
                   ) : (
-                    chores.filter(c => c.status !== 'approved' && c.status !== 'completed').map((chore) => {
+                    filteredChores.filter(c => c.status !== 'approved' && c.status !== 'completed').map((chore) => {
                       const pendingRequest = choreRequests.find(r => r.chore_id === chore.chore_id && r.status === 'pending');
                       
                       return (
@@ -895,10 +942,10 @@ export default function ParentDashboard({ user }) {
               {/* Rewards Tab */}
               {activeRPTab === 'rewards' && (
                 <div className="space-y-3">
-                  {recentRewards.length === 0 ? (
+                  {filteredRecentRewards.length === 0 ? (
                     <p className="text-center text-[#3D5A80] py-4">No recent rewards. Use &quot;Quick Reward/Penalty&quot; to give one!</p>
                   ) : (
-                    recentRewards.map((record) => (
+                    filteredRecentRewards.map((record) => (
                       <div key={record.record_id} className="card-playful p-4 border-l-4 border-[#06D6A0]">
                         <div className="flex items-center justify-between">
                           <div>
@@ -923,10 +970,10 @@ export default function ParentDashboard({ user }) {
               {/* Penalties Tab */}
               {activeRPTab === 'penalties' && (
                 <div className="space-y-3">
-                  {recentPenalties.length === 0 ? (
+                  {filteredRecentPenalties.length === 0 ? (
                     <p className="text-center text-[#3D5A80] py-4">No recent penalties.</p>
                   ) : (
-                    recentPenalties.map((record) => (
+                    filteredRecentPenalties.map((record) => (
                       <div key={record.record_id} className="card-playful p-4 border-l-4 border-[#EE6C4D]">
                         <div className="flex items-center justify-between">
                           <div>
@@ -952,10 +999,10 @@ export default function ParentDashboard({ user }) {
               {activeRPTab === 'history' && (
                 <div className="space-y-3">
                   <h3 className="text-lg font-bold text-[#1D3557] mb-3">Completed Chores</h3>
-                  {chores.filter(c => c.status === 'approved' || c.status === 'completed').length === 0 ? (
+                  {filteredChores.filter(c => c.status === 'approved' || c.status === 'completed').length === 0 ? (
                     <p className="text-center text-[#3D5A80] py-4">No completed chores yet.</p>
                   ) : (
-                    chores.filter(c => c.status === 'approved' || c.status === 'completed').map((chore) => (
+                    filteredChores.filter(c => c.status === 'approved' || c.status === 'completed').map((chore) => (
                       <div key={chore.chore_id} className="card-playful p-4 opacity-80 bg-[#06D6A0]/10 border-l-4 border-[#06D6A0]">
                         <div className="flex items-center justify-between">
                           <div>
@@ -975,10 +1022,10 @@ export default function ParentDashboard({ user }) {
                   )}
                   
                   <h3 className="text-lg font-bold text-[#1D3557] mb-3 mt-6">Reward & Penalty History</h3>
-                  {historyRP.length === 0 ? (
+                  {filteredHistoryRP.length === 0 ? (
                     <p className="text-center text-[#3D5A80] py-4">No rewards or penalties older than 3 days.</p>
                   ) : (
-                    historyRP.map((record) => (
+                    filteredHistoryRP.map((record) => (
                       <div 
                         key={record.record_id} 
                         className={`card-playful p-4 opacity-80 border-l-4 ${
@@ -1013,13 +1060,14 @@ export default function ParentDashboard({ user }) {
 
             {parentSection === 'savings' && (
             <>
+            <ChildFilter />
 
             {/* Allowances */}
-            {allowances.length > 0 && (
+            {filteredAllowances.length > 0 && (
               <>
                 <h2 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>Active Allowances</h2>
                 <div className="space-y-3 mb-6">
-                  {allowances.map((allowance) => (
+                  {filteredAllowances.map((allowance) => (
                     <div key={allowance.allowance_id} className="card-playful p-4">
                       <div className="flex items-center justify-between">
                         <div>
@@ -1040,11 +1088,11 @@ export default function ParentDashboard({ user }) {
             )}
             
             {/* Savings Goals */}
-            {savingsGoals.length > 0 && (
+            {filteredGoals.length > 0 && (
               <>
                 <h2 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>Savings Goals</h2>
                 <div className="space-y-3">
-                  {savingsGoals.map((goal) => (
+                  {filteredGoals.map((goal) => (
                     <div key={goal.goal_id} className="card-playful p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div>
@@ -1080,8 +1128,9 @@ export default function ParentDashboard({ user }) {
 
             {parentSection === 'jobs' && (
             <>
+            <ChildFilter />
             {/* My Jobs Section */}
-            {childJobs.length > 0 ? (
+            {filteredJobs.length > 0 ? (
               <>
                 <div className="flex items-center gap-3 mb-4 mt-6">
                   <div className="w-10 h-10 bg-[#3D5A80] rounded-xl flex items-center justify-center">
@@ -1093,14 +1142,14 @@ export default function ParentDashboard({ user }) {
                 </div>
                 
                 {/* Pending Jobs - Need Approval */}
-                {childJobs.filter(j => j.status === 'pending').length > 0 && (
+                {filteredJobs.filter(j => j.status === 'pending').length > 0 && (
                   <div className="mb-4">
                     <h3 className="text-base font-semibold text-[#1D3557] mb-3 flex items-center gap-2">
                       <Clock className="w-4 h-4 text-[#FFD23F]" />
                       Pending Approval
                     </h3>
                     <div className="space-y-3">
-                      {childJobs.filter(j => j.status === 'pending').map(job => (
+                      {filteredJobs.filter(j => j.status === 'pending').map(job => (
                         <div key={job.job_id} className="card-playful p-4 border-l-4 border-[#FFD23F]" data-testid={`parent-job-${job.job_id}`}>
                           <div className="flex items-start gap-3">
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${job.job_type === 'family' ? 'bg-[#E0FBFC]' : 'bg-[#FFD23F]/30'}`}>
@@ -1155,14 +1204,14 @@ export default function ParentDashboard({ user }) {
                 )}
                 
                 {/* Approved Jobs */}
-                {childJobs.filter(j => j.status === 'approved').length > 0 && (
+                {filteredJobs.filter(j => j.status === 'approved').length > 0 && (
                   <div className="mb-4">
                     <h3 className="text-base font-semibold text-[#1D3557] mb-3 flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-[#06D6A0]" />
                       Active Jobs
                     </h3>
                     <div className="space-y-3">
-                      {childJobs.filter(j => j.status === 'approved').map(job => (
+                      {filteredJobs.filter(j => j.status === 'approved').map(job => (
                         <div key={job.job_id} className="card-playful p-4 border-l-4 border-[#06D6A0]" data-testid={`parent-job-${job.job_id}`}>
                           <div className="flex items-start gap-3">
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${job.job_type === 'family' ? 'bg-[#E0FBFC]' : 'bg-[#FFD23F]/30'}`}>
@@ -1286,210 +1335,6 @@ export default function ParentDashboard({ user }) {
                 <Briefcase className="w-12 h-12 mx-auto text-[#98C1D9] mb-3" />
                 <h3 className="text-lg font-bold text-[#1D3557] mb-1">No Jobs Yet</h3>
                 <p className="text-sm text-[#3D5A80]">When your children add jobs from their dashboard, they&apos;ll appear here for your approval.</p>
-              </div>
-            )}
-            </>
-            )}
-            {/* ===== END JOBS, START LENDING ===== */}
-
-            {parentSection === 'lending' && (
-            <>
-            {/* Lending Section - For children in Grade 4-5 */}
-            {(lendingRequests.length > 0 || Object.keys(childrenLoans).length > 0) && (
-              <>
-                <div className="flex items-center gap-3 mb-4 mt-6">
-                  <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
-                    <HandCoins className="w-5 h-5 text-white" />
-                  </div>
-                  <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                    Lending Center
-                  </h2>
-                </div>
-                
-                {/* Incoming Loan Requests */}
-                {lendingRequests.filter(r => ['pending', 'countered'].includes(r.status)).length > 0 && (
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-[#1D3557] mb-3">Loan Requests from Children</h3>
-                    <div className="space-y-3">
-                      {lendingRequests.filter(r => ['pending', 'countered'].includes(r.status)).map(req => (
-                        <div key={req.request_id} className="card-playful p-4 border-l-4 border-amber-500">
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                                <span className="text-amber-600 font-bold">{req.borrower_name?.charAt(0)}</span>
-                              </div>
-                              <div>
-                                <p className="font-bold text-[#1D3557]">{req.borrower_name}</p>
-                                <p className="text-xs text-[#3D5A80]">Grade {req.borrower_grade} • Credit Score: <span className={getCreditScoreColor(req.borrower_credit_score)}>{req.borrower_credit_score || 70}</span></p>
-                              </div>
-                            </div>
-                            {getLoanStatusBadge(req.status)}
-                          </div>
-                          
-                          <div className="bg-gray-50 rounded-lg p-3 mb-3">
-                            <div className="grid grid-cols-3 gap-4 text-center">
-                              <div>
-                                <p className="text-xs text-gray-500">Amount</p>
-                                <p className="font-bold text-[#1D3557]">₹{req.amount}</p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-500">Interest</p>
-                                <p className="font-bold text-green-600">₹{req.interest_amount}</p>
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-500">Return By</p>
-                                <p className="font-bold text-[#1D3557]">{formatDate(req.return_date)}</p>
-                              </div>
-                            </div>
-                            <p className="mt-2 text-sm text-[#3D5A80]">
-                              <span className="font-medium">Purpose:</span> {req.purpose}
-                            </p>
-                          </div>
-                          
-                          {req.status === 'countered' && req.counter_offers?.length > 0 && (
-                            <div className="bg-purple-50 rounded-lg p-2 text-sm mb-3">
-                              <p className="text-purple-700 font-medium">Your counter offer: ₹{req.counter_amount} + ₹{req.counter_interest} interest</p>
-                            </div>
-                          )}
-                          
-                          <div className="flex gap-2">
-                            <Button 
-                              size="sm" 
-                              className="flex-1 bg-green-500 hover:bg-green-600"
-                              onClick={() => { 
-                                setSelectedLoanRequest(req); 
-                                setLoanResponseForm({...loanResponseForm, action: 'accept'}); 
-                                setShowRespondLoan(true); 
-                              }}
-                            >
-                              <Check className="w-4 h-4 mr-1" /> Accept
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              className="flex-1"
-                              onClick={() => { 
-                                setSelectedLoanRequest(req); 
-                                setLoanResponseForm({
-                                  action: 'counter', 
-                                  counter_amount: req.amount, 
-                                  counter_interest: req.interest_amount, 
-                                  counter_return_date: req.return_date,
-                                  message: ''
-                                }); 
-                                setShowRespondLoan(true); 
-                              }}
-                            >
-                              <RefreshCw className="w-4 h-4 mr-1" /> Counter
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              className="text-red-500 border-red-200 hover:bg-red-50"
-                              onClick={() => { 
-                                setSelectedLoanRequest(req); 
-                                setLoanResponseForm({...loanResponseForm, action: 'reject'}); 
-                                setShowRespondLoan(true); 
-                              }}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Children's Loan Summary */}
-                {Object.entries(childrenLoans).filter(([_, data]) => data).length > 0 && (
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-[#1D3557] mb-3">Children's Lending Activity</h3>
-                    <div className="space-y-3">
-                      {Object.entries(childrenLoans).filter(([_, data]) => data).map(([childId, data]) => (
-                        <div key={childId} className="card-playful p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                <span className="text-blue-600 font-bold">{data.child_name?.charAt(0)}</span>
-                              </div>
-                              <div>
-                                <p className="font-bold text-[#1D3557]">{data.child_name}</p>
-                                <p className="text-sm text-[#3D5A80]">
-                                  Credit Score: <span className={`font-bold ${getCreditScoreColor(data.credit_score)}`}>{data.credit_score}</span>
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-4 gap-2 text-center text-sm">
-                            <div className="bg-blue-50 rounded-lg p-2">
-                              <p className="text-xs text-gray-500">Active Borrowed</p>
-                              <p className="font-bold text-blue-600">{data.summary?.active_borrowed || 0}</p>
-                            </div>
-                            <div className="bg-green-50 rounded-lg p-2">
-                              <p className="text-xs text-gray-500">Loans Repaid</p>
-                              <p className="font-bold text-green-600">{data.summary?.total_borrowed || 0}</p>
-                            </div>
-                            <div className="bg-purple-50 rounded-lg p-2">
-                              <p className="text-xs text-gray-500">Active Lent</p>
-                              <p className="font-bold text-purple-600">{data.summary?.active_lent || 0}</p>
-                            </div>
-                            <div className="bg-red-50 rounded-lg p-2">
-                              <p className="text-xs text-gray-500">Bad Debts</p>
-                              <p className="font-bold text-red-600">{data.summary?.bad_debts || 0}</p>
-                            </div>
-                          </div>
-                          
-                          {/* Active Loans */}
-                          {data.borrowed_loans?.filter(l => l.status === 'active').length > 0 && (
-                            <div className="mt-3">
-                              <p className="text-sm font-medium text-[#1D3557] mb-2">Active Loans (Borrowed):</p>
-                              <div className="space-y-2">
-                                {data.borrowed_loans.filter(l => l.status === 'active').map(loan => (
-                                  <div key={loan.loan_id} className="bg-amber-50 rounded-lg p-2 flex items-center justify-between text-sm">
-                                    <div>
-                                      <p className="font-medium">₹{loan.total_repayment} from {loan.lender_name}</p>
-                                      <p className="text-xs text-gray-500">Due: {formatDate(loan.return_date)}</p>
-                                    </div>
-                                    {getLoanStatusBadge(loan.status)}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Loans Given to Children */}
-                {lendingRequests.filter(r => r.status === 'accepted').length > 0 && (
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-[#1D3557] mb-3">Loans You've Given</h3>
-                    <div className="space-y-2">
-                      {lendingRequests.filter(r => r.status === 'accepted').slice(0, 5).map(loan => (
-                        <div key={loan.request_id} className="card-playful p-3 flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-[#1D3557]">₹{loan.amount} to {loan.borrower_name}</p>
-                            <p className="text-xs text-[#3D5A80]">Interest: ₹{loan.interest_amount}</p>
-                          </div>
-                          {getLoanStatusBadge('active')}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* End of lending loan lists */}
-            {lendingRequests.length === 0 && Object.keys(childrenLoans).length === 0 && (
-              <div className="card-playful p-8 text-center">
-                <HandCoins className="w-12 h-12 mx-auto text-[#98C1D9] mb-3" />
-                <h3 className="text-lg font-bold text-[#1D3557] mb-1">No Lending Activity</h3>
-                <p className="text-sm text-[#3D5A80]">Lending features are available for children in Grade 4-5.</p>
               </div>
             )}
             </>
