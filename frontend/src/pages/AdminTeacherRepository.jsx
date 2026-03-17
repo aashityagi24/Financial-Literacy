@@ -19,6 +19,8 @@ export default function AdminTeacherRepository() {
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [accessSettings, setAccessSettings] = useState({ visibility: 'all', allowed_schools: [] });
+  const [savingAccess, setSavingAccess] = useState(false);
   
   // Filters
   const [filterTopic, setFilterTopic] = useState('');
@@ -51,9 +53,10 @@ export default function AdminTeacherRepository() {
       if (filterGrade) url += `grade=${filterGrade}&`;
       if (filterType) url += `file_type=${filterType}&`;
       
-      const [res, schoolsRes] = await Promise.all([
+      const [res, schoolsRes, accessRes] = await Promise.all([
         fetch(url, { credentials: 'include' }),
-        fetch(`${API_URL}/api/admin/repository/schools`, { credentials: 'include' })
+        fetch(`${API_URL}/api/admin/repository/schools`, { credentials: 'include' }),
+        fetch(`${API_URL}/api/admin/repository/access-settings`, { credentials: 'include' })
       ]);
       const data = await res.json();
       setItems(data.items || []);
@@ -61,6 +64,10 @@ export default function AdminTeacherRepository() {
       try {
         const schoolsData = await schoolsRes.json();
         setSchools(schoolsData.schools || []);
+      } catch {}
+      try {
+        const accessData = await accessRes.json();
+        setAccessSettings({ visibility: accessData.visibility || 'all', allowed_schools: accessData.allowed_schools || [] });
       } catch {}
     } catch (error) {
       console.error('Failed to fetch repository:', error);
@@ -231,6 +238,23 @@ export default function AdminTeacherRepository() {
     setSubtopics([]);
   };
 
+  const handleSaveAccess = async () => {
+    setSavingAccess(true);
+    try {
+      await fetch(`${API_URL}/api/admin/repository/access-settings`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(accessSettings)
+      });
+      toast.success('Access settings saved!');
+    } catch {
+      toast.error('Failed to save access settings');
+    } finally {
+      setSavingAccess(false);
+    }
+  };
+
   const filteredItems = items.filter(item => {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -256,6 +280,78 @@ export default function AdminTeacherRepository() {
               Teacher Repository
             </h1>
             <p className="text-sm text-[#3D5A80]">Upload images and PDFs for teachers to use in quests</p>
+          </div>
+        </div>
+
+        {/* Repository Access Settings */}
+        <div className="bg-white rounded-xl p-4 shadow-md mb-4 border-l-4 border-[#1D3557]">
+          <div className="flex items-start gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <School className="w-5 h-5 text-[#1D3557]" />
+                <h3 className="font-bold text-[#1D3557] text-sm">Repository Access</h3>
+              </div>
+              <div className="flex gap-2 mb-3">
+                <button
+                  onClick={() => setAccessSettings(prev => ({ ...prev, visibility: 'all', allowed_schools: [] }))}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    accessSettings.visibility === 'all'
+                      ? 'bg-[#06D6A0] text-white'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  }`}
+                  data-testid="access-all-schools"
+                >
+                  <Eye className="w-3.5 h-3.5" /> All Schools
+                </button>
+                <button
+                  onClick={() => setAccessSettings(prev => ({ ...prev, visibility: 'specific' }))}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    accessSettings.visibility === 'specific'
+                      ? 'bg-[#EE6C4D] text-white'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  }`}
+                  data-testid="access-specific-schools"
+                >
+                  <EyeOff className="w-3.5 h-3.5" /> Specific Schools Only
+                </button>
+              </div>
+              {accessSettings.visibility === 'specific' && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {schools.map(school => (
+                    <label key={school.school_id} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all border-2 ${
+                      accessSettings.allowed_schools.includes(school.school_id)
+                        ? 'bg-[#1D3557] text-white border-[#1D3557]'
+                        : 'bg-white text-[#3D5A80] border-gray-200 hover:border-[#3D5A80]'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={accessSettings.allowed_schools.includes(school.school_id)}
+                        onChange={(e) => {
+                          setAccessSettings(prev => ({
+                            ...prev,
+                            allowed_schools: e.target.checked
+                              ? [...prev.allowed_schools, school.school_id]
+                              : prev.allowed_schools.filter(id => id !== school.school_id)
+                          }));
+                        }}
+                      />
+                      {accessSettings.allowed_schools.includes(school.school_id) ? <Check className="w-3 h-3" /> : <School className="w-3 h-3" />}
+                      {school.name}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+            <Button
+              size="sm"
+              disabled={savingAccess}
+              onClick={handleSaveAccess}
+              className="bg-[#1D3557] hover:bg-[#2D4A6F] text-white text-xs"
+              data-testid="save-access-settings"
+            >
+              {savingAccess ? 'Saving...' : 'Save'}
+            </Button>
           </div>
         </div>
 
@@ -417,19 +513,6 @@ export default function AdminTeacherRepository() {
                       )}
                     </div>
                   )}
-
-                  {/* School Visibility Badge */}
-                  <div className="mt-2">
-                    {(!item.school_visibility || item.school_visibility === 'all') ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#06D6A0]/15 text-[#06D6A0] text-xs rounded-full font-medium">
-                        <Eye className="w-3 h-3" /> All Schools
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#EE6C4D]/15 text-[#EE6C4D] text-xs rounded-full font-medium" title={`Visible to: ${(item.visible_to_schools || []).map(sid => schools.find(s => s.school_id === sid)?.name || sid).join(', ')}`}>
-                        <EyeOff className="w-3 h-3" /> {item.visible_to_schools?.length || 0} school{(item.visible_to_schools?.length || 0) !== 1 ? 's' : ''}
-                      </span>
-                    )}
-                  </div>
 
                   <div className="mt-4 flex gap-2">
                     <Button 
@@ -623,68 +706,6 @@ export default function AdminTeacherRepository() {
                   onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
                   placeholder="e.g., savings, piggy bank, coins"
                 />
-              </div>
-
-              {/* School Visibility */}
-              <div>
-                <label className="block text-sm font-medium text-[#1D3557] mb-2">
-                  <School className="w-4 h-4 inline mr-1" />
-                  School Visibility
-                </label>
-                <div className="flex gap-2 mb-3">
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, school_visibility: 'all', visible_to_schools: [] }))}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      formData.school_visibility === 'all'
-                        ? 'bg-[#06D6A0] text-white shadow-sm'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                    data-testid="visibility-all"
-                  >
-                    <Eye className="w-4 h-4" /> All Schools
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, school_visibility: 'specific' }))}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      formData.school_visibility === 'specific'
-                        ? 'bg-[#EE6C4D] text-white shadow-sm'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                    data-testid="visibility-specific"
-                  >
-                    <EyeOff className="w-4 h-4" /> Specific Schools
-                  </button>
-                </div>
-                {formData.school_visibility === 'specific' && (
-                  <div className="bg-gray-50 rounded-xl p-3 space-y-2 border border-gray-200">
-                    <p className="text-xs text-gray-500 mb-1">Select which schools can see this resource:</p>
-                    {schools.length === 0 ? (
-                      <p className="text-xs text-gray-400 italic">No schools found</p>
-                    ) : (
-                      schools.map(school => (
-                        <label key={school.school_id} className="flex items-center gap-2 cursor-pointer py-1">
-                          <input
-                            type="checkbox"
-                            checked={formData.visible_to_schools.includes(school.school_id)}
-                            onChange={(e) => {
-                              setFormData(prev => ({
-                                ...prev,
-                                visible_to_schools: e.target.checked
-                                  ? [...prev.visible_to_schools, school.school_id]
-                                  : prev.visible_to_schools.filter(id => id !== school.school_id)
-                              }));
-                            }}
-                            className="w-4 h-4 rounded border-gray-300 text-[#06D6A0] focus:ring-[#06D6A0]"
-                            data-testid={`school-checkbox-${school.school_id}`}
-                          />
-                          <span className="text-sm text-[#1D3557] font-medium">{school.name}</span>
-                        </label>
-                      ))
-                    )}
-                  </div>
-                )}
               </div>
 
               {/* Submit */}

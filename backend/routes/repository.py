@@ -25,6 +25,45 @@ def get_db():
         raise HTTPException(status_code=500, detail="Database not initialized")
     return db
 
+# ============== REPOSITORY ACCESS SETTINGS ==============
+
+@router.get("/admin/repository/access-settings")
+async def get_repository_access_settings(request: Request):
+    """Get global repository access settings"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    settings = await db.repository_settings.find_one({"key": "access"}, {"_id": 0})
+    if not settings:
+        settings = {"key": "access", "visibility": "all", "allowed_schools": []}
+    return settings
+
+
+@router.put("/admin/repository/access-settings")
+async def update_repository_access_settings(request: Request):
+    """Update global repository access settings"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    data = await request.json()
+    visibility = data.get("visibility", "all")  # 'all' or 'specific'
+    allowed_schools = data.get("allowed_schools", [])
+    
+    await db.repository_settings.update_one(
+        {"key": "access"},
+        {"$set": {
+            "key": "access",
+            "visibility": visibility,
+            "allowed_schools": allowed_schools,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    return {"message": "Access settings updated"}
+
+
 # ============== ADMIN ROUTES ==============
 
 @router.get("/admin/repository")
@@ -233,6 +272,25 @@ async def delete_repository_item(request: Request, item_id: str):
 
 # ============== TEACHER ROUTES ==============
 
+@router.get("/teacher/repository/access-check")
+async def teacher_check_repository_access(request: Request):
+    """Check if teacher's school has repository access"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    
+    if user.get("role") == "admin":
+        return {"has_access": True}
+    
+    access_settings = await db.repository_settings.find_one({"key": "access"}, {"_id": 0})
+    if not access_settings or access_settings.get("visibility", "all") == "all":
+        return {"has_access": True}
+    
+    teacher_school = user.get("school_id", "")
+    has_access = teacher_school in access_settings.get("allowed_schools", [])
+    return {"has_access": has_access}
+
+
 @router.get("/teacher/repository")
 async def teacher_get_repository(
     request: Request,
@@ -249,6 +307,14 @@ async def teacher_get_repository(
     
     if user.get("role") not in ["teacher", "admin"]:
         raise HTTPException(status_code=403, detail="Only teachers can access repository")
+    
+    # Check global repository access settings
+    if user.get("role") == "teacher":
+        access_settings = await db.repository_settings.find_one({"key": "access"}, {"_id": 0})
+        if access_settings and access_settings.get("visibility") == "specific":
+            teacher_school = user.get("school_id", "")
+            if teacher_school not in access_settings.get("allowed_schools", []):
+                return {"items": [], "topics": [], "access_denied": True, "message": "Repository is not available for your school"}
     
     query = {"is_active": True}
     
