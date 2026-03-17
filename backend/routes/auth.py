@@ -120,7 +120,7 @@ async def unified_login(login_data: UnifiedLoginRequest, response: Response):
 
 @router.post("/signup")
 async def signup(signup_data: SignupRequest, response: Response):
-    """Create a new user account with email/password"""
+    """Create a new user account with email/password or add password to existing Google account"""
     db = get_db()
     
     email = signup_data.email.strip().lower()
@@ -131,12 +131,7 @@ async def signup(signup_data: SignupRequest, response: Response):
     if "@" not in email or "." not in email:
         raise HTTPException(status_code=400, detail="Invalid email format")
     
-    # Check if email already exists
-    existing = await db.users.find_one({"email": email})
-    if existing:
-        raise HTTPException(status_code=400, detail="Email already registered. Please sign in.")
-    
-    # Check subscription - must have active subscription to create account
+    # Check subscription - must have active subscription
     now_check = datetime.now(timezone.utc).isoformat()
     sub = await db.subscriptions.find_one({
         "parent_emails": email,
@@ -147,33 +142,56 @@ async def signup(signup_data: SignupRequest, response: Response):
     if not sub:
         raise HTTPException(status_code=403, detail="No active subscription found for this email. Please purchase a plan first.")
     
-    # Hash password
     password_hash = hashlib.sha256(password.encode()).hexdigest()
     
-    # Create user (default role is 'parent' - they can add children later)
-    user_id = f"user_{uuid.uuid4().hex[:12]}"
-    user = {
-        "user_id": user_id,
-        "email": email,
-        "name": name,
-        "password_hash": password_hash,
-        "role": "parent",  # Default to parent role
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "auth_provider": "email"
-    }
+    existing = await db.users.find_one({"email": email})
+    if existing:
+        # If user exists from Google OAuth (no password), add password to their account
+        if existing.get("password_hash"):
+            raise HTTPException(status_code=400, detail="Email already registered. Please sign in.")
+        # Add password to existing Google OAuth account
+        await db.users.update_one(
+            {"email": email},
+            {"$set": {"password_hash": password_hash, "name": name or existing.get("name")}}
+        )
+        user = await db.users.find_one({"email": email}, {"_id": 0, "password_hash": 0})
+    else:
+        # Create new user
+        user_id = f"user_{uuid.uuid4().hex[:12]}"
+        user = {
+            "user_id": user_id,
+            "email": email,
+            "name": name,
+            "password_hash": password_hash,
+            "role": "parent",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "auth_provider": "email"
+        }
+        await db.users.insert_one(user)
+        user = await db.users.find_one({"email": email}, {"_id": 0, "password_hash": 0})
     
-    await db.users.insert_one(user)
-    
-    # Remove internal fields from response
-    user_response = {
+    # Auto-login: create session
+    await db.user_sessions.delete_many({"user_id": user["user_id"]})
+    session_token = f"sess_{uuid.uuid4().hex}"
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+    await db.user_sessions.insert_one({
         "user_id": user["user_id"],
-        "email": user["email"],
-        "name": user["name"],
-        "role": user["role"],
-        "created_at": user["created_at"]
-    }
+        "session_token": session_token,
+        "expires_at": expires_at.isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
     
-    return {"message": "Account created successfully", "user": user_response}
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+        path="/",
+        max_age=7 * 24 * 60 * 60
+    )
+    
+    return {"message": "Account ready!", "user": user, "session_token": session_token}
 
 @router.post("/admin-login")
 async def admin_login(login_data: AdminLoginRequest, response: Response):

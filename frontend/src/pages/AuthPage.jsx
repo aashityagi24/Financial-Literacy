@@ -172,12 +172,16 @@ export default function AuthPage() {
         { withCredentials: true }
       );
       
-      toast.success('Account created! Please sign in.');
-      setMode('login');
-      setPassword('');
-      setConfirmPassword('');
-      setName('');
-      setCaptchaAnswer('');
+      // Auto-login: store session and redirect
+      if (response.data.session_token) {
+        localStorage.setItem('session_token', response.data.session_token);
+      }
+      const user = response.data.user;
+      toast.success(`Welcome to CoinQuest, ${user?.name || name}!`);
+      
+      if (user?.role === 'parent') navigate('/parent-dashboard');
+      else if (user?.role) navigate('/dashboard');
+      else navigate('/role-selection', { state: { user } });
     } catch (error) {
       const detail = error.response?.data?.detail || 'Failed to create account';
       toast.error(detail);
