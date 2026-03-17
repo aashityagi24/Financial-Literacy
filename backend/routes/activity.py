@@ -122,8 +122,12 @@ async def get_child_activity_scores(request: Request, child_id: str, limit: int 
     
     # For parents, verify this is their child
     if user.get("role") == "parent":
-        child = await db.users.find_one({"user_id": child_id})
-        if not child or user.get("user_id") not in child.get("parent_ids", []):
+        link = await db.parent_child_links.find_one({
+            "parent_id": user.get("user_id"),
+            "child_id": child_id,
+            "status": "active"
+        })
+        if not link:
             raise HTTPException(status_code=403, detail="Not authorized to view this child's scores")
     
     # For teachers, verify child is in their classroom
@@ -362,13 +366,16 @@ async def get_parent_children_scores(request: Request, topic_id: str = None):
     if user.get("role") != "parent":
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Get parent's children
+    # Get parent's children via parent_child_links
+    links = await db.parent_child_links.find(
+        {"parent_id": user.get("user_id"), "status": "active"},
+        {"_id": 0, "child_id": 1}
+    ).to_list(20)
+    child_ids = [lnk["child_id"] for lnk in links]
     children = await db.users.find(
-        {"parent_ids": user.get("user_id"), "role": "child"},
+        {"user_id": {"$in": child_ids}, "role": "child"},
         {"_id": 0, "user_id": 1, "name": 1, "username": 1, "grade": 1, "picture": 1}
     ).to_list(20)
-    
-    child_ids = [c["user_id"] for c in children]
     
     # Build query for scores
     score_query = {"child_id": {"$in": child_ids}}
@@ -448,12 +455,16 @@ async def get_scores_by_content(request: Request, content_id: str):
     role = user.get("role")
     
     if role == "parent":
-        # Get children
+        # Get children via parent_child_links
+        links = await db.parent_child_links.find(
+            {"parent_id": user.get("user_id"), "status": "active"},
+            {"_id": 0, "child_id": 1}
+        ).to_list(20)
+        child_ids = [lnk["child_id"] for lnk in links]
         children = await db.users.find(
-            {"parent_ids": user.get("user_id"), "role": "child"},
+            {"user_id": {"$in": child_ids}, "role": "child"},
             {"_id": 0, "user_id": 1, "name": 1, "username": 1, "grade": 1}
         ).to_list(20)
-        child_ids = [c["user_id"] for c in children]
     elif role == "teacher":
         # Get students from classrooms
         classrooms = await db.classrooms.find(
