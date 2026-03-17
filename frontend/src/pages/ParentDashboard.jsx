@@ -455,29 +455,6 @@ export default function ParentDashboard({ user }) {
       
       <main className="container mx-auto px-4 py-6">
         {/* Section Navigation */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide" data-testid="parent-section-nav">
-          {[
-            { id: 'overview', label: 'Overview', icon: Users },
-            { id: 'chores', label: 'Chores & Rewards', icon: Target },
-            { id: 'jobs', label: 'Jobs', icon: Briefcase },
-            { id: 'savings', label: 'Money & Goals', icon: Wallet },
-            { id: 'lending', label: 'Lending', icon: HandCoins },
-          ].map(sec => (
-            <button
-              key={sec.id}
-              onClick={() => setParentSection(sec.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
-                parentSection === sec.id
-                  ? 'bg-[#1D3557] text-white shadow-md'
-                  : 'bg-white text-[#3D5A80] border-2 border-[#1D3557]/15 hover:border-[#1D3557]/30'
-              }`}
-              data-testid={`parent-nav-${sec.id}`}
-            >
-              <sec.icon className="w-4 h-4" />
-              {sec.label}
-            </button>
-          ))}
-        </div>
         
         {!selectedChild ? (
           <>
@@ -509,79 +486,53 @@ export default function ParentDashboard({ user }) {
         {/* ===== OVERVIEW SECTION ===== */}
         {parentSection === 'overview' && (
         <>
-        {/* Quick Links - Shopping List & Learning Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {/* Shopping List Link */}
-          <Link 
-            to="/parent/shopping-list" 
-            className="block bg-gradient-to-r from-[#EE6C4D] to-[#FF8A6C] rounded-xl p-5 hover:shadow-lg transition-shadow border-3 border-[#1D3557]"
-            data-testid="parent-shopping-link"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white rounded-xl border-3 border-[#1D3557] flex items-center justify-center">
-                  <Store className="w-6 h-6 text-[#EE6C4D]" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">Shopping List</h3>
-                  <p className="text-white/80 text-sm">Create shopping lists and assign chores</p>
-                </div>
-              </div>
-              <ChevronRight className="w-6 h-6 text-white" />
-            </div>
+        {/* Compact Action Grid - All actions in one place */}
+        <div className="grid grid-cols-3 md:grid-cols-7 gap-2 mb-5">
+          <Link to="/parent/shopping-list" className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#EE6C4D]/10 hover:bg-[#EE6C4D]/20 transition-colors" data-testid="parent-shopping-link">
+            <Store className="w-5 h-5 text-[#EE6C4D]" />
+            <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Shopping List</span>
           </Link>
-          
-          {/* Children's Purchases Link */}
-          <button
-            onClick={() => setShowPurchases(true)}
-            className="block bg-gradient-to-r from-[#06D6A0] to-[#42E8B3] rounded-xl p-5 hover:shadow-lg transition-shadow border-3 border-[#1D3557] text-left"
-            data-testid="children-purchases-btn"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white rounded-xl border-3 border-[#1D3557] flex items-center justify-center">
-                  <History className="w-6 h-6 text-[#06D6A0]" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">Children's Purchases</h3>
-                  <p className="text-white/80 text-sm">
-                    View what your children bought
-                    {childrenPurchases.reduce((acc, c) => acc + (c.purchases?.length || 0), 0) > 0 && (
-                      <span className="ml-2 bg-white/20 px-2 py-0.5 rounded-full">
-                        {childrenPurchases.reduce((acc, c) => acc + (c.purchases?.length || 0), 0)} items
-                      </span>
-                    )}
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-6 h-6 text-white" />
-            </div>
+          <button onClick={() => setShowPurchases(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#06D6A0]/10 hover:bg-[#06D6A0]/20 transition-colors" data-testid="children-purchases-btn">
+            <History className="w-5 h-5 text-[#06D6A0]" />
+            <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Purchases</span>
+          </button>
+          <button onClick={() => setShowGiveMoney(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#FFD23F]/15 hover:bg-[#FFD23F]/30 transition-colors">
+            <Gift className="w-5 h-5 text-[#FFD23F]" />
+            <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Give Money</span>
+          </button>
+          <button onClick={() => setShowCreateChore(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#06D6A0]/10 hover:bg-[#06D6A0]/20 transition-colors">
+            <Target className="w-5 h-5 text-[#06D6A0]" />
+            <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Add Chore</span>
+          </button>
+          <button onClick={() => setShowAllowance(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#3D5A80]/10 hover:bg-[#3D5A80]/20 transition-colors">
+            <Calendar className="w-5 h-5 text-[#3D5A80]" />
+            <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Allowance</span>
+          </button>
+          <button onClick={() => setShowSavingsGoal(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#EE6C4D]/10 hover:bg-[#EE6C4D]/20 transition-colors">
+            <Wallet className="w-5 h-5 text-[#EE6C4D]" />
+            <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Savings Goal</span>
+          </button>
+          <button onClick={() => setParentSection('jobs')} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#1D3557]/8 hover:bg-[#1D3557]/15 transition-colors">
+            <Briefcase className="w-5 h-5 text-[#1D3557]" />
+            <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Jobs</span>
           </button>
         </div>
         
-        {/* Learning Content Link */}
+        {/* Learning Content - Compact */}
         {dashboard?.children?.length > 0 && (
-          <div className="bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-xl p-5 border-3 border-[#1D3557] mb-6">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="w-12 h-12 bg-white rounded-xl border-3 border-[#1D3557] flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-[#FFD23F]" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-[#1D3557]">Learning Content</h3>
-                <p className="text-[#1D3557]/80 text-sm">View lessons for your child&apos;s grade</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
+          <div className="bg-[#FFD23F]/15 rounded-xl p-3 mb-5 border border-[#FFD23F]/30">
+            <div className="flex items-center gap-2 flex-wrap">
+              <BookOpen className="w-4 h-4 text-[#1D3557]" />
+              <span className="text-sm font-bold text-[#1D3557]">Learning:</span>
               {dashboard.children.map((child) => (
                 <Link
                   key={child.user_id}
                   to={`/learn?grade=${child.grade}`}
-                  className="flex items-center gap-2 bg-white hover:bg-[#1D3557] hover:text-white px-3 py-2 rounded-lg border-2 border-[#1D3557] text-[#1D3557] text-sm font-medium transition-colors"
+                  className="flex items-center gap-1 bg-white hover:bg-[#1D3557] hover:text-white px-2.5 py-1 rounded-lg border border-[#1D3557]/20 text-[#1D3557] text-xs font-medium transition-colors"
                   data-testid={`learn-link-${child.user_id}`}
                 >
-                  <span>{child.name}</span>
-                  <span className="text-xs opacity-70">({gradeLabels[child.grade]})</span>
-                  <ChevronRight className="w-4 h-4" />
+                  {child.name} <span className="opacity-60">({gradeLabels[child.grade]})</span>
+                  <ChevronRight className="w-3 h-3" />
                 </Link>
               ))}
             </div>
@@ -702,31 +653,6 @@ export default function ParentDashboard({ user }) {
                     </div>
                   );
                 })}
-              </div>
-            )}
-            
-            {/* Quick Actions */}
-            {dashboard?.children?.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                <button onClick={() => setParentSection('savings')} className="card-playful p-4 text-center hover:bg-[#FFD23F]/10">
-                  <Gift className="w-8 h-8 mx-auto text-[#FFD23F] mb-2" />
-                  <span className="font-bold text-[#1D3557] text-sm">Give Money</span>
-                </button>
-                
-                <button onClick={() => setParentSection('chores')} className="card-playful p-4 text-center hover:bg-[#06D6A0]/10">
-                  <Target className="w-8 h-8 mx-auto text-[#06D6A0] mb-2" />
-                  <span className="font-bold text-[#1D3557] text-sm">Chores & Rewards</span>
-                </button>
-                
-                <button onClick={() => setParentSection('jobs')} className="card-playful p-4 text-center hover:bg-[#3D5A80]/10">
-                  <Briefcase className="w-8 h-8 mx-auto text-[#3D5A80] mb-2" />
-                  <span className="font-bold text-[#1D3557] text-sm">My Jobs</span>
-                </button>
-                
-                <button onClick={() => setParentSection('savings')} className="card-playful p-4 text-center hover:bg-[#EE6C4D]/10">
-                  <Wallet className="w-8 h-8 mx-auto text-[#EE6C4D] mb-2" />
-                  <span className="font-bold text-[#1D3557] text-sm">Savings Goals</span>
-                </button>
               </div>
             )}
             
@@ -1087,35 +1013,6 @@ export default function ParentDashboard({ user }) {
 
             {parentSection === 'savings' && (
             <>
-            {/* Quick Actions for Money */}
-            {dashboard?.children?.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                <Dialog open={showGiveMoney} onOpenChange={setShowGiveMoney}>
-                  <DialogTrigger asChild>
-                    <button className="card-playful p-4 text-center hover:bg-[#FFD23F]/10">
-                      <Gift className="w-8 h-8 mx-auto text-[#FFD23F] mb-2" />
-                      <span className="font-bold text-[#1D3557]">Give Money</span>
-                    </button>
-                  </DialogTrigger>
-                </Dialog>
-                <Dialog open={showAllowance} onOpenChange={setShowAllowance}>
-                  <DialogTrigger asChild>
-                    <button className="card-playful p-4 text-center hover:bg-[#3D5A80]/10">
-                      <Calendar className="w-8 h-8 mx-auto text-[#3D5A80] mb-2" />
-                      <span className="font-bold text-[#1D3557]">Allowance</span>
-                    </button>
-                  </DialogTrigger>
-                </Dialog>
-                <Dialog open={showSavingsGoal} onOpenChange={setShowSavingsGoal}>
-                  <DialogTrigger asChild>
-                    <button className="card-playful p-4 text-center hover:bg-[#EE6C4D]/10">
-                      <Wallet className="w-8 h-8 mx-auto text-[#EE6C4D] mb-2" />
-                      <span className="font-bold text-[#1D3557]">Savings Goal</span>
-                    </button>
-                  </DialogTrigger>
-                </Dialog>
-              </div>
-            )}
 
             {/* Allowances */}
             {allowances.length > 0 && (
