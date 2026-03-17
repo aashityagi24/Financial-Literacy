@@ -50,7 +50,7 @@ export default function ProfilePage({ user, setUser }) {
     { value: '2', label: '2nd Grade' },
   ];
   
-  const gradeNames = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
+  const gradeNames = ['Kindergarten', '1st Grade', '2nd Grade'];
   
   useEffect(() => {
     if (user?.role === 'child') {
@@ -265,7 +265,8 @@ export default function ProfilePage({ user, setUser }) {
           </div>
         </div>
         
-        {/* Grade Settings */}
+        {/* Grade Settings - Only for children */}
+        {user?.role === 'child' && (
         <div className="card-playful p-6 mb-6 animate-bounce-in stagger-1">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -326,6 +327,7 @@ export default function ProfilePage({ user, setUser }) {
             </div>
           )}
         </div>
+        )}
         
         {/* My Connections - Only for Child */}
         {user?.role === 'child' && (
@@ -450,7 +452,7 @@ export default function ProfilePage({ user, setUser }) {
               <div className="flex justify-between items-center py-2 border-b border-[#1D3557]/20">
                 <span className="text-[#3D5A80]">Plan</span>
                 <span className="font-bold text-[#1D3557]">
-                  {subscription.plan_type === 'two_parents' ? 'Double Parent Login' : 'Single Parent Login'}
+                  {subscription.plan_type === 'two_parents' ? 'Dual Parent Login' : 'Single Parent Login'}
                 </span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-[#1D3557]/20">

@@ -197,7 +197,7 @@ export default function PricingSection() {
               }`}
             >
               <Users className="w-4 h-4" />
-              Double Parent Login
+              Dual Parent Login
             </button>
           </div>
         </div>

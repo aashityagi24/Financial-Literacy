@@ -19,7 +19,7 @@ const DURATION_LABELS = {
 
 const PLAN_LABELS = {
   'single_parent': 'Single Parent',
-  'two_parents': 'Two Parents',
+  'two_parents': 'Dual Parent',
 };
 
 export default function AdminSubscriptionManagement({ user }) {
