@@ -1,0 +1,179 @@
+<analysis>**original_problem_statement:** The user wants to create a gamified financial literacy learning application for children (K-5) named CoinQuest. The application requires distinct user roles (Teacher, Parent, Child, Admin, School), a digital wallet with Indian Rupees (₹), a virtual store, gamified investment modules (Money Garden & Stock Market), dynamic quests, achievements, and a hierarchical content system manageable by an Admin.
+
+**PRODUCT REQUIREMENTS:**
+-   **User Roles & Core Features:** Teacher (manage class), Parent (manage chores, rewards), Child (digital wallet, store, investments), Admin (content and user management), and School.
+-   **Gamified Features:** Virtual store, investment simulations, quests, achievements, and daily rewards.
+-   **Content System:** A hierarchical content structure manageable by the Admin, including support for various content types (video, PDF, interactive HTML/ZIP).
+-   **Teacher Repository:** A repository where admins can upload resources (images, PDFs) tagged by topic/grade for teachers to use in quests.
+-   **Data Integrity & Visibility:** Content visibility must be controllable by role and grade.
+-   **Word Bank/Glossary:** A section for financial literacy terms, manageable by an Admin and searchable by users.
+-   **Quest Analytics:** Teachers need to see detailed responses for quests to track student performance.
+-   **Unified Login:** A single sign-in/sign-up page for all user types.
+-   **Content Protection:** Measures to deter casual copying or downloading of website code and uploaded content.
+-   **Activity Score Tracking:** A system to capture scores from uploaded HTML activities and display them to parents and teachers.
+-   **My Jobs Feature:** A new section where children can define family jobs (unpaid) and payday jobs (paid), which parents approve and manage payments for.
+
+**User's preferred language**: English
+
+**what currently exists?**
+The application is a functional full-stack platform. A significant number of features and bug fixes were implemented in this session. The score tracking system for HTML activities was refined, with major UI/UX improvements and backend bug fixes. Parent and Teacher dashboards were enhanced with better data visibility and bug fixes related to analytics. A new feature, My Jobs, has been partially implemented, with the backend routes and database schema created and the initial frontend layout adjustments made on the child's dashboard.
+
+**Last working item**:
+- Last item agent was working: Implementing the new My Jobs feature. The agent successfully created the backend infrastructure (database schema, API endpoints in , and route registration in ). The agent then began frontend work by creating the , adding the necessary route in , and refactoring the  layout to add a summary card for My Jobs.
+- Status: IN PROGRESS
+- Agent Testing Done: N
+- Which testing method agent to use? both. Backend endpoints should be tested with . The complete end-to-end flow (child creates job -> parent approves -> parent pays) will require the  after the frontend UIs are fully built.
+- User Testing Done: N
+
+**All Pending/In progress Issue list**:
+  - Issue 1: Badge images are missing and require manual re-upload by the admin. (P1)
+
+  Issues Detail:
+  - Issue 1: 
+     - **Description**: User-uploaded images for all achievement badges were lost in a previous session due to an accidental database collection deletion. The metadata was restored, but image URLs are gone.
+     - **Attempted fixes**: None possible via code. Data is unrecoverable.
+     - **Next debug checklist**: This is not a coding issue. The agent must remind the user that the admin needs to manually re-upload the images for each badge via the Badge Management section of the admin panel.
+     - **Why fix this issue and what will be achieved with the fix?** Badges are a core gamification element and appear incomplete without images.
+     - **Status:**  BLOCKED (requires user action)
+     - **Is recurring issue?** Y (Data loss incidents are critical).
+     - **Should Test frontend/backend/both after fix?** NA
+     - **Blocked on other issue:** No
+
+**In progress Task List**:
+  - Task 1: Complete the My Jobs Feature (P0)
+
+ Task Detail:
+  - Task 1: 
+     - **Where to resume**: The agent just finished refactoring the  layout. The next steps are:
+        1.  Build the UI of  for the child to view, add, and manage their jobs (both free and payday).
+        2.  Build the parent's UI within  to review pending job proposals, approve/reject them, set payment amounts and schedules for payday jobs, and manually trigger payments.
+        3.  Implement the payment logic where a parent can transfer funds to the child's digital wallet.
+        4.  Implement the reminder system for weekly payment discussions.
+        5.  Create the UI for the admin to upload the guidebook PDFs and for parents/children to view them.
+     - **What will be achieved with this?** A major new user-requested feature for teaching children about earned income and responsibilities.
+     - **Status:**  IN PROGRESS
+     - **Should Test frontend/backend/both after fix?** both
+     - **Blocked on something:** No
+
+**Upcoming and Future Tasks**
+ Upcoming Tasks:
+ - **P1:** Implement Streak Bonuses & Leaderboards.
+ - **P1:** Implement Safety Guardrails: Add spending limits and parent approval for large transactions.
+ - **P1:** Enhance Lending Feature: Add teacher/school dashboard views for lending analytics and credit scores.
+ 
+ Future Tasks:
+ - **P2:** Teacher/Parent Collaboration Portal.
+ - **P2:** Collaborative & Seasonal Events.
+ - **P2:** Email notifications for loan events and other activities.
+ - **P2:** Develop a Tutorial System for new users.
+
+**Completed work in this session**
+- **Feature: My Jobs (Partial):** Created backend schema, API endpoints, and initial frontend layout for the new My Jobs section.
+- **Feature: Admin Activity Download:** Implemented a new endpoint and UI buttons allowing admins to download uploaded HTML/ZIP activity files.
+- **Feature: Per-Question Image Upload:** Added UI in the teacher's quest creation form to allow an image to be uploaded for each individual question.
+- **Feature: Rewards/Penalty Archiving:** Implemented logic to move rewards/penalties to a History tab after 3 days and automatically remove them from the dashboard after 15 days.
+- **Bugfix: Teacher Quest Visibility:** Fixed a critical bug where quests created by a teacher for one classroom were visible in all of their classrooms.
+- **Bugfix: Parent Dashboard Data:** Fixed bugs where child names were not appearing on chores and where newly created rewards/penalties were not showing up in the UI.
+- **Bugfix: Parent/Teacher Analytics:** Fixed critical bugs in  that were causing Failed to load errors on analytics pages due to incorrect database collection names ( vs ) and outdated student lookup logic ( vs  collection).
+- **Bugfix: Parent Score Visibility:** Fixed a bug preventing parents from seeing their children's activity scores due to incorrect parent-child relationship lookup in the backend.
+- **Bugfix: Score Tracking Logic:** Implemented backend deduplication to prevent multi-round games from inflating attempt counts and explained the limitation of score tracking in new tabs.
+- **Bugfix: Double Close Button:** Removed a duplicate 'X' button on the onboarding tour modal.
+- **UI/UX:** Provided corrected HTML code to the user for their broken activity file.
+- **UI/UX:** Replaced numeric scores with encouraging text (Great job!, Almost there!) in both toasts and on-card badges for children.
+- **UI/UX:** Improved styling of score/attempt badges and added descriptive tooltips.
+- **UI/UX:** Optimized the activity viewer modal to provide more screen space for the  content.
+- **UI/UX:** Added green checkmarks on content cards for parents to see activities completed by their children.
+- **UI/UX:** Renamed Admin to CoinQuest in quest source listings.
+
+**Earlier issues found/mentioned but not fixed**
+   - **Issue 1: Missing Badge Images.** This is a data loss issue from a previous session. The user, as an admin, must manually re-upload the images via the admin panel. This cannot be fixed with code.
+
+**Known issue recurrence from previous fork**
+  - **Issue recurrence in previous fork:** Permanent loss of user-uploaded badge images due to accidental database collection deletion.
+  - **Recurrence count:** 1
+  - **Status:** BLOCKED (requires manual data re-entry by the user).
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+- **Backend Data Enrichment:** Dynamically adding data (like ) to API responses from related collections.
+- **Data Model Correction:** Identifying and fixing inconsistencies between application code and database schema (e.g., wrong collection names, incorrect field lookups).
+- **Time-based Filtering:** Using  and  on the backend to implement data archiving rules.
+- **Stateful Deduplication:** Updating existing records within a time window instead of creating new ones to handle rapid-fire events (e.g., score reporting).
+- **Frontend Layout Refactoring:** Reorganizing component structure and using CSS Flexbox/Grid to change dashboard layouts as requested.
+- **Complex Frontend State Logic:** Splitting a single data array () into multiple derived state arrays (, ) for different UI tabs.
+- **Shadcn UI Integration:** Using  and  components to create custom, on-brand tooltips, replacing native browser behavior.
+
+**key DB schema**
+  - ** (New Collection):** 
+  - **:** Logic modified to  if a recent score (<5 mins) exists, otherwise .
+  - **:** Now correctly saves records using . Backend filters to only return records from the last 15 days.
+  - **:** GET endpoint now enriches the response with  from the  collection.
+  - **:** Backend logic in  now populates an  flag for parents if any of their children have completed the content.
+  - **Data Lookups:** Multiple endpoints were fixed to query the  and  collections instead of assuming embedded IDs in user/classroom documents.
+
+**All files of reference**
+-   **/app/backend/routes/jobs.py**: New file containing all backend logic for the My Jobs feature.
+-   **/app/frontend/src/pages/MyJobsPage.jsx**: New page for children to manage their jobs.
+-   **/app/frontend/src/pages/ChildDashboard.jsx**: Significantly refactored to change the layout and add a My Jobs summary.
+-   **/app/backend/routes/activities.py**: Heavily modified to fix multiple critical bugs related to teacher analytics and parent score visibility.
+-   **/app/backend/routes/parent.py**: Modified to fix bugs where rewards/penalties were not being saved and child names were not appearing on chores.
+-   **/app/frontend/src/pages/ParentDashboard.jsx**: Heavily modified to implement archiving logic and fix data display issues.
+-   **/app/frontend/src/pages/TeacherDashboard.jsx**: Modified to fix a critical bug where quests were not being filtered by the selected classroom.
+
+**Areas that need refactoring**:
+- ****: Remains a very large and complex component. It should be broken down into smaller, more manageable components.
+- ****: Remains a large, monolithic component that handles all game logic, state, and UI dialogs.
+- **Duplicate Route Definitions:** The codebase has multiple, sometimes conflicting, route definitions for the same functionality (e.g., child quests). This should be centralized into the respective router files (, , etc.) and removed from  and other files to avoid confusion.
+
+**key api endpoints**
+-   ****: (New) Creates a new job proposal from a child.
+-   ****: (New) Gets all jobs for the logged-in child.
+-   ****: (New) Allows a parent to approve a job.
+-   ****: (New) Allows an admin to download an activity folder as a ZIP file.
+-   ****: (Fixed) Now correctly loads data for teacher analytics.
+-   ****: (Fixed) Now correctly shows scores for parents.
+-   ****: (Fixed) Now correctly saves the reward/penalty record to the database.
+
+**Critical Info for New Agent**
+-   **Priority 1 is completing the My Jobs feature.** The backend is scaffolded, but the entire frontend workflow for the child, parent (approval/payment), and admin (guidebook upload) needs to be built.
+-   **Be aware of data model inconsistencies.** Many bugs fixed in this session stemmed from code assuming an outdated database schema (e.g., using  instead of , or  instead of the  collection). When debugging, always verify the actual database collection names and document structures.
+-   **Do not try to fix the missing badge images with code.** This is a data loss issue. The user (as admin) must manually re-upload the images. Remind the user of this if it comes up.
+
+**documents and test reports created in this job**
+  - /app/memory/PRD.md (updated)
+
+**Last 10 User Messages and any pending HUMAN messages** 
+- 10. **Feature Request:** Create the My Jobs section with specific requirements for free vs. paid jobs, parent approval, payment reminders, and guidebooks.
+- 9. **Bug Report:** Teacher analytics page shows failed to load. (Fixed).
+- 8. **Feature Request:** Add tooltips to parent/teacher score badges, add an attempts tab, show green checkmark on completed content for parents, and hide reward text for parents. (Completed).
+- 7. **Bug Report:** As a parent, I can't see my child's scores when viewing the Learning Content pages. (Fixed).
+- 6. **UI Request:** The score badge on the content card still shows the numeric score 1/1 for the child, not the Great job! message. (Fixed).
+- 5. **Question:** What size should my HTML activities be to fit in the iframe? (Answered).
+- 4. **UI Request:** Improve the activity  viewer to give more space to the content by shrinking the header/footer. (Completed).
+- 3. **UI Request:** Instead of showing the score in the toast notification, show encouraging messages like Great job! or Keep practicing!. (Completed).
+- 2. **Bug Report:** Score tracking doesn't work in a new tab, attempt counts are inaccurate, and a specific game is scoring wrong answers as correct. (Partially Fixed & Explained).
+- 1. **UI Request:** Rename Admin quests to CoinQuest and re-order the filter tabs. (Completed).
+
+**Project Health Check:**
+- **Broken:** None.
+- **Mocked:** None.
+
+**3rd Party Integrations**
+-   **Custom Google OAuth**: Uses  library.
+-   **APScheduler**: For running scheduled backend jobs.
+
+**Testing status**
+  - Testing agent used after significant changes: NO
+  - Troubleshoot agent used after agent stuck in loop: NO
+  - Test files created: []
+  - Known regressions: **Permanent loss of user-uploaded badge images.**
+
+**Credentials to test flow:**
+-   **Admin:**  / 
+-   **Teacher:**  / 
+-   **Child (Grade 1):**  / 
+
+**What agent forgot to execute**
+- The agent was in the middle of implementing the large My Jobs feature. It is the primary unfinished task, but nothing was forgotten or overlooked.</analysis>

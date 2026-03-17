@@ -41,6 +41,7 @@ import LendingBorrowingPage from "@/pages/LendingBorrowingPage";
 import AdminGlossaryManagement from "@/pages/AdminGlossaryManagement";
 import AdminTeacherRepository from "@/pages/AdminTeacherRepository";
 import GlossaryPage from "@/pages/GlossaryPage";
+import MyJobsPage from "@/pages/MyJobsPage";
 import AuthPage from "@/pages/AuthPage";
 import ContentProtection from "@/components/ContentProtection";
 import ActivityScoresPage from "@/pages/ActivityScoresPage";
@@ -232,6 +233,11 @@ function AppRouter() {
       <Route path="/achievements" element={
         <ProtectedRoute>
           {({ user }) => <AchievementsPage user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/my-jobs" element={
+        <ProtectedRoute>
+          {({ user }) => <MyJobsPage user={user} />}
         </ProtectedRoute>
       } />
       {/* AI Buddy chat removed to prevent children from using AI for test answers */}

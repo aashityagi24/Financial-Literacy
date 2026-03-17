@@ -33,6 +33,8 @@ export default function AdminPage({ user }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showCreateSchool, setShowCreateSchool] = useState(false);
+  const [guidebook, setGuidebook] = useState({ child_guide: '', parent_guide: '' });
+  const [guidebookSaving, setGuidebookSaving] = useState(false);
   const [newUserForm, setNewUserForm] = useState({
     name: '',
     email: '',
@@ -65,6 +67,14 @@ export default function AdminPage({ user }) {
     }
     fetchData();
   }, [user, navigate]);
+  
+  useEffect(() => {
+    if (activeTab === 'guidebook') {
+      axios.get(`${API}/jobs/guidebook`).then(res => {
+        setGuidebook({ child_guide: res.data.child_guide || '', parent_guide: res.data.parent_guide || '' });
+      }).catch(() => {});
+    }
+  }, [activeTab]);
   
   const fetchData = async () => {
     try {
@@ -415,6 +425,23 @@ export default function AdminPage({ user }) {
               </div>
             </div>
           </Link>
+          
+          {/* Jobs Guidebook Card */}
+          <button 
+            onClick={() => setActiveTab('guidebook')}
+            className="block w-full bg-gradient-to-r from-[#3D5A80] to-[#5A7BA0] rounded-xl p-4 hover:shadow-lg transition-shadow"
+            data-testid="guidebook-management-link"
+          >
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <span className="text-lg">📋</span>
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Jobs Guide</h3>
+                <p className="text-white/70 text-xs">Child & Parent</p>
+              </div>
+            </div>
+          </button>
         </div>
         
         {/* Tabs */}
@@ -423,6 +450,7 @@ export default function AdminPage({ user }) {
             { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
             { id: 'users', label: 'Users', icon: Users },
             { id: 'schools', label: 'Schools', icon: School },
+            { id: 'guidebook', label: 'Jobs Guide', icon: BookOpen },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -913,6 +941,58 @@ export default function AdminPage({ user }) {
                 ))}
               </div>
             )}
+          </div>
+        )}
+        
+        {/* Guidebook Tab */}
+        {activeTab === 'guidebook' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-800">Jobs Guidebook Management</h2>
+              <Button
+                disabled={guidebookSaving}
+                onClick={async () => {
+                  setGuidebookSaving(true);
+                  try {
+                    await axios.put(`${API}/admin/jobs/guidebook`, guidebook);
+                    toast.success('Guidebook updated!');
+                  } catch (err) {
+                    toast.error('Failed to save');
+                  } finally {
+                    setGuidebookSaving(false);
+                  }
+                }}
+                className="bg-[#06D6A0] hover:bg-[#05C493] text-white"
+                data-testid="save-guidebook-btn"
+              >
+                {guidebookSaving ? 'Saving...' : 'Save Guidebook'}
+              </Button>
+            </div>
+            <p className="text-sm text-gray-500">Edit the guidebook content shown to children and parents on the "My Jobs" page. Supports Markdown-style formatting (### for headings, **bold**).</p>
+            
+            <div className="bg-white rounded-xl border-2 border-gray-200 p-5">
+              <h3 className="font-bold text-[#1D3557] mb-2">Child's Guide</h3>
+              <p className="text-xs text-gray-400 mb-2">This is shown to children when they click "Guide" on My Jobs.</p>
+              <textarea
+                className="w-full h-48 border-2 border-gray-300 rounded-lg p-3 text-sm font-mono resize-y focus:border-[#3D5A80] focus:outline-none"
+                value={guidebook.child_guide}
+                onChange={(e) => setGuidebook(g => ({ ...g, child_guide: e.target.value }))}
+                placeholder="### My Jobs Guide..."
+                data-testid="child-guide-textarea"
+              />
+            </div>
+            
+            <div className="bg-white rounded-xl border-2 border-gray-200 p-5">
+              <h3 className="font-bold text-[#1D3557] mb-2">Parent's Guide</h3>
+              <p className="text-xs text-gray-400 mb-2">This is shown to parents to help them manage their child's jobs.</p>
+              <textarea
+                className="w-full h-48 border-2 border-gray-300 rounded-lg p-3 text-sm font-mono resize-y focus:border-[#3D5A80] focus:outline-none"
+                value={guidebook.parent_guide}
+                onChange={(e) => setGuidebook(g => ({ ...g, parent_guide: e.target.value }))}
+                placeholder="### Parent's Guide to My Jobs..."
+                data-testid="parent-guide-textarea"
+              />
+            </div>
           </div>
         )}
       </main>

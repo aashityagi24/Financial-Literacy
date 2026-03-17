@@ -8,7 +8,8 @@ import {
   Check, Clock, X, ChevronRight, Eye, Calendar, Trash2,
   School, Megaphone, Store, LogOut, User, TrendingUp, TrendingDown,
   Sprout, LineChart, BookOpen, Award, CheckCircle, XCircle, History,
-  Filter, ArrowLeft, ArrowRight, HandCoins, AlertTriangle, RefreshCw
+  Filter, ArrowLeft, ArrowRight, HandCoins, AlertTriangle, RefreshCw,
+  Briefcase, Heart, DollarSign, CreditCard, Banknote
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -92,6 +93,15 @@ export default function ParentDashboard({ user }) {
   const [lendingRequests, setLendingRequests] = useState([]);
   const [childrenLoans, setChildrenLoans] = useState({});
   const [showRespondLoan, setShowRespondLoan] = useState(false);
+  
+  // Jobs state
+  const [childJobs, setChildJobs] = useState([]);
+  const [showApproveJob, setShowApproveJob] = useState(null);
+  const [approveJobForm, setApproveJobForm] = useState({
+    payment_amount: 10,
+    payment_type: 'digital',
+    reminder_day: 'sunday'
+  });
   const [selectedLoanRequest, setSelectedLoanRequest] = useState(null);
   const [loanResponseForm, setLoanResponseForm] = useState({
     action: '',
@@ -112,7 +122,7 @@ export default function ParentDashboard({ user }) {
   
   const fetchData = async () => {
     try {
-      const [dashRes, choresRes, rpRes, allowRes, goalsRes, choreReqRes, purchasesRes, lendingReqRes] = await Promise.all([
+      const [dashRes, choresRes, rpRes, allowRes, goalsRes, choreReqRes, purchasesRes, lendingReqRes, jobsRes] = await Promise.all([
         axios.get(`${API}/parent/dashboard`),
         axios.get(`${API}/parent/chores-new`).catch(() => ({ data: [] })),
         axios.get(`${API}/parent/reward-penalty`).catch(() => ({ data: [] })),
@@ -120,7 +130,8 @@ export default function ParentDashboard({ user }) {
         axios.get(`${API}/parent/savings-goals`),
         axios.get(`${API}/parent/chore-requests`).catch(() => ({ data: [] })),
         axios.get(`${API}/parent/children-purchases`).catch(() => ({ data: [] })),
-        axios.get(`${API}/lending/requests/received`).catch(() => ({ data: [] }))
+        axios.get(`${API}/lending/requests/received`).catch(() => ({ data: [] })),
+        axios.get(`${API}/parent/child-jobs`).catch(() => ({ data: { jobs: [] } }))
       ]);
       setDashboard(dashRes.data);
       setChores(choresRes.data);
@@ -130,6 +141,7 @@ export default function ParentDashboard({ user }) {
       setChoreRequests(choreReqRes.data);
       setChildrenPurchases(purchasesRes.data);
       setLendingRequests(lendingReqRes.data || []);
+      setChildJobs(jobsRes.data?.jobs || []);
       
       // Fetch classroom info and lending data for each child
       if (dashRes.data?.children) {
@@ -347,6 +359,53 @@ export default function ParentDashboard({ user }) {
       console.error('Logout failed:', error);
       navigate('/');
     }
+  };
+  
+  const handleApproveJob = async (job) => {
+    try {
+      const payload = {};
+      if (job.job_type === 'payday') {
+        payload.payment_amount = approveJobForm.payment_amount;
+        payload.payment_type = approveJobForm.payment_type;
+        payload.reminder_day = approveJobForm.reminder_day;
+      }
+      await axios.put(`${API}/parent/child-jobs/${job.job_id}/approve`, payload);
+      toast.success(`Job "${job.activity}" approved!`);
+      setShowApproveJob(null);
+      setApproveJobForm({ payment_amount: 10, payment_type: 'digital', reminder_day: 'sunday' });
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to approve job');
+    }
+  };
+  
+  const handleRejectJob = async (jobId) => {
+    try {
+      await axios.put(`${API}/parent/child-jobs/${jobId}/reject`);
+      toast.success('Job rejected');
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to reject job');
+    }
+  };
+  
+  const handlePayJob = async (job) => {
+    try {
+      const res = await axios.post(`${API}/parent/child-jobs/${job.job_id}/pay`);
+      toast.success(res.data.message);
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to process payment');
+    }
+  };
+  
+  const FREQUENCIES_MAP = {
+    daily: 'Every day', twice_week: 'Twice/week', three_week: '3x/week',
+    weekly: 'Once/week', as_needed: 'As needed'
+  };
+  const DAYS_MAP = {
+    monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu',
+    friday: 'Fri', saturday: 'Sat', sunday: 'Sun'
   };
   
   if (loading) {
@@ -1172,6 +1231,209 @@ export default function ParentDashboard({ user }) {
                 </div>
               </>
             )}
+            
+            {/* My Jobs Section */}
+            {childJobs.length > 0 && (
+              <>
+                <div className="flex items-center gap-3 mb-4 mt-6">
+                  <div className="w-10 h-10 bg-[#3D5A80] rounded-xl flex items-center justify-center">
+                    <Briefcase className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                    Children's Jobs
+                  </h2>
+                </div>
+                
+                {/* Pending Jobs - Need Approval */}
+                {childJobs.filter(j => j.status === 'pending').length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="text-base font-semibold text-[#1D3557] mb-3 flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-[#FFD23F]" />
+                      Pending Approval
+                    </h3>
+                    <div className="space-y-3">
+                      {childJobs.filter(j => j.status === 'pending').map(job => (
+                        <div key={job.job_id} className="card-playful p-4 border-l-4 border-[#FFD23F]" data-testid={`parent-job-${job.job_id}`}>
+                          <div className="flex items-start gap-3">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${job.job_type === 'family' ? 'bg-[#E0FBFC]' : 'bg-[#FFD23F]/30'}`}>
+                              {job.job_type === 'family' ? <Heart className="w-5 h-5 text-[#EE6C4D]" /> : <Briefcase className="w-5 h-5 text-[#1D3557]" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className="font-bold text-[#1D3557]">{job.activity}</span>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${job.job_type === 'family' ? 'bg-[#EE6C4D]/20 text-[#EE6C4D]' : 'bg-[#FFD23F]/40 text-[#1D3557]'}`}>
+                                  {job.job_type === 'family' ? 'Family Job' : 'Payday Job'}
+                                </span>
+                              </div>
+                              <p className="text-sm text-[#3D5A80]">
+                                <span className="font-medium">{job.child_name}</span> · {FREQUENCIES_MAP[job.frequency] || job.frequency}
+                              </p>
+                            </div>
+                            <div className="flex gap-2 flex-shrink-0">
+                              {job.job_type === 'payday' ? (
+                                <Button
+                                  size="sm"
+                                  className="bg-[#06D6A0] hover:bg-[#05C493] text-white"
+                                  onClick={() => { setShowApproveJob(job); setApproveJobForm({ payment_amount: 10, payment_type: 'digital', reminder_day: 'sunday' }); }}
+                                  data-testid={`approve-job-${job.job_id}`}
+                                >
+                                  <Check className="w-4 h-4 mr-1" /> Set Pay
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  className="bg-[#06D6A0] hover:bg-[#05C493] text-white"
+                                  onClick={() => handleApproveJob(job)}
+                                  data-testid={`approve-job-${job.job_id}`}
+                                >
+                                  <Check className="w-4 h-4 mr-1" /> Approve
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-[#EE6C4D] text-[#EE6C4D] hover:bg-[#EE6C4D]/10"
+                                onClick={() => handleRejectJob(job.job_id)}
+                                data-testid={`reject-job-${job.job_id}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Approved Jobs */}
+                {childJobs.filter(j => j.status === 'approved').length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="text-base font-semibold text-[#1D3557] mb-3 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-[#06D6A0]" />
+                      Active Jobs
+                    </h3>
+                    <div className="space-y-3">
+                      {childJobs.filter(j => j.status === 'approved').map(job => (
+                        <div key={job.job_id} className="card-playful p-4 border-l-4 border-[#06D6A0]" data-testid={`parent-job-${job.job_id}`}>
+                          <div className="flex items-start gap-3">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${job.job_type === 'family' ? 'bg-[#E0FBFC]' : 'bg-[#FFD23F]/30'}`}>
+                              {job.job_type === 'family' ? <Heart className="w-5 h-5 text-[#EE6C4D]" /> : <Briefcase className="w-5 h-5 text-[#1D3557]" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className="font-bold text-[#1D3557]">{job.activity}</span>
+                                <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${job.job_type === 'family' ? 'bg-[#EE6C4D]/20 text-[#EE6C4D]' : 'bg-[#FFD23F]/40 text-[#1D3557]'}`}>
+                                  {job.job_type === 'family' ? 'Family Job' : 'Payday Job'}
+                                </span>
+                              </div>
+                              <p className="text-sm text-[#3D5A80]">
+                                <span className="font-medium">{job.child_name}</span> · {FREQUENCIES_MAP[job.frequency] || job.frequency}
+                              </p>
+                              {job.job_type === 'payday' && job.payment_amount > 0 && (
+                                <div className="flex items-center gap-3 mt-2 text-sm">
+                                  <span className="text-[#06D6A0] font-bold flex items-center gap-1">
+                                    <DollarSign className="w-3 h-3" /> ₹{job.payment_amount}/week
+                                  </span>
+                                  <span className="text-[#3D5A80] flex items-center gap-1">
+                                    {job.payment_type === 'digital' ? <CreditCard className="w-3 h-3" /> : <Banknote className="w-3 h-3" />}
+                                    {job.payment_type === 'digital' ? 'Digital' : 'Cash'}
+                                  </span>
+                                  {job.reminder_day && (
+                                    <span className="text-[#3D5A80] flex items-center gap-1">
+                                      <Calendar className="w-3 h-3" /> {DAYS_MAP[job.reminder_day] || job.reminder_day}
+                                    </span>
+                                  )}
+                                  {job.last_paid_at && (
+                                    <span className="text-xs text-[#3D5A80]">
+                                      Last paid: {new Date(job.last_paid_at).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            {job.job_type === 'payday' && job.payment_amount > 0 && (
+                              <Button
+                                size="sm"
+                                className="bg-[#06D6A0] hover:bg-[#05C493] text-white flex-shrink-0"
+                                onClick={() => handlePayJob(job)}
+                                data-testid={`pay-job-${job.job_id}`}
+                              >
+                                <DollarSign className="w-4 h-4 mr-1" /> Pay ₹{job.payment_amount}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            
+            {/* Approve Payday Job Dialog */}
+            <Dialog open={!!showApproveJob} onOpenChange={(open) => { if (!open) setShowApproveJob(null); }}>
+              <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                    Set Payment for "{showApproveJob?.activity}"
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  <p className="text-sm text-[#3D5A80]">
+                    {showApproveJob?.child_name} wants to do this job: <strong>{showApproveJob?.activity}</strong> ({FREQUENCIES_MAP[showApproveJob?.frequency] || showApproveJob?.frequency})
+                  </p>
+                  <div>
+                    <label className="block text-sm font-bold text-[#1D3557] mb-1">Weekly Payment Amount (₹)</label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={approveJobForm.payment_amount}
+                      onChange={(e) => setApproveJobForm(f => ({ ...f, payment_amount: parseInt(e.target.value) || 0 }))}
+                      className="border-3 border-[#1D3557]"
+                      data-testid="job-payment-amount"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-[#1D3557] mb-1">Payment Method</label>
+                    <Select value={approveJobForm.payment_type} onValueChange={(v) => setApproveJobForm(f => ({ ...f, payment_type: v }))}>
+                      <SelectTrigger className="border-3 border-[#1D3557]" data-testid="job-payment-type">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="digital">Digital (CoinQuest Wallet)</SelectItem>
+                        <SelectItem value="physical">Cash (Physical)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-[#1D3557] mb-1">Weekly Review Day</label>
+                    <Select value={approveJobForm.reminder_day} onValueChange={(v) => setApproveJobForm(f => ({ ...f, reminder_day: v }))}>
+                      <SelectTrigger className="border-3 border-[#1D3557]" data-testid="job-reminder-day">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(DAYS_MAP).map(([val, label]) => (
+                          <SelectItem key={val} value={val}>{label === 'Mon' ? 'Monday' : label === 'Tue' ? 'Tuesday' : label === 'Wed' ? 'Wednesday' : label === 'Thu' ? 'Thursday' : label === 'Fri' ? 'Friday' : label === 'Sat' ? 'Saturday' : 'Sunday'}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-[#3D5A80] mt-1">You'll be reminded to discuss and pay on this day</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button variant="outline" className="flex-1" onClick={() => setShowApproveJob(null)}>Cancel</Button>
+                    <Button
+                      className="flex-1 bg-[#06D6A0] hover:bg-[#05C493] text-white"
+                      onClick={() => handleApproveJob(showApproveJob)}
+                      disabled={approveJobForm.payment_amount <= 0}
+                      data-testid="confirm-approve-job"
+                    >
+                      Approve & Set Pay
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
             
             {/* Lending Section - For children in Grade 4-5 */}
             {(lendingRequests.length > 0 || Object.keys(childrenLoans).length > 0) && (

@@ -259,8 +259,8 @@ async def google_login(request: Request):
         callback_url = "https://coinquest.co.in/auth/google/callback"
         frontend_url = "https://coinquest.co.in"
     elif "coinquest-kids-2.preview.emergentagent.com" in origin:
-        callback_url = "https://coinquest-learn.preview.emergentagent.com/api/auth/google/callback"
-        frontend_url = "https://coinquest-learn.preview.emergentagent.com"
+        callback_url = "https://earn-and-learn-4.preview.emergentagent.com/api/auth/google/callback"
+        frontend_url = "https://earn-and-learn-4.preview.emergentagent.com"
     else:
         # Fallback to environment variable
         callback_url = GOOGLE_REDIRECT_URI
@@ -321,7 +321,7 @@ async def google_callback(request: Request, response: Response, code: str = None
         if "coinquest.co.in" in host:
             callback_url = "https://coinquest.co.in/auth/google/callback"
         elif "coinquest-kids-2.preview.emergentagent.com" in host:
-            callback_url = "https://coinquest-learn.preview.emergentagent.com/api/auth/google/callback"
+            callback_url = "https://earn-and-learn-4.preview.emergentagent.com/api/auth/google/callback"
         else:
             callback_url = GOOGLE_REDIRECT_URI
         print(f"Determined callback_url from host: {callback_url}")
@@ -438,7 +438,7 @@ async def google_callback(request: Request, response: Response, code: str = None
         if "coinquest.co.in" in host:
             frontend_url = "https://coinquest.co.in"
         else:
-            frontend_url = "https://coinquest-learn.preview.emergentagent.com"
+            frontend_url = "https://earn-and-learn-4.preview.emergentagent.com"
     
     # Create redirect response with session cookie
     redirect_url = f"{frontend_url}/auth/callback?session={session_token}"

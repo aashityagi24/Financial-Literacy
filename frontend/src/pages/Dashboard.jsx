@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { 
   Coins, Wallet, Store, TrendingUp, Target, Trophy, 
   User, LogOut, Flame, Gift, Sparkles,
-  ChevronRight, Star, BookOpen, Shield, GraduationCap, Users, Award, HandCoins, BookMarked
+  ChevronRight, Star, BookOpen, Shield, GraduationCap, Users, Award, HandCoins, BookMarked, Briefcase, Heart
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
@@ -22,6 +22,7 @@ export default function Dashboard({ user, setUser }) {
   const [badges, setBadges] = useState([]);
   const [badgeStats, setBadgeStats] = useState({ total: 0, earned: 0 });
   const [savingsGoals, setSavingsGoals] = useState([]);
+  const [myJobs, setMyJobs] = useState({ family_jobs: [], payday_jobs: [] });
   const [loading, setLoading] = useState(true);
   const [showStreakModal, setShowStreakModal] = useState(false);
   const showAnimations = useFirstVisitAnimation('dashboard');
@@ -48,11 +49,12 @@ export default function Dashboard({ user, setUser }) {
   
   const fetchDashboardData = async () => {
     try {
-      const [walletRes, questsRes, badgesRes, goalsRes] = await Promise.all([
+      const [walletRes, questsRes, badgesRes, goalsRes, jobsRes] = await Promise.all([
         axios.get(`${API}/wallet`),
         axios.get(`${API}/child/quests-new`),
         axios.get(`${API}/badges`),
-        axios.get(`${API}/child/savings-goals`)
+        axios.get(`${API}/child/savings-goals`),
+        axios.get(`${API}/child/jobs`).catch(() => ({ data: { family_jobs: [], payday_jobs: [] } }))
       ]);
       
       setWallet(walletRes.data);
@@ -76,6 +78,7 @@ export default function Dashboard({ user, setUser }) {
       // Set active savings goals (up to 2 for dashboard display)
       const activeGoals = (goalsRes.data || []).filter(g => !g.completed);
       setSavingsGoals(activeGoals);
+      setMyJobs(jobsRes.data);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
@@ -468,108 +471,131 @@ export default function Dashboard({ user, setUser }) {
             )}
           </div>
           
-          {/* Classroom Card */}
+          {/* My Jobs Card */}
           <div className="card-playful p-4 flex flex-col">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-bold text-[#1D3557] flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+                <Briefcase className="w-5 h-5 text-[#3D5A80]" />
+                My Jobs
+              </h2>
+              <Link to="/my-jobs" className="text-sm text-[#3D5A80] hover:text-[#1D3557]">
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            
+            {(myJobs.family_jobs.length + myJobs.payday_jobs.length) === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center py-4">
+                <Briefcase className="w-10 h-10 text-[#98C1D9] mb-2" />
+                <p className="text-sm text-[#3D5A80]">No jobs yet</p>
+                <Link to="/my-jobs" className="text-sm font-bold text-[#06D6A0] hover:underline mt-1">
+                  Add Jobs →
+                </Link>
+              </div>
+            ) : (
+              <div className="flex-1 space-y-2">
+                {myJobs.family_jobs.slice(0, 2).map((job) => (
+                  <div key={job.job_id} className="bg-[#E0FBFC] rounded-lg p-2 border border-[#1D3557]/10 flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-[#EE6C4D] flex-shrink-0" />
+                    <span className="text-xs font-medium text-[#1D3557] truncate">{job.activity}</span>
+                  </div>
+                ))}
+                {myJobs.payday_jobs.slice(0, 2).map((job) => (
+                  <div key={job.job_id} className="bg-[#FFD23F]/15 rounded-lg p-2 border border-[#FFD23F]/30 flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-[#1D3557] flex-shrink-0" />
+                    <span className="text-xs font-medium text-[#1D3557] truncate">{job.activity}</span>
+                    {job.payment_amount > 0 && <span className="text-xs font-bold text-[#06D6A0] ml-auto">₹{job.payment_amount}</span>}
+                  </div>
+                ))}
+                <Link to="/my-jobs" className="text-xs text-center text-[#3D5A80] hover:text-[#1D3557] block font-bold">
+                  Manage Jobs →
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Three Column Layout - Quests, Badges, Classroom */}
+        <div className="grid md:grid-cols-3 gap-4 mb-6">
+          {/* Active Quests - Compact */}
+          <div className={`card-playful p-4 ${showAnimations ? 'animate-bounce-in stagger-3' : ''}`}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                Active Quests
+              </h2>
+              <Link to="/quests" className="text-[#3D5A80] hover:text-[#1D3557]">
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            {quests.length === 0 ? (
+              <p className="text-center text-[#3D5A80] py-3 text-sm">No active quests. <Link to="/quests" className="text-[#3D5A80] underline font-bold">Find some!</Link></p>
+            ) : (
+              <div className="space-y-2">
+                {quests.map((quest) => (
+                  <Link key={quest.quest_id} to="/quests" className="bg-[#E0FBFC] rounded-lg border border-[#1D3557]/20 p-2 block hover:bg-[#D0EFF2]">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="font-bold text-[#1D3557] text-sm truncate flex-1">{quest.title}</h3>
+                      <span className="bg-[#FFD23F] text-[#1D3557] px-1.5 py-0.5 rounded text-xs font-bold ml-2">
+                        +₹{quest.total_points || quest.reward_amount || 0}
+                      </span>
+                    </div>
+                    <Progress value={quest.progress || 0} className="h-1.5" />
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* My Badges - Compact */}
+          <div className={`card-playful p-4 ${showAnimations ? 'animate-bounce-in stagger-4' : ''}`}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                  My Badges
+                </h2>
+                <span className="text-xs bg-[#FFD23F] text-[#1D3557] px-1.5 py-0.5 rounded-full font-bold">
+                  {badgeStats.earned}/{badgeStats.total}
+                </span>
+              </div>
+              <Link to="/achievements" className="text-[#3D5A80] hover:text-[#1D3557]">
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            {badges.length === 0 ? (
+              <p className="text-center text-[#3D5A80] py-3 text-sm">Complete activities to earn badges!</p>
+            ) : (
+              <div className="grid grid-cols-4 gap-2">
+                {badges.slice(0, 8).map((badge) => {
+                  const hasImage = badge.image_url && badge.image_url.length > 0;
+                  const imageUrl = hasImage ? getAssetUrl(badge.image_url) : null;
+                  return (
+                    <div key={badge.achievement_id} className={`text-center ${!badge.earned ? 'opacity-40' : ''}`} title={badge.name}>
+                      <div className={`w-12 h-12 mx-auto rounded-lg border-2 flex items-center justify-center overflow-hidden ${
+                        badge.earned ? 'bg-[#FFD23F] border-[#1D3557]' : 'bg-gray-200 border-gray-400 grayscale'
+                      }`}>
+                        {hasImage ? (
+                          <img src={imageUrl} alt={badge.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                        ) : (
+                          <span className="text-lg">{badge.icon}</span>
+                        )}
+                      </div>
+                      <p className={`text-[10px] font-bold mt-1 truncate ${badge.earned ? 'text-[#1D3557]' : 'text-gray-400'}`}>
+                        {badge.name}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          
+          {/* My Classroom - Compact */}
+          <div className={`card-playful p-4 ${showAnimations ? 'animate-bounce-in stagger-5' : ''}`}>
             <ClassmatesSection 
               giftingBalance={wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance || 0} 
               compact={true} 
               wallet={wallet}
               onRefresh={fetchDashboardData}
             />
-          </div>
-        </div>
-        
-        {/* Two Column Layout */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Active Quests */}
-          <div className={`card-playful p-6 ${showAnimations ? 'animate-bounce-in stagger-3' : ''}`}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                Active Quests
-              </h2>
-              <Link to="/quests" className="text-[#3D5A80] hover:text-[#1D3557] flex items-center gap-1">
-                See All <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-            
-            {quests.length === 0 ? (
-              <p className="text-center text-[#3D5A80] py-4">No active quests. <Link to="/quests" className="text-[#3D5A80] underline font-bold">Find some!</Link></p>
-            ) : (
-              <div className="space-y-3">
-                {quests.map((quest) => (
-                  <div key={quest.quest_id} className="bg-[#E0FBFC] rounded-xl border-2 border-[#1D3557] p-3">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-bold text-[#1D3557]">{quest.title}</h3>
-                        <p className="text-base text-[#3D5A80]">{quest.description}</p>
-                      </div>
-                      <span className="bg-[#FFD23F] text-[#1D3557] px-2 py-1 rounded-lg text-base font-bold">
-                        +₹{quest.total_points || quest.reward_amount || 0}
-                      </span>
-                    </div>
-                    <Progress value={quest.progress || 0} className="h-2" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {/* My Badges Section - 8 cute square cards */}
-          <div className={`card-playful p-6 ${showAnimations ? 'animate-bounce-in stagger-4' : ''}`}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                  My Badges
-                </h2>
-                <span className="text-sm bg-[#FFD23F] text-[#1D3557] px-2 py-0.5 rounded-full font-bold">
-                  {badgeStats.earned}/{badgeStats.total}
-                </span>
-              </div>
-              <Link to="/achievements" className="text-[#3D5A80] hover:text-[#1D3557] flex items-center gap-1">
-                See All <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-            
-            {badges.length === 0 ? (
-              <p className="text-center text-[#3D5A80] py-4">Complete activities to earn your first badge!</p>
-            ) : (
-              <div className="grid grid-cols-4 gap-4 gap-y-5">
-                {badges.map((badge) => {
-                  const hasImage = badge.image_url && badge.image_url.length > 0;
-                  const imageUrl = hasImage ? getAssetUrl(badge.image_url) : null;
-                  return (
-                  <div 
-                    key={badge.achievement_id} 
-                    className={`text-center group cursor-pointer ${!badge.earned ? 'opacity-40' : ''}`}
-                    title={`${badge.name} - ${badge.description}${hasImage ? ' (has image)' : ' (no image)'}`}
-                  >
-                    <div className={`w-16 h-16 mx-auto rounded-xl border-2 flex items-center justify-center overflow-hidden transition-all ${
-                      badge.earned 
-                        ? 'bg-[#FFD23F] border-[#1D3557] badge-earned group-hover:scale-110' 
-                        : 'bg-gray-200 border-gray-400 grayscale'
-                    }`}>
-                      {hasImage ? (
-                        <img 
-                          src={imageUrl} 
-                          alt={badge.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            console.error('Image failed to load:', imageUrl);
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <span className="text-2xl">{badge.icon}</span>
-                      )}
-                    </div>
-                    <p className={`text-xs font-bold mt-1.5 truncate ${badge.earned ? 'text-[#1D3557]' : 'text-gray-400'}`}>
-                      {badge.name}
-                    </p>
-                  </div>
-                  );
-                })}
-              </div>
-            )}
           </div>
         </div>
         
