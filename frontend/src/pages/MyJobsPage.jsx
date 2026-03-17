@@ -186,7 +186,7 @@ export default function MyJobsPage({ user }) {
     <div className="min-h-screen bg-[#E0FBFC] flex flex-col">
       {/* Header area */}
       <div className="bg-[#1D3557] px-4 pt-4 pb-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-3 mb-5">
             <Link to="/dashboard" className="text-white/60 hover:text-white p-1 transition-colors">
               <ArrowLeft className="w-5 h-5" />
@@ -214,8 +214,8 @@ export default function MyJobsPage({ user }) {
                 <Star className="w-4 h-4 text-[#1D3557]" />
               </div>
               <div>
-                <h2 className="font-bold text-white text-sm mb-0.5" style={{ fontFamily: 'Fredoka' }}>What is a Job?</h2>
-                <p className="text-xs text-white/70 leading-relaxed">
+                <h2 className="font-bold text-white text-base mb-1" style={{ fontFamily: 'Fredoka' }}>What is a Job?</h2>
+                <p className="text-sm text-white/70 leading-relaxed">
                   A job is something you do regularly at home. Some jobs are for the family (no pay), and some earn you money. You can add up to 3 of each!
                 </p>
               </div>
@@ -226,7 +226,10 @@ export default function MyJobsPage({ user }) {
 
       {/* Content area */}
       <div className="bg-[#E0FBFC] rounded-t-[2rem] -mt-4 px-4 pt-6 pb-8 flex-1">
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6">
+
+          {/* Two-column layout for job sections */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* Family Jobs Section */}
           <div className="bg-gradient-to-br from-[#FFF1EE] to-[#FFE4DE] rounded-2xl p-5 border border-[#EE6C4D]/15" data-testid="family-jobs-section">
@@ -234,10 +237,10 @@ export default function MyJobsPage({ user }) {
               <div className="w-7 h-7 rounded-lg bg-[#EE6C4D] flex items-center justify-center">
                 <Heart className="w-3.5 h-3.5 text-white" />
               </div>
-              <h2 className="text-base font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Family Jobs</h2>
+              <h2 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Family Jobs</h2>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#EE6C4D]/15 text-[#EE6C4D] font-bold">{familyJobs.length}/3</span>
             </div>
-            <p className="text-xs text-[#3D5A80] mb-3 ml-9">Things I do because I'm part of the family — no pay needed!</p>
+            <p className="text-sm text-[#3D5A80] mb-3 ml-9">Things I do because I'm part of the family — no pay needed!</p>
 
             <div className="space-y-2">
               {familyJobs.map(renderJobCard)}
@@ -264,10 +267,10 @@ export default function MyJobsPage({ user }) {
               <div className="w-7 h-7 rounded-lg bg-[#FFD23F] flex items-center justify-center">
                 <Coins className="w-3.5 h-3.5 text-[#1D3557]" />
               </div>
-              <h2 className="text-base font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Payday Jobs</h2>
+              <h2 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Payday Jobs</h2>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFD23F]/30 text-[#B8860B] font-bold">{paydayJobs.length}/3</span>
             </div>
-            <p className="text-xs text-[#3D5A80] mb-3 ml-9">Extra tasks that earn me money every week</p>
+            <p className="text-sm text-[#3D5A80] mb-3 ml-9">Extra tasks that earn me money every week</p>
 
             <div className="space-y-2">
               {paydayJobs.map(renderJobCard)}
@@ -287,6 +290,8 @@ export default function MyJobsPage({ user }) {
               )}
             </div>
           </div>
+
+          </div> {/* end grid */}
 
           {/* Tip card at bottom */}
           <div className="bg-[#1D3557]/5 rounded-2xl p-4 flex items-start gap-3 border border-[#1D3557]/8">
