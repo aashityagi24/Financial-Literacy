@@ -413,7 +413,7 @@ export default function AdminStoreManagement({ user }) {
                             ₹{item.price}
                             <span className="text-xs font-normal text-gray-500">/{item.unit || 'piece'}</span>
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">K{item.min_grade}-{item.max_grade}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{item.min_grade === 0 ? 'K' : `Grade ${item.min_grade}`} - {item.max_grade === 0 ? 'K' : `Grade ${item.max_grade}`}</td>
                           <td className="px-4 py-3">
                             <span className={`text-xs px-2 py-1 rounded-full ${item.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                               {item.is_active ? 'Active' : 'Inactive'}
@@ -629,9 +629,12 @@ export default function AdminStoreManagement({ user }) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[0, 1, 2, 3, 4, 5].map((g) => (
-                      <SelectItem key={g} value={String(g)}>K{g}</SelectItem>
-                    ))}
+                    <SelectItem value="0">Kindergarten</SelectItem>
+                    <SelectItem value="1">Grade 1</SelectItem>
+                    <SelectItem value="2">Grade 2</SelectItem>
+                    <SelectItem value="3">Grade 3</SelectItem>
+                    <SelectItem value="4">Grade 4</SelectItem>
+                    <SelectItem value="5">Grade 5</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -643,9 +646,12 @@ export default function AdminStoreManagement({ user }) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[0, 1, 2, 3, 4, 5].map((g) => (
-                      <SelectItem key={g} value={String(g)}>K{g}</SelectItem>
-                    ))}
+                    <SelectItem value="0">Kindergarten</SelectItem>
+                    <SelectItem value="1">Grade 1</SelectItem>
+                    <SelectItem value="2">Grade 2</SelectItem>
+                    <SelectItem value="3">Grade 3</SelectItem>
+                    <SelectItem value="4">Grade 4</SelectItem>
+                    <SelectItem value="5">Grade 5</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
