@@ -56,6 +56,10 @@ export default function AdminPage({ user }) {
   const [subDialog, setSubDialog] = useState({ open: false, userId: null, userName: '', currentStatus: '' });
   const [subDuration, setSubDuration] = useState('1_month');
   
+  // Multi-select state
+  const [selectedUsers, setSelectedUsers] = useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  
   // Filters for user management
   const [filters, setFilters] = useState({
     role: 'all',
@@ -161,9 +165,54 @@ export default function AdminPage({ user }) {
     try {
       await axios.delete(`${API}/admin/users/${userId}`);
       toast.success(`User ${userName} deleted`);
+      setSelectedUsers(prev => { const s = new Set(prev); s.delete(userId); return s; });
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to delete user');
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const count = selectedUsers.size;
+    const selfSelected = selectedUsers.has(user?.user_id);
+    if (selfSelected) {
+      toast.error('Cannot delete your own account. Deselect yourself first.');
+      return;
+    }
+    if (!confirm(`Are you sure you want to delete ${count} user${count > 1 ? 's' : ''}? This will permanently delete ALL their data.`)) {
+      return;
+    }
+    
+    setBulkDeleting(true);
+    let deleted = 0;
+    let failed = 0;
+    for (const userId of selectedUsers) {
+      try {
+        await axios.delete(`${API}/admin/users/${userId}`);
+        deleted++;
+      } catch {
+        failed++;
+      }
+    }
+    setBulkDeleting(false);
+    setSelectedUsers(new Set());
+    toast.success(`Deleted ${deleted} user${deleted > 1 ? 's' : ''}${failed ? `, ${failed} failed` : ''}`);
+    fetchData();
+  };
+
+  const toggleSelectUser = (userId) => {
+    setSelectedUsers(prev => {
+      const s = new Set(prev);
+      if (s.has(userId)) s.delete(userId); else s.add(userId);
+      return s;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUsers.size === filteredUsers.length) {
+      setSelectedUsers(new Set());
+    } else {
+      setSelectedUsers(new Set(filteredUsers.map(u => u.user_id)));
     }
   };
   
@@ -553,7 +602,19 @@ export default function AdminPage({ user }) {
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-800">User Management</h2>
-              <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
+              <div className="flex items-center gap-3">
+                {selectedUsers.size > 0 && (
+                  <button
+                    onClick={handleBulkDelete}
+                    disabled={bulkDeleting}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                    data-testid="bulk-delete-btn"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    {bulkDeleting ? 'Deleting...' : `Delete ${selectedUsers.size} Selected`}
+                  </button>
+                )}
+                <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
                 <DialogTrigger asChild>
                   <button className="flex items-center gap-2 px-4 py-2 bg-[#06D6A0] text-white rounded-lg hover:bg-[#05C090] transition-colors">
                     <Plus className="w-4 h-4" />
@@ -649,6 +710,7 @@ export default function AdminPage({ user }) {
                   </div>
                 </DialogContent>
               </Dialog>
+              </div>
             </div>
             
             {/* Filters */}
@@ -713,6 +775,15 @@ export default function AdminPage({ user }) {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
+                    <th className="py-3 px-3 w-10">
+                      <input
+                        type="checkbox"
+                        checked={filteredUsers.length > 0 && selectedUsers.size === filteredUsers.length}
+                        onChange={toggleSelectAll}
+                        className="w-4 h-4 rounded border-gray-300 text-[#1D3557] focus:ring-[#1D3557] cursor-pointer"
+                        data-testid="select-all-checkbox"
+                      />
+                    </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">User</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Email</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Role</th>
@@ -726,7 +797,16 @@ export default function AdminPage({ user }) {
                 </thead>
                 <tbody>
                   {filteredUsers.map((u) => (
-                    <tr key={u.user_id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <tr key={u.user_id} className={`border-b border-gray-100 hover:bg-gray-50 ${selectedUsers.has(u.user_id) ? 'bg-blue-50' : ''}`}>
+                      <td className="py-3 px-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.has(u.user_id)}
+                          onChange={() => toggleSelectUser(u.user_id)}
+                          className="w-4 h-4 rounded border-gray-300 text-[#1D3557] focus:ring-[#1D3557] cursor-pointer"
+                          data-testid={`select-user-${u.user_id}`}
+                        />
+                      </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           {u.picture ? (

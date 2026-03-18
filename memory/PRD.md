@@ -919,6 +919,11 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Multi-User Selection & Bulk Delete** (March 18, 2026)
+  - Checkbox selection in admin user management table with select-all
+  - "Delete X Selected" button appears when users are selected
+  - Safety: prevents admin from deleting their own account
+  - Selected rows highlighted with blue background
 - **Admin Subscription Management** (March 18, 2026)
   - Admin can view subscription status (Active/Inactive) for all parent/child users in user management table
   - Admin can activate subscriptions with durations: 1 Day, 1 Week, 1 Month
