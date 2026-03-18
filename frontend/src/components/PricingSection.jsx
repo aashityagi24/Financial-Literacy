@@ -115,6 +115,12 @@ export default function PricingSection() {
 
       const { order_id, amount, currency, key_id } = orderRes.data;
 
+      if (!order_id || !key_id) {
+        toast.error('Payment gateway configuration error. Please contact support.');
+        setIsProcessing(false);
+        return;
+      }
+
       const options = {
         key: key_id || RAZORPAY_KEY,
         amount,
@@ -155,7 +161,8 @@ export default function PricingSection() {
       });
       rzp.open();
     } catch (err) {
-      toast.error('Failed to initiate payment. Please try again.');
+      const detail = err.response?.data?.detail || err.message || 'Unknown error';
+      toast.error(`Failed to initiate payment: ${detail}`);
       setIsProcessing(false);
     }
   };

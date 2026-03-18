@@ -163,6 +163,8 @@ async def create_order(order: CreateOrderRequest):
             }
         })
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Payment order creation failed: {str(e)}")
     
     # Calculate dates
