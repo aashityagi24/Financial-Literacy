@@ -33,6 +33,56 @@ GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 
+
+def _get_frontend_origin(request: Request, state: str = None) -> str:
+    """Derive the frontend origin dynamically from request context."""
+    # 1. Try state parameter (set during login initiation)
+    if state:
+        try:
+            decoded = urllib.parse.unquote(state)
+            parsed = urllib.parse.urlparse(decoded)
+            if parsed.scheme and parsed.netloc:
+                return f"{parsed.scheme}://{parsed.netloc}"
+        except Exception:
+            pass
+    # 2. Try origin header
+    origin = request.headers.get("origin", "").rstrip("/")
+    if origin and origin.startswith("http"):
+        return origin
+    # 3. Try referer header
+    referer = request.headers.get("referer", "")
+    if referer:
+        parsed = urllib.parse.urlparse(referer)
+        if parsed.scheme and parsed.netloc:
+            return f"{parsed.scheme}://{parsed.netloc}"
+    # 4. Derive from host header
+    host = request.headers.get("host", "")
+    if host:
+        scheme = "https"
+        return f"{scheme}://{host}"
+    # 5. Fallback to env
+    redirect_uri = os.environ.get("GOOGLE_REDIRECT_URI", "")
+    if redirect_uri:
+        parsed = urllib.parse.urlparse(redirect_uri)
+        return f"{parsed.scheme}://{parsed.netloc}"
+    return ""
+
+
+def _get_callback_url(origin: str) -> str:
+    """Build the Google OAuth callback URL from the frontend origin.
+    Production custom domain uses /auth/google/callback (Nginx proxies to /api).
+    Preview/Emergent domains use /api/auth/google/callback directly.
+    """
+    if not origin:
+        return GOOGLE_REDIRECT_URI or ""
+    parsed = urllib.parse.urlparse(origin)
+    host = parsed.netloc or ""
+    # Custom domains (e.g. coinquest.co.in) proxy /auth → /api/auth via Nginx
+    if host and not host.endswith(".emergentagent.com") and not host.endswith(".emergent.host"):
+        return f"{origin}/auth/google/callback"
+    # Emergent preview/deployed domains use /api prefix
+    return f"{origin}/api/auth/google/callback"
+
 class AdminLoginRequest(BaseModel):
     email: str
     password: str
@@ -292,30 +342,9 @@ async def school_login(login_data: SchoolLoginRequest, response: Response):
 @router.get("/google/login")
 async def google_login(request: Request):
     """Initiate Google OAuth login"""
-    # Get the origin from headers to determine correct redirect URI
-    origin = request.headers.get("origin") or request.headers.get("referer", "")
-    
-    # Determine the correct callback URL based on origin
-    # NOTE: For custom domains, the redirect URI must match exactly what's registered in Google Console
-    if "coinquest.co.in" in origin:
-        # Production domain - use /auth/google/callback (without /api) as registered in Google Console
-        callback_url = "https://coinquest.co.in/auth/google/callback"
-        frontend_url = "https://coinquest.co.in"
-    elif "coinquest-kids-2.preview.emergentagent.com" in origin:
-        callback_url = "https://coinquest-preview.preview.emergentagent.com/api/auth/google/callback"
-        frontend_url = "https://coinquest-preview.preview.emergentagent.com"
-    else:
-        # Fallback to environment variable
-        callback_url = GOOGLE_REDIRECT_URI
-        frontend_url = origin.rstrip("/") if origin else ""
-    
-    # Store the frontend URL origin (without path) in state for redirect after auth
-    if frontend_url:
-        parsed = urllib.parse.urlparse(frontend_url)
-        frontend_origin = f"{parsed.scheme}://{parsed.netloc}" if parsed.scheme and parsed.netloc else frontend_url
-    else:
-        frontend_origin = ""
-    state = urllib.parse.quote(frontend_origin) if frontend_origin else ""
+    frontend_url = _get_frontend_origin(request)
+    callback_url = _get_callback_url(frontend_url)
+    state = urllib.parse.quote(frontend_url) if frontend_url else ""
     
     params = {
         "client_id": GOOGLE_CLIENT_ID,
@@ -354,23 +383,14 @@ async def google_callback(request: Request, response: Response, code: str = None
         raise HTTPException(status_code=400, detail="No authorization code received")
     
     # Use provided redirect_uri if available (from frontend forwarding)
-    # Otherwise determine based on host - MUST match what's registered in Google Console
+    # Otherwise determine dynamically from request
     if redirect_uri:
         callback_url = redirect_uri
-        print(f"Using provided redirect_uri: {callback_url}")
     else:
-        host = request.headers.get("host", "")
-        # For coinquest.co.in, use /auth/google/callback (without /api) as registered in Google Console
-        if "coinquest.co.in" in host:
-            callback_url = "https://coinquest.co.in/auth/google/callback"
-        elif "coinquest-kids-2.preview.emergentagent.com" in host:
-            callback_url = "https://coinquest-preview.preview.emergentagent.com/api/auth/google/callback"
-        else:
-            callback_url = GOOGLE_REDIRECT_URI
-        print(f"Determined callback_url from host: {callback_url}")
+        origin = _get_frontend_origin(request, state)
+        callback_url = _get_callback_url(origin)
     
     # Exchange code for tokens
-    print(f"Exchanging code with redirect_uri: {callback_url}")
     async with httpx.AsyncClient(timeout=30.0) as client:
         token_response = await client.post(
             GOOGLE_TOKEN_URL,
@@ -465,13 +485,7 @@ async def google_callback(request: Request, response: Response, code: str = None
                 "end_date": {"$gt": _now}
             })
             if not _sub:
-                if state:
-                    _fe = urllib.parse.unquote(state)
-                    _p = urllib.parse.urlparse(_fe)
-                    _fe = f"{_p.scheme}://{_p.netloc}"
-                else:
-                    _h = request.headers.get("host", "")
-                    _fe = "https://coinquest.co.in" if "coinquest.co.in" in _h else "https://coinquest-preview.preview.emergentagent.com"
+                _fe = _get_frontend_origin(request, state)
                 return RedirectResponse(url=f"{_fe}/?no_subscription=true", status_code=302)
 
     
@@ -495,18 +509,8 @@ async def google_callback(request: Request, response: Response, code: str = None
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    # Determine frontend URL - from state or based on host
-    if state:
-        frontend_url = urllib.parse.unquote(state)
-        # Extract only the origin (scheme + host) from the URL, removing any path
-        parsed = urllib.parse.urlparse(frontend_url)
-        frontend_url = f"{parsed.scheme}://{parsed.netloc}"
-    else:
-        host = request.headers.get("host", "")
-        if "coinquest.co.in" in host:
-            frontend_url = "https://coinquest.co.in"
-        else:
-            frontend_url = "https://coinquest-preview.preview.emergentagent.com"
+    # Determine frontend URL dynamically
+    frontend_url = _get_frontend_origin(request, state)
     
     # Create redirect response with session cookie
     redirect_url = f"{frontend_url}/auth/callback?session={session_token}"
