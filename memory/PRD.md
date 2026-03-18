@@ -894,3 +894,35 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - `/app/frontend/src/pages/LandingPage.jsx` - Added PricingSection, updated CTAs
 - `/app/frontend/src/pages/AdminPage.jsx` - Added Subscriptions management card
 - `/app/backend/routes/auth.py` - Added subscription_status to /auth/me response
+
+#### Feature: Chunked File Upload System ✅ (P0, March 18, 2026)
+- **Problem**: Large file uploads (videos, PDFs, images) failed on production server (`coinquest.co.in`) due to proxy/ingress body size limits (~1MB).
+- **Solution**: Implemented chunked upload system that splits files into 512KB chunks on the client and reassembles on the server.
+- **Backend** (`/app/backend/routes/uploads.py`):
+  - `POST /api/upload/chunked/init` - Initialize upload session
+  - `POST /api/upload/chunked/part` - Upload individual chunks
+  - `POST /api/upload/chunked/complete` - Assemble chunks into final file
+  - DEST_MAP routes files to correct subdirectories (video, image, thumbnail, pdf, badge, quest, repository, store, glossary, investment, goal)
+- **Frontend** (`/app/frontend/src/utils/chunkedUpload.js`):
+  - `uploadFile(file, destType, directEndpoint, onProgress)` utility
+  - Files < 512KB use direct upload; larger files use chunked upload
+  - Progress callback support for UI feedback
+- **Refactored ALL frontend upload points** to use `uploadFile`:
+  - AdminStoreManagement.jsx, AdminInvestmentManagement.jsx, AdminGlossaryManagement.jsx
+  - AdminBadgeManagement.jsx, AdminVideoManagement.jsx, AdminQuestsPage.jsx
+  - AdminTeacherRepository.jsx, ContentManagement.jsx, TeacherDashboard.jsx
+  - ProfilePage.jsx, SavingsGoalsPage.jsx
+- **Testing**: 20/20 backend tests passed, all frontend pages verified. Test file: `/app/backend/tests/test_chunked_upload.py`
+
+## Pending Issues
+- **P1**: Payment failure on live site (coinquest.co.in) - likely deployment issue, needs redeployment with latest code
+- **P2**: Teacher-uploaded quest assets not visible to children - needs investigation with test data
+- **P2**: Badge images missing - requires manual re-upload by admin
+
+## Upcoming Tasks
+- **P1**: Streak Bonuses & Leaderboards
+- **P1**: Safety Guardrails (spending limits, parent approval)
+- **P2**: Teacher/Parent Collaboration Portal
+- **P2**: Collaborative & Seasonal Events
+- **P2**: Email notifications for loan events
+- **P2**: Tutorial System for new users
