@@ -915,8 +915,8 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **Testing**: 20/20 backend tests passed, all frontend pages verified. Test file: `/app/backend/tests/test_chunked_upload.py`
 
 ## Pending Issues
-- **P1**: Payment failure on live site (coinquest.co.in) - likely deployment issue, needs redeployment with latest code
-- **P2**: Teacher-uploaded quest assets not visible to children - needs investigation with test data
+- **P1**: Payment failure on live site (coinquest.co.in) - VERIFIED WORKING in preview. Production needs redeployment with latest code and correct .env variables (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET).
+- **P2 RESOLVED**: Teacher-uploaded quest assets now display correctly for children (verified with test data: images, PDFs, and per-question images all render in quest list and detail views).
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Upcoming Tasks
