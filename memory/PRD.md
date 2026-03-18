@@ -916,8 +916,16 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 
 ## Pending Issues
 - **P1**: Payment failure on live site (coinquest.co.in) - VERIFIED WORKING in preview. Production needs redeployment with latest code and correct .env variables (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET).
-- **P2 RESOLVED**: Teacher-uploaded quest assets now display correctly for children (verified with test data: images, PDFs, and per-question images all render in quest list and detail views).
 - **P2**: Badge images missing - requires manual re-upload by admin
+
+## Recently Completed
+- **Admin Subscription Management** (March 18, 2026)
+  - Admin can view subscription status (Active/Inactive) for all parent/child users in user management table
+  - Admin can activate subscriptions with durations: 1 Day, 1 Week, 1 Month
+  - Admin can renew or deactivate existing subscriptions
+  - Backend endpoint: `PUT /api/admin/users/{user_id}/subscription`
+  - Admin-granted subscriptions stored with `granted_by_admin: true` flag
+  - CSV bulk upload (students + parents) now supports `subscription` and `subscription_duration` columns for school tie-ups
 
 ## Upcoming Tasks
 - **P1**: Streak Bonuses & Leaderboards
