@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
+import { uploadFile } from '@/utils/chunkedUpload';
 import { toast } from 'sonner';
 import { 
   ChevronLeft, Plus, Target, Trash2, Edit2, Upload,
@@ -94,14 +95,9 @@ export default function AdminQuestsPage({ user }) {
     const file = e.target.files[0];
     if (!file) return;
     
-    const formDataUpload = new FormData();
-    formDataUpload.append('file', file);
-    
     try {
-      const res = await axios.post(`${API}/upload/quest-asset`, formDataUpload, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setFormData(prev => ({ ...prev, [type]: res.data.url }));
+      const res = await uploadFile(file, 'quest', '/upload/quest-asset');
+      setFormData(prev => ({ ...prev, [type]: res.url }));
       toast.success(`${type === 'image_url' ? 'Image' : 'PDF'} uploaded!`);
     } catch (error) {
       toast.error('Upload failed');
@@ -437,13 +433,9 @@ export default function AdminQuestsPage({ user }) {
                                 onChange={async (e) => {
                                   const file = e.target.files[0];
                                   if (!file) return;
-                                  const formDataUpload = new FormData();
-                                  formDataUpload.append('file', file);
                                   try {
-                                    const res = await axios.post(`${API}/upload/quest-asset`, formDataUpload, {
-                                      headers: { 'Content-Type': 'multipart/form-data' }
-                                    });
-                                    updateQuestion(qIndex, 'image_url', res.data.url);
+                                    const res = await uploadFile(file, 'quest', '/upload/quest-asset');
+                                    updateQuestion(qIndex, 'image_url', res.url);
                                   } catch (error) {
                                     toast.error('Image upload failed');
                                   }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
+import { uploadFile } from '@/utils/chunkedUpload';
 import { toast } from 'sonner';
 import { 
   BookOpen, ChevronLeft, Plus, Search, Edit2, Trash2, 
@@ -187,20 +188,9 @@ export default function AdminGlossaryManagement({ user }) {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Check file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image must be smaller than 2MB');
-      return;
-    }
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    
     try {
-      const res = await axios.post(`${API}/upload/image`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setForm({ ...form, image_url: res.data.url, video_url: '', media_type: 'image' });
+      const res = await uploadFile(file, 'glossary', '/upload/image');
+      setForm({ ...form, image_url: res.url, video_url: '', media_type: 'image' });
       toast.success('Image uploaded');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to upload image');
@@ -211,24 +201,15 @@ export default function AdminGlossaryManagement({ user }) {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Check file size (max 50MB)
-    if (file.size > 50 * 1024 * 1024) {
-      toast.error('Video must be smaller than 50MB');
-      return;
-    }
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    
     try {
       toast.info('Uploading video...');
-      const res = await axios.post(`${API}/upload/glossary-video`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      const res = await uploadFile(file, 'video', '/upload/glossary-video', (progress) => {
+        toast.loading(`Uploading video... ${progress}%`, { id: 'glossary-video-upload' });
       });
-      setForm({ ...form, video_url: res.data.url, image_url: '', media_type: 'video' });
-      toast.success('Video uploaded');
+      setForm({ ...form, video_url: res.url, image_url: '', media_type: 'video' });
+      toast.success('Video uploaded', { id: 'glossary-video-upload' });
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to upload video');
+      toast.error(error.response?.data?.detail || 'Failed to upload video', { id: 'glossary-video-upload' });
     }
   };
   

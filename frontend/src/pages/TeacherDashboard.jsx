@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { uploadFile } from '@/utils/chunkedUpload';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
@@ -423,15 +424,9 @@ export default function TeacherDashboard({ user }) {
   const handleQuestFileUpload = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
-    
-    const formDataUpload = new FormData();
-    formDataUpload.append('file', file);
-    
     try {
-      const res = await axios.post(`${API}/upload/quest-asset`, formDataUpload, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setQuestForm(prev => ({ ...prev, [type]: res.data.url }));
+      const res = await uploadFile(file, 'quest', '/upload/quest-asset');
+      setQuestForm(prev => ({ ...prev, [type]: res.url }));
       toast.success(`${type === 'image_url' ? 'Image' : 'PDF'} uploaded!`);
     } catch (error) {
       toast.error('Upload failed');
@@ -483,13 +478,9 @@ export default function TeacherDashboard({ user }) {
   const handleQuestionImageUpload = async (e, qIndex) => {
     const file = e.target.files[0];
     if (!file) return;
-    const formDataUpload = new FormData();
-    formDataUpload.append('file', file);
     try {
-      const res = await axios.post(`${API}/upload/quest-asset`, formDataUpload, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      updateQuestion(qIndex, 'image_url', res.data.url);
+      const res = await uploadFile(file, 'quest', '/upload/quest-asset');
+      updateQuestion(qIndex, 'image_url', res.url);
       toast.success('Question image uploaded!');
     } catch (error) {
       toast.error('Image upload failed');

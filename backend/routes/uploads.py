@@ -290,3 +290,135 @@ async def upload_investment_image(file: UploadFile = File(...)):
         f.write(content)
     
     return {"url": f"/api/uploads/investments/{filename}"}
+
+
+# ============== CHUNKED UPLOAD ==============
+CHUNKS_DIR = UPLOADS_DIR / "chunks"
+CHUNKS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Map destination types to directories
+DEST_MAP = {
+    "video": VIDEOS_DIR,
+    "image": GLOSSARY_IMAGES_DIR,
+    "thumbnail": THUMBNAILS_DIR,
+    "pdf": PDFS_DIR,
+    "badge": BADGES_DIR,
+    "quest": UPLOADS_DIR / "quests",
+    "repository": UPLOADS_DIR / "repository",
+    "store": STORE_IMAGES_DIR,
+    "glossary": GLOSSARY_IMAGES_DIR,
+    "investment": INVESTMENT_IMAGES_DIR,
+    "goal": THUMBNAILS_DIR,
+    "activity": ACTIVITIES_DIR,
+}
+
+from fastapi import Form
+
+@router.post("/chunked/init")
+async def chunked_upload_init(filename: str = Form(...), dest_type: str = Form("video"), total_chunks: int = Form(1)):
+    """Initialize a chunked upload session"""
+    upload_id = uuid.uuid4().hex[:16]
+    upload_dir = CHUNKS_DIR / upload_id
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    return {"upload_id": upload_id, "filename": filename, "dest_type": dest_type}
+
+@router.post("/chunked/part")
+async def chunked_upload_part(
+    upload_id: str = Form(...),
+    chunk_index: int = Form(...),
+    file: UploadFile = File(...)
+):
+    """Upload a single chunk"""
+    upload_dir = CHUNKS_DIR / upload_id
+    if not upload_dir.exists():
+        raise HTTPException(status_code=404, detail="Upload session not found")
+    
+    chunk_path = upload_dir / f"chunk_{chunk_index:04d}"
+    content = await file.read()
+    with open(chunk_path, "wb") as f:
+        f.write(content)
+    
+    return {"chunk_index": chunk_index, "received": len(content)}
+
+@router.post("/chunked/complete")
+async def chunked_upload_complete(
+    upload_id: str = Form(...),
+    filename: str = Form(...),
+    dest_type: str = Form("video"),
+    total_chunks: int = Form(1)
+):
+    """Assemble chunks into the final file"""
+    upload_dir = CHUNKS_DIR / upload_id
+    if not upload_dir.exists():
+        raise HTTPException(status_code=404, detail="Upload session not found")
+    
+    # Determine destination
+    dest_dir = DEST_MAP.get(dest_type, VIDEOS_DIR)
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    
+    file_ext = os.path.splitext(filename)[1].lower()
+    final_filename = f"{uuid.uuid4().hex[:16]}{file_ext}"
+    
+    # Handle zip files for activities
+    if dest_type == "activity" and file_ext == ".zip":
+        # Assemble into temp file first
+        temp_path = upload_dir / f"temp{file_ext}"
+        with open(temp_path, "wb") as outfile:
+            for i in range(total_chunks):
+                chunk_path = upload_dir / f"chunk_{i:04d}"
+                if not chunk_path.exists():
+                    raise HTTPException(status_code=400, detail=f"Missing chunk {i}")
+                with open(chunk_path, "rb") as chunk:
+                    outfile.write(chunk.read())
+        
+        # Extract zip
+        folder_name = uuid.uuid4().hex[:12]
+        extract_dir = ACTIVITIES_DIR / folder_name
+        extract_dir.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(temp_path, 'r') as zip_ref:
+            zip_ref.extractall(extract_dir)
+        
+        # Find HTML file
+        html_file = None
+        for f in extract_dir.rglob("*.html"):
+            html_file = f.name
+            break
+        
+        # Cleanup
+        shutil.rmtree(upload_dir, ignore_errors=True)
+        
+        if html_file:
+            return {"url": f"/api/uploads/activities/{folder_name}/{html_file}", "folder": folder_name}
+        return {"url": f"/api/uploads/activities/{folder_name}/index.html", "folder": folder_name}
+    
+    # Standard file assembly
+    final_path = dest_dir / final_filename
+    with open(final_path, "wb") as outfile:
+        for i in range(total_chunks):
+            chunk_path = upload_dir / f"chunk_{i:04d}"
+            if not chunk_path.exists():
+                raise HTTPException(status_code=400, detail=f"Missing chunk {i}")
+            with open(chunk_path, "rb") as chunk:
+                outfile.write(chunk.read())
+    
+    # Cleanup chunks
+    shutil.rmtree(upload_dir, ignore_errors=True)
+    
+    # Build URL path based on dest_type
+    url_prefix_map = {
+        "video": "videos",
+        "image": "glossary",
+        "thumbnail": "thumbnails",
+        "pdf": "pdfs",
+        "badge": "badges",
+        "quest": "quests",
+        "repository": "repository",
+        "store": "store",
+        "glossary": "glossary",
+        "investment": "investments",
+        "goal": "thumbnails",
+    }
+    url_prefix = url_prefix_map.get(dest_type, "videos")
+    
+    return {"url": f"/api/uploads/{url_prefix}/{final_filename}"}

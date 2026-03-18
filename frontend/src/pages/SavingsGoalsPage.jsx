@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
+import { uploadFile } from '@/utils/chunkedUpload';
 import { toast } from 'sonner';
 import { Target, ChevronLeft, Plus, Check, Calendar, Wallet, ArrowLeftRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
@@ -95,12 +96,8 @@ export default function SavingsGoalsPage({ user }) {
       
       // Upload image if provided
       if (goalForm.image) {
-        const formData = new FormData();
-        formData.append('file', goalForm.image);
-        const uploadRes = await axios.post(`${API}/upload/goal-image`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        imageUrl = uploadRes.data.url;
+        const uploadRes = await uploadFile(goalForm.image, 'goal', '/upload/goal-image');
+        imageUrl = uploadRes.url;
       }
 
       await axios.post(`${API}/child/savings-goals`, {
@@ -171,12 +168,8 @@ export default function SavingsGoalsPage({ user }) {
     try {
       let imageUrl = editForm.image_url;
       if (editImageFile) {
-        const formData = new FormData();
-        formData.append('file', editImageFile);
-        const uploadRes = await axios.post(`${API}/upload/goal-image`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        imageUrl = uploadRes.data.url;
+        const uploadRes = await uploadFile(editImageFile, 'goal', '/upload/goal-image');
+        imageUrl = uploadRes.url;
       }
       await axios.put(`${API}/child/savings-goals/${editForm.goal_id}`, {
         title: editForm.title,

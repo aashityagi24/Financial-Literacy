@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { uploadFile } from '@/utils/chunkedUpload';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
@@ -99,15 +100,14 @@ export default function AdminVideoManagement({ user }) {
 
     setUploadingType(userType);
     try {
-      const formData = new FormData();
-      formData.append('file', selectedFiles[userType]);
-      formData.append('user_type', userType);
+      const uploadResponse = await uploadFile(
+        selectedFiles[userType],
+        'video',
+        `/upload/walkthrough-video?user_type=${userType}`,
+        (progress) => setUploadProgress(prev => ({ ...prev, [userType]: progress }))
+      );
 
-      const uploadResponse = await axios.post(`${API}/upload/walkthrough-video?user_type=${userType}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      const newUrl = uploadResponse.data.url;
+      const newUrl = uploadResponse.url;
       
       await axios.put(`${API}/admin/settings/walkthrough-video`, {
         user_type: userType,

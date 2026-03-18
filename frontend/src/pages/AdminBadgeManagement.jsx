@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
+import { uploadFile } from '@/utils/chunkedUpload';
 import { toast } from 'sonner';
 import { 
   ChevronLeft, Award, Plus, Edit2, Trash2, Save, X, Search, Upload, Image as ImageIcon
@@ -172,19 +173,9 @@ export default function AdminBadgeManagement({ user }) {
     }
     
     setUploading(true);
-    const formDataUpload = new FormData();
-    formDataUpload.append('file', file);
-    
     try {
-      const res = await axios.post(`${API}/upload/badge`, formDataUpload, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      console.log('Image uploaded successfully, URL:', res.data.url);
-      setFormData(prev => {
-        const newData = { ...prev, image_url: res.data.url };
-        console.log('Updated formData with image_url:', newData);
-        return newData;
-      });
+      const res = await uploadFile(file, 'badge', '/upload/badge');
+      setFormData(prev => ({ ...prev, image_url: res.url }));
       toast.success('Badge image uploaded!');
     } catch (error) {
       console.error('Upload error:', error);

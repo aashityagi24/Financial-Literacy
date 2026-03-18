@@ -111,26 +111,13 @@ export default function AdminTeacherRepository() {
     if (!file) return;
 
     setUploading(true);
-    const formDataUpload = new FormData();
-    formDataUpload.append('file', file);
-
     try {
-      const res = await fetch(`${API_URL}/api/upload/repository`, {
-        method: 'POST',
-        credentials: 'include',
-        body: formDataUpload
-      });
-      
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.detail || 'Upload failed');
-      }
-      
-      const data = await res.json();
+      const { uploadFile } = await import('@/utils/chunkedUpload');
+      const data = await uploadFile(file, 'repository', '/upload/repository');
       setFormData(prev => ({
         ...prev,
         file_url: data.url,
-        file_type: data.file_type
+        file_type: data.file_type || file.type.split('/')[0]
       }));
       toast.success('File uploaded successfully');
     } catch (error) {

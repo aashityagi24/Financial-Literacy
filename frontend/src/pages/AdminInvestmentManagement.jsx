@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
+import { uploadFile } from '@/utils/chunkedUpload';
 import { toast } from 'sonner';
 import { 
   ChevronLeft, Plus, Trash2, Edit2, TrendingUp, Leaf, Building2, 
@@ -92,15 +93,12 @@ export default function AdminInvestmentManagement({ user }) {
     if (!file) return;
     
     setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    
     try {
-      const res = await axios.post(`${API}/upload/investment-image`, formData);
+      const res = await uploadFile(file, 'investment', '/upload/investment-image');
       if (type === 'plant') {
-        setPlantForm({ ...plantForm, image_url: res.data.url });
+        setPlantForm({ ...plantForm, image_url: res.url });
       } else {
-        setStockForm({ ...stockForm, logo_url: res.data.url });
+        setStockForm({ ...stockForm, logo_url: res.url });
       }
       toast.success('Image uploaded');
     } catch (error) {

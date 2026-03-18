@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
+import { uploadFile } from '@/utils/chunkedUpload';
 import { toast } from 'sonner';
 import { 
   ChevronLeft, Plus, Trash2, Edit2, Store, Package, Upload, Save, X,
@@ -113,15 +114,12 @@ export default function AdminStoreManagement({ user }) {
     if (!file) return;
     
     setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    
     try {
-      const res = await axios.post(`${API}/upload/store-image`, formData);
+      const res = await uploadFile(file, 'store', '/upload/store-image');
       if (type === 'category') {
-        setCategoryForm({ ...categoryForm, image_url: res.data.url });
+        setCategoryForm({ ...categoryForm, image_url: res.url });
       } else {
-        setItemForm({ ...itemForm, image_url: res.data.url });
+        setItemForm({ ...itemForm, image_url: res.url });
       }
       toast.success('Image uploaded');
     } catch (error) {

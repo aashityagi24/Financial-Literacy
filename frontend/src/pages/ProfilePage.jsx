@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
+import { uploadFile } from '@/utils/chunkedUpload';
 import { toast } from 'sonner';
 import { User, ChevronLeft, LogOut, GraduationCap, Edit2, Save, Users, School, UserPlus, Megaphone, X, CreditCard, Calendar, Lock, Camera, KeyRound } from 'lucide-react';
 import {
@@ -162,10 +163,8 @@ export default function ProfilePage({ user, setUser }) {
     }
     setUploadingPicture(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const uploadRes = await axios.post(`${API}/upload/image`, formData);
-      const pictureUrl = uploadRes.data.url;
+      const uploadRes = await uploadFile(file, 'image', '/upload/image');
+      const pictureUrl = uploadRes.url;
       const userRes = await axios.put(`${API}/auth/update-picture`, { picture: pictureUrl });
       setUser(userRes.data);
       toast.success('Profile picture updated!');

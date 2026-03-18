@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
+import { uploadFile } from '@/utils/chunkedUpload';
 import { toast } from 'sonner';
 import { 
   Shield, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
@@ -441,15 +442,11 @@ export default function ContentManagement({ user }) {
   
   const filteredContent = allContent.filter(matchesGradeFilter);
   
-  // File upload handlers
+  // File upload handlers (using chunked upload for production compatibility)
   const uploadThumbnail = async (file, setForm) => {
-    const formData = new FormData();
-    formData.append('file', file);
     try {
-      const res = await axios.post(`${API}/upload/thumbnail`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setForm(prev => ({ ...prev, thumbnail: res.data.url }));
+      const res = await uploadFile(file, 'thumbnail', '/upload/thumbnail');
+      setForm(prev => ({ ...prev, thumbnail: res.url }));
       toast.success('Thumbnail uploaded');
     } catch (error) {
       toast.error('Failed to upload thumbnail');
@@ -457,15 +454,11 @@ export default function ContentManagement({ user }) {
   };
   
   const uploadPdf = async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
     try {
-      const res = await axios.post(`${API}/upload/pdf`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await uploadFile(file, 'pdf', '/upload/pdf');
       setContentForm(prev => ({
         ...prev,
-        content_data: { ...prev.content_data, pdf_url: res.data.url }
+        content_data: { ...prev.content_data, pdf_url: res.url }
       }));
       toast.success('PDF uploaded');
     } catch (error) {
@@ -474,41 +467,33 @@ export default function ContentManagement({ user }) {
   };
   
   const uploadActivity = async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
     try {
-      const res = await axios.post(`${API}/upload/activity`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await uploadFile(file, 'activity', '/upload/activity');
       setContentForm(prev => ({
         ...prev,
         content_data: { 
           ...prev.content_data, 
-          html_url: res.data.url, 
-          html_folder: res.data.folder,
-          html_files: res.data.html_files || []
+          html_url: res.url, 
+          html_folder: res.folder,
+          html_files: res.html_files || []
         }
       }));
-      toast.success(`HTML ZIP uploaded (${res.data.html_files?.length || 1} file${res.data.html_files?.length > 1 ? 's' : ''} found)`);
+      toast.success(`HTML ZIP uploaded`);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to upload HTML ZIP');
     }
   };
   
   const uploadHtmlFile = async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
     try {
-      const res = await axios.post(`${API}/upload/html`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await uploadFile(file, 'activity', '/upload/html');
       setContentForm(prev => ({
         ...prev,
         content_data: { 
           ...prev.content_data, 
-          html_url: res.data.url, 
-          html_folder: res.data.folder,
-          html_files: [{ name: 'Index', path: 'index.html', url: res.data.url }]
+          html_url: res.url, 
+          html_folder: res.folder,
+          html_files: [{ name: 'Index', path: 'index.html', url: res.url }]
         }
       }));
       toast.success('HTML file uploaded');
@@ -518,16 +503,14 @@ export default function ContentManagement({ user }) {
   };
   
   const uploadVideo = async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
     try {
       toast.loading('Uploading video...', { id: 'video-upload' });
-      const res = await axios.post(`${API}/upload/video`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      const res = await uploadFile(file, 'video', '/upload/video', (progress) => {
+        toast.loading(`Uploading video... ${progress}%`, { id: 'video-upload' });
       });
       setContentForm(prev => ({
         ...prev,
-        content_data: { ...prev.content_data, video_url: res.data.url }
+        content_data: { ...prev.content_data, video_url: res.url }
       }));
       toast.success('Video uploaded', { id: 'video-upload' });
     } catch (error) {
