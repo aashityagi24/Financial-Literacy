@@ -5,7 +5,7 @@ import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
   Shield, ChevronLeft, ChevronRight, Users, BookOpen, BarChart3,
-  Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus, School, Video, BookMarked, Eye, EyeOff
+  Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus, School, Video, BookMarked, Eye, EyeOff, CreditCard, Clock
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +51,10 @@ export default function AdminPage({ user }) {
     contact_email: ''
   });
   const [showNewSchoolPassword, setShowNewSchoolPassword] = useState(false);
+  
+  // Subscription management state
+  const [subDialog, setSubDialog] = useState({ open: false, userId: null, userName: '', currentStatus: '' });
+  const [subDuration, setSubDuration] = useState('1_month');
   
   // Filters for user management
   const [filters, setFilters] = useState({
@@ -121,6 +125,17 @@ export default function AdminPage({ user }) {
       fetchData();
     } catch (error) {
       toast.error('Failed to update grade');
+    }
+  };
+
+  const handleSubscriptionChange = async (status, duration) => {
+    try {
+      await axios.put(`${API}/admin/users/${subDialog.userId}/subscription`, { status, duration });
+      toast.success(status === 'active' ? `Subscription activated for ${subDialog.userName}` : `Subscription deactivated for ${subDialog.userName}`);
+      setSubDialog({ open: false, userId: null, userName: '', currentStatus: '' });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update subscription');
     }
   };
   
@@ -702,6 +717,7 @@ export default function AdminPage({ user }) {
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Email</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Role</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Grade</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Subscription</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">School</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Sign Up</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Last Login</th>
@@ -758,6 +774,31 @@ export default function AdminPage({ user }) {
                             <SelectItem value="5">Grade 5</SelectItem>
                           </SelectContent>
                         </Select>
+                      </td>
+                      <td className="py-3 px-4">
+                        {(u.role === 'parent' || u.role === 'child') ? (
+                          <button
+                            onClick={() => {
+                              if (u.subscription_status === 'active') {
+                                setSubDialog({ open: true, userId: u.user_id, userName: u.name, currentStatus: 'active' });
+                              } else {
+                                setSubDialog({ open: true, userId: u.user_id, userName: u.name, currentStatus: 'inactive' });
+                              }
+                              setSubDuration('1_month');
+                            }}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${
+                              u.subscription_status === 'active'
+                                ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                : 'bg-red-100 text-red-700 hover:bg-red-200'
+                            }`}
+                            data-testid={`sub-status-${u.user_id}`}
+                          >
+                            <CreditCard className="w-3 h-3" />
+                            {u.subscription_status === 'active' ? 'Active' : 'Inactive'}
+                          </button>
+                        ) : (
+                          <span className="text-gray-400 text-xs">N/A</span>
+                        )}
                       </td>
                       <td className="py-3 px-4">
                         {u.school_name ? (
@@ -1013,6 +1054,90 @@ export default function AdminPage({ user }) {
           </div>
         )}
       </main>
+
+      {/* Subscription Management Dialog */}
+      <Dialog open={subDialog.open} onOpenChange={(open) => !open && setSubDialog({ ...subDialog, open: false })}>
+        <DialogContent className="bg-white border-2 border-gray-200 rounded-xl max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-[#06D6A0]" />
+              Manage Subscription
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <p className="text-sm text-gray-600">
+              User: <span className="font-semibold">{subDialog.userName}</span>
+            </p>
+            <p className="text-sm text-gray-600">
+              Current Status: {' '}
+              <span className={`font-semibold ${subDialog.currentStatus === 'active' ? 'text-green-600' : 'text-red-600'}`}>
+                {subDialog.currentStatus === 'active' ? 'Active' : 'Inactive'}
+              </span>
+            </p>
+
+            {subDialog.currentStatus === 'inactive' ? (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <Clock className="w-3.5 h-3.5 inline mr-1" />
+                    Subscription Duration
+                  </label>
+                  <Select value={subDuration} onValueChange={setSubDuration}>
+                    <SelectTrigger data-testid="sub-duration-select">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1_day">1 Day</SelectItem>
+                      <SelectItem value="1_week">1 Week</SelectItem>
+                      <SelectItem value="1_month">1 Month</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <button
+                  onClick={() => handleSubscriptionChange('active', subDuration)}
+                  className="w-full py-2 bg-[#06D6A0] text-white rounded-lg hover:bg-[#05C090] font-medium"
+                  data-testid="activate-sub-btn"
+                >
+                  Activate Subscription
+                </button>
+              </>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <Clock className="w-3.5 h-3.5 inline mr-1" />
+                    Extend / Change Duration
+                  </label>
+                  <Select value={subDuration} onValueChange={setSubDuration}>
+                    <SelectTrigger data-testid="sub-duration-select">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1_day">1 Day</SelectItem>
+                      <SelectItem value="1_week">1 Week</SelectItem>
+                      <SelectItem value="1_month">1 Month</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <button
+                  onClick={() => handleSubscriptionChange('active', subDuration)}
+                  className="w-full py-2 bg-[#3D5A80] text-white rounded-lg hover:bg-[#2A4A6B] font-medium"
+                  data-testid="extend-sub-btn"
+                >
+                  Renew Subscription
+                </button>
+                <button
+                  onClick={() => handleSubscriptionChange('inactive')}
+                  className="w-full py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 font-medium"
+                  data-testid="deactivate-sub-btn"
+                >
+                  Deactivate Subscription
+                </button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

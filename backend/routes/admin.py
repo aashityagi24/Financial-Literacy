@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Request, UploadFile, File
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import uuid
 import hashlib
@@ -52,7 +52,7 @@ class LessonCreate(BaseModel):
 # User Management
 @router.get("/users")
 async def get_users(request: Request):
-    """Get all users with school info"""
+    """Get all users with school info and subscription status"""
     from services.auth import require_admin
     db = get_db()
     await require_admin(request)
@@ -62,10 +62,36 @@ async def get_users(request: Request):
     schools = await db.schools.find({}, {"_id": 0, "school_id": 1, "name": 1}).to_list(100)
     school_map = {s["school_id"]: s["name"] for s in schools}
     
-    # Add school_name to each user
+    # Get all active subscriptions
+    now = datetime.now(timezone.utc).isoformat()
+    active_subs = await db.subscriptions.find({
+        "payment_status": "completed",
+        "is_active": True,
+        "end_date": {"$gt": now}
+    }, {"_id": 0, "parent_emails": 1, "end_date": 1, "plan_type": 1, "duration": 1, "granted_by_admin": 1}).to_list(1000)
+    
+    # Build email -> subscription lookup
+    sub_map = {}
+    for sub in active_subs:
+        for email in sub.get("parent_emails", []):
+            sub_map[email] = {
+                "end_date": sub["end_date"],
+                "plan_type": sub.get("plan_type", ""),
+                "duration": sub.get("duration", ""),
+                "granted_by_admin": sub.get("granted_by_admin", False)
+            }
+    
+    # Add school_name and subscription_status to each user
     for user in users:
         school_id = user.get("school_id")
         user["school_name"] = school_map.get(school_id) if school_id else None
+        email = user.get("email", "").lower()
+        if email in sub_map:
+            user["subscription_status"] = "active"
+            user["subscription_end_date"] = sub_map[email]["end_date"]
+            user["subscription_granted_by_admin"] = sub_map[email].get("granted_by_admin", False)
+        else:
+            user["subscription_status"] = "inactive"
     
     return users
 
@@ -163,6 +189,99 @@ async def update_user_grade(user_id: str, request: Request):
         raise HTTPException(status_code=404, detail="User not found")
     
     return {"message": f"Grade updated to {new_grade if new_grade else 'none'}"}
+
+
+ADMIN_SUB_DURATION_MAP = {
+    "1_day": {"days": 1, "label": "1 Day"},
+    "1_week": {"days": 7, "label": "1 Week"},
+    "1_month": {"days": 30, "label": "1 Month"},
+}
+
+@router.put("/users/{user_id}/subscription")
+async def update_user_subscription(user_id: str, request: Request):
+    """Admin grants or revokes subscription access for a user"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    body = await request.json()
+    status = body.get("status")  # "active" or "inactive"
+    duration = body.get("duration")  # "1_day", "1_week", "1_month"
+    
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    email = user.get("email", "").lower()
+    if not email:
+        raise HTTPException(status_code=400, detail="User has no email")
+    
+    if status == "active":
+        if not duration or duration not in ADMIN_SUB_DURATION_MAP:
+            raise HTTPException(status_code=400, detail="Valid duration required: 1_day, 1_week, 1_month")
+        
+        dur = ADMIN_SUB_DURATION_MAP[duration]
+        now = datetime.now(timezone.utc)
+        end_date = now + timedelta(days=dur["days"])
+        
+        # Check if user already has an active admin-granted subscription
+        existing = await db.subscriptions.find_one({
+            "parent_emails": email,
+            "granted_by_admin": True,
+            "is_active": True
+        })
+        
+        if existing:
+            # Update existing
+            await db.subscriptions.update_one(
+                {"subscription_id": existing["subscription_id"]},
+                {"$set": {
+                    "start_date": now.isoformat(),
+                    "end_date": end_date.isoformat(),
+                    "duration": duration,
+                    "duration_label": dur["label"],
+                    "is_active": True,
+                    "payment_status": "completed",
+                }}
+            )
+        else:
+            # Create new admin-granted subscription
+            sub_id = f"sub_{uuid.uuid4().hex[:12]}"
+            await db.subscriptions.insert_one({
+                "subscription_id": sub_id,
+                "plan_type": "admin_granted",
+                "duration": duration,
+                "duration_label": dur["label"],
+                "num_parents": 1,
+                "num_children": 5,
+                "amount": 0,
+                "razorpay_order_id": None,
+                "razorpay_payment_id": None,
+                "payment_status": "completed",
+                "subscriber_name": user.get("name", ""),
+                "subscriber_email": email,
+                "subscriber_phone": "",
+                "parent_emails": [email],
+                "child_user_ids": [],
+                "start_date": now.isoformat(),
+                "end_date": end_date.isoformat(),
+                "is_active": True,
+                "granted_by_admin": True,
+                "created_at": now.isoformat(),
+            })
+        
+        return {"message": f"Subscription activated for {dur['label']}", "end_date": end_date.isoformat()}
+    
+    elif status == "inactive":
+        # Deactivate all admin-granted subscriptions for this user
+        result = await db.subscriptions.update_many(
+            {"parent_emails": email, "granted_by_admin": True},
+            {"$set": {"is_active": False}}
+        )
+        return {"message": "Subscription deactivated", "modified": result.modified_count}
+    
+    raise HTTPException(status_code=400, detail="Status must be 'active' or 'inactive'")
+
 
 @router.delete("/users/{user_id}")
 async def delete_user(user_id: str, request: Request):

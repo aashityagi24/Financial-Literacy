@@ -1,6 +1,6 @@
 """School-related routes - Admin management and School dashboard"""
 from fastapi import APIRouter, HTTPException, Request
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import uuid
 import hashlib
 
@@ -17,6 +17,56 @@ def get_db():
     if _db is None:
         raise RuntimeError("Database not initialized")
     return _db
+
+CSV_DURATION_MAP = {
+    "1_day": {"days": 1, "label": "1 Day"},
+    "1_week": {"days": 7, "label": "1 Week"},
+    "1_month": {"days": 30, "label": "1 Month"},
+}
+
+async def _grant_subscription(db, email, name, duration):
+    """Create an admin-granted subscription for a user"""
+    if duration not in CSV_DURATION_MAP:
+        return False
+    dur = CSV_DURATION_MAP[duration]
+    now = datetime.now(timezone.utc)
+    end_date = now + timedelta(days=dur["days"])
+    
+    # Check if already has active admin sub
+    existing = await db.subscriptions.find_one({
+        "parent_emails": email,
+        "granted_by_admin": True,
+        "is_active": True
+    })
+    if existing:
+        await db.subscriptions.update_one(
+            {"subscription_id": existing["subscription_id"]},
+            {"$set": {"start_date": now.isoformat(), "end_date": end_date.isoformat(), "duration": duration, "duration_label": dur["label"], "is_active": True, "payment_status": "completed"}}
+        )
+    else:
+        await db.subscriptions.insert_one({
+            "subscription_id": f"sub_{uuid.uuid4().hex[:12]}",
+            "plan_type": "admin_granted",
+            "duration": duration,
+            "duration_label": dur["label"],
+            "num_parents": 1,
+            "num_children": 5,
+            "amount": 0,
+            "razorpay_order_id": None,
+            "razorpay_payment_id": None,
+            "payment_status": "completed",
+            "subscriber_name": name,
+            "subscriber_email": email,
+            "subscriber_phone": "",
+            "parent_emails": [email],
+            "child_user_ids": [],
+            "start_date": now.isoformat(),
+            "end_date": end_date.isoformat(),
+            "is_active": True,
+            "granted_by_admin": True,
+            "created_at": now.isoformat(),
+        })
+    return True
 
 router = APIRouter(tags=["school"])
 
@@ -653,7 +703,7 @@ async def school_upload_teachers(request: Request):
 @router.post("/school/upload/students")
 async def school_upload_students(request: Request):
     """Bulk upload students via CSV data with teacher/classroom linking
-    CSV columns: name, email, grade, teacher_email
+    CSV columns: name, email, grade, teacher_email, subscription (active/inactive), subscription_duration (1_day/1_week/1_month)
     """
     from services.auth import require_school
     db = get_db()
@@ -665,6 +715,7 @@ async def school_upload_students(request: Request):
     
     created = 0
     linked_to_classroom = 0
+    subscribed = 0
     errors = []
     
     for row in csv_data:
@@ -672,6 +723,8 @@ async def school_upload_students(request: Request):
         email = row.get("email", "").strip().lower()
         grade = row.get("grade", 0)
         teacher_email = row.get("teacher_email", "").strip().lower()
+        subscription = row.get("subscription", "").strip().lower()
+        subscription_duration = row.get("subscription_duration", "1_month").strip().lower()
         
         if isinstance(grade, str):
             try:
@@ -727,6 +780,12 @@ async def school_upload_students(request: Request):
             
             created += 1
         
+        # Handle subscription
+        if subscription == "active" and user_id:
+            granted = await _grant_subscription(db, email, name, subscription_duration)
+            if granted:
+                subscribed += 1
+        
         # Link to teacher's classroom if teacher_email provided
         if teacher_email and user_id:
             teacher = await db.users.find_one({"email": teacher_email, "role": "teacher"})
@@ -747,12 +806,12 @@ async def school_upload_students(request: Request):
                         })
                         linked_to_classroom += 1
     
-    return {"created": created, "linked_to_classroom": linked_to_classroom, "errors": errors}
+    return {"created": created, "linked_to_classroom": linked_to_classroom, "subscribed": subscribed, "errors": errors}
 
 @router.post("/school/upload/parents")
 async def school_upload_parents(request: Request):
     """Bulk upload parents via CSV data with child linking
-    CSV columns: name, email, child_email
+    CSV columns: name, email, child_email, subscription (active/inactive), subscription_duration (1_day/1_week/1_month)
     """
     from services.auth import require_school
     db = get_db()
@@ -764,12 +823,15 @@ async def school_upload_parents(request: Request):
     
     created = 0
     linked_to_child = 0
+    subscribed = 0
     errors = []
     
     for row in csv_data:
         name = row.get("name", "").strip()
         email = row.get("email", "").strip().lower()
         child_email = row.get("child_email", "").strip().lower()
+        subscription = row.get("subscription", "").strip().lower()
+        subscription_duration = row.get("subscription_duration", "1_month").strip().lower()
         
         if not name or not email:
             errors.append(f"Missing name or email: {row}")
@@ -805,6 +867,12 @@ async def school_upload_parents(request: Request):
             await db.users.insert_one(user_doc)
             created += 1
         
+        # Handle subscription
+        if subscription == "active" and user_id:
+            granted = await _grant_subscription(db, email, name, subscription_duration)
+            if granted:
+                subscribed += 1
+        
         # Link to child if child_email provided
         if child_email and user_id:
             child = await db.users.find_one({"email": child_email, "role": "child"})
@@ -823,4 +891,4 @@ async def school_upload_parents(request: Request):
                     })
                     linked_to_child += 1
     
-    return {"created": created, "linked_to_child": linked_to_child, "errors": errors}
+    return {"created": created, "linked_to_child": linked_to_child, "subscribed": subscribed, "errors": errors}

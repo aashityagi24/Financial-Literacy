@@ -125,6 +125,14 @@ export default function SchoolDashboard() {
         if (uploadType === 'students') {
           if (row.name && row.email && row.grade !== undefined) {
             row.grade = parseInt(row.grade) || 0;
+            row.subscription = row.subscription || '';
+            row.subscription_duration = row.subscription_duration || '1_month';
+            data.push(row);
+          }
+        } else if (uploadType === 'parents') {
+          if (row.name && row.email) {
+            row.subscription = row.subscription || '';
+            row.subscription_duration = row.subscription_duration || '1_month';
             data.push(row);
           }
         } else {
@@ -761,14 +769,14 @@ export default function SchoolDashboard() {
                 ) : uploadType === 'students' ? (
                   <>
                     <p><strong>Required:</strong> <code className="bg-blue-100 px-1 rounded">name</code>, <code className="bg-blue-100 px-1 rounded">email</code>, <code className="bg-blue-100 px-1 rounded">grade</code> (0-5)</p>
-                    <p className="mt-1"><strong>Optional:</strong> <code className="bg-blue-100 px-1 rounded">teacher_email</code></p>
-                    <p className="text-xs text-blue-600 mt-1">If teacher_email is provided, student will be enrolled in teacher&apos;s classroom</p>
+                    <p className="mt-1"><strong>Optional:</strong> <code className="bg-blue-100 px-1 rounded">teacher_email</code>, <code className="bg-blue-100 px-1 rounded">subscription</code> (active), <code className="bg-blue-100 px-1 rounded">subscription_duration</code> (1_day / 1_week / 1_month)</p>
+                    <p className="text-xs text-blue-600 mt-1">Set subscription=active to grant immediate platform access</p>
                   </>
                 ) : (
                   <>
                     <p><strong>Required:</strong> <code className="bg-blue-100 px-1 rounded">name</code>, <code className="bg-blue-100 px-1 rounded">email</code></p>
-                    <p className="mt-1"><strong>Optional:</strong> <code className="bg-blue-100 px-1 rounded">child_email</code></p>
-                    <p className="text-xs text-blue-600 mt-1">If child_email is provided, parent will be linked to that child</p>
+                    <p className="mt-1"><strong>Optional:</strong> <code className="bg-blue-100 px-1 rounded">child_email</code>, <code className="bg-blue-100 px-1 rounded">subscription</code> (active), <code className="bg-blue-100 px-1 rounded">subscription_duration</code> (1_day / 1_week / 1_month)</p>
+                    <p className="text-xs text-blue-600 mt-1">Set subscription=active to grant immediate platform access</p>
                   </>
                 )}
               </div>
@@ -808,6 +816,9 @@ export default function SchoolDashboard() {
                         {uploadType === 'students' && (
                           <th className="text-left py-2 px-3">Grade</th>
                         )}
+                        {(uploadType === 'students' || uploadType === 'parents') && (
+                          <th className="text-left py-2 px-3">Subscription</th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -817,6 +828,15 @@ export default function SchoolDashboard() {
                           <td className="py-2 px-3">{row.email}</td>
                           {uploadType === 'students' && (
                             <td className="py-2 px-3">{row.grade}</td>
+                          )}
+                          {(uploadType === 'students' || uploadType === 'parents') && (
+                            <td className="py-2 px-3">
+                              {row.subscription?.toLowerCase() === 'active' ? (
+                                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{row.subscription_duration || '1_month'}</span>
+                              ) : (
+                                <span className="text-xs text-gray-400">-</span>
+                              )}
+                            </td>
                           )}
                         </tr>
                       ))}
