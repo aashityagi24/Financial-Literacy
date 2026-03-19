@@ -99,6 +99,8 @@ export default function ParentDashboard({ user }) {
   // Jobs state
   const [childJobs, setChildJobs] = useState([]);
   const [showApproveJob, setShowApproveJob] = useState(null);
+  const [parentGuide, setParentGuide] = useState('');
+  const [showJobGuide, setShowJobGuide] = useState(false);
   
   // Subscription state
   const [subscription, setSubscription] = useState(null);
@@ -129,7 +131,7 @@ export default function ParentDashboard({ user }) {
   
   const fetchData = async () => {
     try {
-      const [dashRes, choresRes, rpRes, allowRes, goalsRes, choreReqRes, purchasesRes, lendingReqRes, jobsRes] = await Promise.all([
+      const [dashRes, choresRes, rpRes, allowRes, goalsRes, choreReqRes, purchasesRes, lendingReqRes, jobsRes, guideRes] = await Promise.all([
         axios.get(`${API}/parent/dashboard`),
         axios.get(`${API}/parent/chores-new`).catch(() => ({ data: [] })),
         axios.get(`${API}/parent/reward-penalty`).catch(() => ({ data: [] })),
@@ -138,7 +140,8 @@ export default function ParentDashboard({ user }) {
         axios.get(`${API}/parent/chore-requests`).catch(() => ({ data: [] })),
         axios.get(`${API}/parent/children-purchases`).catch(() => ({ data: [] })),
         axios.get(`${API}/lending/requests/received`).catch(() => ({ data: [] })),
-        axios.get(`${API}/parent/child-jobs`).catch(() => ({ data: { jobs: [] } }))
+        axios.get(`${API}/parent/child-jobs`).catch(() => ({ data: { jobs: [] } })),
+        axios.get(`${API}/jobs/guidebook`).catch(() => ({ data: {} }))
       ]);
       setDashboard(dashRes.data);
       setChores(choresRes.data);
@@ -149,6 +152,7 @@ export default function ParentDashboard({ user }) {
       setChildrenPurchases(purchasesRes.data);
       setLendingRequests(lendingReqRes.data || []);
       setChildJobs(jobsRes.data?.jobs || []);
+      setParentGuide(guideRes.data?.parent_guide || '');
       
       // Fetch subscription info
       axios.get(`${API}/subscriptions/my-subscription`)
@@ -1211,6 +1215,23 @@ export default function ParentDashboard({ user }) {
             {parentSection === 'jobs' && (
             <>
             <ChildFilter />
+            {/* Job Guide Toggle */}
+            {parentGuide && (
+              <div className="mt-4 mb-2">
+                <button
+                  data-testid="toggle-job-guide"
+                  onClick={() => setShowJobGuide(!showJobGuide)}
+                  className={`text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition-all ${showJobGuide ? 'bg-[#1D3557] text-white' : 'bg-[#1D3557]/10 text-[#1D3557] hover:bg-[#1D3557]/20'}`}
+                >
+                  <BookOpen className="w-3 h-3" /> Parent&apos;s Guide
+                </button>
+                {showJobGuide && (
+                  <div className="mt-3 card-playful p-4 bg-[#E0FBFC] border-l-4 border-[#3D5A80] text-sm text-[#1D3557] leading-relaxed whitespace-pre-line" data-testid="job-guide-content">
+                    {parentGuide}
+                  </div>
+                )}
+              </div>
+            )}
             {/* My Jobs Section */}
             {filteredJobs.length > 0 ? (
               <>
