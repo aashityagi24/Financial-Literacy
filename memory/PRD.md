@@ -919,6 +919,13 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Linked Users & Renewal Tracking** (March 19, 2026)
+  - Eye button on each subscription row opens dialog showing all linked parent and child accounts
+  - Backend enriches `/api/subscriptions/admin/list` with `linked_users` array (parent + nested children) and `is_renewal` boolean
+  - `is_renewal=true` when subscriber email has >1 completed subscription
+  - Amber "Renewed" badge displayed next to "Admin Granted" badge for repeat subscribers
+  - Dialog shows Parent (blue badge) and Child (green badge) with names and emails
+  - Testing: 10/10 backend + all frontend tests passed
 - **School Subscription Enquiry System** (March 19, 2026)
   - "Looking for a School Plan?" CTA banner below pricing cards with "Enquire Now" button
   - Full enquiry form: School Name*, City, Contact Person*, Designation, Phone*, Email*, Grades (K/1/2) - optional fields marked
