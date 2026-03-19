@@ -5,12 +5,18 @@ import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, CreditCard, Users, Calendar as CalendarIcon, DollarSign, 
-  ToggleLeft, ToggleRight, Save, RefreshCw, Search, Filter, X
+  ToggleLeft, ToggleRight, Save, RefreshCw, Search, Filter, X, Eye
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -61,6 +67,7 @@ export default function AdminSubscriptionManagement({ user }) {
   const [durationFilter, setDurationFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
+  const [linkedUsersDialog, setLinkedUsersDialog] = useState({ open: false, sub: null });
 
   useEffect(() => {
     if (user?.role !== 'admin') {
@@ -319,6 +326,7 @@ export default function AdminSubscriptionManagement({ user }) {
                       <th className="px-4 py-3 font-medium text-gray-600">Amount</th>
                       <th className="px-4 py-3 font-medium text-gray-600">Start</th>
                       <th className="px-4 py-3 font-medium text-gray-600">Expires</th>
+                      <th className="px-4 py-3 font-medium text-gray-600 text-center">Users</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -327,7 +335,10 @@ export default function AdminSubscriptionManagement({ user }) {
                         <td className="px-4 py-3">
                           <p className="font-medium text-[#1D3557]">{sub.subscriber_name}</p>
                           <p className="text-xs text-gray-500">{sub.subscriber_email}</p>
-                          {sub.granted_by_admin && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">Admin Granted</span>}
+                          <div className="flex gap-1 mt-0.5 flex-wrap">
+                            {sub.granted_by_admin && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">Admin Granted</span>}
+                            {sub.is_renewal && <span className="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded font-medium" data-testid={`renewal-badge-${sub.subscription_id}`}>Renewed</span>}
+                          </div>
                         </td>
                         <td className="px-4 py-3">{PLAN_LABELS[sub.plan_type] || sub.plan_type}</td>
                         <td className="px-4 py-3">{sub.duration_label || DURATION_LABELS[sub.duration]}</td>
@@ -335,6 +346,16 @@ export default function AdminSubscriptionManagement({ user }) {
                         <td className="px-4 py-3 font-medium">{sub.amount ? `₹${sub.amount.toLocaleString('en-IN')}` : 'Free'}</td>
                         <td className="px-4 py-3">{formatDate(sub.start_date)}</td>
                         <td className="px-4 py-3">{formatDate(sub.end_date)}</td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            data-testid={`view-linked-users-${sub.subscription_id}`}
+                            onClick={() => setLinkedUsersDialog({ open: true, sub })}
+                            className="p-1.5 rounded-md hover:bg-[#1D3557]/10 text-[#3D5A80] transition-colors"
+                            title="View linked users"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -459,6 +480,48 @@ export default function AdminSubscriptionManagement({ user }) {
           </div>
         )}
       </div>
+
+      {/* Linked Users Dialog */}
+      <Dialog open={linkedUsersDialog.open} onOpenChange={(open) => setLinkedUsersDialog({ open, sub: open ? linkedUsersDialog.sub : null })}>
+        <DialogContent className="max-w-md" data-testid="linked-users-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Linked Users</DialogTitle>
+            {linkedUsersDialog.sub && (
+              <p className="text-sm text-gray-500">
+                {linkedUsersDialog.sub.subscriber_name} &middot; {linkedUsersDialog.sub.subscription_id}
+              </p>
+            )}
+          </DialogHeader>
+          {linkedUsersDialog.sub && (
+            <div className="space-y-3 mt-2">
+              {(linkedUsersDialog.sub.linked_users || []).length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-4">No linked accounts found</p>
+              ) : (
+                linkedUsersDialog.sub.linked_users.map((lu, idx) => (
+                  <div key={idx} className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-[#1D3557] text-white capitalize">{lu.role}</span>
+                      <span className="font-medium text-sm text-[#1D3557]">{lu.name}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5 ml-[52px]">{lu.email}</p>
+                    {lu.children && lu.children.length > 0 && (
+                      <div className="mt-2 ml-4 space-y-1.5">
+                        {lu.children.map((child, ci) => (
+                          <div key={ci} className="flex items-center gap-2 text-sm">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-[#06D6A0]/15 text-[#06D6A0] capitalize">child</span>
+                            <span className="text-gray-700">{child.name}</span>
+                            <span className="text-xs text-gray-400">{child.email}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

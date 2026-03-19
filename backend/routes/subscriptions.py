@@ -457,7 +457,7 @@ async def remove_second_parent(request: Request, email: str):
 
 @router.get("/admin/list")
 async def admin_list_subscriptions(request: Request):
-    """Admin: List all subscriptions"""
+    """Admin: List all subscriptions with linked users and renewal info"""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
@@ -467,6 +467,62 @@ async def admin_list_subscriptions(request: Request):
     subscriptions = await db.subscriptions.find(
         {}, {"_id": 0}
     ).sort("created_at", -1).to_list(500)
+    
+    # Count subscriptions per email to detect renewals
+    email_sub_count = {}
+    for sub in subscriptions:
+        if sub.get("payment_status") == "completed":
+            email = sub.get("subscriber_email", "").lower()
+            if email:
+                email_sub_count[email] = email_sub_count.get(email, 0) + 1
+    
+    # Fetch all users and parent-child links for lookups
+    all_users = await db.users.find({}, {"_id": 0, "user_id": 1, "name": 1, "email": 1, "role": 1}).to_list(2000)
+    email_to_user = {u.get("email", "").lower(): u for u in all_users if u.get("email")}
+    userid_to_user = {u["user_id"]: u for u in all_users}
+    
+    all_links = await db.parent_child_links.find({"status": "active"}, {"_id": 0}).to_list(2000)
+    parent_to_children = {}
+    for link in all_links:
+        pid = link.get("parent_id")
+        cid = link.get("child_id")
+        if pid not in parent_to_children:
+            parent_to_children[pid] = []
+        parent_to_children[pid].append(cid)
+    
+    # Enrich each subscription
+    for sub in subscriptions:
+        email = sub.get("subscriber_email", "").lower()
+        sub["is_renewal"] = email_sub_count.get(email, 0) > 1
+        
+        # Build linked users list
+        linked = []
+        for pe in sub.get("parent_emails", []):
+            pe_lower = pe.lower()
+            u = email_to_user.get(pe_lower)
+            if u:
+                entry = {"name": u.get("name", pe), "email": pe, "role": "parent"}
+                # Find children linked to this parent
+                children = []
+                for child_id in parent_to_children.get(u["user_id"], []):
+                    child = userid_to_user.get(child_id)
+                    if child:
+                        children.append({"name": child.get("name", ""), "email": child.get("email", ""), "role": "child"})
+                entry["children"] = children
+                linked.append(entry)
+            else:
+                linked.append({"name": pe, "email": pe, "role": "parent", "children": []})
+        
+        # Also include child_user_ids directly on the subscription
+        for cid in sub.get("child_user_ids", []):
+            child = userid_to_user.get(cid)
+            if child:
+                # Only add if not already listed under a parent
+                already = any(c["email"] == child.get("email", "") for p in linked for c in p.get("children", []))
+                if not already:
+                    linked.append({"name": child.get("name", ""), "email": child.get("email", ""), "role": "child", "children": []})
+        
+        sub["linked_users"] = linked
     
     return subscriptions
 

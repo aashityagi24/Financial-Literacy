@@ -1,0 +1,66 @@
+{
+  "summary": "Completed testing of Admin Subscription Management - Eye Button and Renewed Badge features. All 10 backend tests passed. Frontend UI verification passed - eye buttons, Renewed badge, and linked users dialog all working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Linked Users Dialog",
+        "issues": ["Minor: Missing aria-describedby for DialogContent (console warning) - accessibility improvement"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_admin_subscription_linked_users.py",
+    "/app/test_reports/pytest/admin_subscription_linked_users_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_admin_subscription_linked_users.py"
+  ],
+  "success_rate": {
+    "backend": "100% (10/10 tests passed)",
+    "frontend": "100% (all features working)"
+  },
+  "test_credentials": {
+    "admin": "admin@learnersplanet.com / finlit@2026"
+  },
+  "seed_data_creation": "No seed data created - used existing subscriptions for testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Admin subscription linked users and renewal badge features fully tested. Backend API returns is_renewal (boolean) and linked_users (array with parent/children structure) for each subscription. Frontend shows: (1) Eye icon button in Users column to view linked users, (2) Amber 'Renewed' badge for subscriptions where subscriber has multiple completed subscriptions, (3) Dialog displaying parent with 'Parent' badge and linked children with 'Child' badge. Test data: Alka M (alkabmaheshwari@gmail.com) has is_renewal=true and 2 linked children.",
+  "feature_test_coverage": {
+    "backend_api_tests": {
+      "GET /api/subscriptions/admin/list returns 200": "PASS",
+      "Each subscription has is_renewal boolean field": "PASS",
+      "Each subscription has linked_users array field": "PASS",
+      "linked_users structure contains parent with children array": "PASS",
+      "is_renewal=true for emails with multiple completed subscriptions": "PASS",
+      "is_renewal=false for emails with single subscription": "PASS",
+      "Unauthenticated access returns 401/403": "PASS",
+      "Invalid token returns 401/403": "PASS",
+      "Alka M (alkabmaheshwari@gmail.com) has is_renewal=true": "PASS",
+      "Alka M has linked children in linked_users": "PASS"
+    },
+    "frontend_ui_tests": {
+      "Admin Subscription Management page loads": "PASS",
+      "Users column header present": "PASS",
+      "Eye icon buttons present (found 7)": "PASS",
+      "Renewed badge displayed (found 1 for Alka M)": "PASS",
+      "Eye button click opens Linked Users dialog": "PASS",
+      "Dialog shows Parent badge": "PASS",
+      "Dialog shows Child badges": "PASS",
+      "Dialog closes on Escape": "PASS"
+    },
+    "verified_ui_elements": {
+      "data-testid='view-linked-users-{subscription_id}'": "Eye button for each subscription row",
+      "data-testid='renewal-badge-{subscription_id}'": "Renewed badge for renewal subscriptions",
+      "data-testid='linked-users-dialog'": "Dialog container for linked users display"
+    }
+  }
+}
