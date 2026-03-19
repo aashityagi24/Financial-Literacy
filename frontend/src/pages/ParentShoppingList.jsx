@@ -65,7 +65,7 @@ export default function ParentShoppingList({ user }) {
       setCategories(catRes.data || []);
       
       if (dashRes.data.children?.length > 0) {
-        setSelectedChild(dashRes.data.children[0].user_id);
+        setSelectedChild(prev => prev || dashRes.data.children[0].user_id);
       }
     } catch (error) {
       toast.error('Failed to load data');
