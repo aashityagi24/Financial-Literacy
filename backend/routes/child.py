@@ -216,16 +216,16 @@ async def contribute_to_goal(goal_id: str, request: Request):
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
     
-    spending_acc = await db.wallet_accounts.find_one({
+    savings_acc = await db.wallet_accounts.find_one({
         "user_id": user["user_id"],
-        "account_type": "spending"
+        "account_type": "savings"
     })
     
-    if not spending_acc or spending_acc.get("balance", 0) < amount:
+    if not savings_acc or savings_acc.get("balance", 0) < amount:
         raise HTTPException(status_code=400, detail="Insufficient balance")
     
     await db.wallet_accounts.update_one(
-        {"user_id": user["user_id"], "account_type": "spending"},
+        {"user_id": user["user_id"], "account_type": "savings"},
         {"$inc": {"balance": -amount}}
     )
     
@@ -241,7 +241,7 @@ async def contribute_to_goal(goal_id: str, request: Request):
     await db.transactions.insert_one({
         "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
         "user_id": user["user_id"],
-        "from_account": "spending",
+        "from_account": "savings",
         "amount": amount,
         "transaction_type": "savings_contribution",
         "description": f"Contribution to: {goal['title']}",
