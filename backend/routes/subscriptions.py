@@ -124,6 +124,42 @@ async def get_plans():
     }
 
 
+@router.post("/capture-lead")
+async def capture_checkout_lead(request: Request):
+    """Capture lead when user fills checkout form, even if they don't complete payment"""
+    db = get_db()
+    body = await request.json()
+    
+    name = (body.get("name") or "").strip()
+    email = (body.get("email") or "").strip().lower()
+    phone = (body.get("phone") or "").strip()
+    plan_type = body.get("plan_type", "")
+    duration = body.get("duration", "")
+    num_children = body.get("num_children", 1)
+    
+    if not email:
+        return {"message": "skipped"}
+    
+    # Upsert — update if same email already exists, so we don't create duplicates
+    await db.checkout_leads.update_one(
+        {"email": email},
+        {"$set": {
+            "name": name,
+            "phone": phone,
+            "plan_type": plan_type,
+            "duration": duration,
+            "num_children": num_children,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }, "$setOnInsert": {
+            "lead_id": f"lead_{uuid.uuid4().hex[:12]}",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "converted": False,
+        }},
+        upsert=True
+    )
+    return {"message": "lead captured"}
+
+
 @router.post("/create-order")
 async def create_order(order: CreateOrderRequest):
     """Create a Razorpay order for subscription purchase"""
@@ -255,6 +291,12 @@ async def verify_payment(payment: VerifyPaymentRequest):
             "end_date": end_date.isoformat(),
             "activated_at": now.isoformat(),
         }}
+    )
+    
+    # Mark lead as converted
+    await db.checkout_leads.update_one(
+        {"email": subscription.get("subscriber_email", "").lower()},
+        {"$set": {"converted": True, "converted_at": now.isoformat()}}
     )
     
     return {
@@ -407,6 +449,19 @@ async def admin_list_subscriptions(request: Request):
     ).sort("created_at", -1).to_list(500)
     
     return subscriptions
+
+
+@router.get("/admin/checkout-leads")
+async def admin_get_checkout_leads(request: Request):
+    """Admin: List all checkout leads (users who filled the buy form)"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    leads = await db.checkout_leads.find({}, {"_id": 0}).sort("updated_at", -1).to_list(500)
+    return leads
 
 
 @router.get("/admin/plan-config")

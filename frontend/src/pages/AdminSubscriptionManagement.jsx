@@ -31,6 +31,7 @@ export default function AdminSubscriptionManagement({ user }) {
   const [activeTab, setActiveTab] = useState('subscriptions');
   const [searchTerm, setSearchTerm] = useState('');
   const [savingConfig, setSavingConfig] = useState(false);
+  const [checkoutLeads, setCheckoutLeads] = useState([]);
 
   useEffect(() => {
     if (user?.role !== 'admin') {
@@ -42,12 +43,14 @@ export default function AdminSubscriptionManagement({ user }) {
 
   const fetchData = async () => {
     try {
-      const [subsRes, configRes] = await Promise.all([
+      const [subsRes, configRes, leadsRes] = await Promise.all([
         axios.get(`${API}/subscriptions/admin/list`),
         axios.get(`${API}/subscriptions/admin/plan-config`),
+        axios.get(`${API}/subscriptions/admin/checkout-leads`),
       ]);
       setSubscriptions(subsRes.data);
       setPlanConfig(configRes.data);
+      setCheckoutLeads(leadsRes.data || []);
       setEditingConfig(JSON.parse(JSON.stringify(configRes.data)));
     } catch (err) {
       toast.error('Failed to load subscription data');
@@ -164,6 +167,7 @@ export default function AdminSubscriptionManagement({ user }) {
         <div className="flex gap-2 mb-6">
           {[
             { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
+            { id: 'leads', label: `Checkout Leads${checkoutLeads.length ? ` (${checkoutLeads.length})` : ''}`, icon: Users },
             { id: 'pricing', label: 'Plan Pricing', icon: DollarSign },
           ].map((tab) => (
             <button
@@ -261,6 +265,56 @@ export default function AdminSubscriptionManagement({ user }) {
                                 <ToggleLeft className="w-5 h-5 text-gray-400" />
                               )}
                             </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Leads Tab */}
+        {activeTab === 'leads' && (
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-[#1D3557]">Checkout Leads</h3>
+              <p className="text-sm text-gray-500">Users who filled the buy form — includes those who didn't complete payment</p>
+            </div>
+            {checkoutLeads.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">No checkout leads yet.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" data-testid="checkout-leads-table">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Email</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Phone</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Plan</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Duration</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Children</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Last Activity</th>
+                      <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {checkoutLeads.map((lead, idx) => (
+                      <tr key={lead.lead_id || idx} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="px-4 py-3 font-medium text-gray-800">{lead.name || '-'}</td>
+                        <td className="px-4 py-3 text-blue-600">{lead.email}</td>
+                        <td className="px-4 py-3">{lead.phone || '-'}</td>
+                        <td className="px-4 py-3">{PLAN_LABELS[lead.plan_type] || lead.plan_type || '-'}</td>
+                        <td className="px-4 py-3">{DURATION_LABELS[lead.duration] || lead.duration || '-'}</td>
+                        <td className="px-4 py-3 text-center">{lead.num_children || '-'}</td>
+                        <td className="px-4 py-3 text-gray-500">{formatDate(lead.updated_at || lead.created_at)}</td>
+                        <td className="px-4 py-3">
+                          {lead.converted ? (
+                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Converted</span>
+                          ) : (
+                            <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">Not Purchased</span>
                           )}
                         </td>
                       </tr>

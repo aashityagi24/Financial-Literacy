@@ -925,6 +925,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - All enquiries stored in `school_enquiries` collection with date and status
   - Admin "Enquiries" tab showing all leads with status tracking (New/Contacted/Converted/Closed)
   - Backend endpoints: `POST /api/admin/school-enquiry` (public), `GET /api/admin/school-enquiries`, `PUT /api/admin/school-enquiries/{id}/status`
+- **Checkout Lead Capture** (March 19, 2026)
+  - Captures user details when they fill the Buy Now form, even if they don't complete payment
+  - Lead captured on: (1) Pay button click, (2) dialog close with filled email
+  - Leads marked as "Converted" when payment succeeds
+  - Admin "Checkout Leads" tab in Subscription Management with full lead details
+  - Backend endpoints: `POST /api/subscriptions/capture-lead`, `GET /api/subscriptions/admin/checkout-leads`
 - **Multi-User Selection & Bulk Delete** (March 18, 2026)
   - Checkbox selection in admin user management table with select-all
   - "Delete X Selected" button appears when users are selected

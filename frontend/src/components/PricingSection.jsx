@@ -85,6 +85,22 @@ export default function PricingSection() {
     setShowCheckout(true);
   };
 
+  const captureLeadQuietly = (form) => {
+    if (form.email?.trim()) {
+      axios.post(`${API}/subscriptions/capture-lead`, {
+        name: form.name, email: form.email, phone: form.phone,
+        plan_type: selectedPlanType, duration: selectedDuration, num_children: numChildren,
+      }).catch(() => {});
+    }
+  };
+
+  const handleCheckoutClose = (open) => {
+    if (!open && checkoutForm.email?.trim()) {
+      captureLeadQuietly(checkoutForm);
+    }
+    setShowCheckout(open);
+  };
+
   const handlePayment = async () => {
     if (!checkoutForm.name.trim() || !checkoutForm.email.trim() || !checkoutForm.phone.trim()) {
       toast.error('Please fill in all fields');
@@ -100,6 +116,7 @@ export default function PricingSection() {
     }
 
     setIsProcessing(true);
+    captureLeadQuietly(checkoutForm);
     try {
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
@@ -369,7 +386,7 @@ export default function PricingSection() {
       </div>
 
       {/* Checkout Dialog */}
-      <Dialog open={showCheckout} onOpenChange={setShowCheckout}>
+      <Dialog open={showCheckout} onOpenChange={handleCheckoutClose}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
