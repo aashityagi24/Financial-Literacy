@@ -85,18 +85,19 @@ export default function PricingSection() {
     setShowCheckout(true);
   };
 
-  const captureLeadQuietly = (form) => {
+  const captureLeadQuietly = (form, leadStatus) => {
     if (form.email?.trim()) {
       axios.post(`${API}/subscriptions/capture-lead`, {
         name: form.name, email: form.email, phone: form.phone,
         plan_type: selectedPlanType, duration: selectedDuration, num_children: numChildren,
+        lead_status: leadStatus,
       }).catch(() => {});
     }
   };
 
   const handleCheckoutClose = (open) => {
     if (!open && checkoutForm.email?.trim()) {
-      captureLeadQuietly(checkoutForm);
+      captureLeadQuietly(checkoutForm, 'form_closed');
     }
     setShowCheckout(open);
   };
@@ -116,7 +117,7 @@ export default function PricingSection() {
     }
 
     setIsProcessing(true);
-    captureLeadQuietly(checkoutForm);
+    captureLeadQuietly(checkoutForm, 'form_submitted');
     try {
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {

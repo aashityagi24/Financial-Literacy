@@ -4,11 +4,20 @@ import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
-  ArrowLeft, CreditCard, Users, Calendar, DollarSign, 
-  ToggleLeft, ToggleRight, Save, RefreshCw, Search
+  ArrowLeft, CreditCard, Users, Calendar as CalendarIcon, DollarSign, 
+  ToggleLeft, ToggleRight, Save, RefreshCw, Search, Filter, X
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const DURATION_LABELS = {
   '1_day': '1 Day',
@@ -20,6 +29,22 @@ const DURATION_LABELS = {
 const PLAN_LABELS = {
   'single_parent': 'Single Parent',
   'two_parents': 'Dual Parent',
+  'admin_granted': 'Admin Granted',
+};
+
+const isExpired = (endDate) => {
+  if (!endDate) return false;
+  return new Date(endDate) < new Date();
+};
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-';
+  return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+const LEAD_STATUS_MAP = {
+  form_closed: { label: 'Form Closed', cls: 'bg-gray-100 text-gray-600' },
+  form_submitted: { label: 'Form Submitted', cls: 'bg-yellow-100 text-yellow-700' },
 };
 
 export default function AdminSubscriptionManagement({ user }) {
@@ -32,6 +57,9 @@ export default function AdminSubscriptionManagement({ user }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [savingConfig, setSavingConfig] = useState(false);
   const [checkoutLeads, setCheckoutLeads] = useState([]);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFrom, setDateFrom] = useState(null);
+  const [dateTo, setDateTo] = useState(null);
 
   useEffect(() => {
     if (user?.role !== 'admin') {
@@ -89,11 +117,31 @@ export default function AdminSubscriptionManagement({ user }) {
   };
 
   const filteredSubs = subscriptions.filter(sub => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return sub.subscriber_name?.toLowerCase().includes(term) ||
-           sub.subscriber_email?.toLowerCase().includes(term) ||
-           sub.subscription_id?.toLowerCase().includes(term);
+    // Search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      const matches = sub.subscriber_name?.toLowerCase().includes(term) ||
+             sub.subscriber_email?.toLowerCase().includes(term) ||
+             sub.subscription_id?.toLowerCase().includes(term);
+      if (!matches) return false;
+    }
+    // Status filter
+    if (statusFilter === 'active' && !(sub.is_active && !isExpired(sub.end_date))) return false;
+    if (statusFilter === 'inactive' && (sub.is_active && !isExpired(sub.end_date))) return false;
+    if (statusFilter === 'expired' && !isExpired(sub.end_date)) return false;
+    if (statusFilter === 'pending' && sub.payment_status !== 'pending') return false;
+    // Date range filter
+    if (dateFrom) {
+      const subDate = new Date(sub.created_at || sub.start_date);
+      if (subDate < dateFrom) return false;
+    }
+    if (dateTo) {
+      const subDate = new Date(sub.created_at || sub.start_date);
+      const endOfDay = new Date(dateTo);
+      endOfDay.setHours(23, 59, 59, 999);
+      if (subDate > endOfDay) return false;
+    }
+    return true;
   });
 
   const formatDate = (dateStr) => {
@@ -189,18 +237,70 @@ export default function AdminSubscriptionManagement({ user }) {
         {/* Subscriptions Tab */}
         {activeTab === 'subscriptions' && (
           <div className="bg-white rounded-xl border border-gray-200">
-            <div className="p-4 border-b border-gray-200 flex items-center gap-3">
-              <Search className="w-4 h-4 text-gray-400" />
-              <Input
-                data-testid="subscription-search"
-                placeholder="Search by name, email, or ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="border-0 focus-visible:ring-0 p-0"
-              />
-              <Button variant="outline" size="sm" onClick={fetchData}>
-                <RefreshCw className="w-4 h-4" />
-              </Button>
+            <div className="p-4 border-b border-gray-200 space-y-3">
+              <div className="flex items-center gap-3">
+                <Search className="w-4 h-4 text-gray-400" />
+                <Input
+                  data-testid="subscription-search"
+                  placeholder="Search by name, email, or ID..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="border-0 focus-visible:ring-0 p-0"
+                />
+                <Button variant="outline" size="sm" onClick={fetchData}>
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-1.5">
+                  <Filter className="w-3.5 h-3.5 text-gray-400" />
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-32 h-8 text-xs" data-testid="sub-status-filter">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="expired">Expired</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="h-8 px-3 text-xs border rounded-md flex items-center gap-1.5 hover:bg-gray-50" data-testid="sub-date-from">
+                      <CalendarIcon className="w-3.5 h-3.5 text-gray-400" />
+                      {dateFrom ? dateFrom.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'From'}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} />
+                  </PopoverContent>
+                </Popover>
+                <span className="text-gray-400 text-xs">to</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="h-8 px-3 text-xs border rounded-md flex items-center gap-1.5 hover:bg-gray-50" data-testid="sub-date-to">
+                      <CalendarIcon className="w-3.5 h-3.5 text-gray-400" />
+                      {dateTo ? dateTo.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'To'}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={dateTo} onSelect={setDateTo} />
+                  </PopoverContent>
+                </Popover>
+                {(statusFilter !== 'all' || dateFrom || dateTo) && (
+                  <button
+                    onClick={() => { setStatusFilter('all'); setDateFrom(null); setDateTo(null); }}
+                    className="h-8 px-2 text-xs text-red-500 hover:bg-red-50 rounded-md flex items-center gap-1"
+                    data-testid="clear-sub-filters"
+                  >
+                    <X className="w-3.5 h-3.5" /> Clear
+                  </button>
+                )}
+                <span className="text-xs text-gray-400 ml-auto">{filteredSubs.length} of {subscriptions.length}</span>
+              </div>
             </div>
             
             {filteredSubs.length === 0 ? (
@@ -281,10 +381,10 @@ export default function AdminSubscriptionManagement({ user }) {
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200">
               <h3 className="text-lg font-bold text-[#1D3557]">Checkout Leads</h3>
-              <p className="text-sm text-gray-500">Users who filled the buy form — includes those who didn't complete payment</p>
+              <p className="text-sm text-gray-500">Users who showed interest but didn't complete payment</p>
             </div>
             {checkoutLeads.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">No checkout leads yet.</div>
+              <div className="p-8 text-center text-gray-500">No unconverted leads yet.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm" data-testid="checkout-leads-table">
@@ -311,11 +411,10 @@ export default function AdminSubscriptionManagement({ user }) {
                         <td className="px-4 py-3 text-center">{lead.num_children || '-'}</td>
                         <td className="px-4 py-3 text-gray-500">{formatDate(lead.updated_at || lead.created_at)}</td>
                         <td className="px-4 py-3">
-                          {lead.converted ? (
-                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Converted</span>
-                          ) : (
-                            <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">Not Purchased</span>
-                          )}
+                          {(() => {
+                            const s = LEAD_STATUS_MAP[lead.lead_status] || LEAD_STATUS_MAP.form_closed;
+                            return <span className={`px-2 py-1 rounded-full text-xs font-medium ${s.cls}`}>{s.label}</span>;
+                          })()}
                         </td>
                       </tr>
                     ))}

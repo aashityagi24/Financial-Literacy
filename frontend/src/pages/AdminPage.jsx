@@ -5,10 +5,12 @@ import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
   Shield, ChevronLeft, ChevronRight, Users, BookOpen, BarChart3,
-  Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus, School, Video, BookMarked, Eye, EyeOff, CreditCard, Clock, Phone
+  Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus, School, Video, BookMarked, Eye, EyeOff, CreditCard, Clock, Phone, Calendar as CalendarIcon, Filter, X
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -60,6 +62,8 @@ export default function AdminPage({ user }) {
   const [selectedUsers, setSelectedUsers] = useState(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [enquiries, setEnquiries] = useState([]);
+  const [userDateFrom, setUserDateFrom] = useState(null);
+  const [userDateTo, setUserDateTo] = useState(null);
   
   // Filters for user management
   const [filters, setFilters] = useState({
@@ -159,6 +163,15 @@ export default function AdminPage({ user }) {
     if (filters.school !== 'all') {
       if (filters.school === 'none' && u.school_id) return false;
       if (filters.school !== 'none' && u.school_id !== filters.school) return false;
+    }
+    if (userDateFrom) {
+      const d = new Date(u.created_at);
+      if (d < userDateFrom) return false;
+    }
+    if (userDateTo) {
+      const d = new Date(u.created_at);
+      const end = new Date(userDateTo); end.setHours(23, 59, 59, 999);
+      if (d > end) return false;
     }
     return true;
   });
@@ -765,14 +778,37 @@ export default function AdminPage({ user }) {
                   ))}
                 </SelectContent>
               </Select>
-              {(filters.role !== 'all' || filters.grade !== 'all' || filters.school !== 'all') && (
+              {(filters.role !== 'all' || filters.grade !== 'all' || filters.school !== 'all' || userDateFrom || userDateTo) && (
                 <button 
-                  onClick={() => setFilters({ role: 'all', grade: 'all', school: 'all' })}
-                  className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded"
+                  onClick={() => { setFilters({ role: 'all', grade: 'all', school: 'all' }); setUserDateFrom(null); setUserDateTo(null); }}
+                  className="px-3 py-1 text-sm text-red-500 hover:text-red-700 hover:bg-red-50 rounded flex items-center gap-1"
                 >
-                  Clear Filters
+                  <X className="w-3.5 h-3.5" /> Clear
                 </button>
               )}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="h-8 px-3 text-xs border rounded-md flex items-center gap-1.5 hover:bg-gray-50" data-testid="user-date-from">
+                    <CalendarIcon className="w-3.5 h-3.5 text-gray-400" />
+                    {userDateFrom ? userDateFrom.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'From'}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={userDateFrom} onSelect={setUserDateFrom} />
+                </PopoverContent>
+              </Popover>
+              <span className="text-gray-400 text-xs">to</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="h-8 px-3 text-xs border rounded-md flex items-center gap-1.5 hover:bg-gray-50" data-testid="user-date-to">
+                    <CalendarIcon className="w-3.5 h-3.5 text-gray-400" />
+                    {userDateTo ? userDateTo.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'To'}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={userDateTo} onSelect={setUserDateTo} />
+                </PopoverContent>
+              </Popover>
               <span className="ml-auto text-sm text-gray-500">
                 Showing {filteredUsers.length} of {users.length} users
               </span>

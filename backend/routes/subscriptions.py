@@ -136,27 +136,47 @@ async def capture_checkout_lead(request: Request):
     plan_type = body.get("plan_type", "")
     duration = body.get("duration", "")
     num_children = body.get("num_children", 1)
+    lead_status = body.get("lead_status", "form_closed")
     
     if not email:
         return {"message": "skipped"}
     
     # Upsert — update if same email already exists, so we don't create duplicates
-    await db.checkout_leads.update_one(
-        {"email": email},
-        {"$set": {
+    # Only upgrade status (form_closed -> form_submitted), never downgrade
+    existing = await db.checkout_leads.find_one({"email": email})
+    
+    status_priority = {"form_closed": 0, "form_submitted": 1, "converted": 2}
+    if existing:
+        current_priority = status_priority.get(existing.get("lead_status", "form_closed"), 0)
+        new_priority = status_priority.get(lead_status, 0)
+        final_status = lead_status if new_priority >= current_priority else existing.get("lead_status", "form_closed")
+        
+        await db.checkout_leads.update_one(
+            {"email": email},
+            {"$set": {
+                "name": name or existing.get("name", ""),
+                "phone": phone or existing.get("phone", ""),
+                "plan_type": plan_type,
+                "duration": duration,
+                "num_children": num_children,
+                "lead_status": final_status,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }}
+        )
+    else:
+        await db.checkout_leads.insert_one({
+            "lead_id": f"lead_{uuid.uuid4().hex[:12]}",
             "name": name,
+            "email": email,
             "phone": phone,
             "plan_type": plan_type,
             "duration": duration,
             "num_children": num_children,
-            "updated_at": datetime.now(timezone.utc).isoformat(),
-        }, "$setOnInsert": {
-            "lead_id": f"lead_{uuid.uuid4().hex[:12]}",
+            "lead_status": lead_status,
             "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
             "converted": False,
-        }},
-        upsert=True
-    )
+        })
     return {"message": "lead captured"}
 
 
@@ -296,7 +316,7 @@ async def verify_payment(payment: VerifyPaymentRequest):
     # Mark lead as converted
     await db.checkout_leads.update_one(
         {"email": subscription.get("subscriber_email", "").lower()},
-        {"$set": {"converted": True, "converted_at": now.isoformat()}}
+        {"$set": {"converted": True, "lead_status": "converted", "converted_at": now.isoformat()}}
     )
     
     return {
@@ -453,14 +473,16 @@ async def admin_list_subscriptions(request: Request):
 
 @router.get("/admin/checkout-leads")
 async def admin_get_checkout_leads(request: Request):
-    """Admin: List all checkout leads (users who filled the buy form)"""
+    """Admin: List checkout leads - excludes converted (they show in subscriptions)"""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin only")
     
-    leads = await db.checkout_leads.find({}, {"_id": 0}).sort("updated_at", -1).to_list(500)
+    leads = await db.checkout_leads.find(
+        {"converted": {"$ne": True}}, {"_id": 0}
+    ).sort("updated_at", -1).to_list(500)
     return leads
 
 
