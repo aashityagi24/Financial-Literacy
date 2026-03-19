@@ -69,7 +69,8 @@ export default function AdminPage({ user }) {
   const [filters, setFilters] = useState({
     role: 'all',
     grade: 'all',
-    school: 'all'
+    school: 'all',
+    subscription: 'all'
   });
   
   useEffect(() => {
@@ -163,6 +164,10 @@ export default function AdminPage({ user }) {
     if (filters.school !== 'all') {
       if (filters.school === 'none' && u.school_id) return false;
       if (filters.school !== 'none' && u.school_id !== filters.school) return false;
+    }
+    if (filters.subscription !== 'all') {
+      if (filters.subscription === 'active' && u.subscription_status !== 'active') return false;
+      if (filters.subscription === 'inactive' && u.subscription_status !== 'inactive') return false;
     }
     if (userDateFrom) {
       const d = new Date(u.created_at);
@@ -778,9 +783,19 @@ export default function AdminPage({ user }) {
                   ))}
                 </SelectContent>
               </Select>
-              {(filters.role !== 'all' || filters.grade !== 'all' || filters.school !== 'all' || userDateFrom || userDateTo) && (
+              <Select value={filters.subscription} onValueChange={(v) => setFilters({...filters, subscription: v})}>
+                <SelectTrigger className="w-40 bg-white" data-testid="user-sub-filter">
+                  <SelectValue placeholder="Subscription" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Subscriptions</SelectItem>
+                  <SelectItem value="active">Active Sub</SelectItem>
+                  <SelectItem value="inactive">Inactive Sub</SelectItem>
+                </SelectContent>
+              </Select>
+              {(filters.role !== 'all' || filters.grade !== 'all' || filters.school !== 'all' || filters.subscription !== 'all' || userDateFrom || userDateTo) && (
                 <button 
-                  onClick={() => { setFilters({ role: 'all', grade: 'all', school: 'all' }); setUserDateFrom(null); setUserDateTo(null); }}
+                  onClick={() => { setFilters({ role: 'all', grade: 'all', school: 'all', subscription: 'all' }); setUserDateFrom(null); setUserDateTo(null); }}
                   className="px-3 py-1 text-sm text-red-500 hover:text-red-700 hover:bg-red-50 rounded flex items-center gap-1"
                 >
                   <X className="w-3.5 h-3.5" /> Clear

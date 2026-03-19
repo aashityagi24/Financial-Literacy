@@ -200,7 +200,7 @@ export default function AdminSubscriptionManagement({ user }) {
             <p className="text-sm text-gray-500">Active</p>
           </div>
           <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <Calendar className="w-6 h-6 text-[#EE6C4D] mb-1" />
+            <CalendarIcon className="w-6 h-6 text-[#EE6C4D] mb-1" />
             <p className="text-2xl font-bold text-[#EE6C4D]">{stats.expired}</p>
             <p className="text-sm text-gray-500">Expired</p>
           </div>
