@@ -5,7 +5,7 @@ import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
   Shield, ChevronLeft, ChevronRight, Users, BookOpen, BarChart3,
-  Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus, School, Video, BookMarked, Eye, EyeOff, CreditCard, Clock
+  Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus, School, Video, BookMarked, Eye, EyeOff, CreditCard, Clock, Phone
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +59,7 @@ export default function AdminPage({ user }) {
   // Multi-select state
   const [selectedUsers, setSelectedUsers] = useState(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [enquiries, setEnquiries] = useState([]);
   
   // Filters for user management
   const [filters, setFilters] = useState({
@@ -80,6 +81,11 @@ export default function AdminPage({ user }) {
     if (activeTab === 'guidebook') {
       axios.get(`${API}/jobs/guidebook`).then(res => {
         setGuidebook({ child_guide: res.data.child_guide || '', parent_guide: res.data.parent_guide || '' });
+      }).catch(() => {});
+    }
+    if (activeTab === 'enquiries') {
+      axios.get(`${API}/admin/school-enquiries`).then(res => {
+        setEnquiries(res.data);
       }).catch(() => {});
     }
   }, [activeTab]);
@@ -531,6 +537,7 @@ export default function AdminPage({ user }) {
             { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
             { id: 'users', label: 'Users', icon: Users },
             { id: 'schools', label: 'Schools', icon: School },
+            { id: 'enquiries', label: 'Enquiries', icon: Phone },
             { id: 'guidebook', label: 'Jobs Guide', icon: BookOpen },
           ].map((tab) => (
             <button
@@ -1082,6 +1089,85 @@ export default function AdminPage({ user }) {
           </div>
         )}
         
+        {/* Enquiries Tab */}
+        {activeTab === 'enquiries' && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <Phone className="w-5 h-5 text-[#EE6C4D]" />
+              School Subscription Enquiries
+              {enquiries.length > 0 && (
+                <span className="text-xs bg-[#EE6C4D] text-white px-2 py-0.5 rounded-full">{enquiries.length}</span>
+              )}
+            </h2>
+            {enquiries.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">No enquiries yet.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" data-testid="enquiries-table">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Date</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">School</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Contact Person</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Phone</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Email</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">City</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Grades</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {enquiries.map((enq) => (
+                      <tr key={enq.enquiry_id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-3 text-gray-500 whitespace-nowrap">
+                          {new Date(enq.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td className="py-3 px-3 font-medium text-gray-800">{enq.school_name}</td>
+                        <td className="py-3 px-3">
+                          <div>{enq.person_name}</div>
+                          {enq.designation && <div className="text-xs text-gray-400">{enq.designation}</div>}
+                        </td>
+                        <td className="py-3 px-3">{enq.contact_number}</td>
+                        <td className="py-3 px-3 text-blue-600">{enq.email}</td>
+                        <td className="py-3 px-3 text-gray-500">{enq.city || '-'}</td>
+                        <td className="py-3 px-3">
+                          {enq.grades?.length > 0 ? enq.grades.map(g => (
+                            <span key={g} className="inline-block bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full mr-1 mb-1">
+                              {g.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                            </span>
+                          )) : <span className="text-gray-400">-</span>}
+                        </td>
+                        <td className="py-3 px-3">
+                          <Select
+                            value={enq.status}
+                            onValueChange={async (val) => {
+                              try {
+                                await axios.put(`${API}/admin/school-enquiries/${enq.enquiry_id}/status`, { status: val });
+                                setEnquiries(prev => prev.map(e => e.enquiry_id === enq.enquiry_id ? { ...e, status: val } : e));
+                                toast.success('Status updated');
+                              } catch { toast.error('Failed to update'); }
+                            }}
+                          >
+                            <SelectTrigger className="w-28 h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="new"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />New</span></SelectItem>
+                              <SelectItem value="contacted"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />Contacted</span></SelectItem>
+                              <SelectItem value="converted"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400 inline-block" />Converted</span></SelectItem>
+                              <SelectItem value="closed"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-400 inline-block" />Closed</span></SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Guidebook Tab */}
         {activeTab === 'guidebook' && (
           <div className="space-y-6">

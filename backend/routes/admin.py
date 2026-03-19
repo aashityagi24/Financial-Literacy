@@ -283,6 +283,75 @@ async def update_user_subscription(user_id: str, request: Request):
     raise HTTPException(status_code=400, detail="Status must be 'active' or 'inactive'")
 
 
+@router.post("/school-enquiry")
+async def submit_school_enquiry(request: Request):
+    """Submit a school subscription enquiry - public endpoint"""
+    db = get_db()
+    body = await request.json()
+    
+    school_name = (body.get("school_name") or "").strip()
+    person_name = (body.get("person_name") or "").strip()
+    contact_number = (body.get("contact_number") or "").strip()
+    email = (body.get("email") or "").strip().lower()
+    city = (body.get("city") or "").strip()
+    designation = (body.get("designation") or "").strip()
+    grades = body.get("grades", [])
+    
+    if not school_name:
+        raise HTTPException(status_code=400, detail="School name is required")
+    if not person_name:
+        raise HTTPException(status_code=400, detail="Contact person name is required")
+    if not contact_number or len(contact_number.replace(" ", "").replace("+", "")) < 10:
+        raise HTTPException(status_code=400, detail="Valid contact number is required")
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Valid email is required")
+    
+    enquiry = {
+        "enquiry_id": f"enq_{uuid.uuid4().hex[:12]}",
+        "school_name": school_name,
+        "person_name": person_name,
+        "contact_number": contact_number,
+        "email": email,
+        "city": city,
+        "designation": designation,
+        "grades": grades,
+        "status": "new",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    
+    await db.school_enquiries.insert_one(enquiry)
+    return {"message": "Enquiry submitted successfully", "enquiry_id": enquiry["enquiry_id"]}
+
+
+@router.get("/school-enquiries")
+async def get_school_enquiries(request: Request):
+    """Get all school enquiries - admin only"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    enquiries = await db.school_enquiries.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return enquiries
+
+
+@router.put("/school-enquiries/{enquiry_id}/status")
+async def update_enquiry_status(enquiry_id: str, request: Request):
+    """Update enquiry status - admin only"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    status = body.get("status", "").strip()
+    if status not in ["new", "contacted", "converted", "closed"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    result = await db.school_enquiries.update_one(
+        {"enquiry_id": enquiry_id},
+        {"$set": {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Enquiry not found")
+    return {"message": "Status updated"}
+
+
 @router.delete("/users/{user_id}")
 async def delete_user(user_id: str, request: Request):
     """Delete a user and all related data completely"""

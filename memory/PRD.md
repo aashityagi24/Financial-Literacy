@@ -919,6 +919,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **School Subscription Enquiry System** (March 19, 2026)
+  - "Looking for a School Plan?" CTA banner below pricing cards with "Enquire Now" button
+  - Full enquiry form: School Name*, City, Contact Person*, Designation, Phone*, Email*, Grades (K/1/2) - optional fields marked
+  - All enquiries stored in `school_enquiries` collection with date and status
+  - Admin "Enquiries" tab showing all leads with status tracking (New/Contacted/Converted/Closed)
+  - Backend endpoints: `POST /api/admin/school-enquiry` (public), `GET /api/admin/school-enquiries`, `PUT /api/admin/school-enquiries/{id}/status`
 - **Multi-User Selection & Bulk Delete** (March 18, 2026)
   - Checkbox selection in admin user management table with select-all
   - "Delete X Selected" button appears when users are selected
