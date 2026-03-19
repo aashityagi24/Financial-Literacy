@@ -58,6 +58,7 @@ export default function AdminSubscriptionManagement({ user }) {
   const [savingConfig, setSavingConfig] = useState(false);
   const [checkoutLeads, setCheckoutLeads] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [durationFilter, setDurationFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
 
@@ -116,7 +117,13 @@ export default function AdminSubscriptionManagement({ user }) {
     }
   };
 
-  const filteredSubs = subscriptions.filter(sub => {
+  // Only show active ongoing subscriptions (completed payment, not expired)
+  // Pending payments go to Checkout Leads, expired go to user list
+  const activeSubs = subscriptions.filter(s => 
+    s.payment_status === 'completed' && s.is_active && !isExpired(s.end_date)
+  );
+
+  const filteredSubs = activeSubs.filter(sub => {
     // Search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
@@ -125,11 +132,8 @@ export default function AdminSubscriptionManagement({ user }) {
              sub.subscription_id?.toLowerCase().includes(term);
       if (!matches) return false;
     }
-    // Status filter
-    if (statusFilter === 'active' && !(sub.is_active && !isExpired(sub.end_date))) return false;
-    if (statusFilter === 'inactive' && (sub.is_active && !isExpired(sub.end_date))) return false;
-    if (statusFilter === 'expired' && !isExpired(sub.end_date)) return false;
-    if (statusFilter === 'pending' && sub.payment_status !== 'pending') return false;
+    // Duration filter
+    if (durationFilter !== 'all' && sub.duration !== durationFilter) return false;
     // Date range filter
     if (dateFrom) {
       const subDate = new Date(sub.created_at || sub.start_date);
@@ -149,11 +153,6 @@ export default function AdminSubscriptionManagement({ user }) {
     return new Date(dateStr).toLocaleDateString('en-IN', { 
       year: 'numeric', month: 'short', day: 'numeric' 
     });
-  };
-
-  const isExpired = (endDate) => {
-    if (!endDate) return false;
-    return new Date(endDate) < new Date();
   };
 
   if (loading) {
@@ -254,16 +253,16 @@ export default function AdminSubscriptionManagement({ user }) {
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-1.5">
                   <Filter className="w-3.5 h-3.5 text-gray-400" />
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-32 h-8 text-xs" data-testid="sub-status-filter">
+                  <Select value={durationFilter} onValueChange={setDurationFilter}>
+                    <SelectTrigger className="w-36 h-8 text-xs" data-testid="sub-duration-filter">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="expired">Expired</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="all">All Durations</SelectItem>
+                      <SelectItem value="1_day">1 Day</SelectItem>
+                      <SelectItem value="1_month">1 Month</SelectItem>
+                      <SelectItem value="6_months">6 Months</SelectItem>
+                      <SelectItem value="annual">Annual</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -290,16 +289,16 @@ export default function AdminSubscriptionManagement({ user }) {
                     <Calendar mode="single" selected={dateTo} onSelect={setDateTo} />
                   </PopoverContent>
                 </Popover>
-                {(statusFilter !== 'all' || dateFrom || dateTo) && (
+                {(durationFilter !== 'all' || dateFrom || dateTo) && (
                   <button
-                    onClick={() => { setStatusFilter('all'); setDateFrom(null); setDateTo(null); }}
+                    onClick={() => { setDurationFilter('all'); setDateFrom(null); setDateTo(null); }}
                     className="h-8 px-2 text-xs text-red-500 hover:bg-red-50 rounded-md flex items-center gap-1"
                     data-testid="clear-sub-filters"
                   >
                     <X className="w-3.5 h-3.5" /> Clear
                   </button>
                 )}
-                <span className="text-xs text-gray-400 ml-auto">{filteredSubs.length} of {subscriptions.length}</span>
+                <span className="text-xs text-gray-400 ml-auto">{filteredSubs.length} active subscriptions</span>
               </div>
             </div>
             
@@ -319,9 +318,7 @@ export default function AdminSubscriptionManagement({ user }) {
                       <th className="px-4 py-3 font-medium text-gray-600">Children</th>
                       <th className="px-4 py-3 font-medium text-gray-600">Amount</th>
                       <th className="px-4 py-3 font-medium text-gray-600">Start</th>
-                      <th className="px-4 py-3 font-medium text-gray-600">End</th>
-                      <th className="px-4 py-3 font-medium text-gray-600">Status</th>
-                      <th className="px-4 py-3 font-medium text-gray-600">Actions</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">Expires</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -330,43 +327,14 @@ export default function AdminSubscriptionManagement({ user }) {
                         <td className="px-4 py-3">
                           <p className="font-medium text-[#1D3557]">{sub.subscriber_name}</p>
                           <p className="text-xs text-gray-500">{sub.subscriber_email}</p>
+                          {sub.granted_by_admin && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">Admin Granted</span>}
                         </td>
                         <td className="px-4 py-3">{PLAN_LABELS[sub.plan_type] || sub.plan_type}</td>
                         <td className="px-4 py-3">{sub.duration_label || DURATION_LABELS[sub.duration]}</td>
                         <td className="px-4 py-3 text-center">{sub.num_children}</td>
-                        <td className="px-4 py-3 font-medium">₹{(sub.amount || 0).toLocaleString('en-IN')}</td>
+                        <td className="px-4 py-3 font-medium">{sub.amount ? `₹${sub.amount.toLocaleString('en-IN')}` : 'Free'}</td>
                         <td className="px-4 py-3">{formatDate(sub.start_date)}</td>
-                        <td className="px-4 py-3">
-                          <span className={isExpired(sub.end_date) ? 'text-red-500 font-medium' : ''}>
-                            {formatDate(sub.end_date)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          {sub.payment_status === 'pending' ? (
-                            <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">Pending</span>
-                          ) : isExpired(sub.end_date) ? (
-                            <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">Expired</span>
-                          ) : sub.is_active ? (
-                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Active</span>
-                          ) : (
-                            <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">Inactive</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          {sub.payment_status === 'completed' && (
-                            <button
-                              data-testid={`toggle-sub-${sub.subscription_id}`}
-                              onClick={() => toggleSubscription(sub.subscription_id)}
-                              className="flex items-center gap-1 text-sm hover:bg-gray-100 px-2 py-1 rounded"
-                            >
-                              {sub.is_active ? (
-                                <ToggleRight className="w-5 h-5 text-green-600" />
-                              ) : (
-                                <ToggleLeft className="w-5 h-5 text-gray-400" />
-                              )}
-                            </button>
-                          )}
-                        </td>
+                        <td className="px-4 py-3">{formatDate(sub.end_date)}</td>
                       </tr>
                     ))}
                   </tbody>

@@ -166,8 +166,7 @@ export default function AdminPage({ user }) {
       if (filters.school !== 'none' && u.school_id !== filters.school) return false;
     }
     if (filters.subscription !== 'all') {
-      if (filters.subscription === 'active' && u.subscription_status !== 'active') return false;
-      if (filters.subscription === 'inactive' && u.subscription_status !== 'inactive') return false;
+      if (filters.subscription !== u.subscription_status) return false;
     }
     if (userDateFrom) {
       const d = new Date(u.created_at);
@@ -790,7 +789,8 @@ export default function AdminPage({ user }) {
                 <SelectContent>
                   <SelectItem value="all">All Subscriptions</SelectItem>
                   <SelectItem value="active">Active Sub</SelectItem>
-                  <SelectItem value="inactive">Inactive Sub</SelectItem>
+                  <SelectItem value="expired">Expired Sub</SelectItem>
+                  <SelectItem value="inactive">No Subscription</SelectItem>
                 </SelectContent>
               </Select>
               {(filters.role !== 'all' || filters.grade !== 'all' || filters.school !== 'all' || filters.subscription !== 'all' || userDateFrom || userDateTo) && (
@@ -917,22 +917,20 @@ export default function AdminPage({ user }) {
                         {(u.role === 'parent' || u.role === 'child') ? (
                           <button
                             onClick={() => {
-                              if (u.subscription_status === 'active') {
-                                setSubDialog({ open: true, userId: u.user_id, userName: u.name, currentStatus: 'active' });
-                              } else {
-                                setSubDialog({ open: true, userId: u.user_id, userName: u.name, currentStatus: 'inactive' });
-                              }
+                              setSubDialog({ open: true, userId: u.user_id, userName: u.name, currentStatus: u.subscription_status });
                               setSubDuration('1_month');
                             }}
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${
                               u.subscription_status === 'active'
                                 ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                : u.subscription_status === 'expired'
+                                ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
                                 : 'bg-red-100 text-red-700 hover:bg-red-200'
                             }`}
                             data-testid={`sub-status-${u.user_id}`}
                           >
                             <CreditCard className="w-3 h-3" />
-                            {u.subscription_status === 'active' ? 'Active' : 'Inactive'}
+                            {u.subscription_status === 'active' ? 'Active' : u.subscription_status === 'expired' ? 'Expired' : 'Inactive'}
                           </button>
                         ) : (
                           <span className="text-gray-400 text-xs">N/A</span>
@@ -1287,12 +1285,12 @@ export default function AdminPage({ user }) {
             </p>
             <p className="text-sm text-gray-600">
               Current Status: {' '}
-              <span className={`font-semibold ${subDialog.currentStatus === 'active' ? 'text-green-600' : 'text-red-600'}`}>
-                {subDialog.currentStatus === 'active' ? 'Active' : 'Inactive'}
+              <span className={`font-semibold ${subDialog.currentStatus === 'active' ? 'text-green-600' : subDialog.currentStatus === 'expired' ? 'text-orange-600' : 'text-red-600'}`}>
+                {subDialog.currentStatus === 'active' ? 'Active' : subDialog.currentStatus === 'expired' ? 'Expired' : 'Inactive'}
               </span>
             </p>
 
-            {subDialog.currentStatus === 'inactive' ? (
+            {subDialog.currentStatus !== 'active' ? (
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">

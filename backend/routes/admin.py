@@ -62,24 +62,28 @@ async def get_users(request: Request):
     schools = await db.schools.find({}, {"_id": 0, "school_id": 1, "name": 1}).to_list(100)
     school_map = {s["school_id"]: s["name"] for s in schools}
     
-    # Get all active subscriptions
+    # Get all completed subscriptions for lookup
     now = datetime.now(timezone.utc).isoformat()
-    active_subs = await db.subscriptions.find({
+    all_subs = await db.subscriptions.find({
         "payment_status": "completed",
         "is_active": True,
-        "end_date": {"$gt": now}
     }, {"_id": 0, "parent_emails": 1, "end_date": 1, "plan_type": 1, "duration": 1, "granted_by_admin": 1}).to_list(1000)
     
-    # Build email -> subscription lookup
+    # Build email -> subscription lookup (active vs expired)
     sub_map = {}
-    for sub in active_subs:
+    for sub in all_subs:
         for email in sub.get("parent_emails", []):
-            sub_map[email] = {
-                "end_date": sub["end_date"],
-                "plan_type": sub.get("plan_type", ""),
-                "duration": sub.get("duration", ""),
-                "granted_by_admin": sub.get("granted_by_admin", False)
-            }
+            is_active = sub["end_date"] > now
+            # Prefer active over expired
+            existing = sub_map.get(email)
+            if not existing or (is_active and existing["subscription_status"] != "active"):
+                sub_map[email] = {
+                    "subscription_status": "active" if is_active else "expired",
+                    "end_date": sub["end_date"],
+                    "plan_type": sub.get("plan_type", ""),
+                    "duration": sub.get("duration", ""),
+                    "granted_by_admin": sub.get("granted_by_admin", False)
+                }
     
     # Add school_name and subscription_status to each user
     for user in users:
@@ -87,7 +91,7 @@ async def get_users(request: Request):
         user["school_name"] = school_map.get(school_id) if school_id else None
         email = user.get("email", "").lower()
         if email in sub_map:
-            user["subscription_status"] = "active"
+            user["subscription_status"] = sub_map[email]["subscription_status"]
             user["subscription_end_date"] = sub_map[email]["end_date"]
             user["subscription_granted_by_admin"] = sub_map[email].get("granted_by_admin", False)
         else:
