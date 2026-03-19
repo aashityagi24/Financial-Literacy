@@ -310,6 +310,7 @@ DEST_MAP = {
     "investment": INVESTMENT_IMAGES_DIR,
     "goal": THUMBNAILS_DIR,
     "activity": ACTIVITIES_DIR,
+    "audio": UPLOADS_DIR / "audio",
 }
 
 from fastapi import Form

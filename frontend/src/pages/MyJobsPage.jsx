@@ -7,6 +7,7 @@ import { ArrowLeft, Plus, Trash2, Briefcase, Heart, Clock, BookOpen, Check, Coin
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { JobGuideDialog } from '@/components/JobGuideDialog';
 
 const FREQUENCIES = [
   { value: 'daily', label: 'Every day' },
@@ -19,27 +20,11 @@ const FREQUENCIES = [
 const FAMILY_EXAMPLES = ['Keeping my room clean', 'Setting the table', 'Putting clothes away', 'Feeding the pet'];
 const PAYDAY_EXAMPLES = ['Watering plants', 'Cleaning the car', 'Helping with dishes', 'Organizing shelves'];
 
-const renderMarkdown = (text) => {
-  return text.split('\n').map((line, i) => {
-    if (line.startsWith('###')) {
-      return <h3 key={i} className="text-white font-bold text-base mt-3 mb-1" style={{ fontFamily: 'Fredoka' }}>{line.replace(/^###\s*/, '')}</h3>;
-    }
-    const parts = line.split(/(\*\*[^*]+\*\*)/g);
-    const rendered = parts.map((part, j) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={j} className="text-white">{part.slice(2, -2)}</strong>;
-      }
-      return part;
-    });
-    if (line.trim()) return <p key={i} className="mb-1">{rendered}</p>;
-    return null;
-  });
-};
-
 export default function MyJobsPage({ user }) {
   const [familyJobs, setFamilyJobs] = useState([]);
   const [paydayJobs, setPaydayJobs] = useState([]);
   const [guidebook, setGuidebook] = useState('');
+  const [guideAudioUrl, setGuideAudioUrl] = useState('');
   const [showGuide, setShowGuide] = useState(false);
   const [newJob, setNewJob] = useState({ activity: '', frequency: 'daily' });
   const [adding, setAdding] = useState(null);
@@ -58,6 +43,7 @@ export default function MyJobsPage({ user }) {
     try {
       const res = await axios.get(`${API}/jobs/guidebook`);
       setGuidebook(res.data.child_guide || '');
+      setGuideAudioUrl(res.data.child_audio_url || '');
     } catch (err) { console.error(err); }
   };
 
@@ -193,19 +179,23 @@ export default function MyJobsPage({ user }) {
             </Link>
             <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>My Jobs</h1>
             <button
-              onClick={() => setShowGuide(!showGuide)}
-              className={`ml-auto text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition-all ${showGuide ? 'bg-white text-[#1D3557]' : 'bg-white/15 text-white/90 hover:bg-white/25'}`}
+              onClick={() => setShowGuide(true)}
+              className="ml-auto px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all bg-[#FFD23F] text-[#1D3557] hover:bg-[#FFEB99] shadow-lg"
+              data-testid="open-job-guide"
             >
-              <BookOpen className="w-3 h-3" /> Guide
+              <BookOpen className="w-4 h-4" /> What are Jobs?
             </button>
           </div>
 
-          {/* Guidebook */}
-          {showGuide && (
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 mb-4 text-sm text-white/80 border border-white/10">
-              {renderMarkdown(guidebook)}
-            </div>
-          )}
+          {/* Guide Dialog */}
+          <JobGuideDialog
+            open={showGuide}
+            onClose={() => setShowGuide(false)}
+            guideText={guidebook}
+            audioUrl={guideAudioUrl}
+            theme="dark"
+            title="My Jobs Guide"
+          />
 
           {/* Intro */}
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10">

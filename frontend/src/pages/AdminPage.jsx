@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
+import { uploadFile } from '@/utils/chunkedUpload';
 import { 
   Shield, ChevronLeft, ChevronRight, Users, BookOpen, BarChart3,
   Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus, School, Video, BookMarked, Eye, EyeOff, CreditCard, Clock, Phone, Calendar as CalendarIcon, Filter, X
@@ -35,7 +36,7 @@ export default function AdminPage({ user }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showCreateSchool, setShowCreateSchool] = useState(false);
-  const [guidebook, setGuidebook] = useState({ child_guide: '', parent_guide: '' });
+  const [guidebook, setGuidebook] = useState({ child_guide: '', parent_guide: '', child_audio_url: '', parent_audio_url: '' });
   const [guidebookSaving, setGuidebookSaving] = useState(false);
   const [newUserForm, setNewUserForm] = useState({
     name: '',
@@ -85,7 +86,7 @@ export default function AdminPage({ user }) {
   useEffect(() => {
     if (activeTab === 'guidebook') {
       axios.get(`${API}/jobs/guidebook`).then(res => {
-        setGuidebook({ child_guide: res.data.child_guide || '', parent_guide: res.data.parent_guide || '' });
+        setGuidebook({ child_guide: res.data.child_guide || '', parent_guide: res.data.parent_guide || '', child_audio_url: res.data.child_audio_url || '', parent_audio_url: res.data.parent_audio_url || '' });
       }).catch(() => {});
     }
     if (activeTab === 'enquiries') {
@@ -1253,6 +1254,40 @@ export default function AdminPage({ user }) {
                 placeholder="### My Jobs Guide..."
                 data-testid="child-guide-textarea"
               />
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                <label className="text-xs font-bold text-[#1D3557] block mb-1">Voice Guide (Audio) for Children</label>
+                <p className="text-xs text-gray-400 mb-2">Upload an audio file so children can listen instead of reading.</p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    data-testid="child-audio-upload"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        toast.info('Uploading audio...');
+                        const url = await uploadFile(file, 'audio');
+                        setGuidebook(g => ({ ...g, child_audio_url: url }));
+                        toast.success('Audio uploaded! Remember to Save.');
+                      } catch (err) {
+                        toast.error('Failed to upload audio');
+                      }
+                    }}
+                    className="text-xs"
+                  />
+                  {guidebook.child_audio_url && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-[#06D6A0] font-medium">Audio uploaded</span>
+                      <button
+                        type="button"
+                        onClick={() => setGuidebook(g => ({ ...g, child_audio_url: '' }))}
+                        className="text-xs text-red-500 hover:underline"
+                      >Remove</button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
             
             <div className="bg-white rounded-xl border-2 border-gray-200 p-5">
@@ -1265,6 +1300,40 @@ export default function AdminPage({ user }) {
                 placeholder="### Parent's Guide to My Jobs..."
                 data-testid="parent-guide-textarea"
               />
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                <label className="text-xs font-bold text-[#1D3557] block mb-1">Voice Guide (Audio) for Parents</label>
+                <p className="text-xs text-gray-400 mb-2">Upload an audio file for parents to listen to.</p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    data-testid="parent-audio-upload"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        toast.info('Uploading audio...');
+                        const url = await uploadFile(file, 'audio');
+                        setGuidebook(g => ({ ...g, parent_audio_url: url }));
+                        toast.success('Audio uploaded! Remember to Save.');
+                      } catch (err) {
+                        toast.error('Failed to upload audio');
+                      }
+                    }}
+                    className="text-xs"
+                  />
+                  {guidebook.parent_audio_url && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-[#06D6A0] font-medium">Audio uploaded</span>
+                      <button
+                        type="button"
+                        onClick={() => setGuidebook(g => ({ ...g, parent_audio_url: '' }))}
+                        className="text-xs text-red-500 hover:underline"
+                      >Remove</button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         )}

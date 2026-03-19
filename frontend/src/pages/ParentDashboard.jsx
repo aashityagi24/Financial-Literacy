@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import NotificationCenter from '@/components/NotificationCenter';
 import { getDefaultAvatar } from '@/utils/avatars';
+import { JobGuideDialog } from '@/components/JobGuideDialog';
 
 const gradeLabels = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
 
@@ -100,6 +101,7 @@ export default function ParentDashboard({ user }) {
   const [childJobs, setChildJobs] = useState([]);
   const [showApproveJob, setShowApproveJob] = useState(null);
   const [parentGuide, setParentGuide] = useState('');
+  const [parentGuideAudioUrl, setParentGuideAudioUrl] = useState('');
   const [showJobGuide, setShowJobGuide] = useState(false);
   
   // Subscription state
@@ -153,6 +155,7 @@ export default function ParentDashboard({ user }) {
       setLendingRequests(lendingReqRes.data || []);
       setChildJobs(jobsRes.data?.jobs || []);
       setParentGuide(guideRes.data?.parent_guide || '');
+      setParentGuideAudioUrl(guideRes.data?.parent_audio_url || '');
       
       // Fetch subscription info
       axios.get(`${API}/subscriptions/my-subscription`)
@@ -1215,23 +1218,24 @@ export default function ParentDashboard({ user }) {
             {parentSection === 'jobs' && (
             <>
             <ChildFilter />
-            {/* Job Guide Toggle */}
-            {parentGuide && (
-              <div className="mt-4 mb-2">
-                <button
-                  data-testid="toggle-job-guide"
-                  onClick={() => setShowJobGuide(!showJobGuide)}
-                  className={`text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1.5 transition-all ${showJobGuide ? 'bg-[#1D3557] text-white' : 'bg-[#1D3557]/10 text-[#1D3557] hover:bg-[#1D3557]/20'}`}
-                >
-                  <BookOpen className="w-3 h-3" /> Parent&apos;s Guide
-                </button>
-                {showJobGuide && (
-                  <div className="mt-3 card-playful p-4 bg-[#E0FBFC] border-l-4 border-[#3D5A80] text-sm text-[#1D3557] leading-relaxed whitespace-pre-line" data-testid="job-guide-content">
-                    {parentGuide}
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Job Guide Button */}
+            <div className="mt-4 mb-2 flex items-center gap-3">
+              <button
+                data-testid="toggle-job-guide"
+                onClick={() => setShowJobGuide(true)}
+                className="px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all bg-[#1D3557] text-white hover:bg-[#152A45] shadow-md"
+              >
+                <BookOpen className="w-4 h-4" /> Parent&apos;s Guide to Jobs
+              </button>
+            </div>
+            <JobGuideDialog
+              open={showJobGuide}
+              onClose={() => setShowJobGuide(false)}
+              guideText={parentGuide}
+              audioUrl={parentGuideAudioUrl}
+              theme="light"
+              title="Parent's Guide to Jobs"
+            />
             {/* My Jobs Section */}
             {filteredJobs.length > 0 ? (
               <>

@@ -332,15 +332,22 @@ async def get_job_guidebook(request: Request):
         # Default content
         return {
             "child_guide": "### My Jobs Guide\n\n**Family Jobs** are things you do because you're part of the family. No payment needed!\n\nExamples: Keeping your room clean, putting clothes in the laundry basket.\n\n**Payday Jobs** are extra tasks you do to earn money.\n\nExamples: Watering plants, feeding the pet, cleaning the table after dinner.\n\nAdd up to 3 of each type!",
-            "parent_guide": "### Parent's Guide to My Jobs\n\n**Family Jobs**: These are responsibilities your child commits to as part of the family. They are unpaid and help teach accountability.\n\n**Payday Jobs**: These are extra tasks your child takes on to earn money. You set the weekly payment amount and choose between digital (CoinQuest wallet) or physical (cash) payment.\n\n**Best Practices**:\n- Review jobs weekly on your chosen reminder day\n- Be consistent with payments to build trust\n- Discuss what went well and what can improve\n- Start with small amounts and increase as responsibility grows"
+            "parent_guide": "### Parent's Guide to My Jobs\n\n**Family Jobs**: These are responsibilities your child commits to as part of the family. They are unpaid and help teach accountability.\n\n**Payday Jobs**: These are extra tasks your child takes on to earn money. You set the weekly payment amount and choose between digital (CoinQuest wallet) or physical (cash) payment.\n\n**Best Practices**:\n- Review jobs weekly on your chosen reminder day\n- Be consistent with payments to build trust\n- Discuss what went well and what can improve\n- Start with small amounts and increase as responsibility grows",
+            "child_audio_url": "",
+            "parent_audio_url": ""
         }
     
     if role == "child":
-        return {"child_guide": guidebook.get("child_guide", "")}
+        return {
+            "child_guide": guidebook.get("child_guide", ""),
+            "child_audio_url": guidebook.get("child_audio_url", "")
+        }
     else:
         return {
             "child_guide": guidebook.get("child_guide", ""),
-            "parent_guide": guidebook.get("parent_guide", "")
+            "parent_guide": guidebook.get("parent_guide", ""),
+            "child_audio_url": guidebook.get("child_audio_url", ""),
+            "parent_audio_url": guidebook.get("parent_audio_url", "")
         }
 
 
@@ -361,6 +368,8 @@ async def update_job_guidebook(request: Request):
             "type": "guidebook",
             "child_guide": body.get("child_guide", ""),
             "parent_guide": body.get("parent_guide", ""),
+            "child_audio_url": body.get("child_audio_url", ""),
+            "parent_audio_url": body.get("parent_audio_url", ""),
             "updated_at": datetime.now(timezone.utc).isoformat(),
             "updated_by": user["user_id"]
         }},
