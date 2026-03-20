@@ -919,6 +919,14 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Tiered Child Pricing** (March 20, 2026)
+  - Replaced flat per_child_price with tiered child_prices array [2nd, 3rd, 4th, 5th child] — each additional child gets cheaper
+  - Pricing cards now show individual child price badges matching the user's design
+  - Checkout dialog has children selector (1-5) with itemized breakdown showing each child's price
+  - Admin pricing config updated with 4 individual child price inputs + extra_child_per_day rate
+  - Backend: Updated DEFAULT_PLANS, calculate_total, get_plan_pricing, create-order, admin plan-config endpoints
+  - Testing: 19/19 backend + all frontend tests passed (iteration_60)
+
 - **Linked Users & Renewal Tracking** (March 19, 2026)
   - Eye button on each subscription row opens dialog showing all linked parent and child accounts
   - Backend enriches `/api/subscriptions/admin/list` with `linked_users` array (parent + nested children) and `is_renewal` boolean
