@@ -50,7 +50,8 @@ class PlanConfigUpdate(BaseModel):
     plan_type: str
     duration: str
     base_price: int
-    per_child_price: int
+    child_prices: list  # [2nd_child, 3rd_child, 4th_child, 5th_child]
+    extra_child_per_day: float = 0
 
 
 # ============== HELPER FUNCTIONS ==============
@@ -64,16 +65,16 @@ DURATION_MAP = {
 
 DEFAULT_PLANS = {
     "single_parent": {
-        "1_day": {"base_price": 99, "per_child_price": 49},
-        "1_month": {"base_price": 500, "per_child_price": 200},
-        "6_months": {"base_price": 2500, "per_child_price": 1000},
-        "1_year": {"base_price": 4500, "per_child_price": 1800},
+        "1_day": {"base_price": 49, "child_prices": [29, 25, 20, 15], "extra_child_per_day": 29},
+        "1_month": {"base_price": 499, "child_prices": [179, 149, 119, 99], "extra_child_per_day": 6.0},
+        "6_months": {"base_price": 2299, "child_prices": [799, 649, 519, 399], "extra_child_per_day": 4.4},
+        "1_year": {"base_price": 3999, "child_prices": [1299, 1049, 849, 649], "extra_child_per_day": 3.6},
     },
     "two_parents": {
-        "1_day": {"base_price": 149, "per_child_price": 49},
-        "1_month": {"base_price": 700, "per_child_price": 200},
-        "6_months": {"base_price": 3500, "per_child_price": 1000},
-        "1_year": {"base_price": 6300, "per_child_price": 1800},
+        "1_day": {"base_price": 69, "child_prices": [39, 35, 29, 22], "extra_child_per_day": 39},
+        "1_month": {"base_price": 649, "child_prices": [219, 179, 149, 119], "extra_child_per_day": 7.3},
+        "6_months": {"base_price": 2999, "child_prices": [999, 799, 649, 499], "extra_child_per_day": 5.5},
+        "1_year": {"base_price": 5199, "child_prices": [1599, 1299, 1049, 799], "extra_child_per_day": 4.4},
     }
 }
 
@@ -84,15 +85,33 @@ async def get_plan_pricing(plan_type: str, duration: str):
     config = await db.subscription_plan_config.find_one(
         {"plan_type": plan_type, "duration": duration}, {"_id": 0}
     )
-    if config:
-        return {"base_price": config["base_price"], "per_child_price": config["per_child_price"]}
-    return DEFAULT_PLANS.get(plan_type, {}).get(duration, {"base_price": 500, "per_child_price": 200})
+    if config and "child_prices" in config:
+        return {
+            "base_price": config["base_price"],
+            "child_prices": config["child_prices"],
+            "extra_child_per_day": config.get("extra_child_per_day", 0),
+        }
+    # Legacy fallback: convert old per_child_price to child_prices array
+    if config and "per_child_price" in config:
+        p = config["per_child_price"]
+        return {
+            "base_price": config["base_price"],
+            "child_prices": [p, p, p, p],
+            "extra_child_per_day": 0,
+        }
+    default = DEFAULT_PLANS.get(plan_type, {}).get(duration, {"base_price": 500, "child_prices": [200, 200, 200, 200], "extra_child_per_day": 0})
+    return default
 
 
-def calculate_total(base_price: int, per_child_price: int, num_children: int) -> int:
-    """Calculate total: base includes 1 child, extra children cost more"""
-    extra_children = max(0, num_children - 1)
-    return base_price + (extra_children * per_child_price)
+def calculate_total(pricing: dict, num_children: int) -> int:
+    """Calculate total: base includes 1 child, additional children have tiered pricing"""
+    total = pricing["base_price"]
+    child_prices = pricing.get("child_prices", [])
+    for i in range(1, num_children):
+        if i - 1 < len(child_prices):
+            total += child_prices[i - 1]
+        # Beyond defined tiers, no extra charge (shouldn't happen with max 5)
+    return total
 
 
 # ============== PUBLIC ROUTES (No auth needed) ==============
@@ -100,7 +119,6 @@ def calculate_total(base_price: int, per_child_price: int, num_children: int) ->
 @router.get("/plans")
 async def get_plans():
     """Get all plan pricing for display on homepage"""
-    db = get_db()
     plans = {}
     
     for plan_type in ["single_parent", "two_parents"]:
@@ -109,7 +127,8 @@ async def get_plans():
             pricing = await get_plan_pricing(plan_type, duration)
             plans[plan_type][duration] = {
                 "base_price": pricing["base_price"],
-                "per_child_price": pricing["per_child_price"],
+                "child_prices": pricing["child_prices"],
+                "extra_child_per_day": pricing.get("extra_child_per_day", 0),
                 "duration_label": DURATION_MAP[duration]["label"],
                 "duration_days": DURATION_MAP[duration]["days"],
             }
@@ -198,7 +217,7 @@ async def create_order(order: CreateOrderRequest):
     
     # Get pricing
     pricing = await get_plan_pricing(order.plan_type, order.duration)
-    total_amount = calculate_total(pricing["base_price"], pricing["per_child_price"], order.num_children)
+    total_amount = calculate_total(pricing, order.num_children)
     amount_paise = total_amount * 100  # Razorpay expects paise
     
     # Create Razorpay order
@@ -562,10 +581,19 @@ async def admin_get_plan_config(request: Request):
                 (c for c in configs if c["plan_type"] == plan_type and c["duration"] == duration),
                 None
             )
-            if db_config:
+            if db_config and "child_prices" in db_config:
                 all_plans[plan_type][duration] = {
                     "base_price": db_config["base_price"],
-                    "per_child_price": db_config["per_child_price"],
+                    "child_prices": db_config["child_prices"],
+                    "extra_child_per_day": db_config.get("extra_child_per_day", 0),
+                }
+            elif db_config and "per_child_price" in db_config:
+                # Legacy migration
+                p = db_config["per_child_price"]
+                all_plans[plan_type][duration] = {
+                    "base_price": db_config["base_price"],
+                    "child_prices": [p, p, p, p],
+                    "extra_child_per_day": 0,
                 }
             else:
                 all_plans[plan_type][duration] = DEFAULT_PLANS[plan_type][duration]
@@ -593,7 +621,8 @@ async def admin_update_plan_config(request: Request, config: PlanConfigUpdate):
             "plan_type": config.plan_type,
             "duration": config.duration,
             "base_price": config.base_price,
-            "per_child_price": config.per_child_price,
+            "child_prices": config.child_prices,
+            "extra_child_per_day": config.extra_child_per_day,
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }},
         upsert=True

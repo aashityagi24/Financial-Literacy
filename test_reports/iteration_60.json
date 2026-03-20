@@ -1,0 +1,91 @@
+{
+  "summary": "Completed comprehensive testing of tiered pricing feature for subscription plans. All backend tests passed (19/19). Frontend pricing UI verified - Single Parent and Dual Parent tabs show correct tiered pricing, checkout dialog shows children selector with itemized breakdown and correct total calculations. Admin pricing config tab shows individual child price inputs.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Checkout Dialog",
+        "issues": ["Minor: Missing aria-describedby for DialogContent (console warning) - accessibility improvement"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_tiered_pricing.py",
+    "/app/test_reports/pytest/tiered_pricing_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_tiered_pricing.py"
+  ],
+  "success_rate": {
+    "backend": "100% (19/19 tests passed)",
+    "frontend": "100% (all features working)"
+  },
+  "test_credentials": {
+    "admin": "admin@learnersplanet.com / finlit@2026"
+  },
+  "seed_data_creation": "No seed data created - using default pricing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Tiered pricing feature fully tested. Backend /api/subscriptions/plans returns child_prices array (4 elements) and extra_child_per_day. Total calculation uses tiered sum: base + individual child prices. Frontend pricing section shows tiered badges (2nd, 3rd, 4th, 5th child prices). Checkout dialog has children selector (1-5) with itemized breakdown. Admin pricing tab shows 4 individual child price inputs per plan/duration.",
+  "feature_test_coverage": {
+    "backend_api_tests": {
+      "GET /api/subscriptions/plans returns 200": "PASS",
+      "Plans contain both single_parent and two_parents": "PASS",
+      "Each plan has child_prices array with 4 elements": "PASS",
+      "Each plan has extra_child_per_day field": "PASS",
+      "Single Parent 1 Day: base=49, children=[29,25,20,15]": "PASS",
+      "Single Parent 1 Month: base=499, children=[179,149,119,99]": "PASS",
+      "Single Parent 6 Months: base=2299, children=[799,649,519,399]": "PASS",
+      "Single Parent 1 Year: base=3999, children=[1299,1049,849,649]": "PASS",
+      "Two Parents 1 Day: base=69, children=[39,35,29,22]": "PASS",
+      "Two Parents 1 Month: base=649, children=[219,179,149,119]": "PASS",
+      "Two Parents 6 Months: base=2999, children=[999,799,649,499]": "PASS",
+      "Two Parents 1 Year: base=5199, children=[1599,1299,1049,799]": "PASS",
+      "Total calc: Single Parent 6 Months 3 children = 2299+799+649 = 3747": "PASS",
+      "Total calc: Two Parents 1 Year 5 children = 5199+1599+1299+1049+799 = 9945": "PASS",
+      "Total calc: Single Parent 1 Month 2 children = 499+179 = 678": "PASS",
+      "Total calc: Single Parent 1 Day 1 child = 49 (base only)": "PASS",
+      "GET /api/subscriptions/admin/plan-config returns all configs": "PASS",
+      "POST /api/subscriptions/admin/plan-config accepts child_prices array": "PASS",
+      "POST /api/subscriptions/admin/plan-config requires authentication": "PASS"
+    },
+    "frontend_ui_tests": {
+      "Pricing section loads at #pricing": "PASS",
+      "Single Parent tab active by default": "PASS",
+      "Plan cards (1 Day, 1 Month, 6 Months, 1 Year) displayed": "PASS",
+      "Single Parent 6 Months shows base ₹2,299": "PASS",
+      "Single Parent 6 Months shows tiered child prices [799, 649, 519, 399]": "PASS",
+      "Dual Parent tab switch works": "PASS",
+      "Dual Parent 6 Months shows base ₹2,999": "PASS",
+      "Buy Now opens checkout dialog": "PASS",
+      "Children selector buttons (1-5) present": "PASS",
+      "3 children shows itemized breakdown (Base, 2nd child, 3rd child)": "PASS",
+      "3 children total correct: ₹4,797 for Dual Parent 6 months": "PASS",
+      "5 children total correct: ₹5,945 for Dual Parent 6 months": "PASS",
+      "Admin Plan Pricing tab shows base_price input": "PASS",
+      "Admin Plan Pricing tab shows 4 child price inputs (2nd, 3rd, 4th, 5th)": "PASS",
+      "Admin Plan Pricing tab shows extra_child_per_day input": "PASS"
+    },
+    "verified_pricing_structure": {
+      "single_parent": {
+        "1_day": { "base": 49, "child_prices": [29, 25, 20, 15] },
+        "1_month": { "base": 499, "child_prices": [179, 149, 119, 99] },
+        "6_months": { "base": 2299, "child_prices": [799, 649, 519, 399] },
+        "1_year": { "base": 3999, "child_prices": [1299, 1049, 849, 649] }
+      },
+      "two_parents": {
+        "1_day": { "base": 69, "child_prices": [39, 35, 29, 22] },
+        "1_month": { "base": 649, "child_prices": [219, 179, 149, 119] },
+        "6_months": { "base": 2999, "child_prices": [999, 799, 649, 499] },
+        "1_year": { "base": 5199, "child_prices": [1599, 1299, 1049, 799] }
+      }
+    }
+  }
+}

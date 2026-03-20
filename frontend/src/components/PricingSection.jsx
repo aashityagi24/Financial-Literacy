@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { Check, Users, User, ChevronDown, CreditCard, Shield, Clock, Star, School, Phone, Mail, MapPin, Briefcase } from 'lucide-react';
+import { Check, Users, User, ChevronDown, CreditCard, Shield, Clock, School, Phone, Mail, MapPin, Briefcase } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -62,9 +62,18 @@ export default function PricingSection() {
   if (!plans || !planMeta) return null;
 
   const currentPlan = plans[selectedPlanType]?.[selectedDuration];
-  const totalPrice = currentPlan
-    ? currentPlan.base_price + Math.max(0, numChildren - 1) * currentPlan.per_child_price
-    : 0;
+  
+  const calcTotal = (plan, children) => {
+    if (!plan) return 0;
+    let total = plan.base_price;
+    const cp = plan.child_prices || [];
+    for (let i = 1; i < children; i++) {
+      total += (cp[i - 1] || 0);
+    }
+    return total;
+  };
+  
+  const totalPrice = calcTotal(currentPlan, numChildren);
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -258,83 +267,77 @@ export default function PricingSection() {
           </div>
         </div>
 
-        {/* Children Selector */}
-        <div className="flex justify-center mb-6">
-          <div className="flex items-center gap-3 bg-[#FFF3E0] rounded-full px-5 py-2 border border-[#EE6C4D]/30">
-            <span className="text-sm font-bold text-[#1D3557]">Children:</span>
-            <div className="flex gap-1.5">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  data-testid={`children-count-${n}`}
-                  onClick={() => setNumChildren(n)}
-                  className={`w-8 h-8 rounded-full font-bold text-sm transition-all ${
-                    numChildren === n
-                      ? 'bg-[#EE6C4D] text-white shadow-md scale-110'
-                      : 'bg-white text-[#1D3557] hover:bg-[#EE6C4D]/20 border border-[#1D3557]/20'
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* Plan Subtitle */}
+        <p className="text-center text-sm font-semibold tracking-wide text-[#3D5A80] uppercase mb-6">
+          {selectedPlanType === 'single_parent' ? '1' : '2'} Parent Login{selectedPlanType === 'two_parents' ? 's' : ''} &middot; Base 1 Child Included
+        </p>
 
-        {/* Duration Cards with Buy Now */}
+        {/* Duration Cards with Tiered Pricing */}
         <div className="grid md:grid-cols-4 gap-5 max-w-5xl mx-auto">
           {DURATION_ORDER.map((dur) => {
             const plan = plans[selectedPlanType]?.[dur];
             if (!plan) return null;
-            const price = plan.base_price + Math.max(0, numChildren - 1) * plan.per_child_price;
+            const price = plan.base_price;
             const isPopular = dur === '6_months';
             const isSelected = selectedDuration === dur;
-
-            const headerColors = {
-              '1_day': 'bg-[#E0FBFC] text-[#1D3557]',
-              '1_month': 'bg-[#D1FAE5] text-[#1D3557]',
-              '6_months': 'bg-[#1D3557] text-[#FFD23F]',
-              '1_year': 'bg-[#E0E7FF] text-[#1D3557]',
-            };
+            const isYear = dur === '1_year';
+            const cp = plan.child_prices || [];
+            const perDay = (price / (plan.duration_days || 1)).toFixed(1);
+            const durLabel = {
+              '1_day': { name: '1 Day', tag: 'Try it', tagColor: 'bg-[#E0FBFC] text-[#3D5A80]' },
+              '1_month': { name: '1 Month', tag: '', tagColor: '' },
+              '6_months': { name: '6 Months', tag: 'Best value', tagColor: 'bg-[#E0FBFC] text-[#3D5A80]' },
+              '1_year': { name: '1 Year', tag: 'Max saving', tagColor: 'bg-[#D1FAE5] text-[#166534]' },
+            }[dur];
 
             return (
               <div key={dur} className="flex flex-col">
-                {/* Best Value badge - always reserve space for alignment */}
-                <div className="flex justify-center mb-2 h-7">
-                  {isPopular && (
-                    <span className="bg-[#FFD23F] text-[#1D3557] text-xs font-bold px-4 py-1.5 rounded-full border-2 border-[#1D3557] flex items-center gap-1">
-                      <Star className="w-3 h-3" />
-                      Best Value
-                    </span>
-                  )}
-                </div>
-
                 <div
                   data-testid={`plan-card-${dur}`}
                   onClick={() => setSelectedDuration(dur)}
-                  className={`relative cursor-pointer rounded-2xl overflow-hidden flex flex-col border-2 transition-all duration-200 ${
-                    isSelected
+                  className={`relative cursor-pointer rounded-2xl overflow-hidden flex flex-col border-2 transition-all duration-200 bg-white ${
+                    isPopular && isSelected
+                      ? 'border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557]'
+                      : isSelected
                       ? 'border-[#06D6A0] shadow-[3px_3px_0px_0px_#06D6A0]'
-                      : 'border-[#1D3557]/20 hover:border-[#1D3557]/40 shadow-sm hover:shadow-md'
+                      : 'border-[#1D3557]/15 hover:border-[#1D3557]/40 shadow-sm hover:shadow-md'
                   }`}
                 >
-                  {/* Colored header strip */}
-                  <div className={`${headerColors[dur]} px-4 py-3 text-center`}>
-                    <p className="text-sm font-bold">{DURATION_LABELS[dur].short}</p>
-                  </div>
+                  <div className="px-5 pt-5 pb-0">
+                    {/* Title row */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <h3 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{durLabel.name}</h3>
+                      {durLabel.tag && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${durLabel.tagColor}`}>{durLabel.tag}</span>
+                      )}
+                    </div>
 
-                  {/* White body - same for all */}
-                  <div className="bg-white px-4 py-6 text-center flex-1 flex flex-col justify-center">
-                    <p className="text-3xl font-bold text-[#1D3557] mb-1" style={{ fontFamily: 'Fredoka' }}>
+                    {/* Base price */}
+                    <p className="text-4xl font-bold text-[#1D3557] mb-0.5" style={{ fontFamily: 'Fredoka' }}>
                       ₹{price.toLocaleString('en-IN')}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      {planMeta[selectedPlanType].max_parents} parent{planMeta[selectedPlanType].max_parents > 1 ? 's' : ''} + {numChildren} child{numChildren > 1 ? 'ren' : ''}
+                    <p className="text-xs text-gray-500 mb-3">
+                      ₹{perDay}/day &middot; includes 1 child
                     </p>
+
+                    <hr className="border-[#1D3557]/10 mb-3" />
+
+                    {/* Additional children pricing */}
+                    <p className="text-sm font-bold text-[#1D3557] mb-2">Additional children</p>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {cp.map((childPrice, idx) => (
+                        <span key={idx} className="text-xs bg-[#F1F5F9] text-[#475569] px-2.5 py-1 rounded-full font-medium border border-[#E2E8F0]">
+                          {idx + 2}{idx === 0 ? 'nd' : idx === 1 ? 'rd' : 'th'}: ₹{childPrice.toLocaleString('en-IN')}
+                        </span>
+                      ))}
+                    </div>
+                    {plan.extra_child_per_day > 0 && (
+                      <p className="text-[10px] text-gray-400 mb-3">Per extra child/day: ₹{plan.extra_child_per_day}</p>
+                    )}
                   </div>
 
-                  {/* Button area - white bg, same for all */}
-                  <div className="bg-white px-4 pb-4">
+                  {/* Button area */}
+                  <div className="mt-auto px-5 pb-5 pt-2">
                     <button
                       data-testid={`buy-now-${dur}`}
                       onClick={(e) => { e.stopPropagation(); setSelectedDuration(dur); handleBuyNow(); }}
@@ -398,11 +401,39 @@ export default function PricingSection() {
             <div className="bg-[#E0FBFC] rounded-xl p-4 text-sm">
               <div className="flex justify-between mb-1">
                 <span className="text-[#3D5A80]">{planMeta[selectedPlanType].label}</span>
-                <span className="font-bold text-[#1D3557]">{DURATION_LABELS[selectedDuration].short}</span>
+                <span className="font-bold text-[#1D3557]">{currentPlan?.duration_label}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-[#3D5A80]">{numChildren} Child{numChildren > 1 ? 'ren' : ''}</span>
-                <span className="font-bold text-[#1D3557]">₹{totalPrice.toLocaleString('en-IN')}</span>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[#3D5A80]">Children</span>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      data-testid={`checkout-children-${n}`}
+                      onClick={() => setNumChildren(n)}
+                      className={`w-7 h-7 rounded-full font-bold text-xs transition-all ${
+                        numChildren === n
+                          ? 'bg-[#1D3557] text-white'
+                          : 'bg-white text-[#1D3557] border border-[#1D3557]/20'
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {numChildren > 1 && (
+                <div className="text-[10px] text-[#3D5A80] mb-1 space-y-0.5">
+                  <div className="flex justify-between"><span>Base (1 child)</span><span>₹{(currentPlan?.base_price || 0).toLocaleString('en-IN')}</span></div>
+                  {(currentPlan?.child_prices || []).slice(0, numChildren - 1).map((cp, i) => (
+                    <div key={i} className="flex justify-between"><span>{i + 2}{i === 0 ? 'nd' : i === 1 ? 'rd' : 'th'} child</span><span>₹{cp.toLocaleString('en-IN')}</span></div>
+                  ))}
+                </div>
+              )}
+              <hr className="border-[#1D3557]/10 my-1.5" />
+              <div className="flex justify-between font-bold text-[#1D3557]">
+                <span>Total</span>
+                <span>₹{totalPrice.toLocaleString('en-IN')}</span>
               </div>
             </div>
 

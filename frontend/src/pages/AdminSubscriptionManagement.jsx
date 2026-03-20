@@ -113,7 +113,8 @@ export default function AdminSubscriptionManagement({ user }) {
         plan_type: planType,
         duration: duration,
         base_price: parseInt(config.base_price),
-        per_child_price: parseInt(config.per_child_price),
+        child_prices: (config.child_prices || []).map(p => parseInt(p) || 0),
+        extra_child_per_day: parseFloat(config.extra_child_per_day) || 0,
       });
       toast.success(`${PLAN_LABELS[planType]} - ${DURATION_LABELS[duration]} pricing updated`);
       fetchData();
@@ -429,6 +430,7 @@ export default function AdminSubscriptionManagement({ user }) {
                   <div className="grid md:grid-cols-2 gap-4">
                     {Object.keys(DURATION_LABELS).map((duration) => {
                       const config = editingConfig[planType]?.[duration] || {};
+                      const childPrices = config.child_prices || [0, 0, 0, 0];
                       return (
                         <div key={duration} className="border border-gray-200 rounded-lg p-4">
                           <h4 className="font-bold text-[#1D3557] mb-3">{DURATION_LABELS[duration]}</h4>
@@ -447,14 +449,39 @@ export default function AdminSubscriptionManagement({ user }) {
                               />
                             </div>
                             <div>
-                              <label className="text-xs font-medium text-gray-500">Per Additional Child (₹)</label>
+                              <label className="text-xs font-medium text-gray-500 block mb-1">Additional Child Prices (₹)</label>
+                              <div className="grid grid-cols-2 gap-2">
+                                {['2nd', '3rd', '4th', '5th'].map((label, idx) => (
+                                  <div key={idx}>
+                                    <label className="text-[10px] text-gray-400">{label} child</label>
+                                    <Input
+                                      data-testid={`config-child-${idx}-${planType}-${duration}`}
+                                      type="number"
+                                      value={childPrices[idx] || ''}
+                                      onChange={(e) => {
+                                        const newConfig = JSON.parse(JSON.stringify(editingConfig));
+                                        if (!newConfig[planType][duration].child_prices) {
+                                          newConfig[planType][duration].child_prices = [0, 0, 0, 0];
+                                        }
+                                        newConfig[planType][duration].child_prices[idx] = parseInt(e.target.value) || 0;
+                                        setEditingConfig(newConfig);
+                                      }}
+                                      className="h-8 text-sm"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-gray-500">Per Extra Child / Day (₹)</label>
                               <Input
-                                data-testid={`config-child-${planType}-${duration}`}
+                                data-testid={`config-extra-${planType}-${duration}`}
                                 type="number"
-                                value={config.per_child_price || ''}
+                                step="0.1"
+                                value={config.extra_child_per_day || ''}
                                 onChange={(e) => {
                                   const newConfig = { ...editingConfig };
-                                  newConfig[planType][duration].per_child_price = parseInt(e.target.value) || 0;
+                                  newConfig[planType][duration].extra_child_per_day = parseFloat(e.target.value) || 0;
                                   setEditingConfig({ ...newConfig });
                                 }}
                               />
