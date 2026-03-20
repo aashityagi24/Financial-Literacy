@@ -295,7 +295,7 @@ export default function PricingSection() {
           {DURATION_ORDER.map((dur) => {
             const plan = plans[selectedPlanType]?.[dur];
             if (!plan) return null;
-            const price = plan.base_price;
+            const price = calcTotal(plan, numChildren);
             const isPopular = dur === '6_months';
             const isSelected = selectedDuration === dur;
             const perDay = (price / (plan.duration_days || 1)).toFixed(1);
