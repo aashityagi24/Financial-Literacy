@@ -267,6 +267,29 @@ export default function PricingSection() {
           </div>
         </div>
 
+        {/* Children Selector */}
+        <div className="flex justify-center mb-6">
+          <div className="flex items-center gap-3 bg-[#FFF3E0] rounded-full px-5 py-2 border border-[#EE6C4D]/30">
+            <span className="text-sm font-bold text-[#1D3557]">Children:</span>
+            <div className="flex gap-1.5">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  data-testid={`children-count-${n}`}
+                  onClick={() => setNumChildren(n)}
+                  className={`w-8 h-8 rounded-full font-bold text-sm transition-all ${
+                    numChildren === n
+                      ? 'bg-[#EE6C4D] text-white shadow-md scale-110'
+                      : 'bg-white text-[#1D3557] hover:bg-[#EE6C4D]/20 border border-[#1D3557]/20'
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Duration Cards with Tiered Pricing */}
         <div className="grid md:grid-cols-4 gap-5 max-w-5xl mx-auto">
           {DURATION_ORDER.map((dur) => {
@@ -381,37 +404,9 @@ export default function PricingSection() {
                 <span className="text-[#3D5A80]">{planMeta[selectedPlanType].label}</span>
                 <span className="font-bold text-[#1D3557]">{currentPlan?.duration_label}</span>
               </div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-[#3D5A80]">Children</span>
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <button
-                      key={n}
-                      data-testid={`checkout-children-${n}`}
-                      onClick={() => setNumChildren(n)}
-                      className={`w-7 h-7 rounded-full font-bold text-xs transition-all ${
-                        numChildren === n
-                          ? 'bg-[#1D3557] text-white'
-                          : 'bg-white text-[#1D3557] border border-[#1D3557]/20'
-                      }`}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {numChildren > 1 && (
-                <div className="text-[10px] text-[#3D5A80] mb-1 space-y-0.5">
-                  <div className="flex justify-between"><span>Base (1 child)</span><span>₹{(currentPlan?.base_price || 0).toLocaleString('en-IN')}</span></div>
-                  {(currentPlan?.child_prices || []).slice(0, numChildren - 1).map((cp, i) => (
-                    <div key={i} className="flex justify-between"><span>{i + 2}{i === 0 ? 'nd' : i === 1 ? 'rd' : 'th'} child</span><span>₹{cp.toLocaleString('en-IN')}</span></div>
-                  ))}
-                </div>
-              )}
-              <hr className="border-[#1D3557]/10 my-1.5" />
-              <div className="flex justify-between font-bold text-[#1D3557]">
-                <span>Total</span>
-                <span>₹{totalPrice.toLocaleString('en-IN')}</span>
+              <div className="flex justify-between">
+                <span className="text-[#3D5A80]">{numChildren} Child{numChildren > 1 ? 'ren' : ''}</span>
+                <span className="font-bold text-[#1D3557]">₹{totalPrice.toLocaleString('en-IN')}</span>
               </div>
             </div>
 
