@@ -267,11 +267,6 @@ export default function PricingSection() {
           </div>
         </div>
 
-        {/* Plan Subtitle */}
-        <p className="text-center text-sm font-semibold tracking-wide text-[#3D5A80] uppercase mb-6">
-          {selectedPlanType === 'single_parent' ? '1' : '2'} Parent Login{selectedPlanType === 'two_parents' ? 's' : ''} &middot; Base 1 Child Included
-        </p>
-
         {/* Duration Cards with Tiered Pricing */}
         <div className="grid md:grid-cols-4 gap-5 max-w-5xl mx-auto">
           {DURATION_ORDER.map((dur) => {
