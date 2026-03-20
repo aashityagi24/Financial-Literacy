@@ -446,6 +446,15 @@ async def complete_content_item(content_id: str, request: Request):
             {"user_id": user_id, "account_type": "spending"},
             {"$inc": {"balance": reward_coins}}
         )
+        await db.transactions.insert_one({
+            "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+            "user_id": user_id,
+            "to_account": "spending",
+            "amount": reward_coins,
+            "transaction_type": "lesson_reward",
+            "description": f"Completed: {item.get('title', 'Lesson')}",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
     
     return {"message": "Content completed!", "coins_awarded": reward_coins}
 

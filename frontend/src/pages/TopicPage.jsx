@@ -82,7 +82,8 @@ export default function TopicPage({ user }) {
               const response = await axios.post(`${API}/content/items/${selectedContent.content_id}/complete`);
               const coins = response.data.coins_awarded || 0;
               toastFn(`${feedback} Earned ₹${coins}!`, { duration: 4000 });
-              fetchTopicData();
+              // Delay refresh so the user can read feedback before the content list updates
+              setTimeout(() => fetchTopicData(), 2500);
             } catch (completeError) {
               toastFn(feedback, { duration: 4000 });
             }
