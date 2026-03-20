@@ -472,20 +472,6 @@ export default function AdminSubscriptionManagement({ user }) {
                                 ))}
                               </div>
                             </div>
-                            <div>
-                              <label className="text-xs font-medium text-gray-500">Per Extra Child / Day (₹)</label>
-                              <Input
-                                data-testid={`config-extra-${planType}-${duration}`}
-                                type="number"
-                                step="0.1"
-                                value={config.extra_child_per_day || ''}
-                                onChange={(e) => {
-                                  const newConfig = { ...editingConfig };
-                                  newConfig[planType][duration].extra_child_per_day = parseFloat(e.target.value) || 0;
-                                  setEditingConfig({ ...newConfig });
-                                }}
-                              />
-                            </div>
                             <Button
                               data-testid={`save-config-${planType}-${duration}`}
                               onClick={() => savePlanConfig(planType, duration)}

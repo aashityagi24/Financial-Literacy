@@ -280,8 +280,6 @@ export default function PricingSection() {
             const price = plan.base_price;
             const isPopular = dur === '6_months';
             const isSelected = selectedDuration === dur;
-            const isYear = dur === '1_year';
-            const cp = plan.child_prices || [];
             const perDay = (price / (plan.duration_days || 1)).toFixed(1);
             const durLabel = {
               '1_day': { name: '1 Day', tag: 'Try it', tagColor: 'bg-[#E0FBFC] text-[#3D5A80]' },
@@ -319,21 +317,6 @@ export default function PricingSection() {
                     <p className="text-xs text-gray-500 mb-3">
                       ₹{perDay}/day &middot; includes 1 child
                     </p>
-
-                    <hr className="border-[#1D3557]/10 mb-3" />
-
-                    {/* Additional children pricing */}
-                    <p className="text-sm font-bold text-[#1D3557] mb-2">Additional children</p>
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {cp.map((childPrice, idx) => (
-                        <span key={idx} className="text-xs bg-[#F1F5F9] text-[#475569] px-2.5 py-1 rounded-full font-medium border border-[#E2E8F0]">
-                          {idx + 2}{idx === 0 ? 'nd' : idx === 1 ? 'rd' : 'th'}: ₹{childPrice.toLocaleString('en-IN')}
-                        </span>
-                      ))}
-                    </div>
-                    {plan.extra_child_per_day > 0 && (
-                      <p className="text-[10px] text-gray-400 mb-3">Per extra child/day: ₹{plan.extra_child_per_day}</p>
-                    )}
                   </div>
 
                   {/* Button area */}
