@@ -27,6 +27,7 @@ export default function AdminVideoManagement({ user }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingType, setUploadingType] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState({});
   const [activeTab, setActiveTab] = useState('child');
   
   const [videoData, setVideoData] = useState({
