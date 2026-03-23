@@ -124,7 +124,12 @@ export default function AdminVideoManagement({ user }) {
       setPreviewUrls(prev => ({ ...prev, [userType]: null }));
       toast.success(`${userType.charAt(0).toUpperCase() + userType.slice(1)} video uploaded successfully!`);
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to upload video');
+      console.error('Video upload error:', error);
+      const msg = error.response?.data?.detail 
+        || error.response?.data?.message 
+        || error.message 
+        || 'Failed to upload video';
+      toast.error(msg);
     } finally {
       setUploadingType(null);
     }

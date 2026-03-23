@@ -313,6 +313,10 @@ DEST_MAP = {
     "audio": UPLOADS_DIR / "audio",
 }
 
+# Ensure all directories exist
+for d in DEST_MAP.values():
+    d.mkdir(parents=True, exist_ok=True)
+
 from fastapi import Form
 
 @router.post("/chunked/init")

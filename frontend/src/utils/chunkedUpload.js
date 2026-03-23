@@ -32,7 +32,12 @@ export async function uploadFile(file, destType, directEndpoint, onProgress) {
   initForm.append('filename', file.name);
   initForm.append('dest_type', destType);
   initForm.append('total_chunks', totalChunks.toString());
-  const initRes = await axios.post(`${API}/upload/chunked/init`, initForm);
+  let initRes;
+  try {
+    initRes = await axios.post(`${API}/upload/chunked/init`, initForm);
+  } catch (err) {
+    throw new Error(`Upload init failed: ${err.response?.data?.detail || err.message}`);
+  }
   const { upload_id } = initRes.data;
 
   // 2. Upload chunks
@@ -46,9 +51,13 @@ export async function uploadFile(file, destType, directEndpoint, onProgress) {
     chunkForm.append('chunk_index', i.toString());
     chunkForm.append('file', chunk, `chunk_${i}`);
 
-    await axios.post(`${API}/upload/chunked/part`, chunkForm, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    try {
+      await axios.post(`${API}/upload/chunked/part`, chunkForm, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    } catch (err) {
+      throw new Error(`Chunk ${i + 1}/${totalChunks} failed: ${err.response?.data?.detail || err.message}`);
+    }
 
     if (onProgress) {
       onProgress(Math.round(((i + 1) / totalChunks) * 95)); // Reserve 5% for assembly
@@ -61,7 +70,12 @@ export async function uploadFile(file, destType, directEndpoint, onProgress) {
   completeForm.append('filename', file.name);
   completeForm.append('dest_type', destType);
   completeForm.append('total_chunks', totalChunks.toString());
-  const completeRes = await axios.post(`${API}/upload/chunked/complete`, completeForm);
+  let completeRes;
+  try {
+    completeRes = await axios.post(`${API}/upload/chunked/complete`, completeForm);
+  } catch (err) {
+    throw new Error(`Upload assembly failed: ${err.response?.data?.detail || err.message}`);
+  }
   
   if (onProgress) onProgress(100);
   return completeRes.data;
