@@ -191,6 +191,7 @@ export default function PricingSection() {
         toast.error(`Payment failed: ${response.error.description}`);
         setIsProcessing(false);
       });
+      setShowCheckout(false);
       rzp.open();
     } catch (err) {
       const detail = err.response?.data?.detail || err.message || 'Unknown error';
