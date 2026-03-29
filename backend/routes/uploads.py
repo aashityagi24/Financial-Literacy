@@ -423,6 +423,8 @@ async def chunked_upload_complete(
         "glossary": "glossary",
         "investment": "investments",
         "goal": "thumbnails",
+        "audio": "audio",
+        "activity": "activities",
     }
     url_prefix = url_prefix_map.get(dest_type, "videos")
     

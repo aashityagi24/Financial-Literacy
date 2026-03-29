@@ -47,6 +47,7 @@ import ContentProtection from "@/components/ContentProtection";
 import ActivityScoresPage from "@/pages/ActivityScoresPage";
 import TeacherActivityAnalytics from "@/pages/TeacherActivityAnalytics";
 import AdminSubscriptionManagement from "@/pages/AdminSubscriptionManagement";
+import { useUploadProgress, UploadProgressBar } from "@/components/UploadProgress";
 
 // Components
 import OnboardingTour from "@/components/OnboardingTour";
@@ -387,6 +388,7 @@ function AppRouter() {
 }
 
 function App() {
+  const { progress } = useUploadProgress();
   return (
     <div className="min-h-screen">
       <ContentProtection />
@@ -394,6 +396,7 @@ function App() {
         <AppRouter />
       </BrowserRouter>
       <Toaster position="top-right" richColors />
+      <UploadProgressBar progress={progress} />
     </div>
   );
 }
