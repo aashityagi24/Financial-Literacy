@@ -36,7 +36,7 @@ export default function AdminPage({ user }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showCreateSchool, setShowCreateSchool] = useState(false);
-  const [guidebook, setGuidebook] = useState({ child_guide: '', parent_guide: '', child_audio_url: '', parent_audio_url: '' });
+  const [guidebook, setGuidebook] = useState({ child_guide: '', parent_guide: '', child_page_audios: [], parent_page_audios: [] });
   const [guidebookSaving, setGuidebookSaving] = useState(false);
   const [newUserForm, setNewUserForm] = useState({
     name: '',
@@ -86,7 +86,7 @@ export default function AdminPage({ user }) {
   useEffect(() => {
     if (activeTab === 'guidebook') {
       axios.get(`${API}/jobs/guidebook`).then(res => {
-        setGuidebook({ child_guide: res.data.child_guide || '', parent_guide: res.data.parent_guide || '', child_audio_url: res.data.child_audio_url || '', parent_audio_url: res.data.parent_audio_url || '' });
+        setGuidebook({ child_guide: res.data.child_guide || '', parent_guide: res.data.parent_guide || '', child_page_audios: res.data.child_page_audios || [], parent_page_audios: res.data.parent_page_audios || [] });
       }).catch(() => {});
     }
     if (activeTab === 'enquiries') {
@@ -1255,37 +1255,42 @@ export default function AdminPage({ user }) {
                 data-testid="child-guide-textarea"
               />
               <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                <label className="text-xs font-bold text-[#1D3557] block mb-1">Voice Guide (Audio) for Children</label>
-                <p className="text-xs text-gray-400 mb-2">Upload an audio file so children can listen instead of reading.</p>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    data-testid="child-audio-upload"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      try {
-                        toast.info('Uploading audio...');
-                        const url = await uploadFile(file, 'audio');
-                        setGuidebook(g => ({ ...g, child_audio_url: url }));
-                        toast.success('Audio uploaded! Remember to Save.');
-                      } catch (err) {
-                        toast.error('Failed to upload audio');
-                      }
-                    }}
-                    className="text-xs"
-                  />
-                  {guidebook.child_audio_url && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-[#06D6A0] font-medium">Audio uploaded</span>
-                      <button
-                        type="button"
-                        onClick={() => setGuidebook(g => ({ ...g, child_audio_url: '' }))}
-                        className="text-xs text-red-500 hover:underline"
-                      >Remove</button>
+                <label className="text-xs font-bold text-[#1D3557] block mb-1">Page Audio for Children (max 3 pages)</label>
+                <p className="text-xs text-gray-400 mb-2">Upload audio per page. Auto-plays when child opens that page.</p>
+                <div className="space-y-2">
+                  {[0, 1, 2].map((idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-gray-500 w-14 shrink-0">Page {idx + 1}</span>
+                      {(guidebook.child_page_audios || [])[idx] ? (
+                        <div className="flex items-center gap-2 flex-1">
+                          <span className="text-xs text-[#06D6A0] font-medium">Uploaded</span>
+                          <button type="button" onClick={() => {
+                            const audios = [...(guidebook.child_page_audios || [])];
+                            audios[idx] = '';
+                            setGuidebook(g => ({ ...g, child_page_audios: audios }));
+                          }} className="text-xs text-red-500 hover:underline">Remove</button>
+                        </div>
+                      ) : (
+                        <input type="file" accept="audio/*" className="text-xs flex-1"
+                          data-testid={`child-page-audio-${idx}`}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            try {
+                              toast.info(`Uploading page ${idx + 1} audio...`);
+                              const res = await uploadFile(file, 'audio');
+                              const url = res.url || res;
+                              const audios = [...(guidebook.child_page_audios || [])];
+                              while (audios.length <= idx) audios.push('');
+                              audios[idx] = url;
+                              setGuidebook(g => ({ ...g, child_page_audios: audios }));
+                              toast.success(`Page ${idx + 1} audio uploaded! Remember to Save.`);
+                            } catch (err) { toast.error('Failed to upload audio'); }
+                          }}
+                        />
+                      )}
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
             </div>
@@ -1301,37 +1306,42 @@ export default function AdminPage({ user }) {
                 data-testid="parent-guide-textarea"
               />
               <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                <label className="text-xs font-bold text-[#1D3557] block mb-1">Voice Guide (Audio) for Parents</label>
-                <p className="text-xs text-gray-400 mb-2">Upload an audio file for parents to listen to.</p>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    data-testid="parent-audio-upload"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      try {
-                        toast.info('Uploading audio...');
-                        const url = await uploadFile(file, 'audio');
-                        setGuidebook(g => ({ ...g, parent_audio_url: url }));
-                        toast.success('Audio uploaded! Remember to Save.');
-                      } catch (err) {
-                        toast.error('Failed to upload audio');
-                      }
-                    }}
-                    className="text-xs"
-                  />
-                  {guidebook.parent_audio_url && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-[#06D6A0] font-medium">Audio uploaded</span>
-                      <button
-                        type="button"
-                        onClick={() => setGuidebook(g => ({ ...g, parent_audio_url: '' }))}
-                        className="text-xs text-red-500 hover:underline"
-                      >Remove</button>
+                <label className="text-xs font-bold text-[#1D3557] block mb-1">Page Audio for Parents (max 3 pages)</label>
+                <p className="text-xs text-gray-400 mb-2">Upload audio per page. Auto-plays when parent opens that page.</p>
+                <div className="space-y-2">
+                  {[0, 1, 2].map((idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-gray-500 w-14 shrink-0">Page {idx + 1}</span>
+                      {(guidebook.parent_page_audios || [])[idx] ? (
+                        <div className="flex items-center gap-2 flex-1">
+                          <span className="text-xs text-[#06D6A0] font-medium">Uploaded</span>
+                          <button type="button" onClick={() => {
+                            const audios = [...(guidebook.parent_page_audios || [])];
+                            audios[idx] = '';
+                            setGuidebook(g => ({ ...g, parent_page_audios: audios }));
+                          }} className="text-xs text-red-500 hover:underline">Remove</button>
+                        </div>
+                      ) : (
+                        <input type="file" accept="audio/*" className="text-xs flex-1"
+                          data-testid={`parent-page-audio-${idx}`}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            try {
+                              toast.info(`Uploading page ${idx + 1} audio...`);
+                              const res = await uploadFile(file, 'audio');
+                              const url = res.url || res;
+                              const audios = [...(guidebook.parent_page_audios || [])];
+                              while (audios.length <= idx) audios.push('');
+                              audios[idx] = url;
+                              setGuidebook(g => ({ ...g, parent_page_audios: audios }));
+                              toast.success(`Page ${idx + 1} audio uploaded! Remember to Save.`);
+                            } catch (err) { toast.error('Failed to upload audio'); }
+                          }}
+                        />
+                      )}
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
             </div>

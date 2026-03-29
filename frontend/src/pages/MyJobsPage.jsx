@@ -24,7 +24,7 @@ export default function MyJobsPage({ user }) {
   const [familyJobs, setFamilyJobs] = useState([]);
   const [paydayJobs, setPaydayJobs] = useState([]);
   const [guidebook, setGuidebook] = useState('');
-  const [guideAudioUrl, setGuideAudioUrl] = useState('');
+  const [guidePageAudios, setGuidePageAudios] = useState([]);
   const [showGuide, setShowGuide] = useState(false);
   const [newJob, setNewJob] = useState({ activity: '', frequency: 'daily' });
   const [adding, setAdding] = useState(null);
@@ -43,7 +43,7 @@ export default function MyJobsPage({ user }) {
     try {
       const res = await axios.get(`${API}/jobs/guidebook`);
       setGuidebook(res.data.child_guide || '');
-      setGuideAudioUrl(res.data.child_audio_url || '');
+      setGuidePageAudios(res.data.child_page_audios || []);
     } catch (err) { console.error(err); }
   };
 
@@ -192,7 +192,7 @@ export default function MyJobsPage({ user }) {
             open={showGuide}
             onClose={() => setShowGuide(false)}
             guideText={guidebook}
-            audioUrl={guideAudioUrl}
+            pageAudios={guidePageAudios}
             theme="dark"
             title="My Jobs Guide"
           />

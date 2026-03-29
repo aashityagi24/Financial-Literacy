@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, Volume2, Pause, BookOpen } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { X, ChevronLeft, ChevronRight, Volume2, VolumeX, BookOpen } from 'lucide-react';
 import { getAssetUrl } from '@/App';
 
 const renderMarkdownBlock = (text, theme = 'light') => {
@@ -40,10 +40,8 @@ function splitIntoPages(text) {
 
   for (const line of lines) {
     if (line.startsWith('###')) {
-      if (currentContent.length > 0 || pages.length === 0) {
-        if (currentContent.length > 0) {
-          pages.push({ title: currentTitle, content: currentContent.join('\n') });
-        }
+      if (currentContent.length > 0) {
+        pages.push({ title: currentTitle, content: currentContent.join('\n') });
       }
       currentTitle = line.replace(/^###\s*/, '');
       currentContent = [];
@@ -60,31 +58,56 @@ function splitIntoPages(text) {
   return pages;
 }
 
-export function JobGuideDialog({ open, onClose, guideText, audioUrl, theme = 'light', title = 'Guide' }) {
+export function JobGuideDialog({ open, onClose, guideText, pageAudios = [], theme = 'light', title = 'Guide' }) {
   const [currentPage, setCurrentPage] = useState(0);
+  const [audioEnabled, setAudioEnabled] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
   const pages = splitIntoPages(guideText);
 
+  const currentAudioUrl = pageAudios[currentPage] || '';
+
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setIsPlaying(false);
+  }, []);
+
+  const playAudio = useCallback((url) => {
+    if (!url || !audioEnabled) return;
+    stopAudio();
+    // Small delay to let the audio element update its src
+    setTimeout(() => {
+      if (audioRef.current) {
+        audioRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      }
+    }, 100);
+  }, [audioEnabled, stopAudio]);
+
+  // Reset on close
   useEffect(() => {
     if (!open) {
       setCurrentPage(0);
-      setIsPlaying(false);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
+      stopAudio();
     }
-  }, [open]);
+  }, [open, stopAudio]);
 
-  const toggleAudio = () => {
-    if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
+  // Auto-play when dialog opens or page changes
+  useEffect(() => {
+    if (open && currentAudioUrl && audioEnabled) {
+      playAudio(currentAudioUrl);
     } else {
-      audioRef.current.play();
+      stopAudio();
     }
-    setIsPlaying(!isPlaying);
+  }, [open, currentPage, currentAudioUrl, audioEnabled, playAudio, stopAudio]);
+
+  const toggleAudioEnabled = () => {
+    if (audioEnabled) {
+      stopAudio();
+    }
+    setAudioEnabled(prev => !prev);
   };
 
   if (!open) return null;
@@ -100,11 +123,9 @@ export function JobGuideDialog({ open, onClose, guideText, audioUrl, theme = 'li
   const navBtnCls = isDark
     ? 'bg-white/10 hover:bg-white/20 text-white'
     : 'bg-[#1D3557]/10 hover:bg-[#1D3557]/20 text-[#1D3557]';
-  const audioBtnCls = isDark
-    ? 'bg-[#FFD23F] text-[#1D3557] hover:bg-[#FFEB99]'
-    : 'bg-[#06D6A0] text-white hover:bg-[#05C493]';
 
   const page = pages[currentPage] || pages[0];
+  const hasAnyAudio = pageAudios.some(a => a);
 
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center ${overlayBg}`} onClick={onClose}>
@@ -118,16 +139,26 @@ export function JobGuideDialog({ open, onClose, guideText, audioUrl, theme = 'li
           <BookOpen className={`w-5 h-5 ${titleCls}`} />
           <div className="flex-1 min-w-0">
             <h2 className={`font-bold text-base ${titleCls}`} style={{ fontFamily: 'Fredoka' }}>{title}</h2>
-            <p className={`text-xs ${subtitleCls}`}>Page {currentPage + 1} of {pages.length}</p>
+            <div className="flex items-center gap-2">
+              <p className={`text-xs ${subtitleCls}`}>Page {currentPage + 1} of {pages.length}</p>
+              {isPlaying && currentAudioUrl && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isDark ? 'bg-[#FFD23F]/20 text-[#FFD23F]' : 'bg-[#06D6A0]/15 text-[#06D6A0]'} animate-pulse`}>
+                  Playing
+                </span>
+              )}
+            </div>
           </div>
-          {audioUrl && (
+          {hasAnyAudio && (
             <button
-              data-testid="guide-audio-btn"
-              onClick={toggleAudio}
-              className={`p-2 rounded-full font-bold text-xs flex items-center gap-1.5 transition-all ${audioBtnCls}`}
+              data-testid="guide-audio-toggle"
+              onClick={toggleAudioEnabled}
+              className={`p-2 rounded-full transition-all ${audioEnabled
+                ? (isDark ? 'bg-[#FFD23F] text-[#1D3557]' : 'bg-[#06D6A0] text-white')
+                : (isDark ? 'bg-white/10 text-white/40' : 'bg-gray-200 text-gray-400')
+              }`}
+              title={audioEnabled ? 'Mute audio' : 'Enable audio'}
             >
-              {isPlaying ? <Pause className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-              {isPlaying ? 'Pause' : 'Listen'}
+              {audioEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>
           )}
           <button onClick={onClose} className={`p-1.5 rounded-full ${navBtnCls}`} data-testid="close-guide-dialog">
@@ -177,10 +208,10 @@ export function JobGuideDialog({ open, onClose, guideText, audioUrl, theme = 'li
         </div>
 
         {/* Hidden audio element */}
-        {audioUrl && (
+        {currentAudioUrl && (
           <audio
             ref={audioRef}
-            src={getAssetUrl(audioUrl)}
+            src={getAssetUrl(currentAudioUrl)}
             onEnded={() => setIsPlaying(false)}
           />
         )}

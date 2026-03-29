@@ -101,7 +101,7 @@ export default function ParentDashboard({ user }) {
   const [childJobs, setChildJobs] = useState([]);
   const [showApproveJob, setShowApproveJob] = useState(null);
   const [parentGuide, setParentGuide] = useState('');
-  const [parentGuideAudioUrl, setParentGuideAudioUrl] = useState('');
+  const [parentGuidePageAudios, setParentGuidePageAudios] = useState([]);
   const [showJobGuide, setShowJobGuide] = useState(false);
   
   // Subscription state
@@ -155,7 +155,7 @@ export default function ParentDashboard({ user }) {
       setLendingRequests(lendingReqRes.data || []);
       setChildJobs(jobsRes.data?.jobs || []);
       setParentGuide(guideRes.data?.parent_guide || '');
-      setParentGuideAudioUrl(guideRes.data?.parent_audio_url || '');
+      setParentGuidePageAudios(guideRes.data?.parent_page_audios || []);
       
       // Fetch subscription info
       axios.get(`${API}/subscriptions/my-subscription`)
@@ -1232,7 +1232,7 @@ export default function ParentDashboard({ user }) {
               open={showJobGuide}
               onClose={() => setShowJobGuide(false)}
               guideText={parentGuide}
-              audioUrl={parentGuideAudioUrl}
+              pageAudios={parentGuidePageAudios}
               theme="light"
               title="Parent's Guide to Jobs"
             />
