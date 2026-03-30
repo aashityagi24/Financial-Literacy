@@ -324,6 +324,19 @@ async def submit_school_enquiry(request: Request):
     }
     
     await db.school_enquiries.insert_one(enquiry)
+    
+    # Notify admins of new school enquiry
+    try:
+        from routes.notifications import notify_admins
+        await notify_admins(
+            "new_school_enquiry",
+            "New School Enquiry",
+            f"{school_name} ({person_name}, {city or 'N/A'}) submitted a school enquiry",
+            related_id=enquiry["enquiry_id"]
+        )
+    except Exception:
+        pass
+    
     return {"message": "Enquiry submitted successfully", "enquiry_id": enquiry["enquiry_id"]}
 
 

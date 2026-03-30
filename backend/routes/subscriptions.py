@@ -196,6 +196,17 @@ async def capture_checkout_lead(request: Request):
             "updated_at": datetime.now(timezone.utc).isoformat(),
             "converted": False,
         })
+        # Notify admins of new checkout lead
+        try:
+            from routes.notifications import notify_admins
+            await notify_admins(
+                "new_checkout_lead",
+                "New Checkout Lead",
+                f"{name or email} started checkout ({plan_type}, {num_children} child{'ren' if num_children > 1 else ''})",
+                related_id=email
+            )
+        except Exception:
+            pass
     return {"message": "lead captured"}
 
 
@@ -337,6 +348,20 @@ async def verify_payment(payment: VerifyPaymentRequest):
         {"email": subscription.get("subscriber_email", "").lower()},
         {"$set": {"converted": True, "lead_status": "converted", "converted_at": now.isoformat()}}
     )
+    
+    # Notify admins of new subscription
+    try:
+        from routes.notifications import notify_admins
+        plan_label = "Two Parents" if subscription.get("plan_type") == "two_parents" else "Single Parent"
+        dur_label = DURATION_MAP.get(subscription.get("duration", ""), {}).get("label", subscription.get("duration", ""))
+        await notify_admins(
+            "new_subscription",
+            "New Subscription",
+            f"{subscription.get('subscriber_name', subscription.get('subscriber_email', 'Someone'))} subscribed to {plan_label} ({dur_label}, {subscription.get('num_children', 1)} child{'ren' if subscription.get('num_children', 1) > 1 else ''}) - Rs.{subscription.get('amount', 0)}",
+            related_id=subscription.get("subscription_id")
+        )
+    except Exception:
+        pass
     
     return {
         "message": "Payment verified successfully",

@@ -1,0 +1,171 @@
+<analysis>**original_problem_statement:** 
+The user wants to create a gamified financial literacy learning application, CoinQuest, for children (K-5).
+**Initial Requirements:**
+- User Roles: Teacher, Parent, Child, Admin, School.
+- Core Features: Digital wallet, virtual store, investment modules, dynamic quests, achievements, hierarchical content system.
+- Admin Controls: Content management, user management, feature toggling.
+- Specific Features: Word Bank, Quest Analytics, Unified Login, Content Protection, Activity Score Tracking, My Jobs feature.
+- SaaS Subscriptions (Razorpay): A complete subscription system gating application access, with an admin panel to manage subscriptions and users.
+
+**PRODUCT REQUIREMENTS added in this session:**
+- Tiered per-child pricing for subscriptions.
+- Audio guide uploads and global upload progress indicators.
+- Permanent deletion and CSV downloads for school enquiries and checkout leads.
+- Admin notifications for new subscriptions, leads, and enquiries.
+
+**User's preferred language**: English
+*(Note to next agent: ALWAYS respond in English)*
+
+**what currently exists?** 
+The application is a comprehensive financial literacy platform with robust admin capabilities, tiered SaaS pricing, chunked large-file uploads, and gamified learning. The recent session overhauled the subscription pricing to support tiered per-child rates, fixed several UI/UX bugs (payment gateway overlays, sudden page refreshes, state resets), improved the My Jobs guide with paginated audio popups, implemented a global upload progress bar, and added delete/CSV capabilities to admin lead management.
+
+**Last working item**: 
+- **Last item agent was working:** Implementing Admin notifications for new subscriptions, new checkout leads, and new school enquiries. The agent had just added a  helper in  and was exploring  to trigger these notifications when the context ended.
+- **Status:** IN PROGRESS
+- **Agent Testing Done:** N
+- **Which testing method agent to use?** backend testing agent for the notification triggers, followed by manual UI verification via screenshot tool to ensure the notifications appear in the admin's notification center.
+- **User Testing Done:** N
+
+**All Pending/In progress Issue list**:
+Issue 1: Failed to initiate payment error on the live site (Production Deployment Issue) - P1
+Issue 2: Badge images missing and require manual re-upload (Data loss from older fork) - P2
+
+Issues Detail:
+- Issue 1:
+   - Attempted fixes: Added enhanced error logging to provide specific error messages on the frontend.
+   - Next debug checklist: Advise the user to redeploy their application on their live domain to ensure the latest code and environment variables are active. Look at production logs if the issue persists.
+   - Why fix this issue and what will be achieved with the fix? Critical for application monetization.
+   - Status: BLOCKED (Awaiting user redeployment)
+   - Is recurring issue? N
+   - Should Test frontend/backend/both after fix? Backend (confirming logs on production)
+   - Blocked on other issue: No
+- Issue 2:
+   - Attempted fixes: None possible via code.
+   - Next debug checklist: Remind the user that the admin must manually re-upload the images for each badge via the Badge Management section of the admin panel.
+   - Why fix this issue and what will be achieved with the fix? Restores visual gamification appeal.
+   - Status: BLOCKED (requires user action)
+   - Is recurring issue? Y
+   - Should Test frontend/backend/both after fix? NA
+   - Blocked on other issue: No
+
+**In progress Task List**:
+Task 1: Admin Notifications for System Events (P0)
+
+Task Detail:
+- Task 1:
+   - Where to resume: Resume in  and . Call the newly added  helper function (from ) when a checkout lead is captured, a school enquiry is submitted, or a subscription is activated.
+   - What will be achieved with this? Admins will be actively alerted in their dashboard when crucial revenue/lead events occur.
+   - Status: IN PROGRESS
+   - Should Test frontend/backend/both after fix? Both
+   - Blocked on something: None
+
+**Upcoming and Future Tasks**:
+Upcoming Tasks:
+- P1: Implement Streak Bonuses & Leaderboards.
+- P1: Implement Safety Guardrails: Add spending limits and parent approval for large transactions.
+
+Future Tasks:
+- P2: Teacher/Parent Collaboration Portal.
+- P2: Collaborative & Seasonal Events.
+- P2: Tutorial System for new users.
+
+**Completed work in this session**:
+- Linked Users Dialog & Renewal Badge in Admin Subscriptions (DONE)
+- Savings goal Insufficient Balance bug fix (deducting from savings instead of spending) (DONE)
+- Parent Shopping List state reset bug fix (DONE)
+- Parent Job Guide UI addition, Popup Dialog overhaul, Pagination, and Admin per-page audio uploads (DONE)
+- Tiered Child Pricing overhaul: cheaper rates for 2nd/3rd/4th/5th children, dynamic card updates (DONE)
+- Pricing cards UI simplified (removed extra pricing text) (DONE)
+- Sudden page refresh fix after completing a learning activity (added 2.5s delay) (DONE)
+- Missing transaction record fix for learning activity completion rewards (now shows in Recent Activity) (DONE)
+- Payment Gateway overlay bug fix (closing checkout dialog before Razorpay opens to fix z-index block) (DONE)
+- Audio file routing fix ( instead of ) (DONE)
+- Global Upload Progress Bar implemented () integrated with  (DONE)
+- Permanent Delete and CSV Download for Enquiries and Checkout Leads (Admin Panel) (DONE)
+
+**Earlier issues found/mentioned but not fixed**:
+- None identified; all user-reported bugs within this context window were addressed.
+
+**Known issue recurrence from previous fork**:
+- Issue recurrence in previous fork: Badge images are missing permanently due to a data loss event in an older fork.
+- Recurrence count: 1
+- Status: BLOCKED (Requires manual admin action to re-upload).
+
+**Code Architecture**:
+
+
+**Key Technical Concepts**:
+- **React Context/State:** Advanced React state managing file uploads, dynamic pricing calculation, popup overlaps, and paginated dialogs.
+- **Chunked File Uploads:** A resilient file upload utility handling files >512KB by sending them in chunks and reassembling on the backend. Extended with a global floating progress UI.
+- **Razorpay Integration:** Live keys processing real subscriptions, with explicit z-index management to prevent UI locking.
+
+**Key DB schema**:
+- : Contains base_price and  (array).
+- : Added  types for activities.
+- : Contains , ,  (array),  (array).
+-  & : Track pre-conversion data.
+
+**Changes in tech stack**: None.
+
+**All files of reference**:
+-  (Currently being edited for admin notifications)
+-  (Needs notification trigger injection)
+-  (New global UI component)
+-  (New interactive job guide)
+-  (Modified for global progress and better error logging)
+
+**Areas that need refactoring**:
+- The Razorpay payment failure issue might need a secondary fallback if production redeployment fails. No immediate refactoring needed, just observation.
+
+**Key API endpoints**:
+-  and  (New)
+-  and  (New)
+-  (Updated for tiered pricing arrays)
+-  (Updated to insert transaction logs)
+
+**Critical Info for New Agent**:
+- **Current Blocker:** You are mid-way through adding Admin notifications. You must hook up the newly created  function inside endpoints where checkout leads, school enquiries, and subscriptions are created.
+- **Upload Progress:**  now natively supports global progress rendering. You do not need to add progress states to individual upload components.
+- **Audio Routing:** The backend now properly serves audio from .
+- **Payment Issue:** Do not touch the Razorpay implementation unless the user comes back with production logs confirming it is still broken after their redeployment. It is considered a localized production environment mismatch.
+
+**Documents and test reports created in this job**:
+-  (Updated continuously)
+-  (Linked users/renewal tests)
+-  (Tiered pricing tests)
+-  &  (DB Exports)
+
+**Last 10 User Messages and any pending HUMAN messages**:
+10. (Feature Request) Remove extra pricing details from the card, keep only base price and 1 child included.
+9. (UI Fix) Remove 1 PARENT LOGIN... subtitle.
+8. (UI Tweak) Move child selection out of checkout modal back to the main pricing page.
+7. (Bug) Price isn't updating on card based on child count selection.
+6. (Bug) Sudden refresh when activity completes; money earned doesn't show in Recent Activity.
+5. (Request) Give me DB structure to import to other hosting. (Agent exported full dump).
+4. (Request) I just want DB structure, no data. (Agent exported schema).
+3. (Bug) Payment gateway buttons aren't clickable until clicking outside (z-index issue).
+2. (Bug/Feature) Audio uploads for Job Guide failing; change audio to be per-page instead of single track; add upload progress bar globally.
+1. (Feature Request) Allow admin to permanently delete enquiries and checkout leads, and download them as CSV. Add admin notifications for new subscriptions, leads, and enquiries. -> *Pending Action: Finish notification triggers.*
+
+**Project Health Check**:
+- Broken: Razorpay payment specifically on the production domain (blocked by user redeployment).
+- Mocked: None.
+
+**3rd Party Integrations**:
+- OpenAI GPT-4o — uses Emergent LLM Key (Not explicitly used this session but present)
+- Razorpay (Payments) — requires User API Key (Live test keys in environment)
+- Google OAuth — requires User Client ID/Secret
+
+**Testing status**:
+- Testing agent used after significant changes: YES (iteration 59 & 60)
+- Troubleshoot agent used after agent stuck in loop: NO
+- Test files created: None this session.
+- Known regressions: Permanent loss of older user-uploaded badge images (requires manual user re-upload).
+
+**Credentials to test flow**:
+- Admin:  / 
+- Teacher:  / 
+- Child:  / 
+
+**What agent forgot to execute**:
+The agent successfully finished the delete & CSV feature but did not finish wiring up the  function for new subscriptions made, new checkout leads or new school enquiries as requested in the final user message. The next agent must complete this.</analysis>

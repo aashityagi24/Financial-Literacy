@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
-import { Bell, X, Gift, Megaphone, Trophy, Check, Trash2, ExternalLink, CheckCheck } from 'lucide-react';
+import { Bell, X, Gift, Megaphone, Trophy, Check, Trash2, ExternalLink, CheckCheck, CreditCard, ShoppingCart, School } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,11 @@ const notificationIcons = {
   garden_update: { icon: Trophy, color: 'text-[#228B22]', bg: 'bg-[#228B22]/20', path: '/garden' },
   investment_purchase: { icon: Trophy, color: 'text-[#10B981]', bg: 'bg-[#10B981]/20', path: '/wallet' },
   investment_sale: { icon: Trophy, color: 'text-[#10B981]', bg: 'bg-[#10B981]/20', path: '/wallet' },
+  
+  // Admin alerts
+  new_subscription: { icon: CreditCard, color: 'text-[#06D6A0]', bg: 'bg-[#06D6A0]/20', path: '/admin/subscriptions' },
+  new_checkout_lead: { icon: ShoppingCart, color: 'text-[#3D5A80]', bg: 'bg-[#3D5A80]/20', path: '/admin/subscriptions' },
+  new_school_enquiry: { icon: School, color: 'text-[#FFD23F]', bg: 'bg-[#FFD23F]/20', path: '/admin' },
 };
 
 export default function NotificationCenter({ onGiftRequestAction }) {

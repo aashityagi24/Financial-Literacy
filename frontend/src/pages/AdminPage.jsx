@@ -4,6 +4,7 @@ import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
 import { uploadFile } from '@/utils/chunkedUpload';
+import NotificationCenter from '@/components/NotificationCenter';
 import { 
   Shield, ChevronLeft, ChevronRight, Users, BookOpen, BarChart3,
   Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus, School, Video, BookMarked, Eye, EyeOff, CreditCard, Clock, Phone, Calendar as CalendarIcon, Filter, X, Download
@@ -363,6 +364,7 @@ export default function AdminPage({ user }) {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <NotificationCenter />
               <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-xl">
                 <User className="w-4 h-4 text-gray-600" />
                 <span className="text-sm font-medium text-gray-700">{user?.email || 'Admin'}</span>

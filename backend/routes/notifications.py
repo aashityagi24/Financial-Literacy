@@ -56,6 +56,14 @@ async def create_notification(
     await db.notifications.insert_one(notification)
     return notification
 
+async def notify_admins(notification_type: str, title: str, message: str, related_id: str = None):
+    """Send a notification to all admin users"""
+    db = get_db()
+    admins = await db.users.find({"role": "admin"}, {"_id": 0, "user_id": 1}).to_list(20)
+    for admin in admins:
+        await create_notification(admin["user_id"], notification_type, title, message, related_id=related_id)
+
+
 @router.get("/notifications")
 async def get_notifications(request: Request):
     """Get notifications for current user"""
