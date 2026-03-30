@@ -919,6 +919,11 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Learn Section Bug Fixes** (March 30, 2026)
+  - **Progressive Unlock on Subtopics Page**: Fixed subtopics showing all unlocked on detail page. Backend `get_topic_detail` now computes `is_unlocked`, `is_completed`, `completed_count`, `content_count` for subtopics AND `is_unlocked` for content items. First item always unlocked, rest depend on previous completion.
+  - **Fraction Display Removed**: Removed "2/20 Done" badge and "0/6" fraction from topic cards, quick access badges, and subtopic cards. Now shows only clean counts: "3 Subtopics", "20 Items", "6 items".
+  - Testing: 9/9 backend + all frontend tests passed (iteration_62)
+
 - **Admin Notifications for System Events** (March 30, 2026)
   - Admins receive real-time notifications for 3 key events:
     1. **New Subscription** (`new_subscription`) - triggered on payment verification, shows plan type, duration, child count, amount
