@@ -334,14 +334,45 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
         ).to_list(1000)
         completed_content_ids = {doc["content_id"] for doc in completed_docs}
         
+        # Progressive unlock for subtopics
+        previous_subtopic_completed = True  # First subtopic always unlocked
+        for subtopic in subtopics:
+            subtopic["is_unlocked"] = previous_subtopic_completed
+            subtopic_content_query = {
+                "topic_id": subtopic["topic_id"],
+                "is_published": True,
+                "$or": [
+                    {"visible_to": {"$in": ["child"]}},
+                    {"visible_to": {"$exists": False}},
+                    {"visible_to": []},
+                    {"visible_to": None}
+                ]
+            }
+            if filter_grade is not None:
+                subtopic_content_query["min_grade"] = {"$lte": filter_grade}
+                subtopic_content_query["max_grade"] = {"$gte": filter_grade}
+            subtopic_content = await db.content_items.find(
+                subtopic_content_query, {"content_id": 1}
+            ).sort("order", 1).to_list(100)
+            subtopic_completed_count = sum(1 for c in subtopic_content if c["content_id"] in completed_content_ids)
+            subtopic["completed_count"] = subtopic_completed_count
+            subtopic["content_count"] = len(subtopic_content)
+            subtopic["is_completed"] = subtopic_completed_count == len(subtopic_content) and len(subtopic_content) > 0
+            previous_subtopic_completed = subtopic["is_completed"]
+        
+        # Progressive unlock for content items
+        previous_content_completed = True  # First item always unlocked
         for content in content_items:
             content["is_completed"] = content["content_id"] in completed_content_ids
+            content["is_unlocked"] = previous_content_completed
+            previous_content_completed = content["is_completed"]
     elif is_parent and user_id:
         # For parents: show completion status based on their children's progress
         links = await db.parent_child_links.find(
             {"parent_id": user_id, "status": "active"}, {"child_id": 1}
         ).to_list(20)
         child_ids = [lnk["child_id"] for lnk in links]
+        completed_content_ids = set()
         if child_ids:
             completed_docs = await db.user_content_progress.find(
                 {"user_id": {"$in": child_ids}, "completed": True}, {"content_id": 1}

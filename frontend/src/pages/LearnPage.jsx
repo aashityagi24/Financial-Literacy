@@ -224,11 +224,6 @@ export default function LearnPage({ user }) {
                       <span className="px-3 py-1 bg-[#06D6A0]/20 rounded-full text-[#06D6A0] font-medium">
                         {(topic.content_count || 0) + (topic.subtopics?.reduce((sum, st) => sum + (st.content_count || 0), 0) || 0)} Items
                       </span>
-                      {isChild && topic.total_content > 0 && (
-                        <span className="px-3 py-1 bg-[#FFD23F]/30 rounded-full text-[#1D3557] font-medium">
-                          {topic.completed_count}/{topic.total_content} Done
-                        </span>
-                      )}
                     </div>
                     {isChild && topic.total_content > 0 && (
                       <div className="mt-2">
@@ -279,7 +274,7 @@ export default function LearnPage({ user }) {
                           <span className={`text-sm font-medium ${subtopicCompleted ? 'text-[#06D6A0]' : 'text-[#1D3557]'}`}>{subtopic.title}</span>
                           {subtopic.content_count > 0 && (
                             <span className={`text-xs px-2 py-0.5 rounded-full ${subtopicCompleted ? 'bg-[#06D6A0] text-white' : 'bg-[#06D6A0]/20 text-[#06D6A0]'}`}>
-                              {isChild && subtopic.completed_count !== undefined ? `${subtopic.completed_count}/` : ''}{subtopic.content_count}
+                              {subtopic.content_count}
                             </span>
                           )}
                         </Link>

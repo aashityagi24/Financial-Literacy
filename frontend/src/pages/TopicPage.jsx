@@ -356,7 +356,7 @@ export default function TopicPage({ user }) {
                   <h3 className={`font-bold text-sm line-clamp-2 ${isCompleted ? 'text-[#06D6A0]' : 'text-[#1D3557]'}`}>{subtopic.title}</h3>
                   {subtopic.content_count > 0 && (
                     <p className={`text-xs font-medium mt-1 ${isCompleted ? 'text-[#06D6A0]' : 'text-[#06D6A0]'}`}>
-                      {isChild && subtopic.completed_count !== undefined ? `${subtopic.completed_count}/` : ''}{subtopic.content_count} items
+                      {subtopic.content_count} items
                       {isCompleted && ' ✓'}
                     </p>
                   )}

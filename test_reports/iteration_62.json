@@ -1,0 +1,74 @@
+{
+  "summary": "Completed testing of CoinQuest learning section bug fixes: (1) Progressive unlock for subtopics now working correctly - first subtopic unlocked, subsequent ones locked until previous completed. (2) Fraction displays removed - shows only counts like '2 items' instead of '0/2 items'. Backend tests: 9/9 passed. Frontend UI verified via Playwright.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Welcome Modal",
+        "issues": ["Minor: DialogContent missing DialogTitle for accessibility (console warning)"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_progressive_unlock.py",
+    "/app/test_reports/pytest/progressive_unlock_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_progressive_unlock.py"
+  ],
+  "success_rate": {
+    "backend": "100% (9/9 tests passed)",
+    "frontend": "100% (all features working)"
+  },
+  "test_credentials": {
+    "admin": "admin@learnersplanet.com / finlit@2026",
+    "test_child": "test_progress_child@test.com / testpassword123 (grade 1)"
+  },
+  "seed_data_creation": "Created test child user: test_progress_child@test.com for testing progressive unlock",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Progressive unlock feature fully tested. Backend returns is_unlocked, is_completed, completed_count, content_count for subtopics and content items. Frontend correctly displays locked/unlocked states and shows counts without fractions.",
+  "feature_test_coverage": {
+    "backend_api_tests": {
+      "GET /api/content/topics/{topic_id} returns is_unlocked for subtopics": "PASS",
+      "GET /api/content/topics/{topic_id} returns is_completed for subtopics": "PASS",
+      "GET /api/content/topics/{topic_id} returns completed_count for subtopics": "PASS",
+      "GET /api/content/topics/{topic_id} returns content_count for subtopics": "PASS",
+      "First subtopic always unlocked (is_unlocked=true)": "PASS",
+      "Subsequent subtopics locked until previous completed": "PASS",
+      "Content items have is_unlocked field": "PASS",
+      "First content item always unlocked": "PASS",
+      "Subsequent content items locked until previous completed": "PASS",
+      "Topics listing returns is_unlocked for subtopics": "PASS",
+      "Counts returned as integers (not fractions)": "PASS"
+    },
+    "frontend_ui_tests": {
+      "LearnPage: No 'X/Y Done' badge on topic cards": "PASS",
+      "LearnPage: Quick access subtopic badges show only count (e.g., '2')": "PASS",
+      "LearnPage: Locked topics show '🔒 Locked' indicator": "PASS",
+      "LearnPage: Locked subtopics in quick access show greyed out with lock icon": "PASS",
+      "TopicPage: Subtopic cards show only count (e.g., '2 items')": "PASS",
+      "TopicPage: Locked subtopics show with greyscale image and lock overlay": "PASS",
+      "TopicPage: First subtopic unlocked, second locked": "PASS"
+    }
+  },
+  "verified_bug_fixes": {
+    "bug_1_progressive_unlock": {
+      "description": "Subtopics showing locked on quick access bar but ALL unlocked on detail page",
+      "status": "FIXED",
+      "verification": "Backend now returns is_unlocked for subtopics in get_topic_detail endpoint. First subtopic is_unlocked=true, subsequent ones depend on previous completion."
+    },
+    "bug_2_fraction_removal": {
+      "description": "Remove fraction displays like '2/20 Done' and '0/6'",
+      "status": "FIXED",
+      "verification": "LearnPage shows '2 Subtopics' and '5 Items' without fractions. TopicPage shows '2 items' instead of '0/2 items'. Quick access badges show just count like '2' instead of '0/2'."
+    }
+  }
+}
