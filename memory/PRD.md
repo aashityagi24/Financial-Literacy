@@ -919,6 +919,16 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Admin Notifications for System Events** (March 30, 2026)
+  - Admins receive real-time notifications for 3 key events:
+    1. **New Subscription** (`new_subscription`) - triggered on payment verification, shows plan type, duration, child count, amount
+    2. **New Checkout Lead** (`new_checkout_lead`) - triggered when a new lead is captured (not on updates), shows name, plan, children
+    3. **New School Enquiry** (`new_school_enquiry`) - triggered on enquiry submission, shows school name, contact person, city
+  - `notify_admins` helper function in `backend/routes/notifications.py` sends to all admin users
+  - NotificationCenter bell added to Admin Dashboard header with unread count badge
+  - Custom icons: CreditCard (subscription), ShoppingCart (lead), School (enquiry)
+  - Testing: 11/11 backend + all frontend tests passed (iteration_61)
+
 - **Tiered Child Pricing** (March 20, 2026)
   - Replaced flat per_child_price with tiered child_prices array [2nd, 3rd, 4th, 5th child] — each additional child gets cheaper
   - Pricing cards now show individual child price badges matching the user's design
