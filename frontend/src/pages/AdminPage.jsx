@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { uploadFile } from '@/utils/chunkedUpload';
 import { 
   Shield, ChevronLeft, ChevronRight, Users, BookOpen, BarChart3,
-  Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus, School, Video, BookMarked, Eye, EyeOff, CreditCard, Clock, Phone, Calendar as CalendarIcon, Filter, X
+  Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus, School, Video, BookMarked, Eye, EyeOff, CreditCard, Clock, Phone, Calendar as CalendarIcon, Filter, X, Download
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +63,7 @@ export default function AdminPage({ user }) {
   const [selectedUsers, setSelectedUsers] = useState(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [enquiries, setEnquiries] = useState([]);
+  const [selectedEnquiries, setSelectedEnquiries] = useState(new Set());
   const [userDateFrom, setUserDateFrom] = useState(null);
   const [userDateTo, setUserDateTo] = useState(null);
   
@@ -239,6 +240,43 @@ export default function AdminPage({ user }) {
       setSelectedUsers(new Set(filteredUsers.map(u => u.user_id)));
     }
   };
+
+  const deleteEnquiry = async (id) => {
+    if (!confirm('Permanently delete this enquiry?')) return;
+    try {
+      await axios.delete(`${API}/admin/school-enquiries/${id}`);
+      setEnquiries(prev => prev.filter(e => e.enquiry_id !== id));
+      setSelectedEnquiries(prev => { const s = new Set(prev); s.delete(id); return s; });
+      toast.success('Enquiry deleted');
+    } catch { toast.error('Failed to delete'); }
+  };
+
+  const bulkDeleteEnquiries = async () => {
+    if (!selectedEnquiries.size) return;
+    if (!confirm(`Delete ${selectedEnquiries.size} enquiries permanently?`)) return;
+    try {
+      await axios.delete(`${API}/admin/school-enquiries-bulk`, { data: { enquiry_ids: [...selectedEnquiries] } });
+      setEnquiries(prev => prev.filter(e => !selectedEnquiries.has(e.enquiry_id)));
+      setSelectedEnquiries(new Set());
+      toast.success('Enquiries deleted');
+    } catch { toast.error('Failed to delete'); }
+  };
+
+  const downloadCSV = (data, headers, filename) => {
+    const csvRows = [headers.join(',')];
+    data.forEach(row => {
+      csvRows.push(headers.map(h => {
+        const val = String(row[h] ?? '').replace(/"/g, '""');
+        return `"${val}"`;
+      }).join(','));
+    });
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  };
+
   
   const handleCreateUser = async () => {
     if (!newUserForm.name || !newUserForm.email) {
@@ -1142,13 +1180,31 @@ export default function AdminPage({ user }) {
         {/* Enquiries Tab */}
         {activeTab === 'enquiries' && (
           <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <Phone className="w-5 h-5 text-[#EE6C4D]" />
-              School Subscription Enquiries
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <Phone className="w-5 h-5 text-[#EE6C4D]" />
+                School Subscription Enquiries
+                {enquiries.length > 0 && (
+                  <span className="text-xs bg-[#EE6C4D] text-white px-2 py-0.5 rounded-full">{enquiries.length}</span>
+                )}
+              </h2>
               {enquiries.length > 0 && (
-                <span className="text-xs bg-[#EE6C4D] text-white px-2 py-0.5 rounded-full">{enquiries.length}</span>
+                <div className="flex gap-2">
+                  {selectedEnquiries.size > 0 && (
+                    <Button size="sm" variant="destructive" onClick={bulkDeleteEnquiries} data-testid="bulk-delete-enquiries">
+                      <Trash2 className="w-3 h-3 mr-1" />Delete {selectedEnquiries.size}
+                    </Button>
+                  )}
+                  <Button size="sm" variant="outline" data-testid="download-enquiries-csv" onClick={() => downloadCSV(
+                    enquiries,
+                    ['created_at','school_name','person_name','designation','contact_number','email','city','grades','status'],
+                    'school_enquiries.csv'
+                  )}>
+                    <Download className="w-3 h-3 mr-1" />CSV
+                  </Button>
+                </div>
               )}
-            </h2>
+            </div>
             {enquiries.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No enquiries yet.</p>
             ) : (
@@ -1156,6 +1212,7 @@ export default function AdminPage({ user }) {
                 <table className="w-full text-sm" data-testid="enquiries-table">
                   <thead>
                     <tr className="border-b border-gray-200">
+                      <th className="py-3 px-2 w-8"><input type="checkbox" checked={selectedEnquiries.size === enquiries.length && enquiries.length > 0} onChange={() => setSelectedEnquiries(prev => prev.size === enquiries.length ? new Set() : new Set(enquiries.map(e => e.enquiry_id)))} /></th>
                       <th className="text-left py-3 px-3 font-medium text-gray-600">Date</th>
                       <th className="text-left py-3 px-3 font-medium text-gray-600">School</th>
                       <th className="text-left py-3 px-3 font-medium text-gray-600">Contact Person</th>
@@ -1164,11 +1221,13 @@ export default function AdminPage({ user }) {
                       <th className="text-left py-3 px-3 font-medium text-gray-600">City</th>
                       <th className="text-left py-3 px-3 font-medium text-gray-600">Grades</th>
                       <th className="text-left py-3 px-3 font-medium text-gray-600">Status</th>
+                      <th className="py-3 px-2 w-10"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {enquiries.map((enq) => (
                       <tr key={enq.enquiry_id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-2"><input type="checkbox" checked={selectedEnquiries.has(enq.enquiry_id)} onChange={() => setSelectedEnquiries(prev => { const s = new Set(prev); s.has(enq.enquiry_id) ? s.delete(enq.enquiry_id) : s.add(enq.enquiry_id); return s; })} /></td>
                         <td className="py-3 px-3 text-gray-500 whitespace-nowrap">
                           {new Date(enq.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </td>
@@ -1208,6 +1267,11 @@ export default function AdminPage({ user }) {
                               <SelectItem value="closed"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-400 inline-block" />Closed</span></SelectItem>
                             </SelectContent>
                           </Select>
+                        </td>
+                        <td className="py-3 px-2">
+                          <button onClick={() => deleteEnquiry(enq.enquiry_id)} className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </td>
                       </tr>
                     ))}

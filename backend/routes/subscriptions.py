@@ -561,6 +561,35 @@ async def admin_get_checkout_leads(request: Request):
     return leads
 
 
+@router.delete("/admin/checkout-leads/{lead_id}")
+async def delete_checkout_lead(lead_id: str, request: Request):
+    """Admin: Permanently delete a checkout lead"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    result = await db.checkout_leads.delete_one({"lead_id": lead_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Lead not found")
+    return {"message": "Lead deleted"}
+
+@router.delete("/admin/checkout-leads-bulk")
+async def bulk_delete_checkout_leads(request: Request):
+    """Admin: Permanently delete multiple checkout leads"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    body = await request.json()
+    ids = body.get("lead_ids", [])
+    if not ids:
+        raise HTTPException(status_code=400, detail="No IDs provided")
+    result = await db.checkout_leads.delete_many({"lead_id": {"$in": ids}})
+    return {"message": f"Deleted {result.deleted_count} leads"}
+
+
 @router.get("/admin/plan-config")
 async def admin_get_plan_config(request: Request):
     """Admin: Get all plan pricing config"""

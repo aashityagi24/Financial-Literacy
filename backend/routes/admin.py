@@ -356,6 +356,31 @@ async def update_enquiry_status(enquiry_id: str, request: Request):
     return {"message": "Status updated"}
 
 
+@router.delete("/school-enquiries/{enquiry_id}")
+async def delete_enquiry(enquiry_id: str, request: Request):
+    """Permanently delete a school enquiry"""
+    from services.auth import require_admin
+    await require_admin(request)
+    db = get_db()
+    result = await db.school_enquiries.delete_one({"enquiry_id": enquiry_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Enquiry not found")
+    return {"message": "Enquiry deleted"}
+
+@router.delete("/school-enquiries-bulk")
+async def bulk_delete_enquiries(request: Request):
+    """Permanently delete multiple enquiries"""
+    from services.auth import require_admin
+    await require_admin(request)
+    db = get_db()
+    body = await request.json()
+    ids = body.get("enquiry_ids", [])
+    if not ids:
+        raise HTTPException(status_code=400, detail="No IDs provided")
+    result = await db.school_enquiries.delete_many({"enquiry_id": {"$in": ids}})
+    return {"message": f"Deleted {result.deleted_count} enquiries"}
+
+
 @router.delete("/users/{user_id}")
 async def delete_user(user_id: str, request: Request):
     """Delete a user and all related data completely"""

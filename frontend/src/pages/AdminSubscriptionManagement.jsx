@@ -5,7 +5,7 @@ import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, CreditCard, Users, Calendar as CalendarIcon, DollarSign, 
-  ToggleLeft, ToggleRight, Save, RefreshCw, Search, Filter, X, Eye
+  ToggleLeft, ToggleRight, Save, RefreshCw, Search, Filter, X, Eye, Trash2, Download
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +63,7 @@ export default function AdminSubscriptionManagement({ user }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [savingConfig, setSavingConfig] = useState(false);
   const [checkoutLeads, setCheckoutLeads] = useState([]);
+  const [selectedLeads, setSelectedLeads] = useState(new Set());
   const [statusFilter, setStatusFilter] = useState('all');
   const [durationFilter, setDurationFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState(null);
@@ -124,6 +125,43 @@ export default function AdminSubscriptionManagement({ user }) {
       setSavingConfig(false);
     }
   };
+
+  const deleteLead = async (id) => {
+    if (!confirm('Permanently delete this lead?')) return;
+    try {
+      await axios.delete(`${API}/subscriptions/admin/checkout-leads/${id}`);
+      setCheckoutLeads(prev => prev.filter(l => l.lead_id !== id));
+      setSelectedLeads(prev => { const s = new Set(prev); s.delete(id); return s; });
+      toast.success('Lead deleted');
+    } catch { toast.error('Failed to delete'); }
+  };
+
+  const bulkDeleteLeads = async () => {
+    if (!selectedLeads.size) return;
+    if (!confirm(`Delete ${selectedLeads.size} leads permanently?`)) return;
+    try {
+      await axios.delete(`${API}/subscriptions/admin/checkout-leads-bulk`, { data: { lead_ids: [...selectedLeads] } });
+      setCheckoutLeads(prev => prev.filter(l => !selectedLeads.has(l.lead_id)));
+      setSelectedLeads(new Set());
+      toast.success('Leads deleted');
+    } catch { toast.error('Failed to delete'); }
+  };
+
+  const downloadCSV = (data, headers, filename) => {
+    const csvRows = [headers.join(',')];
+    data.forEach(row => {
+      csvRows.push(headers.map(h => {
+        const val = String(row[h] ?? '').replace(/"/g, '""');
+        return `"${val}"`;
+      }).join(','));
+    });
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  };
+
 
   // Only show active ongoing subscriptions (completed payment, not expired)
   // Pending payments go to Checkout Leads, expired go to user list
@@ -369,9 +407,27 @@ export default function AdminSubscriptionManagement({ user }) {
         {/* Leads Tab */}
         {activeTab === 'leads' && (
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-bold text-[#1D3557]">Checkout Leads</h3>
-              <p className="text-sm text-gray-500">Users who showed interest but didn't complete payment</p>
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-[#1D3557]">Checkout Leads</h3>
+                <p className="text-sm text-gray-500">Users who showed interest but didn't complete payment</p>
+              </div>
+              {checkoutLeads.length > 0 && (
+                <div className="flex gap-2">
+                  {selectedLeads.size > 0 && (
+                    <Button size="sm" variant="destructive" onClick={bulkDeleteLeads} data-testid="bulk-delete-leads">
+                      <Trash2 className="w-3 h-3 mr-1" />Delete {selectedLeads.size}
+                    </Button>
+                  )}
+                  <Button size="sm" variant="outline" data-testid="download-leads-csv" onClick={() => downloadCSV(
+                    checkoutLeads,
+                    ['created_at','name','email','phone','plan_type','duration','num_children','lead_status'],
+                    'checkout_leads.csv'
+                  )}>
+                    <Download className="w-3 h-3 mr-1" />CSV
+                  </Button>
+                </div>
+              )}
             </div>
             {checkoutLeads.length === 0 ? (
               <div className="p-8 text-center text-gray-500">No unconverted leads yet.</div>
@@ -380,6 +436,7 @@ export default function AdminSubscriptionManagement({ user }) {
                 <table className="w-full text-sm" data-testid="checkout-leads-table">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
+                      <th className="py-3 px-2 w-8"><input type="checkbox" checked={selectedLeads.size === checkoutLeads.length && checkoutLeads.length > 0} onChange={() => setSelectedLeads(prev => prev.size === checkoutLeads.length ? new Set() : new Set(checkoutLeads.map(l => l.lead_id)))} /></th>
                       <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
                       <th className="text-left px-4 py-3 font-medium text-gray-600">Email</th>
                       <th className="text-left px-4 py-3 font-medium text-gray-600">Phone</th>
@@ -388,11 +445,13 @@ export default function AdminSubscriptionManagement({ user }) {
                       <th className="text-left px-4 py-3 font-medium text-gray-600">Children</th>
                       <th className="text-left px-4 py-3 font-medium text-gray-600">Last Activity</th>
                       <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                      <th className="py-3 px-2 w-10"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {checkoutLeads.map((lead, idx) => (
                       <tr key={lead.lead_id || idx} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-2"><input type="checkbox" checked={selectedLeads.has(lead.lead_id)} onChange={() => setSelectedLeads(prev => { const s = new Set(prev); s.has(lead.lead_id) ? s.delete(lead.lead_id) : s.add(lead.lead_id); return s; })} /></td>
                         <td className="px-4 py-3 font-medium text-gray-800">{lead.name || '-'}</td>
                         <td className="px-4 py-3 text-blue-600">{lead.email}</td>
                         <td className="px-4 py-3">{lead.phone || '-'}</td>
@@ -405,6 +464,11 @@ export default function AdminSubscriptionManagement({ user }) {
                             const s = LEAD_STATUS_MAP[lead.lead_status] || LEAD_STATUS_MAP.form_closed;
                             return <span className={`px-2 py-1 rounded-full text-xs font-medium ${s.cls}`}>{s.label}</span>;
                           })()}
+                        </td>
+                        <td className="py-3 px-2">
+                          <button onClick={() => deleteLead(lead.lead_id)} className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </td>
                       </tr>
                     ))}
