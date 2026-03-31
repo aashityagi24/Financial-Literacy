@@ -919,6 +919,10 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **HTML Zip Book Rendering Fix for Children** (March 31, 2026)
+  - Root cause: Mac OS X `__MACOSX` resource fork files in uploaded zips were being served to children via the `activity-files` endpoint. Admin viewed content via direct URL (bypassing the endpoint), so it worked for them.
+  - Fix: (1) Filtered `__MACOSX` and `._` files from `activity-files` endpoint in both server.py locations, (2) Filtered during zip extraction in `uploads.py` and `server.py`, (3) Cleaned up existing `__MACOSX` folders from activities directory.
+
 - **Learn Section Bug Fixes** (March 30, 2026)
   - **Progressive Unlock on Subtopics Page**: Fixed subtopics showing all unlocked on detail page. Backend `get_topic_detail` now computes `is_unlocked`, `is_completed`, `completed_count`, `content_count` for subtopics AND `is_unlocked` for content items. First item always unlocked, rest depend on previous completion.
   - **Fraction Display Removed**: Removed "2/20 Done" badge and "0/6" fraction from topic cards, quick access badges, and subtopic cards. Now shows only clean counts: "3 Subtopics", "20 Items", "6 items".

@@ -6145,7 +6145,11 @@ async def _legacy_upload_activity_html(file: UploadFile = File(...)):
     # Extract the zip file
     try:
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(activity_folder)
+            # Filter out __MACOSX metadata files
+            for member in zip_ref.namelist():
+                if "__MACOSX" in member or member.startswith("._") or "/._" in member:
+                    continue
+                zip_ref.extract(member, activity_folder)
         zip_path.unlink()  # Remove the zip file after extraction
         
         # Check if index.html exists at root level
@@ -6166,6 +6170,9 @@ async def _legacy_upload_activity_html(file: UploadFile = File(...)):
         html_files = []
         for html_file in activity_folder.rglob("*.html"):
             relative_path = html_file.relative_to(activity_folder)
+            # Skip __MACOSX metadata files
+            if "__MACOSX" in str(relative_path) or str(relative_path).startswith("._"):
+                continue
             # Clean up the display name
             display_name = html_file.stem.replace("_", " ").replace("-", " ").replace(".html", "").replace(".htm", "")
             display_name = display_name.title()
@@ -6178,6 +6185,9 @@ async def _legacy_upload_activity_html(file: UploadFile = File(...)):
         # Also check for .htm files
         for html_file in activity_folder.rglob("*.htm"):
             relative_path = html_file.relative_to(activity_folder)
+            # Skip __MACOSX metadata files
+            if "__MACOSX" in str(relative_path) or str(relative_path).startswith("._"):
+                continue
             display_name = html_file.stem.replace("_", " ").replace("-", " ").replace(".html", "").replace(".htm", "")
             display_name = display_name.title()
             html_files.append({
@@ -6239,9 +6249,12 @@ async def get_activity_html_files(folder_name: str):
     
     html_files = []
     
-    # Find all .html files
+    # Find all .html files (excluding __MACOSX resource fork files)
     for html_file in activity_folder.rglob("*.html"):
         relative_path = html_file.relative_to(activity_folder)
+        # Skip __MACOSX metadata files
+        if "__MACOSX" in str(relative_path) or str(relative_path).startswith("._"):
+            continue
         # Clean up the display name
         display_name = html_file.stem.replace("_", " ").replace("-", " ").replace(".html", "").replace(".htm", "")
         display_name = display_name.title()
@@ -6251,9 +6264,12 @@ async def get_activity_html_files(folder_name: str):
             "url": f"/api/uploads/activities/{folder_name}/{relative_path}"
         })
     
-    # Find all .htm files
+    # Find all .htm files (excluding __MACOSX resource fork files)
     for html_file in activity_folder.rglob("*.htm"):
         relative_path = html_file.relative_to(activity_folder)
+        # Skip __MACOSX metadata files
+        if "__MACOSX" in str(relative_path) or str(relative_path).startswith("._"):
+            continue
         display_name = html_file.stem.replace("_", " ").replace("-", " ").replace(".html", "").replace(".htm", "")
         display_name = display_name.title()
         html_files.append({

@@ -139,7 +139,11 @@ async def upload_activity_html(file: UploadFile = File(...)):
     # Extract the zip file
     try:
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(activity_folder)
+            # Filter out __MACOSX metadata files
+            for member in zip_ref.namelist():
+                if "__MACOSX" in member or member.startswith("._") or "/._" in member:
+                    continue
+                zip_ref.extract(member, activity_folder)
         zip_path.unlink()  # Remove the zip file after extraction
         
         # Find any HTML file (not just index.html)
@@ -382,7 +386,11 @@ async def chunked_upload_complete(
         extract_dir = ACTIVITIES_DIR / folder_name
         extract_dir.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(temp_path, 'r') as zip_ref:
-            zip_ref.extractall(extract_dir)
+            # Filter out __MACOSX metadata files
+            for member in zip_ref.namelist():
+                if "__MACOSX" in member or member.startswith("._") or "/._" in member:
+                    continue
+                zip_ref.extract(member, extract_dir)
         
         # Find HTML file
         html_file = None
