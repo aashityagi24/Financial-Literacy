@@ -921,7 +921,8 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 ## Recently Completed
 - **Content Move Fix + Gifting→Giving Rename** (April 1, 2026)
   - **Content Move Bug**: The `/admin/content/items/{id}/move` endpoint was commented out in `server.py` with `# MOVED` but never added to `routes/content.py`. Added the endpoint. Content can now be moved between subtopics.
-  - **Gifting→Giving Rename**: Renamed all user-facing "Gifting" display text to "Giving" across 10+ files (WalletPage, Dashboard, TeacherDashboard, GiftingPage, ClassmatesPage, ClassmatesSection, SavingsGoalsPage, StorePage, AchievementsPage, OnboardingTour, LandingPage). Backend `account_type` key remains `'gifting'` (data model unchanged).
+  - **Subtopic Move Bug**: Same issue — `/admin/content/subtopics/{id}/move` endpoint was also missing from `routes/content.py`. Added it. Subtopics can now be moved between parent topics.
+  - **Gifting→Giving Rename**: Renamed all user-facing "Gifting" display text to "Giving" across 10+ files. Backend `account_type` key remains `'gifting'` (data model unchanged).
 
 - **HTML Zip Book Rendering Fix for Children** (March 31, 2026)
   - Root cause: Mac OS X `__MACOSX` resource fork files in uploaded zips were being served to children via the `activity-files` endpoint. Admin viewed content via direct URL (bypassing the endpoint), so it worked for them.
