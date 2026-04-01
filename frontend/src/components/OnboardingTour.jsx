@@ -20,7 +20,7 @@ const childSteps = [
   {
     icon: Wallet,
     title: "Your Money Jars",
-    description: "You have 4 special jars: Spending (for buying), Savings (for goals), Investing (to grow), and Gifting (to share)!",
+    description: "You have 4 special jars: Spending (for buying), Savings (for goals), Investing (to grow), and Giving (to share)!",
     color: "from-[#06D6A0] to-[#42E8B3]"
   },
   {

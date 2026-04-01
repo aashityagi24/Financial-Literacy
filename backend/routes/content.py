@@ -706,3 +706,38 @@ async def admin_toggle_publish(content_id: str, request: Request):
     await db.content_items.update_one({"content_id": content_id}, {"$set": {"is_published": new_status}})
     
     return {"message": f"Content {'published' if new_status else 'unpublished'}", "is_published": new_status}
+
+
+@router.post("/admin/content/items/{content_id}/move")
+async def admin_move_content(content_id: str, request: Request):
+    """Move a content item to a different topic/subtopic"""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    body = await request.json()
+    new_topic_id = body.get("new_topic_id")
+    
+    if not new_topic_id:
+        raise HTTPException(status_code=400, detail="new_topic_id is required")
+    
+    content = await db.content_items.find_one({"content_id": content_id})
+    if not content:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    new_topic = await db.content_topics.find_one({"topic_id": new_topic_id})
+    if not new_topic:
+        raise HTTPException(status_code=404, detail="Target topic/subtopic not found")
+    
+    max_order_doc = await db.content_items.find_one(
+        {"topic_id": new_topic_id},
+        sort=[("order", -1)]
+    )
+    new_order = (max_order_doc.get("order", 0) + 1) if max_order_doc else 0
+    
+    await db.content_items.update_one(
+        {"content_id": content_id},
+        {"$set": {"topic_id": new_topic_id, "order": new_order}}
+    )
+    
+    return {"message": f"Content moved to {new_topic['title']}", "new_topic_id": new_topic_id}

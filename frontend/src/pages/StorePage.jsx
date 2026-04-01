@@ -607,7 +607,7 @@ export default function StorePage({ user }) {
                     📈 Investing (₹{wallet?.accounts?.find(a => a.account_type === 'investing')?.balance?.toFixed(0) || 0})
                   </SelectItem>
                   <SelectItem value="gifting">
-                    🎁 Gifting (₹{wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance?.toFixed(0) || 0})
+                    🎁 Giving (₹{wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance?.toFixed(0) || 0})
                   </SelectItem>
                 </SelectContent>
               </Select>

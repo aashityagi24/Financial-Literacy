@@ -60,6 +60,7 @@ export default function WalletPage({ user }) {
       },
       gifting: { 
         icon: '❤️', 
+        label: 'Giving',
         color: 'from-[#9B5DE5] to-[#B47EE5]',
         description: 'Share with others who need it!',
         action: { label: 'Give ₹', path: '/gifting' }

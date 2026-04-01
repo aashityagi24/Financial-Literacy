@@ -64,7 +64,7 @@ export default function LandingPage() {
   };
   
   const features = [
-    { icon: Coins, title: "Digital Wallet", description: "Learn to manage money with 4 account types: Spending, Piggy Bank, Investing & Gifting", color: "#FFD23F" },
+    { icon: Coins, title: "Digital Wallet", description: "Learn to manage money with 4 account types: Spending, Piggy Bank, Investing & Giving", color: "#FFD23F" },
     { icon: TrendingUp, title: "Money Garden", description: "Grow your money! Plant seeds, water your garden, and sell vegetables at the market", color: "#06D6A0" },
     { icon: Gift, title: "Virtual Store", description: "Spend your money on your needs and wants and enhance your collection!", color: "#EE6C4D" },
     { icon: Trophy, title: "Quests & Achievements", description: "Complete fun challenges and chores to earn money and badges", color: "#3D5A80" },
@@ -175,7 +175,7 @@ export default function LandingPage() {
                 Learn Money Skills <span className="text-[#EE6C4D]">While Having Fun!</span>
               </h1>
               <p className="text-xl text-[#3D5A80] mb-8 leading-relaxed">
-                CoinQuest teaches K-2 kids about saving, spending, investing, and gifting through exciting games, quests, and real-world simulations!
+                CoinQuest teaches K-2 kids about saving, spending, investing, and giving through exciting games, quests, and real-world simulations!
               </p>
               <div className="flex flex-wrap gap-4">
                 <button

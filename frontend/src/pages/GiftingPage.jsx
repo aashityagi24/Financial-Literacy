@@ -94,9 +94,9 @@ export default function GiftingPage({ user }) {
         to_account: 'gifting',
         amount: amount,
         transaction_type: 'transfer',
-        description: `Transfer to Gifting Jar from ${transferFrom}`
+        description: `Transfer to Giving Jar from ${transferFrom}`
       });
-      toast.success(`₹${amount} transferred to Gifting Jar! 🎉`);
+      toast.success(`₹${amount} transferred to Giving Jar! 🎉`);
       setShowTransferDialog(false);
       setTransferAmount('');
       fetchData();
@@ -186,7 +186,7 @@ export default function GiftingPage({ user }) {
           </Link>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-              💝 Gifting & Giving
+              💝 Giving
             </h1>
             <p className="text-sm text-[#3D5A80]">Share kindness with friends and those in need</p>
           </div>
@@ -200,7 +200,7 @@ export default function GiftingPage({ user }) {
                 <span className="text-3xl">💝</span>
               </div>
               <div>
-                <p className="text-sm opacity-80">Gifting Jar Balance</p>
+                <p className="text-sm opacity-80">Giving Jar Balance</p>
                 <p className="text-3xl font-bold">₹{getAccountBalance('gifting').toFixed(0)}</p>
               </div>
             </div>
@@ -608,7 +608,7 @@ export default function GiftingPage({ user }) {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-[#1D3557]">
                 <ArrowRightLeft className="w-5 h-5 text-[#9B5DE5]" />
-                Add Money to Gifting Jar
+                Add Money to Giving Jar
               </DialogTitle>
             </DialogHeader>
             
@@ -624,7 +624,7 @@ export default function GiftingPage({ user }) {
                   <span className="font-bold text-[#1D3557]">₹{getAccountBalance('savings').toFixed(0)}</span>
                 </div>
                 <div className="flex justify-between items-center border-t pt-2">
-                  <span className="text-sm text-[#9B5DE5] font-bold">💝 Gifting Jar</span>
+                  <span className="text-sm text-[#9B5DE5] font-bold">💝 Giving Jar</span>
                   <span className="font-bold text-[#9B5DE5]">₹{getAccountBalance('gifting').toFixed(0)}</span>
                 </div>
               </div>
@@ -683,7 +683,7 @@ export default function GiftingPage({ user }) {
                 ) : (
                   <>
                     <ArrowRightLeft className="w-4 h-4 mr-2" />
-                    Transfer to Gifting Jar
+                    Transfer to Giving Jar
                   </>
                 )}
               </Button>

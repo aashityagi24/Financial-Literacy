@@ -919,6 +919,10 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Content Move Fix + Gifting→Giving Rename** (April 1, 2026)
+  - **Content Move Bug**: The `/admin/content/items/{id}/move` endpoint was commented out in `server.py` with `# MOVED` but never added to `routes/content.py`. Added the endpoint. Content can now be moved between subtopics.
+  - **Gifting→Giving Rename**: Renamed all user-facing "Gifting" display text to "Giving" across 10+ files (WalletPage, Dashboard, TeacherDashboard, GiftingPage, ClassmatesPage, ClassmatesSection, SavingsGoalsPage, StorePage, AchievementsPage, OnboardingTour, LandingPage). Backend `account_type` key remains `'gifting'` (data model unchanged).
+
 - **HTML Zip Book Rendering Fix for Children** (March 31, 2026)
   - Root cause: Mac OS X `__MACOSX` resource fork files in uploaded zips were being served to children via the `activity-files` endpoint. Admin viewed content via direct URL (bypassing the endpoint), so it worked for them.
   - Fix: (1) Filtered `__MACOSX` and `._` files from `activity-files` endpoint in both server.py locations, (2) Filtered during zip extraction in `uploads.py` and `server.py`, (3) Cleaned up existing `__MACOSX` folders from activities directory.

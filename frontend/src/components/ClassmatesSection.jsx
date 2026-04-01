@@ -59,7 +59,7 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
     }
 
     if (parseFloat(giftForm.amount) > giftingBalance) {
-      toast.error('Not enough balance in your Gifting jar');
+      toast.error('Not enough balance in your Giving jar');
       return;
     }
 
@@ -101,7 +101,7 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
         to_account: 'gifting',
         amount: amount,
         transaction_type: 'transfer',
-        description: `Quick transfer for gifting`
+        description: `Quick transfer for giving`
       });
       
       toast.success('Transfer successful!');
@@ -284,14 +284,14 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
             <div className="space-y-4 pt-2">
               <div className="bg-[#FFD23F]/20 rounded-xl p-3 border-2 border-[#FFD23F]">
                 <p className="text-sm text-[#1D3557]">
-                  Your Gifting Jar: <strong>₹{giftingBalance?.toFixed(0) || 0}</strong>
+                  Your Giving Jar: <strong>₹{giftingBalance?.toFixed(0) || 0}</strong>
                 </p>
                 {giftingBalance < 10 && wallet && (
                   <button
                     onClick={() => setShowTransfer(true)}
                     className="mt-2 w-full py-2 bg-[#FFD23F] text-[#1D3557] text-sm font-bold rounded-lg hover:bg-[#FFE066] flex items-center justify-center gap-2"
                   >
-                    <ArrowLeftRight className="w-4 h-4" /> Move money to Gifting Jar
+                    <ArrowLeftRight className="w-4 h-4" /> Move money to Giving Jar
                   </button>
                 )}
               </div>
@@ -344,13 +344,13 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
               <DialogHeader>
                 <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
                   <ArrowLeftRight className="w-5 h-5 inline mr-2" />
-                  Move Money to Gifting Jar
+                  Move Money to Giving Jar
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-2">
                 <div className="bg-[#E0FBFC] rounded-xl p-3">
                   <p className="text-sm text-[#3D5A80]">
-                    Your Gifting Jar: <strong className="text-[#06D6A0]">₹{giftingBalance?.toFixed(0) || 0}</strong>
+                    Your Giving Jar: <strong className="text-[#06D6A0]">₹{giftingBalance?.toFixed(0) || 0}</strong>
                   </p>
                 </div>
                 
