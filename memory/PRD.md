@@ -919,6 +919,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Subscription Gating & Pricing Popup** (April 1, 2026)
+  - **Signup/Login 403 → Pricing Popup**: Instead of just a toast error, the AuthPage now shows a full PricingSection popup when a user tries to sign up or log in without an active subscription. Users can purchase right there without page shuffling.
+  - **No Registration Without Subscription**: Fixed Google OAuth gap where user records were created BEFORE subscription check. Now subscription is verified first; user is only created if subscription exists.
+  - **Second OAuth Handler Fixed**: The alternative Google OAuth handler had NO subscription check at all — added subscription gating for both new and existing users.
+  - Testing: 9/9 backend + all frontend tests passed (iteration_63)
+
 - **Content Move Fix + Gifting→Giving Rename** (April 1, 2026)
   - **Content Move Bug**: The `/admin/content/items/{id}/move` endpoint was commented out in `server.py` with `# MOVED` but never added to `routes/content.py`. Added the endpoint. Content can now be moved between subtopics.
   - **Subtopic Move Bug**: Same issue — `/admin/content/subtopics/{id}/move` endpoint was also missing from `routes/content.py`. Added it. Subtopics can now be moved between parent topics.
