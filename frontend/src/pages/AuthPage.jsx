@@ -4,10 +4,11 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { 
   Eye, EyeOff, ArrowLeft, Mail, Lock, User, School, Shield,
-  Sparkles, BookOpen, Coins, RefreshCw
+  Sparkles, BookOpen, Coins, RefreshCw, X
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import PricingSection from '@/components/PricingSection';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -45,6 +46,8 @@ export default function AuthPage() {
   // Captcha state
   const [captcha, setCaptcha] = useState(generateCaptcha());
   const [captchaAnswer, setCaptchaAnswer] = useState('');
+  const [showSubscriptionPopup, setShowSubscriptionPopup] = useState(false);
+  const [subscriptionMessage, setSubscriptionMessage] = useState('');
   
   // Regenerate captcha when switching to signup mode
   useEffect(() => {
@@ -125,7 +128,8 @@ export default function AuthPage() {
     } catch (error) {
       const message = error.response?.data?.detail || 'Invalid credentials';
       if (error.response?.status === 403) {
-        toast.error(message, { duration: 6000 });
+        setSubscriptionMessage(message);
+        setShowSubscriptionPopup(true);
       } else {
         toast.error(message);
       }
@@ -184,7 +188,12 @@ export default function AuthPage() {
       else navigate('/role-selection', { state: { user } });
     } catch (error) {
       const detail = error.response?.data?.detail || 'Failed to create account';
-      toast.error(detail);
+      if (error.response?.status === 403) {
+        setSubscriptionMessage(detail);
+        setShowSubscriptionPopup(true);
+      } else {
+        toast.error(detail);
+      }
       refreshCaptcha();
     } finally {
       setIsLoading(false);
@@ -422,6 +431,32 @@ export default function AuthPage() {
           </p>
         </div>
       </div>
+      
+      {/* Subscription Required Popup */}
+      {showSubscriptionPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" data-testid="subscription-popup-overlay">
+          <div className="bg-white rounded-3xl w-full max-w-5xl max-h-[90vh] overflow-y-auto relative shadow-2xl">
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-[#EE6C4D] to-[#FF8A6C] px-6 py-4 rounded-t-3xl flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>
+                  Subscription Required
+                </h2>
+                <p className="text-white/90 text-sm mt-0.5">{subscriptionMessage}</p>
+              </div>
+              <button
+                onClick={() => setShowSubscriptionPopup(false)}
+                className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                data-testid="close-subscription-popup"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+            </div>
+            <div className="p-2">
+              <PricingSection />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

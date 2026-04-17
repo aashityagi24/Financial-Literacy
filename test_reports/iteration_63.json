@@ -1,0 +1,84 @@
+{
+  "summary": "Completed testing of subscription gating feature for signup/login flows. All features working correctly: (1) Signup without subscription returns 403 and shows subscription popup with PricingSection. (2) Admin login works without subscription checks. (3) Wrong credentials return 401 (not 403). (4) Subscription popup has working close button. (5) Landing page with ?no_subscription=true scrolls to pricing section.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_subscription_gating.py",
+    "/app/test_reports/pytest/subscription_gating_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_subscription_gating.py"
+  ],
+  "success_rate": {
+    "backend": "100% (9/9 tests passed)",
+    "frontend": "100% (all features working)"
+  },
+  "test_credentials": {
+    "admin": "admin@learnersplanet.com / finlit@2026"
+  },
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Subscription gating feature fully tested. Backend returns 403 for signup/login without subscription. Frontend shows subscription popup with PricingSection on 403 errors. Admin login is exempt from subscription checks. Landing page ?no_subscription=true parameter scrolls to pricing section.",
+  "feature_test_coverage": {
+    "backend_api_tests": {
+      "POST /api/auth/signup without subscription returns 403": "PASS",
+      "POST /api/auth/login for non-existent user returns 401": "PASS",
+      "POST /api/auth/admin-login works without subscription check": "PASS",
+      "POST /api/auth/admin-login with wrong password returns 401": "PASS",
+      "POST /api/auth/login endpoint exists": "PASS",
+      "POST /api/auth/signup endpoint exists": "PASS",
+      "POST /api/auth/signup with invalid email returns 400": "PASS",
+      "POST /api/auth/school-login endpoint exists": "PASS"
+    },
+    "frontend_ui_tests": {
+      "AuthPage: Signup form displays correctly with all fields": "PASS",
+      "AuthPage: On signup 403, subscription popup appears": "PASS",
+      "AuthPage: Subscription popup contains PricingSection": "PASS",
+      "AuthPage: Subscription popup has close button that works": "PASS",
+      "AuthPage: Admin login works and redirects to /admin": "PASS",
+      "LandingPage: ?no_subscription=true scrolls to pricing section": "PASS"
+    }
+  },
+  "verified_features": {
+    "subscription_gating_signup": {
+      "description": "Signup without subscription shows popup instead of just toast",
+      "status": "WORKING",
+      "verification": "Tested signup with nosub_test@example.com - 403 returned, popup with PricingSection displayed"
+    },
+    "subscription_gating_login": {
+      "description": "Login for parent without subscription returns 403",
+      "status": "WORKING",
+      "verification": "Backend returns 403 for parent users without active subscription"
+    },
+    "admin_exempt": {
+      "description": "Admin login exempt from subscription checks",
+      "status": "WORKING",
+      "verification": "Admin login with admin@learnersplanet.com works and redirects to /admin"
+    },
+    "wrong_credentials_401": {
+      "description": "Wrong credentials return 401, not 403",
+      "status": "WORKING",
+      "verification": "Login with non-existent user returns 401"
+    },
+    "popup_close_button": {
+      "description": "Subscription popup close button works",
+      "status": "WORKING",
+      "verification": "Close button dismisses popup correctly"
+    },
+    "no_subscription_redirect": {
+      "description": "Google OAuth redirect with no_subscription=true shows toast and scrolls to pricing",
+      "status": "WORKING",
+      "verification": "Landing page scrolls to pricing section (scroll position 3743px)"
+    }
+  }
+}

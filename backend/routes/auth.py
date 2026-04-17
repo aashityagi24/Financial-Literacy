@@ -429,6 +429,19 @@ async def google_callback(request: Request, response: Response, code: str = None
     user = await db.users.find_one({"email": email}, {"_id": 0})
     
     if not user:
+        # NEW Google user: check subscription BEFORE creating account
+        _now_pre = datetime.now(timezone.utc).isoformat()
+        _pre_sub = await db.subscriptions.find_one({
+            "parent_emails": email.lower(),
+            "payment_status": "completed",
+            "is_active": True,
+            "end_date": {"$gt": _now_pre}
+        })
+        if not _pre_sub:
+            _fe = _get_frontend_origin(request, state)
+            return RedirectResponse(url=f"{_fe}/?no_subscription=true", status_code=302)
+        
+        # Subscription found - create the user
         user_id = f"user_{uuid.uuid4().hex[:12]}"
         user = {
             "user_id": user_id,
@@ -571,6 +584,17 @@ async def create_session(request: Request, response: Response):
     user = await db.users.find_one({"email": email}, {"_id": 0})
     
     if not user:
+        # NEW Google user: check subscription BEFORE creating account
+        _now_pre = datetime.now(timezone.utc).isoformat()
+        _pre_sub = await db.subscriptions.find_one({
+            "parent_emails": email.lower(),
+            "payment_status": "completed",
+            "is_active": True,
+            "end_date": {"$gt": _now_pre}
+        })
+        if not _pre_sub:
+            raise HTTPException(status_code=403, detail="No active subscription found for this email. Please purchase a plan first.")
+        
         user_id = f"user_{uuid.uuid4().hex[:12]}"
         user = {
             "user_id": user_id,
@@ -610,6 +634,23 @@ async def create_session(request: Request, response: Response):
                 {"$set": {"last_login_date": today, "streak_count": new_streak}}
             )
             user = await db.users.find_one({"email": email}, {"_id": 0})
+    
+    # Subscription gate for D2C users
+    _user_role = user.get("role")
+    if _user_role not in ["admin", "teacher"] and not user.get("school_id"):
+        if _user_role in ["parent", "child", None]:
+            _now = datetime.now(timezone.utc).isoformat()
+            _sub = await db.subscriptions.find_one({
+                "$or": [
+                    {"parent_emails": email.lower()},
+                    {"child_user_ids": user.get("user_id", "")}
+                ],
+                "payment_status": "completed",
+                "is_active": True,
+                "end_date": {"$gt": _now}
+            })
+            if not _sub:
+                raise HTTPException(status_code=403, detail="Your subscription has expired or is inactive. Please purchase a plan to continue.")
     
     # Single device login: Invalidate ALL previous sessions for this user
     await db.user_sessions.delete_many({"user_id": user["user_id"]})
