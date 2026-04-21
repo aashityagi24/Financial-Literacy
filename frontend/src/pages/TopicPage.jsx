@@ -84,8 +84,8 @@ export default function TopicPage({ user }) {
               const coins = response.data.coins_awarded || 0;
               toastFn(`${feedback} Earned ₹${coins}!`, { duration: 4000 });
               lastCompletedRef.current = selectedContent.content_id;
-              // Delay refresh so the user can read feedback before the content list updates
-              setTimeout(() => { closeViewer(); fetchTopicData(); }, 2500);
+              // Close viewer after delay, then silently refresh in background
+              setTimeout(() => { closeViewer(); fetchTopicData(true); }, 2500);
             } catch (completeError) {
               toastFn(feedback, { duration: 4000 });
             }
@@ -108,8 +108,8 @@ export default function TopicPage({ user }) {
     return () => window.removeEventListener('message', handleActivityMessage);
   }, [selectedContent, user]);
   
-  const fetchTopicData = async () => {
-    setLoading(true);
+  const fetchTopicData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       // Build API URL with grade filter for teachers/parents
       let url = `${API}/content/topics/${topicId}`;
@@ -134,20 +134,27 @@ export default function TopicPage({ user }) {
       toast.error('Failed to load topic');
       navigate('/learn');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
   
   const handleCompleteContent = async (contentId) => {
     try {
       const response = await axios.post(`${API}/content/items/${contentId}/complete`);
-      toast.success(`Completed! +₹${response.data.coins_awarded || 0}`);
+      const coins = response.data.coins_awarded || 0;
+      if (coins > 0) {
+        toast.success(`Completed! +₹${coins}`);
+      } else {
+        toast.success('Done! Reward already added to your wallet');
+      }
       lastCompletedRef.current = contentId;
       closeViewer();
-      fetchTopicData();
+      fetchTopicData(true);
     } catch (error) {
       if (error.response?.data?.message === 'Already completed') {
-        toast.info('You already completed this!');
+        toast.success('Already done! Reward is in your wallet');
+        closeViewer();
+        fetchTopicData(true);
       } else {
         toast.error(error.response?.data?.detail || 'Failed to complete');
       }
@@ -699,16 +706,19 @@ export default function TopicPage({ user }) {
             {/* Modal Footer - compact */}
             <div className="px-3 py-1.5 border-t-2 border-[#1D3557] flex justify-between items-center bg-[#FFD23F]/20">
               <span className="text-sm font-bold text-[#06D6A0]">
-                {user?.role === 'child' ? `+₹${selectedContent.reward_coins}` : `Reward: ₹${selectedContent.reward_coins}`}
+                {user?.role === 'child' 
+                  ? (selectedContent.is_completed ? '✓ Reward in wallet' : `+₹${selectedContent.reward_coins}`)
+                  : `Reward: ₹${selectedContent.reward_coins}`
+                }
               </span>
               <div className="flex items-center gap-2">
                 {user?.role === 'child' && (
                   <button 
-                    onClick={() => { handleCompleteContent(selectedContent.content_id); closeViewer(); }}
+                    onClick={() => { handleCompleteContent(selectedContent.content_id); }}
                     className="btn-primary px-3 py-1.5 text-sm"
                   >
                     <Check className="w-4 h-4 mr-1 inline" />
-                    Done
+                    {selectedContent.is_completed ? 'Done' : 'Mark Done'}
                   </button>
                 )}
               </div>

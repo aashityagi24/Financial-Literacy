@@ -923,6 +923,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - After a child marks an activity/book as done, the viewer closes and the content list scrolls to the just-completed item (using `scrollIntoView` with `block: 'center'`). Previously scrolled to top, forcing child to scroll down to find where they stopped.
   - Added `data-content-id` attributes to content item cards and `lastCompletedRef` to track the last completed content ID.
 
+- **Smoother Activity Completion & Reward Messaging** (April 1, 2026)
+  - Silent background refresh after activity score capture: `fetchTopicData(true)` skips the loading spinner, so the content list updates seamlessly without a jarring full-page reload.
+  - When child clicks "Done" after reward was already given via score capture: shows "Done! Reward already added to your wallet" instead of confusing "+₹0".
+  - Footer shows "✓ Reward in wallet" for already-completed items instead of "+₹X".
+  - "Done" button text changes to "Mark Done" for incomplete and "Done" for already-completed items.
+
 - **Subscription Gating & Pricing Popup** (April 1, 2026)
   - **Signup/Login 403 → Pricing Popup**: Instead of just a toast error, the AuthPage now shows a full PricingSection popup when a user tries to sign up or log in without an active subscription. Users can purchase right there without page shuffling.
   - **No Registration Without Subscription**: Fixed Google OAuth gap where user records were created BEFORE subscription check. Now subscription is verified first; user is only created if subscription exists.
