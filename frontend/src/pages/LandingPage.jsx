@@ -64,10 +64,10 @@ export default function LandingPage() {
   };
   
   const features = [
-    { icon: Coins, title: "Digital Wallet", description: "Learn to manage money with 4 account types: Spending, Piggy Bank, Investing & Giving", color: "#FFD23F" },
-    { icon: TrendingUp, title: "Money Garden", description: "Grow your money! Plant seeds, water your garden, and sell vegetables at the market", color: "#06D6A0" },
-    { icon: Gift, title: "Virtual Store", description: "Spend your money on your needs and wants and enhance your collection!", color: "#EE6C4D" },
-    { icon: Trophy, title: "Quests & Achievements", description: "Complete fun challenges and chores to earn money and badges", color: "#3D5A80" },
+    { icon: Coins, title: "Digital Wallet", description: "Learn how to manage and allocate money for Spending, Saving, Sharing and Investing.", color: "#FFD23F" },
+    { icon: TrendingUp, title: "Money Garden", description: "Plant seeds, water your garden, and sell vegetables at the market to earn and grow your money.", color: "#06D6A0" },
+    { icon: Gift, title: "Money Around Me", description: "Learn everything about money - currencies, history, real-world usage, and more.", color: "#EE6C4D" },
+    { icon: Trophy, title: "Quests & Badges", description: "Complete challenges and chores to earn money and badges.", color: "#3D5A80" },
   ];
   
   const grades = ["Kindergarten", "1st Grade", "2nd Grade"];
@@ -76,21 +76,21 @@ export default function LandingPage() {
     "Kindergarten": {
       title: "Money Basics & Counting",
       skills: [
-        "Identify and count coins (₹1, ₹2, ₹5, ₹10)",
-        "Understand needs vs. wants through fun stories",
-        "Learn saving through piggy bank activities",
-        "Simple earning through fun tasks and activities"
+        "Identify and count coins (₹1, ₹2, ₹5, ₹10, ₹20, ₹50, ₹100)",
+        "Observe and learn about money around you and how it reaches home",
+        "Understand forms of money and how they are used",
+        "Simple earning, spending and saving exercises through fun tasks and activities"
       ],
       color: "#FFD23F"
     },
     "1st Grade": {
       title: "Earning & Saving",
       skills: [
-        "Recognising and using coins & notes up to ₹500",
-        "Learn how money is earned and used",
+        "Recognising and using all coins and notes up to ₹500",
+        "Learn the history, usage and evolution of money",
         "Setting saving goals and working towards them",
-        "Understanding the difference between goods & services",
-        "Introduction to sharing and giving"
+        "Starting payday jobs to Understanding the difference between goods & services",
+        "Introduction to sharing and growing your money"
       ],
       color: "#06D6A0"
     },
@@ -175,7 +175,7 @@ export default function LandingPage() {
                 Learn Money Skills <span className="text-[#EE6C4D]">While Having Fun!</span>
               </h1>
               <p className="text-xl text-[#3D5A80] mb-8 leading-relaxed">
-                CoinQuest teaches K-2 kids about saving, spending, investing, and giving through exciting games, quests, and real-world simulations!
+                CoinQuest teaches KG - Class 2 kids about saving, spending, investing, and sharing through stories, exciting games, and real-world simulations!
               </p>
               <div className="flex flex-wrap gap-4">
                 <button

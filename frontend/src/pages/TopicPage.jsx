@@ -33,6 +33,7 @@ export default function TopicPage({ user }) {
   const [htmlFiles, setHtmlFiles] = useState([]);
   const [currentHtmlIndex, setCurrentHtmlIndex] = useState(0);
   const showAnimations = useFirstVisitAnimation(`topic-${topicId}`);
+  const lastCompletedRef = useRef(null);
   
   useEffect(() => {
     fetchTopicData();
@@ -82,8 +83,9 @@ export default function TopicPage({ user }) {
               const response = await axios.post(`${API}/content/items/${selectedContent.content_id}/complete`);
               const coins = response.data.coins_awarded || 0;
               toastFn(`${feedback} Earned ₹${coins}!`, { duration: 4000 });
+              lastCompletedRef.current = selectedContent.content_id;
               // Delay refresh so the user can read feedback before the content list updates
-              setTimeout(() => fetchTopicData(), 2500);
+              setTimeout(() => { closeViewer(); fetchTopicData(); }, 2500);
             } catch (completeError) {
               toastFn(feedback, { duration: 4000 });
             }
@@ -116,6 +118,18 @@ export default function TopicPage({ user }) {
       }
       const res = await axios.get(url);
       setTopic(res.data);
+      
+      // Scroll to last completed item after data loads
+      if (lastCompletedRef.current) {
+        const scrollTarget = lastCompletedRef.current;
+        setTimeout(() => {
+          const el = document.querySelector(`[data-content-id="${scrollTarget}"]`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          lastCompletedRef.current = null;
+        }, 300);
+      }
     } catch (error) {
       toast.error('Failed to load topic');
       navigate('/learn');
@@ -128,6 +142,8 @@ export default function TopicPage({ user }) {
     try {
       const response = await axios.post(`${API}/content/items/${contentId}/complete`);
       toast.success(`Completed! +₹${response.data.coins_awarded || 0}`);
+      lastCompletedRef.current = contentId;
+      closeViewer();
       fetchTopicData();
     } catch (error) {
       if (error.response?.data?.message === 'Already completed') {
@@ -384,6 +400,7 @@ export default function TopicPage({ user }) {
                   return (
                     <div
                       key={content.content_id}
+                      data-content-id={content.content_id}
                       className={`card-playful p-5 opacity-60 cursor-not-allowed bg-gray-50 ${showAnimations ? 'animate-bounce-in' : ''}`}
                       style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
                       onClick={() => toast.info('Complete the previous content first!')}
@@ -427,6 +444,7 @@ export default function TopicPage({ user }) {
                 return (
                   <div
                     key={content.content_id}
+                    data-content-id={content.content_id}
                     className={`card-playful p-5 cursor-pointer hover:scale-[1.01] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/5' : ''}`}
                     style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
                     onClick={() => openContent(content)}

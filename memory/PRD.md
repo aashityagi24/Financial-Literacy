@@ -919,6 +919,10 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Scroll-to-completed content fix** (April 1, 2026)
+  - After a child marks an activity/book as done, the viewer closes and the content list scrolls to the just-completed item (using `scrollIntoView` with `block: 'center'`). Previously scrolled to top, forcing child to scroll down to find where they stopped.
+  - Added `data-content-id` attributes to content item cards and `lastCompletedRef` to track the last completed content ID.
+
 - **Subscription Gating & Pricing Popup** (April 1, 2026)
   - **Signup/Login 403 → Pricing Popup**: Instead of just a toast error, the AuthPage now shows a full PricingSection popup when a user tries to sign up or log in without an active subscription. Users can purchase right there without page shuffling.
   - **No Registration Without Subscription**: Fixed Google OAuth gap where user records were created BEFORE subscription check. Now subscription is verified first; user is only created if subscription exists.
