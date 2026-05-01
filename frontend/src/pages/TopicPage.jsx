@@ -752,7 +752,7 @@ export default function TopicPage({ user }) {
                 }
               </span>
               <div className="flex items-center gap-2">
-                {user?.role === 'child' && (
+                {user?.role === 'child' && selectedContent.content_type !== 'activity' && (
                   <button 
                     onClick={() => { handleCompleteContent(selectedContent.content_id); }}
                     className="btn-primary px-3 py-1.5 text-sm"
@@ -760,6 +760,9 @@ export default function TopicPage({ user }) {
                     <Check className="w-4 h-4 mr-1 inline" />
                     {selectedContent.is_completed ? 'Done' : 'Mark Done'}
                   </button>
+                )}
+                {user?.role === 'child' && selectedContent.content_type === 'activity' && !selectedContent.is_completed && (
+                  <span className="text-xs text-[#3D5A80] italic">Complete the activity to earn reward</span>
                 )}
               </div>
             </div>
