@@ -337,9 +337,10 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
     
     if is_child and user_id:
         completed_docs = await db.user_content_progress.find(
-            {"user_id": user_id, "completed": True}, {"content_id": 1}
+            {"user_id": user_id, "completed": True}, {"content_id": 1, "coins_earned": 1}
         ).to_list(1000)
         completed_content_ids = {doc["content_id"] for doc in completed_docs}
+        coins_earned_map = {doc["content_id"]: doc.get("coins_earned") for doc in completed_docs}
         
         # Progressive unlock for subtopics
         previous_subtopic_completed = True  # First subtopic always unlocked
@@ -372,6 +373,7 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
         for content in content_items:
             content["is_completed"] = content["content_id"] in completed_content_ids
             content["is_unlocked"] = previous_content_completed
+            content["coins_earned"] = coins_earned_map.get(content["content_id"])
             previous_content_completed = content["is_completed"]
     elif is_parent and user_id:
         # For parents: show completion status based on their children's progress
@@ -496,7 +498,8 @@ async def complete_content_item(content_id: str, request: Request):
             "user_id": user_id,
             "content_id": content_id,
             "completed": True,
-            "completed_at": datetime.now(timezone.utc).isoformat()
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+            "coins_earned": reward_coins
         }},
         upsert=True
     )

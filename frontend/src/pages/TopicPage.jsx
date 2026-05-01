@@ -543,7 +543,10 @@ export default function TopicPage({ user }) {
                         <p className="text-base text-[#3D5A80] line-clamp-1">{content.description}</p>
                         {user?.role === 'child' && (
                           <p className={`text-base font-bold mt-1 text-[#06D6A0]`}>
-                            {isCompleted ? '✓ Earned' : '+'} ₹{content.reward_coins}
+                            {isCompleted 
+                              ? `✓ Earned ₹${content.coins_earned != null ? content.coins_earned : content.reward_coins}`
+                              : `+₹${content.reward_coins}`
+                            }
                           </p>
                         )}
                         
@@ -747,7 +750,9 @@ export default function TopicPage({ user }) {
             <div className="px-3 py-1.5 border-t-2 border-[#1D3557] flex justify-between items-center bg-[#FFD23F]/20">
               <span className="text-sm font-bold text-[#06D6A0]">
                 {user?.role === 'child' 
-                  ? (selectedContent.is_completed ? '✓ Reward in wallet' : `+₹${selectedContent.reward_coins}`)
+                  ? (selectedContent.is_completed 
+                      ? `✓ Earned ₹${selectedContent.coins_earned != null ? selectedContent.coins_earned : selectedContent.reward_coins}` 
+                      : `+₹${selectedContent.reward_coins}`)
                   : `Reward: ₹${selectedContent.reward_coins}`
                 }
               </span>
