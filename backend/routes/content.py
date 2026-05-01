@@ -172,11 +172,12 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                 subtopic["is_unlocked"] = previous_subtopic_completed
                 topic["completed_count"] += subtopic_completed_count
                 
-                if not subtopic["is_completed"]:
+                if not subtopic["is_completed"] and subtopic["content_count"] > 0:
                     all_subtopics_completed = False
                 previous_subtopic_completed = subtopic["is_completed"]
             
-            topic["is_completed"] = all_subtopics_completed and len(subtopics) > 0
+            has_any_content = topic["total_content"] > 0
+            topic["is_completed"] = all_subtopics_completed and has_any_content
             previous_topic_completed = topic["is_completed"]
         else:
             for subtopic in subtopics:
