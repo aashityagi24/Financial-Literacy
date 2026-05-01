@@ -472,6 +472,24 @@ async def complete_content_item(content_id: str, request: Request):
     
     reward_coins = item.get("reward_coins", 5)
     
+    # Performance-based reward tiering for activities with scores
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        pass
+    percentage = body.get("percentage")
+    if percentage is not None:
+        try:
+            pct = float(percentage)
+            if pct < 50:
+                reward_coins = 1  # Poor performance
+            elif pct < 80:
+                reward_coins = 3  # Okay performance
+            # else: full reward_coins (great performance)
+        except (ValueError, TypeError):
+            pass
+    
     await db.user_content_progress.update_one(
         {"user_id": user_id, "content_id": content_id},
         {"$set": {

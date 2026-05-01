@@ -81,9 +81,17 @@ export default function TopicPage({ user }) {
           // Auto-complete the content if not already completed
           if (!selectedContent.is_completed) {
             try {
-              const response = await axios.post(`${API}/content/items/${selectedContent.content_id}/complete`);
+              const response = await axios.post(`${API}/content/items/${selectedContent.content_id}/complete`, {
+                percentage: pct
+              });
               const coins = response.data.coins_awarded || 0;
-              toastFn(`${feedback} Earned ₹${coins}!`, { duration: 4000 });
+              if (pct >= 80) {
+                toastFn(`${feedback} Earned ₹${coins}!`, { duration: 4000 });
+              } else if (pct >= 50) {
+                toastFn(`${feedback} Earned ₹${coins}. Score higher for more!`, { duration: 4000 });
+              } else {
+                toastFn(`${feedback} Earned ₹${coins}. Try again for a bigger reward!`, { duration: 4000 });
+              }
               lastCompletedRef.current = selectedContent.content_id;
               // Close viewer after delay, then silently refresh in background
               setTimeout(() => { closeViewer(); fetchTopicData(true); }, 2500);
