@@ -207,6 +207,12 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                     subtopic_content_query = {"topic_id": subtopic["topic_id"], "is_published": True}
                 subtopic["content_count"] = await db.content_items.count_documents(subtopic_content_query)
     
+    # Filter out empty topics/subtopics for non-admin users
+    if not is_admin:
+        for topic in parent_topics:
+            topic["subtopics"] = [st for st in topic.get("subtopics", []) if st.get("content_count", 0) > 0]
+        parent_topics = [t for t in parent_topics if t.get("content_count", 0) > 0 or len(t.get("subtopics", [])) > 0]
+    
     return parent_topics
 
 @router.get("/content/topics/{topic_id}")
@@ -402,6 +408,10 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
             ).to_list(100)
             subtopic["completed_count"] = sum(1 for c in subtopic_content if c["content_id"] in completed_content_ids)
             subtopic["content_count"] = len(subtopic_content)
+    
+    # Filter out empty subtopics for non-admin users
+    if not is_admin:
+        subtopics = [st for st in subtopics if st.get("content_count", 0) > 0]
     
     return {"topic": topic, "subtopics": subtopics, "content_items": content_items}
 

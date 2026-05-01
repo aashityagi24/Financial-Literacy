@@ -923,6 +923,10 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - After a child marks an activity/book as done, the viewer closes and the content list scrolls to the just-completed item (using `scrollIntoView` with `block: 'center'`). Previously scrolled to top, forcing child to scroll down to find where they stopped.
   - Added `data-content-id` attributes to content item cards and `lastCompletedRef` to track the last completed content ID.
 
+- **Hide Empty Topics/Subtopics from Users** (May 1, 2026)
+  - Topics and subtopics with zero content items are now hidden from non-admin users (children, parents, teachers). Admin still sees everything for management.
+  - Applied in both `get_all_topics` (LearnPage listing) and `get_topic_detail` (TopicPage subtopics).
+
 - **Smoother Activity Completion & Reward Messaging** (April 1, 2026)
   - Silent background refresh after activity score capture: `fetchTopicData(true)` skips the loading spinner, so the content list updates seamlessly without a jarring full-page reload.
   - When child clicks "Done" after reward was already given via score capture: shows "Done! Reward already added to your wallet" instead of confusing "+₹0".
