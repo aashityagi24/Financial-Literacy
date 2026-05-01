@@ -30,6 +30,7 @@ export default function TopicPage({ user }) {
   const [loading, setLoading] = useState(true);
   const [selectedContent, setSelectedContent] = useState(null);
   const [showViewer, setShowViewer] = useState(false);
+  const [contentFilter, setContentFilter] = useState('all');
   const [htmlFiles, setHtmlFiles] = useState([]);
   const [currentHtmlIndex, setCurrentHtmlIndex] = useState(0);
   const showAnimations = useFirstVisitAnimation(`topic-${topicId}`);
@@ -392,11 +393,42 @@ export default function TopicPage({ user }) {
         {/* Content Items */}
         {topic.content_items?.length > 0 && (
           <div>
-            <h2 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
-              📖 Learning Content
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                📖 Learning Content
+              </h2>
+              {user?.role === 'child' && (
+                <div className="flex gap-1.5 bg-white rounded-xl p-1 border-2 border-[#1D3557]/10" data-testid="content-filter-tabs">
+                  {[
+                    { key: 'all', label: 'All' },
+                    { key: 'pending', label: 'Pending' },
+                    { key: 'completed', label: 'Done' },
+                  ].map(f => (
+                    <button
+                      key={f.key}
+                      onClick={() => setContentFilter(f.key)}
+                      data-testid={`content-filter-${f.key}`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        contentFilter === f.key
+                          ? 'bg-[#1D3557] text-white shadow-sm'
+                          : 'text-[#3D5A80] hover:bg-[#1D3557]/10'
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="space-y-4">
-              {topic.content_items.map((content, index) => {
+              {topic.content_items
+                .filter(content => {
+                  if (user?.role !== 'child' || contentFilter === 'all') return true;
+                  if (contentFilter === 'completed') return content.is_completed;
+                  if (contentFilter === 'pending') return !content.is_completed;
+                  return true;
+                })
+                .map((content, index) => {
                 const config = CONTENT_TYPE_CONFIG[content.content_type] || CONTENT_TYPE_CONFIG.worksheet;
                 const Icon = config.icon;
                 const isChild = user?.role === 'child';
