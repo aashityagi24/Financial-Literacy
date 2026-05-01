@@ -253,7 +253,7 @@ function SortableSubtopicItem({ subtopic, isSelected, onSelect, onEdit, onDelete
 }
 
 // Sortable Content Item Component for Lesson Plan
-function SortableContentItem({ content, onEdit, onDelete, onMove, typeConfig }) {
+function SortableContentItem({ content, onEdit, onDelete, onMove, onTogglePublish, typeConfig }) {
   const {
     attributes,
     listeners,
@@ -317,13 +317,13 @@ function SortableContentItem({ content, onEdit, onDelete, onMove, typeConfig }) 
             Grade {gradeLabel}-{maxGradeLabel}
           </span>
           {content.is_published ? (
-            <span className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-600 flex items-center gap-1">
+            <button onClick={onTogglePublish} className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-600 flex items-center gap-1 hover:bg-green-200 transition-colors cursor-pointer" title="Click to set as Draft">
               <Eye className="w-3 h-3" /> Live
-            </span>
+            </button>
           ) : (
-            <span className="text-xs px-2 py-0.5 rounded bg-gray-200 text-gray-600 flex items-center gap-1">
+            <button onClick={onTogglePublish} className="text-xs px-2 py-0.5 rounded bg-gray-200 text-gray-600 flex items-center gap-1 hover:bg-gray-300 transition-colors cursor-pointer" title="Click to set as Live">
               <EyeOff className="w-3 h-3" /> Draft
-            </span>
+            </button>
           )}
           {content.visible_to && content.visible_to.length > 0 && (
             <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-600">
@@ -1537,6 +1537,7 @@ export default function ContentManagement({ user }) {
                             onEdit={() => openEditContent(content)}
                             onDelete={() => deleteContent(content.content_id)}
                             onMove={() => openMoveContent(content)}
+                            onTogglePublish={() => togglePublish(content.content_id)}
                           />
                         );
                       })}
