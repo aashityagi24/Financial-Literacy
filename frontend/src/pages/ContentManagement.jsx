@@ -410,9 +410,21 @@ export default function ContentManagement({ user }) {
       return;
     }
     fetchData();
+    
+    // Poll for updates every 15 seconds (silent)
+    const pollInterval = setInterval(() => fetchData(true), 15000);
+    
+    // Refresh when tab regains focus
+    const handleFocus = () => fetchData(true);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [user, navigate]);
   
-  const fetchData = async () => {
+  const fetchData = async (silent = false) => {
     try {
       const [topicsRes, contentRes] = await Promise.all([
         axios.get(`${API}/admin/content/topics`),
@@ -421,9 +433,9 @@ export default function ContentManagement({ user }) {
       setTopics(topicsRes.data);
       setAllContent(contentRes.data);
     } catch (error) {
-      toast.error('Failed to load data');
+      if (!silent) toast.error('Failed to load data');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
   
