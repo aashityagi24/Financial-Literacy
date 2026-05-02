@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
 import { uploadFile } from '@/utils/chunkedUpload';
@@ -364,6 +364,7 @@ function SortableContentItem({ content, onEdit, onDelete, onMove, onTogglePublis
 
 export default function ContentManagement({ user }) {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('topics');
   const [topics, setTopics] = useState([]);
   const [allContent, setAllContent] = useState([]);
@@ -375,9 +376,35 @@ export default function ContentManagement({ user }) {
   const [repoTypeFilter, setRepoTypeFilter] = useState('all'); // 'all', 'subtopic', 'content'
   const [repoTopicFilter, setRepoTopicFilter] = useState('all');
   
-  // Selection states
-  const [selectedTopic, setSelectedTopic] = useState(null);
-  const [selectedSubtopic, setSelectedSubtopic] = useState(null);
+  // Selection states - synced with URL params
+  const [selectedTopic, _setSelectedTopic] = useState(null);
+  const [selectedSubtopic, _setSelectedSubtopic] = useState(null);
+  
+  const setSelectedTopic = (topicOrUpdater) => {
+    _setSelectedTopic(prev => {
+      const topic = typeof topicOrUpdater === 'function' ? topicOrUpdater(prev) : topicOrUpdater;
+      const params = new URLSearchParams(searchParams);
+      if (topic) {
+        params.set('topic', topic.topic_id);
+      } else {
+        params.delete('topic');
+        params.delete('subtopic');
+      }
+      setSearchParams(params, { replace: true });
+      return topic;
+    });
+  };
+  
+  const setSelectedSubtopic = (subtopic) => {
+    _setSelectedSubtopic(subtopic);
+    const params = new URLSearchParams(searchParams);
+    if (subtopic) {
+      params.set('subtopic', subtopic.topic_id);
+    } else {
+      params.delete('subtopic');
+    }
+    setSearchParams(params, { replace: true });
+  };
   
   // Dialog states
   const [showTopicDialog, setShowTopicDialog] = useState(false);
@@ -432,6 +459,22 @@ export default function ContentManagement({ user }) {
       ]);
       setTopics(topicsRes.data);
       setAllContent(contentRes.data);
+      
+      // Restore selections from URL params on initial load
+      if (!silent) {
+        const topicParam = searchParams.get('topic');
+        const subtopicParam = searchParams.get('subtopic');
+        if (topicParam) {
+          const topic = topicsRes.data.find(t => t.topic_id === topicParam);
+          if (topic) {
+            setSelectedTopic(topic);
+            if (subtopicParam) {
+              const subtopic = topic.subtopics?.find(st => st.topic_id === subtopicParam);
+              if (subtopic) setSelectedSubtopic(subtopic);
+            }
+          }
+        }
+      }
     } catch (error) {
       if (!silent) toast.error('Failed to load data');
     } finally {
