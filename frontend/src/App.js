@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import axios from "axios";
 import { Toaster } from "@/components/ui/sonner";
 
 // Pages
 import LandingPage from "@/pages/LandingPage";
+import ExplorePage from "@/pages/ExplorePage";
 import AuthCallback from "@/pages/AuthCallback";
 import RoleSelection from "@/pages/RoleSelection";
 import Dashboard from "@/pages/Dashboard";
@@ -193,6 +195,7 @@ function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/explore" element={<ExplorePage />} />
       <Route path="/login" element={<AuthPage />} />
       <Route path="/signup" element={<AuthPage />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
@@ -392,9 +395,11 @@ function App() {
   return (
     <div className="min-h-screen">
       <ContentProtection />
+      <HelmetProvider>
       <BrowserRouter>
         <AppRouter />
       </BrowserRouter>
+      </HelmetProvider>
       <Toaster position="top-right" richColors />
       <UploadProgressBar progress={progress} />
     </div>

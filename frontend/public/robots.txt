@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /explore
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /wallet
+Disallow: /learn
+Disallow: /quests
+Disallow: /store
+Disallow: /api/
+
+Sitemap: https://learnersplanet.com/sitemap.xml
