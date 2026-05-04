@@ -20,51 +20,6 @@ def get_db():
 
 # ============== USER CONTENT ROUTES ==============
 
-# ============== PUBLIC SEO ROUTES (no auth) ==============
-
-@router.get("/public/topics")
-async def get_public_topics():
-    """Public endpoint for SEO - returns published topics with names, descriptions, and content counts (no auth required)"""
-    db = get_db()
-    
-    all_topics = await db.content_topics.find(
-        {"is_published": True},
-        {"_id": 0, "topic_id": 1, "title": 1, "description": 1, "image_url": 1, "parent_id": 1, "order": 1}
-    ).sort("order", 1).to_list(100)
-    
-    parent_topics = [t for t in all_topics if not t.get("parent_id")]
-    subtopic_map = {}
-    for t in all_topics:
-        if t.get("parent_id"):
-            subtopic_map.setdefault(t["parent_id"], []).append(t)
-    
-    result = []
-    for topic in parent_topics:
-        subtopics = subtopic_map.get(topic["topic_id"], [])
-        # Count published content items
-        content_count = await db.content_items.count_documents({"topic_id": topic["topic_id"], "is_published": True})
-        for st in subtopics:
-            st_count = await db.content_items.count_documents({"topic_id": st["topic_id"], "is_published": True})
-            st["content_count"] = st_count
-            content_count += st_count
-        
-        # Only include topics with content
-        subtopics_with_content = [st for st in subtopics if st.get("content_count", 0) > 0]
-        direct_content = await db.content_items.count_documents({"topic_id": topic["topic_id"], "is_published": True})
-        if direct_content > 0 or len(subtopics_with_content) > 0:
-            topic["subtopics"] = subtopics_with_content
-            topic["total_content"] = content_count
-            # Get sample content titles for SEO
-            sample_content = await db.content_items.find(
-                {"topic_id": {"$in": [topic["topic_id"]] + [st["topic_id"] for st in subtopics]}, "is_published": True},
-                {"_id": 0, "title": 1, "content_type": 1, "description": 1}
-            ).sort("order", 1).limit(10).to_list(10)
-            topic["sample_content"] = sample_content
-            result.append(topic)
-    
-    return result
-
-
 
 @router.get("/content/topics")
 async def get_all_topics(request: Request, grade: Optional[int] = None):

@@ -12,160 +12,160 @@ The user wants to create a gamified financial literacy learning application, Coi
 - Audio guide uploads and global upload progress indicators.
 - Permanent deletion and CSV downloads for school enquiries and checkout leads.
 - Admin notifications for new subscriptions, leads, and enquiries.
+- Robust UI/UX for the Learn module (progressive unlock, hiding empty topics, filtering, smooth scrolling).
+- Performance-based rewards for activities.
+- Multi-admin real-time syncing for Content Management.
 
 **User's preferred language**: English
-*(Note to next agent: ALWAYS respond in English)*
 
 **what currently exists?** 
-The application is a comprehensive financial literacy platform with robust admin capabilities, tiered SaaS pricing, chunked large-file uploads, and gamified learning. The recent session overhauled the subscription pricing to support tiered per-child rates, fixed several UI/UX bugs (payment gateway overlays, sudden page refreshes, state resets), improved the My Jobs guide with paginated audio popups, implemented a global upload progress bar, and added delete/CSV capabilities to admin lead management.
+The application is a comprehensive financial literacy platform with robust admin capabilities, tiered SaaS pricing, and gamified learning. In this session, the agent completed a massive polish of the Learn module (progressive unlocks, hiding empty topics, performance-based coin rewards, smooth scrolling to completed tasks, removing fractions from progress indicators, and fixing HTML book rendering). The agent also stabilized the Admin Content Management system (adding missing move endpoints, adding real-time polling for multi-admin collaboration, and persisting state in URL params). An attempt was made to add SEO features, but the user explicitly requested to revert them, which the agent successfully did.
 
 **Last working item**: 
-- **Last item agent was working:** Implementing Admin notifications for new subscriptions, new checkout leads, and new school enquiries. The agent had just added a  helper in  and was exploring  to trigger these notifications when the context ended.
-- **Status:** IN PROGRESS
-- **Agent Testing Done:** N
-- **Which testing method agent to use?** backend testing agent for the notification triggers, followed by manual UI verification via screenshot tool to ensure the notifications appear in the admin's notification center.
+- **Last item agent was working:** Reverting SEO changes. The agent had previously implemented SEO tags, a public Explore page, robots.txt, and a public API endpoint. The user requested to roll these back, so the agent removed all related code (, , backend public routes, index.html meta tags).
+- **Status:** COMPLETED
+- **Agent Testing Done:** Y
+- **Which testing method agent to use?** NA (already done and reverted cleanly)
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-Issue 1: Failed to initiate payment error on the live site (Production Deployment Issue) - P1
-Issue 2: Badge images missing and require manual re-upload (Data loss from older fork) - P2
+  Issue 1: Failed to initiate payment error on the live site (Production Deployment Issue) - P1
+  Issue 2: Badge images missing and require manual re-upload (Data loss from older fork) - P2
 
-Issues Detail:
-- Issue 1:
-   - Attempted fixes: Added enhanced error logging to provide specific error messages on the frontend.
-   - Next debug checklist: Advise the user to redeploy their application on their live domain to ensure the latest code and environment variables are active. Look at production logs if the issue persists.
-   - Why fix this issue and what will be achieved with the fix? Critical for application monetization.
-   - Status: BLOCKED (Awaiting user redeployment)
-   - Is recurring issue? N
-   - Should Test frontend/backend/both after fix? Backend (confirming logs on production)
-   - Blocked on other issue: No
-- Issue 2:
-   - Attempted fixes: None possible via code.
-   - Next debug checklist: Remind the user that the admin must manually re-upload the images for each badge via the Badge Management section of the admin panel.
-   - Why fix this issue and what will be achieved with the fix? Restores visual gamification appeal.
-   - Status: BLOCKED (requires user action)
-   - Is recurring issue? Y
-   - Should Test frontend/backend/both after fix? NA
-   - Blocked on other issue: No
+  Issues Detail:
+  - Issue 1: 
+     - Attempted fixes: Added enhanced error logging to provide specific error messages on the frontend.
+     - Next debug checklist: Advise the user to redeploy their application on their live domain to ensure the latest code and environment variables are active. Look at production logs if the issue persists.
+     - Why fix this issue and what will be achieved with the fix? Critical for application monetization.
+     - Status: BLOCKED (Awaiting user redeployment)
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Backend
+     - Blocked on other issue: None
+  - Issue 2: 
+     - Attempted fixes: None possible via code.
+     - Next debug checklist: Remind the user that the admin must manually re-upload the images for each badge via the Badge Management section of the admin panel.
+     - Why fix this issue and what will be achieved with the fix? Restores visual gamification appeal.
+     - Status: BLOCKED (Requires manual user action)
+     - Is recurring issue? Y
+     - Should Test frontend/backend/both after fix? NA
+     - Blocked on other issue: None
 
 **In progress Task List**:
-Task 1: Admin Notifications for System Events (P0)
+None.
 
-Task Detail:
-- Task 1:
-   - Where to resume: Resume in  and . Call the newly added  helper function (from ) when a checkout lead is captured, a school enquiry is submitted, or a subscription is activated.
-   - What will be achieved with this? Admins will be actively alerted in their dashboard when crucial revenue/lead events occur.
-   - Status: IN PROGRESS
-   - Should Test frontend/backend/both after fix? Both
-   - Blocked on something: None
+**Upcoming and Future Tasks**
+    Upcoming Tasks:
+    - P1: Implement Streak Bonuses & Leaderboards.
+    - P1: Implement Safety Guardrails: Add spending limits and parent approval for large transactions.
 
-**Upcoming and Future Tasks**:
-Upcoming Tasks:
-- P1: Implement Streak Bonuses & Leaderboards.
-- P1: Implement Safety Guardrails: Add spending limits and parent approval for large transactions.
+    Future Tasks:
+    - P2: Teacher/Parent Collaboration Portal.
+    - P2: Collaborative & Seasonal Events.
+    - P2: Tutorial System for new users.
 
-Future Tasks:
-- P2: Teacher/Parent Collaboration Portal.
-- P2: Collaborative & Seasonal Events.
-- P2: Tutorial System for new users.
+**Completed work in this session**
+- Admin Notifications: Wired  to checkout leads, school enquiries, and subscriptions. Added NotificationCenter to Admin header. (DONE)
+- Learn UI - Progressive Unlock: Fixed backend so subtopics enforce progressive unlocking on . (DONE)
+- Learn UI - Removed fractions: Changed 2/20 Done to clean counts (2 Subtopics, 5 Items) for children. (DONE)
+- HTML Zip Book Rendering: Filtered out Mac OS X  and  resource fork files from zip extraction and API responses so iframes don't download binary files. (DONE)
+- Content/Subtopic Move endpoints: Added missing  endpoints to  (legacy code migrated). (DONE)
+- Nomenclature Change: Renamed Gifting to Giving across all frontend display text (kept underlying  as 'gifting'). (DONE)
+- Subscription Gating: Fixed Google SSO to check subscription *before* creating a user record. Added full-screen  popup on AuthPage for 403 errors instead of generic toasts. (DONE)
+- Learn UI - Scroll to Complete: Page now smoothly scrolls to the specific activity just completed instead of resetting to the top. (DONE)
+- Learn UI - Smoother completion: Silent background refresh prevents jarring loading spinners after sending scores. (DONE)
+- Hide Empty Topics: Topics/subtopics with 0 content items are now hidden from non-admin users. (DONE)
+- Content Filter: Added All / Pending / Done filter tabs inside subtopics for children. (DONE)
+- Topic Completion logic: Fixed bug where topics weren't marked done because empty subtopics were evaluating to incomplete. (DONE)
+- Performance-Based Rewards: Activities now grant tiered rewards based on percentage score (Poor=₹1, Okay=₹3, Great=full admin amount). (DONE)
+- Disable Manual Mark Done: Hidden for interactive activities so children are forced to attempt them for a score. (DONE)
+- Show Actual Earnings: Topic list now shows  (e.g., +₹3) instead of the blanket admin setting (+₹5) if performance was lower. (DONE)
+- Content Management - Live/Draft Toggle: Made the status badge clickable directly in the list view. (DONE)
+- Content Management - Multi-Admin Syncing: Added 15s silent background polling and window-focus refresh to prevent overriding concurrent admin edits. (DONE)
+- Content Management - State Persistence: Synced  and  to URL search params to survive manual page refreshes. (DONE)
+- SEO Implementation & Revert: Implemented React Helmet, an Explore page, and public APIs, but completely reverted all of it at user's explicit request. (DONE)
 
-**Completed work in this session**:
-- Linked Users Dialog & Renewal Badge in Admin Subscriptions (DONE)
-- Savings goal Insufficient Balance bug fix (deducting from savings instead of spending) (DONE)
-- Parent Shopping List state reset bug fix (DONE)
-- Parent Job Guide UI addition, Popup Dialog overhaul, Pagination, and Admin per-page audio uploads (DONE)
-- Tiered Child Pricing overhaul: cheaper rates for 2nd/3rd/4th/5th children, dynamic card updates (DONE)
-- Pricing cards UI simplified (removed extra pricing text) (DONE)
-- Sudden page refresh fix after completing a learning activity (added 2.5s delay) (DONE)
-- Missing transaction record fix for learning activity completion rewards (now shows in Recent Activity) (DONE)
-- Payment Gateway overlay bug fix (closing checkout dialog before Razorpay opens to fix z-index block) (DONE)
-- Audio file routing fix ( instead of ) (DONE)
-- Global Upload Progress Bar implemented () integrated with  (DONE)
-- Permanent Delete and CSV Download for Enquiries and Checkout Leads (Admin Panel) (DONE)
+**Earlier issues found/mentioned but not fixed**
+None.
 
-**Earlier issues found/mentioned but not fixed**:
-- None identified; all user-reported bugs within this context window were addressed.
+**Known issue recurrence from previous fork**
+  - Issue recurrence in previous fork: Badge images are missing permanently due to a data loss event in an older fork.
+  - Recurrence count: 1
+  - Status: BLOCKED
 
-**Known issue recurrence from previous fork**:
-- Issue recurrence in previous fork: Badge images are missing permanently due to a data loss event in an older fork.
-- Recurrence count: 1
-- Status: BLOCKED (Requires manual admin action to re-upload).
-
-**Code Architecture**:
+**Code Architecture**
 
 
-**Key Technical Concepts**:
-- **React Context/State:** Advanced React state managing file uploads, dynamic pricing calculation, popup overlaps, and paginated dialogs.
-- **Chunked File Uploads:** A resilient file upload utility handling files >512KB by sending them in chunks and reassembling on the backend. Extended with a global floating progress UI.
-- **Razorpay Integration:** Live keys processing real subscriptions, with explicit z-index management to prevent UI locking.
+**Key Technical Concepts**
+- React Context/State, URL Search Params (for persisting state across refreshes)
+-  API (used for iframe activity score capturing)
+- Google OAuth and Razorpay Subscription gating.
 
-**Key DB schema**:
-- : Contains base_price and  (array).
-- : Added  types for activities.
-- : Contains , ,  (array),  (array).
--  & : Track pre-conversion data.
+**key DB schema**
+  - : Added/utilized  based on performance score.
+  - : Contains , , .
 
-**Changes in tech stack**: None.
+**changes in tech stack**
+  -  was briefly installed but uninstalled per user request. No lasting changes.
 
-**All files of reference**:
--  (Currently being edited for admin notifications)
--  (Needs notification trigger injection)
--  (New global UI component)
--  (New interactive job guide)
--  (Modified for global progress and better error logging)
+**All files of reference**
+-  (Heavily modified for unlocking, filtering, tiered rewards, and move endpoints)
+-  (Fixed Google SSO subscription gating)
+-  (Massive UX overhaul: scrolling, filters, hiding Mark Done, silent polling)
+-  (Polling, URL params, toggles)
+-  and  (Fixed  zip extraction)
 
 **Areas that need refactoring**:
-- The Razorpay payment failure issue might need a secondary fallback if production redeployment fails. No immediate refactoring needed, just observation.
+-  and  are becoming extremely large and might benefit from component breakdown in future tasks.
 
-**Key API endpoints**:
--  and  (New)
--  and  (New)
--  (Updated for tiered pricing arrays)
--  (Updated to insert transaction logs)
+**key api endpoints**
+-  (Modified to accept percentage for tiered rewards)
+-  (Migrated from legacy code)
+-  (Migrated from legacy code)
 
-**Critical Info for New Agent**:
-- **Current Blocker:** You are mid-way through adding Admin notifications. You must hook up the newly created  function inside endpoints where checkout leads, school enquiries, and subscriptions are created.
-- **Upload Progress:**  now natively supports global progress rendering. You do not need to add progress states to individual upload components.
-- **Audio Routing:** The backend now properly serves audio from .
-- **Payment Issue:** Do not touch the Razorpay implementation unless the user comes back with production logs confirming it is still broken after their redeployment. It is considered a localized production environment mismatch.
+**Critical Info for New Agent**
+- **Gifting vs Giving**: The UI display text was changed from Gifting to Giving, but the backend database and code identifiers still use . Do not rename the underlying object keys.
+- **SEO**: The user explicitly asked to roll back the SEO features (Helmet, Explore Page). Do not attempt to add SEO again unless specifically requested.
+- **Auth Subscription Gating**:  now strictly requires an active subscription *before* creating a user via Google SSO.
 
-**Documents and test reports created in this job**:
--  (Updated continuously)
--  (Linked users/renewal tests)
--  (Tiered pricing tests)
--  &  (DB Exports)
+**documents and test reports created in this job**
+  - /app/memory/PRD.md
+  - /app/memory/test_credentials.md (Created)
+  - /app/test_reports/iteration_61.json
+  - /app/test_reports/iteration_62.json
+  - /app/test_reports/iteration_63.json
 
-**Last 10 User Messages and any pending HUMAN messages**:
-10. (Feature Request) Remove extra pricing details from the card, keep only base price and 1 child included.
-9. (UI Fix) Remove 1 PARENT LOGIN... subtitle.
-8. (UI Tweak) Move child selection out of checkout modal back to the main pricing page.
-7. (Bug) Price isn't updating on card based on child count selection.
-6. (Bug) Sudden refresh when activity completes; money earned doesn't show in Recent Activity.
-5. (Request) Give me DB structure to import to other hosting. (Agent exported full dump).
-4. (Request) I just want DB structure, no data. (Agent exported schema).
-3. (Bug) Payment gateway buttons aren't clickable until clicking outside (z-index issue).
-2. (Bug/Feature) Audio uploads for Job Guide failing; change audio to be per-page instead of single track; add upload progress bar globally.
-1. (Feature Request) Allow admin to permanently delete enquiries and checkout leads, and download them as CSV. Add admin notifications for new subscriptions, leads, and enquiries. -> *Pending Action: Finish notification triggers.*
+**Last 10 User Messages and any pending HUMAN messages** 
+10. (Bug) I have compleetd the subtopics but the topic is still not being marked as completed (Fixed - empty subtopics were blocking it)
+9. (Feature) For activities where the score is being sent... dont give blanket amount... poor=1 rs, okay=3 rs, great=amount added by admin (Fixed - tiered rewards added)
+8. (Feature) disable manual mark done so that the child needs to attempt the activity? (Fixed - hidden for activity types)
+7. (Bug) it should show how much they earned instead of blanket amount... in their activity history (Fixed -  tracked and displayed)
+6. (Feature) Add live and draft toggle on the outside agianst each content piece (Fixed - added clickable toggle to Lesson Plan list)
+5. (Bug) When multiple users are using admin... changes made by one are not showing up (Fixed - added 15s polling to Content Management)
+4. (Bug) When a manual refresh is done... it doesnt always reload the same page - especially in the content management (Fixed - state synced to URL search params)
+3. (Question) The descriptions and names of activities that we put - will they have google seo (Agent asked via  to proceed with implementing it)
+2. (User) do b. (Agent implemented SEO)
+1. (Bug) I rolled back the seo changes - have they been removed now? (Agent verified they were still in the codebase, asked if they should be deleted, user said yes, agent deleted them all). -> *Status: COMPLETED. No pending tasks.*
 
-**Project Health Check**:
+**Project Health Check:**
 - Broken: Razorpay payment specifically on the production domain (blocked by user redeployment).
 - Mocked: None.
 
-**3rd Party Integrations**:
+**3rd Party Integrations**
 - OpenAI GPT-4o — uses Emergent LLM Key (Not explicitly used this session but present)
-- Razorpay (Payments) — requires User API Key (Live test keys in environment)
+- Razorpay (Payments) — requires User API Key
 - Google OAuth — requires User Client ID/Secret
 
-**Testing status**:
-- Testing agent used after significant changes: YES (iteration 59 & 60)
+**Testing status**
+- Testing agent used after significant changes: YES (iterations 61, 62, 63)
 - Troubleshoot agent used after agent stuck in loop: NO
-- Test files created: None this session.
-- Known regressions: Permanent loss of older user-uploaded badge images (requires manual user re-upload).
+- Test files created: None
+- Known regressions: Missing badge images from old fork (requires manual re-upload).
 
-**Credentials to test flow**:
+**Credentials to test flow:**
 - Admin:  / 
 - Teacher:  / 
 - Child:  / 
+- Parent:  (SSO/session token used in tests)
 
-**What agent forgot to execute**:
-The agent successfully finished the delete & CSV feature but did not finish wiring up the  function for new subscriptions made, new checkout leads or new school enquiries as requested in the final user message. The next agent must complete this.</analysis>
+**What agent forgot to execute**
+The agent successfully completed all user requests, including the final request to completely purge the SEO code. Nothing was forgotten.</analysis>

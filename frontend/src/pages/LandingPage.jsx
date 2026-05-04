@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, School, Play, Pause } from 'lucide-react';
-import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import { toast } from 'sonner';
 import PricingSection from '@/components/PricingSection';
@@ -142,28 +141,6 @@ export default function LandingPage() {
   
   return (
     <div className="min-h-screen bg-[#E0FBFC]">
-      <Helmet>
-        <title>CoinQuest by Learners Planet - Financial Literacy for Kids K-5</title>
-        <meta name="description" content="CoinQuest teaches children K-5 about saving, spending, investing, and giving through interactive games, quests, and real-world simulations. Make financial literacy fun!" />
-        <meta property="og:title" content="CoinQuest - Financial Literacy for Kids K-5" />
-        <meta property="og:description" content="Interactive financial literacy platform for children. Learn money skills through games, digital wallets, virtual stores, and gamified quests." />
-        <meta property="og:type" content="website" />
-        <meta name="keywords" content="financial literacy for kids, money management for children, K-5 education, interactive learning, CoinQuest, Learners Planet, saving for kids, spending habits, digital wallet for kids" />
-        <link rel="canonical" href={window.location.origin} />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "EducationalOrganization",
-          "name": "CoinQuest by Learners Planet",
-          "description": "Interactive financial literacy platform for children K-5",
-          "url": window.location.origin,
-          "sameAs": [],
-          "offers": {
-            "@type": "Offer",
-            "category": "Education",
-            "description": "Financial literacy subscription for families"
-          }
-        })}</script>
-      </Helmet>
       
       {/* Hero Section */}
       <header className="relative overflow-hidden">
@@ -182,9 +159,6 @@ export default function LandingPage() {
               />
             </div>
             <div className="flex items-center gap-3">
-              <Link to="/explore" className="text-[#3D5A80] hover:text-[#1D3557] font-bold transition-colors px-3 py-2" data-testid="explore-link-nav">
-                Explore Curriculum
-              </Link>
               <button
                 data-testid="login-btn-nav"
                 onClick={() => navigate('/login')}
