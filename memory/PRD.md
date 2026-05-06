@@ -8,7 +8,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 ### Core MVP ✅
 - User authentication (Custom Google OAuth + Admin login + School login)
 - Role-based dashboards (Admin, Teacher, Parent, Child)
-- Content management system with drag-and-drop reordering
+- Content management system with drag-and-drop reordering (now **grade-specific** when a grade filter is applied — same item can have different positions per grade)
 - Virtual store with categories and items
 - Wallet system (Spending, Savings, Gifting jars)
 - User connections (Parent-Child, Teacher-Classroom)

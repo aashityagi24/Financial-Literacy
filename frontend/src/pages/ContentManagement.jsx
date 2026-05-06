@@ -489,6 +489,20 @@ export default function ContentManagement({ user }) {
     return item.min_grade <= grade && item.max_grade >= grade;
   };
   
+  // Returns the order to use for the active grade filter.
+  // When a grade is selected, prefer grade_orders[grade] (set when admin
+  // reorders within a specific grade). Falls back to the global `order`.
+  const effectiveOrder = (item) => {
+    if (!item) return 0;
+    if (gradeFilter !== 'all') {
+      const go = item.grade_orders;
+      if (go && go[gradeFilter] !== undefined && go[gradeFilter] !== null) {
+        return go[gradeFilter];
+      }
+    }
+    return item.order || 0;
+  };
+  
   // Filtered data based on grade filter
   const filteredTopics = topics.filter(matchesGradeFilter).map(topic => ({
     ...topic,
@@ -679,22 +693,24 @@ export default function ContentManagement({ user }) {
   };
   
   const moveContent = async (contentId, direction) => {
-    const subtopicContent = allContent
+    const subtopicContentList = allContent
       .filter(c => c.topic_id === selectedSubtopic?.topic_id)
-      .sort((a, b) => a.order - b.order);
+      .sort((a, b) => effectiveOrder(a) - effectiveOrder(b));
     
-    const index = subtopicContent.findIndex(c => c.content_id === contentId);
+    const index = subtopicContentList.findIndex(c => c.content_id === contentId);
     const newIndex = index + direction;
     
-    if (newIndex < 0 || newIndex >= subtopicContent.length) return;
+    if (newIndex < 0 || newIndex >= subtopicContentList.length) return;
     
-    const newItems = [...subtopicContent];
+    const newItems = [...subtopicContentList];
     [newItems[index], newItems[newIndex]] = [newItems[newIndex], newItems[index]];
     
     const reorderData = newItems.map((item, i) => ({ id: item.content_id, order: i }));
+    const payload = { items: reorderData };
+    if (gradeFilter !== 'all') payload.grade = gradeFilter;
     
     try {
-      await axios.post(`${API}/admin/content/items/reorder`, { items: reorderData });
+      await axios.post(`${API}/admin/content/items/reorder`, payload);
       fetchData();
     } catch (error) {
       toast.error('Failed to reorder');
@@ -703,7 +719,7 @@ export default function ContentManagement({ user }) {
   
   // Move topic up or down
   const moveTopic = async (topicId, direction) => {
-    const parentTopics = topics.sort((a, b) => (a.order || 0) - (b.order || 0));
+    const parentTopics = [...topics].sort((a, b) => effectiveOrder(a) - effectiveOrder(b));
     const index = parentTopics.findIndex(t => t.topic_id === topicId);
     const newIndex = index + direction;
     
@@ -713,9 +729,11 @@ export default function ContentManagement({ user }) {
     [newItems[index], newItems[newIndex]] = [newItems[newIndex], newItems[index]];
     
     const reorderData = newItems.map((item, i) => ({ id: item.topic_id, order: i }));
+    const payload = { items: reorderData };
+    if (gradeFilter !== 'all') payload.grade = gradeFilter;
     
     try {
-      await axios.post(`${API}/admin/content/topics/reorder`, { items: reorderData });
+      await axios.post(`${API}/admin/content/topics/reorder`, payload);
       toast.success('Topics reordered');
       fetchData();
     } catch (error) {
@@ -727,19 +745,21 @@ export default function ContentManagement({ user }) {
   const moveSubtopic = async (subtopicId, direction) => {
     if (!selectedTopic?.subtopics) return;
     
-    const subtopics = [...selectedTopic.subtopics].sort((a, b) => (a.order || 0) - (b.order || 0));
-    const index = subtopics.findIndex(s => s.topic_id === subtopicId);
+    const subtopicsList = [...selectedTopic.subtopics].sort((a, b) => effectiveOrder(a) - effectiveOrder(b));
+    const index = subtopicsList.findIndex(s => s.topic_id === subtopicId);
     const newIndex = index + direction;
     
-    if (newIndex < 0 || newIndex >= subtopics.length) return;
+    if (newIndex < 0 || newIndex >= subtopicsList.length) return;
     
-    const newItems = [...subtopics];
+    const newItems = [...subtopicsList];
     [newItems[index], newItems[newIndex]] = [newItems[newIndex], newItems[index]];
     
     const reorderData = newItems.map((item, i) => ({ id: item.topic_id, order: i }));
+    const payload = { items: reorderData };
+    if (gradeFilter !== 'all') payload.grade = gradeFilter;
     
     try {
-      await axios.post(`${API}/admin/content/topics/reorder`, { items: reorderData });
+      await axios.post(`${API}/admin/content/topics/reorder`, payload);
       toast.success('Subtopics reordered');
       fetchData();
     } catch (error) {
@@ -760,18 +780,28 @@ export default function ContentManagement({ user }) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const sortedTopics = [...topics].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const sortedTopics = [...topics].sort((a, b) => effectiveOrder(a) - effectiveOrder(b));
     const oldIndex = sortedTopics.findIndex(t => t.topic_id === active.id);
     const newIndex = sortedTopics.findIndex(t => t.topic_id === over.id);
 
     const newItems = arrayMove(sortedTopics, oldIndex, newIndex);
     
-    // Optimistically update UI
-    setTopics(newItems.map((item, i) => ({ ...item, order: i })));
+    // Optimistically update UI - write to global order when no grade filter,
+    // otherwise to grade_orders[gradeFilter]
+    if (gradeFilter === 'all') {
+      setTopics(newItems.map((item, i) => ({ ...item, order: i })));
+    } else {
+      setTopics(newItems.map((item, i) => ({
+        ...item,
+        grade_orders: { ...(item.grade_orders || {}), [gradeFilter]: i }
+      })));
+    }
 
     const reorderData = newItems.map((item, i) => ({ id: item.topic_id, order: i }));
+    const payload = { items: reorderData };
+    if (gradeFilter !== 'all') payload.grade = gradeFilter;
     try {
-      await axios.post(`${API}/admin/content/topics/reorder`, { items: reorderData });
+      await axios.post(`${API}/admin/content/topics/reorder`, payload);
       toast.success('Topics reordered');
     } catch (error) {
       toast.error('Failed to reorder topics');
@@ -784,21 +814,33 @@ export default function ContentManagement({ user }) {
     const { active, over } = event;
     if (!over || active.id === over.id || !selectedTopic?.subtopics) return;
 
-    const sortedSubtopics = [...selectedTopic.subtopics].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const sortedSubtopics = [...selectedTopic.subtopics].sort((a, b) => effectiveOrder(a) - effectiveOrder(b));
     const oldIndex = sortedSubtopics.findIndex(s => s.topic_id === active.id);
     const newIndex = sortedSubtopics.findIndex(s => s.topic_id === over.id);
 
     const newItems = arrayMove(sortedSubtopics, oldIndex, newIndex);
     
     // Optimistically update UI
-    setSelectedTopic(prev => ({
-      ...prev,
-      subtopics: newItems.map((item, i) => ({ ...item, order: i }))
-    }));
+    if (gradeFilter === 'all') {
+      setSelectedTopic(prev => ({
+        ...prev,
+        subtopics: newItems.map((item, i) => ({ ...item, order: i }))
+      }));
+    } else {
+      setSelectedTopic(prev => ({
+        ...prev,
+        subtopics: newItems.map((item, i) => ({
+          ...item,
+          grade_orders: { ...(item.grade_orders || {}), [gradeFilter]: i }
+        }))
+      }));
+    }
 
     const reorderData = newItems.map((item, i) => ({ id: item.topic_id, order: i }));
+    const payload = { items: reorderData };
+    if (gradeFilter !== 'all') payload.grade = gradeFilter;
     try {
-      await axios.post(`${API}/admin/content/topics/reorder`, { items: reorderData });
+      await axios.post(`${API}/admin/content/topics/reorder`, payload);
       toast.success('Subtopics reordered');
       fetchData(); // Refresh to sync
     } catch (error) {
@@ -821,12 +863,20 @@ export default function ContentManagement({ user }) {
     // Optimistically update UI
     setAllContent(prev => {
       const otherContent = prev.filter(c => c.topic_id !== selectedSubtopic?.topic_id);
-      return [...otherContent, ...newItems.map((item, i) => ({ ...item, order: i }))];
+      const updated = gradeFilter === 'all'
+        ? newItems.map((item, i) => ({ ...item, order: i }))
+        : newItems.map((item, i) => ({
+            ...item,
+            grade_orders: { ...(item.grade_orders || {}), [gradeFilter]: i }
+          }));
+      return [...otherContent, ...updated];
     });
 
     const reorderData = newItems.map((item, i) => ({ id: item.content_id, order: i }));
+    const payload = { items: reorderData };
+    if (gradeFilter !== 'all') payload.grade = gradeFilter;
     try {
-      await axios.post(`${API}/admin/content/items/reorder`, { items: reorderData });
+      await axios.post(`${API}/admin/content/items/reorder`, payload);
       toast.success('Content reordered');
     } catch (error) {
       toast.error('Failed to reorder content');
@@ -946,7 +996,7 @@ export default function ContentManagement({ user }) {
   const getContentTypeConfig = (type) => CONTENT_TYPES.find(t => t.value === type) || CONTENT_TYPES[0];
   
   const subtopicContent = selectedSubtopic 
-    ? filteredContent.filter(c => c.topic_id === selectedSubtopic.topic_id).sort((a, b) => a.order - b.order)
+    ? filteredContent.filter(c => c.topic_id === selectedSubtopic.topic_id).sort((a, b) => effectiveOrder(a) - effectiveOrder(b))
     : [];
   
   // Grade options for filter
@@ -1407,7 +1457,11 @@ export default function ContentManagement({ user }) {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-800">Step 1: Manage Topics</h2>
-                  <p className="text-sm text-gray-500">Drag and drop to reorder your learning topics</p>
+                  <p className="text-sm text-gray-500">
+                    {gradeFilter === 'all'
+                      ? 'Drag and drop to reorder your learning topics'
+                      : `Drag and drop to reorder topics for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label}. Order is saved for this grade only.`}
+                  </p>
                 </div>
                 <Button onClick={() => { setEditingItem(null); setTopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5 }); setShowTopicDialog(true); }}>
                   <Plus className="w-4 h-4 mr-2" /> Add Topic
@@ -1426,11 +1480,11 @@ export default function ContentManagement({ user }) {
                   onDragEnd={handleTopicDragEnd}
                 >
                   <SortableContext
-                    items={[...filteredTopics].sort((a, b) => (a.order || 0) - (b.order || 0)).map(t => t.topic_id)}
+                    items={[...filteredTopics].sort((a, b) => effectiveOrder(a) - effectiveOrder(b)).map(t => t.topic_id)}
                     strategy={verticalListSortingStrategy}
                   >
                     <div className="space-y-3">
-                      {[...filteredTopics].sort((a, b) => (a.order || 0) - (b.order || 0)).map((topic) => (
+                      {[...filteredTopics].sort((a, b) => effectiveOrder(a) - effectiveOrder(b)).map((topic) => (
                         <SortableTopicItem
                           key={topic.topic_id}
                           topic={topic}
@@ -1497,11 +1551,11 @@ export default function ContentManagement({ user }) {
                   onDragEnd={handleSubtopicDragEnd}
                 >
                   <SortableContext
-                    items={[...selectedTopic.subtopics].filter(matchesGradeFilter).sort((a, b) => (a.order || 0) - (b.order || 0)).map(s => s.topic_id)}
+                    items={[...selectedTopic.subtopics].filter(matchesGradeFilter).sort((a, b) => effectiveOrder(a) - effectiveOrder(b)).map(s => s.topic_id)}
                     strategy={verticalListSortingStrategy}
                   >
                     <div className="space-y-3">
-                      {[...selectedTopic.subtopics].filter(matchesGradeFilter).sort((a, b) => (a.order || 0) - (b.order || 0)).map((subtopic) => (
+                      {[...selectedTopic.subtopics].filter(matchesGradeFilter).sort((a, b) => effectiveOrder(a) - effectiveOrder(b)).map((subtopic) => (
                         <SortableSubtopicItem
                           key={subtopic.topic_id}
                           subtopic={subtopic}
@@ -1579,7 +1633,9 @@ export default function ContentManagement({ user }) {
                   >
                     <div className="space-y-3">
                       <p className="text-sm text-gray-500 mb-4">
-                        Drag and drop to reorder content. Students will see content in this order.
+                        {gradeFilter === 'all'
+                          ? 'Drag and drop to reorder content. Students will see content in this order.'
+                          : `Reordering for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only — same content can have a different position per grade.`}
                       </p>
                       {subtopicContent.map((content) => {
                         const typeConfig = getContentTypeConfig(content.content_type);

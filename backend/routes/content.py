@@ -18,6 +18,30 @@ def get_db():
         raise HTTPException(status_code=500, detail="Database not initialized")
     return db
 
+
+async def find_with_grade_order(collection, query, filter_grade, limit=500):
+    """Fetch documents sorted by grade-specific order if filter_grade is set,
+    falling back to the global `order` field. Uses a simple find when no grade
+    filter is active to avoid aggregation overhead.
+    Always strips internal MongoDB _id and the computed effective_order field.
+    """
+    if filter_grade is None:
+        cursor = collection.find(query, {"_id": 0}).sort("order", 1)
+        return await cursor.to_list(limit)
+
+    pipeline = [
+        {"$match": query},
+        {"$addFields": {
+            "effective_order": {
+                "$ifNull": [f"$grade_orders.{filter_grade}", "$order"]
+            }
+        }},
+        {"$sort": {"effective_order": 1}},
+        {"$project": {"_id": 0, "effective_order": 0}},
+    ]
+    cursor = collection.aggregate(pipeline)
+    return await cursor.to_list(limit)
+
 # ============== USER CONTENT ROUTES ==============
 
 
@@ -50,7 +74,7 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
     else:
         query = {"parent_id": None, "min_grade": {"$lte": filter_grade}, "max_grade": {"$gte": filter_grade}}
     
-    parent_topics = await db.content_topics.find(query, {"_id": 0}).sort("order", 1).to_list(100)
+    parent_topics = await find_with_grade_order(db.content_topics, query, filter_grade, limit=100)
     
     completed_content_ids = set()
     if is_child and user_id:
@@ -135,7 +159,7 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                     {"visible_to": None}
                 ]
         
-        subtopics = await db.content_topics.find(subtopic_query, {"_id": 0}).sort("order", 1).to_list(100)
+        subtopics = await find_with_grade_order(db.content_topics, subtopic_query, filter_grade, limit=100)
         topic["subtopics"] = subtopics
         topic["content_count"] = await db.content_items.count_documents(content_grade_query)
         
@@ -251,7 +275,7 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
         subtopic_query = {"parent_id": topic_id, "min_grade": {"$lte": filter_grade}, "max_grade": {"$gte": filter_grade}}
     else:
         subtopic_query = {"parent_id": topic_id}
-    subtopics = await db.content_topics.find(subtopic_query, {"_id": 0}).sort("order", 1).to_list(100)
+    subtopics = await find_with_grade_order(db.content_topics, subtopic_query, filter_grade, limit=100)
     
     # Grade filter for content items
     content_query = {"topic_id": topic_id}
@@ -333,7 +357,7 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
             ]
     
     logging.info(f"TopicDetail: Final content_query={content_query}")
-    content_items = await db.content_items.find(content_query, {"_id": 0}).sort("order", 1).to_list(100)
+    content_items = await find_with_grade_order(db.content_items, content_query, filter_grade, limit=100)
     logging.info(f"TopicDetail: Found {len(content_items)} content items")
     
     if is_child and user_id:
@@ -610,21 +634,30 @@ async def admin_delete_topic(topic_id: str, request: Request):
 
 @router.post("/admin/content/topics/reorder")
 async def admin_reorder_topics(request: Request):
-    """Reorder topics"""
+    """Reorder topics. If `grade` is supplied in the body, the order is saved
+    per-grade (under `grade_orders.<grade>`) so the same topic can have a
+    different position for different grades. Without `grade`, the global
+    `order` field is updated."""
     from services.auth import require_admin
     db = get_db()
     await require_admin(request)
     body = await request.json()
     
+    grade = body.get("grade")
+    grade_key = str(grade) if grade is not None and grade != "all" else None
+    
     # Frontend sends 'items' with 'id' field, map to topic_id
     items = body.get("items") or body.get("topics", [])
     for item in items:
         topic_id = item.get("id") or item.get("topic_id")
-        if topic_id:
-            await db.content_topics.update_one(
-                {"topic_id": topic_id},
-                {"$set": {"order": item.get("order", 0)}}
-            )
+        if not topic_id:
+            continue
+        order_value = item.get("order", 0)
+        if grade_key is not None:
+            update_op = {"$set": {f"grade_orders.{grade_key}": order_value}}
+        else:
+            update_op = {"$set": {"order": order_value}}
+        await db.content_topics.update_one({"topic_id": topic_id}, update_op)
     
     return {"message": "Topics reordered"}
 
@@ -707,20 +740,28 @@ async def admin_delete_item(content_id: str, request: Request):
 
 @router.post("/admin/content/items/reorder")
 async def admin_reorder_items(request: Request):
-    """Reorder content items"""
+    """Reorder content items. Supports per-grade ordering when `grade` is
+    supplied in the body — same content item can have different positions for
+    different grades."""
     from services.auth import require_admin
     db = get_db()
     await require_admin(request)
     body = await request.json()
     
+    grade = body.get("grade")
+    grade_key = str(grade) if grade is not None and grade != "all" else None
+    
     for item in body.get("items", []):
         # Frontend sends 'id' field, map it to content_id
         content_id = item.get("id") or item.get("content_id")
-        if content_id:
-            await db.content_items.update_one(
-                {"content_id": content_id},
-                {"$set": {"order": item.get("order", 0)}}
-            )
+        if not content_id:
+            continue
+        order_value = item.get("order", 0)
+        if grade_key is not None:
+            update_op = {"$set": {f"grade_orders.{grade_key}": order_value}}
+        else:
+            update_op = {"$set": {"order": order_value}}
+        await db.content_items.update_one({"content_id": content_id}, update_op)
     
     return {"message": "Content reordered"}
 
