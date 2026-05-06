@@ -27,6 +27,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useAdminBackgroundSync } from '@/hooks/useAdminBackgroundSync';
 
 export default function AdminPage({ user }) {
   const navigate = useNavigate();
@@ -98,7 +99,7 @@ export default function AdminPage({ user }) {
     }
   }, [activeTab]);
   
-  const fetchData = async () => {
+  const fetchData = async (silent = false) => {
     try {
       const [statsRes, usersRes, schoolsRes] = await Promise.all([
         axios.get(`${API}/admin/stats`),
@@ -109,11 +110,13 @@ export default function AdminPage({ user }) {
       setUsers(usersRes.data);
       setSchools(schoolsRes.data);
     } catch (error) {
-      toast.error('Failed to load admin data');
+      if (!silent) toast.error('Failed to load admin data');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
+  
+  useAdminBackgroundSync(fetchData, { enabled: user?.role === 'admin' });
   
   const handleLogout = async () => {
     try {

@@ -28,6 +28,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { useAdminBackgroundSync } from '@/hooks/useAdminBackgroundSync';
 
 const RISK_LEVELS = [
   { value: 'low', label: 'Low Risk', color: 'text-green-500' },
@@ -71,25 +72,10 @@ export default function AdminStockManagement() {
   });
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [catRes, stockRes, newsRes] = await Promise.all([
-          axios.get(`${API}/admin/stock-categories`),
-          axios.get(`${API}/admin/investments/stocks`),
-          axios.get(`${API}/admin/stock-news`)
-        ]);
-        setCategories(catRes.data);
-        setStocks(stockRes.data);
-        setNews(newsRes.data);
-      } catch (error) {
-        console.error('Failed to fetch data:', error);
-        toast.error('Failed to load data');
-      }
-    };
-    loadData();
+    fetchData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (silent = false) => {
     try {
       const [catRes, stockRes, newsRes] = await Promise.all([
         axios.get(`${API}/admin/stock-categories`),
@@ -100,10 +86,14 @@ export default function AdminStockManagement() {
       setStocks(stockRes.data);
       setNews(newsRes.data);
     } catch (error) {
-      console.error('Failed to fetch data:', error);
-      toast.error('Failed to load data');
+      if (!silent) {
+        console.error('Failed to fetch data:', error);
+        toast.error('Failed to load data');
+      }
     }
   };
+  
+  useAdminBackgroundSync(fetchData);
 
   // Category handlers
   const handleSaveCategory = async () => {

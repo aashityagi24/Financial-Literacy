@@ -9,6 +9,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 - User authentication (Custom Google OAuth + Admin login + School login)
 - Role-based dashboards (Admin, Teacher, Parent, Child)
 - Content management system with drag-and-drop reordering (now **grade-specific** when a grade filter is applied — same item can have different positions per grade)
+- Multi-admin background sync — every admin management page (Badges, Garden, Glossary, Investments, Stocks, Store, Quests, Subscriptions, Teacher Repository, main Admin dashboard, Content Management) now polls every 15s and on window focus, so concurrent admins see each other's edits without manual refresh.
 - Virtual store with categories and items
 - Wallet system (Spending, Savings, Gifting jars)
 - User connections (Parent-Child, Teacher-Classroom)

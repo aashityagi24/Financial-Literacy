@@ -7,6 +7,7 @@ import {
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { toast } from 'sonner';
+import { useAdminBackgroundSync } from '@/hooks/useAdminBackgroundSync';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
@@ -45,7 +46,7 @@ export default function AdminTeacherRepository() {
   });
   const [uploading, setUploading] = useState(false);
 
-  const fetchItems = useCallback(async () => {
+  const fetchItems = useCallback(async (silent = false) => {
     try {
       let url = `${API_URL}/api/admin/repository?`;
       if (filterTopic) url += `topic_id=${filterTopic}&`;
@@ -70,16 +71,20 @@ export default function AdminTeacherRepository() {
         setAccessSettings({ visibility: accessData.visibility || 'all', allowed_schools: accessData.allowed_schools || [] });
       } catch {}
     } catch (error) {
-      console.error('Failed to fetch repository:', error);
-      toast.error('Failed to load repository');
+      if (!silent) {
+        console.error('Failed to fetch repository:', error);
+        toast.error('Failed to load repository');
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [filterTopic, filterSubtopic, filterGrade, filterType]);
 
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
+
+  useAdminBackgroundSync(fetchItems);
 
   const fetchSubtopics = async (topicId) => {
     if (!topicId) {

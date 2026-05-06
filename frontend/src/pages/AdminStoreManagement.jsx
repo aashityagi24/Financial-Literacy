@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAdminBackgroundSync } from '@/hooks/useAdminBackgroundSync';
 
 export default function AdminStoreManagement({ user }) {
   const navigate = useNavigate();
@@ -94,7 +95,7 @@ export default function AdminStoreManagement({ user }) {
     fetchData();
   }, [user, navigate]);
   
-  const fetchData = async () => {
+  const fetchData = async (silent = false) => {
     try {
       const [catRes, itemsRes] = await Promise.all([
         axios.get(`${API}/admin/store/categories`),
@@ -103,11 +104,13 @@ export default function AdminStoreManagement({ user }) {
       setCategories(catRes.data);
       setItems(itemsRes.data);
     } catch (error) {
-      toast.error('Failed to load store data');
+      if (!silent) toast.error('Failed to load store data');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
+  
+  useAdminBackgroundSync(fetchData, { enabled: user?.role === 'admin' });
   
   const handleImageUpload = async (e, type) => {
     const file = e.target.files[0];

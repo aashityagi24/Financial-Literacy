@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAdminBackgroundSync } from '@/hooks/useAdminBackgroundSync';
 
 export default function AdminInvestmentManagement({ user }) {
   const navigate = useNavigate();
@@ -71,7 +72,7 @@ export default function AdminInvestmentManagement({ user }) {
     fetchData();
   }, [user, navigate]);
   
-  const fetchData = async () => {
+  const fetchData = async (silent = false) => {
     try {
       const [plantsRes, stocksRes, schedulerRes] = await Promise.all([
         axios.get(`${API}/admin/investments/plants`),
@@ -82,11 +83,13 @@ export default function AdminInvestmentManagement({ user }) {
       setStocks(stocksRes.data);
       setSchedulerStatus(schedulerRes.data);
     } catch (error) {
-      toast.error('Failed to load investment data');
+      if (!silent) toast.error('Failed to load investment data');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
+  
+  useAdminBackgroundSync(fetchData, { enabled: user?.role === 'admin' });
   
   const handleImageUpload = async (e, type) => {
     const file = e.target.files[0];

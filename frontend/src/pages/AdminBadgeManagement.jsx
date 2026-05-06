@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAdminBackgroundSync } from '@/hooks/useAdminBackgroundSync';
 import {
   Select,
   SelectContent,
@@ -66,7 +67,7 @@ export default function AdminBadgeManagement({ user }) {
     fetchData();
   }, [user, navigate]);
   
-  const fetchData = async () => {
+  const fetchData = async (silent = false) => {
     try {
       const [badgesRes, categoriesRes] = await Promise.all([
         axios.get(`${API}/admin/badges`),
@@ -75,11 +76,14 @@ export default function AdminBadgeManagement({ user }) {
       setBadges(badgesRes.data.badges || []);
       setCategories(categoriesRes.data.categories || []);
     } catch (error) {
-      toast.error('Failed to load badges');
+      if (!silent) toast.error('Failed to load badges');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
+  
+  // Keep data fresh when multiple admins edit concurrently.
+  useAdminBackgroundSync(fetchData, { enabled: user?.role === 'admin' });
   
   const handleCreateBadge = async () => {
     if (!formData.name || !formData.description) {

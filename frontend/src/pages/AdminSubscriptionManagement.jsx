@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAdminBackgroundSync } from '@/hooks/useAdminBackgroundSync';
 
 const DURATION_LABELS = {
   '1_day': '1 Day',
@@ -78,7 +79,7 @@ export default function AdminSubscriptionManagement({ user }) {
     fetchData();
   }, [user, navigate]);
 
-  const fetchData = async () => {
+  const fetchData = async (silent = false) => {
     try {
       const [subsRes, configRes, leadsRes] = await Promise.all([
         axios.get(`${API}/subscriptions/admin/list`),
@@ -88,13 +89,19 @@ export default function AdminSubscriptionManagement({ user }) {
       setSubscriptions(subsRes.data);
       setPlanConfig(configRes.data);
       setCheckoutLeads(leadsRes.data || []);
-      setEditingConfig(JSON.parse(JSON.stringify(configRes.data)));
+      // On a silent background refresh, do NOT clobber the in-progress
+      // editing config (it would discard unsaved admin edits).
+      if (!silent) {
+        setEditingConfig(JSON.parse(JSON.stringify(configRes.data)));
+      }
     } catch (err) {
-      toast.error('Failed to load subscription data');
+      if (!silent) toast.error('Failed to load subscription data');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
+
+  useAdminBackgroundSync(fetchData, { enabled: user?.role === 'admin' });
 
   const toggleSubscription = async (subId) => {
     try {

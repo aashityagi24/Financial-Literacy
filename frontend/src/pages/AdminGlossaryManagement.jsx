@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useAdminBackgroundSync } from '@/hooks/useAdminBackgroundSync';
 
 const CATEGORIES = [
   { value: 'general', label: 'General' },
@@ -74,7 +75,7 @@ export default function AdminGlossaryManagement({ user }) {
     fetchWords();
   }, [user, navigate, searchQuery, categoryFilter]);
   
-  const fetchWords = async () => {
+  const fetchWords = async (silent = false) => {
     try {
       let url = `${API}/admin/glossary/words?limit=100`;
       if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
@@ -85,11 +86,13 @@ export default function AdminGlossaryManagement({ user }) {
       setTotal(res.data.total || 0);
       setCategories(res.data.categories || []);
     } catch (error) {
-      toast.error('Failed to load glossary words');
+      if (!silent) toast.error('Failed to load glossary words');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
+  
+  useAdminBackgroundSync(fetchWords, { enabled: user?.role === 'admin' });
   
   const resetForm = () => {
     setForm({

@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAdminBackgroundSync } from '@/hooks/useAdminBackgroundSync';
 
 const GRADE_OPTIONS = [
   { value: 0, label: 'Kindergarten' },
@@ -61,16 +62,18 @@ export default function AdminGardenManagement({ user }) {
     fetchPlants();
   }, [user, navigate]);
   
-  const fetchPlants = async () => {
+  const fetchPlants = async (silent = false) => {
     try {
       const res = await axios.get(`${API}/admin/garden/plants`);
       setPlants(res.data || []);
     } catch (error) {
-      toast.error('Failed to load plants');
+      if (!silent) toast.error('Failed to load plants');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
+  
+  useAdminBackgroundSync(fetchPlants, { enabled: user?.role === 'admin' });
   
   const resetForm = () => {
     setFormData({

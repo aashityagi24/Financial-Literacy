@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useAdminBackgroundSync } from '@/hooks/useAdminBackgroundSync';
 
 export default function AdminQuestsPage({ user }) {
   const [quests, setQuests] = useState([]);
@@ -49,16 +50,18 @@ export default function AdminQuestsPage({ user }) {
     fetchQuests();
   }, []);
   
-  const fetchQuests = async () => {
+  const fetchQuests = async (silent = false) => {
     try {
       const res = await axios.get(`${API}/admin/quests`);
       setQuests(res.data);
     } catch (error) {
-      toast.error('Failed to load quests');
+      if (!silent) toast.error('Failed to load quests');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
+  
+  useAdminBackgroundSync(fetchQuests);
   
   const resetForm = () => {
     setFormData({
