@@ -19,28 +19,64 @@ def get_db():
     return db
 
 
-async def find_with_grade_order(collection, query, filter_grade, limit=500):
+async def find_with_grade_order(collection, query, filter_grade, parent_field=None, parent_target=None, limit=500):
     """Fetch documents sorted by grade-specific order if filter_grade is set,
-    falling back to the global `order` field. Uses a simple find when no grade
-    filter is active to avoid aggregation overhead.
-    Always strips internal MongoDB _id and the computed effective_order field.
+    falling back to the global `order` field.
+
+    If parent_field + parent_target are given, the parent match is computed as
+    the effective parent: `grade_parents.<grade>` when set, falling back to
+    the document's own `<parent_field>` value. This allows the same item to
+    appear under a different topic/subtopic per grade. When filter_grade is
+    None, the parent match is performed directly on `<parent_field>`.
+
+    Always strips internal MongoDB _id and the computed helper fields.
     """
+    use_parent_remap = parent_field is not None and parent_target is not None
+
     if filter_grade is None:
-        cursor = collection.find(query, {"_id": 0}).sort("order", 1)
+        full_query = dict(query)
+        if use_parent_remap:
+            full_query[parent_field] = parent_target
+        cursor = collection.find(full_query, {"_id": 0}).sort("order", 1)
         return await cursor.to_list(limit)
 
-    pipeline = [
-        {"$match": query},
-        {"$addFields": {
-            "effective_order": {
-                "$ifNull": [f"$grade_orders.{filter_grade}", "$order"]
-            }
-        }},
-        {"$sort": {"effective_order": 1}},
-        {"$project": {"_id": 0, "effective_order": 0}},
-    ]
+    pipeline = []
+    if query:
+        pipeline.append({"$match": query})
+    add_fields = {
+        "effective_order": {"$ifNull": [f"$grade_orders.{filter_grade}", "$order"]}
+    }
+    if use_parent_remap:
+        add_fields["effective_parent"] = {
+            "$ifNull": [f"$grade_parents.{filter_grade}", f"${parent_field}"]
+        }
+    pipeline.append({"$addFields": add_fields})
+    if use_parent_remap:
+        pipeline.append({"$match": {"effective_parent": parent_target}})
+    pipeline.append({"$sort": {"effective_order": 1}})
+    pipeline.append({"$project": {"_id": 0, "effective_order": 0, "effective_parent": 0}})
     cursor = collection.aggregate(pipeline)
     return await cursor.to_list(limit)
+
+
+async def count_with_grade_parent(collection, parent_field, parent_target, filter_grade, extra_query=None):
+    """Count documents whose effective parent (grade_parents.<grade> ?? parent_field)
+    equals parent_target. Uses simple count_documents when no grade filter."""
+    extra_query = extra_query or {}
+    if filter_grade is None:
+        full_query = dict(extra_query)
+        full_query[parent_field] = parent_target
+        return await collection.count_documents(full_query)
+    pipeline = []
+    if extra_query:
+        pipeline.append({"$match": extra_query})
+    pipeline.append({"$addFields": {
+        "effective_parent": {"$ifNull": [f"$grade_parents.{filter_grade}", f"${parent_field}"]}
+    }})
+    pipeline.append({"$match": {"effective_parent": parent_target}})
+    pipeline.append({"$count": "n"})
+    docs = await collection.aggregate(pipeline).to_list(1)
+    return docs[0]["n"] if docs else 0
 
 # ============== USER CONTENT ROUTES ==============
 
@@ -86,23 +122,22 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
     previous_topic_completed = True
     
     for topic in parent_topics:
+        topic_id = topic["topic_id"]
         # Grade filter for subtopics
         if filter_grade is None or is_admin:
-            subtopic_query = {"parent_id": topic["topic_id"]}
-            content_grade_query = {"topic_id": topic["topic_id"], "is_published": True}
+            subtopic_extra_query = {}
+            content_extra_query = {"is_published": True}
         else:
-            subtopic_query = {"parent_id": topic["topic_id"], "min_grade": {"$lte": filter_grade}, "max_grade": {"$gte": filter_grade}}
-            # Build content query with $and for grade AND visibility
-            base_query = {
-                "topic_id": topic["topic_id"], 
+            subtopic_extra_query = {"min_grade": {"$lte": filter_grade}, "max_grade": {"$gte": filter_grade}}
+            # Build content query (without topic_id, which is handled by parent_target)
+            content_extra_query = {
                 "is_published": True,
-                "min_grade": {"$lte": filter_grade}, 
+                "min_grade": {"$lte": filter_grade},
                 "max_grade": {"$gte": filter_grade}
             }
-            content_grade_query = base_query
         
-        # Add visibility filter for non-admin users using $and
-        if not is_admin and filter_grade is not None:
+        # Add visibility filter for non-admin users
+        if not is_admin:
             if is_child:
                 visibility_condition = {
                     "$or": [
@@ -134,34 +169,16 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                 visibility_condition = None
             
             if visibility_condition:
-                content_grade_query = {"$and": [base_query, visibility_condition]}
-        elif not is_admin:
-            # No grade filter but still need visibility filter
-            if is_child:
-                content_grade_query["$or"] = [
-                    {"visible_to": {"$in": ["child"]}},
-                    {"visible_to": {"$exists": False}},
-                    {"visible_to": []},
-                    {"visible_to": None}
-                ]
-            elif is_teacher:
-                content_grade_query["$or"] = [
-                    {"visible_to": {"$in": ["child", "teacher"]}},
-                    {"visible_to": {"$exists": False}},
-                    {"visible_to": []},
-                    {"visible_to": None}
-                ]
-            elif is_parent:
-                content_grade_query["$or"] = [
-                    {"visible_to": {"$in": ["child", "parent"]}},
-                    {"visible_to": {"$exists": False}},
-                    {"visible_to": []},
-                    {"visible_to": None}
-                ]
+                content_extra_query = {"$and": [content_extra_query, visibility_condition]}
         
-        subtopics = await find_with_grade_order(db.content_topics, subtopic_query, filter_grade, limit=100)
+        subtopics = await find_with_grade_order(
+            db.content_topics, subtopic_extra_query, filter_grade,
+            parent_field='parent_id', parent_target=topic_id, limit=100
+        )
         topic["subtopics"] = subtopics
-        topic["content_count"] = await db.content_items.count_documents(content_grade_query)
+        topic["content_count"] = await count_with_grade_parent(
+            db.content_items, 'topic_id', topic_id, filter_grade, content_extra_query
+        )
         
         if is_child:
             topic["is_unlocked"] = previous_topic_completed
@@ -171,11 +188,11 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
             previous_subtopic_completed = previous_topic_completed
             
             for subtopic in subtopics:
+                subtopic_id = subtopic["topic_id"]
                 # Grade filter for subtopic content - only show content visible to children
-                subtopic_content_query = {
-                    "topic_id": subtopic["topic_id"], 
+                subtopic_content_extra = {
                     "is_published": True,
-                    "min_grade": {"$lte": filter_grade}, 
+                    "min_grade": {"$lte": filter_grade},
                     "max_grade": {"$gte": filter_grade},
                     "$or": [
                         {"visible_to": {"$in": ["child"]}},
@@ -184,12 +201,15 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                         {"visible_to": None}
                     ]
                 }
-                subtopic["content_count"] = await db.content_items.count_documents(subtopic_content_query)
+                subtopic["content_count"] = await count_with_grade_parent(
+                    db.content_items, 'topic_id', subtopic_id, filter_grade, subtopic_content_extra
+                )
                 topic["total_content"] += subtopic["content_count"]
                 
-                subtopic_content = await db.content_items.find(
-                    subtopic_content_query, {"content_id": 1}
-                ).sort("order", 1).to_list(100)
+                subtopic_content = await find_with_grade_order(
+                    db.content_items, subtopic_content_extra, filter_grade,
+                    parent_field='topic_id', parent_target=subtopic_id, limit=100
+                )
                 
                 subtopic_completed_count = sum(1 for c in subtopic_content if c["content_id"] in completed_content_ids)
                 subtopic["completed_count"] = subtopic_completed_count
@@ -206,32 +226,34 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
             previous_topic_completed = topic["is_completed"]
         else:
             for subtopic in subtopics:
+                subtopic_id = subtopic["topic_id"]
                 # Grade and visibility filter for teachers/parents viewing content
                 if filter_grade is not None and not is_admin:
-                    subtopic_content_query = {
-                        "topic_id": subtopic["topic_id"], 
+                    subtopic_content_extra = {
                         "is_published": True,
-                        "min_grade": {"$lte": filter_grade}, 
+                        "min_grade": {"$lte": filter_grade},
                         "max_grade": {"$gte": filter_grade}
                     }
                     # Add visibility filter - teachers/parents see child content + their own
                     if is_teacher:
-                        subtopic_content_query["$or"] = [
+                        subtopic_content_extra["$or"] = [
                             {"visible_to": {"$in": ["child", "teacher"]}},
                             {"visible_to": {"$exists": False}},
                             {"visible_to": []},
                             {"visible_to": None}
                         ]
                     elif is_parent:
-                        subtopic_content_query["$or"] = [
+                        subtopic_content_extra["$or"] = [
                             {"visible_to": {"$in": ["child", "parent"]}},
                             {"visible_to": {"$exists": False}},
                             {"visible_to": []},
                             {"visible_to": None}
                         ]
                 else:
-                    subtopic_content_query = {"topic_id": subtopic["topic_id"], "is_published": True}
-                subtopic["content_count"] = await db.content_items.count_documents(subtopic_content_query)
+                    subtopic_content_extra = {"is_published": True}
+                subtopic["content_count"] = await count_with_grade_parent(
+                    db.content_items, 'topic_id', subtopic_id, filter_grade, subtopic_content_extra
+                )
     
     # Filter out empty topics/subtopics for non-admin users
     if not is_admin:
@@ -272,13 +294,16 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
     
     # Grade filter for subtopics - apply if grade param is passed
     if filter_grade is not None:
-        subtopic_query = {"parent_id": topic_id, "min_grade": {"$lte": filter_grade}, "max_grade": {"$gte": filter_grade}}
+        subtopic_extra_query = {"min_grade": {"$lte": filter_grade}, "max_grade": {"$gte": filter_grade}}
     else:
-        subtopic_query = {"parent_id": topic_id}
-    subtopics = await find_with_grade_order(db.content_topics, subtopic_query, filter_grade, limit=100)
+        subtopic_extra_query = {}
+    subtopics = await find_with_grade_order(
+        db.content_topics, subtopic_extra_query, filter_grade,
+        parent_field='parent_id', parent_target=topic_id, limit=100
+    )
     
-    # Grade filter for content items
-    content_query = {"topic_id": topic_id}
+    # Grade filter for content items (parent_id handled via parent_target)
+    content_query = {}
     
     # Only require is_published for non-admin
     if not is_admin:
@@ -288,7 +313,7 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
     # Apply grade filter if filter_grade is set (for any user including admin preview)
     if filter_grade is not None:
         # Start with base conditions
-        conditions = [content_query]
+        conditions = [content_query] if content_query else []
         
         # Add grade filter
         grade_condition = {
@@ -331,7 +356,7 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
                 conditions.append(visibility_condition)
         
         # Combine all conditions with $and
-        content_query = {"$and": conditions}
+        content_query = {"$and": conditions} if conditions else {}
     elif not is_admin:
         # No grade filter but still need visibility filter for non-admin
         if is_child:
@@ -357,7 +382,10 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
             ]
     
     logging.info(f"TopicDetail: Final content_query={content_query}")
-    content_items = await find_with_grade_order(db.content_items, content_query, filter_grade, limit=100)
+    content_items = await find_with_grade_order(
+        db.content_items, content_query, filter_grade,
+        parent_field='topic_id', parent_target=topic_id, limit=100
+    )
     logging.info(f"TopicDetail: Found {len(content_items)} content items")
     
     if is_child and user_id:
@@ -370,9 +398,9 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
         # Progressive unlock for subtopics
         previous_subtopic_completed = True  # First subtopic always unlocked
         for subtopic in subtopics:
+            subtopic_id = subtopic["topic_id"]
             subtopic["is_unlocked"] = previous_subtopic_completed
-            subtopic_content_query = {
-                "topic_id": subtopic["topic_id"],
+            subtopic_content_extra = {
                 "is_published": True,
                 "$or": [
                     {"visible_to": {"$in": ["child"]}},
@@ -382,11 +410,12 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
                 ]
             }
             if filter_grade is not None:
-                subtopic_content_query["min_grade"] = {"$lte": filter_grade}
-                subtopic_content_query["max_grade"] = {"$gte": filter_grade}
-            subtopic_content = await db.content_items.find(
-                subtopic_content_query, {"content_id": 1}
-            ).sort("order", 1).to_list(100)
+                subtopic_content_extra["min_grade"] = {"$lte": filter_grade}
+                subtopic_content_extra["max_grade"] = {"$gte": filter_grade}
+            subtopic_content = await find_with_grade_order(
+                db.content_items, subtopic_content_extra, filter_grade,
+                parent_field='topic_id', parent_target=subtopic_id, limit=100
+            )
             subtopic_completed_count = sum(1 for c in subtopic_content if c["content_id"] in completed_content_ids)
             subtopic["completed_count"] = subtopic_completed_count
             subtopic["content_count"] = len(subtopic_content)
@@ -416,9 +445,9 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
                 content["is_completed"] = content["content_id"] in completed_content_ids
         
         for subtopic in subtopics:
+            subtopic_id = subtopic["topic_id"]
             # Grade filter for subtopic content - only show content visible to children
-            subtopic_content_query = {
-                "topic_id": subtopic["topic_id"], 
+            subtopic_content_extra = {
                 "is_published": True,
                 "$or": [
                     {"visible_to": {"$in": ["child"]}},
@@ -428,12 +457,13 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
                 ]
             }
             if filter_grade is not None:
-                subtopic_content_query["min_grade"] = {"$lte": filter_grade}
-                subtopic_content_query["max_grade"] = {"$gte": filter_grade}
+                subtopic_content_extra["min_grade"] = {"$lte": filter_grade}
+                subtopic_content_extra["max_grade"] = {"$gte": filter_grade}
             
-            subtopic_content = await db.content_items.find(
-                subtopic_content_query, {"content_id": 1}
-            ).to_list(100)
+            subtopic_content = await find_with_grade_order(
+                db.content_items, subtopic_content_extra, filter_grade,
+                parent_field='topic_id', parent_target=subtopic_id, limit=100
+            )
             subtopic["completed_count"] = sum(1 for c in subtopic_content if c["content_id"] in completed_content_ids)
             subtopic["content_count"] = len(subtopic_content)
     
@@ -784,13 +814,19 @@ async def admin_toggle_publish(content_id: str, request: Request):
 
 @router.post("/admin/content/items/{content_id}/move")
 async def admin_move_content(content_id: str, request: Request):
-    """Move a content item to a different topic/subtopic"""
+    """Move a content item to a different topic/subtopic. When `grade` is
+    supplied in the body, the move is grade-specific — the item is recorded
+    under the new parent only for that grade (`grade_parents.<grade>`),
+    leaving its position in other grades unchanged. Without `grade`, the
+    global `topic_id` is updated as before."""
     from services.auth import require_admin
     db = get_db()
     await require_admin(request)
     
     body = await request.json()
     new_topic_id = body.get("new_topic_id")
+    grade = body.get("grade")
+    grade_key = str(grade) if grade is not None and grade != "all" else None
     
     if not new_topic_id:
         raise HTTPException(status_code=400, detail="new_topic_id is required")
@@ -803,28 +839,65 @@ async def admin_move_content(content_id: str, request: Request):
     if not new_topic:
         raise HTTPException(status_code=404, detail="Target topic/subtopic not found")
     
-    max_order_doc = await db.content_items.find_one(
-        {"topic_id": new_topic_id},
-        sort=[("order", -1)]
-    )
-    new_order = (max_order_doc.get("order", 0) + 1) if max_order_doc else 0
-    
-    await db.content_items.update_one(
-        {"content_id": content_id},
-        {"$set": {"topic_id": new_topic_id, "order": new_order}}
-    )
+    if grade_key is None:
+        # Global move: existing behaviour.
+        max_order_doc = await db.content_items.find_one(
+            {"topic_id": new_topic_id},
+            sort=[("order", -1)]
+        )
+        new_order = (max_order_doc.get("order", 0) + 1) if max_order_doc else 0
+        await db.content_items.update_one(
+            {"content_id": content_id},
+            {"$set": {"topic_id": new_topic_id, "order": new_order}}
+        )
+    else:
+        # Grade-specific move: write to grade_parents/grade_orders so the item
+        # retains its original placement for other grades.
+        # Find the next per-grade order at the destination.
+        existing = await db.content_items.find(
+            {"$or": [
+                {"topic_id": new_topic_id},
+                {f"grade_parents.{grade_key}": new_topic_id},
+            ]},
+            {"_id": 0, "content_id": 1, "topic_id": 1,
+             "order": 1, "grade_orders": 1, "grade_parents": 1}
+        ).to_list(1000)
+        max_eff_order = -1
+        for doc in existing:
+            grade_parents = doc.get("grade_parents") or {}
+            effective_parent = grade_parents.get(grade_key) or doc.get("topic_id")
+            if effective_parent != new_topic_id:
+                continue
+            grade_orders = doc.get("grade_orders") or {}
+            eff_order = grade_orders.get(grade_key)
+            if eff_order is None:
+                eff_order = doc.get("order", 0)
+            if eff_order > max_eff_order:
+                max_eff_order = eff_order
+        new_order = max_eff_order + 1
+        await db.content_items.update_one(
+            {"content_id": content_id},
+            {"$set": {
+                f"grade_parents.{grade_key}": new_topic_id,
+                f"grade_orders.{grade_key}": new_order,
+            }}
+        )
     
     return {"message": f"Content moved to {new_topic['title']}", "new_topic_id": new_topic_id}
 
 @router.post("/admin/content/subtopics/{subtopic_id}/move")
 async def admin_move_subtopic(subtopic_id: str, request: Request):
-    """Move a subtopic to a different parent topic"""
+    """Move a subtopic to a different parent topic. Supports grade-specific
+    placement when `grade` is supplied in the body (the subtopic appears under
+    the new parent only for that grade)."""
     from services.auth import require_admin
     db = get_db()
     await require_admin(request)
     
     body = await request.json()
     new_parent_id = body.get("new_parent_id")
+    grade = body.get("grade")
+    grade_key = str(grade) if grade is not None and grade != "all" else None
     
     if not new_parent_id:
         raise HTTPException(status_code=400, detail="new_parent_id is required")
@@ -843,16 +916,46 @@ async def admin_move_subtopic(subtopic_id: str, request: Request):
     if new_parent.get("parent_id"):
         raise HTTPException(status_code=400, detail="Cannot move subtopic to another subtopic. Target must be a parent topic.")
     
-    max_order_doc = await db.content_topics.find_one(
-        {"parent_id": new_parent_id},
-        sort=[("order", -1)]
-    )
-    new_order = (max_order_doc.get("order", 0) + 1) if max_order_doc else 0
-    
-    await db.content_topics.update_one(
-        {"topic_id": subtopic_id},
-        {"$set": {"parent_id": new_parent_id, "order": new_order}}
-    )
+    if grade_key is None:
+        max_order_doc = await db.content_topics.find_one(
+            {"parent_id": new_parent_id},
+            sort=[("order", -1)]
+        )
+        new_order = (max_order_doc.get("order", 0) + 1) if max_order_doc else 0
+        await db.content_topics.update_one(
+            {"topic_id": subtopic_id},
+            {"$set": {"parent_id": new_parent_id, "order": new_order}}
+        )
+    else:
+        # Grade-specific move
+        existing = await db.content_topics.find(
+            {"$or": [
+                {"parent_id": new_parent_id},
+                {f"grade_parents.{grade_key}": new_parent_id},
+            ]},
+            {"_id": 0, "topic_id": 1, "parent_id": 1,
+             "order": 1, "grade_orders": 1, "grade_parents": 1}
+        ).to_list(1000)
+        max_eff_order = -1
+        for doc in existing:
+            grade_parents = doc.get("grade_parents") or {}
+            effective_parent = grade_parents.get(grade_key) or doc.get("parent_id")
+            if effective_parent != new_parent_id:
+                continue
+            grade_orders = doc.get("grade_orders") or {}
+            eff_order = grade_orders.get(grade_key)
+            if eff_order is None:
+                eff_order = doc.get("order", 0)
+            if eff_order > max_eff_order:
+                max_eff_order = eff_order
+        new_order = max_eff_order + 1
+        await db.content_topics.update_one(
+            {"topic_id": subtopic_id},
+            {"$set": {
+                f"grade_parents.{grade_key}": new_parent_id,
+                f"grade_orders.{grade_key}": new_order,
+            }}
+        )
     
     return {"message": f"Subtopic moved to {new_parent['title']}", "new_parent_id": new_parent_id}
 

@@ -503,11 +503,46 @@ export default function ContentManagement({ user }) {
     return item.order || 0;
   };
   
-  // Filtered data based on grade filter
-  const filteredTopics = topics.filter(matchesGradeFilter).map(topic => ({
-    ...topic,
-    subtopics: topic.subtopics?.filter(matchesGradeFilter) || []
-  }));
+  // Returns the effective parent_id for a subtopic for the active grade
+  // filter. When grade-specific moves are applied, grade_parents[grade]
+  // overrides the global parent_id.
+  const effectiveSubtopicParent = (subtopic) => {
+    if (!subtopic) return null;
+    if (gradeFilter !== 'all' && subtopic.grade_parents?.[gradeFilter]) {
+      return subtopic.grade_parents[gradeFilter];
+    }
+    return subtopic.parent_id;
+  };
+  
+  // Returns the effective topic_id for a content item for the active grade.
+  const effectiveContentParent = (content) => {
+    if (!content) return null;
+    if (gradeFilter !== 'all' && content.grade_parents?.[gradeFilter]) {
+      return content.grade_parents[gradeFilter];
+    }
+    return content.topic_id;
+  };
+  
+  // Filtered data based on grade filter. When a grade is selected, subtopics
+  // are regrouped under their *effective* parent (grade_parents overrides
+  // parent_id) so admins see the per-grade hierarchy.
+  const allSubtopics = topics.flatMap(t => t.subtopics || []);
+  const filteredTopics = topics.filter(matchesGradeFilter).map(topic => {
+    const own = (topic.subtopics || []).filter(matchesGradeFilter);
+    if (gradeFilter === 'all') {
+      return { ...topic, subtopics: own };
+    }
+    // Include subtopics moved into this topic for the current grade.
+    const ownIds = new Set(own.map(s => s.topic_id));
+    const grafted = allSubtopics.filter(s =>
+      !ownIds.has(s.topic_id) &&
+      s.grade_parents?.[gradeFilter] === topic.topic_id &&
+      matchesGradeFilter(s)
+    );
+    // Also drop subtopics whose effective parent for this grade points elsewhere.
+    const retained = own.filter(s => effectiveSubtopicParent(s) === topic.topic_id);
+    return { ...topic, subtopics: [...retained, ...grafted] };
+  });
   
   const filteredContent = allContent.filter(matchesGradeFilter);
   
@@ -743,9 +778,7 @@ export default function ContentManagement({ user }) {
   
   // Move subtopic up or down
   const moveSubtopic = async (subtopicId, direction) => {
-    if (!selectedTopic?.subtopics) return;
-    
-    const subtopicsList = [...selectedTopic.subtopics].sort((a, b) => effectiveOrder(a) - effectiveOrder(b));
+    const subtopicsList = [...selectedTopicSubtopics].sort((a, b) => effectiveOrder(a) - effectiveOrder(b));
     const index = subtopicsList.findIndex(s => s.topic_id === subtopicId);
     const newIndex = index + direction;
     
@@ -812,29 +845,13 @@ export default function ContentManagement({ user }) {
   // Handle subtopic drag end
   const handleSubtopicDragEnd = async (event) => {
     const { active, over } = event;
-    if (!over || active.id === over.id || !selectedTopic?.subtopics) return;
+    if (!over || active.id === over.id || !selectedTopic) return;
 
-    const sortedSubtopics = [...selectedTopic.subtopics].sort((a, b) => effectiveOrder(a) - effectiveOrder(b));
+    const sortedSubtopics = [...selectedTopicSubtopics].sort((a, b) => effectiveOrder(a) - effectiveOrder(b));
     const oldIndex = sortedSubtopics.findIndex(s => s.topic_id === active.id);
     const newIndex = sortedSubtopics.findIndex(s => s.topic_id === over.id);
 
     const newItems = arrayMove(sortedSubtopics, oldIndex, newIndex);
-    
-    // Optimistically update UI
-    if (gradeFilter === 'all') {
-      setSelectedTopic(prev => ({
-        ...prev,
-        subtopics: newItems.map((item, i) => ({ ...item, order: i }))
-      }));
-    } else {
-      setSelectedTopic(prev => ({
-        ...prev,
-        subtopics: newItems.map((item, i) => ({
-          ...item,
-          grade_orders: { ...(item.grade_orders || {}), [gradeFilter]: i }
-        }))
-      }));
-    }
 
     const reorderData = newItems.map((item, i) => ({ id: item.topic_id, order: i }));
     const payload = { items: reorderData };
@@ -896,10 +913,12 @@ export default function ContentManagement({ user }) {
     if (!itemToMove || !moveTargetId) return;
     
     try {
-      await axios.post(`${API}/admin/content/subtopics/${itemToMove.topic_id}/move`, {
-        new_parent_id: moveTargetId
-      });
-      toast.success('Subtopic moved successfully');
+      const payload = { new_parent_id: moveTargetId };
+      if (gradeFilter !== 'all') payload.grade = gradeFilter;
+      await axios.post(`${API}/admin/content/subtopics/${itemToMove.topic_id}/move`, payload);
+      toast.success(gradeFilter === 'all'
+        ? 'Subtopic moved successfully'
+        : `Subtopic moved for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only`);
       setShowMoveSubtopicDialog(false);
       setItemToMove(null);
       setMoveTargetId('');
@@ -996,7 +1015,15 @@ export default function ContentManagement({ user }) {
   const getContentTypeConfig = (type) => CONTENT_TYPES.find(t => t.value === type) || CONTENT_TYPES[0];
   
   const subtopicContent = selectedSubtopic 
-    ? filteredContent.filter(c => c.topic_id === selectedSubtopic.topic_id).sort((a, b) => effectiveOrder(a) - effectiveOrder(b))
+    ? filteredContent.filter(c => effectiveContentParent(c) === selectedSubtopic.topic_id).sort((a, b) => effectiveOrder(a) - effectiveOrder(b))
+    : [];
+  
+  // Subtopics under the currently selected topic, respecting grade-specific
+  // moves (some subtopics may have been moved into this topic only for the
+  // active grade). Comes from `filteredTopics` so it stays consistent with
+  // the topic list rendering.
+  const selectedTopicSubtopics = selectedTopic
+    ? (filteredTopics.find(t => t.topic_id === selectedTopic.topic_id)?.subtopics || [])
     : [];
   
   // Grade options for filter
@@ -1539,7 +1566,7 @@ export default function ContentManagement({ user }) {
                     <ChevronLeft className="w-4 h-4 mr-1" /> Go to Topics
                   </Button>
                 </div>
-              ) : selectedTopic.subtopics?.filter(matchesGradeFilter).length === 0 ? (
+              ) : selectedTopicSubtopics.filter(matchesGradeFilter).length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
                   <Layers className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                   <p>{gradeFilter === 'all' ? 'No subtopics yet. Create subtopics to organize your content!' : `No subtopics found for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label || 'selected grade'}.`}</p>
@@ -1551,11 +1578,11 @@ export default function ContentManagement({ user }) {
                   onDragEnd={handleSubtopicDragEnd}
                 >
                   <SortableContext
-                    items={[...selectedTopic.subtopics].filter(matchesGradeFilter).sort((a, b) => effectiveOrder(a) - effectiveOrder(b)).map(s => s.topic_id)}
+                    items={[...selectedTopicSubtopics].filter(matchesGradeFilter).sort((a, b) => effectiveOrder(a) - effectiveOrder(b)).map(s => s.topic_id)}
                     strategy={verticalListSortingStrategy}
                   >
                     <div className="space-y-3">
-                      {[...selectedTopic.subtopics].filter(matchesGradeFilter).sort((a, b) => effectiveOrder(a) - effectiveOrder(b)).map((subtopic) => (
+                      {[...selectedTopicSubtopics].filter(matchesGradeFilter).sort((a, b) => effectiveOrder(a) - effectiveOrder(b)).map((subtopic) => (
                         <SortableSubtopicItem
                           key={subtopic.topic_id}
                           subtopic={subtopic}
