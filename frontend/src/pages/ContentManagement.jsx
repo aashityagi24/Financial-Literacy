@@ -523,6 +523,43 @@ export default function ContentManagement({ user }) {
     return content.topic_id;
   };
   
+  // Returns the grade-overridden text field for a topic/subtopic when a
+  // grade filter is active and an override exists. Falls back to the
+  // document's global field.
+  const effectiveText = (item, field) => {
+    if (!item) return '';
+    if (gradeFilter !== 'all') {
+      const override = item.grade_overrides?.[gradeFilter];
+      if (override && override[field] != null && override[field] !== '') {
+        return override[field];
+      }
+    }
+    return item[field] ?? '';
+  };
+  
+  // Returns the override snapshot for the active grade (or null when there is
+  // no filter / no override). Useful to decide UI hints like "Reset to global".
+  const getCurrentGradeOverride = (item) => {
+    if (!item || gradeFilter === 'all') return null;
+    return item.grade_overrides?.[gradeFilter] || null;
+  };
+  
+  // Returns a copy of a topic/subtopic with grade overrides applied when a
+  // grade filter is active. Keeps the original object untouched, so any
+  // per-grade view auto-renders the overridden text without code changes
+  // downstream.
+  const applyOverrides = (item) => {
+    if (!item || gradeFilter === 'all') return item;
+    const override = item.grade_overrides?.[gradeFilter];
+    if (!override) return item;
+    return {
+      ...item,
+      title: (override.title != null && override.title !== '') ? override.title : item.title,
+      description: (override.description != null && override.description !== '') ? override.description : item.description,
+      thumbnail: (override.thumbnail != null && override.thumbnail !== '') ? override.thumbnail : item.thumbnail,
+    };
+  };
+  
   // Filtered data based on grade filter. When a grade is selected, subtopics
   // are regrouped under their *effective* parent (grade_parents overrides
   // parent_id) so admins see the per-grade hierarchy.
@@ -532,16 +569,15 @@ export default function ContentManagement({ user }) {
     if (gradeFilter === 'all') {
       return { ...topic, subtopics: own };
     }
-    // Include subtopics moved into this topic for the current grade.
     const ownIds = new Set(own.map(s => s.topic_id));
     const grafted = allSubtopics.filter(s =>
       !ownIds.has(s.topic_id) &&
       s.grade_parents?.[gradeFilter] === topic.topic_id &&
       matchesGradeFilter(s)
     );
-    // Also drop subtopics whose effective parent for this grade points elsewhere.
     const retained = own.filter(s => effectiveSubtopicParent(s) === topic.topic_id);
-    return { ...topic, subtopics: [...retained, ...grafted] };
+    const mergedSubtopics = [...retained, ...grafted].map(applyOverrides);
+    return { ...applyOverrides(topic), subtopics: mergedSubtopics };
   });
   
   const filteredContent = allContent.filter(matchesGradeFilter);
@@ -626,8 +662,13 @@ export default function ContentManagement({ user }) {
   const saveTopic = async () => {
     try {
       if (editingItem) {
-        await axios.put(`${API}/admin/content/topics/${editingItem.topic_id}`, topicForm);
-        toast.success('Topic updated');
+        // When grade filter active, save as per-grade override only.
+        const payload = { ...topicForm };
+        if (gradeFilter !== 'all') payload.grade = gradeFilter;
+        await axios.put(`${API}/admin/content/topics/${editingItem.topic_id}`, payload);
+        toast.success(gradeFilter === 'all'
+          ? 'Topic updated'
+          : `Topic updated for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only`);
       } else {
         await axios.post(`${API}/admin/content/topics`, { ...topicForm, parent_id: null });
         toast.success('Topic created');
@@ -648,8 +689,12 @@ export default function ContentManagement({ user }) {
     }
     try {
       if (editingItem) {
-        await axios.put(`${API}/admin/content/topics/${editingItem.topic_id}`, subtopicForm);
-        toast.success('Subtopic updated');
+        const payload = { ...subtopicForm };
+        if (gradeFilter !== 'all') payload.grade = gradeFilter;
+        await axios.put(`${API}/admin/content/topics/${editingItem.topic_id}`, payload);
+        toast.success(gradeFilter === 'all'
+          ? 'Subtopic updated'
+          : `Subtopic updated for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only`);
       } else {
         await axios.post(`${API}/admin/content/topics`, { ...subtopicForm, parent_id: selectedTopic.topic_id });
         toast.success('Subtopic created');
@@ -660,6 +705,24 @@ export default function ContentManagement({ user }) {
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to save subtopic');
+    }
+  };
+  
+  // Clear per-grade override (revert that grade's title/desc/thumb to the global value).
+  const clearGradeOverride = async (topicId) => {
+    if (gradeFilter === 'all') return;
+    try {
+      await axios.put(`${API}/admin/content/topics/${topicId}`, {
+        grade: gradeFilter,
+        grade_overrides_clear: true,
+      });
+      toast.success(`Reverted ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label} to global values`);
+      setShowTopicDialog(false);
+      setShowSubtopicDialog(false);
+      setEditingItem(null);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to reset override');
     }
   };
   
@@ -973,10 +1036,13 @@ export default function ContentManagement({ user }) {
   
   const openEditTopic = (topic) => {
     setEditingItem(topic);
+    // When grade filter is active, pre-fill from grade override (falls back
+    // to global). Saving will then write to grade_overrides[grade] only.
+    const override = (gradeFilter !== 'all' && topic.grade_overrides?.[gradeFilter]) || null;
     setTopicForm({
-      title: topic.title,
-      description: topic.description,
-      thumbnail: topic.thumbnail || '',
+      title: override?.title ?? topic.title,
+      description: override?.description ?? topic.description,
+      thumbnail: (override?.thumbnail ?? topic.thumbnail) || '',
       min_grade: topic.min_grade,
       max_grade: topic.max_grade
     });
@@ -985,10 +1051,11 @@ export default function ContentManagement({ user }) {
   
   const openEditSubtopic = (subtopic) => {
     setEditingItem(subtopic);
+    const override = (gradeFilter !== 'all' && subtopic.grade_overrides?.[gradeFilter]) || null;
     setSubtopicForm({
-      title: subtopic.title,
-      description: subtopic.description,
-      thumbnail: subtopic.thumbnail || '',
+      title: override?.title ?? subtopic.title,
+      description: override?.description ?? subtopic.description,
+      thumbnail: (override?.thumbnail ?? subtopic.thumbnail) || '',
       min_grade: subtopic.min_grade,
       max_grade: subtopic.max_grade
     });
@@ -1529,7 +1596,7 @@ export default function ContentManagement({ user }) {
               {selectedTopic && (
                 <div className="mt-6 p-4 bg-blue-50 rounded-lg flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-blue-600">Selected: <strong>{selectedTopic.title}</strong></p>
+                    <p className="text-sm text-blue-600">Selected: <strong>{effectiveText(selectedTopic, 'title')}</strong></p>
                     <p className="text-xs text-blue-500">Click Subtopics tab to manage subtopics</p>
                   </div>
                   <Button onClick={() => setActiveTab('subtopics')}>
@@ -1547,7 +1614,7 @@ export default function ContentManagement({ user }) {
                 <div>
                   <h2 className="text-lg font-semibold text-gray-800">Step 2: Manage Subtopics</h2>
                   <p className="text-sm text-gray-500">
-                    {selectedTopic ? `Drag and drop to reorder subtopics under ${selectedTopic.title}` : 'Select a topic first'}
+                    {selectedTopic ? `Drag and drop to reorder subtopics under ${effectiveText(selectedTopic, 'title')}` : 'Select a topic first'}
                   </p>
                 </div>
                 <Button 
@@ -1602,7 +1669,7 @@ export default function ContentManagement({ user }) {
               {selectedSubtopic && (
                 <div className="mt-6 p-4 bg-green-50 rounded-lg flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-green-600">Selected: <strong>{selectedSubtopic.title}</strong></p>
+                    <p className="text-sm text-green-600">Selected: <strong>{effectiveText(selectedSubtopic, 'title')}</strong></p>
                     <p className="text-xs text-green-500">Click Lesson Plan tab to manage content order</p>
                   </div>
                   <Button onClick={() => setActiveTab('lesson-plan')} className="bg-green-600 hover:bg-green-700">
@@ -1621,7 +1688,7 @@ export default function ContentManagement({ user }) {
                   <h2 className="text-lg font-semibold text-gray-800">Step 3: Lesson Plan</h2>
                   <p className="text-sm text-gray-500">
                     {selectedSubtopic 
-                      ? `Order content for "${selectedSubtopic.title}"` 
+                      ? `Order content for "${effectiveText(selectedSubtopic, 'title')}"` 
                       : 'Select a subtopic to manage its lesson plan'}
                   </p>
                 </div>
@@ -1707,7 +1774,7 @@ export default function ContentManagement({ user }) {
                   {/* Current Selection */}
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-600">
-                      Adding content to: <strong>{selectedTopic?.title}</strong> → <strong>{selectedSubtopic.title}</strong>
+                      Adding content to: <strong>{effectiveText(selectedTopic, 'title')}</strong> → <strong>{effectiveText(selectedSubtopic, 'title')}</strong>
                     </p>
                   </div>
                   
@@ -1751,6 +1818,23 @@ export default function ContentManagement({ user }) {
             <DialogTitle>{editingItem ? 'Edit Topic' : 'New Topic'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
+            {editingItem && gradeFilter !== 'all' && (
+              <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800 flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-medium">Editing for {gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only</p>
+                  <p className="text-xs mt-1">Title, description and thumbnail will be saved as a per-grade override. The global values stay unchanged.</p>
+                </div>
+                {getCurrentGradeOverride(editingItem) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => clearGradeOverride(editingItem.topic_id)}
+                  >
+                    Reset to global
+                  </Button>
+                )}
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
               <Input value={topicForm.title} onChange={e => setTopicForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g., Money Basics" />
@@ -1797,8 +1881,25 @@ export default function ContentManagement({ user }) {
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <div className="p-3 bg-blue-50 rounded-lg text-sm text-blue-600">
-              Parent Topic: <strong>{selectedTopic?.title}</strong>
+              Parent Topic: <strong>{effectiveText(selectedTopic, 'title')}</strong>
             </div>
+            {editingItem && gradeFilter !== 'all' && (
+              <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800 flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-medium">Editing for {gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only</p>
+                  <p className="text-xs mt-1">Title, description and thumbnail will be saved as a per-grade override. The global values stay unchanged.</p>
+                </div>
+                {getCurrentGradeOverride(editingItem) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => clearGradeOverride(editingItem.topic_id)}
+                  >
+                    Reset to global
+                  </Button>
+                )}
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
               <Input value={subtopicForm.title} onChange={e => setSubtopicForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g., What is Money?" />

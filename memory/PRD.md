@@ -8,7 +8,11 @@ A gamified financial literacy learning application for children (K-5) with disti
 ### Core MVP ✅
 - User authentication (Custom Google OAuth + Admin login + School login)
 - Role-based dashboards (Admin, Teacher, Parent, Child)
-- Content management system with drag-and-drop reordering — fully **grade-specific** when a grade filter is applied. Both ordering (`grade_orders`) AND parent placement (`grade_parents`) are stored per-grade, so the same topic/subtopic/content item can live under a different parent and have a different position for each grade without affecting other grades.
+- Content management system with drag-and-drop reordering — fully **grade-specific** when a grade filter is applied. Three layers of per-grade overrides on topics/subtopics:
+  - `grade_orders` — different position per grade
+  - `grade_parents` — different parent topic/subtopic per grade
+  - `grade_overrides` — different title, description and thumbnail per grade
+  Admins editing a topic/subtopic with a grade filter on save changes as a grade-only override (with a "Reset to global" affordance). Children/teachers/parents see the override automatically.
 - Multi-admin background sync — every admin management page (Badges, Garden, Glossary, Investments, Stocks, Store, Quests, Subscriptions, Teacher Repository, main Admin dashboard, Content Management) now polls every 15s and on window focus, so concurrent admins see each other's edits without manual refresh.
 - Virtual store with categories and items
 - Wallet system (Spending, Savings, Gifting jars)

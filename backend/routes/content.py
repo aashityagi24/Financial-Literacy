@@ -78,6 +78,22 @@ async def count_with_grade_parent(collection, parent_field, parent_target, filte
     docs = await collection.aggregate(pipeline).to_list(1)
     return docs[0]["n"] if docs else 0
 
+
+def apply_grade_overrides(doc, filter_grade, fields=("title", "description", "thumbnail")):
+    """Merge per-grade text overrides (title/description/thumbnail) from
+    `grade_overrides.<grade>` onto the document for the given filter_grade.
+    Returns the same doc with the merged fields. Idempotent; safe when no
+    grade filter or no overrides exist."""
+    if not doc or filter_grade is None:
+        return doc
+    overrides = (doc.get("grade_overrides") or {}).get(str(filter_grade))
+    if not overrides:
+        return doc
+    for field in fields:
+        if field in overrides and overrides[field] not in (None, ""):
+            doc[field] = overrides[field]
+    return doc
+
 # ============== USER CONTENT ROUTES ==============
 
 
@@ -120,6 +136,12 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
         completed_content_ids = {doc["content_id"] for doc in completed_docs}
     
     previous_topic_completed = True
+    
+    # Apply grade-specific text overrides on top-level topics (admin views the
+    # global names, everyone else sees the per-grade override when set).
+    if filter_grade is not None and not is_admin:
+        for t in parent_topics:
+            apply_grade_overrides(t, filter_grade)
     
     for topic in parent_topics:
         topic_id = topic["topic_id"]
@@ -175,6 +197,10 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
             db.content_topics, subtopic_extra_query, filter_grade,
             parent_field='parent_id', parent_target=topic_id, limit=100
         )
+        # Apply per-grade text overrides on subtopics (non-admin only).
+        if filter_grade is not None and not is_admin:
+            for st in subtopics:
+                apply_grade_overrides(st, filter_grade)
         topic["subtopics"] = subtopics
         topic["content_count"] = await count_with_grade_parent(
             db.content_items, 'topic_id', topic_id, filter_grade, content_extra_query
@@ -292,6 +318,10 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
     
+    # Apply per-grade text overrides for non-admins.
+    if filter_grade is not None and not is_admin:
+        apply_grade_overrides(topic, filter_grade)
+    
     # Grade filter for subtopics - apply if grade param is passed
     if filter_grade is not None:
         subtopic_extra_query = {"min_grade": {"$lte": filter_grade}, "max_grade": {"$gte": filter_grade}}
@@ -301,6 +331,9 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
         db.content_topics, subtopic_extra_query, filter_grade,
         parent_field='parent_id', parent_target=topic_id, limit=100
     )
+    if filter_grade is not None and not is_admin:
+        for st in subtopics:
+            apply_grade_overrides(st, filter_grade)
     
     # Grade filter for content items (parent_id handled via parent_target)
     content_query = {}
@@ -629,20 +662,39 @@ async def admin_create_topic(request: Request):
 
 @router.put("/admin/content/topics/{topic_id}")
 async def admin_update_topic(topic_id: str, request: Request):
-    """Update a topic"""
+    """Update a topic. When `grade` is supplied in the body, the editable
+    text fields (title, description, thumbnail) are saved as per-grade
+    overrides under `grade_overrides.<grade>` and the global title/description/
+    thumbnail are left untouched. Without `grade`, the global fields are
+    updated as before."""
     from services.auth import require_admin
     db = get_db()
     await require_admin(request)
     body = await request.json()
-    
+    grade = body.get("grade")
+    grade_key = str(grade) if grade is not None and grade != "all" else None
+
     update_fields = {}
-    for field in ["title", "description", "thumbnail", "icon", "min_grade", "max_grade", "order"]:
-        if field in body:
-            update_fields[field] = body[field]
-    
+    if grade_key is None:
+        # Global update
+        for field in ["title", "description", "thumbnail", "icon", "min_grade", "max_grade", "order"]:
+            if field in body:
+                update_fields[field] = body[field]
+    else:
+        # Per-grade override for the human-facing fields only.
+        for field in ["title", "description", "thumbnail"]:
+            if field in body:
+                update_fields[f"grade_overrides.{grade_key}.{field}"] = body[field]
+        # Allow clearing all overrides for this grade by sending grade_overrides_clear: true
+        if body.get("grade_overrides_clear"):
+            await db.content_topics.update_one(
+                {"topic_id": topic_id},
+                {"$unset": {f"grade_overrides.{grade_key}": ""}}
+            )
+
     if update_fields:
         await db.content_topics.update_one({"topic_id": topic_id}, {"$set": update_fields})
-    
+
     return {"message": "Topic updated"}
 
 @router.delete("/admin/content/topics/{topic_id}")
