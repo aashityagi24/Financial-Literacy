@@ -28,6 +28,12 @@ class UserCreateAdmin(BaseModel):
     role: str
     grade: Optional[int] = None
 
+class TestUserCreate(BaseModel):
+    name: str
+    email: str
+    password: str
+    grade: int = 0
+
 class TopicCreate(BaseModel):
     title: str
     description: str
@@ -150,6 +156,65 @@ async def create_user(data: UserCreateAdmin, request: Request):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
+
+
+@router.post("/users/test-user")
+async def create_test_user(data: TestUserCreate, request: Request):
+    """Create a child account flagged as a test user. Test users bypass
+    progressive unlocking — every topic/subtopic/content item is visible and
+    unlocked from day one. Useful for content QA and demos."""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    
+    existing = await db.users.find_one({"email": data.email.lower()})
+    if existing:
+        raise HTTPException(status_code=400, detail="A user with this email already exists")
+    if len(data.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    password_hash = hashlib.sha256(data.password.encode()).hexdigest()
+    user_id = f"user_{uuid.uuid4().hex[:12]}"
+    user_doc = {
+        "user_id": user_id,
+        "name": data.name.strip(),
+        "username": data.email.split('@')[0].lower(),
+        "email": data.email.lower().strip(),
+        "password_hash": password_hash,
+        "role": "child",
+        "grade": data.grade,
+        "balance": 100.0,
+        "streak_count": 0,
+        "is_test_user": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.users.insert_one(user_doc)
+    for account_type in ["spending", "savings", "investing", "gifting"]:
+        await db.wallet_accounts.insert_one({
+            "account_id": f"acc_{uuid.uuid4().hex[:12]}",
+            "user_id": user_id,
+            "account_type": account_type,
+            "balance": 100.0 if account_type == "spending" else 0.0,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+    return {"message": f"Test user {data.name} created", "user_id": user_id}
+
+
+@router.put("/users/{user_id}/test-mode")
+async def toggle_test_mode(user_id: str, request: Request):
+    """Toggle the is_test_user flag for an existing user. Body: {is_test_user: bool}.
+    When true, the user sees every piece of content unlocked regardless of
+    progressive unlock state."""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    body = await request.json()
+    flag = bool(body.get("is_test_user", False))
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "name": 1})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    await db.users.update_one({"user_id": user_id}, {"$set": {"is_test_user": flag}})
+    return {"message": f"Test mode {'enabled' if flag else 'disabled'} for {user['name']}", "is_test_user": flag}
 
 @router.put("/users/{user_id}/role")
 async def update_user_role(user_id: str, request: Request):

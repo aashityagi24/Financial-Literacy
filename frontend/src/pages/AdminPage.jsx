@@ -37,6 +37,7 @@ export default function AdminPage({ user }) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showCreateUser, setShowCreateUser] = useState(false);
+  const [showCreateTestUser, setShowCreateTestUser] = useState(false);
   const [showCreateSchool, setShowCreateSchool] = useState(false);
   const [guidebook, setGuidebook] = useState({ child_guide: '', parent_guide: '', child_page_audios: [], parent_page_audios: [] });
   const [guidebookSaving, setGuidebookSaving] = useState(false);
@@ -47,6 +48,13 @@ export default function AdminPage({ user }) {
     role: 'child',
     grade: 0
   });
+  const [newTestUserForm, setNewTestUserForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    grade: 0
+  });
+  const [showNewTestUserPassword, setShowNewTestUserPassword] = useState(false);
   const [showNewUserPassword, setShowNewUserPassword] = useState(false);
   const [newSchoolForm, setNewSchoolForm] = useState({
     name: '',
@@ -310,6 +318,44 @@ export default function AdminPage({ user }) {
     } catch (error) {
       console.error('Create user error:', error.response?.data);
       toast.error(error.response?.data?.detail || 'Failed to create user');
+    }
+  };
+  
+  const handleCreateTestUser = async () => {
+    if (!newTestUserForm.name || !newTestUserForm.email) {
+      toast.error('Name and email are required');
+      return;
+    }
+    if (!newTestUserForm.password || newTestUserForm.password.length < 6) {
+      toast.error('Password is required (minimum 6 characters)');
+      return;
+    }
+    try {
+      await axios.post(`${API}/admin/users/test-user`, {
+        name: newTestUserForm.name.trim(),
+        email: newTestUserForm.email.trim().toLowerCase(),
+        password: newTestUserForm.password,
+        grade: newTestUserForm.grade,
+      });
+      toast.success(`Test user ${newTestUserForm.name} created. All content unlocked.`);
+      setShowCreateTestUser(false);
+      setNewTestUserForm({ name: '', email: '', password: '', grade: 0 });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create test user');
+    }
+  };
+  
+  const handleToggleTestMode = async (userId, currentlyTest, userName) => {
+    const next = !currentlyTest;
+    try {
+      await axios.put(`${API}/admin/users/${userId}/test-mode`, { is_test_user: next });
+      toast.success(next
+        ? `${userName} is now a test user — all content unlocked`
+        : `${userName} reverted to normal progressive unlock`);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update test mode');
     }
   };
   
@@ -684,7 +730,7 @@ export default function AdminPage({ user }) {
                 )}
                 <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
                 <DialogTrigger asChild>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-[#06D6A0] text-white rounded-lg hover:bg-[#05C090] transition-colors">
+                  <button className="flex items-center gap-2 px-4 py-2 bg-[#06D6A0] text-white rounded-lg hover:bg-[#05C090] transition-colors" data-testid="add-user-btn">
                     <Plus className="w-4 h-4" />
                     Add User
                   </button>
@@ -774,6 +820,93 @@ export default function AdminPage({ user }) {
                       className="w-full py-2 bg-[#06D6A0] text-white rounded-lg hover:bg-[#05C090] font-medium"
                     >
                       Create User
+                    </button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              
+              {/* Create Test User Dialog */}
+              <Dialog open={showCreateTestUser} onOpenChange={setShowCreateTestUser}>
+                <DialogTrigger asChild>
+                  <button
+                    className="flex items-center gap-2 px-4 py-2 border-2 border-purple-500 text-purple-700 rounded-lg hover:bg-purple-50 transition-colors"
+                    data-testid="add-test-user-btn"
+                    title="Create a test child whose content is fully unlocked"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Test User
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="bg-white border-2 border-gray-200 rounded-xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-lg font-bold text-gray-800">Create Test User</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div className="p-3 rounded-lg border border-purple-200 bg-purple-50 text-sm text-purple-800">
+                      Test users skip progressive unlocking entirely — every topic, subtopic and activity is visible and clickable from day one. Ideal for content QA and demos.
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                      <Input
+                        placeholder="Full name"
+                        value={newTestUserForm.name}
+                        onChange={(e) => setNewTestUserForm({ ...newTestUserForm, name: e.target.value })}
+                        data-testid="test-user-name-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                      <Input
+                        type="email"
+                        placeholder="email@example.com"
+                        value={newTestUserForm.email}
+                        onChange={(e) => setNewTestUserForm({ ...newTestUserForm, email: e.target.value })}
+                        data-testid="test-user-email-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                      <div className="relative">
+                        <Input
+                          type={showNewTestUserPassword ? "text" : "password"}
+                          placeholder="Minimum 6 characters"
+                          value={newTestUserForm.password}
+                          onChange={(e) => setNewTestUserForm({ ...newTestUserForm, password: e.target.value })}
+                          className="pr-10"
+                          data-testid="test-user-password-input"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewTestUserPassword(!showNewTestUserPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                          {showNewTestUserPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Grade</label>
+                      <Select
+                        value={String(newTestUserForm.grade)}
+                        onValueChange={(v) => setNewTestUserForm({ ...newTestUserForm, grade: parseInt(v) })}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">Kindergarten</SelectItem>
+                          <SelectItem value="1">1st Grade</SelectItem>
+                          <SelectItem value="2">2nd Grade</SelectItem>
+                          <SelectItem value="3">3rd Grade</SelectItem>
+                          <SelectItem value="4">4th Grade</SelectItem>
+                          <SelectItem value="5">5th Grade</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <button
+                      onClick={handleCreateTestUser}
+                      className="w-full py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
+                      data-testid="create-test-user-submit-btn"
+                    >
+                      Create Test User
                     </button>
                   </div>
                 </DialogContent>
@@ -894,6 +1027,7 @@ export default function AdminPage({ user }) {
                     <th className="text-left py-3 px-4 font-medium text-gray-600">School</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Sign Up</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Last Login</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Mode</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Actions</th>
                   </tr>
                 </thead>
@@ -1024,6 +1158,20 @@ export default function AdminPage({ user }) {
                         ) : (
                           <span className="text-gray-400">Never</span>
                         )}
+                      </td>
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => handleToggleTestMode(u.user_id, !!u.is_test_user, u.name)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${
+                            u.is_test_user
+                              ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                          title={u.is_test_user ? 'Click to revert to normal progressive unlock' : 'Click to mark as a test user (content fully unlocked)'}
+                          data-testid={`test-mode-toggle-${u.user_id}`}
+                        >
+                          {u.is_test_user ? 'Test User' : 'Normal'}
+                        </button>
                       </td>
                       <td className="py-3 px-4">
                         <button

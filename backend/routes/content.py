@@ -94,6 +94,38 @@ def apply_grade_overrides(doc, filter_grade, fields=("title", "description", "th
             doc[field] = overrides[field]
     return doc
 
+
+async def is_user_in_test_mode(user, db):
+    """A user is in 'test mode' (everything unlocked, no progressive gating) when:
+    1. An admin has explicitly set `is_test_user: True` on the user, OR
+    2. The user (or any subscription containing their user_id / email) has an
+       active 1-day subscription. Longer plans keep the normal progressive
+       unlock behaviour.
+
+    Returns False for non-existent users."""
+    if not user:
+        return False
+    if user.get("is_test_user"):
+        return True
+    now_iso = datetime.now(timezone.utc).isoformat()
+    user_id = user.get("user_id")
+    email = (user.get("email") or "").lower()
+    candidates = []
+    if user_id:
+        candidates.append({"child_user_ids": user_id})
+    if email:
+        candidates.append({"parent_emails": email})
+    if not candidates:
+        return False
+    sub = await db.subscriptions.find_one({
+        "$or": candidates,
+        "payment_status": "completed",
+        "is_active": True,
+        "end_date": {"$gt": now_iso},
+        "duration": "1_day",
+    }, {"_id": 0, "subscription_id": 1})
+    return sub is not None
+
 # ============== USER CONTENT ROUTES ==============
 
 
@@ -129,11 +161,13 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
     parent_topics = await find_with_grade_order(db.content_topics, query, filter_grade, limit=100)
     
     completed_content_ids = set()
+    test_mode = False
     if is_child and user_id:
         completed_docs = await db.user_content_progress.find(
             {"user_id": user_id, "completed": True}, {"content_id": 1}
         ).to_list(1000)
         completed_content_ids = {doc["content_id"] for doc in completed_docs}
+        test_mode = await is_user_in_test_mode(user, db)
     
     previous_topic_completed = True
     
@@ -207,11 +241,11 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
         )
         
         if is_child:
-            topic["is_unlocked"] = previous_topic_completed
+            topic["is_unlocked"] = True if test_mode else previous_topic_completed
             topic["completed_count"] = 0
             topic["total_content"] = topic["content_count"]
             all_subtopics_completed = True
-            previous_subtopic_completed = previous_topic_completed
+            previous_subtopic_completed = True if test_mode else previous_topic_completed
             
             for subtopic in subtopics:
                 subtopic_id = subtopic["topic_id"]
@@ -240,16 +274,16 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                 subtopic_completed_count = sum(1 for c in subtopic_content if c["content_id"] in completed_content_ids)
                 subtopic["completed_count"] = subtopic_completed_count
                 subtopic["is_completed"] = subtopic_completed_count == len(subtopic_content) and len(subtopic_content) > 0
-                subtopic["is_unlocked"] = previous_subtopic_completed
+                subtopic["is_unlocked"] = True if test_mode else previous_subtopic_completed
                 topic["completed_count"] += subtopic_completed_count
                 
                 if not subtopic["is_completed"] and subtopic["content_count"] > 0:
                     all_subtopics_completed = False
-                previous_subtopic_completed = subtopic["is_completed"]
+                previous_subtopic_completed = True if test_mode else subtopic["is_completed"]
             
             has_any_content = topic["total_content"] > 0
             topic["is_completed"] = all_subtopics_completed and has_any_content
-            previous_topic_completed = topic["is_completed"]
+            previous_topic_completed = True if test_mode else topic["is_completed"]
         else:
             for subtopic in subtopics:
                 subtopic_id = subtopic["topic_id"]
@@ -427,12 +461,13 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
         ).to_list(1000)
         completed_content_ids = {doc["content_id"] for doc in completed_docs}
         coins_earned_map = {doc["content_id"]: doc.get("coins_earned") for doc in completed_docs}
+        test_mode = await is_user_in_test_mode(user, db)
         
         # Progressive unlock for subtopics
         previous_subtopic_completed = True  # First subtopic always unlocked
         for subtopic in subtopics:
             subtopic_id = subtopic["topic_id"]
-            subtopic["is_unlocked"] = previous_subtopic_completed
+            subtopic["is_unlocked"] = True if test_mode else previous_subtopic_completed
             subtopic_content_extra = {
                 "is_published": True,
                 "$or": [
@@ -453,15 +488,15 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
             subtopic["completed_count"] = subtopic_completed_count
             subtopic["content_count"] = len(subtopic_content)
             subtopic["is_completed"] = subtopic_completed_count == len(subtopic_content) and len(subtopic_content) > 0
-            previous_subtopic_completed = subtopic["is_completed"]
+            previous_subtopic_completed = True if test_mode else subtopic["is_completed"]
         
         # Progressive unlock for content items
         previous_content_completed = True  # First item always unlocked
         for content in content_items:
             content["is_completed"] = content["content_id"] in completed_content_ids
-            content["is_unlocked"] = previous_content_completed
+            content["is_unlocked"] = True if test_mode else previous_content_completed
             content["coins_earned"] = coins_earned_map.get(content["content_id"])
-            previous_content_completed = content["is_completed"]
+            previous_content_completed = True if test_mode else content["is_completed"]
     elif is_parent and user_id:
         # For parents: show completion status based on their children's progress
         links = await db.parent_child_links.find(
