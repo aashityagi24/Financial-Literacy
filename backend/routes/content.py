@@ -107,6 +107,16 @@ async def is_user_in_test_mode(user, db):
         return False
     if user.get("is_test_user"):
         return True
+    return await is_user_on_one_day_trial(user, db)
+
+
+async def is_user_on_one_day_trial(user, db):
+    """True iff the user has an active completed 1-day subscription (their own,
+    their parent's, or one that lists their user_id). Distinct from
+    is_test_user so download throttles can target paying trial users without
+    penalising internal QA accounts."""
+    if not user:
+        return False
     now_iso = datetime.now(timezone.utc).isoformat()
     user_id = user.get("user_id")
     email = (user.get("email") or "").lower()
@@ -1045,4 +1055,103 @@ async def admin_move_subtopic(subtopic_id: str, request: Request):
         )
     
     return {"message": f"Subtopic moved to {new_parent['title']}", "new_parent_id": new_parent_id}
+
+
+TRIAL_DOWNLOAD_LIMIT = 5
+
+
+@router.get("/content/{content_id}/download-status")
+async def get_download_status(content_id: str, request: Request):
+    """Returns the current download usage and limit for the caller. Used by
+    the UI to render the remaining allowance and disable the button when the
+    quota is exhausted. content_id is accepted for routing consistency but is
+    not used by the count — the limit is per-user, not per-item."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Login required")
+    
+    is_trial = await is_user_on_one_day_trial(user, db)
+    if not is_trial:
+        return {"is_limited": False, "limit": None, "used": 0, "remaining": None}
+    
+    used = await db.user_downloads.count_documents({"user_id": user.get("user_id")})
+    return {
+        "is_limited": True,
+        "limit": TRIAL_DOWNLOAD_LIMIT,
+        "used": used,
+        "remaining": max(0, TRIAL_DOWNLOAD_LIMIT - used),
+    }
+
+
+@router.post("/content/{content_id}/download")
+async def request_content_download(content_id: str, request: Request):
+    """Authorises a download for the caller. Returns the asset URL on success.
+    1-day trial subscribers are capped at TRIAL_DOWNLOAD_LIMIT downloads —
+    further attempts return 403 with a clear upgrade message. Admin-flagged
+    test users (`is_test_user: True`) are NOT throttled, only paid 1-day trial
+    subscribers are."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Login required to download")
+    
+    content = await db.content_items.find_one({"content_id": content_id}, {"_id": 0})
+    if not content:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    # Resolve the asset URL based on content type. Worksheets/workbooks use
+    # pdf_url; other types may expose html_url / audio_url / video_url.
+    data = content.get("content_data") or {}
+    url = (
+        data.get("pdf_url")
+        or data.get("html_url")
+        or data.get("audio_url")
+        or data.get("video_url")
+        or data.get("file_url")
+    )
+    if not url:
+        raise HTTPException(status_code=400, detail="This content has no downloadable file")
+    
+    user_id = user.get("user_id")
+    is_trial = await is_user_on_one_day_trial(user, db)
+    
+    if is_trial:
+        # Count any prior downloads — duplicate downloads of the same item
+        # still count, so a curious downloader can't loop a single allowed
+        # file repeatedly.
+        used = await db.user_downloads.count_documents({"user_id": user_id})
+        if used >= TRIAL_DOWNLOAD_LIMIT:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    f"You have reached the {TRIAL_DOWNLOAD_LIMIT}-download limit for the 1-day trial. "
+                    f"Upgrade to a longer plan for unlimited downloads."
+                ),
+            )
+    
+    # Record the download. We always record (even for non-trial users) so we
+    # have a history; the limit check only fires for trial accounts.
+    await db.user_downloads.insert_one({
+        "download_id": f"dl_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id,
+        "content_id": content_id,
+        "content_type": content.get("content_type"),
+        "url": url,
+        "downloaded_at": datetime.now(timezone.utc).isoformat(),
+        "is_trial_download": is_trial,
+    })
+    
+    if is_trial:
+        used_after = await db.user_downloads.count_documents({"user_id": user_id})
+        return {
+            "url": url,
+            "is_limited": True,
+            "limit": TRIAL_DOWNLOAD_LIMIT,
+            "used": used_after,
+            "remaining": max(0, TRIAL_DOWNLOAD_LIMIT - used_after),
+        }
+    return {"url": url, "is_limited": False}
 

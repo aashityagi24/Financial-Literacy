@@ -9,10 +9,8 @@ A gamified financial literacy learning application for children (K-5) with disti
 - User authentication (Custom Google OAuth + Admin login + School login)
 - Role-based dashboards (Admin, Teacher, Parent, Child)
 - Test users — admin can create or flag any existing child as a `test_user`; all topics, subtopics and content are visible and unlocked for them. Any active **1-day subscription** auto-treats the user as a test user (longer plans keep progressive unlock).
-- Content management system with drag-and-drop reordering — fully **grade-specific** when a grade filter is applied. Three layers of per-grade overrides on topics/subtopics:
-  - `grade_orders` — different position per grade
-  - `grade_parents` — different parent topic/subtopic per grade
-  - `grade_overrides` — different title, description and thumbnail per grade
+- **Download anti-piracy throttle** — paid 1-day-plan subscribers are capped at **5 downloadable assets per account**; the 6th request returns HTTP 403 with an upgrade prompt. Admin-flagged test users are exempt. Each download is recorded in `user_downloads` for auditing. Frontend renders a live "X/5" badge on the download button and disables it at zero.
+- Content management system with drag-and-drop reordering — fully **grade-specific** when a grade filter is applied. Per-grade overrides on topics/subtopics (orders, parents, titles/descriptions/thumbnails).
 - Multi-admin background sync — every admin management page polls every 15s and on window focus.
 - Virtual store with categories and items
 - Wallet system (Spending, Savings, Gifting jars)

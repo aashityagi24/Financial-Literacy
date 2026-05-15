@@ -33,12 +33,74 @@ export default function TopicPage({ user }) {
   const [contentFilter, setContentFilter] = useState('all');
   const [htmlFiles, setHtmlFiles] = useState([]);
   const [currentHtmlIndex, setCurrentHtmlIndex] = useState(0);
+  const [downloadStatus, setDownloadStatus] = useState({ is_limited: false, remaining: null, limit: null });
+  const [downloading, setDownloading] = useState(false);
   const showAnimations = useFirstVisitAnimation(`topic-${topicId}`);
   const lastCompletedRef = useRef(null);
   
   useEffect(() => {
     fetchTopicData();
   }, [topicId, gradeFilter]);
+  
+  // Fetch the user's current trial-download status whenever a downloadable
+  // item is opened, so we can show "X downloads left" and disable when zero.
+  useEffect(() => {
+    if (!selectedContent?.content_id) return;
+    const hasDownloadable = !!(selectedContent.content_data?.pdf_url);
+    if (!hasDownloadable) {
+      setDownloadStatus({ is_limited: false, remaining: null, limit: null });
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await axios.get(`${API}/content/${selectedContent.content_id}/download-status`);
+        if (!cancelled) setDownloadStatus(res.data || {});
+      } catch {
+        if (!cancelled) setDownloadStatus({ is_limited: false, remaining: null, limit: null });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [selectedContent?.content_id]);
+  
+  const handleDownload = async () => {
+    if (!selectedContent?.content_id) return;
+    setDownloading(true);
+    try {
+      const res = await axios.post(`${API}/content/${selectedContent.content_id}/download`);
+      const { url, is_limited, remaining, limit } = res.data || {};
+      if (url) {
+        // Trigger the actual file download.
+        const a = document.createElement('a');
+        a.href = getAssetUrl(url);
+        a.download = '';
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+      if (is_limited) {
+        setDownloadStatus({ is_limited: true, remaining, limit });
+        if (typeof remaining === 'number') {
+          toast.success(remaining === 0
+            ? `Last trial download used (${limit}/${limit}).`
+            : `${remaining} of ${limit} trial downloads remaining`);
+        }
+      }
+    } catch (err) {
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail || 'Download failed';
+      if (status === 403) {
+        // Limit reached — refresh status so the button shows the disabled state.
+        setDownloadStatus({ is_limited: true, remaining: 0, limit: downloadStatus.limit || 5 });
+        toast.error(detail, { duration: 5000 });
+      } else {
+        toast.error(detail);
+      }
+    } finally {
+      setDownloading(false);
+    }
+  };
   
   // Listen for activity score messages from iframes
   // Track last score save time to debounce rapid postMessage events
@@ -605,16 +667,33 @@ export default function TopicPage({ user }) {
                 </div>
               )}
               <div className="flex items-center gap-2">
-                {/* Download PDF button for worksheets/workbooks */}
+                {/* Download PDF button for worksheets/workbooks. Goes through
+                    the API so 1-day trial accounts can be capped at 5 downloads. */}
                 {(selectedContent.content_type === 'worksheet' || selectedContent.content_type === 'workbook') && selectedContent.content_data?.pdf_url && (
-                  <a 
-                    href={getAssetUrl(selectedContent.content_data.pdf_url)} 
-                    download 
-                    className="p-2 hover:bg-gray-100 rounded-xl border-2 border-[#1D3557]"
-                    title="Download PDF"
+                  <button
+                    onClick={handleDownload}
+                    disabled={downloading || (downloadStatus.is_limited && downloadStatus.remaining === 0)}
+                    className={`p-2 rounded-xl border-2 border-[#1D3557] flex items-center gap-1.5 transition-colors ${
+                      downloadStatus.is_limited && downloadStatus.remaining === 0
+                        ? 'opacity-50 cursor-not-allowed bg-gray-100'
+                        : 'hover:bg-gray-100'
+                    }`}
+                    title={
+                      downloadStatus.is_limited
+                        ? (downloadStatus.remaining === 0
+                            ? 'Trial download limit reached'
+                            : `${downloadStatus.remaining} of ${downloadStatus.limit} trial downloads left`)
+                        : 'Download PDF'
+                    }
+                    data-testid="content-download-btn"
                   >
                     <Download className="w-5 h-5 text-[#1D3557]" />
-                  </a>
+                    {downloadStatus.is_limited && typeof downloadStatus.remaining === 'number' && (
+                      <span className="text-xs font-semibold text-[#1D3557]">
+                        {downloadStatus.remaining}/{downloadStatus.limit}
+                      </span>
+                    )}
+                  </button>
                 )}
                 {/* Open in new tab for worksheets/workbooks (for teachers/parents) */}
                 {user?.role !== 'child' && (selectedContent.content_type === 'worksheet' || selectedContent.content_type === 'workbook') && selectedContent.content_data?.pdf_url && (
