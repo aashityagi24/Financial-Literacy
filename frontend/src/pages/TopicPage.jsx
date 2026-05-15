@@ -12,6 +12,7 @@ import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
 import { Progress } from "@/components/ui/progress";
 import ActivityScoresBadge from "@/components/ActivityScoresBadge";
 import ChildActivityScore from "@/components/ChildActivityScore";
+import TrialLimitDialog from "@/components/TrialLimitDialog";
 
 const CONTENT_TYPE_CONFIG = {
   worksheet: { icon: FileSpreadsheet, color: 'text-orange-600', bg: 'bg-orange-100', label: 'Worksheet' },
@@ -35,6 +36,8 @@ export default function TopicPage({ user }) {
   const [currentHtmlIndex, setCurrentHtmlIndex] = useState(0);
   const [downloadStatus, setDownloadStatus] = useState({ is_limited: false, remaining: null, limit: null });
   const [downloading, setDownloading] = useState(false);
+  const [showTrialLimitDialog, setShowTrialLimitDialog] = useState(false);
+  const trialBannerShownRef = useRef(false);
   const showAnimations = useFirstVisitAnimation(`topic-${topicId}`);
   const lastCompletedRef = useRef(null);
   
@@ -55,7 +58,24 @@ export default function TopicPage({ user }) {
     (async () => {
       try {
         const res = await axios.get(`${API}/content/${selectedContent.content_id}/download-status`);
-        if (!cancelled) setDownloadStatus(res.data || {});
+        if (cancelled) return;
+        const data = res.data || {};
+        setDownloadStatus(data);
+        // First-time-this-session educational nudge for trial users so the
+        // cap doesn't surprise them when they hit it later.
+        if (data.is_limited && !trialBannerShownRef.current) {
+          trialBannerShownRef.current = true;
+          if (typeof data.remaining === 'number') {
+            if (data.remaining === 0) {
+              toast.error(`Trial download limit reached (${data.limit}/${data.limit}). Upgrade for unlimited access.`, { duration: 6000 });
+            } else {
+              toast(
+                `${data.remaining} of ${data.limit} trial downloads remaining — upgrade for unlimited access.`,
+                { duration: 6000 }
+              );
+            }
+          }
+        }
       } catch {
         if (!cancelled) setDownloadStatus({ is_limited: false, remaining: null, limit: null });
       }
@@ -65,12 +85,17 @@ export default function TopicPage({ user }) {
   
   const handleDownload = async () => {
     if (!selectedContent?.content_id) return;
+    // Pre-empt the round trip when we already know the trial allowance is
+    // exhausted so the user immediately sees the upsell modal.
+    if (downloadStatus.is_limited && downloadStatus.remaining === 0) {
+      setShowTrialLimitDialog(true);
+      return;
+    }
     setDownloading(true);
     try {
       const res = await axios.post(`${API}/content/${selectedContent.content_id}/download`);
       const { url, is_limited, remaining, limit } = res.data || {};
       if (url) {
-        // Trigger the actual file download.
         const a = document.createElement('a');
         a.href = getAssetUrl(url);
         a.download = '';
@@ -81,19 +106,25 @@ export default function TopicPage({ user }) {
       }
       if (is_limited) {
         setDownloadStatus({ is_limited: true, remaining, limit });
+        // Let the global banner refresh its count too.
+        window.dispatchEvent(new Event('trial-status-refresh'));
         if (typeof remaining === 'number') {
-          toast.success(remaining === 0
-            ? `Last trial download used (${limit}/${limit}).`
-            : `${remaining} of ${limit} trial downloads remaining`);
+          if (remaining === 0) {
+            // Used the last allowed download — show the upsell.
+            setShowTrialLimitDialog(true);
+          } else {
+            toast.success(`${remaining} of ${limit} trial downloads remaining`);
+          }
         }
       }
     } catch (err) {
       const status = err.response?.status;
       const detail = err.response?.data?.detail || 'Download failed';
       if (status === 403) {
-        // Limit reached — refresh status so the button shows the disabled state.
         setDownloadStatus({ is_limited: true, remaining: 0, limit: downloadStatus.limit || 5 });
-        toast.error(detail, { duration: 5000 });
+        window.dispatchEvent(new Event('trial-status-refresh'));
+        // Hard wall → show the explanation modal.
+        setShowTrialLimitDialog(true);
       } else {
         toast.error(detail);
       }
@@ -672,24 +703,28 @@ export default function TopicPage({ user }) {
                 {(selectedContent.content_type === 'worksheet' || selectedContent.content_type === 'workbook') && selectedContent.content_data?.pdf_url && (
                   <button
                     onClick={handleDownload}
-                    disabled={downloading || (downloadStatus.is_limited && downloadStatus.remaining === 0)}
+                    disabled={downloading}
                     className={`p-2 rounded-xl border-2 border-[#1D3557] flex items-center gap-1.5 transition-colors ${
                       downloadStatus.is_limited && downloadStatus.remaining === 0
-                        ? 'opacity-50 cursor-not-allowed bg-gray-100'
+                        ? 'bg-orange-50 border-orange-400 hover:bg-orange-100'
                         : 'hover:bg-gray-100'
-                    }`}
+                    } ${downloading ? 'opacity-50 cursor-wait' : ''}`}
                     title={
                       downloadStatus.is_limited
                         ? (downloadStatus.remaining === 0
-                            ? 'Trial download limit reached'
+                            ? 'Trial download limit reached — click to see upgrade options'
                             : `${downloadStatus.remaining} of ${downloadStatus.limit} trial downloads left`)
                         : 'Download PDF'
                     }
                     data-testid="content-download-btn"
                   >
-                    <Download className="w-5 h-5 text-[#1D3557]" />
+                    {downloadStatus.is_limited && downloadStatus.remaining === 0 ? (
+                      <Lock className="w-5 h-5 text-orange-600" />
+                    ) : (
+                      <Download className="w-5 h-5 text-[#1D3557]" />
+                    )}
                     {downloadStatus.is_limited && typeof downloadStatus.remaining === 'number' && (
-                      <span className="text-xs font-semibold text-[#1D3557]">
+                      <span className={`text-xs font-semibold ${downloadStatus.remaining === 0 ? 'text-orange-700' : 'text-[#1D3557]'}`}>
                         {downloadStatus.remaining}/{downloadStatus.limit}
                       </span>
                     )}
@@ -853,6 +888,12 @@ export default function TopicPage({ user }) {
           </div>
         </div>
       )}
+      
+      <TrialLimitDialog
+        open={showTrialLimitDialog}
+        onClose={() => setShowTrialLimitDialog(false)}
+        limit={downloadStatus.limit || 5}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import "@/App.css";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
 import axios from "axios";
 import { Toaster } from "@/components/ui/sonner";
+import TrialBanner from "@/components/TrialBanner";
 
 // Pages
 import LandingPage from "@/pages/LandingPage";
@@ -174,6 +175,7 @@ export const ProtectedRoute = ({ children }) => {
   // Clone children with user prop and include OnboardingTour for child/parent
   return (
     <>
+      <TrialBanner user={user} />
       <OnboardingTour user={user} onComplete={() => setUser({...user, has_completed_onboarding: true})} />
       {children({ user, setUser })}
     </>

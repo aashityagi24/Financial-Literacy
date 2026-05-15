@@ -1060,6 +1060,28 @@ async def admin_move_subtopic(subtopic_id: str, request: Request):
 TRIAL_DOWNLOAD_LIMIT = 5
 
 
+@router.get("/me/trial-status")
+async def get_my_trial_status(request: Request):
+    """Returns the caller's 1-day-trial status and current download usage.
+    Used by global UI (persistent upgrade banner, limit-reached dialog).
+    Safe for unauthenticated callers — returns is_trial=false."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if not user:
+        return {"is_trial": False, "downloads_used": 0, "downloads_limit": TRIAL_DOWNLOAD_LIMIT, "downloads_remaining": TRIAL_DOWNLOAD_LIMIT}
+    is_trial = await is_user_on_one_day_trial(user, db)
+    if not is_trial:
+        return {"is_trial": False, "downloads_used": 0, "downloads_limit": TRIAL_DOWNLOAD_LIMIT, "downloads_remaining": TRIAL_DOWNLOAD_LIMIT}
+    used = await db.user_downloads.count_documents({"user_id": user.get("user_id")})
+    return {
+        "is_trial": True,
+        "downloads_used": used,
+        "downloads_limit": TRIAL_DOWNLOAD_LIMIT,
+        "downloads_remaining": max(0, TRIAL_DOWNLOAD_LIMIT - used),
+    }
+
+
 @router.get("/content/{content_id}/download-status")
 async def get_download_status(content_id: str, request: Request):
     """Returns the current download usage and limit for the caller. Used by
