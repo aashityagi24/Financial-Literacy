@@ -23,15 +23,17 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 class UserCreateAdmin(BaseModel):
     name: str
-    email: str
+    email: Optional[str] = None
+    username: Optional[str] = None
     password: str
     role: str
     grade: Optional[int] = None
 
 class TestUserCreate(BaseModel):
     name: str
-    email: str
-    password: str
+    email: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
     grade: int = 0
 
 class TopicCreate(BaseModel):
@@ -107,51 +109,63 @@ async def get_users(request: Request):
 
 @router.post("/users")
 async def create_user(data: UserCreateAdmin, request: Request):
-    """Create a new user with password"""
+    """Create a new user with password. Either an email or a username is
+    required. Children may be created with username + password only."""
     from services.auth import require_admin
+    from services.user_provisioning import create_child_user, resolve_username
     db = get_db()
     await require_admin(request)
     
-    # Check for existing user by email only (name, role, grade can be duplicated)
-    existing = await db.users.find_one({"email": data.email.lower()})
-    if existing:
-        raise HTTPException(status_code=400, detail="A user with this email already exists")
+    if data.role not in ("child", "parent", "teacher", "admin"):
+        raise HTTPException(status_code=400, detail="Invalid role")
     
-    # Validate password
-    if len(data.password) < 6:
+    if not data.email and not data.username:
+        raise HTTPException(status_code=400, detail="Either email or username is required")
+    
+    if data.email:
+        existing = await db.users.find_one({"email": data.email.lower()})
+        if existing:
+            raise HTTPException(status_code=400, detail="A user with this email already exists")
+    
+    if not data.password or len(data.password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
     
     try:
-        # Hash the password
-        password_hash = hashlib.sha256(data.password.encode()).hexdigest()
+        # Children use the shared provisioning helper so wallet accounts and
+        # username uniqueness are handled consistently.
+        if data.role == "child":
+            created = await create_child_user(
+                db,
+                name=data.name,
+                grade=data.grade or 0,
+                email=data.email,
+                username=data.username,
+                password=data.password,
+            )
+            return {"message": f"User {data.name} created successfully", "user_id": created["user_id"], "username": created["username"]}
         
+        # Non-child accounts (parent/teacher/admin) still require email today.
+        if not data.email:
+            raise HTTPException(status_code=400, detail="Email is required for non-child accounts")
+        username = await resolve_username(db, data.username, data.name, data.email)
+        password_hash = hashlib.sha256(data.password.encode()).hexdigest()
         user_id = f"user_{uuid.uuid4().hex[:12]}"
         user_doc = {
             "user_id": user_id,
             "name": data.name.strip(),
-            "username": data.email.split('@')[0].lower(),  # Create username from email
+            "username": username,
             "email": data.email.lower().strip(),
             "password_hash": password_hash,
             "role": data.role,
             "grade": data.grade if data.role == "child" else None,
-            "balance": 100.0 if data.role == "child" else 0,
+            "balance": 0,
             "streak_count": 0,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         await db.users.insert_one(user_doc)
-        
-        # Create wallet accounts for children
-        if data.role == "child":
-            for account_type in ["spending", "savings", "investing", "gifting"]:
-                await db.wallet_accounts.insert_one({
-                    "account_id": f"acc_{uuid.uuid4().hex[:12]}",
-                    "user_id": user_id,
-                    "account_type": account_type,
-                    "balance": 100.0 if account_type == "spending" else 0.0,
-                    "created_at": datetime.now(timezone.utc).isoformat()
-                })
-        
-        return {"message": f"User {data.name} created successfully", "user_id": user_id}
+        return {"message": f"User {data.name} created successfully", "user_id": user_id, "username": username}
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -162,42 +176,33 @@ async def create_user(data: UserCreateAdmin, request: Request):
 async def create_test_user(data: TestUserCreate, request: Request):
     """Create a child account flagged as a test user. Test users bypass
     progressive unlocking — every topic/subtopic/content item is visible and
-    unlocked from day one. Useful for content QA and demos."""
+    unlocked from day one. Supports both email and username+password modes."""
     from services.auth import require_admin
+    from services.user_provisioning import create_child_user
     db = get_db()
     await require_admin(request)
     
-    existing = await db.users.find_one({"email": data.email.lower()})
-    if existing:
-        raise HTTPException(status_code=400, detail="A user with this email already exists")
-    if len(data.password) < 6:
-        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    if not data.email and not data.username:
+        raise HTTPException(status_code=400, detail="Either email or username is required")
     
-    password_hash = hashlib.sha256(data.password.encode()).hexdigest()
-    user_id = f"user_{uuid.uuid4().hex[:12]}"
-    user_doc = {
-        "user_id": user_id,
-        "name": data.name.strip(),
-        "username": data.email.split('@')[0].lower(),
-        "email": data.email.lower().strip(),
-        "password_hash": password_hash,
-        "role": "child",
-        "grade": data.grade,
-        "balance": 100.0,
-        "streak_count": 0,
-        "is_test_user": True,
-        "created_at": datetime.now(timezone.utc).isoformat()
+    try:
+        created = await create_child_user(
+            db,
+            name=data.name,
+            grade=data.grade or 0,
+            email=data.email,
+            username=data.username,
+            password=data.password,
+            extra={"is_test_user": True},
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    return {
+        "message": f"Test user {data.name} created",
+        "user_id": created["user_id"],
+        "username": created["username"],
+        "auto_generated_password": created["password"] if created["auto_generated_password"] else None,
     }
-    await db.users.insert_one(user_doc)
-    for account_type in ["spending", "savings", "investing", "gifting"]:
-        await db.wallet_accounts.insert_one({
-            "account_id": f"acc_{uuid.uuid4().hex[:12]}",
-            "user_id": user_id,
-            "account_type": account_type,
-            "balance": 100.0 if account_type == "spending" else 0.0,
-            "created_at": datetime.now(timezone.utc).isoformat()
-        })
-    return {"message": f"Test user {data.name} created", "user_id": user_id}
 
 
 @router.put("/users/{user_id}/test-mode")

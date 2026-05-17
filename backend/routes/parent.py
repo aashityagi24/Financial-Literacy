@@ -21,6 +21,14 @@ router = APIRouter(prefix="/parent", tags=["parent"])
 class LinkChildRequest(BaseModel):
     child_email: str
 
+
+class ParentCreateChildRequest(BaseModel):
+    name: str
+    grade: int = 0
+    email: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+
 class AllowanceCreate(BaseModel):
     child_id: str
     amount: float
@@ -80,6 +88,56 @@ async def parent_dashboard(request: Request):
             })
     
     return {"children": children}
+
+@router.post("/create-child")
+async def parent_create_child(data: ParentCreateChildRequest, request: Request):
+    """Create a brand-new child account and link it to the calling parent.
+    Supports children without an email — parent supplies a username and
+    password (or lets the system auto-generate). The new child is returned
+    so the UI can show the credentials back to the parent for safe-keeping."""
+    from services.auth import require_parent
+    from services.user_provisioning import create_child_user
+    db = get_db()
+    parent = await require_parent(request)
+    
+    if not data.email and not data.username:
+        raise HTTPException(status_code=400, detail="Either an email or a username is required")
+    
+    try:
+        created = await create_child_user(
+            db,
+            name=data.name,
+            grade=data.grade or 0,
+            email=data.email,
+            username=data.username,
+            password=data.password,
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    
+    # Auto-link the new child to the calling parent.
+    await db.parent_child_links.insert_one({
+        "link_id": f"link_{uuid.uuid4().hex[:12]}",
+        "parent_id": parent["user_id"],
+        "child_id": created["user_id"],
+        "status": "active",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    
+    return {
+        "message": f"Child {created['name']} created and linked",
+        "child": {
+            "user_id": created["user_id"],
+            "name": created["name"],
+            "username": created["username"],
+            "email": created["email"],
+            "grade": created["grade"],
+            # Returned ONLY when the system auto-generated it so the parent can
+            # write it down. None when the parent supplied their own password.
+            "auto_generated_password": created["password"] if created["auto_generated_password"] else None,
+        },
+    }
+
 
 @router.post("/link-child")
 async def link_child(data: LinkChildRequest, request: Request):

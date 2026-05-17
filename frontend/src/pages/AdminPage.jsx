@@ -38,6 +38,7 @@ export default function AdminPage({ user }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showCreateTestUser, setShowCreateTestUser] = useState(false);
+  const [showCreateChildNoEmail, setShowCreateChildNoEmail] = useState(false);
   const [showCreateSchool, setShowCreateSchool] = useState(false);
   const [guidebook, setGuidebook] = useState({ child_guide: '', parent_guide: '', child_page_audios: [], parent_page_audios: [] });
   const [guidebookSaving, setGuidebookSaving] = useState(false);
@@ -55,6 +56,15 @@ export default function AdminPage({ user }) {
     grade: 0
   });
   const [showNewTestUserPassword, setShowNewTestUserPassword] = useState(false);
+  // No-email child creation form (admin → child via username + password)
+  const [newChildNoEmailForm, setNewChildNoEmailForm] = useState({
+    name: '',
+    username: '',
+    password: '',
+    grade: 0,
+  });
+  const [showNewChildNoEmailPassword, setShowNewChildNoEmailPassword] = useState(false);
+  const [lastCreatedChildCreds, setLastCreatedChildCreds] = useState(null);
   const [showNewUserPassword, setShowNewUserPassword] = useState(false);
   const [newSchoolForm, setNewSchoolForm] = useState({
     name: '',
@@ -343,6 +353,39 @@ export default function AdminPage({ user }) {
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to create test user');
+    }
+  };
+  
+  const handleCreateChildNoEmail = async () => {
+    if (!newChildNoEmailForm.name) {
+      toast.error('Name is required');
+      return;
+    }
+    if (newChildNoEmailForm.password && newChildNoEmailForm.password.length < 6) {
+      toast.error('Password must be at least 6 characters (or leave blank to auto-generate)');
+      return;
+    }
+    try {
+      const payload = {
+        name: newChildNoEmailForm.name.trim(),
+        role: 'child',
+        grade: newChildNoEmailForm.grade,
+      };
+      payload.username = (newChildNoEmailForm.username || '').trim() || newChildNoEmailForm.name.trim().toLowerCase().replace(/\s+/g, '_').slice(0, 20);
+      // Backend requires password — generate one client-side if admin left blank
+      // so we can immediately show it back to the admin.
+      payload.password = newChildNoEmailForm.password || Math.random().toString(36).slice(-10);
+      const res = await axios.post(`${API}/admin/users`, payload);
+      setLastCreatedChildCreds({
+        name: newChildNoEmailForm.name.trim(),
+        username: res.data.username || payload.username,
+        password: payload.password,
+      });
+      toast.success(`Child ${newChildNoEmailForm.name} created — credentials shown below`);
+      setNewChildNoEmailForm({ name: '', username: '', password: '', grade: 0 });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create child');
     }
   };
   
@@ -907,6 +950,119 @@ export default function AdminPage({ user }) {
                       data-testid="create-test-user-submit-btn"
                     >
                       Create Test User
+                    </button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              
+              {/* Create Child WITHOUT Email Dialog — for kids who don't have an email ID. */}
+              <Dialog open={showCreateChildNoEmail} onOpenChange={(o) => { setShowCreateChildNoEmail(o); if (!o) setLastCreatedChildCreds(null); }}>
+                <DialogTrigger asChild>
+                  <button
+                    className="flex items-center gap-2 px-4 py-2 border-2 border-emerald-500 text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors"
+                    data-testid="add-child-no-email-btn"
+                    title="Create a child account with just a username and password"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Child (No Email)
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="bg-white border-2 border-gray-200 rounded-xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-lg font-bold text-gray-800">Add Child without Email</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div className="p-3 rounded-lg border border-emerald-200 bg-emerald-50 text-sm text-emerald-800">
+                      For kids who don't have an email yet — they'll sign in with a username and password instead. Leave fields blank to auto-generate.
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                      <Input
+                        placeholder="Full name"
+                        value={newChildNoEmailForm.name}
+                        onChange={(e) => setNewChildNoEmailForm({ ...newChildNoEmailForm, name: e.target.value })}
+                        data-testid="child-no-email-name-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Username
+                        <span className="text-xs text-gray-500 font-normal ml-1">(auto-generated when blank)</span>
+                      </label>
+                      <Input
+                        placeholder="e.g. ria_g2"
+                        value={newChildNoEmailForm.username}
+                        onChange={(e) => setNewChildNoEmailForm({ ...newChildNoEmailForm, username: e.target.value })}
+                        data-testid="child-no-email-username-input"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Password
+                        <span className="text-xs text-gray-500 font-normal ml-1">(min 6 chars; auto-generated when blank)</span>
+                      </label>
+                      <div className="relative">
+                        <Input
+                          type={showNewChildNoEmailPassword ? 'text' : 'password'}
+                          placeholder="Auto-generated when blank"
+                          value={newChildNoEmailForm.password}
+                          onChange={(e) => setNewChildNoEmailForm({ ...newChildNoEmailForm, password: e.target.value })}
+                          className="pr-10"
+                          data-testid="child-no-email-password-input"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewChildNoEmailPassword(!showNewChildNoEmailPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                          {showNewChildNoEmailPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Grade</label>
+                      <Select
+                        value={String(newChildNoEmailForm.grade)}
+                        onValueChange={(v) => setNewChildNoEmailForm({ ...newChildNoEmailForm, grade: parseInt(v) })}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">Kindergarten</SelectItem>
+                          <SelectItem value="1">1st Grade</SelectItem>
+                          <SelectItem value="2">2nd Grade</SelectItem>
+                          <SelectItem value="3">3rd Grade</SelectItem>
+                          <SelectItem value="4">4th Grade</SelectItem>
+                          <SelectItem value="5">5th Grade</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {lastCreatedChildCreds && (
+                      <div className="p-3 rounded-lg border-2 border-emerald-300 bg-emerald-50" data-testid="child-no-email-creds-card">
+                        <p className="text-sm font-bold text-emerald-800 mb-2">Credentials for {lastCreatedChildCreds.name}</p>
+                        <div className="space-y-1 text-sm font-mono text-gray-800">
+                          <div><span className="text-gray-500">Username:</span> {lastCreatedChildCreds.username}</div>
+                          <div><span className="text-gray-500">Password:</span> {lastCreatedChildCreds.password}</div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(`Username: ${lastCreatedChildCreds.username}\nPassword: ${lastCreatedChildCreds.password}`);
+                            toast.success('Copied');
+                          }}
+                          className="mt-2 text-xs font-medium text-emerald-700 hover:underline"
+                        >
+                          Copy to clipboard
+                        </button>
+                        <p className="text-xs text-emerald-700 mt-2">Note these down — the password won't be shown again.</p>
+                      </div>
+                    )}
+                    
+                    <button
+                      onClick={handleCreateChildNoEmail}
+                      className="w-full py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium"
+                      data-testid="create-child-no-email-submit-btn"
+                    >
+                      Create Child
                     </button>
                   </div>
                 </DialogContent>

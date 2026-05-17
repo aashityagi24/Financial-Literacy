@@ -768,9 +768,10 @@ export default function SchoolDashboard() {
                   </>
                 ) : uploadType === 'students' ? (
                   <>
-                    <p><strong>Required:</strong> <code className="bg-blue-100 px-1 rounded">name</code>, <code className="bg-blue-100 px-1 rounded">email</code>, <code className="bg-blue-100 px-1 rounded">grade</code> (0-5)</p>
-                    <p className="mt-1"><strong>Optional:</strong> <code className="bg-blue-100 px-1 rounded">teacher_email</code>, <code className="bg-blue-100 px-1 rounded">subscription</code> (active), <code className="bg-blue-100 px-1 rounded">subscription_duration</code> (1_day / 1_week / 1_month)</p>
-                    <p className="text-xs text-blue-600 mt-1">Set subscription=active to grant immediate platform access</p>
+                    <p><strong>Required:</strong> <code className="bg-blue-100 px-1 rounded">name</code>, <code className="bg-blue-100 px-1 rounded">grade</code> (0-5)</p>
+                    <p className="mt-1"><strong>One of:</strong> <code className="bg-blue-100 px-1 rounded">email</code> <em>or</em> <code className="bg-blue-100 px-1 rounded">username</code> — leave both blank to auto-generate a username + password</p>
+                    <p className="mt-1"><strong>Optional:</strong> <code className="bg-blue-100 px-1 rounded">password</code>, <code className="bg-blue-100 px-1 rounded">teacher_email</code>, <code className="bg-blue-100 px-1 rounded">subscription</code> (active), <code className="bg-blue-100 px-1 rounded">subscription_duration</code> (1_day / 1_week / 1_month)</p>
+                    <p className="text-xs text-blue-600 mt-1">Children without email IDs sign in using <strong>username + password</strong>. Auto-generated credentials are shown after upload so you can share them with families.</p>
                   </>
                 ) : (
                   <>
@@ -868,6 +869,53 @@ export default function SchoolDashboard() {
                         <li key={idx}>{err}</li>
                       ))}
                     </ul>
+                  </div>
+                )}
+                {uploadResult.auto_generated_credentials?.length > 0 && (
+                  <div className="mt-3 border-t border-green-200 pt-3" data-testid="auto-creds-section">
+                    <p className="font-semibold text-green-800 mb-2">
+                      Auto-generated credentials ({uploadResult.auto_generated_credentials.length})
+                    </p>
+                    <p className="text-xs text-green-700 mb-2">
+                      These children had no email. Share these credentials with their families — they won&apos;t be shown again.
+                    </p>
+                    <div className="max-h-48 overflow-y-auto border border-green-200 rounded bg-white">
+                      <table className="w-full text-xs">
+                        <thead className="bg-green-100 text-green-800">
+                          <tr>
+                            <th className="px-2 py-1 text-left">Name</th>
+                            <th className="px-2 py-1 text-left">Username</th>
+                            <th className="px-2 py-1 text-left">Password</th>
+                          </tr>
+                        </thead>
+                        <tbody className="font-mono text-gray-800">
+                          {uploadResult.auto_generated_credentials.map((c, idx) => (
+                            <tr key={idx} className="border-t border-green-100">
+                              <td className="px-2 py-1 font-sans">{c.name}</td>
+                              <td className="px-2 py-1">{c.username}</td>
+                              <td className="px-2 py-1">{c.password}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const text = ['name,username,password']
+                          .concat(uploadResult.auto_generated_credentials.map(c => `${c.name},${c.username},${c.password}`))
+                          .join('\n');
+                        const blob = new Blob([text], { type: 'text/csv' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `student_credentials_${new Date().toISOString().slice(0,10)}.csv`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                      className="mt-2 text-xs font-medium text-green-700 hover:underline"
+                    >
+                      Download as CSV
+                    </button>
                   </div>
                 )}
               </div>

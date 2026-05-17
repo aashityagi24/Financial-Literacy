@@ -8,6 +8,11 @@ A gamified financial literacy learning application for children (K-5) with disti
 ### Core MVP ✅
 - User authentication (Custom Google OAuth + Admin login + School login)
 - Role-based dashboards (Admin, Teacher, Parent, Child)
+- **Email-less child accounts** — children without email IDs can be onboarded via **username + password**:
+  - Admin: dedicated "Add Child (No Email)" button with auto-suggest username + auto-generated password (one-time display)
+  - Parent: "Add Child (No Email)" button that creates the child and auto-links it to the parent
+  - School CSV bulk upload: new optional `username` and `password` columns; when both are blank along with `email`, the system auto-generates credentials and surfaces them in the upload result (downloadable as CSV)
+  - Login already supported username + password — children sign in with their username
 - Test users — admin can create or flag any existing child as a `test_user`; all topics, subtopics and content are visible and unlocked for them. Any active **1-day subscription** auto-treats the user as a test user (longer plans keep progressive unlock).
 - **Download anti-piracy throttle** — paid 1-day-plan subscribers are capped at **5 downloadable assets per account**; the 6th request returns HTTP 403 with an upgrade prompt. Admin-flagged test users are exempt. Each download is recorded in `user_downloads` for auditing.
 - **Trial UX (1-day plan)**:

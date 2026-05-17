@@ -703,9 +703,15 @@ async def school_upload_teachers(request: Request):
 @router.post("/school/upload/students")
 async def school_upload_students(request: Request):
     """Bulk upload students via CSV data with teacher/classroom linking
-    CSV columns: name, email, grade, teacher_email, subscription (active/inactive), subscription_duration (1_day/1_week/1_month)
+    CSV columns: name, email (optional), username (optional), password (optional),
+    grade, teacher_email, subscription (active/inactive), subscription_duration
+    
+    If both email and username are blank, a username + password are
+    auto-generated so children without email IDs can still be onboarded.
     """
     from services.auth import require_school
+    from services.user_provisioning import resolve_username, auto_generate_password
+    import hashlib
     db = get_db()
     school = await require_school(request)
     school_id = school["school_id"]
@@ -716,11 +722,14 @@ async def school_upload_students(request: Request):
     created = 0
     linked_to_classroom = 0
     subscribed = 0
+    credentials = []  # auto-generated creds we surface back so the school can share with families
     errors = []
     
     for row in csv_data:
         name = row.get("name", "").strip()
         email = row.get("email", "").strip().lower()
+        username_in = row.get("username", "").strip()
+        password_in = row.get("password", "").strip()
         grade = row.get("grade", 0)
         teacher_email = row.get("teacher_email", "").strip().lower()
         subscription = row.get("subscription", "").strip().lower()
@@ -732,36 +741,63 @@ async def school_upload_students(request: Request):
             except ValueError:
                 grade = 0
         
-        if not name or not email:
-            errors.append(f"Missing name or email: {row}")
+        if not name:
+            errors.append(f"Missing name: {row}")
             continue
+        if not email and not username_in:
+            # Auto-generate username + password so email-less children can be onboarded.
+            try:
+                username_in = await resolve_username(db, None, name, None)
+            except ValueError as ve:
+                errors.append(f"{name}: {ve}")
+                continue
+            if not password_in:
+                password_in = auto_generate_password()
         
-        existing = await db.users.find_one({"email": email})
         user_id = None
+        existing = None
+        if email:
+            existing = await db.users.find_one({"email": email})
+        elif username_in:
+            existing = await db.users.find_one({"username": username_in})
         
         if existing:
             if not existing.get("school_id"):
+                update = {"school_id": school_id, "role": "child", "grade": grade}
                 await db.users.update_one(
-                    {"email": email},
-                    {"$set": {"school_id": school_id, "role": "child", "grade": grade}}
+                    {"user_id": existing["user_id"]},
+                    {"$set": update}
                 )
                 user_id = existing["user_id"]
                 created += 1
             elif existing.get("school_id") == school_id:
                 user_id = existing["user_id"]  # Already in school
             else:
-                errors.append(f"User {email} already belongs to another school")
+                ident = email or username_in
+                errors.append(f"User {ident} already belongs to another school")
                 continue
         else:
+            try:
+                final_username = await resolve_username(db, username_in, name, email)
+            except ValueError as ve:
+                errors.append(f"{name}: {ve}")
+                continue
+            final_password = password_in or auto_generate_password()
+            if len(final_password) < 6:
+                errors.append(f"{name}: password must be at least 6 characters")
+                continue
             user_id = f"user_{uuid.uuid4().hex[:12]}"
             user_doc = {
                 "user_id": user_id,
-                "email": email,
+                "email": email or None,
+                "username": final_username,
+                "password_hash": hashlib.sha256(final_password.encode()).hexdigest(),
                 "name": name,
                 "role": "child",
                 "grade": grade,
                 "school_id": school_id,
                 "streak_count": 0,
+                "balance": 100.0,
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "created_by_school": True
             }
@@ -778,10 +814,18 @@ async def school_upload_students(request: Request):
                 }
                 await db.wallet_accounts.insert_one(wallet_doc)
             
+            # Surface auto-generated credentials so the school can hand them out.
+            if not password_in:
+                credentials.append({
+                    "name": name,
+                    "username": final_username,
+                    "password": final_password,
+                    "email": email or None,
+                })
             created += 1
         
-        # Handle subscription
-        if subscription == "active" and user_id:
+        # Handle subscription (still requires an email today)
+        if subscription == "active" and user_id and email:
             granted = await _grant_subscription(db, email, name, subscription_duration)
             if granted:
                 subscribed += 1
@@ -806,7 +850,13 @@ async def school_upload_students(request: Request):
                         })
                         linked_to_classroom += 1
     
-    return {"created": created, "linked_to_classroom": linked_to_classroom, "subscribed": subscribed, "errors": errors}
+    return {
+        "created": created,
+        "linked_to_classroom": linked_to_classroom,
+        "subscribed": subscribed,
+        "auto_generated_credentials": credentials,
+        "errors": errors,
+    }
 
 @router.post("/school/upload/parents")
 async def school_upload_parents(request: Request):
