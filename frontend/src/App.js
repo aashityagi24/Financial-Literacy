@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from
 import axios from "axios";
 import { Toaster } from "@/components/ui/sonner";
 import TrialBanner from "@/components/TrialBanner";
+import SubscriptionExpiredGate from "@/components/SubscriptionExpiredGate";
 
 // Pages
 import LandingPage from "@/pages/LandingPage";
@@ -176,6 +177,16 @@ export const ProtectedRoute = ({ children }) => {
   return (
     <>
       <TrialBanner user={user} />
+      <SubscriptionExpiredGate
+        user={user}
+        onLogout={async () => {
+          try {
+            await axios.post(`${API}/auth/logout`);
+          } catch {}
+          setUser(null);
+          window.location.href = '/login';
+        }}
+      />
       <OnboardingTour user={user} onComplete={() => setUser({...user, has_completed_onboarding: true})} />
       {children({ user, setUser })}
     </>

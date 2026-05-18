@@ -701,6 +701,9 @@ async def get_me(request: Request):
     role = user.get("role")
     if role in ["admin", "teacher"] or user.get("school_id"):
         user["subscription_status"] = "active"
+    elif user.get("is_test_user"):
+        # Admin-flagged test users bypass subscription gating
+        user["subscription_status"] = "active"
     elif role in ["parent", "child", None]:
         now = datetime.now(timezone.utc).isoformat()
         email = user.get("email", "").lower()
