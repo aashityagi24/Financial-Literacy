@@ -321,7 +321,7 @@ export default function WalletPage({ user }) {
         {/* Two-Wallet Split: CoinQuest (play) vs My Wallet (real, owed by parent) */}
         <div className="grid md:grid-cols-2 gap-4 mb-6">
           <div
-            className="rounded-2xl p-5 bg-gradient-to-br from-[#9B5DE5] to-[#6A4FB6] text-white shadow-lg border-2 border-white/40"
+            className="rounded-2xl p-5 bg-gradient-to-br from-[#EE6C4D] to-[#FF8A6C] text-white shadow-lg border-2 border-white/40"
             data-testid="coinquest-wallet-card"
           >
             <div className="flex items-center justify-between mb-1">
@@ -338,7 +338,7 @@ export default function WalletPage({ user }) {
           </div>
 
           <div
-            className="rounded-2xl p-5 bg-gradient-to-br from-[#06D6A0] to-[#048A65] text-white shadow-lg border-2 border-white/40"
+            className="rounded-2xl p-5 bg-gradient-to-br from-[#0EA5E9] to-[#38BDF8] text-white shadow-lg border-2 border-white/40"
             data-testid="my-wallet-card"
           >
             <div className="flex items-center justify-between mb-1">

@@ -758,7 +758,7 @@ export default function ParentDashboard({ user }) {
           );
           if (totalOwed <= 0) return null;
           return (
-            <div className="bg-gradient-to-r from-emerald-50 to-amber-50 border-2 border-emerald-200 rounded-2xl p-4 mb-5" data-testid="money-you-owe-panel">
+            <div className="bg-gradient-to-r from-sky-50 to-blue-50 border-2 border-sky-200 rounded-2xl p-4 mb-5" data-testid="money-you-owe-panel">
               <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                 <div>
                   <h3 className="text-base font-bold text-[#1D3557] flex items-center gap-1.5" style={{ fontFamily: 'Fredoka' }}>
@@ -768,7 +768,7 @@ export default function ParentDashboard({ user }) {
                     These are real-world earnings (chores, jobs, gifts, allowance, rewards). Pay your child and tap <em>Mark as Paid</em>.
                   </p>
                 </div>
-                <span className="text-2xl font-bold text-emerald-700" style={{ fontFamily: 'Fredoka' }}>
+                <span className="text-2xl font-bold text-sky-700" style={{ fontFamily: 'Fredoka' }}>
                   ₹{totalOwed.toFixed(0)}
                 </span>
               </div>
@@ -780,11 +780,11 @@ export default function ParentDashboard({ user }) {
                     return (
                       <div
                         key={child.user_id}
-                        className="flex items-center justify-between bg-white rounded-xl p-3 border border-emerald-100"
+                        className="flex items-center justify-between bg-white rounded-xl p-3 border border-sky-100"
                         data-testid={`owe-row-${child.user_id}`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold">
+                          <div className="w-9 h-9 rounded-full bg-sky-100 flex items-center justify-center text-sky-700 font-bold">
                             {child.name?.[0]?.toUpperCase() || '?'}
                           </div>
                           <div>
@@ -795,13 +795,13 @@ export default function ParentDashboard({ user }) {
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-xl font-bold text-emerald-700" style={{ fontFamily: 'Fredoka' }}>
+                          <span className="text-xl font-bold text-sky-700" style={{ fontFamily: 'Fredoka' }}>
                             ₹{Number(p.pending_total || 0).toFixed(0)}
                           </span>
                           <button
                             onClick={() => handleSettleChildWallet(child.user_id, child.name, p.pending_total)}
                             disabled={settling === child.user_id}
-                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white disabled:opacity-50"
                             data-testid={`settle-btn-${child.user_id}`}
                           >
                             {settling === child.user_id ? 'Marking…' : 'Mark as Paid'}
