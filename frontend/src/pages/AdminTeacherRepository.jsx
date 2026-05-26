@@ -11,6 +11,18 @@ import { useAdminBackgroundSync } from '@/hooks/useAdminBackgroundSync';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
+const CONTENT_TYPES = [
+  'Book',
+  'Worksheet',
+  'Activity',
+  'Workbook',
+  'Poster',
+  'Flashcard',
+  'Lesson Plan',
+  'Reference',
+  'Other'
+];
+
 export default function AdminTeacherRepository() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
@@ -28,6 +40,7 @@ export default function AdminTeacherRepository() {
   const [filterSubtopic, setFilterSubtopic] = useState('');
   const [filterGrade, setFilterGrade] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [filterContentType, setFilterContentType] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   
   // Form state
@@ -36,6 +49,7 @@ export default function AdminTeacherRepository() {
     description: '',
     file_url: '',
     file_type: 'image',
+    content_type: '',
     topic_id: '',
     subtopic_id: '',
     min_grade: 0,
@@ -53,6 +67,7 @@ export default function AdminTeacherRepository() {
       if (filterSubtopic) url += `subtopic_id=${filterSubtopic}&`;
       if (filterGrade) url += `grade=${filterGrade}&`;
       if (filterType) url += `file_type=${filterType}&`;
+      if (filterContentType) url += `content_type=${encodeURIComponent(filterContentType)}&`;
       
       const [res, schoolsRes, accessRes] = await Promise.all([
         fetch(url, { credentials: 'include' }),
@@ -78,7 +93,7 @@ export default function AdminTeacherRepository() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [filterTopic, filterSubtopic, filterGrade, filterType]);
+  }, [filterTopic, filterSubtopic, filterGrade, filterType, filterContentType]);
 
   useEffect(() => {
     fetchItems();
@@ -201,6 +216,7 @@ export default function AdminTeacherRepository() {
       description: item.description || '',
       file_url: item.file_url,
       file_type: item.file_type,
+      content_type: item.content_type || '',
       topic_id: item.topic_id,
       subtopic_id: item.subtopic_id,
       min_grade: item.min_grade,
@@ -219,6 +235,7 @@ export default function AdminTeacherRepository() {
       description: '',
       file_url: '',
       file_type: 'image',
+      content_type: '',
       topic_id: '',
       subtopic_id: '',
       min_grade: 0,
@@ -400,6 +417,18 @@ export default function AdminTeacherRepository() {
               <option value="pdf">PDFs</option>
             </select>
 
+            <select
+              value={filterContentType}
+              onChange={(e) => setFilterContentType(e.target.value)}
+              className="px-3 py-2 border rounded-lg text-sm"
+              data-testid="filter-content-type"
+            >
+              <option value="">All Content Types</option>
+              {CONTENT_TYPES.map(ct => (
+                <option key={ct} value={ct}>{ct}</option>
+              ))}
+            </select>
+
             <div className="flex-1 min-w-[200px]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -467,6 +496,11 @@ export default function AdminTeacherRepository() {
                     }`}>
                       {item.file_type === 'image' ? 'Image' : 'PDF'}
                     </span>
+                    {item.content_type && (
+                      <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-700">
+                        {item.content_type}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -615,6 +649,22 @@ export default function AdminTeacherRepository() {
                   placeholder="e.g., Piggy Bank Illustration"
                   required
                 />
+              </div>
+
+              {/* Content Type */}
+              <div>
+                <label className="block text-sm font-medium text-[#1D3557] mb-2">Content Type</label>
+                <select
+                  value={formData.content_type}
+                  onChange={(e) => setFormData(prev => ({ ...prev, content_type: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  data-testid="form-content-type"
+                >
+                  <option value="">— Select a type —</option>
+                  {CONTENT_TYPES.map(ct => (
+                    <option key={ct} value={ct}>{ct}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Description */}

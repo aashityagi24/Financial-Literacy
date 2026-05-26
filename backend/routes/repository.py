@@ -72,7 +72,8 @@ async def get_repository_items(
     topic_id: Optional[str] = None,
     subtopic_id: Optional[str] = None,
     grade: Optional[int] = None,
-    file_type: Optional[str] = None
+    file_type: Optional[str] = None,
+    content_type: Optional[str] = None
 ):
     """Get all repository items with optional filters"""
     from services.auth import require_admin
@@ -91,6 +92,8 @@ async def get_repository_items(
         ]
     if file_type:
         query["file_type"] = file_type
+    if content_type:
+        query["content_type"] = content_type
     
     items = await db.teacher_repository.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
     
@@ -153,6 +156,7 @@ async def create_repository_item(request: Request):
         "description": data.get("description", ""),
         "file_url": data["file_url"],
         "file_type": data["file_type"],  # 'image' or 'pdf'
+        "content_type": data.get("content_type", ""),  # 'book', 'worksheet', 'activity', 'workbook', etc.
         "thumbnail_url": data.get("thumbnail_url", data["file_url"] if data["file_type"] == "image" else ""),
         "topic_id": data["topic_id"],
         "topic_name": topic["title"] if topic else "",
@@ -231,7 +235,8 @@ async def update_repository_item(request: Request, item_id: str):
     }
     
     allowed_fields = ["title", "description", "file_url", "thumbnail_url", "topic_id", "subtopic_id", 
-                      "min_grade", "max_grade", "tags", "is_active", "school_visibility", "visible_to_schools"]
+                      "min_grade", "max_grade", "tags", "is_active", "school_visibility", "visible_to_schools",
+                      "content_type"]
     
     for field in allowed_fields:
         if field in data:
@@ -298,6 +303,7 @@ async def teacher_get_repository(
     subtopic_id: Optional[str] = None,
     grade: Optional[int] = None,
     file_type: Optional[str] = None,
+    content_type: Optional[str] = None,
     search: Optional[str] = None
 ):
     """Get repository items for teachers to use in quests"""
@@ -338,6 +344,8 @@ async def teacher_get_repository(
         ]
     if file_type:
         query["file_type"] = file_type
+    if content_type:
+        query["content_type"] = content_type
     if search:
         search_conditions = [
             {"title": {"$regex": search, "$options": "i"}},
