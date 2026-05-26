@@ -375,6 +375,7 @@ export default function ContentManagement({ user }) {
   const [repoSearchQuery, setRepoSearchQuery] = useState('');
   const [repoTypeFilter, setRepoTypeFilter] = useState('all'); // 'all', 'subtopic', 'content'
   const [repoTopicFilter, setRepoTopicFilter] = useState('all');
+  const [repoContentTypeFilter, setRepoContentTypeFilter] = useState('all'); // 'all' | worksheet | activity | book | workbook | video
   
   // Selection states - synced with URL params
   const [selectedTopic, _setSelectedTopic] = useState(null);
@@ -1229,12 +1230,24 @@ export default function ContentManagement({ user }) {
                       ))}
                     </SelectContent>
                   </Select>
+
+                  <Select value={repoContentTypeFilter} onValueChange={setRepoContentTypeFilter}>
+                    <SelectTrigger className="w-[170px]" data-testid="repo-content-type-filter">
+                      <SelectValue placeholder="Content Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Content Types</SelectItem>
+                      {CONTENT_TYPES.map(ct => (
+                        <SelectItem key={ct.value} value={ct.value}>{ct.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   
-                  {(repoSearchQuery || repoTypeFilter !== 'all' || repoTopicFilter !== 'all') && (
+                  {(repoSearchQuery || repoTypeFilter !== 'all' || repoTopicFilter !== 'all' || repoContentTypeFilter !== 'all') && (
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      onClick={() => { setRepoSearchQuery(''); setRepoTypeFilter('all'); setRepoTopicFilter('all'); }}
+                      onClick={() => { setRepoSearchQuery(''); setRepoTypeFilter('all'); setRepoTopicFilter('all'); setRepoContentTypeFilter('all'); }}
                     >
                       <X className="w-4 h-4 mr-1" /> Clear Filters
                     </Button>
@@ -1256,8 +1269,8 @@ export default function ContentManagement({ user }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {/* Subtopics */}
-                    {(repoTypeFilter === 'all' || repoTypeFilter === 'subtopic') && 
+                    {/* Subtopics — hidden when filtering by a specific content type since subtopics have no content_type */}
+                    {(repoTypeFilter === 'all' || repoTypeFilter === 'subtopic') && repoContentTypeFilter === 'all' && 
                       topics
                         .filter(t => repoTopicFilter === 'all' || t.topic_id === repoTopicFilter)
                         .filter(matchesGradeFilter)
@@ -1330,6 +1343,10 @@ export default function ContentManagement({ user }) {
                     {(repoTypeFilter === 'all' || repoTypeFilter === 'content') && 
                       filteredContent
                         .filter(content => {
+                          // Filter by content_type
+                          if (repoContentTypeFilter !== 'all' && content.content_type !== repoContentTypeFilter) {
+                            return false;
+                          }
                           // Find parent subtopic and topic
                           let parentSubtopic = null;
                           let parentTopic = null;
@@ -1497,12 +1514,14 @@ export default function ContentManagement({ user }) {
                     
                     {/* Empty State */}
                     {((repoTypeFilter === 'all' || repoTypeFilter === 'subtopic') && 
-                      topics.filter(t => repoTopicFilter === 'all' || t.topic_id === repoTopicFilter)
+                      (repoContentTypeFilter !== 'all' ||
+                       topics.filter(t => repoTopicFilter === 'all' || t.topic_id === repoTopicFilter)
                         .flatMap(t => t.subtopics || [])
                         .filter(matchesGradeFilter)
-                        .filter(sub => !repoSearchQuery || sub.title.toLowerCase().includes(repoSearchQuery.toLowerCase())).length === 0) &&
+                        .filter(sub => !repoSearchQuery || sub.title.toLowerCase().includes(repoSearchQuery.toLowerCase())).length === 0)) &&
                      ((repoTypeFilter === 'all' || repoTypeFilter === 'content') && 
                       filteredContent.filter(c => {
+                        if (repoContentTypeFilter !== 'all' && c.content_type !== repoContentTypeFilter) return false;
                         if (repoTopicFilter !== 'all') {
                           const parentTopic = topics.find(t => t.subtopics?.some(s => s.topic_id === c.topic_id));
                           if (parentTopic?.topic_id !== repoTopicFilter) return false;
@@ -1519,7 +1538,7 @@ export default function ContentManagement({ user }) {
                           <Button 
                             variant="link" 
                             className="mt-2"
-                            onClick={() => { setRepoSearchQuery(''); setRepoTypeFilter('all'); setRepoTopicFilter('all'); setGradeFilter('all'); }}
+                            onClick={() => { setRepoSearchQuery(''); setRepoTypeFilter('all'); setRepoTopicFilter('all'); setRepoContentTypeFilter('all'); setGradeFilter('all'); }}
                           >
                             Clear all filters
                           </Button>

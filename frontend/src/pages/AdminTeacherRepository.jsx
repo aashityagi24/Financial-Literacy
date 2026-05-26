@@ -11,18 +11,6 @@ import { useAdminBackgroundSync } from '@/hooks/useAdminBackgroundSync';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || '';
 
-const CONTENT_TYPES = [
-  'Book',
-  'Worksheet',
-  'Activity',
-  'Workbook',
-  'Poster',
-  'Flashcard',
-  'Lesson Plan',
-  'Reference',
-  'Other'
-];
-
 export default function AdminTeacherRepository() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
@@ -40,7 +28,6 @@ export default function AdminTeacherRepository() {
   const [filterSubtopic, setFilterSubtopic] = useState('');
   const [filterGrade, setFilterGrade] = useState('');
   const [filterType, setFilterType] = useState('');
-  const [filterContentType, setFilterContentType] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   
   // Form state
@@ -49,7 +36,6 @@ export default function AdminTeacherRepository() {
     description: '',
     file_url: '',
     file_type: 'image',
-    content_type: '',
     topic_id: '',
     subtopic_id: '',
     min_grade: 0,
@@ -93,7 +79,7 @@ export default function AdminTeacherRepository() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [filterTopic, filterSubtopic, filterGrade, filterType, filterContentType]);
+  }, [filterTopic, filterSubtopic, filterGrade, filterType]);
 
   useEffect(() => {
     fetchItems();
@@ -235,7 +221,6 @@ export default function AdminTeacherRepository() {
       description: '',
       file_url: '',
       file_type: 'image',
-      content_type: '',
       topic_id: '',
       subtopic_id: '',
       min_grade: 0,
@@ -415,18 +400,6 @@ export default function AdminTeacherRepository() {
               <option value="">All Types</option>
               <option value="image">Images</option>
               <option value="pdf">PDFs</option>
-            </select>
-
-            <select
-              value={filterContentType}
-              onChange={(e) => setFilterContentType(e.target.value)}
-              className="px-3 py-2 border rounded-lg text-sm"
-              data-testid="filter-content-type"
-            >
-              <option value="">All Content Types</option>
-              {CONTENT_TYPES.map(ct => (
-                <option key={ct} value={ct}>{ct}</option>
-              ))}
             </select>
 
             <div className="flex-1 min-w-[200px]">
@@ -649,22 +622,6 @@ export default function AdminTeacherRepository() {
                   placeholder="e.g., Piggy Bank Illustration"
                   required
                 />
-              </div>
-
-              {/* Content Type */}
-              <div>
-                <label className="block text-sm font-medium text-[#1D3557] mb-2">Content Type</label>
-                <select
-                  value={formData.content_type}
-                  onChange={(e) => setFormData(prev => ({ ...prev, content_type: e.target.value }))}
-                  className="w-full px-3 py-2 border rounded-lg text-sm"
-                  data-testid="form-content-type"
-                >
-                  <option value="">— Select a type —</option>
-                  {CONTENT_TYPES.map(ct => (
-                    <option key={ct} value={ct}>{ct}</option>
-                  ))}
-                </select>
               </div>
 
               {/* Description */}
