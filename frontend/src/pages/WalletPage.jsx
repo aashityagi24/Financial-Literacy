@@ -42,6 +42,34 @@ export default function WalletPage({ user }) {
   const ITEMS_PER_PAGE = 15;
   
   const grade = user?.grade ?? 3;
+
+  // Grade-aware description for the CoinQuest wallet card. Kindergarten has neither
+  // garden nor stocks; grades 1-2 have garden but not stocks; grade 3+ has both.
+  const coinquestDescription = (() => {
+    if (grade === 0) return 'Earned by learning, streaks and badges.';
+    if (grade <= 2) return 'Earned by learning, streaks, badges and garden.';
+    return 'Earned by learning, streaks, badges, garden & stocks.';
+  })();
+
+  // Rules: Piggy Bank (savings) & Giving (gifting) are funded ONLY from My Wallet (real
+  // earnings); Investing/Garden is funded ONLY from CoinQuest (spending). Returns the
+  // list of allowed `from` accounts given a `to` account (or vice versa).
+  const REAL_JARS = ['savings', 'gifting'];
+  const PLAY_JARS = ['investing'];
+  const allowedSourcesFor = (toAcc) => {
+    if (REAL_JARS.includes(toAcc)) return ['my_wallet', ...REAL_JARS.filter(j => j !== toAcc)];
+    if (PLAY_JARS.includes(toAcc)) return ['spending'];
+    if (toAcc === 'spending') return ['my_wallet', ...PLAY_JARS];
+    if (toAcc === 'my_wallet') return ['spending', ...REAL_JARS];
+    return [];
+  };
+  const allowedDestsFor = (fromAcc) => {
+    if (REAL_JARS.includes(fromAcc)) return ['my_wallet', ...REAL_JARS.filter(j => j !== fromAcc)];
+    if (PLAY_JARS.includes(fromAcc)) return ['spending'];
+    if (fromAcc === 'spending') return ['my_wallet', ...PLAY_JARS];
+    if (fromAcc === 'my_wallet') return ['spending', ...REAL_JARS];
+    return [];
+  };
   
   // Grade-based account configuration
   const getAccountMeta = () => {
@@ -110,9 +138,11 @@ export default function WalletPage({ user }) {
     return wallet.accounts;
   };
 
-  // Jar tiles shown below the two-wallet header: hide 'spending' since it's already
-  // represented as the CoinQuest Wallet card up top (avoids the confusing third wallet).
-  const getJarAccounts = () => getFilteredAccounts().filter(acc => acc.account_type !== 'spending');
+  // Jar tiles shown below the two-wallet header: hide 'spending' AND 'my_wallet' since
+  // both are represented as cards up top.
+  const getJarAccounts = () => getFilteredAccounts().filter(
+    acc => acc.account_type !== 'spending' && acc.account_type !== 'my_wallet'
+  );
   
   useEffect(() => {
     fetchWalletData();
@@ -258,11 +288,23 @@ export default function WalletPage({ user }) {
                         <SelectValue placeholder="Select account" />
                       </SelectTrigger>
                       <SelectContent>
-                        {filteredAccounts.map(acc => (
-                          <SelectItem key={acc.account_type} value={acc.account_type}>
-                            {accountInfo[acc.account_type]?.icon} {accountInfo[acc.account_type]?.label || (acc.account_type.charAt(0).toUpperCase() + acc.account_type.slice(1))} (₹{acc.balance?.toFixed(0)})
-                          </SelectItem>
-                        ))}
+                        {filteredAccounts
+                          .filter(acc => !transferData.to_account || allowedSourcesFor(transferData.to_account).includes(acc.account_type))
+                          .map(acc => {
+                            const isMyWallet = acc.account_type === 'my_wallet';
+                            const isSpending = acc.account_type === 'spending';
+                            const displayLabel = isMyWallet
+                              ? 'My Wallet'
+                              : isSpending
+                                ? 'CoinQuest Wallet'
+                                : (accountInfo[acc.account_type]?.label || (acc.account_type.charAt(0).toUpperCase() + acc.account_type.slice(1)));
+                            const icon = isMyWallet ? '₹' : isSpending ? '🎮' : accountInfo[acc.account_type]?.icon;
+                            return (
+                              <SelectItem key={acc.account_type} value={acc.account_type}>
+                                {icon} {displayLabel} (₹{acc.balance?.toFixed(0)})
+                              </SelectItem>
+                            );
+                          })}
                       </SelectContent>
                     </Select>
                   </div>
@@ -274,13 +316,30 @@ export default function WalletPage({ user }) {
                         <SelectValue placeholder="Select account" />
                       </SelectTrigger>
                       <SelectContent>
-                        {filteredAccounts.map(acc => (
-                          <SelectItem key={acc.account_type} value={acc.account_type}>
-                            {accountInfo[acc.account_type]?.icon} {accountInfo[acc.account_type]?.label || (acc.account_type.charAt(0).toUpperCase() + acc.account_type.slice(1))} (₹{acc.balance?.toFixed(0)})
-                          </SelectItem>
-                        ))}
+                        {filteredAccounts
+                          .filter(acc => !transferData.from_account || allowedDestsFor(transferData.from_account).includes(acc.account_type))
+                          .map(acc => {
+                            const isMyWallet = acc.account_type === 'my_wallet';
+                            const isSpending = acc.account_type === 'spending';
+                            const displayLabel = isMyWallet
+                              ? 'My Wallet'
+                              : isSpending
+                                ? 'CoinQuest Wallet'
+                                : (accountInfo[acc.account_type]?.label || (acc.account_type.charAt(0).toUpperCase() + acc.account_type.slice(1)));
+                            const icon = isMyWallet ? '₹' : isSpending ? '🎮' : accountInfo[acc.account_type]?.icon;
+                            return (
+                              <SelectItem key={acc.account_type} value={acc.account_type}>
+                                {icon} {displayLabel} (₹{acc.balance?.toFixed(0)})
+                              </SelectItem>
+                            );
+                          })}
                       </SelectContent>
                     </Select>
+                    {(transferData.from_account || transferData.to_account) && (
+                      <p className="text-[11px] text-[#3D5A80] mt-1.5 italic">
+                        Piggy Bank & Giving use your <strong>My Wallet</strong> (real earnings). Garden / Investing use your <strong>CoinQuest Wallet</strong> (play coins).
+                      </p>
+                    )}
                   </div>
                   
                   <div>
@@ -334,7 +393,7 @@ export default function WalletPage({ user }) {
             <p className="text-4xl font-bold mt-2" style={{ fontFamily: 'Fredoka' }}>
               ₹{Number(summary.coinquest_balance || 0).toFixed(0)}
             </p>
-            <p className="text-xs opacity-90 mt-1">Earned by learning, streaks, badges, garden & stocks.</p>
+            <p className="text-xs opacity-90 mt-1">{coinquestDescription}</p>
           </div>
 
           <div
@@ -354,9 +413,10 @@ export default function WalletPage({ user }) {
               ₹{Number(summary.my_wallet_balance || 0).toFixed(0)}
             </p>
             <p className="text-xs opacity-90 mt-1">
+              You earned this from chores, jobs, rewards & gifts.
               {summary.my_wallet_pending_count > 0
-                ? `${summary.my_wallet_pending_count} entries pending — your parent will pay you soon.`
-                : 'Money your parent owes you will show up here.'}
+                ? ` ${summary.my_wallet_pending_count} entries waiting for parent payout.`
+                : ''}
             </p>
           </div>
         </div>

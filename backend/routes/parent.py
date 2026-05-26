@@ -207,8 +207,13 @@ async def create_reward_penalty(data: RewardPenaltyCreate, request: Request):
     
     amount = data.amount if data.category == "reward" else -data.amount
     
-    # Parent rewards/penalties are tracked on the My Wallet ledger only — they don't touch
-    # the in-game spending balance. The parent settles in real life via /parent/wallet/settle.
+    # Parent rewards/penalties are real-world earnings — credit child's My Wallet balance
+    # AND log a transaction marked pending until parent settles (hands over real cash IRL).
+    await db.wallet_accounts.update_one(
+        {"user_id": data.child_id, "account_type": "my_wallet"},
+        {"$inc": {"balance": amount}, "$setOnInsert": {"account_id": f"acc_{uuid.uuid4().hex[:12]}", "user_id": data.child_id, "account_type": "my_wallet"}},
+        upsert=True
+    )
     trans_type = "parent_reward" if data.category == "reward" else "parent_penalty"
     await db.transactions.insert_one({
         "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
@@ -943,7 +948,12 @@ async def validate_chore_request(request_id: str, request: Request):
             }}
         )
         
-        # Parent chore reward → My Wallet ledger only (parent settles in real life)
+        # Parent chore reward → credit child's My Wallet balance + log pending entry.
+        await db.wallet_accounts.update_one(
+            {"user_id": child_id, "account_type": "my_wallet"},
+            {"$inc": {"balance": reward}, "$setOnInsert": {"account_id": f"acc_{uuid.uuid4().hex[:12]}", "user_id": child_id, "account_type": "my_wallet"}},
+            upsert=True
+        )
         await db.transactions.insert_one({
             "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
             "user_id": child_id,
@@ -1367,7 +1377,12 @@ async def give_money_to_child(request: Request):
     if not link:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Parent gift → My Wallet ledger only (settled when parent pays in real life)
+    # Parent gift → credit child's My Wallet balance + log pending entry
+    await db.wallet_accounts.update_one(
+        {"user_id": child_id, "account_type": "my_wallet"},
+        {"$inc": {"balance": amount}, "$setOnInsert": {"account_id": f"acc_{uuid.uuid4().hex[:12]}", "user_id": child_id, "account_type": "my_wallet"}},
+        upsert=True
+    )
     await db.transactions.insert_one({
         "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
         "user_id": child_id,

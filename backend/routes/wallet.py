@@ -39,25 +39,28 @@ async def get_wallet(request: Request):
     ).to_list(10)
 
     # Defensive: child users sometimes land here without ever having gone through
-    # /auth/set-role (e.g. accounts created via admin/parent provisioning). If they
-    # have no wallet accounts at all, create the four standard ones so the dashboard
-    # has something to display instead of a blank "My Money" card.
-    if not accounts and user.get("role") == "child":
+    # /auth/set-role (e.g. accounts created via admin/parent provisioning). Ensure
+    # all five jar accounts exist (spending + savings + investing + gifting + my_wallet).
+    if user.get("role") == "child":
         from datetime import datetime, timezone
         import uuid
-        now = datetime.now(timezone.utc).isoformat()
-        for account_type in ["spending", "savings", "investing", "gifting"]:
-            await db.wallet_accounts.insert_one({
-                "account_id": f"acc_{uuid.uuid4().hex[:12]}",
-                "user_id": user_id,
-                "account_type": account_type,
-                "balance": 0.0,
-                "created_at": now,
-            })
-        accounts = await db.wallet_accounts.find(
-            {"user_id": user_id},
-            {"_id": 0}
-        ).to_list(10)
+        existing_types = {a.get("account_type") for a in accounts}
+        required = ["spending", "savings", "investing", "gifting", "my_wallet"]
+        missing = [t for t in required if t not in existing_types]
+        if missing:
+            now = datetime.now(timezone.utc).isoformat()
+            for account_type in missing:
+                await db.wallet_accounts.insert_one({
+                    "account_id": f"acc_{uuid.uuid4().hex[:12]}",
+                    "user_id": user_id,
+                    "account_type": account_type,
+                    "balance": 0.0,
+                    "created_at": now,
+                })
+            accounts = await db.wallet_accounts.find(
+                {"user_id": user_id},
+                {"_id": 0}
+            ).to_list(10)
     
     # Calculate allocated amounts for savings (money committed to goals)
     savings_goals = await db.savings_goals.find(
@@ -146,7 +149,35 @@ async def transfer_money(transaction: TransactionCreate, request: Request):
     if transaction.transaction_type == "transfer":
         if not transaction.from_account or not transaction.to_account:
             raise HTTPException(status_code=400, detail="Both from_account and to_account required for transfer")
-        
+
+        # Direction rules:
+        #   * Piggy Bank (savings) & Giving (gifting) are "real money" jars — they can
+        #     only be funded from My Wallet (or withdrawn back to My Wallet).
+        #   * Investing/Garden is a "play coins" jar — only funded from/to CoinQuest (spending).
+        REAL_JARS = {"savings", "gifting"}
+        PLAY_JARS = {"investing"}
+        f, t = transaction.from_account, transaction.to_account
+        if t in REAL_JARS and f not in (REAL_JARS | {"my_wallet"} | {t}):
+            raise HTTPException(
+                status_code=400,
+                detail=f"{t.capitalize()} can only be funded from your My Wallet (real earnings)."
+            )
+        if f in REAL_JARS and t not in (REAL_JARS | {"my_wallet"} | {f}):
+            raise HTTPException(
+                status_code=400,
+                detail=f"{f.capitalize()} money can only move back to your My Wallet."
+            )
+        if t in PLAY_JARS and f not in (PLAY_JARS | {"spending"} | {t}):
+            raise HTTPException(
+                status_code=400,
+                detail=f"{t.capitalize()} can only be funded from your CoinQuest Wallet (play coins)."
+            )
+        if f in PLAY_JARS and t not in (PLAY_JARS | {"spending"} | {f}):
+            raise HTTPException(
+                status_code=400,
+                detail=f"{f.capitalize()} money can only move back to your CoinQuest Wallet."
+            )
+
         from_acc = await db.wallet_accounts.find_one({
             "user_id": user["user_id"],
             "account_type": transaction.from_account
@@ -219,10 +250,11 @@ async def get_transactions(request: Request, limit: int = 20, source: str = None
 async def get_wallet_summary(request: Request):
     """Return both wallet balances for the current child.
 
-    - coinquest_balance: spendable in-game balance (sum of wallet_accounts).
-    - my_wallet_balance: pending money owed by parent (sum of unsettled my_wallet credits
-      net of any negative entries like penalties).
-    - my_wallet_pending_count: how many pending entries (so UI can show a counter badge).
+    - coinquest_balance: spendable in-game balance (sum of spending + savings + investing + gifting accounts).
+    - my_wallet_balance: actual spendable balance on the `my_wallet` account (money the child
+      has earned from chores/jobs/rewards/gifts). It stays in the child's wallet regardless of
+      whether the parent has handed over real cash yet — `my_wallet_pending_count` tracks
+      that separately for UI nudges.
     """
     from services.auth import get_current_user
     from services.wallet_sources import classify_source
@@ -232,30 +264,33 @@ async def get_wallet_summary(request: Request):
 
     accounts = await db.wallet_accounts.find(
         {"user_id": user_id},
-        {"_id": 0, "balance": 1}
+        {"_id": 0, "account_type": 1, "balance": 1}
     ).to_list(10)
-    coinquest_balance = sum(a.get("balance", 0) for a in accounts)
+    my_wallet_balance = 0.0
+    coinquest_balance = 0.0
+    for a in accounts:
+        bal = float(a.get("balance", 0) or 0)
+        atype = a.get("account_type")
+        if atype == "my_wallet":
+            my_wallet_balance += bal
+        elif atype == "spending":
+            # CoinQuest Wallet card == the spending account specifically. Savings, gifting
+            # and investing have their own jar tiles and are NOT bucketed here.
+            coinquest_balance += bal
 
-    # Pull all my_wallet pending transactions. Use classify_source fallback for legacy rows.
+    # Pending count is purely informational ("parent hasn't handed over the cash yet").
     raw = await db.transactions.find(
-        {"user_id": user_id},
-        {"_id": 0, "transaction_type": 1, "type": 1, "amount": 1, "wallet_source": 1, "settlement_status": 1}
+        {"user_id": user_id, "wallet_source": "my_wallet"},
+        {"_id": 0, "transaction_type": 1, "settlement_status": 1}
     ).to_list(5000)
-
-    pending_total = 0.0
-    pending_count = 0
-    for t in raw:
-        src = t.get("wallet_source") or classify_source(t.get("transaction_type", "") or t.get("type", ""))
-        if src != "my_wallet":
-            continue
-        if t.get("settlement_status") == "paid":
-            continue
-        pending_total += float(t.get("amount", 0) or 0)
-        pending_count += 1
+    pending_count = sum(
+        1 for t in raw
+        if t.get("settlement_status") != "paid" and t.get("transaction_type") != "parent_settlement"
+    )
 
     return {
         "coinquest_balance": coinquest_balance,
-        "my_wallet_balance": pending_total,
+        "my_wallet_balance": my_wallet_balance,
         "my_wallet_pending_count": pending_count,
     }
 
@@ -426,3 +461,57 @@ async def migrate_wallet_sources(request: Request):
             coinquest += 1
 
     return {"migrated_coinquest": coinquest, "migrated_my_wallet": my_wallet}
+
+
+@router.post("/admin/wallet/promote-my-wallet")
+async def promote_my_wallet(request: Request):
+    """One-time admin task: promote My Wallet from a tracking ledger to a real spendable
+    balance. For every child user:
+      1. Ensure a `my_wallet` wallet_account exists (balance 0).
+      2. Move any pending unsettled `my_wallet` ledger entries that were created
+         *before this rollout* into a settled state (their money is already in the
+         child's spending balance from the pre-feature behaviour, so we don't want
+         to double-credit it).
+    Idempotent — safe to re-run."""
+    from services.auth import require_admin
+    from datetime import datetime, timezone
+    import uuid
+    db = get_db()
+    await require_admin(request)
+
+    now = datetime.now(timezone.utc).isoformat()
+    accounts_created = 0
+    settled = 0
+
+    async for u in db.users.find({"role": "child"}, {"_id": 0, "user_id": 1}):
+        uid = u["user_id"]
+        existing = await db.wallet_accounts.find_one({"user_id": uid, "account_type": "my_wallet"})
+        if not existing:
+            await db.wallet_accounts.insert_one({
+                "account_id": f"acc_{uuid.uuid4().hex[:12]}",
+                "user_id": uid,
+                "account_type": "my_wallet",
+                "balance": 0.0,
+                "created_at": now,
+            })
+            accounts_created += 1
+
+        # Sweep legacy pending my_wallet entries to 'paid' so they don't appear as owed.
+        res = await db.transactions.update_many(
+            {
+                "user_id": uid,
+                "wallet_source": "my_wallet",
+                "settlement_status": "pending",
+                "transaction_id": {"$not": {"$regex": "^demo_"}},  # keep demo seeds intact
+            },
+            {"$set": {
+                "settlement_status": "paid",
+                "settled_at": now,
+                "settled_by": "system_migration",
+                "settlement_note": "Auto-settled by My Wallet promotion (legacy ledger)",
+            }}
+        )
+        settled += res.modified_count
+
+    return {"my_wallet_accounts_created": accounts_created, "legacy_pending_settled": settled}
+

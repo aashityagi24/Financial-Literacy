@@ -762,10 +762,10 @@ export default function ParentDashboard({ user }) {
               <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                 <div>
                   <h3 className="text-base font-bold text-[#1D3557] flex items-center gap-1.5" style={{ fontFamily: 'Fredoka' }}>
-                    <IndianRupee className="w-4 h-4" strokeWidth={2.5} /> Money You Owe Your Children
+                    <IndianRupee className="w-4 h-4" strokeWidth={2.5} /> Real Earnings to Pay Your Children
                   </h3>
                   <p className="text-xs text-[#3D5A80] mt-0.5">
-                    These are real-world earnings (chores, jobs, gifts, allowance, rewards). Pay your child and tap <em>Mark as Paid</em>.
+                    Money your children have earned via chores, jobs, gifts, allowance & rewards. It's already in their My Wallet — tap <em>Mark as Paid</em> once you've handed over the actual cash.
                   </p>
                 </div>
                 <span className="text-2xl font-bold text-sky-700" style={{ fontFamily: 'Fredoka' }}>

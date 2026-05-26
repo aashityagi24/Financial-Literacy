@@ -660,7 +660,12 @@ async def approve_chore(chore_id: str, request: Request):
         }}
     )
     
-    # Parent chore reward → My Wallet ledger only
+    # Parent chore reward → credit My Wallet balance + log pending entry
+    await db.wallet_accounts.update_one(
+        {"user_id": child_id, "account_type": "my_wallet"},
+        {"$inc": {"balance": reward}, "$setOnInsert": {"account_id": f"acc_{uuid.uuid4().hex[:12]}", "user_id": child_id, "account_type": "my_wallet"}},
+        upsert=True
+    )
     await db.transactions.insert_one({
         "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
         "user_id": child_id,
