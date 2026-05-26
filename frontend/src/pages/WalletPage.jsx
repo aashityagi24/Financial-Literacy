@@ -100,7 +100,7 @@ export default function WalletPage({ user }) {
   
   const accountInfo = getAccountMeta();
   
-  // Filter accounts based on grade
+  // Filter accounts based on grade (used for the Transfer dialog dropdowns)
   const getFilteredAccounts = () => {
     if (!wallet?.accounts) return [];
     if (grade === 0) {
@@ -109,6 +109,10 @@ export default function WalletPage({ user }) {
     }
     return wallet.accounts;
   };
+
+  // Jar tiles shown below the two-wallet header: hide 'spending' since it's already
+  // represented as the CoinQuest Wallet card up top (avoids the confusing third wallet).
+  const getJarAccounts = () => getFilteredAccounts().filter(acc => acc.account_type !== 'spending');
   
   useEffect(() => {
     fetchWalletData();
@@ -201,8 +205,11 @@ export default function WalletPage({ user }) {
   };
   
   const filteredAccounts = getFilteredAccounts();
-  // Total balance = only money that can be spent (sum of available balances)
-  const totalAvailable = filteredAccounts.reduce((sum, acc) => sum + (acc.available_balance ?? acc.balance ?? 0), 0) || 0;
+  // Total balance = sum across ALL accounts (incl. spending which we hide as a jar).
+  const totalAvailable = (wallet?.accounts || []).reduce(
+    (sum, acc) => sum + (acc.available_balance ?? acc.balance ?? 0),
+    0
+  ) || 0;
   
   if (loading) {
     return (
@@ -354,9 +361,9 @@ export default function WalletPage({ user }) {
           </div>
         </div>
         
-        {/* Account Cards */}
+        {/* Account Cards — spending jar hidden (shown as CoinQuest Wallet above) */}
         <div className="grid grid-cols-2 gap-4 mb-8" data-testid="money-jars-grid">
-          {filteredAccounts.map((acc, index) => {
+          {getJarAccounts().map((acc, index) => {
             const info = accountInfo[acc.account_type];
             const displayLabel = info?.label || acc.account_type;
             const hasAllocation = acc.account_type === 'savings' || acc.account_type === 'investing';
