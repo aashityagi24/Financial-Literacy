@@ -207,18 +207,17 @@ async def create_reward_penalty(data: RewardPenaltyCreate, request: Request):
     
     amount = data.amount if data.category == "reward" else -data.amount
     
-    await db.wallet_accounts.update_one(
-        {"user_id": data.child_id, "account_type": "spending"},
-        {"$inc": {"balance": amount}}
-    )
-    
+    # Parent rewards/penalties are tracked on the My Wallet ledger only — they don't touch
+    # the in-game spending balance. The parent settles in real life via /parent/wallet/settle.
     trans_type = "parent_reward" if data.category == "reward" else "parent_penalty"
     await db.transactions.insert_one({
         "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
         "user_id": data.child_id,
-        "to_account": "spending",
+        "to_account": "my_wallet",
         "amount": amount,
         "transaction_type": trans_type,
+        "wallet_source": "my_wallet",
+        "settlement_status": "pending",
         "description": f"{data.title}: {data.description or ''}",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
@@ -944,19 +943,15 @@ async def validate_chore_request(request_id: str, request: Request):
             }}
         )
         
-        # Award coins to child
-        await db.wallet_accounts.update_one(
-            {"user_id": child_id, "account_type": "spending"},
-            {"$inc": {"balance": reward}}
-        )
-        
-        # Record transaction
+        # Parent chore reward → My Wallet ledger only (parent settles in real life)
         await db.transactions.insert_one({
             "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
             "user_id": child_id,
-            "to_account": "spending",
+            "to_account": "my_wallet",
             "amount": reward,
             "transaction_type": "chore_reward",
+            "wallet_source": "my_wallet",
+            "settlement_status": "pending",
             "description": f"Approved: {chore.get('title', 'Chore')}",
             "created_at": datetime.now(timezone.utc).isoformat()
         })
@@ -1337,15 +1332,14 @@ async def create_single_allowance(request: Request):
     if not link:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    await db.wallet_accounts.update_one(
-        {"user_id": child_id, "account_type": "spending"},
-        {"$inc": {"balance": amount}}
-    )
-    
+    # Parent allowance → My Wallet ledger only
     await db.transactions.insert_one({
         "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
         "user_id": child_id,
-        "type": "allowance",
+        "to_account": "my_wallet",
+        "transaction_type": "allowance",
+        "wallet_source": "my_wallet",
+        "settlement_status": "pending",
         "amount": amount,
         "description": body.get("reason", "Allowance from parent"),
         "created_at": datetime.now(timezone.utc).isoformat()
@@ -1373,19 +1367,17 @@ async def give_money_to_child(request: Request):
     if not link:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    await db.wallet_accounts.update_one(
-        {"user_id": child_id, "account_type": "spending"},
-        {"$inc": {"balance": amount}}
-    )
-    
+    # Parent gift → My Wallet ledger only (settled when parent pays in real life)
     await db.transactions.insert_one({
         "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
         "user_id": child_id,
         "transaction_type": "gift_received",
+        "wallet_source": "my_wallet",
+        "settlement_status": "pending",
         "amount": amount,
         "description": f"Gift from {parent.get('name', 'Parent')}: {reason}",
         "from_user_id": parent["user_id"],
-        "to_account": "spending",
+        "to_account": "my_wallet",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     

@@ -181,6 +181,7 @@ async def complete_lesson(lesson_id: str, request: Request):
         "to_account": "spending",
         "amount": reward_coins,
         "transaction_type": "lesson_reward",
+        "wallet_source": "coinquest",
         "description": f"Completed: {lesson.get('title', 'Lesson')}",
         "created_at": datetime.now(timezone.utc).isoformat()
     })

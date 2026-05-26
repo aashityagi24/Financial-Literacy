@@ -253,17 +253,15 @@ async def pay_child_job(job_id: str, request: Request):
     amount = job.get("payment_amount", 0)
     
     if payment_type == "digital" and amount > 0:
-        # Transfer to child's spending wallet
-        await db.wallet_accounts.update_one(
-            {"user_id": job["child_id"], "account_type": "spending"},
-            {"$inc": {"balance": amount}}
-        )
+        # Parent-assigned job pay → My Wallet ledger (parent settles in real life)
         await db.transactions.insert_one({
             "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
             "user_id": job["child_id"],
-            "to_account": "spending",
+            "to_account": "my_wallet",
             "amount": amount,
             "transaction_type": "job_payment",
+            "wallet_source": "my_wallet",
+            "settlement_status": "pending",
             "description": f"Weekly pay: {job['activity']}",
             "created_at": datetime.now(timezone.utc).isoformat()
         })

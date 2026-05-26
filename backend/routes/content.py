@@ -648,6 +648,7 @@ async def complete_content_item(content_id: str, request: Request):
             "to_account": "spending",
             "amount": reward_coins,
             "transaction_type": "lesson_reward",
+            "wallet_source": "coinquest",
             "description": f"Completed: {item.get('title', 'Lesson')}",
             "created_at": datetime.now(timezone.utc).isoformat()
         })

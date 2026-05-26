@@ -44,6 +44,8 @@ export default function ParentDashboard({ user }) {
   const [savingsGoals, setSavingsGoals] = useState([]);
   const [childClassrooms, setChildClassrooms] = useState({});
   const [childrenPurchases, setChildrenPurchases] = useState([]);
+  const [childrenPending, setChildrenPending] = useState({}); // { [childId]: { pending_total, pending_count } }
+  const [settling, setSettling] = useState(null); // childId currently being settled
   const [loading, setLoading] = useState(true);
   const [selectedChild, setSelectedChild] = useState(null);
   const [childProgress, setChildProgress] = useState(null);
@@ -170,6 +172,7 @@ export default function ParentDashboard({ user }) {
       if (dashRes.data?.children) {
         const classroomData = {};
         const loanData = {};
+        const pendingData = {};
         await Promise.all(
           dashRes.data.children.map(async (child) => {
             try {
@@ -177,6 +180,17 @@ export default function ParentDashboard({ user }) {
               classroomData[child.user_id] = classRes.data;
             } catch (err) {
               classroomData[child.user_id] = { has_classroom: false };
+            }
+
+            // Pending My Wallet (real money owed) for this child
+            try {
+              const pRes = await axios.get(`${API}/parent/wallet/pending/${child.user_id}`);
+              pendingData[child.user_id] = {
+                pending_total: pRes.data?.pending_total || 0,
+                pending_count: pRes.data?.pending_count || 0
+              };
+            } catch (err) {
+              pendingData[child.user_id] = { pending_total: 0, pending_count: 0 };
             }
             
             // Fetch lending data for grade 4-5 children
@@ -192,6 +206,7 @@ export default function ParentDashboard({ user }) {
         );
         setChildClassrooms(classroomData);
         setChildrenLoans(loanData);
+        setChildrenPending(pendingData);
       }
     } catch (error) {
       toast.error('Failed to load dashboard');
@@ -207,6 +222,29 @@ export default function ParentDashboard({ user }) {
       setSelectedChild(childId);
     } catch (error) {
       toast.error('Failed to load child progress');
+    }
+  };
+  
+  const handleSettleChildWallet = async (childId, childName, total) => {
+    if (!total || total <= 0) {
+      toast.info('Nothing to settle for this child');
+      return;
+    }
+    if (!window.confirm(`Mark ₹${Number(total).toFixed(0)} as paid to ${childName}? This records that you've handed over the real cash / transfer.`)) {
+      return;
+    }
+    setSettling(childId);
+    try {
+      const res = await axios.post(`${API}/parent/wallet/settle`, { child_id: childId });
+      toast.success(res.data?.message || 'Settled');
+      setChildrenPending(prev => ({
+        ...prev,
+        [childId]: { pending_total: 0, pending_count: 0 }
+      }));
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to settle');
+    } finally {
+      setSettling(null);
     }
   };
   
@@ -711,6 +749,71 @@ export default function ParentDashboard({ user }) {
             </div>
           </div>
         )}
+
+        {/* Money You Owe — pending My Wallet balances per child */}
+        {dashboard?.children?.length > 0 && (() => {
+          const totalOwed = dashboard.children.reduce(
+            (sum, c) => sum + (childrenPending[c.user_id]?.pending_total || 0),
+            0
+          );
+          if (totalOwed <= 0) return null;
+          return (
+            <div className="bg-gradient-to-r from-emerald-50 to-amber-50 border-2 border-emerald-200 rounded-2xl p-4 mb-5" data-testid="money-you-owe-panel">
+              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                <div>
+                  <h3 className="text-base font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                    💰 Money You Owe Your Children
+                  </h3>
+                  <p className="text-xs text-[#3D5A80] mt-0.5">
+                    These are real-world earnings (chores, jobs, gifts, allowance, rewards). Pay your child and tap <em>Mark as Paid</em>.
+                  </p>
+                </div>
+                <span className="text-2xl font-bold text-emerald-700" style={{ fontFamily: 'Fredoka' }}>
+                  ₹{totalOwed.toFixed(0)}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {dashboard.children
+                  .filter((c) => (childrenPending[c.user_id]?.pending_total || 0) > 0)
+                  .map((child) => {
+                    const p = childrenPending[child.user_id] || {};
+                    return (
+                      <div
+                        key={child.user_id}
+                        className="flex items-center justify-between bg-white rounded-xl p-3 border border-emerald-100"
+                        data-testid={`owe-row-${child.user_id}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold">
+                            {child.name?.[0]?.toUpperCase() || '?'}
+                          </div>
+                          <div>
+                            <p className="font-bold text-[#1D3557]">{child.name}</p>
+                            <p className="text-xs text-[#3D5A80]">
+                              {p.pending_count} pending {p.pending_count === 1 ? 'entry' : 'entries'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl font-bold text-emerald-700" style={{ fontFamily: 'Fredoka' }}>
+                            ₹{Number(p.pending_total || 0).toFixed(0)}
+                          </span>
+                          <button
+                            onClick={() => handleSettleChildWallet(child.user_id, child.name, p.pending_total)}
+                            disabled={settling === child.user_id}
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
+                            data-testid={`settle-btn-${child.user_id}`}
+                          >
+                            {settling === child.user_id ? 'Marking…' : 'Mark as Paid'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          );
+        })()}
         
             {/* Children Overview */}
             <div className="flex items-center justify-between mb-4">

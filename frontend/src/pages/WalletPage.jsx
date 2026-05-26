@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 
 export default function WalletPage({ user }) {
   const [wallet, setWallet] = useState(null);
+  const [summary, setSummary] = useState({ coinquest_balance: 0, my_wallet_balance: 0, my_wallet_pending_count: 0 });
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [transferOpen, setTransferOpen] = useState(false);
@@ -37,6 +38,7 @@ export default function WalletPage({ user }) {
   // Pagination and filter state
   const [currentPage, setCurrentPage] = useState(1);
   const [dateFilter, setDateFilter] = useState('all');
+  const [sourceFilter, setSourceFilter] = useState('all'); // 'all' | 'coinquest' | 'my_wallet'
   const ITEMS_PER_PAGE = 15;
   
   const grade = user?.grade ?? 3;
@@ -114,12 +116,14 @@ export default function WalletPage({ user }) {
   
   const fetchWalletData = async () => {
     try {
-      const [walletRes, transRes] = await Promise.all([
+      const [walletRes, transRes, summaryRes] = await Promise.all([
         axios.get(`${API}/wallet`),
-        axios.get(`${API}/wallet/transactions?limit=100`) // Get more for pagination
+        axios.get(`${API}/wallet/transactions?limit=200`),
+        axios.get(`${API}/wallet/summary`)
       ]);
       setWallet(walletRes.data);
       setTransactions(transRes.data);
+      setSummary(summaryRes.data || { coinquest_balance: 0, my_wallet_balance: 0, my_wallet_pending_count: 0 });
     } catch (error) {
       toast.error('Failed to load wallet');
     } finally {
@@ -306,6 +310,47 @@ export default function WalletPage({ user }) {
             <p className="text-sm text-[#1D3557]/70 mt-2">Available across all your jars</p>
           </div>
         </div>
+
+        {/* Two-Wallet Split: CoinQuest (play) vs My Wallet (real, owed by parent) */}
+        <div className="grid md:grid-cols-2 gap-4 mb-6">
+          <div
+            className="rounded-2xl p-5 bg-gradient-to-br from-[#9B5DE5] to-[#6A4FB6] text-white shadow-lg border-2 border-white/40"
+            data-testid="coinquest-wallet-card"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🎮</span>
+                <h3 className="text-lg font-bold" style={{ fontFamily: 'Fredoka' }}>CoinQuest Wallet</h3>
+              </div>
+              <span className="text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full">Play coins</span>
+            </div>
+            <p className="text-4xl font-bold mt-2" style={{ fontFamily: 'Fredoka' }}>
+              ₹{Number(summary.coinquest_balance || 0).toFixed(0)}
+            </p>
+            <p className="text-xs opacity-90 mt-1">Earned by learning, streaks, badges, garden & stocks.</p>
+          </div>
+
+          <div
+            className="rounded-2xl p-5 bg-gradient-to-br from-[#06D6A0] to-[#048A65] text-white shadow-lg border-2 border-white/40"
+            data-testid="my-wallet-card"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">💰</span>
+                <h3 className="text-lg font-bold" style={{ fontFamily: 'Fredoka' }}>My Wallet</h3>
+              </div>
+              <span className="text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full">From parent</span>
+            </div>
+            <p className="text-4xl font-bold mt-2" style={{ fontFamily: 'Fredoka' }}>
+              ₹{Number(summary.my_wallet_balance || 0).toFixed(0)}
+            </p>
+            <p className="text-xs opacity-90 mt-1">
+              {summary.my_wallet_pending_count > 0
+                ? `${summary.my_wallet_pending_count} entries pending — your parent will pay you soon.`
+                : 'Money your parent owes you will show up here.'}
+            </p>
+          </div>
+        </div>
         
         {/* Account Cards */}
         <div className="grid grid-cols-2 gap-4 mb-8" data-testid="money-jars-grid">
@@ -371,38 +416,62 @@ export default function WalletPage({ user }) {
         
         {/* Transaction History */}
         <div className="card-playful p-6 animate-bounce-in stagger-3">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <div className="flex items-center gap-2">
               <History className="w-5 h-5 text-[#3D5A80]" />
               <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Recent Activity</h2>
             </div>
             
-            {/* Date Filter */}
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-[#3D5A80]" />
-              <div className="flex gap-1">
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Wallet source filter */}
+              <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
                 {[
-                  { value: 'all', label: 'All' },
-                  { value: 'today', label: 'Today' },
-                  { value: 'week', label: 'Week' },
-                  { value: 'month', label: 'Month' }
-                ].map((f) => (
+                  { value: 'all', label: 'All', icon: '🌟' },
+                  { value: 'coinquest', label: 'CoinQuest', icon: '🎮' },
+                  { value: 'my_wallet', label: 'My Wallet', icon: '💰' }
+                ].map((s) => (
                   <button
-                    key={f.value}
-                    onClick={() => {
-                      setDateFilter(f.value);
-                      setCurrentPage(1);
-                    }}
-                    className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
-                      dateFilter === f.value
-                        ? 'bg-[#3D5A80] text-white'
-                        : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
+                    key={s.value}
+                    onClick={() => { setSourceFilter(s.value); setCurrentPage(1); }}
+                    className={`px-2.5 py-1 rounded-md text-xs font-bold transition-colors ${
+                      sourceFilter === s.value
+                        ? 'bg-white text-[#1D3557] shadow-sm'
+                        : 'text-[#3D5A80] hover:bg-white/60'
                     }`}
-                    data-testid={`wallet-filter-${f.value}`}
+                    data-testid={`wallet-source-${s.value}`}
                   >
-                    {f.label}
+                    <span className="mr-1">{s.icon}</span>{s.label}
                   </button>
                 ))}
+              </div>
+
+              {/* Date Filter */}
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-[#3D5A80]" />
+                <div className="flex gap-1">
+                  {[
+                    { value: 'all', label: 'All' },
+                    { value: 'today', label: 'Today' },
+                    { value: 'week', label: 'Week' },
+                    { value: 'month', label: 'Month' }
+                  ].map((f) => (
+                    <button
+                      key={f.value}
+                      onClick={() => {
+                        setDateFilter(f.value);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+                        dateFilter === f.value
+                          ? 'bg-[#3D5A80] text-white'
+                          : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
+                      }`}
+                      data-testid={`wallet-filter-${f.value}`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -420,6 +489,10 @@ export default function WalletPage({ user }) {
               
               // Apply date filter
               const filteredTransactions = sortedTransactions.filter((tx) => {
+                // Source filter (CoinQuest vs My Wallet)
+                if (sourceFilter !== 'all' && tx.wallet_source !== sourceFilter) {
+                  return false;
+                }
                 if (dateFilter === 'all') return true;
                 if (!tx.created_at) return false;
                 
@@ -484,7 +557,20 @@ export default function WalletPage({ user }) {
                                 {getTransactionIcon(trans.transaction_type)}
                               </div>
                               <div>
-                                <p className="font-bold text-[#1D3557]">{trans.description}</p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="font-bold text-[#1D3557]">{trans.description}</p>
+                                  {trans.wallet_source === 'my_wallet' && trans.transaction_type !== 'parent_settlement' && (
+                                    <span
+                                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
+                                        trans.settlement_status === 'paid'
+                                          ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
+                                          : 'bg-amber-100 text-amber-700 border border-amber-300'
+                                      }`}
+                                    >
+                                      {trans.settlement_status === 'paid' ? '✓ Paid' : '⏳ Pending'}
+                                    </span>
+                                  )}
+                                </div>
                                 <p className="text-xs text-[#3D5A80]">
                                   {new Date(trans.created_at).toLocaleDateString()} {new Date(trans.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </p>

@@ -142,6 +142,7 @@ async def claim_streak_bonus(request: Request):
                 "to_account": "spending",
                 "amount": bonus,
                 "transaction_type": "streak_bonus",
+                "wallet_source": "coinquest",
                 "description": f"{milestone}-day streak bonus!",
                 "created_at": datetime.now(timezone.utc).isoformat()
             })
@@ -203,6 +204,7 @@ async def streak_checkin(request: Request):
         "to_account": "spending",
         "amount": reward_coins,
         "transaction_type": "streak_reward",
+        "wallet_source": "coinquest",
         "description": f"Day {current_streak} streak reward!" + (" (5-day bonus!)" if current_streak % 5 == 0 else ""),
         "created_at": datetime.now(timezone.utc).isoformat()
     })
@@ -380,6 +382,7 @@ async def award_badge(db, user_id: str, trigger: str):
         "to_account": "spending",
         "amount": badge["points"],
         "transaction_type": "badge_reward",
+        "wallet_source": "coinquest",
         "description": f"Badge earned: {badge['name']}",
         "created_at": datetime.now(timezone.utc).isoformat()
     })

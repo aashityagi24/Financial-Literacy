@@ -457,6 +457,7 @@ async def submit_quest(quest_id: str, request: Request):
             "to_account": "spending",
             "amount": earned_points,
             "transaction_type": "quest_reward",
+            "wallet_source": "coinquest",
             "description": f"Completed: {quest.get('title', 'Quest')}",
             "created_at": datetime.now(timezone.utc).isoformat()
         })
@@ -659,19 +660,15 @@ async def approve_chore(chore_id: str, request: Request):
         }}
     )
     
-    # Award coins to child
-    await db.wallet_accounts.update_one(
-        {"user_id": child_id, "account_type": "spending"},
-        {"$inc": {"balance": reward}}
-    )
-    
-    # Record transaction
+    # Parent chore reward → My Wallet ledger only
     await db.transactions.insert_one({
         "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
         "user_id": child_id,
-        "to_account": "spending",
+        "to_account": "my_wallet",
         "amount": reward,
         "transaction_type": "chore_reward",
+        "wallet_source": "my_wallet",
+        "settlement_status": "pending",
         "description": f"Approved: {chore.get('title', 'Chore')}",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
