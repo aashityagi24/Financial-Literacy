@@ -140,8 +140,9 @@ export default function Dashboard({ user, setUser }) {
   const getAccountColors = () => {
     const baseAccounts = {
       spending: { bg: 'bg-gradient-to-br from-[#EE6C4D] to-[#FF8A6C]', icon: '💳', label: 'Wallet', description: 'Money to buy things' },
+      my_wallet: { bg: 'bg-gradient-to-br from-[#0EA5E9] to-[#38BDF8]', icon: '₹', label: 'My Wallet', description: 'Real money you earned' },
       savings: { bg: 'bg-gradient-to-br from-[#06D6A0] to-[#42E8B3]', icon: '🐷', label: 'Piggy Bank', description: 'Money saved for later' },
-      gifting: { bg: 'bg-gradient-to-br from-[#9B5DE5] to-[#B47EE5]', icon: '❤️', description: 'Money to help others' },
+      gifting: { bg: 'bg-gradient-to-br from-[#9B5DE5] to-[#B47EE5]', icon: '❤️', label: 'Giving', description: 'Money to help others' },
     };
     
     if (grade === 0) {
@@ -357,6 +358,7 @@ export default function Dashboard({ user, setUser }) {
                 const getAccountPath = (type) => {
                   switch(type) {
                     case 'spending': return '/store';
+                    case 'my_wallet': return '/wallet';
                     case 'savings': return '/savings-goals';
                     case 'gifting': return '/gifting';
                     case 'investing': return grade <= 2 ? '/garden' : '/stock-market';
