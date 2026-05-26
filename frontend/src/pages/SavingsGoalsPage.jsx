@@ -51,7 +51,7 @@ export default function SavingsGoalsPage({ user }) {
   
   // Transfer
   const [showTransfer, setShowTransfer] = useState(false);
-  const [transferData, setTransferData] = useState({ from_account: 'spending', amount: '' });
+  const [transferData, setTransferData] = useState({ from_account: 'my_wallet', amount: '' });
 
   const savingsBalance = wallet?.accounts?.find(a => a.account_type === 'savings')?.balance || 0;
 
@@ -212,7 +212,7 @@ export default function SavingsGoalsPage({ user }) {
       
       toast.success('Transfer successful!');
       setShowTransfer(false);
-      setTransferData({ from_account: 'spending', amount: '' });
+      setTransferData({ from_account: 'my_wallet', amount: '' });
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Transfer failed');
@@ -601,17 +601,12 @@ export default function SavingsGoalsPage({ user }) {
                 onValueChange={(v) => setTransferData({...transferData, from_account: v})}
               >
                 <SelectTrigger className="border-3 border-[#1D3557] rounded-xl">
-                  <SelectValue />
+                  <SelectValue placeholder="Select source" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="spending">
-                    🛒 Spending (₹{wallet?.accounts?.find(a => a.account_type === 'spending')?.balance?.toFixed(0) || 0})
-                  </SelectItem>
-                  <SelectItem value="investing">
-                    📈 Investing (₹{wallet?.accounts?.find(a => a.account_type === 'investing')?.balance?.toFixed(0) || 0})
-                  </SelectItem>
-                  <SelectItem value="gifting">
-                    🎁 Giving (₹{wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance?.toFixed(0) || 0})
+                  {/* Piggy Bank can ONLY be funded from My Wallet (real earnings) */}
+                  <SelectItem value="my_wallet">
+                    ₹ My Wallet (₹{wallet?.accounts?.find(a => a.account_type === 'my_wallet')?.balance?.toFixed(0) || 0})
                   </SelectItem>
                 </SelectContent>
               </Select>

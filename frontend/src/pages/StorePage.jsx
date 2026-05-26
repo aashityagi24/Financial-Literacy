@@ -543,7 +543,7 @@ export default function StorePage({ user }) {
                       onClick={() => setShowTransfer(true)}
                       className="w-full py-2 bg-[#FFD23F] text-[#1D3557] font-bold rounded-xl hover:bg-[#FFE066] flex items-center justify-center gap-2"
                     >
-                      <ArrowLeftRight className="w-4 h-4" /> Move money to Spending Jar
+                      <ArrowLeftRight className="w-4 h-4" /> Move money to CoinQuest Wallet
                     </button>
                   </div>
                 )}
@@ -580,49 +580,56 @@ export default function StorePage({ user }) {
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
               <ArrowLeftRight className="w-5 h-5 inline mr-2" />
-              Move Money to Spending
+              Move Money to CoinQuest Wallet
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="bg-[#E0FBFC] rounded-xl p-3">
               <p className="text-sm text-[#3D5A80]">
-                Your Spending Jar: <strong className="text-[#06D6A0]">₹{spendingBalance.toFixed(0)}</strong>
+                Your CoinQuest Wallet: <strong className="text-[#EE6C4D]">₹{spendingBalance.toFixed(0)}</strong>
               </p>
             </div>
-            
-            <div>
-              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Transfer from:</label>
-              <Select 
-                value={transferData.from_account} 
-                onValueChange={(v) => setTransferData({...transferData, from_account: v})}
-              >
-                <SelectTrigger className="border-3 border-[#1D3557] rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="savings">
-                    🐷 Piggy Bank (₹{wallet?.accounts?.find(a => a.account_type === 'savings')?.balance?.toFixed(0) || 0})
-                  </SelectItem>
-                  <SelectItem value="investing">
-                    📈 Investing (₹{wallet?.accounts?.find(a => a.account_type === 'investing')?.balance?.toFixed(0) || 0})
-                  </SelectItem>
-                  <SelectItem value="gifting">
-                    🎁 Giving (₹{wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance?.toFixed(0) || 0})
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Amount (₹)</label>
-              <Input
-                type="number"
-                placeholder="How much to move?"
-                value={transferData.amount}
-                onChange={(e) => setTransferData({...transferData, amount: e.target.value})}
-                className="border-3 border-[#1D3557] rounded-xl"
-              />
-            </div>
+
+            {/* Per the money-flow rules, only Investing/Stocks can fund CoinQuest. That
+                jar only exists for grade 3+. K and grades 1-2 don't have a way to top
+                up play coins — they earn more by learning, badges or garden harvests. */}
+            {(user?.grade ?? 5) >= 3 ? (
+              <>
+                <div>
+                  <label className="text-sm font-bold text-[#1D3557] mb-1 block">Transfer from:</label>
+                  <Select
+                    value={transferData.from_account}
+                    onValueChange={(v) => setTransferData({...transferData, from_account: v})}
+                  >
+                    <SelectTrigger className="border-3 border-[#1D3557] rounded-xl">
+                      <SelectValue placeholder="Select source" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="investing">
+                        📈 Investing (₹{wallet?.accounts?.find(a => a.account_type === 'investing')?.balance?.toFixed(0) || 0})
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-bold text-[#1D3557] mb-1 block">Amount (₹)</label>
+                  <Input
+                    type="number"
+                    placeholder="How much to move?"
+                    value={transferData.amount}
+                    onChange={(e) => setTransferData({...transferData, amount: e.target.value})}
+                    className="border-3 border-[#1D3557] rounded-xl"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-[#1D3557]">
+                🌟 CoinQuest coins can only be earned — they can't be transferred from other jars.
+                Try completing a lesson, claiming a daily streak, earning a badge
+                {(user?.grade ?? 5) >= 1 ? ' or harvesting your garden' : ''} to get more!
+              </div>
+            )}
             
             <div className="flex gap-3">
               <button
@@ -633,7 +640,7 @@ export default function StorePage({ user }) {
               </button>
               <button
                 onClick={handleQuickTransfer}
-                disabled={!transferData.amount}
+                disabled={!transferData.amount || (user?.grade ?? 5) < 3}
                 className="flex-1 btn-primary py-3 disabled:opacity-50"
               >
                 Transfer

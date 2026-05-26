@@ -34,7 +34,7 @@ export default function GiftingPage({ user }) {
   const [showTransferDialog, setShowTransferDialog] = useState(false);
   const [wallet, setWallet] = useState(null);
   const [transferAmount, setTransferAmount] = useState('');
-  const [transferFrom, setTransferFrom] = useState('spending');
+  const [transferFrom, setTransferFrom] = useState('my_wallet');
   const [transferring, setTransferring] = useState(false);
   
   const [newGiving, setNewGiving] = useState({
@@ -616,12 +616,8 @@ export default function GiftingPage({ user }) {
               {/* Current Balances */}
               <div className="bg-gray-50 rounded-xl p-3 space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-[#3D5A80]">🛒 Spending Jar</span>
-                  <span className="font-bold text-[#1D3557]">₹{getAccountBalance('spending').toFixed(0)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-[#3D5A80]">🐷 Piggy Bank</span>
-                  <span className="font-bold text-[#1D3557]">₹{getAccountBalance('savings').toFixed(0)}</span>
+                  <span className="text-sm text-[#3D5A80]">₹ My Wallet</span>
+                  <span className="font-bold text-[#1D3557]">₹{getAccountBalance('my_wallet').toFixed(0)}</span>
                 </div>
                 <div className="flex justify-between items-center border-t pt-2">
                   <span className="text-sm text-[#9B5DE5] font-bold">💝 Giving Jar</span>
@@ -629,16 +625,15 @@ export default function GiftingPage({ user }) {
                 </div>
               </div>
               
-              {/* Transfer From */}
+              {/* Transfer From — Giving can ONLY be funded from My Wallet (real earnings) */}
               <div>
                 <label className="text-sm font-medium text-[#1D3557] block mb-2">Transfer From</label>
                 <Select value={transferFrom} onValueChange={setTransferFrom}>
                   <SelectTrigger className="border-2 border-[#1D3557]">
-                    <SelectValue />
+                    <SelectValue placeholder="Select source" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="spending">🛒 Spending Jar (₹{getAccountBalance('spending').toFixed(0)})</SelectItem>
-                    <SelectItem value="savings">🐷 Piggy Bank (₹{getAccountBalance('savings').toFixed(0)})</SelectItem>
+                    <SelectItem value="my_wallet">₹ My Wallet (₹{getAccountBalance('my_wallet').toFixed(0)})</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
