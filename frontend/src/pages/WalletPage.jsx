@@ -52,22 +52,25 @@ export default function WalletPage({ user }) {
   })();
 
   // Rules: Piggy Bank (savings) & Giving (gifting) are funded ONLY from My Wallet (real
-  // earnings); Investing/Garden is funded ONLY from CoinQuest (spending). Returns the
-  // list of allowed `from` accounts given a `to` account (or vice versa).
+  // earnings); Investing/Garden is funded ONLY from CoinQuest (spending). Piggy Bank
+  // is OUTBOUND-RESTRICTED — money can only leave it by contributing to a savings goal,
+  // never via a general transfer.
   const REAL_JARS = ['savings', 'gifting'];
   const PLAY_JARS = ['investing'];
   const allowedSourcesFor = (toAcc) => {
-    if (REAL_JARS.includes(toAcc)) return ['my_wallet', ...REAL_JARS.filter(j => j !== toAcc)];
+    if (toAcc === 'savings') return ['my_wallet'];
+    if (toAcc === 'gifting') return ['my_wallet'];
     if (PLAY_JARS.includes(toAcc)) return ['spending'];
-    if (toAcc === 'spending') return ['my_wallet', ...PLAY_JARS];
-    if (toAcc === 'my_wallet') return ['spending', ...REAL_JARS];
+    if (toAcc === 'spending') return PLAY_JARS;             // CoinQuest Wallet: only from Investing
+    if (toAcc === 'my_wallet') return ['gifting'];          // My Wallet: withdrawals from Giving only
     return [];
   };
   const allowedDestsFor = (fromAcc) => {
-    if (REAL_JARS.includes(fromAcc)) return ['my_wallet', ...REAL_JARS.filter(j => j !== fromAcc)];
+    if (fromAcc === 'savings') return [];                    // Piggy Bank cannot be a source
+    if (fromAcc === 'gifting') return ['my_wallet'];         // Giving can return to My Wallet
     if (PLAY_JARS.includes(fromAcc)) return ['spending'];
-    if (fromAcc === 'spending') return ['my_wallet', ...PLAY_JARS];
-    if (fromAcc === 'my_wallet') return ['spending', ...REAL_JARS];
+    if (fromAcc === 'spending') return PLAY_JARS;            // CoinQuest → Investing only
+    if (fromAcc === 'my_wallet') return REAL_JARS;           // My Wallet → Piggy Bank / Giving
     return [];
   };
   
@@ -289,6 +292,7 @@ export default function WalletPage({ user }) {
                       </SelectTrigger>
                       <SelectContent>
                         {filteredAccounts
+                          .filter(acc => acc.account_type !== 'savings') // Piggy Bank is never a source
                           .filter(acc => !transferData.to_account || allowedSourcesFor(transferData.to_account).includes(acc.account_type))
                           .map(acc => {
                             const isMyWallet = acc.account_type === 'my_wallet';
@@ -337,7 +341,7 @@ export default function WalletPage({ user }) {
                     </Select>
                     {(transferData.from_account || transferData.to_account) && (
                       <p className="text-[11px] text-[#3D5A80] mt-1.5 italic">
-                        Piggy Bank & Giving use your <strong>My Wallet</strong> (real earnings). Garden / Investing use your <strong>CoinQuest Wallet</strong> (play coins).
+                        Piggy Bank & Giving are funded from <strong>My Wallet</strong>. Garden / Investing from <strong>CoinQuest Wallet</strong>. Piggy Bank money leaves only by contributing to a savings goal.
                       </p>
                     )}
                   </div>

@@ -151,28 +151,38 @@ async def transfer_money(transaction: TransactionCreate, request: Request):
             raise HTTPException(status_code=400, detail="Both from_account and to_account required for transfer")
 
         # Direction rules:
-        #   * Piggy Bank (savings) & Giving (gifting) are "real money" jars — they can
-        #     only be funded from My Wallet (or withdrawn back to My Wallet).
-        #   * Investing/Garden is a "play coins" jar — only funded from/to CoinQuest (spending).
+        #   * Piggy Bank (savings) is **outbound-restricted**: money goes in from My
+        #     Wallet but can only LEAVE by contributing to a specific goal (handled in
+        #     /savings-goals/{id}/contribute). General transfers out are not allowed.
+        #   * Giving (gifting) is funded from My Wallet; money leaves by sending a gift.
+        #   * Investing/Garden is a "play coins" jar — only funded from CoinQuest (spending).
         REAL_JARS = {"savings", "gifting"}
         PLAY_JARS = {"investing"}
         f, t = transaction.from_account, transaction.to_account
-        if t in REAL_JARS and f not in (REAL_JARS | {"my_wallet"} | {t}):
+
+        # Piggy Bank cannot be a source for a transfer.
+        if f == "savings":
+            raise HTTPException(
+                status_code=400,
+                detail="Piggy Bank money can only be spent by contributing to a savings goal."
+            )
+
+        if t in REAL_JARS and f != "my_wallet":
             raise HTTPException(
                 status_code=400,
                 detail=f"{t.capitalize()} can only be funded from your My Wallet (real earnings)."
             )
-        if f in REAL_JARS and t not in (REAL_JARS | {"my_wallet"} | {f}):
+        if f == "gifting" and t != "my_wallet":
             raise HTTPException(
                 status_code=400,
-                detail=f"{f.capitalize()} money can only move back to your My Wallet."
+                detail="Giving money can only move back to your My Wallet."
             )
-        if t in PLAY_JARS and f not in (PLAY_JARS | {"spending"} | {t}):
+        if t in PLAY_JARS and f != "spending":
             raise HTTPException(
                 status_code=400,
                 detail=f"{t.capitalize()} can only be funded from your CoinQuest Wallet (play coins)."
             )
-        if f in PLAY_JARS and t not in (PLAY_JARS | {"spending"} | {f}):
+        if f in PLAY_JARS and t != "spending":
             raise HTTPException(
                 status_code=400,
                 detail=f"{f.capitalize()} money can only move back to your CoinQuest Wallet."
