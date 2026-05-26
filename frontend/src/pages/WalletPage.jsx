@@ -341,7 +341,11 @@ export default function WalletPage({ user }) {
                     </Select>
                     {(transferData.from_account || transferData.to_account) && (
                       <p className="text-[11px] text-[#3D5A80] mt-1.5 italic">
-                        Piggy Bank & Giving are funded from <strong>My Wallet</strong>. Garden / Investing from <strong>CoinQuest Wallet</strong>. Piggy Bank money leaves only by contributing to a savings goal.
+                        Piggy Bank & Giving are funded from <strong>My Wallet</strong>.
+                        {grade > 0 && (
+                          <> {grade <= 2 ? 'Garden' : 'Garden / Investing'} from <strong>CoinQuest Wallet</strong>.</>
+                        )}
+                        {' '}Piggy Bank money leaves only by contributing to a savings goal.
                       </p>
                     )}
                   </div>
