@@ -5,7 +5,7 @@ import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
   Wallet, ArrowLeftRight, ArrowDown, ArrowUp, 
-  ChevronLeft, History, Target, Filter, ArrowLeft, ArrowRight
+  ChevronLeft, History, Target, Filter, ArrowLeft, ArrowRight, IndianRupee
 } from 'lucide-react';
 import {
   Dialog,
@@ -169,7 +169,7 @@ export default function WalletPage({ user }) {
       case 'quest_reward': return <span className="text-sm">🏆</span>;
       case 'chore_reward': return <span className="text-sm">✅</span>;
       case 'lesson_reward': return <span className="text-sm">📚</span>;
-      case 'earning': return <span className="text-sm">💰</span>;
+      case 'earning': return <span className="text-sm">⭐</span>;
       case 'allowance': return <span className="text-sm">💵</span>;
       case 'parent_reward': return <span className="text-sm">🌟</span>;
       case 'gift_received': return <span className="text-sm">🎁</span>;
@@ -336,7 +336,9 @@ export default function WalletPage({ user }) {
           >
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">💰</span>
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                  <IndianRupee className="w-5 h-5" strokeWidth={2.5} />
+                </div>
                 <h3 className="text-lg font-bold" style={{ fontFamily: 'Fredoka' }}>My Wallet</h3>
               </div>
               <span className="text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full">From parent</span>
@@ -428,7 +430,7 @@ export default function WalletPage({ user }) {
                 {[
                   { value: 'all', label: 'All', icon: '🌟' },
                   { value: 'coinquest', label: 'CoinQuest', icon: '🎮' },
-                  { value: 'my_wallet', label: 'My Wallet', icon: '💰' }
+                  { value: 'my_wallet', label: 'My Wallet', icon: '₹' }
                 ].map((s) => (
                   <button
                     key={s.value}

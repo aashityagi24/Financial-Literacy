@@ -37,6 +37,27 @@ async def get_wallet(request: Request):
         {"user_id": user_id},
         {"_id": 0}
     ).to_list(10)
+
+    # Defensive: child users sometimes land here without ever having gone through
+    # /auth/set-role (e.g. accounts created via admin/parent provisioning). If they
+    # have no wallet accounts at all, create the four standard ones so the dashboard
+    # has something to display instead of a blank "My Money" card.
+    if not accounts and user.get("role") == "child":
+        from datetime import datetime, timezone
+        import uuid
+        now = datetime.now(timezone.utc).isoformat()
+        for account_type in ["spending", "savings", "investing", "gifting"]:
+            await db.wallet_accounts.insert_one({
+                "account_id": f"acc_{uuid.uuid4().hex[:12]}",
+                "user_id": user_id,
+                "account_type": account_type,
+                "balance": 0.0,
+                "created_at": now,
+            })
+        accounts = await db.wallet_accounts.find(
+            {"user_id": user_id},
+            {"_id": 0}
+        ).to_list(10)
     
     # Calculate allocated amounts for savings (money committed to goals)
     savings_goals = await db.savings_goals.find(

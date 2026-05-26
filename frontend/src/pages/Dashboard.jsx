@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { 
   Coins, Wallet, Store, TrendingUp, Target, Trophy, 
   User, LogOut, Flame, Gift, Sparkles,
-  ChevronRight, Star, BookOpen, Shield, GraduationCap, Users, Award, HandCoins, BookMarked, Briefcase, Heart
+  ChevronRight, Star, BookOpen, Shield, GraduationCap, Users, Award, HandCoins, BookMarked, Briefcase, Heart, IndianRupee
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
@@ -340,8 +340,8 @@ export default function Dashboard({ user, setUser }) {
           {/* Money Jars Card */}
           <div className="card-playful p-4 flex flex-col">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                💰 My Money
+              <h2 className="text-lg font-bold text-[#1D3557] flex items-center gap-1.5" style={{ fontFamily: 'Fredoka' }}>
+                <IndianRupee className="w-5 h-5" strokeWidth={2.5} /> My Money
               </h2>
               <Link to="/wallet" className="text-sm text-[#3D5A80] hover:text-[#1D3557]">
                 <ChevronRight className="w-4 h-4" />

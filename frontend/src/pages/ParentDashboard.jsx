@@ -9,7 +9,7 @@ import {
   School, Megaphone, Store, LogOut, User, TrendingUp, TrendingDown,
   Sprout, LineChart, BookOpen, Award, CheckCircle, XCircle, History,
   Filter, ArrowLeft, ArrowRight, HandCoins, AlertTriangle, RefreshCw,
-  Briefcase, Heart, DollarSign, CreditCard, Banknote
+  Briefcase, Heart, DollarSign, CreditCard, Banknote, IndianRupee
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -761,8 +761,8 @@ export default function ParentDashboard({ user }) {
             <div className="bg-gradient-to-r from-emerald-50 to-amber-50 border-2 border-emerald-200 rounded-2xl p-4 mb-5" data-testid="money-you-owe-panel">
               <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                 <div>
-                  <h3 className="text-base font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                    💰 Money You Owe Your Children
+                  <h3 className="text-base font-bold text-[#1D3557] flex items-center gap-1.5" style={{ fontFamily: 'Fredoka' }}>
+                    <IndianRupee className="w-4 h-4" strokeWidth={2.5} /> Money You Owe Your Children
                   </h3>
                   <p className="text-xs text-[#3D5A80] mt-0.5">
                     These are real-world earnings (chores, jobs, gifts, allowance, rewards). Pay your child and tap <em>Mark as Paid</em>.
@@ -966,7 +966,7 @@ export default function ParentDashboard({ user }) {
                           <h3 className="font-bold text-[#1D3557] text-lg">{child.name}</h3>
                           <p className="text-xs text-[#3D5A80]">{gradeLabels[child.grade] || 'Unknown Grade'}</p>
                           <div className="flex items-center gap-4 text-sm text-[#3D5A80] mt-1">
-                            <span>💰 ₹{child.total_balance?.toFixed(0)}</span>
+                            <span>₹{child.total_balance?.toFixed(0)}</span>
                             <span>📚 {child.lessons_completed}/{child.total_lessons}</span>
                             {child.pending_chores > 0 && (
                               <span className="bg-[#EE6C4D] text-white px-2 py-0.5 rounded-full text-xs">
