@@ -531,6 +531,26 @@ async def get_classmates(request: Request):
             investment_value = portfolio_value + investing_balance
             investment_profit = portfolio_value - total_cost
         
+        # Active jobs & chores this classmate is doing — titles only, no payment amounts
+        # (so kids can get ideas of what work they could do themselves without seeing
+        # how much another child is paid for it).
+        jobs_cursor = db.jobs.find(
+            {"child_id": student_id, "status": {"$in": ["active", "in_progress"]}},
+            {"_id": 0, "activity": 1, "title": 1}
+        )
+        peer_jobs = [
+            {"title": j.get("title") or j.get("activity") or "Job"}
+            async for j in jobs_cursor
+        ]
+        chores_cursor = db.new_quests.find(
+            {"child_id": student_id, "creator_type": "parent", "is_active": True},
+            {"_id": 0, "title": 1}
+        )
+        peer_chores = [
+            {"title": q.get("title", "Chore")}
+            async for q in chores_cursor
+        ]
+
         classmates.append({
             "user_id": student_id,
             "name": student.get("name", "Unknown"),
@@ -545,7 +565,9 @@ async def get_classmates(request: Request):
             "investment_profit": round(investment_profit, 0),
             "lessons_completed": lessons,
             "quests_completed": quests_completed,
-            "badges": badge_count
+            "badges": badge_count,
+            "jobs": peer_jobs,
+            "chores": peer_chores,
         })
     
     # Sort by lessons completed

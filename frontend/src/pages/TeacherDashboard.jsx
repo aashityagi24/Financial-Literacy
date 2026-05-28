@@ -1406,15 +1406,26 @@ export default function TeacherDashboard({ user }) {
                 <div className="grid grid-cols-4 gap-3">
                   <div className="bg-[#FFD23F]/20 rounded-xl p-3 text-center">
                     <p className="text-2xl font-bold text-[#1D3557]">₹{studentInsights.wallet?.total_balance?.toFixed(0)}</p>
-                    <p className="text-xs text-[#3D5A80]">Available Balance</p>
+                    <p className="text-xs text-[#3D5A80]">CoinQuest Balance</p>
                   </div>
                   <div className="bg-[#06D6A0]/20 rounded-xl p-3 text-center">
-                    <p className="text-2xl font-bold text-[#1D3557]">{studentInsights.learning?.lessons_completed}</p>
-                    <p className="text-xs text-[#3D5A80]">Lessons Done</p>
+                    <p className="text-2xl font-bold text-[#1D3557]">
+                      {studentInsights.learning?.lessons_completed || 0}
+                      {studentInsights.learning?.total_lessons ? <span className="text-base text-[#3D5A80]">/{studentInsights.learning.total_lessons}</span> : null}
+                    </p>
+                    <p className="text-xs text-[#3D5A80]">Lessons</p>
+                    {studentInsights.learning?.total_topics ? (
+                      <p className="text-[10px] text-[#3D5A80] mt-1">
+                        {studentInsights.learning.topics_completed || 0}/{studentInsights.learning.total_topics} topics · {studentInsights.learning.subtopics_completed || 0}/{studentInsights.learning.total_subtopics || 0} subtopics
+                      </p>
+                    ) : null}
                   </div>
                   <div className="bg-[#EE6C4D]/20 rounded-xl p-3 text-center">
-                    <p className="text-2xl font-bold text-[#1D3557]">{studentInsights.student?.streak_count || 0}</p>
+                    <p className="text-2xl font-bold text-[#1D3557]">{studentInsights.learning?.current_streak ?? studentInsights.student?.streak_count ?? 0}</p>
                     <p className="text-xs text-[#3D5A80]">Day Streak</p>
+                    {studentInsights.learning?.longest_streak ? (
+                      <p className="text-[10px] text-[#3D5A80] mt-1">best: {studentInsights.learning.longest_streak}</p>
+                    ) : null}
                   </div>
                   <div className="bg-[#3D5A80]/20 rounded-xl p-3 text-center">
                     <p className="text-2xl font-bold text-[#1D3557]">{studentInsights.achievements?.badges_earned || 0}</p>

@@ -1793,12 +1793,23 @@ export default function ParentDashboard({ user }) {
                     )}
                   </div>
                   <div className="bg-[#06D6A0]/20 rounded-xl p-3 text-center">
-                    <p className="text-2xl font-bold text-[#1D3557]">{childInsights.learning?.lessons_completed}</p>
-                    <p className="text-xs text-[#3D5A80]">Lessons Done</p>
+                    <p className="text-2xl font-bold text-[#1D3557]">
+                      {childInsights.learning?.lessons_completed || 0}
+                      {childInsights.learning?.total_lessons ? <span className="text-base text-[#3D5A80]">/{childInsights.learning.total_lessons}</span> : null}
+                    </p>
+                    <p className="text-xs text-[#3D5A80]">Lessons</p>
+                    {childInsights.learning?.total_topics ? (
+                      <p className="text-[10px] text-[#3D5A80] mt-1">
+                        {childInsights.learning.topics_completed || 0}/{childInsights.learning.total_topics} topics · {childInsights.learning.subtopics_completed || 0}/{childInsights.learning.total_subtopics || 0} subtopics
+                      </p>
+                    ) : null}
                   </div>
                   <div className="bg-[#EE6C4D]/20 rounded-xl p-3 text-center">
-                    <p className="text-2xl font-bold text-[#1D3557]">{childInsights.child?.streak_count || 0}</p>
+                    <p className="text-2xl font-bold text-[#1D3557]">{childInsights.learning?.current_streak ?? childInsights.child?.streak_count ?? 0}</p>
                     <p className="text-xs text-[#3D5A80]">Day Streak</p>
+                    {childInsights.learning?.longest_streak ? (
+                      <p className="text-[10px] text-[#3D5A80] mt-1">best: {childInsights.learning.longest_streak}</p>
+                    ) : null}
                   </div>
                   <div className="bg-[#3D5A80]/20 rounded-xl p-3 text-center">
                     <p className="text-2xl font-bold text-[#1D3557]">{childInsights.achievements?.badges_earned || 0}</p>

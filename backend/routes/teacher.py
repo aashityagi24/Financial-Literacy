@@ -146,7 +146,7 @@ async def get_classroom_details(classroom_id: str, request: Request):
             # Teachers don't see the child's My Wallet (real-world parent earnings) — only CoinQuest.
             total_balance = sum(w.get("balance", 0) for w in wallet if w.get("account_type") != "my_wallet")
             
-            lessons_completed = await db.user_lesson_progress.count_documents({
+            lessons_completed = await db.user_content_progress.count_documents({
                 "user_id": student["user_id"],
                 "completed": True
         })
@@ -457,6 +457,57 @@ async def get_student_insights(classroom_id: str, student_id: str, request: Requ
         "user_id": student_id,
         "completed": True
 })
+    grade = student.get("grade", 3) or 0
+    total_lessons = await db.content_items.count_documents({
+        "is_published": True,
+        "min_grade": {"$lte": grade},
+        "max_grade": {"$gte": grade},
+    })
+
+    # Topic / subtopic completion
+    grade_topics = await db.content_topics.find(
+        {"is_active": {"$ne": False}, "min_grade": {"$lte": grade}, "max_grade": {"$gte": grade}},
+        {"_id": 0, "topic_id": 1}
+    ).to_list(200)
+    total_topics = len(grade_topics)
+    topics_completed = 0
+    subtopics_completed = 0
+    total_subtopics = 0
+    for t in grade_topics:
+        subtopics = await db.content_topics.find(
+            {"parent_id": t["topic_id"]},
+            {"_id": 0, "topic_id": 1}
+        ).to_list(200)
+        sub_ids = [s["topic_id"] for s in subtopics]
+        total_subtopics += len(sub_ids)
+        if not sub_ids:
+            continue
+        topic_all_done = True
+        any_subtopic_with_content = False
+        for sid in sub_ids:
+            items = await db.content_items.find(
+                {"topic_id": sid, "is_published": True},
+                {"_id": 0, "content_id": 1}
+            ).to_list(200)
+            if not items:
+                topic_all_done = False
+                continue
+            any_subtopic_with_content = True
+            item_ids = [i["content_id"] for i in items]
+            done = await db.user_content_progress.count_documents({
+                "user_id": student_id,
+                "content_id": {"$in": item_ids},
+                "completed": True
+            })
+            if done >= len(item_ids):
+                subtopics_completed += 1
+            else:
+                topic_all_done = False
+        if topic_all_done and any_subtopic_with_content:
+            topics_completed += 1
+
+    current_streak = student.get("streak_count", 0) or student.get("current_streak", 0) or 0
+    longest_streak = student.get("longest_streak", current_streak) or 0
     
     # Get chore stats
     all_chores = await db.new_quests.find({
@@ -481,7 +532,6 @@ async def get_student_insights(classroom_id: str, student_id: str, request: Requ
     quests_completed = len(quest_completions)
     
     # Count all available quests for this student
-    grade = student.get("grade", 3) or 3
     all_quests = await db.new_quests.count_documents({
         "creator_type": {"$in": ["admin", "teacher"]},
         "is_active": True,
@@ -549,7 +599,14 @@ async def get_student_insights(classroom_id: str, student_id: str, request: Requ
             "savings_goals_count": len(active_goals)
         },
         "learning": {
-            "lessons_completed": lessons_completed
+            "lessons_completed": lessons_completed,
+            "total_lessons": total_lessons,
+            "topics_completed": topics_completed,
+            "total_topics": total_topics,
+            "subtopics_completed": subtopics_completed,
+            "total_subtopics": total_subtopics,
+            "current_streak": current_streak,
+            "longest_streak": longest_streak,
         },
         "transactions": {
             "total_earned": total_earned,

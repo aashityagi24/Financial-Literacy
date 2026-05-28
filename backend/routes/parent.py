@@ -83,13 +83,35 @@ async def parent_dashboard(request: Request):
                 "child_id": child["user_id"],
                 "is_active": True
             })
-            
+
+            # Learning progress so the dashboard card can show "X / Y lessons"
+            grade = child.get("grade", 3) or 0
+            lessons_completed = await db.user_content_progress.count_documents({
+                "user_id": child["user_id"],
+                "completed": True
+            })
+            # Total lessons available for this grade (content items active for this grade range)
+            total_lessons = await db.content_items.count_documents({
+                "is_published": True,
+                "min_grade": {"$lte": grade},
+                "max_grade": {"$gte": grade},
+            })
+
+            # Pending chores awaiting parent approval
+            pending_chores = await db.quest_completions.count_documents({
+                "user_id": child["user_id"],
+                "status": "pending"
+            })
+
             children.append({
                 **child,
                 "total_balance": total_balance,
                 "coinquest_balance": coinquest_balance,
                 "my_wallet_balance": my_wallet_balance,
-                "active_chores": chores
+                "active_chores": chores,
+                "pending_chores": pending_chores,
+                "lessons_completed": lessons_completed,
+                "total_lessons": total_lessons,
             })
     
     return {"children": children}
@@ -374,6 +396,63 @@ async def get_child_insights(child_id: str, request: Request):
         "user_id": child_id,
         "completed": True
     })
+    total_lessons = await db.content_items.count_documents({
+        "is_published": True,
+        "min_grade": {"$lte": grade},
+        "max_grade": {"$gte": grade},
+    })
+
+    # Subtopics & topics completed (a subtopic is "completed" when all its content items
+    # have a completed progress row for this child; a topic is completed when all its
+    # subtopics are completed).
+    grade_topics = await db.content_topics.find(
+        {
+            "is_active": {"$ne": False},
+            "min_grade": {"$lte": grade},
+            "max_grade": {"$gte": grade},
+        },
+        {"_id": 0, "topic_id": 1}
+    ).to_list(200)
+    total_topics = len(grade_topics)
+    topics_completed = 0
+    subtopics_completed = 0
+    total_subtopics = 0
+    for t in grade_topics:
+        subtopics = await db.content_topics.find(
+            {"parent_id": t["topic_id"]},
+            {"_id": 0, "topic_id": 1}
+        ).to_list(200)
+        sub_ids = [s["topic_id"] for s in subtopics]
+        total_subtopics += len(sub_ids)
+        if not sub_ids:
+            continue
+        topic_all_done = True
+        any_subtopic_with_content = False
+        for sid in sub_ids:
+            items = await db.content_items.find(
+                {"topic_id": sid, "is_published": True},
+                {"_id": 0, "content_id": 1}
+            ).to_list(200)
+            if not items:
+                topic_all_done = False
+                continue
+            any_subtopic_with_content = True
+            item_ids = [i["content_id"] for i in items]
+            done = await db.user_content_progress.count_documents({
+                "user_id": child_id,
+                "content_id": {"$in": item_ids},
+                "completed": True
+            })
+            if done >= len(item_ids):
+                subtopics_completed += 1
+            else:
+                topic_all_done = False
+        if topic_all_done and any_subtopic_with_content:
+            topics_completed += 1
+
+    # Streaks come from the user doc (set by the daily-streak claim flow)
+    current_streak = child.get("streak_count", 0) or child.get("current_streak", 0) or 0
+    longest_streak = child.get("longest_streak", current_streak) or 0
     
     # Get chore stats
     all_chores = await db.new_quests.find({
@@ -398,7 +477,6 @@ async def get_child_insights(child_id: str, request: Request):
     quests_completed = len(quest_completions)
     
     # Count all available quests for this child
-    grade = child.get("grade", 3) or 3
     all_quests = await db.new_quests.count_documents({
         "creator_type": {"$in": ["admin", "teacher"]},
         "is_active": True,
@@ -468,7 +546,14 @@ async def get_child_insights(child_id: str, request: Request):
             "savings_goals_count": len(active_goals)
         },
         "learning": {
-            "lessons_completed": lessons_completed
+            "lessons_completed": lessons_completed,
+            "total_lessons": total_lessons,
+            "topics_completed": topics_completed,
+            "total_topics": total_topics,
+            "subtopics_completed": subtopics_completed,
+            "total_subtopics": total_subtopics,
+            "current_streak": current_streak,
+            "longest_streak": longest_streak,
         },
         "transactions": {
             "total_earned": total_earned,

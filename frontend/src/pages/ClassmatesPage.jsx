@@ -274,6 +274,47 @@ export default function ClassmatesPage({ user }) {
                           ))}
                         </div>
                       )}
+
+                      {/* Work this classmate is doing — titles only, no earnings shown.
+                          Two buckets: Jobs (paid weekly) & Chores (one-off tasks). */}
+                      {(classmate.jobs?.length > 0 || classmate.chores?.length > 0) && (
+                        <div className="mt-3 grid grid-cols-2 gap-2" data-testid={`classmate-work-${classmate.user_id}`}>
+                          <div className="bg-amber-50 rounded-xl p-2.5 border border-amber-200">
+                            <p className="text-[11px] text-amber-700 font-bold uppercase tracking-wider mb-1.5">
+                              💼 Jobs
+                            </p>
+                            {classmate.jobs?.length > 0 ? (
+                              <ul className="space-y-0.5">
+                                {classmate.jobs.slice(0, 3).map((j, i) => (
+                                  <li key={i} className="text-xs text-[#1D3557] truncate">• {j.title}</li>
+                                ))}
+                                {classmate.jobs.length > 3 && (
+                                  <li className="text-[10px] text-[#3D5A80] italic">+{classmate.jobs.length - 3} more</li>
+                                )}
+                              </ul>
+                            ) : (
+                              <p className="text-[11px] text-[#3D5A80] italic">No active jobs</p>
+                            )}
+                          </div>
+                          <div className="bg-violet-50 rounded-xl p-2.5 border border-violet-200">
+                            <p className="text-[11px] text-violet-700 font-bold uppercase tracking-wider mb-1.5">
+                              🧹 Chores
+                            </p>
+                            {classmate.chores?.length > 0 ? (
+                              <ul className="space-y-0.5">
+                                {classmate.chores.slice(0, 3).map((c, i) => (
+                                  <li key={i} className="text-xs text-[#1D3557] truncate">• {c.title}</li>
+                                ))}
+                                {classmate.chores.length > 3 && (
+                                  <li className="text-[10px] text-[#3D5A80] italic">+{classmate.chores.length - 3} more</li>
+                                )}
+                              </ul>
+                            ) : (
+                              <p className="text-[11px] text-[#3D5A80] italic">No active chores</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
                       
                       {/* Action Buttons */}
                       <div className="flex gap-2 mt-3">
