@@ -742,7 +742,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 **Google Cloud Console Configuration**:
 To complete the OAuth setup, add these redirect URIs to your Google Cloud Console OAuth 2.0 credentials:
-- For Preview: `https://learn-coins-1.preview.emergentagent.com/api/auth/google/callback`
+- For Preview: `https://finlit-gamified-1.preview.emergentagent.com/api/auth/google/callback`
 - For Production: `https://coinquest.co.in/api/auth/google/callback`
 
 ### Session 12 Updates (February 9, 2026)
@@ -1020,6 +1020,14 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Backend endpoint: `PUT /api/admin/users/{user_id}/subscription`
   - Admin-granted subscriptions stored with `granted_by_admin: true` flag
   - CSV bulk upload (students + parents) now supports `subscription` and `subscription_duration` columns for school tie-ups
+- **Grade-Aware Classmates Page — Viewer-Driven Tiles** (May 28, 2026)
+  - Fixed `ClassmatesPage.jsx` to gate Investing/Garden and P/L tiles by the VIEWER's grade (not the classmate's grade).
+  - K (grade 0): no Invested/Garden tile, no P/L tile (only Streak, Lessons, Quests, Saved, Spending, Badges).
+  - Grade 1–2: Garden 🌱 tile shown, P/L hidden (kids don't understand profit/loss yet).
+  - Grade 3+: Invested 📈 + P/L tiles both visible.
+  - Verified visually via screenshots for K, G1, and G3 perspectives in Demo Class.
+  - Added test users `classmate_k/g1/g2/g3` (password `testpass123`, all flagged `is_test_user`) enrolled in `demo_classroom_1` for ongoing grade-aware QA.
+
 
 ## Upcoming Tasks
 - **P1**: Streak Bonuses & Leaderboards

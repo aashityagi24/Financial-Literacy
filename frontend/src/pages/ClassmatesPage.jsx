@@ -201,8 +201,18 @@ export default function ClassmatesPage({ user }) {
                     <div className="flex-1">
                       <h3 className="font-bold text-[#1D3557] text-base">{classmate.name}</h3>
                       
-                      {/* Stats Grid - Compact */}
-                      <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 mt-2">
+                      {/* Stats Grid - Compact. The Invested + P/L tiles are grade-aware
+                          based on the VIEWER's grade (financial vocabulary comprehension):
+                          • Viewer K (grade 0): neither tile (no garden, no stocks)
+                          • Viewer Grade 1-2: Garden tile only (no P/L — they don't know profit/loss yet)
+                          • Viewer Grade 3+: Invested + P/L (stocks introduce real P/L) */}
+                      {(() => {
+                        const viewerGrade = user?.grade ?? 5;
+                        const showInvested = viewerGrade >= 1;
+                        const showPL = viewerGrade >= 3;
+                        const visibleCount = 5 + (showInvested ? 1 : 0) + (showPL ? 1 : 0) + 1; // streak/lessons/quests/saved/spending + invested? + pl? + badges
+                        return (
+                      <div className={`grid grid-cols-4 sm:grid-cols-${Math.min(visibleCount, 8)} gap-1.5 mt-2`}>
                         <div className="bg-[#FFD23F]/20 rounded-lg px-2 py-1 text-center">
                           <p className="text-sm font-bold text-[#1D3557]">🔥 {classmate.streak_count || 0}</p>
                           <p className="text-[9px] text-[#3D5A80]">Streak</p>
@@ -223,21 +233,29 @@ export default function ClassmatesPage({ user }) {
                           <p className="text-sm font-bold text-[#1D3557]">💵 ₹{classmate.spending_balance || 0}</p>
                           <p className="text-[9px] text-[#3D5A80]">Spending</p>
                         </div>
-                        <div className="bg-[#9B5DE5]/20 rounded-lg px-2 py-1 text-center">
-                          <p className="text-sm font-bold text-[#1D3557]">📈 ₹{classmate.investment_value || 0}</p>
-                          <p className="text-[9px] text-[#3D5A80]">Invested</p>
-                        </div>
-                        <div className={`${classmate.investment_profit >= 0 ? 'bg-[#06D6A0]/20' : 'bg-[#EE6C4D]/20'} rounded-lg px-2 py-1 text-center`}>
-                          <p className={`text-sm font-bold ${classmate.investment_profit >= 0 ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
-                            {classmate.investment_profit >= 0 ? '+' : '-'}₹{Math.abs(classmate.investment_profit || 0)}
-                          </p>
-                          <p className="text-[9px] text-[#3D5A80]">P/L</p>
-                        </div>
+                        {showInvested && (
+                          <div className="bg-[#9B5DE5]/20 rounded-lg px-2 py-1 text-center">
+                            <p className="text-sm font-bold text-[#1D3557]">
+                              {viewerGrade <= 2 ? '🌱' : '📈'} ₹{classmate.investment_value || 0}
+                            </p>
+                            <p className="text-[9px] text-[#3D5A80]">{viewerGrade <= 2 ? 'Garden' : 'Invested'}</p>
+                          </div>
+                        )}
+                        {showPL && (
+                          <div className={`${classmate.investment_profit >= 0 ? 'bg-[#06D6A0]/20' : 'bg-[#EE6C4D]/20'} rounded-lg px-2 py-1 text-center`}>
+                            <p className={`text-sm font-bold ${classmate.investment_profit >= 0 ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
+                              {classmate.investment_profit >= 0 ? '+' : '-'}₹{Math.abs(classmate.investment_profit || 0)}
+                            </p>
+                            <p className="text-[9px] text-[#3D5A80]">P/L</p>
+                          </div>
+                        )}
                         <div className="bg-[#F72585]/20 rounded-lg px-2 py-1 text-center">
                           <p className="text-sm font-bold text-[#1D3557]">🏆 {classmate.badges || 0}</p>
                           <p className="text-[9px] text-[#3D5A80]">Badges</p>
                         </div>
                       </div>
+                        );
+                      })()}
                       
                       {/* Savings Goals */}
                       {classmate.savings_goals?.length > 0 && (
