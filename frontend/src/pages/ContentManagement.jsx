@@ -325,6 +325,15 @@ function SortableContentItem({ content, onEdit, onDelete, onMove, onTogglePublis
               <EyeOff className="w-3 h-3" /> Draft
             </button>
           )}
+          {content.is_mandatory === false && (
+            <span
+              className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-700 font-medium"
+              title="Children may skip this without blocking the next item"
+              data-testid={`optional-badge-${content.content_id}`}
+            >
+              Optional
+            </span>
+          )}
           {content.visible_to && content.visible_to.length > 0 && (
             <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-600">
               {content.visible_to.join(', ')}
@@ -422,7 +431,7 @@ export default function ContentManagement({ user }) {
   const [subtopicForm, setSubtopicForm] = useState({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5 });
   const [contentForm, setContentForm] = useState({
     title: '', description: '', content_type: 'worksheet', thumbnail: '',
-    min_grade: 0, max_grade: 5, reward_coins: 5, is_published: false, content_data: {},
+    min_grade: 0, max_grade: 5, reward_coins: 5, is_published: false, is_mandatory: true, content_data: {},
     visible_to: ['child'] // Default visibility to child
   });
   
@@ -745,7 +754,7 @@ export default function ContentManagement({ user }) {
       setEditingItem(null);
       setContentForm({
         title: '', description: '', content_type: 'worksheet', thumbnail: '',
-        min_grade: 0, max_grade: 5, reward_coins: 5, is_published: false, content_data: {},
+        min_grade: 0, max_grade: 5, reward_coins: 5, is_published: false, is_mandatory: true, content_data: {},
         visible_to: ['child']
       });
       fetchData();
@@ -1074,6 +1083,7 @@ export default function ContentManagement({ user }) {
       max_grade: content.max_grade,
       reward_coins: content.reward_coins,
       is_published: content.is_published || false,
+      is_mandatory: content.is_mandatory !== false, // default true
       content_data: content.content_data || {},
       visible_to: content.visible_to || ['child']
     });
@@ -2190,6 +2200,31 @@ export default function ContentManagement({ user }) {
                   {contentForm.is_published ? 'Live' : 'Draft'}
                 </span>
                 <Switch checked={contentForm.is_published} onCheckedChange={v => setContentForm(p => ({ ...p, is_published: v }))} />
+              </div>
+            </div>
+
+            {/* Mandatory / Optional Toggle.
+                When ON (default) the child must complete this item before the
+                next one unlocks. When OFF, completing it is optional and the
+                next item auto-unlocks. */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <p className="font-medium text-gray-800">Completion Requirement</p>
+                <p className="text-sm text-gray-500">
+                  {contentForm.is_mandatory
+                    ? 'Mandatory — kids must finish this before the next item unlocks.'
+                    : 'Optional — the next item unlocks even if kids skip this one.'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={contentForm.is_mandatory ? 'text-blue-600 font-medium' : 'text-amber-600 font-medium'}>
+                  {contentForm.is_mandatory ? 'Mandatory' : 'Optional'}
+                </span>
+                <Switch
+                  checked={contentForm.is_mandatory}
+                  onCheckedChange={v => setContentForm(p => ({ ...p, is_mandatory: v }))}
+                  data-testid="content-mandatory-toggle"
+                />
               </div>
             </div>
             

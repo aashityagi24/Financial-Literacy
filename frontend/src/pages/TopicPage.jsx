@@ -632,7 +632,14 @@ export default function TopicPage({ user }) {
                             </button>
                           )}
                         </div>
-                        <h3 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{content.title}</h3>
+                        <h3 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                          {content.title}
+                          {content.is_mandatory === false && (
+                            <span className="ml-2 align-middle text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
+                              Optional
+                            </span>
+                          )}
+                        </h3>
                         <p className="text-base text-[#3D5A80] line-clamp-1">{content.description}</p>
                         {user?.role === 'child' && (
                           <p className={`text-base font-bold mt-1 text-[#06D6A0]`}>

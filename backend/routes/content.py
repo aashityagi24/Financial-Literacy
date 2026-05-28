@@ -287,9 +287,14 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                 subtopic["is_unlocked"] = True if test_mode else previous_subtopic_completed
                 topic["completed_count"] += subtopic_completed_count
                 
-                if not subtopic["is_completed"] and subtopic["content_count"] > 0:
+                # Unlock-progression uses MANDATORY-only completion so optional
+                # items don't gate the next subtopic.
+                mandatory_items = [c for c in subtopic_content if c.get("is_mandatory", True)]
+                mandatory_completed = sum(1 for c in mandatory_items if c["content_id"] in completed_content_ids)
+                subtopic_unlocks_next = (len(mandatory_items) == 0) or (mandatory_completed == len(mandatory_items))
+                if not subtopic_unlocks_next and subtopic["content_count"] > 0:
                     all_subtopics_completed = False
-                previous_subtopic_completed = True if test_mode else subtopic["is_completed"]
+                previous_subtopic_completed = True if test_mode else subtopic_unlocks_next
             
             has_any_content = topic["total_content"] > 0
             topic["is_completed"] = all_subtopics_completed and has_any_content
@@ -497,16 +502,37 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
             subtopic_completed_count = sum(1 for c in subtopic_content if c["content_id"] in completed_content_ids)
             subtopic["completed_count"] = subtopic_completed_count
             subtopic["content_count"] = len(subtopic_content)
+            # A subtopic counts as "completed for unlock purposes" when every
+            # MANDATORY content item under it has been completed. Optional
+            # items don't gate the next subtopic.
+            mandatory_items = [c for c in subtopic_content if c.get("is_mandatory", True)]
+            mandatory_completed = sum(1 for c in mandatory_items if c["content_id"] in completed_content_ids)
             subtopic["is_completed"] = subtopic_completed_count == len(subtopic_content) and len(subtopic_content) > 0
-            previous_subtopic_completed = True if test_mode else subtopic["is_completed"]
+            subtopic_unlocks_next = (len(mandatory_items) == 0) or (mandatory_completed == len(mandatory_items))
+            previous_subtopic_completed = True if test_mode else subtopic_unlocks_next
         
-        # Progressive unlock for content items
+        # Progressive unlock for content items. Optional items (is_mandatory=False)
+        # don't block the next item once they've been reached — but if they
+        # themselves are still locked (because an earlier mandatory item is
+        # incomplete), they can't bypass that lock for downstream items either.
         previous_content_completed = True  # First item always unlocked
         for content in content_items:
             content["is_completed"] = content["content_id"] in completed_content_ids
             content["is_unlocked"] = True if test_mode else previous_content_completed
             content["coins_earned"] = coins_earned_map.get(content["content_id"])
-            previous_content_completed = True if test_mode else content["is_completed"]
+            is_mandatory = content.get("is_mandatory", True)
+            if test_mode:
+                previous_content_completed = True
+            elif not content["is_unlocked"]:
+                # Locked items can't pass progress forward, even if optional.
+                previous_content_completed = False
+            elif content["is_completed"]:
+                previous_content_completed = True
+            elif not is_mandatory:
+                # Reached + optional + skipped: next item unlocks.
+                previous_content_completed = True
+            else:
+                previous_content_completed = False
     elif is_parent and user_id:
         # For parents: show completion status based on their children's progress
         links = await db.parent_child_links.find(
@@ -829,6 +855,11 @@ async def admin_create_item(request: Request):
         "max_grade": body.get("max_grade", 5),
         "reward_coins": body.get("reward_coins", 5),
         "is_published": body.get("is_published", False),
+        # When True (default), the child MUST complete this item before the next
+        # one unlocks. When False the next item unlocks automatically — useful
+        # for supplementary worksheets/activities admins want to offer but not
+        # require.
+        "is_mandatory": body.get("is_mandatory", True),
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.content_items.insert_one(content_doc)
@@ -845,7 +876,8 @@ async def admin_update_item(content_id: str, request: Request):
     
     update_fields = {}
     for field in ["title", "description", "content_type", "content_data", "thumbnail", 
-                  "visible_to", "order", "min_grade", "max_grade", "reward_coins", "is_published"]:
+                  "visible_to", "order", "min_grade", "max_grade", "reward_coins",
+                  "is_published", "is_mandatory"]:
         if field in body:
             update_fields[field] = body[field]
     

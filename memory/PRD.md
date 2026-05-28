@@ -1040,6 +1040,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 
 - **P1**: Safety Guardrails (spending limits, parent approval)
 - **P2**: Teacher/Parent Collaboration Portal
+- **Mandatory vs Optional content** (May 28, 2026)
+  - New `is_mandatory` field on `content_items` (defaults to `True`). Admins flip a "Completion Requirement" toggle in the content dialog (Repository → Edit) — copy adapts to "Mandatory — kids must finish this before the next item unlocks." vs "Optional — the next item unlocks even if kids skip this one."
+  - Backend (`/api/content/topics/{topic_id}`): progressive-unlock walker now lets optional items pass-through (next item auto-unlocks) as long as the optional item itself is reachable. Subtopic→subtopic and topic→topic gates also use mandatory-only completion so a single optional item never blocks downstream progression.
+  - Frontend: admin list shows an amber **Optional** pill on content rows; child `TopicPage.jsx` shows the same pill next to the content title.
+  - Test suite: `/app/backend/tests/test_optional_content.py` — 6 tests covering default-mandatory persistence, optional-skip-through, mandatory chain integrity, and admin PUT-toggle round-trip.
+
 - **P2**: Collaborative & Seasonal Events
 - **P2**: Email notifications for loan events
 - **P2**: Tutorial System for new users
