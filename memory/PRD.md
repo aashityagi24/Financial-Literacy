@@ -1031,6 +1031,13 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 
 ## Upcoming Tasks
 - **P1**: Streak Bonuses & Leaderboards
+- **Gifting Upgrades — CoinQuest funding, Item gifts/requests, Sequential back nav** (May 28, 2026)
+  - Giving Jar can now be funded from **CoinQuest Wallet (play coins)** in addition to My Wallet. Backend `wallet.py` relaxed; frontend `GiftingPage.jsx` exposes both sources in the Add Money dialog.
+  - Children can now **Give** or **Ask for** specific items (toy/book/etc.) — not just money. New `Money/Item` toggle in both `ClassmatesPage.jsx` dialogs. Item gifts/requests don't move any wallet balance; they just create a record + notify the friend so kids can coordinate the physical handover.
+  - Backend: `GiftRequest` model extended with `gift_type`, `item_name`, `item_description`. `/gift-money`, `/request-gift`, and `/gift-requests/{id}/respond` all handle item-type flows without touching wallet balances.
+  - **Smart back navigation**: created `/app/frontend/src/components/BackButton.jsx`. Uses `navigate(-1)` when history exists, falls back to `/dashboard` on deep links. Applied to 10 child-facing pages: Classmates, Gifting, Wallet, Achievements, Chat, Lending, Garden, Jobs, Quests, Stocks. So `Dashboard → Gifting → Send Gift → Classmates → Back` now correctly returns to Gifting (no more confusing jump to Dashboard).
+  - Regression suite: `/app/backend/tests/test_gifting_features.py` — 9 tests, all green (CoinQuest→Gifting allowed, Savings rules intact, item gifts have zero wallet impact, money gifts unchanged).
+
 - **P1**: Safety Guardrails (spending limits, parent approval)
 - **P2**: Teacher/Parent Collaboration Portal
 - **P2**: Collaborative & Seasonal Events

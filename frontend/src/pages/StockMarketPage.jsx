@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import BackButton from '@/components/BackButton';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
@@ -196,9 +196,9 @@ export default function StockMarketPage({ user }) {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to="/dashboard" className="p-2 hover:bg-white/10 rounded-lg">
+              <BackButton className="p-2 hover:bg-white/10 rounded-lg" testId="stocks-back-btn">
                 <ChevronLeft className="w-6 h-6 text-gray-400" />
-              </Link>
+              </BackButton>
               <div className="flex items-center gap-3">
                 <BarChart3 className="w-8 h-8 text-[#10B981]" />
                 <h1 className="text-xl font-bold">CoinQuest Markets</h1>

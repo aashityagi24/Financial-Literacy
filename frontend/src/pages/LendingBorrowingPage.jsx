@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import BackButton from '@/components/BackButton';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
@@ -291,9 +292,9 @@ export default function LendingBorrowingPage({ user }) {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to="/dashboard" className="p-2 hover:bg-white/20 rounded-lg">
+              <BackButton className="p-2 hover:bg-white/20 rounded-lg" testId="lending-back-btn">
                 <ChevronLeft className="w-6 h-6" />
-              </Link>
+              </BackButton>
               <div>
                 <h1 className="text-2xl font-bold flex items-center gap-2">
                   <HandCoins className="w-8 h-8" />

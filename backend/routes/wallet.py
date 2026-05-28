@@ -154,11 +154,12 @@ async def transfer_money(transaction: TransactionCreate, request: Request):
         #   * Piggy Bank (savings) is **outbound-restricted**: money goes in from My
         #     Wallet but can only LEAVE by contributing to a specific goal (handled in
         #     /savings-goals/{id}/contribute). General transfers out are not allowed.
-        #   * Giving (gifting) is funded from My Wallet; money leaves by sending a gift.
+        #   * Giving (gifting) can be funded from EITHER My Wallet (real money) OR
+        #     CoinQuest/Spending (play coins). Money leaves by sending a gift.
         #   * Investing/Garden is a "play coins" jar — only funded from CoinQuest (spending).
-        REAL_JARS = {"savings", "gifting"}
-        PLAY_JARS = {"investing"}
         f, t = transaction.from_account, transaction.to_account
+        PLAY_JARS = {"investing"}
+        GIFTING_SOURCES = {"my_wallet", "spending"}
 
         # Piggy Bank cannot be a source for a transfer.
         if f == "savings":
@@ -167,15 +168,23 @@ async def transfer_money(transaction: TransactionCreate, request: Request):
                 detail="Piggy Bank money can only be spent by contributing to a savings goal."
             )
 
-        if t in REAL_JARS and f != "my_wallet":
+        # Savings (Piggy Bank) can only be funded from My Wallet (real earnings)
+        if t == "savings" and f != "my_wallet":
             raise HTTPException(
                 status_code=400,
-                detail=f"{t.capitalize()} can only be funded from your My Wallet (real earnings)."
+                detail="Piggy Bank can only be funded from your My Wallet (real earnings)."
             )
-        if f == "gifting" and t != "my_wallet":
+        # Giving Jar accepts both real and play money
+        if t == "gifting" and f not in GIFTING_SOURCES:
             raise HTTPException(
                 status_code=400,
-                detail="Giving money can only move back to your My Wallet."
+                detail="Giving Jar can only be funded from My Wallet or your CoinQuest Wallet."
+            )
+        # Money cannot leave the Giving Jar via transfer (only via gifting to friends)
+        if f == "gifting":
+            raise HTTPException(
+                status_code=400,
+                detail="Giving money can only leave by sending a gift to a friend."
             )
         if t in PLAY_JARS and f != "spending":
             raise HTTPException(

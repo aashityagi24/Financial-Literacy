@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import BackButton from '@/components/BackButton';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
@@ -259,9 +260,9 @@ export default function WalletPage({ user }) {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to="/dashboard" className="p-2 rounded-xl border-2 border-[#1D3557] hover:bg-[#E0FBFC]">
+              <BackButton className="p-2 rounded-xl border-2 border-[#1D3557] hover:bg-[#E0FBFC]" testId="wallet-back-btn">
                 <ChevronLeft className="w-5 h-5 text-[#1D3557]" />
-              </Link>
+              </BackButton>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#FFD23F] rounded-xl border-3 border-[#1D3557] flex items-center justify-center">
                   <Wallet className="w-6 h-6 text-[#1D3557]" />

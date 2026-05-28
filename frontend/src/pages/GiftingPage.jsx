@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import BackButton from '@/components/BackButton';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
@@ -34,7 +35,7 @@ export default function GiftingPage({ user }) {
   const [showTransferDialog, setShowTransferDialog] = useState(false);
   const [wallet, setWallet] = useState(null);
   const [transferAmount, setTransferAmount] = useState('');
-  const [transferFrom, setTransferFrom] = useState('my_wallet');
+  const [transferFrom, setTransferFrom] = useState('spending');
   const [transferring, setTransferring] = useState(false);
   
   const [newGiving, setNewGiving] = useState({
@@ -94,7 +95,7 @@ export default function GiftingPage({ user }) {
         to_account: 'gifting',
         amount: amount,
         transaction_type: 'transfer',
-        description: `Transfer to Giving Jar from ${transferFrom}`
+        description: `Transfer to Giving Jar from ${transferFrom === 'spending' ? 'CoinQuest Wallet' : 'My Wallet'}`
       });
       toast.success(`₹${amount} transferred to Giving Jar! 🎉`);
       setShowTransferDialog(false);
@@ -181,9 +182,9 @@ export default function GiftingPage({ user }) {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
-          <Link to="/dashboard" className="p-2 rounded-xl bg-white border-2 border-[#1D3557] hover:bg-[#FFD23F] transition-colors">
+          <BackButton className="p-2 rounded-xl bg-white border-2 border-[#1D3557] hover:bg-[#FFD23F] transition-colors" testId="gifting-back-btn">
             <ArrowLeft className="w-5 h-5 text-[#1D3557]" />
-          </Link>
+          </BackButton>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
               💝 Giving
@@ -616,7 +617,11 @@ export default function GiftingPage({ user }) {
               {/* Current Balances */}
               <div className="bg-gray-50 rounded-xl p-3 space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-[#3D5A80]">₹ My Wallet</span>
+                  <span className="text-sm text-[#3D5A80]">🟠 CoinQuest Wallet</span>
+                  <span className="font-bold text-[#1D3557]">₹{getAccountBalance('spending').toFixed(0)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-[#3D5A80]">🔵 My Wallet</span>
                   <span className="font-bold text-[#1D3557]">₹{getAccountBalance('my_wallet').toFixed(0)}</span>
                 </div>
                 <div className="flex justify-between items-center border-t pt-2">
@@ -625,15 +630,16 @@ export default function GiftingPage({ user }) {
                 </div>
               </div>
               
-              {/* Transfer From — Giving can ONLY be funded from My Wallet (real earnings) */}
+              {/* Transfer From — Giving Jar accepts BOTH CoinQuest (play) and My Wallet (real) */}
               <div>
                 <label className="text-sm font-medium text-[#1D3557] block mb-2">Transfer From</label>
                 <Select value={transferFrom} onValueChange={setTransferFrom}>
-                  <SelectTrigger className="border-2 border-[#1D3557]">
+                  <SelectTrigger className="border-2 border-[#1D3557]" data-testid="gifting-transfer-source">
                     <SelectValue placeholder="Select source" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="my_wallet">₹ My Wallet (₹{getAccountBalance('my_wallet').toFixed(0)})</SelectItem>
+                    <SelectItem value="spending">🟠 CoinQuest Wallet (₹{getAccountBalance('spending').toFixed(0)})</SelectItem>
+                    <SelectItem value="my_wallet">🔵 My Wallet (₹{getAccountBalance('my_wallet').toFixed(0)})</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

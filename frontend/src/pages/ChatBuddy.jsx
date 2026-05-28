@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import BackButton from '@/components/BackButton';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
@@ -89,9 +89,9 @@ export default function ChatBuddy({ user }) {
       <header className="bg-white border-b-3 border-[#1D3557]">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Link to="/dashboard" className="p-2 rounded-xl border-2 border-[#1D3557] hover:bg-[#E0FBFC]">
+            <BackButton className="p-2 rounded-xl border-2 border-[#1D3557] hover:bg-[#E0FBFC]" testId="chat-back-btn">
               <ChevronLeft className="w-5 h-5 text-[#1D3557]" />
-            </Link>
+            </BackButton>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#FFD23F] rounded-xl border-3 border-[#1D3557] flex items-center justify-center animate-pulse-glow">
                 <MessageCircle className="w-6 h-6 text-[#1D3557]" />

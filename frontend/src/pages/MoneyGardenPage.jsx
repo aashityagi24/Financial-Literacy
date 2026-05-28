@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import BackButton from '@/components/BackButton';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
@@ -313,9 +313,9 @@ export default function MoneyGardenPage({ user }) {
       <header className="bg-[#228B22] border-b-4 border-[#1D3557]">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
-            <Link to="/dashboard" className="p-2 hover:bg-white/20 rounded-xl">
+            <BackButton className="p-2 hover:bg-white/20 rounded-xl" testId="garden-back-btn">
               <ChevronLeft className="w-6 h-6 text-white" />
-            </Link>
+            </BackButton>
             <span className="text-3xl">🌻</span>
             <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>Money Garden</h1>
           </div>

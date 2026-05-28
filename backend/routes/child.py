@@ -27,8 +27,12 @@ class SavingsGoalCreate(BaseModel):
 
 class GiftRequest(BaseModel):
     to_user_id: str
-    amount: float
+    amount: Optional[float] = 0
     message: Optional[str] = None
+    # Item-based gifts (toys, books, etc.) — no money moves, just a notification + record.
+    gift_type: Optional[str] = "money"   # "money" | "item"
+    item_name: Optional[str] = None
+    item_description: Optional[str] = None
 
 class CharitableGivingCreate(BaseModel):
     recipient_name: str  # Organization or person name
@@ -590,7 +594,11 @@ async def get_classmates(request: Request):
 
 @router.post("/gift-money")
 async def gift_money(data: GiftRequest, request: Request):
-    """Send money to a classmate"""
+    """Send a gift to a classmate — either money (from Giving Jar) or a specific item (toy, book, etc.).
+    
+    Item gifts don't move any wallet balance — they're recorded as a social gesture
+    and notify the recipient so the child can later hand over the physical item.
+    """
     from services.auth import get_current_user
     from routes.achievements import award_badge
     db = get_db()
@@ -599,7 +607,62 @@ async def gift_money(data: GiftRequest, request: Request):
     if user.get("role") != "child":
         raise HTTPException(status_code=403, detail="Only children can gift")
     
-    if data.amount <= 0:
+    gift_type = (data.gift_type or "money").lower()
+    
+    recipient = await db.users.find_one({"user_id": data.to_user_id})
+    if not recipient or recipient.get("role") != "child":
+        raise HTTPException(status_code=404, detail="Recipient not found")
+    
+    # ---------------- ITEM GIFT ----------------
+    if gift_type == "item":
+        if not data.item_name or not data.item_name.strip():
+            raise HTTPException(status_code=400, detail="Please tell us what you're gifting")
+        item_name = data.item_name.strip()
+        desc_extra = f" — {data.item_description.strip()}" if data.item_description else ""
+        msg_extra = f" ({data.message.strip()})" if data.message else ""
+        
+        now_iso = datetime.now(timezone.utc).isoformat()
+        await db.transactions.insert_one({
+            "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+            "user_id": user["user_id"],
+            "amount": 0,
+            "transaction_type": "gift_sent",
+            "gift_type": "item",
+            "item_name": item_name,
+            "item_description": data.item_description,
+            "description": f"Gift to {recipient.get('name', 'Friend')}: {item_name}{desc_extra}{msg_extra}",
+            "to_user_id": data.to_user_id,
+            "to_user_name": recipient.get('name', 'Friend'),
+            "created_at": now_iso
+        })
+        await db.transactions.insert_one({
+            "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+            "user_id": data.to_user_id,
+            "amount": 0,
+            "transaction_type": "gift_received",
+            "gift_type": "item",
+            "item_name": item_name,
+            "item_description": data.item_description,
+            "description": f"Gift from {user.get('name', 'Friend')}: {item_name}{desc_extra}{msg_extra}",
+            "from_user_id": user["user_id"],
+            "from_user_name": user.get('name', 'Friend'),
+            "created_at": now_iso
+        })
+        await db.notifications.insert_one({
+            "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+            "user_id": data.to_user_id,
+            "type": "gift",
+            "message": f"{user.get('name', 'A friend')} wants to give you a {item_name}!",
+            "is_read": False,
+            "created_at": now_iso
+        })
+        sender_badge = await award_badge(db, user["user_id"], "gift_given")
+        await award_badge(db, data.to_user_id, "gift_received")
+        return {"message": "Item gift sent successfully", "badge_earned": sender_badge}
+    
+    # ---------------- MONEY GIFT ----------------
+    amount = float(data.amount or 0)
+    if amount <= 0:
         raise HTTPException(status_code=400, detail="Amount must be positive")
     
     gifting_acc = await db.wallet_accounts.find_one({
@@ -607,21 +670,17 @@ async def gift_money(data: GiftRequest, request: Request):
         "account_type": "gifting"
     })
     
-    if not gifting_acc or gifting_acc.get("balance", 0) < data.amount:
+    if not gifting_acc or gifting_acc.get("balance", 0) < amount:
         raise HTTPException(status_code=400, detail="Insufficient balance in gifting account")
-    
-    recipient = await db.users.find_one({"user_id": data.to_user_id})
-    if not recipient or recipient.get("role") != "child":
-        raise HTTPException(status_code=404, detail="Recipient not found")
     
     await db.wallet_accounts.update_one(
         {"user_id": user["user_id"], "account_type": "gifting"},
-        {"$inc": {"balance": -data.amount}}
+        {"$inc": {"balance": -amount}}
     )
     
     await db.wallet_accounts.update_one(
         {"user_id": data.to_user_id, "account_type": "gifting"},
-        {"$inc": {"balance": data.amount}}
+        {"$inc": {"balance": amount}}
     )
     
     trans_id = f"trans_{uuid.uuid4().hex[:12]}"
@@ -629,8 +688,9 @@ async def gift_money(data: GiftRequest, request: Request):
         "transaction_id": trans_id,
         "user_id": user["user_id"],
         "from_account": "gifting",
-        "amount": -data.amount,
+        "amount": -amount,
         "transaction_type": "gift_sent",
+        "gift_type": "money",
         "description": f"Gift to {recipient.get('name', 'Friend')}: {data.message or ''}",
         "to_user_id": data.to_user_id,
         "to_user_name": recipient.get('name', 'Friend'),
@@ -641,8 +701,9 @@ async def gift_money(data: GiftRequest, request: Request):
         "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
         "user_id": data.to_user_id,
         "to_account": "gifting",
-        "amount": data.amount,
+        "amount": amount,
         "transaction_type": "gift_received",
+        "gift_type": "money",
         "description": f"Gift from {user.get('name', 'Friend')}: {data.message or ''}",
         "from_user_id": user["user_id"],
         "from_user_name": user.get('name', 'Friend'),
@@ -653,7 +714,7 @@ async def gift_money(data: GiftRequest, request: Request):
         "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
         "user_id": data.to_user_id,
         "type": "gift",
-        "message": f"You received ₹{data.amount} from {user.get('name', 'a friend')}!",
+        "message": f"You received ₹{amount} from {user.get('name', 'a friend')}!",
         "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     })
@@ -803,7 +864,10 @@ async def delete_charitable_giving(record_id: str, request: Request):
 
 @router.post("/request-gift")
 async def request_gift(request: Request):
-    """Request gift from classmate"""
+    """Request a gift from a classmate — money or a specific item.
+    
+    Body: { to_user_id, request_type: 'money'|'item', amount?, item_name?, message? }
+    """
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
@@ -813,18 +877,28 @@ async def request_gift(request: Request):
     
     body = await request.json()
     to_user_id = body.get("to_user_id")
-    amount = body.get("amount", 0)
-    message = body.get("message", "")
+    request_type = (body.get("request_type") or "money").lower()
+    amount = float(body.get("amount") or 0)
+    item_name = (body.get("item_name") or "").strip()
+    message = body.get("message") or body.get("reason", "")
     
-    if amount <= 0:
-        raise HTTPException(status_code=400, detail="Amount must be positive")
+    if request_type == "item":
+        if not item_name:
+            raise HTTPException(status_code=400, detail="Please tell us what you're asking for")
+        notif_msg = f"{user.get('name', 'Someone')} is asking for a {item_name}"
+    else:
+        if amount <= 0:
+            raise HTTPException(status_code=400, detail="Amount must be positive")
+        notif_msg = f"{user.get('name', 'Someone')} requested ₹{amount} gift"
     
     request_doc = {
         "request_id": f"req_{uuid.uuid4().hex[:12]}",
         "from_user_id": user["user_id"],
         "from_user_name": user.get("name", "Friend"),
         "to_user_id": to_user_id,
-        "amount": amount,
+        "request_type": request_type,
+        "amount": amount if request_type == "money" else 0,
+        "item_name": item_name if request_type == "item" else None,
         "message": message,
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat()
@@ -835,7 +909,7 @@ async def request_gift(request: Request):
         "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
         "user_id": to_user_id,
         "type": "gift_request",
-        "message": f"{user.get('name', 'Someone')} requested ₹{amount} gift",
+        "message": notif_msg,
         "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     })
@@ -882,32 +956,47 @@ async def respond_to_gift_request(request_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Request not found")
     
     if accept:
-        gifting_acc = await db.wallet_accounts.find_one({
-            "user_id": user["user_id"],
-            "account_type": "gifting"
-        })
+        request_type = (gift_req.get("request_type") or "money").lower()
         
-        if not gifting_acc or gifting_acc.get("balance", 0) < gift_req["amount"]:
-            raise HTTPException(status_code=400, detail="Insufficient balance")
-        
-        await db.wallet_accounts.update_one(
-            {"user_id": user["user_id"], "account_type": "gifting"},
-            {"$inc": {"balance": -gift_req["amount"]}}
-        )
-        
-        await db.wallet_accounts.update_one(
-            {"user_id": gift_req["from_user_id"], "account_type": "gifting"},
-            {"$inc": {"balance": gift_req["amount"]}}
-        )
-        
-        await db.notifications.insert_one({
-            "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
-            "user_id": gift_req["from_user_id"],
-            "type": "gift_accepted",
-            "message": f"{user.get('name', 'Friend')} accepted your gift request!",
-            "is_read": False,
-            "created_at": datetime.now(timezone.utc).isoformat()
-        })
+        if request_type == "item":
+            # Item requests: no wallet move, just notify the requester so they can
+            # coordinate handover of the physical item with the giver.
+            item_name = gift_req.get("item_name") or "the item you asked for"
+            await db.notifications.insert_one({
+                "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+                "user_id": gift_req["from_user_id"],
+                "type": "gift_accepted",
+                "message": f"{user.get('name', 'Friend')} agreed to give you {item_name}!",
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+        else:
+            gifting_acc = await db.wallet_accounts.find_one({
+                "user_id": user["user_id"],
+                "account_type": "gifting"
+            })
+            
+            if not gifting_acc or gifting_acc.get("balance", 0) < gift_req["amount"]:
+                raise HTTPException(status_code=400, detail="Insufficient balance")
+            
+            await db.wallet_accounts.update_one(
+                {"user_id": user["user_id"], "account_type": "gifting"},
+                {"$inc": {"balance": -gift_req["amount"]}}
+            )
+            
+            await db.wallet_accounts.update_one(
+                {"user_id": gift_req["from_user_id"], "account_type": "gifting"},
+                {"$inc": {"balance": gift_req["amount"]}}
+            )
+            
+            await db.notifications.insert_one({
+                "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+                "user_id": gift_req["from_user_id"],
+                "type": "gift_accepted",
+                "message": f"{user.get('name', 'Friend')} accepted your gift request!",
+                "is_read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
     
     await db.gift_requests.update_one(
         {"request_id": request_id},

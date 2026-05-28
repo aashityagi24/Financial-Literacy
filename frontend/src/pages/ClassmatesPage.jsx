@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
-import { Users, Gift, Target, ChevronLeft, HandHeart, Search } from 'lucide-react';
+import { Users, Gift, Target, ChevronLeft, HandHeart, Search, Coins, Package } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { getDefaultAvatar } from '@/utils/avatars';
 import {
@@ -16,14 +16,22 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function ClassmatesPage({ user }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const goBack = () => {
+    if (location.key && location.key !== 'default') navigate(-1);
+    else navigate('/dashboard');
+  };
   const [classmates, setClassmates] = useState([]);
   const [classroom, setClassroom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedClassmate, setSelectedClassmate] = useState(null);
   const [showGiftDialog, setShowGiftDialog] = useState(false);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
-  const [giftForm, setGiftForm] = useState({ amount: '', message: '' });
-  const [requestForm, setRequestForm] = useState({ amount: '', reason: '' });
+  const [giftMode, setGiftMode] = useState('money'); // 'money' | 'item'
+  const [giftForm, setGiftForm] = useState({ amount: '', message: '', item_name: '', item_description: '' });
+  const [requestMode, setRequestMode] = useState('money'); // 'money' | 'item'
+  const [requestForm, setRequestForm] = useState({ amount: '', reason: '', item_name: '' });
   const [submitting, setSubmitting] = useState(false);
   const [wallet, setWallet] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,6 +59,34 @@ export default function ClassmatesPage({ user }) {
   const giftingBalance = wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance || 0;
 
   const handleGiftMoney = async () => {
+    if (giftMode === 'item') {
+      if (!giftForm.item_name.trim()) {
+        toast.error('Please tell us what you want to gift');
+        return;
+      }
+      setSubmitting(true);
+      try {
+        await axios.post(`${API}/child/gift-money`, {
+          to_user_id: selectedClassmate.user_id,
+          gift_type: 'item',
+          item_name: giftForm.item_name.trim(),
+          item_description: giftForm.item_description.trim() || null,
+          message: giftForm.message
+        });
+        toast.success(`Gift offer sent to ${selectedClassmate.name}! 🎁`);
+        setShowGiftDialog(false);
+        setGiftForm({ amount: '', message: '', item_name: '', item_description: '' });
+        setGiftMode('money');
+        setSelectedClassmate(null);
+        fetchData();
+      } catch (error) {
+        toast.error(error.response?.data?.detail || 'Failed to send gift');
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+    
     if (!giftForm.amount || parseFloat(giftForm.amount) <= 0) {
       toast.error('Please enter a valid amount');
       return;
@@ -65,12 +101,14 @@ export default function ClassmatesPage({ user }) {
     try {
       await axios.post(`${API}/child/gift-money`, {
         to_user_id: selectedClassmate.user_id,
+        gift_type: 'money',
         amount: parseFloat(giftForm.amount),
         message: giftForm.message
       });
       toast.success(`Gift sent to ${selectedClassmate.name}! 🎁`);
       setShowGiftDialog(false);
-      setGiftForm({ amount: '', message: '' });
+      setGiftForm({ amount: '', message: '', item_name: '', item_description: '' });
+      setGiftMode('money');
       setSelectedClassmate(null);
       fetchData();
     } catch (error) {
@@ -81,6 +119,32 @@ export default function ClassmatesPage({ user }) {
   };
 
   const handleRequestGift = async () => {
+    if (requestMode === 'item') {
+      if (!requestForm.item_name.trim()) {
+        toast.error('Please tell us what you want to ask for');
+        return;
+      }
+      setSubmitting(true);
+      try {
+        await axios.post(`${API}/child/request-gift`, {
+          to_user_id: selectedClassmate.user_id,
+          request_type: 'item',
+          item_name: requestForm.item_name.trim(),
+          message: requestForm.reason
+        });
+        toast.success(`Request sent to ${selectedClassmate.name}! 💝`);
+        setShowRequestDialog(false);
+        setRequestForm({ amount: '', reason: '', item_name: '' });
+        setRequestMode('money');
+        setSelectedClassmate(null);
+      } catch (error) {
+        toast.error(error.response?.data?.detail || 'Failed to send request');
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+    
     if (!requestForm.amount || parseFloat(requestForm.amount) <= 0) {
       toast.error('Please enter a valid amount');
       return;
@@ -90,12 +154,14 @@ export default function ClassmatesPage({ user }) {
     try {
       await axios.post(`${API}/child/request-gift`, {
         to_user_id: selectedClassmate.user_id,
+        request_type: 'money',
         amount: parseFloat(requestForm.amount),
-        reason: requestForm.reason
+        message: requestForm.reason
       });
       toast.success(`Request sent to ${selectedClassmate.name}! 💝`);
       setShowRequestDialog(false);
-      setRequestForm({ amount: '', reason: '' });
+      setRequestForm({ amount: '', reason: '', item_name: '' });
+      setRequestMode('money');
       setSelectedClassmate(null);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to send request');
@@ -121,9 +187,9 @@ export default function ClassmatesPage({ user }) {
       <header className="bg-[#3D5A80] border-b-3 border-[#1D3557]">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Link to="/dashboard" className="p-2 rounded-xl border-2 border-white hover:bg-white/20">
+            <button onClick={goBack} className="p-2 rounded-xl border-2 border-white hover:bg-white/20" data-testid="classmates-back-btn">
               <ChevronLeft className="w-5 h-5 text-white" />
-            </Link>
+            </button>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white rounded-xl border-3 border-[#1D3557] flex items-center justify-center">
                 <Users className="w-6 h-6 text-[#3D5A80]" />
@@ -365,7 +431,7 @@ export default function ClassmatesPage({ user }) {
       </main>
 
       {/* Gift Money Dialog */}
-      <Dialog open={showGiftDialog} onOpenChange={setShowGiftDialog}>
+      <Dialog open={showGiftDialog} onOpenChange={(open) => { setShowGiftDialog(open); if (!open) setGiftMode('money'); }}>
         <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
@@ -374,22 +440,81 @@ export default function ClassmatesPage({ user }) {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            <div className="bg-[#FFD23F]/20 rounded-xl p-3 border-2 border-[#FFD23F]">
-              <p className="text-sm text-[#1D3557]">
-                Your Giving Jar: <strong>₹{giftingBalance?.toFixed(0) || 0}</strong>
-              </p>
+            {/* Money / Item Toggle */}
+            <div className="grid grid-cols-2 gap-2" data-testid="give-gift-mode-toggle">
+              <button
+                onClick={() => setGiftMode('money')}
+                className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 font-bold transition-all ${
+                  giftMode === 'money'
+                    ? 'border-[#06D6A0] bg-[#06D6A0]/10 text-[#06D6A0]'
+                    : 'border-gray-200 text-[#3D5A80] hover:border-gray-300'
+                }`}
+                data-testid="give-gift-mode-money"
+              >
+                <Coins className="w-5 h-5" />
+                Money
+              </button>
+              <button
+                onClick={() => setGiftMode('item')}
+                className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 font-bold transition-all ${
+                  giftMode === 'item'
+                    ? 'border-[#EE6C4D] bg-[#EE6C4D]/10 text-[#EE6C4D]'
+                    : 'border-gray-200 text-[#3D5A80] hover:border-gray-300'
+                }`}
+                data-testid="give-gift-mode-item"
+              >
+                <Package className="w-5 h-5" />
+                Item (Toy, etc.)
+              </button>
             </div>
-            
-            <div>
-              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Amount (₹)</label>
-              <Input
-                type="number"
-                placeholder="How much?"
-                value={giftForm.amount}
-                onChange={(e) => setGiftForm({...giftForm, amount: e.target.value})}
-                className="border-3 border-[#1D3557] rounded-xl"
-              />
-            </div>
+
+            {giftMode === 'money' ? (
+              <>
+                <div className="bg-[#FFD23F]/20 rounded-xl p-3 border-2 border-[#FFD23F]">
+                  <p className="text-sm text-[#1D3557]">
+                    Your Giving Jar: <strong>₹{giftingBalance?.toFixed(0) || 0}</strong>
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-bold text-[#1D3557] mb-1 block">Amount (₹)</label>
+                  <Input
+                    type="number"
+                    placeholder="How much?"
+                    value={giftForm.amount}
+                    onChange={(e) => setGiftForm({...giftForm, amount: e.target.value})}
+                    className="border-3 border-[#1D3557] rounded-xl"
+                    data-testid="give-gift-amount"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="bg-[#EE6C4D]/10 rounded-xl p-3 border-2 border-[#EE6C4D]/40">
+                  <p className="text-xs text-[#3D5A80]">
+                    🎁 No money will be moved — you&apos;re offering a real-world item. We&apos;ll let your friend know.
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-bold text-[#1D3557] mb-1 block">What are you gifting?</label>
+                  <Input
+                    placeholder="e.g., Lego set, Crayons, Storybook"
+                    value={giftForm.item_name}
+                    onChange={(e) => setGiftForm({...giftForm, item_name: e.target.value})}
+                    className="border-3 border-[#1D3557] rounded-xl"
+                    data-testid="give-gift-item-name"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-bold text-[#1D3557] mb-1 block">Tell them more (optional)</label>
+                  <Input
+                    placeholder="e.g., The red one with 200 pieces"
+                    value={giftForm.item_description}
+                    onChange={(e) => setGiftForm({...giftForm, item_description: e.target.value})}
+                    className="border-3 border-[#1D3557] rounded-xl"
+                  />
+                </div>
+              </>
+            )}
             
             <div>
               <label className="text-sm font-bold text-[#1D3557] mb-1 block">Message (optional)</label>
@@ -411,8 +536,9 @@ export default function ClassmatesPage({ user }) {
               </button>
               <button
                 onClick={handleGiftMoney}
-                disabled={submitting || !giftForm.amount}
+                disabled={submitting || (giftMode === 'money' ? !giftForm.amount : !giftForm.item_name)}
                 className="flex-1 btn-primary py-3 disabled:opacity-50"
+                data-testid="give-gift-submit"
               >
                 {submitting ? 'Sending...' : 'Send Gift 🎁'}
               </button>
@@ -422,7 +548,7 @@ export default function ClassmatesPage({ user }) {
       </Dialog>
 
       {/* Request Gift Dialog */}
-      <Dialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
+      <Dialog open={showRequestDialog} onOpenChange={(open) => { setShowRequestDialog(open); if (!open) setRequestMode('money'); }}>
         <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
@@ -434,17 +560,59 @@ export default function ClassmatesPage({ user }) {
             <p className="text-sm text-[#3D5A80]">
               They&apos;ll get a notification and can choose to help you out! 💝
             </p>
-            
-            <div>
-              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Amount (₹)</label>
-              <Input
-                type="number"
-                placeholder="How much do you need?"
-                value={requestForm.amount}
-                onChange={(e) => setRequestForm({...requestForm, amount: e.target.value})}
-                className="border-3 border-[#1D3557] rounded-xl"
-              />
+
+            {/* Money / Item Toggle */}
+            <div className="grid grid-cols-2 gap-2" data-testid="ask-gift-mode-toggle">
+              <button
+                onClick={() => setRequestMode('money')}
+                className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 font-bold transition-all ${
+                  requestMode === 'money'
+                    ? 'border-[#FFD23F] bg-[#FFD23F]/20 text-[#1D3557]'
+                    : 'border-gray-200 text-[#3D5A80] hover:border-gray-300'
+                }`}
+                data-testid="ask-gift-mode-money"
+              >
+                <Coins className="w-5 h-5" />
+                Money
+              </button>
+              <button
+                onClick={() => setRequestMode('item')}
+                className={`p-3 rounded-xl border-2 flex items-center justify-center gap-2 font-bold transition-all ${
+                  requestMode === 'item'
+                    ? 'border-[#EE6C4D] bg-[#EE6C4D]/10 text-[#EE6C4D]'
+                    : 'border-gray-200 text-[#3D5A80] hover:border-gray-300'
+                }`}
+                data-testid="ask-gift-mode-item"
+              >
+                <Package className="w-5 h-5" />
+                Item (Toy, etc.)
+              </button>
             </div>
+            
+            {requestMode === 'money' ? (
+              <div>
+                <label className="text-sm font-bold text-[#1D3557] mb-1 block">Amount (₹)</label>
+                <Input
+                  type="number"
+                  placeholder="How much do you need?"
+                  value={requestForm.amount}
+                  onChange={(e) => setRequestForm({...requestForm, amount: e.target.value})}
+                  className="border-3 border-[#1D3557] rounded-xl"
+                  data-testid="ask-gift-amount"
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="text-sm font-bold text-[#1D3557] mb-1 block">What do you want?</label>
+                <Input
+                  placeholder="e.g., Lego set, Crayons, Storybook"
+                  value={requestForm.item_name}
+                  onChange={(e) => setRequestForm({...requestForm, item_name: e.target.value})}
+                  className="border-3 border-[#1D3557] rounded-xl"
+                  data-testid="ask-gift-item-name"
+                />
+              </div>
+            )}
             
             <div>
               <label className="text-sm font-bold text-[#1D3557] mb-1 block">Reason (optional)</label>
@@ -466,8 +634,9 @@ export default function ClassmatesPage({ user }) {
               </button>
               <button
                 onClick={handleRequestGift}
-                disabled={submitting || !requestForm.amount}
+                disabled={submitting || (requestMode === 'money' ? !requestForm.amount : !requestForm.item_name)}
                 className="flex-1 btn-primary py-3 disabled:opacity-50"
+                data-testid="ask-gift-submit"
               >
                 {submitting ? 'Sending...' : 'Send Request 💝'}
               </button>

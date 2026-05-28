@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import BackButton from '@/components/BackButton';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
@@ -174,9 +174,9 @@ export default function MyJobsPage({ user }) {
       <div className="bg-[#1D3557] px-4 pt-4 pb-8">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-3 mb-5">
-            <Link to="/dashboard" className="text-white/60 hover:text-white p-1 transition-colors">
+            <BackButton className="text-white/60 hover:text-white p-1 transition-colors" testId="jobs-back-btn">
               <ArrowLeft className="w-5 h-5" />
-            </Link>
+            </BackButton>
             <h1 className="text-xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>My Jobs</h1>
             <button
               onClick={() => setShowGuide(true)}
