@@ -266,7 +266,8 @@ async def get_school_students_comparison(request: Request):
             {"user_id": student_id},
             {"_id": 0}
         ).to_list(10)
-        total_balance = sum(w.get("balance", 0) for w in wallets)
+        # Schools don't see the child's My Wallet (real-world parent earnings) — only CoinQuest.
+        total_balance = sum(w.get("balance", 0) for w in wallets if w.get("account_type") != "my_wallet")
         
         lessons = await db.user_content_progress.count_documents({
             "user_id": student_id,

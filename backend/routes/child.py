@@ -470,7 +470,8 @@ async def get_classmates(request: Request):
             elif acc_type == "investing":
                 investing_balance = balance
         
-        total_balance = sum(w.get("balance", 0) for w in wallets)
+        # Classmates don't see a peer's My Wallet (real-world parent earnings) — only CoinQuest.
+        total_balance = sum(w.get("balance", 0) for w in wallets if w.get("account_type") != "my_wallet")
         
         # Get savings goals total
         savings_goals = await db.savings_goals.find(

@@ -72,7 +72,10 @@ async def parent_dashboard(request: Request):
                 {"user_id": child["user_id"]},
                 {"_id": 0}
             ).to_list(10)
-            total_balance = sum(w.get("balance", 0) for w in wallets)
+            # Parents see both wallets — CoinQuest (play) and My Wallet (real earnings).
+            coinquest_balance = sum(w.get("balance", 0) for w in wallets if w.get("account_type") != "my_wallet")
+            my_wallet_balance = sum(w.get("balance", 0) for w in wallets if w.get("account_type") == "my_wallet")
+            total_balance = coinquest_balance + my_wallet_balance
             
             chores = await db.new_quests.count_documents({
                 "creator_type": "parent",
@@ -84,6 +87,8 @@ async def parent_dashboard(request: Request):
             children.append({
                 **child,
                 "total_balance": total_balance,
+                "coinquest_balance": coinquest_balance,
+                "my_wallet_balance": my_wallet_balance,
                 "active_chores": chores
             })
     
@@ -339,7 +344,10 @@ async def get_child_insights(child_id: str, request: Request):
         {"_id": 0}
     ).to_list(10)
     
-    total_balance = sum(w.get("balance", 0) for w in wallets)
+    # Parents see both wallets — CoinQuest (play) and My Wallet (real earnings).
+    coinquest_balance = sum(w.get("balance", 0) for w in wallets if w.get("account_type") != "my_wallet")
+    my_wallet_balance = sum(w.get("balance", 0) for w in wallets if w.get("account_type") == "my_wallet")
+    total_balance = coinquest_balance + my_wallet_balance
     
     # Get savings goals
     savings_goals = await db.savings_goals.find(
@@ -453,6 +461,8 @@ async def get_child_insights(child_id: str, request: Request):
         "child": child,
         "wallet": {
             "total_balance": total_balance,
+            "coinquest_balance": coinquest_balance,
+            "my_wallet_balance": my_wallet_balance,
             "accounts": wallets,
             "savings_in_goals": savings_in_goals,
             "savings_goals_count": len(active_goals)

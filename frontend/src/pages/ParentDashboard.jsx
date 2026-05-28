@@ -965,8 +965,15 @@ export default function ParentDashboard({ user }) {
                         <div className="flex-1">
                           <h3 className="font-bold text-[#1D3557] text-lg">{child.name}</h3>
                           <p className="text-xs text-[#3D5A80]">{gradeLabels[child.grade] || 'Unknown Grade'}</p>
-                          <div className="flex items-center gap-4 text-sm text-[#3D5A80] mt-1">
-                            <span>₹{child.total_balance?.toFixed(0)}</span>
+                          <div className="flex items-center gap-3 text-sm text-[#3D5A80] mt-1 flex-wrap">
+                            <span className="flex items-center gap-1" title="CoinQuest Wallet (play coins)">
+                              <span className="text-[#EE6C4D] font-bold">🎮 ₹{Number(child.coinquest_balance ?? child.total_balance ?? 0).toFixed(0)}</span>
+                            </span>
+                            {(child.my_wallet_balance ?? 0) > 0 && (
+                              <span className="flex items-center gap-1" title="My Wallet (real earnings)">
+                                <span className="text-sky-600 font-bold">₹ ₹{Number(child.my_wallet_balance).toFixed(0)}</span>
+                              </span>
+                            )}
                             <span>📚 {child.lessons_completed}/{child.total_lessons}</span>
                             {child.pending_chores > 0 && (
                               <span className="bg-[#EE6C4D] text-white px-2 py-0.5 rounded-full text-xs">
@@ -1778,7 +1785,12 @@ export default function ParentDashboard({ user }) {
                 <div className="grid grid-cols-4 gap-3">
                   <div className="bg-[#FFD23F]/20 rounded-xl p-3 text-center">
                     <p className="text-2xl font-bold text-[#1D3557]">₹{childInsights.wallet?.total_balance?.toFixed(0)}</p>
-                    <p className="text-xs text-[#3D5A80]">Available Balance</p>
+                    <p className="text-xs text-[#3D5A80]">Total Balance</p>
+                    {(childInsights.wallet?.coinquest_balance !== undefined || childInsights.wallet?.my_wallet_balance !== undefined) && (
+                      <p className="text-[10px] text-[#3D5A80] mt-1">
+                        🎮 ₹{Number(childInsights.wallet?.coinquest_balance || 0).toFixed(0)} · ₹ ₹{Number(childInsights.wallet?.my_wallet_balance || 0).toFixed(0)}
+                      </p>
+                    )}
                   </div>
                   <div className="bg-[#06D6A0]/20 rounded-xl p-3 text-center">
                     <p className="text-2xl font-bold text-[#1D3557]">{childInsights.learning?.lessons_completed}</p>

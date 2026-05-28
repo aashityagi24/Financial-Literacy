@@ -143,7 +143,8 @@ async def get_classroom_details(classroom_id: str, request: Request):
                 {"user_id": student["user_id"]},
                 {"_id": 0}
             ).to_list(10)
-            total_balance = sum(w.get("balance", 0) for w in wallet)
+            # Teachers don't see the child's My Wallet (real-world parent earnings) — only CoinQuest.
+            total_balance = sum(w.get("balance", 0) for w in wallet if w.get("account_type") != "my_wallet")
             
             lessons_completed = await db.user_lesson_progress.count_documents({
                 "user_id": student["user_id"],
@@ -428,7 +429,8 @@ async def get_student_insights(classroom_id: str, student_id: str, request: Requ
         {"_id": 0}
     ).to_list(10)
     
-    total_balance = sum(w.get("balance", 0) for w in wallets)
+    # Teachers don't see the child's My Wallet (real-world parent earnings) — only CoinQuest.
+    total_balance = sum(w.get("balance", 0) for w in wallets if w.get("account_type") != "my_wallet")
     
     # Get savings goals
     savings_goals = await db.savings_goals.find(
@@ -625,7 +627,7 @@ async def get_classroom_comparison(classroom_id: str, request: Request):
             {"_id": 0}
         ).to_list(10)
         
-        wallet_by_type = {w.get("account_type"): w.get("balance", 0) for w in wallets}
+        wallet_by_type = {w.get("account_type"): w.get("balance", 0) for w in wallets if w.get("account_type") != "my_wallet"}
         total_balance = sum(wallet_by_type.values())
         
         # Get all transactions for spending analysis
