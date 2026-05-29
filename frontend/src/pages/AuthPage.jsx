@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { 
-  Eye, EyeOff, ArrowLeft, Mail, Lock, User, School, Shield,
+  Eye, EyeOff, ArrowLeft, Mail, Lock, User, School, Shield, Phone,
   Sparkles, BookOpen, Coins, RefreshCw, X
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -141,8 +142,20 @@ export default function AuthPage() {
   const handleSignup = async (e) => {
     e.preventDefault();
     
-    if (!name.trim() || !identifier.trim() || !password.trim()) {
-      toast.error('Please fill all fields');
+    if (!name.trim() || !identifier.trim() || !password.trim() || !phone.trim()) {
+      toast.error('Please fill all fields including mobile number');
+      return;
+    }
+    
+    // Indian 10-digit mobile validation (optional +91 / 0 prefix)
+    const digits = phone.replace(/\D/g, '');
+    const normalized = digits.startsWith('91') && digits.length === 12
+      ? digits.slice(2)
+      : digits.startsWith('0') && digits.length === 11
+      ? digits.slice(1)
+      : digits;
+    if (normalized.length !== 10 || !/^[6-9]/.test(normalized)) {
+      toast.error('Please enter a valid 10-digit Indian mobile number');
       return;
     }
     
@@ -171,7 +184,8 @@ export default function AuthPage() {
         { 
           name,
           email: identifier,
-          password 
+          password,
+          phone
         },
         { withCredentials: true }
       );
@@ -298,6 +312,27 @@ export default function AuthPage() {
                   />
                 </div>
               </div>
+              
+              {mode === 'signup' && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Mobile Number <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="10-digit mobile (e.g. 9876543210)"
+                      maxLength={15}
+                      className="pl-10 h-12 border-2 border-gray-200 focus:border-[#1D3557] rounded-xl"
+                      data-testid="signup-phone-input"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">We&apos;ll use this to reach you if needed.</p>
+                </div>
+              )}
               
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">

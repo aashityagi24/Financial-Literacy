@@ -99,6 +99,7 @@ class SignupRequest(BaseModel):
     name: str
     email: str
     password: str
+    phone: str
 
 @router.post("/login")
 async def unified_login(login_data: UnifiedLoginRequest, response: Response):
@@ -176,10 +177,25 @@ async def signup(signup_data: SignupRequest, response: Response):
     email = signup_data.email.strip().lower()
     name = signup_data.name.strip()
     password = signup_data.password
+    phone = (signup_data.phone or "").strip()
     
     # Validate email format
     if "@" not in email or "." not in email:
         raise HTTPException(status_code=400, detail="Invalid email format")
+    
+    # Validate phone (Indian 10-digit, optional +91 / 91 / 0 prefix)
+    import re
+    digits = re.sub(r"\D", "", phone)
+    if digits.startswith("91") and len(digits) == 12:
+        digits = digits[2:]
+    elif digits.startswith("0") and len(digits) == 11:
+        digits = digits[1:]
+    if len(digits) != 10 or not digits.startswith(("6", "7", "8", "9")):
+        raise HTTPException(
+            status_code=400,
+            detail="Please enter a valid 10-digit Indian mobile number"
+        )
+    normalized_phone = f"+91{digits}"
     
     # Check subscription - must have active subscription
     now_check = datetime.now(timezone.utc).isoformat()
@@ -202,7 +218,7 @@ async def signup(signup_data: SignupRequest, response: Response):
         # Add password to existing Google OAuth account
         await db.users.update_one(
             {"email": email},
-            {"$set": {"password_hash": password_hash, "name": name or existing.get("name")}}
+            {"$set": {"password_hash": password_hash, "name": name or existing.get("name"), "phone": normalized_phone}}
         )
         user = await db.users.find_one({"email": email}, {"_id": 0, "password_hash": 0})
     else:
@@ -212,6 +228,7 @@ async def signup(signup_data: SignupRequest, response: Response):
             "user_id": user_id,
             "email": email,
             "name": name,
+            "phone": normalized_phone,
             "password_hash": password_hash,
             "role": "parent",
             "created_at": datetime.now(timezone.utc).isoformat(),

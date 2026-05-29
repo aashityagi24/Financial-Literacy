@@ -1160,6 +1160,30 @@ export default function AdminPage({ user }) {
               <span className="ml-auto text-sm text-gray-500">
                 Showing {filteredUsers.length} of {users.length} users
               </span>
+              <Button
+                size="sm"
+                variant="outline"
+                data-testid="download-users-csv"
+                onClick={() => downloadCSV(
+                  filteredUsers.map(u => ({
+                    Name: u.name || '',
+                    Email: u.email || '',
+                    Phone: u.phone || '',
+                    Username: u.username || '',
+                    Role: u.role || '',
+                    Grade: u.grade !== null && u.grade !== undefined ? (u.grade === 0 ? 'K' : `Grade ${u.grade}`) : '',
+                    School: u.school_name || '',
+                    'Subscription Status': u.subscription_status || 'inactive',
+                    'Subscription End': u.subscription_end_date ? new Date(u.subscription_end_date).toLocaleDateString('en-IN') : '',
+                    'Sign Up Date': u.created_at ? new Date(u.created_at).toLocaleDateString('en-IN') : '',
+                    'Last Login': u.last_login_at ? new Date(u.last_login_at).toLocaleDateString('en-IN') : '',
+                  })),
+                  ['Name', 'Email', 'Phone', 'Username', 'Role', 'Grade', 'School', 'Subscription Status', 'Subscription End', 'Sign Up Date', 'Last Login'],
+                  `coinquest-users-${new Date().toISOString().slice(0, 10)}.csv`
+                )}
+              >
+                <Download className="w-3 h-3 mr-1" /> CSV
+              </Button>
             </div>
             
             <div className="overflow-x-auto">
@@ -1177,6 +1201,7 @@ export default function AdminPage({ user }) {
                     </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">User</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Email</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Phone</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Role</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Grade</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Subscription</th>
@@ -1212,6 +1237,9 @@ export default function AdminPage({ user }) {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-gray-600">{u.email}</td>
+                      <td className="py-3 px-4 text-gray-600 text-sm" data-testid={`user-phone-${u.user_id}`}>
+                        {u.phone || <span className="text-gray-300">—</span>}
+                      </td>
                       <td className="py-3 px-4">
                         <Select 
                           value={u.role || 'child'} 

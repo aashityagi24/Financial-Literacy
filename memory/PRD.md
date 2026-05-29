@@ -1049,3 +1049,9 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Collaborative & Seasonal Events
 - **P2**: Email notifications for loan events
 - **P2**: Tutorial System for new users
+- **Active/Inactive subscription tabs + Mandatory mobile on signup** (May 29, 2026)
+  - Admin → Subscription Management now has Active / Inactive sub-tabs (with counts) inside the existing Subscriptions tab. Fixes the bug where only 1 of 21 subscriptions was visible. New "Status" column shows Active / Expired / Deactivated / Pending so admins can triage Inactive entries.
+  - Non-SSO signup now requires a mobile number. Backend validates a 10-digit Indian mobile (accepts +91 / 91 / 0 prefixes, must start 6–9) and stores it normalized as `+91XXXXXXXXXX` on the user doc.
+  - Phone surfaces in Admin → Users table (new "Phone" column) and in a new "CSV" download button on the Users toolbar (includes Phone, Subscription Status, Sign Up & Last Login dates).
+  - Regression suite: `/app/backend/tests/test_signup_phone.py` — 5 tests covering required field, invalid formats, valid variants normalization, leading-digit rule, and admin payload exposure. 20/20 tests across all suites green.
+

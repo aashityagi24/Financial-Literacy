@@ -70,6 +70,7 @@ export default function AdminSubscriptionManagement({ user }) {
   const [dateFrom, setDateFrom] = useState(null);
   const [dateTo, setDateTo] = useState(null);
   const [linkedUsersDialog, setLinkedUsersDialog] = useState({ open: false, sub: null });
+  const [subStatusTab, setSubStatusTab] = useState('active'); // 'active' | 'inactive'
 
   useEffect(() => {
     if (user?.role !== 'admin') {
@@ -170,13 +171,20 @@ export default function AdminSubscriptionManagement({ user }) {
   };
 
 
-  // Only show active ongoing subscriptions (completed payment, not expired)
-  // Pending payments go to Checkout Leads, expired go to user list
-  const activeSubs = subscriptions.filter(s => 
+  // Split subscriptions into Active vs Inactive buckets.
+  //   • Active   = payment_status=completed AND is_active=true AND not expired
+  //   • Inactive = everything else with a recorded subscription
+  //                (expired, admin-deactivated, or failed/pending payment)
+  const activeSubs = subscriptions.filter(s =>
     s.payment_status === 'completed' && s.is_active && !isExpired(s.end_date)
   );
+  const inactiveSubs = subscriptions.filter(s =>
+    !(s.payment_status === 'completed' && s.is_active && !isExpired(s.end_date))
+  );
 
-  const filteredSubs = activeSubs.filter(sub => {
+  const subsForStatus = subStatusTab === 'active' ? activeSubs : inactiveSubs;
+
+  const filteredSubs = subsForStatus.filter(sub => {
     // Search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
@@ -289,6 +297,35 @@ export default function AdminSubscriptionManagement({ user }) {
         {/* Subscriptions Tab */}
         {activeTab === 'subscriptions' && (
           <div className="bg-white rounded-xl border border-gray-200">
+            {/* Active / Inactive sub-tabs */}
+            <div className="px-4 pt-4">
+              <div className="flex gap-1 border-b border-gray-200" data-testid="sub-status-tabs">
+                {[
+                  { id: 'active', label: 'Active', count: activeSubs.length, color: 'text-[#06D6A0]' },
+                  { id: 'inactive', label: 'Inactive', count: inactiveSubs.length, color: 'text-[#EE6C4D]' },
+                ].map((t) => {
+                  const isOn = subStatusTab === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setSubStatusTab(t.id)}
+                      data-testid={`sub-status-tab-${t.id}`}
+                      className={`px-4 py-2 -mb-px text-sm font-medium flex items-center gap-2 border-b-2 transition-colors ${
+                        isOn
+                          ? `border-[#1D3557] text-[#1D3557]`
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      <span className={isOn ? t.color : ''}>●</span>
+                      {t.label}
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${isOn ? 'bg-[#1D3557] text-white' : 'bg-gray-100 text-gray-600'}`}>
+                        {t.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
             <div className="p-4 border-b border-gray-200 space-y-3">
               <div className="flex items-center gap-3">
                 <Search className="w-4 h-4 text-gray-400" />
@@ -351,7 +388,7 @@ export default function AdminSubscriptionManagement({ user }) {
                     <X className="w-3.5 h-3.5" /> Clear
                   </button>
                 )}
-                <span className="text-xs text-gray-400 ml-auto">{filteredSubs.length} active subscriptions</span>
+                <span className="text-xs text-gray-400 ml-auto" data-testid="sub-count-label">{filteredSubs.length} {subStatusTab} subscriptions</span>
               </div>
             </div>
             
@@ -372,6 +409,7 @@ export default function AdminSubscriptionManagement({ user }) {
                       <th className="px-4 py-3 font-medium text-gray-600">Amount</th>
                       <th className="px-4 py-3 font-medium text-gray-600">Start</th>
                       <th className="px-4 py-3 font-medium text-gray-600">Expires</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">Status</th>
                       <th className="px-4 py-3 font-medium text-gray-600 text-center">Users</th>
                     </tr>
                   </thead>
@@ -392,6 +430,17 @@ export default function AdminSubscriptionManagement({ user }) {
                         <td className="px-4 py-3 font-medium">{sub.amount ? `₹${sub.amount.toLocaleString('en-IN')}` : 'Free'}</td>
                         <td className="px-4 py-3">{formatDate(sub.start_date)}</td>
                         <td className="px-4 py-3">{formatDate(sub.end_date)}</td>
+                        <td className="px-4 py-3">
+                          {(() => {
+                            const expired = isExpired(sub.end_date);
+                            if (sub.payment_status !== 'completed') {
+                              return <span className="text-[10px] bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded font-medium">{sub.payment_status || 'Pending'}</span>;
+                            }
+                            if (expired) return <span className="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded font-medium">Expired</span>;
+                            if (!sub.is_active) return <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">Deactivated</span>;
+                            return <span className="text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded font-medium">Active</span>;
+                          })()}
+                        </td>
                         <td className="px-4 py-3 text-center">
                           <button
                             data-testid={`view-linked-users-${sub.subscription_id}`}
