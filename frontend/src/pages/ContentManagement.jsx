@@ -1015,10 +1015,12 @@ export default function ContentManagement({ user }) {
     if (!itemToMove || !moveTargetId) return;
     
     try {
-      await axios.post(`${API}/admin/content/items/${itemToMove.content_id}/move`, {
-        new_topic_id: moveTargetId
-      });
-      toast.success('Content moved successfully');
+      const payload = { new_topic_id: moveTargetId };
+      if (gradeFilter !== 'all') payload.grade = gradeFilter;
+      await axios.post(`${API}/admin/content/items/${itemToMove.content_id}/move`, payload);
+      toast.success(gradeFilter === 'all'
+        ? 'Content moved successfully'
+        : `Content moved for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only`);
       setShowMoveContentDialog(false);
       setItemToMove(null);
       setMoveTargetId('');
@@ -2274,6 +2276,11 @@ export default function ContentManagement({ user }) {
             <p className="text-sm text-gray-600">
               Move <strong>{itemToMove?.title}</strong> to a different topic:
             </p>
+            {gradeFilter !== 'all' && (
+              <p data-testid="move-subtopic-grade-note" className="text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-md px-3 py-2">
+                Grade filter active: this move applies to <strong>{gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only</strong>. Other grades keep the current placement.
+              </p>
+            )}
             <Select value={moveTargetId} onValueChange={setMoveTargetId}>
               <SelectTrigger>
                 <SelectValue placeholder="Select target topic" />
@@ -2304,6 +2311,11 @@ export default function ContentManagement({ user }) {
             <p className="text-sm text-gray-600">
               Move <strong>{itemToMove?.title}</strong> to a different subtopic:
             </p>
+            {gradeFilter !== 'all' && (
+              <p data-testid="move-content-grade-note" className="text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-md px-3 py-2">
+                Grade filter active: this move applies to <strong>{gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only</strong>. Other grades keep the current placement.
+              </p>
+            )}
             <Select value={moveTargetId} onValueChange={setMoveTargetId}>
               <SelectTrigger>
                 <SelectValue placeholder="Select target subtopic" />

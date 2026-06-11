@@ -21,6 +21,7 @@ A gamified financial literacy learning application for children (K-5) with disti
   - When the user hits 5/5, a focused modal explains the trial cap with the exact copy *"As part of the 1-day subscription plan, you can download up to 5 pieces of content so you get a chance to explore the platform. To access all content without any restrictions, please subscribe to a longer plan."* — the dialog has a "See Upgrade Plans" CTA and an explicit Close action (can't dismiss by clicking outside).
   - Download button on the content viewer becomes a locked-orange "5/5" badge that opens the same modal on click.
 - Content management system with drag-and-drop reordering — fully **grade-specific** when a grade filter is applied. Per-grade overrides on topics/subtopics (orders, parents, titles/descriptions/thumbnails).
+- **Grade-scoped "Move to" for content items (fixed June 11, 2026)**: when a grade filter is active, moving a content item to another subtopic via the Move dialog now sends `grade` to `POST /api/admin/content/items/{id}/move`, writing to `grade_parents.<grade>`/`grade_orders.<grade>` only — other grades keep the original placement. Both Move dialogs (subtopic + content) now show an amber note when a grade filter is active (`data-testid="move-content-grade-note"`, `move-subtopic-grade-note`).
 - Multi-admin background sync — every admin management page polls every 15s and on window focus.
 - Virtual store with categories and items
 - Wallet system (Spending, Savings, Gifting jars)
