@@ -933,6 +933,13 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Grade-scoped content count fix + Know-It Sheet content type** (June 13, 2026)
+  - **Count Bug Fix**: Admin Content Management Step 2 Subtopics card was showing "0 content items" for subtopics that had items moved into them for a specific grade only. Root cause: `ContentManagement.jsx` line 1692 was filtering by raw `c.topic_id` instead of `effectiveContentParent(c)` which honors `content.grade_parents[gradeFilter]`. Now counts reflect grade-scoped moves correctly. Child-facing pages already used the backend's `count_with_grade_parent` helper so no change was needed there.
+  - **Know-It Sheet content type**: Added as the 5th content type alongside Worksheet, Activity, Book, Workbook, Video. Uses the `Lightbulb` icon. Behaves identically to Worksheet/Workbook (PDF upload, viewer, download, ChildActivityScore). New `WORKSHEET_LIKE_TYPES` set in `TopicPage.jsx` consolidates the worksheet/workbook/know_it_sheet checks via `isWorksheetLike()`.
+  - **Edit dialog type switching**: Added a 6-card Content Type picker at the top of the Add/Edit Content dialog (`data-testid=content-type-pick-{value}`) so admins can switch a content item between any of the 6 types without losing files/metadata.
+  - Backend `content_type` is a free string — no schema changes required. Files: `ContentManagement.jsx`, `TopicPage.jsx`, `LearnPage.jsx`.
+  - Testing: 3/3 backend tests pass (`/app/backend/tests/test_know_it_sheet_and_move.py`) and all frontend flows verified by testing agent (iteration_64).
+
 - **Scroll-to-completed content fix** (April 1, 2026)
   - After a child marks an activity/book as done, the viewer closes and the content list scrolls to the just-completed item (using `scrollIntoView` with `block: 'center'`). Previously scrolled to top, forcing child to scroll down to find where they stopped.
   - Added `data-content-id` attributes to content item cards and `lastCompletedRef` to track the last completed content ID.
