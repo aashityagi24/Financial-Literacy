@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { 
   BookOpen, ChevronLeft, ChevronRight, Check, Download,
   FileText, FileSpreadsheet, Gamepad2, FolderOpen, ExternalLink, X,
-  Video, Book, Play, Lock, CheckCircle, BarChart3
+  Video, Book, Play, Lock, CheckCircle, BarChart3, Lightbulb
 } from 'lucide-react';
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
 import { Progress } from "@/components/ui/progress";
@@ -19,8 +19,13 @@ const CONTENT_TYPE_CONFIG = {
   activity: { icon: Gamepad2, color: 'text-purple-600', bg: 'bg-purple-100', label: 'Activity' },
   book: { icon: BookOpen, color: 'text-green-600', bg: 'bg-green-100', label: 'Book' },
   workbook: { icon: Book, color: 'text-blue-600', bg: 'bg-blue-100', label: 'Workbook' },
+  know_it_sheet: { icon: Lightbulb, color: 'text-yellow-700', bg: 'bg-yellow-100', label: 'Know-It Sheet' },
   video: { icon: Video, color: 'text-red-600', bg: 'bg-red-100', label: 'Video' },
 };
+
+// Worksheet-style content types: they share the same PDF viewer/download/edit UI.
+const WORKSHEET_LIKE_TYPES = new Set(['worksheet', 'workbook', 'know_it_sheet']);
+const isWorksheetLike = (type) => WORKSHEET_LIKE_TYPES.has(type);
 
 export default function TopicPage({ user }) {
   const { topicId } = useParams();
@@ -268,7 +273,7 @@ export default function TopicPage({ user }) {
     setHtmlFiles([]);
     setCurrentHtmlIndex(0);
     
-    if (content.content_type === 'worksheet' || content.content_type === 'workbook') {
+    if (isWorksheetLike(content.content_type)) {
       if (content.content_data?.pdf_url) {
         setShowViewer(true);
       } else {
@@ -707,7 +712,7 @@ export default function TopicPage({ user }) {
               <div className="flex items-center gap-2">
                 {/* Download PDF button for worksheets/workbooks. Goes through
                     the API so 1-day trial accounts can be capped at 5 downloads. */}
-                {(selectedContent.content_type === 'worksheet' || selectedContent.content_type === 'workbook') && selectedContent.content_data?.pdf_url && (
+                {isWorksheetLike(selectedContent.content_type) && selectedContent.content_data?.pdf_url && (
                   <button
                     onClick={handleDownload}
                     disabled={downloading}
@@ -738,7 +743,7 @@ export default function TopicPage({ user }) {
                   </button>
                 )}
                 {/* Open in new tab for worksheets/workbooks (for teachers/parents) */}
-                {user?.role !== 'child' && (selectedContent.content_type === 'worksheet' || selectedContent.content_type === 'workbook') && selectedContent.content_data?.pdf_url && (
+                {user?.role !== 'child' && isWorksheetLike(selectedContent.content_type) && selectedContent.content_data?.pdf_url && (
                   <a 
                     href={getAssetUrl(selectedContent.content_data.pdf_url)} 
                     target="_blank"
@@ -816,7 +821,7 @@ export default function TopicPage({ user }) {
             
             {/* Modal Content */}
             <div className="flex-1 bg-gray-100">
-              {(selectedContent.content_type === 'worksheet' || selectedContent.content_type === 'workbook') && (
+              {isWorksheetLike(selectedContent.content_type) && (
                 <iframe 
                   src={selectedContent.content_data.pdf_url}
                   className="w-full h-full"

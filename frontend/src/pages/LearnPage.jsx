@@ -5,7 +5,7 @@ import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
   BookOpen, ChevronLeft, ChevronRight, Trophy, FolderOpen,
-  FileText, FileSpreadsheet, Gamepad2, Video, Book, Lock, CheckCircle
+  FileText, FileSpreadsheet, Gamepad2, Video, Book, Lock, CheckCircle, Lightbulb
 } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
@@ -15,6 +15,7 @@ const CONTENT_TYPE_ICONS = {
   activity: { icon: Gamepad2, color: 'text-purple-500', bg: 'bg-purple-100' },
   book: { icon: BookOpen, color: 'text-green-500', bg: 'bg-green-100' },
   workbook: { icon: Book, color: 'text-blue-500', bg: 'bg-blue-100' },
+  know_it_sheet: { icon: Lightbulb, color: 'text-yellow-600', bg: 'bg-yellow-100' },
   video: { icon: Video, color: 'text-red-500', bg: 'bg-red-100' },
 };
 

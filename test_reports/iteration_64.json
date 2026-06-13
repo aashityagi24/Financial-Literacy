@@ -1,0 +1,36 @@
+{
+  "summary": "Tested (a) new 'know_it_sheet' content type creation + type switching, and (b) grade-scoped content move and content_count behaviour. Backend: 3/3 pytest cases pass. Frontend: admin Content Management → Grade 1 → Subtopics shows amber 'Grade filter active' note (data-testid=move-subtopic-grade-note) in Move dialog; subtopic 'X content items' labels render correctly. Edit Content dialog under Step 3 Lesson Plan shows all 6 content-type picker cards including data-testid=content-type-pick-know_it_sheet with current type highlighted.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_know_it_sheet_and_move.py",
+    "/app/test_reports/pytest/know_it_sheet_and_move.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "GET /api/content/topics: admin role does NOT honor ?grade=N (filter_grade stays None). This is by design but worth noting — admin viewers cannot see per-grade content_count. Counts in ContentManagement.jsx are computed client-side from /api/admin/content/items via effectiveContentParent, which is the intended fix.",
+    "Both admin_create_item and admin_update_item accept content_type as a free string with no enum/whitelist validation. Acceptable per design (per agent context note) but means typos like 'know_it_sheet' vs 'know-it-sheet' would silently persist. Consider a server-side allowlist or Pydantic Literal in the future."
+  ],
+  "updated_files": ["/app/backend/tests/test_know_it_sheet_and_move.py"],
+  "success_rate": {"backend": "100% (3/3 tests passed)", "frontend": "100% (all flows verified)"},
+  "test_credentials": "Admin admin@learnersplanet.com / finlit@2026; Parent wallet_demo_parent / testpass123 (used for grade-scoped count verification)",
+  "seed_data_creation": "Tests create and delete their own TEST_ prefixed content items; no permanent seed data left behind.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Login endpoint /api/auth/login uses field name 'identifier' (not 'username' or 'email'). Admin uses /api/auth/admin-login which returns 'session_token' (used as Bearer token). For grade-scoped content_count verification on /api/content/topics?grade=N, use a parent/teacher token — admin role bypasses filter_grade so admin queries cannot validate grade-scoped counts. Pick subtopics that satisfy both min_grade<=g<=max_grade for the chosen grade, otherwise the subtopic itself is filtered out of the response.",
+  "feature_test_coverage": {
+    "backend": {
+      "POST /api/admin/content/items with content_type='know_it_sheet' persists": "PASS",
+      "PUT /api/admin/content/items/{id} switches worksheet -> know_it_sheet -> workbook -> worksheet": "PASS",
+      "POST /api/admin/content/items/{id}/move grade=1 sets grade_parents.1, keeps global topic_id, decrements source g1 count, increments dest g1 count, leaves g2 counts unchanged": "PASS"
+    },
+    "frontend": {
+      "Admin login + nav to /admin/content + Grade filter Grade 1": "PASS",
+      "Step 2 Subtopics: Move dialog shows 'Grade filter active' amber note (data-testid=move-subtopic-grade-note)": "PASS",
+      "Subtopic cards show 'X content items' counts that match underlying data": "PASS",
+      "Step 3 Lesson Plan: Edit Content dialog renders 6 content-type picker cards (worksheet, activity, book, workbook, know_it_sheet, video)": "PASS",
+      "data-testid=content-type-pick-know_it_sheet present and clickable": "PASS",
+      "Lesson plan list shows content_type pills (Book, Activity) per item": "PASS"
+    }
+  }
+}

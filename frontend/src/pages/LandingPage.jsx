@@ -77,8 +77,8 @@ export default function LandingPage() {
       title: "Money Basics & Counting",
       skills: [
         "Identify and count coins (₹1, ₹2, ₹5, ₹10, ₹20, ₹50, ₹100)",
-        "Observe and learn about money around you and how it reaches home",
-        "Understand forms of money and how they are used",
+        "Learn about money being used around them and how it reaches home",
+        "Understand different ways in which people pay for things",
         "Simple earning, spending and saving exercises through fun tasks and activities"
       ],
       color: "#FFD23F"
@@ -89,18 +89,18 @@ export default function LandingPage() {
         "Recognising and using all coins and notes up to ₹500",
         "Learn the history, usage and evolution of money",
         "Setting saving goals and working towards them",
-        "Starting payday jobs to Understanding the difference between goods & services",
-        "Introduction to sharing and growing your money"
+        "Learning to earn by doing jobs around house",
+        "Introduction to growing your money"
       ],
       color: "#06D6A0"
     },
     "2nd Grade": {
       title: "Sharing & Investing",
       skills: [
-        "Learn the history and evolution of money",
-        "Budgeting basics in play for small and big purchases",
-        "Harvest vegetables and sell them at the market for profit",
-        "Create wish lists and prioritize wants"
+        "Learn how to be a smart and careful shopper",
+        "Understand what budgets are and how to plan for purchases",
+        "Earning virtual money by harvesting food and selling them at the market",
+        "Introduction to borrowing and lending as a part of sharing"
       ],
       color: "#EE6C4D"
     },
@@ -175,7 +175,7 @@ export default function LandingPage() {
                 Learn Money Skills <span className="text-[#EE6C4D]">While Having Fun!</span>
               </h1>
               <p className="text-xl text-[#3D5A80] mb-8 leading-relaxed">
-                CoinQuest teaches KG - Class 2 kids about saving, spending, investing, and sharing through stories, exciting games, and real-world simulations!
+                CoinQuest teaches KG - Class 2 kids about earning, saving, spending, sharing, and growing money through stories, exciting games, and real-world simulations!
               </p>
               <div className="flex flex-wrap gap-4">
                 <button

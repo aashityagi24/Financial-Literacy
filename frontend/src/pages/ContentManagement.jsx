@@ -8,7 +8,7 @@ import {
   Shield, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   Plus, Trash2, Edit2, Save, X, FolderOpen, FileText, BookOpen,
   FileSpreadsheet, Gamepad2, Upload, Image, Eye, EyeOff, Download,
-  Video, Book, Layers, ListOrdered, Library, Settings, Info, GripVertical, MoveRight, Database, Search
+  Video, Book, Layers, ListOrdered, Library, Settings, Info, GripVertical, MoveRight, Database, Search, Lightbulb
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,6 +50,7 @@ const CONTENT_TYPES = [
   { value: 'activity', label: 'Activity', icon: Gamepad2, color: 'bg-purple-100 text-purple-600', description: 'Interactive content' },
   { value: 'book', label: 'Book', icon: BookOpen, color: 'bg-green-100 text-green-600', description: 'Reading materials' },
   { value: 'workbook', label: 'Workbook', icon: Book, color: 'bg-blue-100 text-blue-600', description: 'Exercise books' },
+  { value: 'know_it_sheet', label: 'Know-It Sheet', icon: Lightbulb, color: 'bg-yellow-100 text-yellow-700', description: 'Knowledge sheets' },
   { value: 'video', label: 'Video', icon: Video, color: 'bg-red-100 text-red-600', description: 'Educational videos' },
 ];
 
@@ -1689,7 +1690,7 @@ export default function ContentManagement({ user }) {
                           onEdit={() => openEditSubtopic(subtopic)}
                           onDelete={() => deleteTopic(subtopic.topic_id, true)}
                           onMove={() => openMoveSubtopic(subtopic)}
-                          contentCount={filteredContent.filter(c => c.topic_id === subtopic.topic_id).length}
+                          contentCount={filteredContent.filter(c => effectiveContentParent(c) === subtopic.topic_id).length}
                         />
                       ))}
                     </div>
@@ -1981,6 +1982,36 @@ export default function ContentManagement({ user }) {
             {/* Location Info */}
             <div className="p-3 bg-gray-50 rounded-lg text-sm">
               <p className="text-gray-600">Location: <strong>{selectedTopic?.title}</strong> → <strong>{selectedSubtopic?.title}</strong></p>
+            </div>
+
+            {/* Content Type Selector (editable for both new and edit) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Content Type</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {CONTENT_TYPES.map((type) => {
+                  const Icon = type.icon;
+                  const isActive = contentForm.content_type === type.value;
+                  return (
+                    <button
+                      key={type.value}
+                      type="button"
+                      onClick={() => setContentForm(prev => ({ ...prev, content_type: type.value }))}
+                      className={`flex items-center gap-2 p-2 border rounded-lg text-left transition-all ${
+                        isActive ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-200' : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      data-testid={`content-type-pick-${type.value}`}
+                    >
+                      <div className={`w-8 h-8 rounded-md flex items-center justify-center ${type.color}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{type.label}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">You can switch the type at any time — content files and metadata stay intact.</p>
             </div>
             
             {/* Basic Info */}
