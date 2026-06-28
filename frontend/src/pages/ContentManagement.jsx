@@ -254,7 +254,7 @@ function SortableSubtopicItem({ subtopic, isSelected, onSelect, onEdit, onDelete
 }
 
 // Sortable Content Item Component for Lesson Plan
-function SortableContentItem({ content, onEdit, onDelete, onMove, onTogglePublish, typeConfig }) {
+function SortableContentItem({ content, onEdit, onDelete, onMove, onTogglePublish, onToggleMandatory, typeConfig }) {
   const {
     attributes,
     listeners,
@@ -326,14 +326,24 @@ function SortableContentItem({ content, onEdit, onDelete, onMove, onTogglePublis
               <EyeOff className="w-3 h-3" /> Draft
             </button>
           )}
-          {content.is_mandatory === false && (
-            <span
-              className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-700 font-medium"
-              title="Children may skip this without blocking the next item"
+          {content.is_mandatory === false ? (
+            <button
+              onClick={onToggleMandatory}
+              className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-700 font-medium hover:bg-amber-200 transition-colors cursor-pointer"
+              title="Click to set as Mandatory"
               data-testid={`optional-badge-${content.content_id}`}
             >
               Optional
-            </span>
+            </button>
+          ) : (
+            <button
+              onClick={onToggleMandatory}
+              className="text-xs px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition-colors cursor-pointer"
+              title="Click to set as Optional"
+              data-testid={`mandatory-badge-${content.content_id}`}
+            >
+              Mandatory
+            </button>
           )}
           {content.visible_to && content.visible_to.length > 0 && (
             <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-600">
@@ -798,6 +808,16 @@ export default function ContentManagement({ user }) {
       fetchData();
     } catch (error) {
       toast.error('Failed to toggle publish status');
+    }
+  };
+
+  const toggleMandatory = async (contentId) => {
+    try {
+      const res = await axios.post(`${API}/admin/content/items/${contentId}/toggle-mandatory`);
+      toast.success(res.data.message);
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to toggle mandatory status');
     }
   };
   
@@ -1775,6 +1795,7 @@ export default function ContentManagement({ user }) {
                             onDelete={() => deleteContent(content.content_id)}
                             onMove={() => openMoveContent(content)}
                             onTogglePublish={() => togglePublish(content.content_id)}
+                            onToggleMandatory={() => toggleMandatory(content.content_id)}
                           />
                         );
                       })}

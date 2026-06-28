@@ -942,6 +942,25 @@ async def admin_toggle_publish(content_id: str, request: Request):
     return {"message": f"Content {'published' if new_status else 'unpublished'}", "is_published": new_status}
 
 
+@router.post("/admin/content/items/{content_id}/toggle-mandatory")
+async def admin_toggle_mandatory(content_id: str, request: Request):
+    """Toggle content mandatory/optional flag. Default for legacy items is
+    mandatory (True), so toggling an item with no `is_mandatory` field turns
+    it Optional."""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+
+    item = await db.content_items.find_one({"content_id": content_id})
+    if not item:
+        raise HTTPException(status_code=404, detail="Content not found")
+
+    new_status = not item.get("is_mandatory", True)
+    await db.content_items.update_one({"content_id": content_id}, {"$set": {"is_mandatory": new_status}})
+
+    return {"message": f"Content set as {'mandatory' if new_status else 'optional'}", "is_mandatory": new_status}
+
+
 @router.post("/admin/content/items/{content_id}/move")
 async def admin_move_content(content_id: str, request: Request):
     """Move a content item to a different topic/subtopic. When `grade` is

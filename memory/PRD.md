@@ -933,6 +933,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Mandatory/Optional inline toggle on Lesson Plan** (June 28, 2026)
+  - Each content item in Step 3 Lesson Plan now shows a clickable **Mandatory** (indigo) or **Optional** (amber) pill alongside the Live/Draft pill. Clicking toggles instantly without opening the Edit dialog — matches the Live/Draft UX.
+  - New backend endpoint `POST /api/admin/content/items/{content_id}/toggle-mandatory` (mirrors `/toggle-publish`). Default for legacy items is mandatory (True).
+  - Files: `/app/backend/routes/content.py` (new endpoint), `/app/frontend/src/pages/ContentManagement.jsx` (`toggleMandatory` handler, clickable pill in `SortableContentItem`).
+  - Verified end-to-end via curl: toggle flips `is_mandatory` between True/False on existing items.
+
 - **Grade-scoped content count fix + Know-It Sheet content type** (June 13, 2026)
   - **Count Bug Fix**: Admin Content Management Step 2 Subtopics card was showing "0 content items" for subtopics that had items moved into them for a specific grade only. Root cause: `ContentManagement.jsx` line 1692 was filtering by raw `c.topic_id` instead of `effectiveContentParent(c)` which honors `content.grade_parents[gradeFilter]`. Now counts reflect grade-scoped moves correctly. Child-facing pages already used the backend's `count_with_grade_parent` helper so no change was needed there.
   - **Know-It Sheet content type**: Added as the 5th content type alongside Worksheet, Activity, Book, Workbook, Video. Uses the `Lightbulb` icon. Behaves identically to Worksheet/Workbook (PDF upload, viewer, download, ChildActivityScore). New `WORKSHEET_LIKE_TYPES` set in `TopicPage.jsx` consolidates the worksheet/workbook/know_it_sheet checks via `isWorksheetLike()`.
