@@ -85,7 +85,7 @@ export default function GlossaryPage({ user }) {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                  Word Bank
+                  Money Words
                 </h1>
                 <p className="text-base text-[#3D5A80]">Learn money words!</p>
               </div>
