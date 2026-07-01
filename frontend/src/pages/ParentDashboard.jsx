@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import NotificationCenter from '@/components/NotificationCenter';
+import DashboardFooter from '@/components/DashboardFooter';
 import { getDefaultAvatar } from '@/utils/avatars';
 import { JobGuideDialog } from '@/components/JobGuideDialog';
 
@@ -2629,6 +2630,7 @@ export default function ParentDashboard({ user }) {
           </DialogContent>
         </Dialog>
       </main>
+      <DashboardFooter />
     </div>
   );
 }

@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
 import NotificationCenter from '@/components/NotificationCenter';
 import ClassmatesSection from '@/components/ClassmatesSection';
+import DashboardFooter from '@/components/DashboardFooter';
 import { getDefaultAvatar } from '@/utils/avatars';
 
 export default function Dashboard({ user, setUser }) {
@@ -632,6 +633,7 @@ export default function Dashboard({ user, setUser }) {
           </div>
         )}
       </main>
+      <DashboardFooter />
     </div>
   );
 }

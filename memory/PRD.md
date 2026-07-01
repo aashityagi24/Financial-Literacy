@@ -933,6 +933,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **User Dashboard Footer** (June 28, 2026)
+  - New `DashboardFooter` component (`/app/frontend/src/components/DashboardFooter.jsx`) rendered at the bottom of the child (`Dashboard.jsx`), parent (`ParentDashboard.jsx`), and teacher (`TeacherDashboard.jsx`) dashboards.
+  - Shows `hello@coinquest.co.in` mailto link + `© {year} CoinQuest. All rights reserved.` — matches landing page contact info.
+  - Test-ids: `dashboard-footer`, `footer-contact-email`.
+  - Verified via screenshot: footer visible at bottom of Parent Dashboard.
+
 - **"Word Bank" → "Money Words" rename (user-facing)** (June 28, 2026)
   - Dashboard nav tile label changed from "Word Bank" to "Money Words" (`/app/frontend/src/pages/Dashboard.jsx`)
   - GlossaryPage header `<h1>` changed from "Word Bank" to "Money Words" (`/app/frontend/src/pages/GlossaryPage.jsx`)

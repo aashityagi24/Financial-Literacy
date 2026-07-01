@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { getDefaultAvatar } from '@/utils/avatars';
+import DashboardFooter from '@/components/DashboardFooter';
 import {
   Dialog,
   DialogContent,
@@ -2276,6 +2277,7 @@ export default function TeacherDashboard({ user }) {
           document.body
         )}
       </main>
+      <DashboardFooter />
     </div>
   );
 }
