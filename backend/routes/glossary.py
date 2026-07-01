@@ -136,10 +136,7 @@ async def admin_get_all_words(
     
     query = {}
     if search:
-        query["$or"] = [
-            {"term": {"$regex": search, "$options": "i"}},
-            {"meaning": {"$regex": search, "$options": "i"}}
-        ]
+        query["term"] = {"$regex": search, "$options": "i"}
     if category:
         query["category"] = category
     
