@@ -6,7 +6,7 @@ import { uploadFile } from '@/utils/chunkedUpload';
 import { toast } from 'sonner';
 import { 
   BookOpen, ChevronLeft, Plus, Search, Edit2, Trash2, 
-  Save, X, Upload, Filter
+  Save, X, Upload, Filter, GraduationCap
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { useAdminBackgroundSync } from '@/hooks/useAdminBackgroundSync';
 
 const CATEGORIES = [
@@ -37,6 +43,22 @@ const CATEGORIES = [
 ];
 
 const gradeLabels = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
+
+// Grades that support per-grade overrides in the admin UI.
+// (User-facing grades are K/1/2, matching the platform config.)
+const OVERRIDE_GRADES = [
+  { key: '0', label: 'Kindergarten (K)' },
+  { key: '1', label: '1st Grade' },
+  { key: '2', label: '2nd Grade' },
+];
+
+// Blank override slot template.
+const EMPTY_OVERRIDE = {
+  meaning: '',
+  description: '',
+  examples: [''],
+  image_url: '',
+};
 
 export default function AdminGlossaryManagement({ user }) {
   const navigate = useNavigate();
@@ -63,7 +85,8 @@ export default function AdminGlossaryManagement({ user }) {
     media_type: 'image',
     category: 'general',
     min_grade: 0,
-    max_grade: 5
+    max_grade: 5,
+    grade_overrides: {}, // { "0": {meaning, description, examples[], image_url}, "1": {...}, ... }
   });
   
   useEffect(() => {
@@ -105,12 +128,25 @@ export default function AdminGlossaryManagement({ user }) {
       media_type: 'image',
       category: 'general',
       min_grade: 0,
-      max_grade: 5
+      max_grade: 5,
+      grade_overrides: {},
     });
   };
   
   const openEdit = (word) => {
     setEditingWord(word);
+    // Normalize existing overrides so every editable grade has a slot
+    const existingOverrides = word.grade_overrides || {};
+    const normalizedOverrides = {};
+    OVERRIDE_GRADES.forEach(({ key }) => {
+      const src = existingOverrides[key] || {};
+      normalizedOverrides[key] = {
+        meaning: src.meaning || '',
+        description: src.description || '',
+        examples: src.examples?.length > 0 ? src.examples : [''],
+        image_url: src.image_url || '',
+      };
+    });
     setForm({
       term: word.term || '',
       meaning: word.meaning || '',
@@ -121,7 +157,8 @@ export default function AdminGlossaryManagement({ user }) {
       media_type: word.media_type || (word.video_url ? 'video' : 'image'),
       category: word.category || 'general',
       min_grade: word.min_grade ?? 0,
-      max_grade: word.max_grade ?? 5
+      max_grade: word.max_grade ?? 5,
+      grade_overrides: normalizedOverrides,
     });
     setShowAddWord(true);
   };
@@ -137,9 +174,24 @@ export default function AdminGlossaryManagement({ user }) {
     }
     
     try {
+      // Sanitize per-grade overrides: only keep grades that have at least one
+      // non-empty field. Empty examples arrays get filtered too.
+      const sanitizedOverrides = {};
+      Object.entries(form.grade_overrides || {}).forEach(([grade, ov]) => {
+        if (!ov) return;
+        const cleaned = {};
+        if (ov.meaning?.trim()) cleaned.meaning = ov.meaning.trim();
+        if (ov.description?.trim()) cleaned.description = ov.description.trim();
+        if (ov.image_url) cleaned.image_url = ov.image_url;
+        const examples = (ov.examples || []).map(e => (e || '').trim()).filter(Boolean);
+        if (examples.length > 0) cleaned.examples = examples;
+        if (Object.keys(cleaned).length > 0) sanitizedOverrides[grade] = cleaned;
+      });
+
       const payload = {
         ...form,
-        examples: form.examples.filter(e => e.trim())
+        examples: form.examples.filter(e => e.trim()),
+        grade_overrides: sanitizedOverrides,
       };
       
       if (editingWord) {
@@ -214,6 +266,77 @@ export default function AdminGlossaryManagement({ user }) {
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to upload video', { id: 'glossary-video-upload' });
     }
+  };
+
+  // --- Per-grade override helpers -------------------------------------------
+  const getOverride = (gradeKey) =>
+    form.grade_overrides?.[gradeKey] || { ...EMPTY_OVERRIDE, examples: [''] };
+
+  const updateOverrideField = (gradeKey, field, value) => {
+    setForm(prev => ({
+      ...prev,
+      grade_overrides: {
+        ...(prev.grade_overrides || {}),
+        [gradeKey]: {
+          ...(prev.grade_overrides?.[gradeKey] || { ...EMPTY_OVERRIDE, examples: [''] }),
+          [field]: value,
+        },
+      },
+    }));
+  };
+
+  const updateOverrideExample = (gradeKey, idx, value) => {
+    const current = getOverride(gradeKey);
+    const nextExamples = [...(current.examples || [''])];
+    nextExamples[idx] = value;
+    updateOverrideField(gradeKey, 'examples', nextExamples);
+  };
+
+  const addOverrideExample = (gradeKey) => {
+    const current = getOverride(gradeKey);
+    updateOverrideField(gradeKey, 'examples', [...(current.examples || []), '']);
+  };
+
+  const removeOverrideExample = (gradeKey, idx) => {
+    const current = getOverride(gradeKey);
+    if ((current.examples || []).length <= 1) return;
+    updateOverrideField(
+      gradeKey,
+      'examples',
+      current.examples.filter((_, i) => i !== idx),
+    );
+  };
+
+  const uploadOverrideImage = async (gradeKey, file) => {
+    if (!file) return;
+    try {
+      const res = await uploadFile(file, 'glossary', '/upload/image');
+      updateOverrideField(gradeKey, 'image_url', res.url);
+      toast.success(`Image uploaded for ${gradeKey === '0' ? 'Kindergarten' : `Grade ${gradeKey}`}`);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to upload image');
+    }
+  };
+
+  const clearOverride = (gradeKey) => {
+    setForm(prev => ({
+      ...prev,
+      grade_overrides: {
+        ...(prev.grade_overrides || {}),
+        [gradeKey]: { ...EMPTY_OVERRIDE, examples: [''] },
+      },
+    }));
+    toast.success('Grade override cleared — will fall back to global values');
+  };
+
+  const hasAnyOverride = (gradeKey) => {
+    const ov = form.grade_overrides?.[gradeKey];
+    if (!ov) return false;
+    if (ov.meaning?.trim()) return true;
+    if (ov.description?.trim()) return true;
+    if (ov.image_url) return true;
+    if ((ov.examples || []).some(e => (e || '').trim())) return true;
+    return false;
   };
   
   if (loading) {
@@ -594,6 +717,157 @@ export default function AdminGlossaryManagement({ user }) {
               )}
             </div>
             
+            {/* Per-grade overrides -------------------------------------- */}
+            <div className="pt-4 border-t border-[#1D3557]/10">
+              <div className="flex items-center gap-2 mb-2">
+                <GraduationCap className="w-5 h-5 text-[#3D5A80]" />
+                <h3 className="text-sm font-semibold text-[#1D3557]">
+                  Grade-specific overrides <span className="text-[#3D5A80] font-normal">(optional)</span>
+                </h3>
+              </div>
+              <p className="text-xs text-[#3D5A80] mb-3">
+                Use a simpler explanation for younger kids and a slightly detailed one for older kids.
+                Empty fields fall back to the global values above.
+              </p>
+              <Accordion type="multiple" className="w-full" data-testid="grade-overrides-accordion">
+                {OVERRIDE_GRADES.map(({ key, label }) => {
+                  const ov = getOverride(key);
+                  const filled = hasAnyOverride(key);
+                  return (
+                    <AccordionItem key={key} value={key} className="border-b border-[#1D3557]/10">
+                      <AccordionTrigger
+                        className="text-sm hover:no-underline"
+                        data-testid={`override-trigger-${key}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-[#1D3557]">{label}</span>
+                          {filled ? (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#06D6A0]/20 text-[#048A6A] font-semibold">
+                              Custom
+                            </span>
+                          ) : (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                              Uses global
+                            </span>
+                          )}
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="space-y-3 pt-2">
+                        <div>
+                          <label className="block text-xs font-medium text-[#1D3557] mb-1">
+                            Meaning ({label})
+                          </label>
+                          <Textarea
+                            rows={2}
+                            value={ov.meaning || ''}
+                            onChange={(e) => updateOverrideField(key, 'meaning', e.target.value)}
+                            placeholder="Leave blank to use the global meaning"
+                            data-testid={`override-meaning-${key}`}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-[#1D3557] mb-1">
+                            Description ({label})
+                          </label>
+                          <Textarea
+                            rows={2}
+                            value={ov.description || ''}
+                            onChange={(e) => updateOverrideField(key, 'description', e.target.value)}
+                            placeholder="Leave blank to use the global description"
+                            data-testid={`override-description-${key}`}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-[#1D3557] mb-1">
+                            Examples ({label})
+                          </label>
+                          <div className="space-y-2">
+                            {(ov.examples || ['']).map((ex, idx) => (
+                              <div key={idx} className="flex gap-2">
+                                <Input
+                                  value={ex}
+                                  onChange={(e) => updateOverrideExample(key, idx, e.target.value)}
+                                  placeholder={`Example ${idx + 1}`}
+                                  data-testid={`override-example-${key}-${idx}`}
+                                />
+                                {(ov.examples || []).length > 1 && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => removeOverrideExample(key, idx)}
+                                    className="text-red-500 hover:bg-red-50"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => addOverrideExample(key)}
+                              className="border-2 border-[#3D5A80] text-[#3D5A80]"
+                            >
+                              <Plus className="w-3 h-3 mr-1" /> Add example
+                            </Button>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-[#1D3557] mb-1">
+                            Image ({label})
+                          </label>
+                          {ov.image_url ? (
+                            <div className="flex items-start gap-3">
+                              <img
+                                src={getAssetUrl(ov.image_url)}
+                                alt=""
+                                className="w-24 h-20 object-contain rounded-lg border border-[#1D3557]/30 bg-gray-50"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => updateOverrideField(key, 'image_url', '')}
+                                className="border-2 border-red-500 text-red-500"
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          ) : (
+                            <label className="flex flex-col items-center justify-center gap-1 p-3 border-2 border-dashed border-[#3D5A80]/50 rounded-lg cursor-pointer hover:bg-[#E0FBFC] transition-colors">
+                              <Upload className="w-4 h-4 text-[#3D5A80]" />
+                              <span className="text-xs text-[#3D5A80]">Upload grade-specific image</span>
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                onChange={(e) => uploadOverrideImage(key, e.target.files?.[0])}
+                                className="hidden"
+                              />
+                            </label>
+                          )}
+                        </div>
+                        {filled && (
+                          <div className="flex justify-end">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => clearOverride(key)}
+                              className="text-red-500 hover:bg-red-50"
+                              data-testid={`override-clear-${key}`}
+                            >
+                              <Trash2 className="w-3 h-3 mr-1" /> Clear this grade
+                            </Button>
+                          </div>
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
+            </div>
+
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-4 border-t">
               <Button

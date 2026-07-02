@@ -933,6 +933,13 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Per-grade Money Words overrides** (June 28, 2026)
+  - Admins can now provide **grade-specific meaning / description / examples / image** for any word — a simple version for K, slightly detailed for Grade 1, more detailed for Grade 2. Everything except the term itself is overridable.
+  - Backend: new `apply_word_grade_override()` helper + `grade_overrides` dict on word docs (`{"0":{...},"1":{...},"2":{...}}`). Admin POST/PUT accept overrides; user-facing GETs (list / single / word-of-day) apply the override for the user's grade (child auto-picks own grade; `?grade=N` for parents/teachers; no grade → global).
+  - Frontend Admin: "Grade-specific overrides" accordion below the main form with one collapsible per grade (K, 1, 2). Each has Meaning / Description / Examples (add/remove) / Image upload. Header shows **Custom** badge when populated or **Uses global** when empty. "Clear this grade" button per grade. Save-time sanitization drops empty fields.
+  - Verified via curl: overrides at grade=0 return K-friendly text, grade=2 returns detailed text, no grade → global.
+  - Files: `/app/backend/routes/glossary.py`, `/app/frontend/src/pages/AdminGlossaryManagement.jsx`.
+
 - **User Dashboard Footer** (June 28, 2026)
   - New `DashboardFooter` component (`/app/frontend/src/components/DashboardFooter.jsx`) rendered at the bottom of the child (`Dashboard.jsx`), parent (`ParentDashboard.jsx`), and teacher (`TeacherDashboard.jsx`) dashboards.
   - Shows `hello@coinquest.co.in` mailto link + `© {year} CoinQuest. All rights reserved.` — matches landing page contact info.

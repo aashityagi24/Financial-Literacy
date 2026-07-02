@@ -15,6 +15,45 @@ def init_db(database):
 def get_db():
     return _db
 
+
+# Fields on a word doc that admins can override per-grade. Term is intentionally
+# excluded — the display term stays global. Every other field can vary per grade.
+OVERRIDABLE_WORD_FIELDS = (
+    "meaning", "description", "examples", "image_url", "video_url",
+    "media_type", "category", "min_grade", "max_grade",
+)
+
+
+def apply_word_grade_override(word: dict, grade) -> dict:
+    """Merge `grade_overrides.<grade>.<field>` onto the word for the requested
+    grade. Empty / missing override values fall back to the global field. Term
+    is never overridden. Returns the same dict for chaining.
+    """
+    if not word or grade is None:
+        return word
+    grade_key = str(grade)
+    overrides = (word.get("grade_overrides") or {}).get(grade_key)
+    if not overrides:
+        return word
+    for field in OVERRIDABLE_WORD_FIELDS:
+        if field in overrides:
+            value = overrides[field]
+            # Treat empty string / None / empty list as "no override — use global"
+            if value in (None, "", []):
+                continue
+            word[field] = value
+    return word
+
+
+def resolve_user_grade(user, explicit_grade):
+    """Pick a grade for override resolution. Explicit ?grade wins, otherwise
+    a child's own grade is used. None means "no override, keep global"."""
+    if explicit_grade is not None:
+        return explicit_grade
+    if user and user.get("role") == "child" and user.get("grade") is not None:
+        return user["grade"]
+    return None
+
 # ============== PUBLIC ROUTES ==============
 
 @router.get("/glossary/words")
@@ -64,6 +103,12 @@ async def get_glossary_words(
         query, 
         {"_id": 0}
     ).sort("term", 1).skip(skip).limit(limit).to_list(limit)
+
+    # Merge per-grade overrides on display fields (term stays global)
+    override_grade = resolve_user_grade(user, grade)
+    if override_grade is not None:
+        for w in words:
+            apply_word_grade_override(w, override_grade)
     
     # Get all unique starting letters for navigation
     all_letters = await db.glossary_words.distinct("first_letter")
@@ -81,18 +126,24 @@ async def get_glossary_words(
     }
 
 @router.get("/glossary/words/{word_id}")
-async def get_glossary_word(word_id: str, request: Request):
+async def get_glossary_word(word_id: str, request: Request, grade: Optional[int] = None):
     """Get a single glossary word by ID"""
+    from services.auth import get_current_user
     db = get_db()
-    
+    user = await get_current_user(request)
+
     word = await db.glossary_words.find_one({"word_id": word_id}, {"_id": 0})
     if not word:
         raise HTTPException(status_code=404, detail="Word not found")
-    
+
+    override_grade = resolve_user_grade(user, grade)
+    if override_grade is not None:
+        apply_word_grade_override(word, override_grade)
+
     return word
 
 @router.get("/glossary/word-of-day")
-async def get_word_of_day(request: Request):
+async def get_word_of_day(request: Request, grade: Optional[int] = None):
     """Get a random word of the day based on user's grade"""
     from services.auth import get_current_user
     import random
@@ -100,10 +151,10 @@ async def get_word_of_day(request: Request):
     user = await get_current_user(request)
     
     query = {}
-    if user and user.get("role") == "child" and user.get("grade") is not None:
-        user_grade = user["grade"]
-        query["min_grade"] = {"$lte": user_grade}
-        query["max_grade"] = {"$gte": user_grade}
+    override_grade = resolve_user_grade(user, grade)
+    if override_grade is not None:
+        query["min_grade"] = {"$lte": override_grade}
+        query["max_grade"] = {"$gte": override_grade}
     
     # Use date as seed for consistent daily word
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -116,7 +167,11 @@ async def get_word_of_day(request: Request):
     random.seed(today)
     word = random.choice(words)
     random.seed()  # Reset seed
-    
+
+    # Apply grade override to the Word of the Day meaning/example/image
+    if override_grade is not None:
+        apply_word_grade_override(word, override_grade)
+
     return word
 
 # ============== ADMIN ROUTES ==============
@@ -189,6 +244,9 @@ async def admin_create_word(request: Request):
         "category": body.get("category", "general"),
         "min_grade": body.get("min_grade", 0),
         "max_grade": body.get("max_grade", 5),
+        # Per-grade overrides: {"0": {"meaning": "...", ...}, "1": {...}, "2": {...}}
+        # Only non-empty fields override the global values. Term is never overridden.
+        "grade_overrides": body.get("grade_overrides", {}),
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
@@ -211,7 +269,7 @@ async def admin_update_word(word_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Word not found")
     
     update_fields = {}
-    allowed_fields = ["term", "meaning", "description", "examples", "image_url", "video_url", "media_type", "category", "min_grade", "max_grade"]
+    allowed_fields = ["term", "meaning", "description", "examples", "image_url", "video_url", "media_type", "category", "min_grade", "max_grade", "grade_overrides"]
     
     for field in allowed_fields:
         if field in body:
