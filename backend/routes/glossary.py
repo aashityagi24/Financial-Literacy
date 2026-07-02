@@ -74,6 +74,12 @@ async def get_glossary_words(
     # Build query
     query = {}
     
+    # Non-admin viewers only see published words. Missing `is_published` is
+    # treated as live (legacy words created before this flag existed).
+    is_admin = user and user.get("role") == "admin"
+    if not is_admin:
+        query["is_published"] = {"$ne": False}
+    
     # Search by term only (not meaning or description)
     if search:
         query["term"] = {"$regex": search, "$options": "i"}
@@ -136,6 +142,11 @@ async def get_glossary_word(word_id: str, request: Request, grade: Optional[int]
     if not word:
         raise HTTPException(status_code=404, detail="Word not found")
 
+    # Non-admin viewers can't peek at draft (unpublished) words
+    is_admin = user and user.get("role") == "admin"
+    if not is_admin and word.get("is_published") is False:
+        raise HTTPException(status_code=404, detail="Word not found")
+
     override_grade = resolve_user_grade(user, grade)
     if override_grade is not None:
         apply_word_grade_override(word, override_grade)
@@ -151,6 +162,11 @@ async def get_word_of_day(request: Request, grade: Optional[int] = None):
     user = await get_current_user(request)
     
     query = {}
+    # Word of the Day never picks a draft word for non-admin users
+    is_admin = user and user.get("role") == "admin"
+    if not is_admin:
+        query["is_published"] = {"$ne": False}
+
     override_grade = resolve_user_grade(user, grade)
     if override_grade is not None:
         query["min_grade"] = {"$lte": override_grade}
@@ -244,6 +260,9 @@ async def admin_create_word(request: Request):
         "category": body.get("category", "general"),
         "min_grade": body.get("min_grade", 0),
         "max_grade": body.get("max_grade", 5),
+        # Live/Draft flag — new words default to Live so admins don't have to
+        # publish each one manually. Admin can flip to Draft to hide temporarily.
+        "is_published": body.get("is_published", True),
         # Per-grade overrides: {"0": {"meaning": "...", ...}, "1": {...}, "2": {...}}
         # Only non-empty fields override the global values. Term is never overridden.
         "grade_overrides": body.get("grade_overrides", {}),
@@ -269,7 +288,7 @@ async def admin_update_word(word_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Word not found")
     
     update_fields = {}
-    allowed_fields = ["term", "meaning", "description", "examples", "image_url", "video_url", "media_type", "category", "min_grade", "max_grade", "grade_overrides"]
+    allowed_fields = ["term", "meaning", "description", "examples", "image_url", "video_url", "media_type", "category", "min_grade", "max_grade", "grade_overrides", "is_published"]
     
     for field in allowed_fields:
         if field in body:
@@ -288,6 +307,33 @@ async def admin_update_word(word_id: str, request: Request):
     )
     
     return {"message": "Word updated"}
+
+
+@router.post("/admin/glossary/words/{word_id}/toggle-publish")
+async def admin_toggle_publish_word(word_id: str, request: Request):
+    """Admin: Toggle a word's Live/Draft state.
+    Legacy words with no `is_published` field are treated as Live, so toggling
+    them flips them to Draft.
+    """
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+
+    word = await db.glossary_words.find_one({"word_id": word_id})
+    if not word:
+        raise HTTPException(status_code=404, detail="Word not found")
+
+    new_status = not word.get("is_published", True)
+    await db.glossary_words.update_one(
+        {"word_id": word_id},
+        {"$set": {"is_published": new_status, "updated_at": datetime.now(timezone.utc).isoformat()}},
+    )
+
+    return {
+        "message": f"Word set to {'Live' if new_status else 'Draft'}",
+        "is_published": new_status,
+    }
+
 
 @router.delete("/admin/glossary/words/{word_id}")
 async def admin_delete_word(word_id: str, request: Request):

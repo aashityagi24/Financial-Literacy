@@ -933,6 +933,20 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Money Words Live/Draft toggle** (June 28, 2026)
+  - Admins can now flip any word to **Draft** to hide it from users, or **Live** to publish. Legacy words with no flag are treated as Live.
+  - Backend (`/app/backend/routes/glossary.py`):
+    - New `is_published` field on word docs (defaults to `True` for new words)
+    - Non-admin GETs (`/glossary/words`, `/glossary/words/{id}`, `/glossary/word-of-day`) exclude `is_published: False` — draft words return 404 on single fetch
+    - Admin GET returns all words including drafts
+    - New endpoint `POST /admin/glossary/words/{id}/toggle-publish` flips the flag
+    - Existing PUT payload accepts `is_published` for full edit dialog control
+  - Frontend Admin (`AdminGlossaryManagement.jsx`):
+    - Clickable **Live** (green) / **Draft** (grey) pill on each word row — toggles instantly (`data-testid=publish-badge-{id}`)
+    - Publish Status Switch inside the Edit dialog (`data-testid=word-publish-toggle`) with helper text explaining Live vs Draft
+  - Verified via curl: draft word hidden from user list + returns 404 on single fetch; toggle flips visibility instantly.
+  - Files: `/app/backend/routes/glossary.py`, `/app/frontend/src/pages/AdminGlossaryManagement.jsx`.
+
 - **Per-grade Money Words overrides** (June 28, 2026)
   - Admins can now provide **grade-specific meaning / description / examples / image** for any word — a simple version for K, slightly detailed for Grade 1, more detailed for Grade 2. Everything except the term itself is overridable.
   - Backend: new `apply_word_grade_override()` helper + `grade_overrides` dict on word docs (`{"0":{...},"1":{...},"2":{...}}`). Admin POST/PUT accept overrides; user-facing GETs (list / single / word-of-day) apply the override for the user's grade (child auto-picks own grade; `?grade=N` for parents/teachers; no grade → global).

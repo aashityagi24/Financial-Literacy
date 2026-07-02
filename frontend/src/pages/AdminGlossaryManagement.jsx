@@ -30,6 +30,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Switch } from "@/components/ui/switch";
 import { useAdminBackgroundSync } from '@/hooks/useAdminBackgroundSync';
 
 const CATEGORIES = [
@@ -86,6 +87,7 @@ export default function AdminGlossaryManagement({ user }) {
     category: 'general',
     min_grade: 0,
     max_grade: 5,
+    is_published: true,
     grade_overrides: {}, // { "0": {meaning, description, examples[], image_url}, "1": {...}, ... }
   });
   
@@ -129,6 +131,7 @@ export default function AdminGlossaryManagement({ user }) {
       category: 'general',
       min_grade: 0,
       max_grade: 5,
+      is_published: true,
       grade_overrides: {},
     });
   };
@@ -158,6 +161,7 @@ export default function AdminGlossaryManagement({ user }) {
       category: word.category || 'general',
       min_grade: word.min_grade ?? 0,
       max_grade: word.max_grade ?? 5,
+      is_published: word.is_published !== false,
       grade_overrides: normalizedOverrides,
     });
     setShowAddWord(true);
@@ -219,6 +223,16 @@ export default function AdminGlossaryManagement({ user }) {
       fetchWords();
     } catch (error) {
       toast.error('Failed to delete word');
+    }
+  };
+
+  const togglePublish = async (wordId) => {
+    try {
+      const res = await axios.post(`${API}/admin/glossary/words/${wordId}/toggle-publish`);
+      toast.success(res.data.message);
+      fetchWords(true);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to toggle publish status');
     }
   };
   
@@ -444,7 +458,7 @@ export default function AdminGlossaryManagement({ user }) {
                   
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <h3 className="text-lg font-bold text-[#1D3557]">{word.term}</h3>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-[#3D5A80]/10 text-[#3D5A80] capitalize">
                         {word.category}
@@ -452,6 +466,25 @@ export default function AdminGlossaryManagement({ user }) {
                       <span className="text-xs px-2 py-0.5 rounded-full bg-[#06D6A0]/20 text-[#06D6A0]">
                         Grade {word.min_grade}-{word.max_grade}
                       </span>
+                      {(word.is_published !== false) ? (
+                        <button
+                          onClick={() => togglePublish(word.word_id)}
+                          className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 hover:bg-green-200 font-medium transition-colors cursor-pointer"
+                          title="Click to set as Draft"
+                          data-testid={`publish-badge-${word.word_id}`}
+                        >
+                          Live
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => togglePublish(word.word_id)}
+                          className="text-xs px-2 py-0.5 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 font-medium transition-colors cursor-pointer"
+                          title="Click to set as Live"
+                          data-testid={`publish-badge-${word.word_id}`}
+                        >
+                          Draft
+                        </button>
+                      )}
                     </div>
                     <p className="text-[#3D5A80] font-medium mb-1">{word.meaning}</p>
                     {word.description && (
@@ -715,6 +748,28 @@ export default function AdminGlossaryManagement({ user }) {
                   )}
                 </>
               )}
+            </div>
+            
+            {/* Publish Status */}
+            <div className="flex items-center justify-between p-3 bg-[#E0FBFC]/50 rounded-lg border border-[#3D5A80]/20">
+              <div>
+                <p className="font-medium text-[#1D3557] text-sm">Publish Status</p>
+                <p className="text-xs text-[#3D5A80]">
+                  {form.is_published
+                    ? 'Live — visible to all users in Money Words.'
+                    : 'Draft — hidden from users until you flip this to Live.'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={form.is_published ? 'text-green-600 font-medium text-sm' : 'text-gray-500 text-sm'}>
+                  {form.is_published ? 'Live' : 'Draft'}
+                </span>
+                <Switch
+                  checked={!!form.is_published}
+                  onCheckedChange={(v) => setForm({ ...form, is_published: v })}
+                  data-testid="word-publish-toggle"
+                />
+              </div>
             </div>
             
             {/* Per-grade overrides -------------------------------------- */}
