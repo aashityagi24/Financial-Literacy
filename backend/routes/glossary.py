@@ -116,12 +116,30 @@ async def get_glossary_words(
         for w in words:
             apply_word_grade_override(w, override_grade)
     
-    # Get all unique starting letters for navigation
-    all_letters = await db.glossary_words.distinct("first_letter")
+    # Base query used for computing available letters + categories. It respects
+    # grade + is_published (for non-admin users) but strips search/letter/category
+    # so the filter chips reflect what's actually available for this user, not
+    # what remains after the current filter selection.
+    base_query = {}
+    if not is_admin:
+        base_query["is_published"] = {"$ne": False}
+    if grade is not None:
+        base_query["min_grade"] = {"$lte": grade}
+        base_query["max_grade"] = {"$gte": grade}
+    elif user and user.get("role") == "child" and user.get("grade") is not None:
+        user_grade = user["grade"]
+        base_query["min_grade"] = {"$lte": user_grade}
+        base_query["max_grade"] = {"$gte": user_grade}
+
+    # Available starting letters — only letters that have at least one word
+    # visible to this user + grade.
+    all_letters = await db.glossary_words.distinct("first_letter", base_query)
     all_letters = sorted([l for l in all_letters if l])
-    
-    # Get all categories
-    all_categories = await db.glossary_words.distinct("category")
+
+    # Available categories — only categories that have at least one word
+    # visible to this user + grade. This prevents the UI from showing empty
+    # category chips like "Investing" for a Kindergarten child.
+    all_categories = await db.glossary_words.distinct("category", base_query)
     all_categories = [c for c in all_categories if c]
     
     return {

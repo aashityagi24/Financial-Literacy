@@ -933,6 +933,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Money Words: grade-aware category & letter filters** (June 28, 2026)
+  - Category chips and A-Z letter buttons on the user Money Words page now show only what's actually available for the viewer's grade. For a Kindergarten child, categories like "Investing" or "Budgeting" (which don't have K words) no longer appear — same for empty letters.
+  - Backend (`/app/backend/routes/glossary.py`): `GET /glossary/words` now computes `letters` and `categories` from a base query that respects `is_published != False` (for non-admins) + the child's grade (auto-picked) or `?grade=N` if supplied. Admin GET still returns all letters/categories including from draft words.
+  - Verified via curl: parent (no grade) → all 7 categories, 12 letters; parent + `?grade=0` → 5 categories (budgeting & investing filtered out), 9 letters. Word list matches.
+  - Files: `/app/backend/routes/glossary.py`.
+
 - **Money Words Live/Draft toggle** (June 28, 2026)
   - Admins can now flip any word to **Draft** to hide it from users, or **Live** to publish. Legacy words with no flag are treated as Live.
   - Backend (`/app/backend/routes/glossary.py`):
