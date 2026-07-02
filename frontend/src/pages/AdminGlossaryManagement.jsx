@@ -37,10 +37,10 @@ const CATEGORIES = [
   { value: 'general', label: 'General' },
   { value: 'saving', label: 'Saving' },
   { value: 'spending', label: 'Spending' },
+  { value: 'sharing', label: 'Sharing' },
   { value: 'earning', label: 'Earning' },
   { value: 'investing', label: 'Investing' },
   { value: 'banking', label: 'Banking' },
-  { value: 'budgeting', label: 'Budgeting' },
 ];
 
 const gradeLabels = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
