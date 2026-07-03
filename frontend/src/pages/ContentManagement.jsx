@@ -971,9 +971,12 @@ export default function ContentManagement({ user }) {
 
     const newItems = arrayMove(sortedContent, oldIndex, newIndex);
     
-    // Optimistically update UI
+    // Optimistically update UI. Use effectiveContentParent so items that were
+    // grade-moved *into* this subtopic (their global topic_id still points to
+    // the origin) are correctly excluded from "otherContent" — otherwise they
+    // get counted twice, appearing as duplicates in the list.
     setAllContent(prev => {
-      const otherContent = prev.filter(c => c.topic_id !== selectedSubtopic?.topic_id);
+      const otherContent = prev.filter(c => effectiveContentParent(c) !== selectedSubtopic?.topic_id);
       const updated = gradeFilter === 'all'
         ? newItems.map((item, i) => ({ ...item, order: i }))
         : newItems.map((item, i) => ({
@@ -989,6 +992,7 @@ export default function ContentManagement({ user }) {
     try {
       await axios.post(`${API}/admin/content/items/reorder`, payload);
       toast.success('Content reordered');
+      fetchData(); // Re-sync from server so any stale rows self-heal
     } catch (error) {
       toast.error('Failed to reorder content');
       fetchData(); // Revert on error
