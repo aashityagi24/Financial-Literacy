@@ -6,6 +6,7 @@ import { uploadFile } from '@/utils/chunkedUpload';
 import { toast } from 'sonner';
 import { Target, ChevronLeft, Plus, Check, Calendar, Wallet, ArrowLeftRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import BackButton from '@/components/BackButton';
 import {
   Dialog,
   DialogContent,
@@ -240,9 +241,9 @@ export default function SavingsGoalsPage({ user }) {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to="/wallet" className="p-2 rounded-xl border-2 border-white hover:bg-white/20">
+              <BackButton className="p-2 rounded-xl border-2 border-white hover:bg-white/20" testId="savings-goals-back-btn">
                 <ChevronLeft className="w-5 h-5 text-white" />
-              </Link>
+              </BackButton>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white rounded-xl border-3 border-[#1D3557] flex items-center justify-center text-2xl">
                   🐷
