@@ -22,6 +22,14 @@ class LinkChildRequest(BaseModel):
     child_email: str
 
 
+class LinkChildByUsernameRequest(BaseModel):
+    """Parent links an existing child account by supplying the child's username
+    and password. Works for children with or without email (admins or another
+    parent may have already created the account)."""
+    username: str
+    password: str
+
+
 class ParentCreateChildRequest(BaseModel):
     name: str
     grade: int = 0
@@ -197,6 +205,59 @@ async def link_child(data: LinkChildRequest, request: Request):
     await db.parent_child_links.insert_one(link_doc)
     
     return {"message": "Child linked successfully", "child": {"name": child["name"], "email": child["email"]}}
+
+
+@router.post("/link-child-by-username")
+async def link_child_by_username(data: LinkChildByUsernameRequest, request: Request):
+    """Link an existing child account to the current parent using the child's
+    username + password. Useful when the child was created earlier by admin or
+    another parent (with or without email).
+    """
+    from services.auth import require_parent
+    import hashlib
+    db = get_db()
+    parent = await require_parent(request)
+
+    username = (data.username or "").strip()
+    if not username or not data.password:
+        raise HTTPException(status_code=400, detail="Username and password are required")
+
+    password_hash = hashlib.sha256(data.password.encode()).hexdigest()
+    child = await db.users.find_one({
+        "username": username,
+        "password_hash": password_hash,
+    })
+    if not child:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    if child.get("role") != "child":
+        raise HTTPException(status_code=400, detail="That account is not a child account")
+
+    existing = await db.parent_child_links.find_one({
+        "parent_id": parent["user_id"],
+        "child_id": child["user_id"],
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="This child is already linked to your account")
+
+    link_doc = {
+        "link_id": f"link_{uuid.uuid4().hex[:12]}",
+        "parent_id": parent["user_id"],
+        "child_id": child["user_id"],
+        "status": "active",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.parent_child_links.insert_one(link_doc)
+
+    return {
+        "message": "Child linked successfully",
+        "child": {
+            "name": child.get("name"),
+            "username": child.get("username"),
+            "email": child.get("email"),
+            "grade": child.get("grade"),
+        },
+    }
 
 @router.delete("/unlink-child/{child_id}")
 async def unlink_child(child_id: str, request: Request):

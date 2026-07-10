@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import NotificationCenter from '@/components/NotificationCenter';
 import DashboardFooter from '@/components/DashboardFooter';
 import { getDefaultAvatar } from '@/utils/avatars';
@@ -65,7 +66,6 @@ export default function ParentDashboard({ user }) {
   
   // Dialogs
   const [showLinkChild, setShowLinkChild] = useState(false);
-  const [showCreateChildNoEmail, setShowCreateChildNoEmail] = useState(false);
   const [showCreateChore, setShowCreateChore] = useState(false);
   const [showRewardPenalty, setShowRewardPenalty] = useState(false);
   const [showGiveMoney, setShowGiveMoney] = useState(false);
@@ -75,6 +75,10 @@ export default function ParentDashboard({ user }) {
   
   // Forms
   const [linkEmail, setLinkEmail] = useState('');
+  // Link existing child by username + password (works for admin-created accounts)
+  const [linkExistingForm, setLinkExistingForm] = useState({ username: '', password: '' });
+  // Which tab of the Link Child dialog is active
+  const [linkChildTab, setLinkChildTab] = useState('existing'); // 'existing' | 'email' | 'new'
   // Brand-new child without email — parent picks username + password.
   const [newChildForm, setNewChildForm] = useState({ name: '', username: '', password: '', grade: 0 });
   const [newChildCreds, setNewChildCreds] = useState(null);
@@ -275,6 +279,25 @@ export default function ParentDashboard({ user }) {
       toast.error(error.response?.data?.detail || 'Failed to link child');
     }
   };
+
+  const handleLinkExistingChild = async () => {
+    if (!linkExistingForm.username.trim() || !linkExistingForm.password) {
+      toast.error("Please enter your child's username and password");
+      return;
+    }
+    try {
+      const res = await axios.post(`${API}/parent/link-child-by-username`, {
+        username: linkExistingForm.username.trim(),
+        password: linkExistingForm.password,
+      });
+      toast.success(`${res.data.child?.name || 'Child'} linked to your account`);
+      setShowLinkChild(false);
+      setLinkExistingForm({ username: '', password: '' });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to link child');
+    }
+  };
   
   const handleCreateChildNoEmail = async () => {
     if (!newChildForm.name.trim()) {
@@ -309,7 +332,6 @@ export default function ParentDashboard({ user }) {
       toast.error(error.response?.data?.detail || 'Failed to create child');
     }
   };
-  
   const handleCreateChore = async () => {
     try {
       await axios.post(`${API}/parent/chores-new`, choreForm);
@@ -819,124 +841,166 @@ export default function ParentDashboard({ user }) {
             {/* Children Overview */}
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>My Children</h2>
-              <Dialog open={showLinkChild} onOpenChange={setShowLinkChild}>
+              <Dialog
+                open={showLinkChild}
+                onOpenChange={(o) => {
+                  setShowLinkChild(o);
+                  if (!o) {
+                    setNewChildCreds(null);
+                    setLinkChildTab('existing');
+                  }
+                }}
+              >
                 <DialogTrigger asChild>
-                  <button className="btn-primary px-4 py-2 flex items-center gap-2">
+                  <button className="btn-primary px-4 py-2 flex items-center gap-2" data-testid="parent-link-child-btn">
                     <Plus className="w-4 h-4" /> Link Child
                   </button>
                 </DialogTrigger>
-                <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
-                  <DialogHeader>
-                    <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Link Child Account</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 mt-4">
-                    <p className="text-sm text-[#3D5A80]">Enter your child&apos;s account email to link their account.</p>
-                    <Input 
-                      type="email"
-                      placeholder="Child's email" 
-                      value={linkEmail} 
-                      onChange={(e) => setLinkEmail(e.target.value)}
-                      className="border-3 border-[#1D3557]"
-                    />
-                    <button onClick={handleLinkChild} className="btn-primary w-full py-3">Link Account</button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-              
-              {/* Add brand-new child without an email — parent picks username + password */}
-              <Dialog open={showCreateChildNoEmail} onOpenChange={(o) => { setShowCreateChildNoEmail(o); if (!o) setNewChildCreds(null); }}>
-                <DialogTrigger asChild>
-                  <button
-                    className="btn-primary px-4 py-2 flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600"
-                    data-testid="parent-add-child-no-email-btn"
-                  >
-                    <Plus className="w-4 h-4" /> Add Child (No Email)
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md">
+                <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-lg">
                   <DialogHeader>
                     <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                      Add Child without Email
+                      Link a Child
                     </DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4 mt-4">
-                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-900">
-                      For children who don&apos;t have an email yet. Pick a username and password — your child will log in with these. Please write them down somewhere safe.
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-[#1D3557] mb-1">Child&apos;s Name *</label>
-                      <Input
-                        placeholder="e.g. Aarav"
-                        value={newChildForm.name}
-                        onChange={(e) => setNewChildForm({ ...newChildForm, name: e.target.value })}
-                        className="border-3 border-[#1D3557]"
-                        data-testid="parent-child-name-input"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-[#1D3557] mb-1">Username *</label>
-                      <Input
-                        placeholder="e.g. aarav_g2"
-                        value={newChildForm.username}
-                        onChange={(e) => setNewChildForm({ ...newChildForm, username: e.target.value })}
-                        className="border-3 border-[#1D3557]"
-                        data-testid="parent-child-username-input"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-[#1D3557] mb-1">Password *</label>
-                      <Input
-                        type="text"
-                        placeholder="Min 6 characters"
-                        value={newChildForm.password}
-                        onChange={(e) => setNewChildForm({ ...newChildForm, password: e.target.value })}
-                        className="border-3 border-[#1D3557]"
-                        data-testid="parent-child-password-input"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-[#1D3557] mb-1">Grade</label>
-                      <select
-                        value={newChildForm.grade}
-                        onChange={(e) => setNewChildForm({ ...newChildForm, grade: parseInt(e.target.value) })}
-                        className="w-full border-3 border-[#1D3557] rounded-md px-3 py-2"
-                      >
-                        <option value={0}>Kindergarten</option>
-                        <option value={1}>1st Grade</option>
-                        <option value={2}>2nd Grade</option>
-                        <option value={3}>3rd Grade</option>
-                        <option value={4}>4th Grade</option>
-                        <option value={5}>5th Grade</option>
-                      </select>
-                    </div>
-                    
-                    {newChildCreds && (
-                      <div className="p-3 rounded-xl border-2 border-emerald-400 bg-emerald-50" data-testid="parent-child-creds-card">
-                        <p className="text-sm font-bold text-emerald-800 mb-2">Save these credentials for {newChildCreds.name}</p>
-                        <div className="space-y-1 text-sm font-mono text-gray-800">
-                          <div><span className="text-gray-500">Username:</span> {newChildCreds.username}</div>
-                          <div><span className="text-gray-500">Password:</span> {newChildCreds.password}</div>
-                        </div>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(`Username: ${newChildCreds.username}\nPassword: ${newChildCreds.password}`);
-                            toast.success('Copied to clipboard');
-                          }}
-                          className="mt-2 text-xs font-bold text-emerald-700 hover:underline"
-                        >
-                          Copy to clipboard
-                        </button>
+                  <Tabs value={linkChildTab} onValueChange={setLinkChildTab} className="mt-4">
+                    <TabsList className="grid grid-cols-3 w-full bg-[#E0FBFC]">
+                      <TabsTrigger value="existing" data-testid="link-tab-existing">Existing Account</TabsTrigger>
+                      <TabsTrigger value="email" data-testid="link-tab-email">By Email</TabsTrigger>
+                      <TabsTrigger value="new" data-testid="link-tab-new">New (no email)</TabsTrigger>
+                    </TabsList>
+
+                    {/* Tab 1 — Link an existing child by username + password */}
+                    <TabsContent value="existing" className="space-y-4 mt-4">
+                      <div className="p-3 rounded-xl bg-[#E0FBFC] border border-[#98C1D9] text-sm text-[#1D3557]">
+                        If your child already has an account (created by their school, admin, or another parent),
+                        enter their username and password to link them to you.
                       </div>
-                    )}
-                    
-                    <button
-                      onClick={handleCreateChildNoEmail}
-                      className="btn-primary w-full py-3 bg-emerald-500 hover:bg-emerald-600"
-                      data-testid="parent-create-child-submit-btn"
-                    >
-                      Create Child Account
-                    </button>
-                  </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#1D3557] mb-1">Child&apos;s Username</label>
+                        <Input
+                          placeholder="e.g. aarav_g2"
+                          value={linkExistingForm.username}
+                          onChange={(e) => setLinkExistingForm({ ...linkExistingForm, username: e.target.value })}
+                          className="border-3 border-[#1D3557]"
+                          data-testid="link-existing-username-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#1D3557] mb-1">Child&apos;s Password</label>
+                        <Input
+                          type="password"
+                          placeholder="Enter password"
+                          value={linkExistingForm.password}
+                          onChange={(e) => setLinkExistingForm({ ...linkExistingForm, password: e.target.value })}
+                          className="border-3 border-[#1D3557]"
+                          data-testid="link-existing-password-input"
+                        />
+                      </div>
+                      <button
+                        onClick={handleLinkExistingChild}
+                        className="btn-primary w-full py-3"
+                        data-testid="link-existing-submit-btn"
+                      >
+                        Link Account
+                      </button>
+                    </TabsContent>
+
+                    {/* Tab 2 — Legacy invite-by-email flow */}
+                    <TabsContent value="email" className="space-y-4 mt-4">
+                      <p className="text-sm text-[#3D5A80]">Enter your child&apos;s account email to link their account.</p>
+                      <Input
+                        type="email"
+                        placeholder="Child's email"
+                        value={linkEmail}
+                        onChange={(e) => setLinkEmail(e.target.value)}
+                        className="border-3 border-[#1D3557]"
+                        data-testid="link-email-input"
+                      />
+                      <button onClick={handleLinkChild} className="btn-primary w-full py-3" data-testid="link-email-submit-btn">
+                        Link Account
+                      </button>
+                    </TabsContent>
+
+                    {/* Tab 3 — Create a brand-new child (no email) */}
+                    <TabsContent value="new" className="space-y-4 mt-4">
+                      <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-900">
+                        For children who don&apos;t have an email yet. Pick a username and password — your child will log in with these. Please write them down somewhere safe.
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#1D3557] mb-1">Child&apos;s Name *</label>
+                        <Input
+                          placeholder="e.g. Aarav"
+                          value={newChildForm.name}
+                          onChange={(e) => setNewChildForm({ ...newChildForm, name: e.target.value })}
+                          className="border-3 border-[#1D3557]"
+                          data-testid="parent-child-name-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#1D3557] mb-1">Username *</label>
+                        <Input
+                          placeholder="e.g. aarav_g2"
+                          value={newChildForm.username}
+                          onChange={(e) => setNewChildForm({ ...newChildForm, username: e.target.value })}
+                          className="border-3 border-[#1D3557]"
+                          data-testid="parent-child-username-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#1D3557] mb-1">Password *</label>
+                        <Input
+                          type="text"
+                          placeholder="Min 6 characters"
+                          value={newChildForm.password}
+                          onChange={(e) => setNewChildForm({ ...newChildForm, password: e.target.value })}
+                          className="border-3 border-[#1D3557]"
+                          data-testid="parent-child-password-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-[#1D3557] mb-1">Grade</label>
+                        <select
+                          value={newChildForm.grade}
+                          onChange={(e) => setNewChildForm({ ...newChildForm, grade: parseInt(e.target.value) })}
+                          className="w-full border-3 border-[#1D3557] rounded-md px-3 py-2"
+                        >
+                          <option value={0}>Kindergarten</option>
+                          <option value={1}>1st Grade</option>
+                          <option value={2}>2nd Grade</option>
+                          <option value={3}>3rd Grade</option>
+                          <option value={4}>4th Grade</option>
+                          <option value={5}>5th Grade</option>
+                        </select>
+                      </div>
+
+                      {newChildCreds && (
+                        <div className="p-3 rounded-xl border-2 border-emerald-400 bg-emerald-50" data-testid="parent-child-creds-card">
+                          <p className="text-sm font-bold text-emerald-800 mb-2">Save these credentials for {newChildCreds.name}</p>
+                          <div className="space-y-1 text-sm font-mono text-gray-800">
+                            <div><span className="text-gray-500">Username:</span> {newChildCreds.username}</div>
+                            <div><span className="text-gray-500">Password:</span> {newChildCreds.password}</div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(`Username: ${newChildCreds.username}\nPassword: ${newChildCreds.password}`);
+                              toast.success('Copied to clipboard');
+                            }}
+                            className="mt-2 text-xs font-bold text-emerald-700 hover:underline"
+                          >
+                            Copy to clipboard
+                          </button>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={handleCreateChildNoEmail}
+                        className="btn-primary w-full py-3 bg-emerald-500 hover:bg-emerald-600"
+                        data-testid="parent-create-child-submit-btn"
+                      >
+                        Create Child Account
+                      </button>
+                    </TabsContent>
+                  </Tabs>
                 </DialogContent>
               </Dialog>
             </div>
