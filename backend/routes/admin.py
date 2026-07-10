@@ -75,23 +75,30 @@ async def get_users(request: Request):
     all_subs = await db.subscriptions.find({
         "payment_status": "completed",
         "is_active": True,
-    }, {"_id": 0, "parent_emails": 1, "end_date": 1, "plan_type": 1, "duration": 1, "granted_by_admin": 1}).to_list(1000)
+    }, {"_id": 0, "parent_emails": 1, "child_user_ids": 1, "end_date": 1, "plan_type": 1, "duration": 1, "granted_by_admin": 1}).to_list(1000)
     
-    # Build email -> subscription lookup (active vs expired)
-    sub_map = {}
+    # Build lookup maps for both parent_emails (adult accounts) and
+    # child_user_ids (used for email-less children granted a subscription).
+    sub_map = {}         # email -> sub summary
+    sub_map_child = {}   # user_id -> sub summary (email-less children only)
+
+    def _record(target_map, key, sub, is_active):
+        existing = target_map.get(key)
+        if not existing or (is_active and existing["subscription_status"] != "active"):
+            target_map[key] = {
+                "subscription_status": "active" if is_active else "expired",
+                "end_date": sub["end_date"],
+                "plan_type": sub.get("plan_type", ""),
+                "duration": sub.get("duration", ""),
+                "granted_by_admin": sub.get("granted_by_admin", False),
+            }
+
     for sub in all_subs:
-        for email in sub.get("parent_emails", []):
-            is_active = sub["end_date"] > now
-            # Prefer active over expired
-            existing = sub_map.get(email)
-            if not existing or (is_active and existing["subscription_status"] != "active"):
-                sub_map[email] = {
-                    "subscription_status": "active" if is_active else "expired",
-                    "end_date": sub["end_date"],
-                    "plan_type": sub.get("plan_type", ""),
-                    "duration": sub.get("duration", ""),
-                    "granted_by_admin": sub.get("granted_by_admin", False)
-                }
+        is_active = sub["end_date"] > now
+        for email in sub.get("parent_emails", []) or []:
+            _record(sub_map, email, sub, is_active)
+        for uid in sub.get("child_user_ids", []) or []:
+            _record(sub_map_child, uid, sub, is_active)
     
     # Add school_name and subscription_status to each user
     for user in users:
@@ -101,10 +108,11 @@ async def get_users(request: Request):
         # (children created without email have `email: None`). Guard with `or ""`
         # so `.lower()` never crashes and we simply treat them as email-less.
         email = (user.get("email") or "").lower()
-        if email in sub_map:
-            user["subscription_status"] = sub_map[email]["subscription_status"]
-            user["subscription_end_date"] = sub_map[email]["end_date"]
-            user["subscription_granted_by_admin"] = sub_map[email].get("granted_by_admin", False)
+        matched = sub_map.get(email) if email else sub_map_child.get(user.get("user_id"))
+        if matched:
+            user["subscription_status"] = matched["subscription_status"]
+            user["subscription_end_date"] = matched["end_date"]
+            user["subscription_granted_by_admin"] = matched.get("granted_by_admin", False)
         else:
             user["subscription_status"] = "inactive"
     
@@ -290,9 +298,12 @@ async def update_user_subscription(user_id: str, request: Request):
         raise HTTPException(status_code=404, detail="User not found")
     
     email = (user.get("email") or "").lower()
-    if not email:
-        raise HTTPException(status_code=400, detail="User has no email")
-    
+    # Legacy behaviour: subscriptions are keyed by parent email. Children
+    # created without email are keyed by their `user_id` so admin can still
+    # activate a subscription for them.
+    sub_query_key = "parent_emails" if email else "child_user_ids"
+    sub_query_val = email if email else user_id
+
     if status == "active":
         if not duration or duration not in ADMIN_SUB_DURATION_MAP:
             raise HTTPException(status_code=400, detail="Valid duration required: 1_day, 1_week, 1_month")
@@ -303,7 +314,7 @@ async def update_user_subscription(user_id: str, request: Request):
         
         # Check if user already has an active admin-granted subscription
         existing = await db.subscriptions.find_one({
-            "parent_emails": email,
+            sub_query_key: sub_query_val,
             "granted_by_admin": True,
             "is_active": True
         })
@@ -329,7 +340,7 @@ async def update_user_subscription(user_id: str, request: Request):
                 "plan_type": "admin_granted",
                 "duration": duration,
                 "duration_label": dur["label"],
-                "num_parents": 1,
+                "num_parents": 1 if email else 0,
                 "num_children": 5,
                 "amount": 0,
                 "razorpay_order_id": None,
@@ -338,8 +349,10 @@ async def update_user_subscription(user_id: str, request: Request):
                 "subscriber_name": user.get("name", ""),
                 "subscriber_email": email,
                 "subscriber_phone": "",
-                "parent_emails": [email],
-                "child_user_ids": [],
+                "parent_emails": [email] if email else [],
+                # For email-less children we key by user_id so the login-time
+                # subscription check (which supports both keys) still works.
+                "child_user_ids": [user_id] if not email else [],
                 "start_date": now.isoformat(),
                 "end_date": end_date.isoformat(),
                 "is_active": True,
@@ -352,7 +365,7 @@ async def update_user_subscription(user_id: str, request: Request):
     elif status == "inactive":
         # Deactivate all admin-granted subscriptions for this user
         result = await db.subscriptions.update_many(
-            {"parent_emails": email, "granted_by_admin": True},
+            {sub_query_key: sub_query_val, "granted_by_admin": True},
             {"$set": {"is_active": False}}
         )
         return {"message": "Subscription deactivated", "modified": result.modified_count}
