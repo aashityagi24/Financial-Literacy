@@ -97,7 +97,10 @@ async def get_users(request: Request):
     for user in users:
         school_id = user.get("school_id")
         user["school_name"] = school_map.get(school_id) if school_id else None
-        email = user.get("email", "").lower()
+        # `user.get("email", "")` returns None if the field is stored as null
+        # (children created without email have `email: None`). Guard with `or ""`
+        # so `.lower()` never crashes and we simply treat them as email-less.
+        email = (user.get("email") or "").lower()
         if email in sub_map:
             user["subscription_status"] = sub_map[email]["subscription_status"]
             user["subscription_end_date"] = sub_map[email]["end_date"]
@@ -286,7 +289,7 @@ async def update_user_subscription(user_id: str, request: Request):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    email = user.get("email", "").lower()
+    email = (user.get("email") or "").lower()
     if not email:
         raise HTTPException(status_code=400, detail="User has no email")
     
