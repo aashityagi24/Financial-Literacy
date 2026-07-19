@@ -167,10 +167,13 @@ export default function PricingSection() {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
             });
-            toast.success('Payment successful! You can now sign in with Google.');
+            toast.success('Payment successful! Setting up your account…');
             setShowCheckout(false);
             setCheckoutForm({ name: '', email: '', phone: '' });
-            navigate('/login');
+            // Send the user to the auto-sign-in screen — it will fetch the
+            // post-payment context and route them to signup, attach-password,
+            // or login-existing depending on their account state.
+            navigate(`/complete-signup?order_id=${response.razorpay_order_id}`);
           } catch (err) {
             toast.error('Payment verification failed. Please contact support.');
           }

@@ -45,6 +45,7 @@ import AdminTeacherRepository from "@/pages/AdminTeacherRepository";
 import GlossaryPage from "@/pages/GlossaryPage";
 import MyJobsPage from "@/pages/MyJobsPage";
 import AuthPage from "@/pages/AuthPage";
+import CompleteSignupPage from "@/pages/CompleteSignupPage";
 import ContentProtection from "@/components/ContentProtection";
 import ActivityScoresPage from "@/pages/ActivityScoresPage";
 import TeacherActivityAnalytics from "@/pages/TeacherActivityAnalytics";
@@ -208,6 +209,7 @@ function AppRouter() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<AuthPage />} />
       <Route path="/signup" element={<AuthPage />} />
+      <Route path="/complete-signup" element={<CompleteSignupPage />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       {/* Fallback: Handle if Google OAuth callback hits frontend without /api prefix */}
       <Route path="/auth/google/callback" element={<AuthCallback />} />

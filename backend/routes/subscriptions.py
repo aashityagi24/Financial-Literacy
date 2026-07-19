@@ -370,6 +370,47 @@ async def verify_payment(payment: VerifyPaymentRequest):
     }
 
 
+@router.get("/post-payment-context")
+async def post_payment_context(order_id: str):
+    """Returns the info the frontend needs to render the post-payment
+    account-setup screen (auto-sign-in flow).
+
+    Given a Razorpay `order_id`, returns:
+      - email, name, phone (from the subscription record — user typed at checkout)
+      - account_status:
+          * 'new'                    — no user with this email → collect name/password to signup
+          * 'exists_no_password'     — user exists (e.g. Google OAuth only) → collect password to attach
+          * 'exists_with_password'   — user already has a password → just collect password to log in
+
+    Called by the new `/complete-signup` frontend route right after Razorpay's
+    verify-payment succeeds, so we can auto-sign-in the payer instead of dumping
+    them at the generic login screen.
+    """
+    db = get_db()
+    sub = await db.subscriptions.find_one(
+        {"razorpay_order_id": order_id, "payment_status": "completed"},
+        {"_id": 0, "subscriber_email": 1, "subscriber_name": 1, "subscriber_phone": 1},
+    )
+    if not sub:
+        raise HTTPException(status_code=404, detail="No completed payment found for this order")
+
+    email = (sub.get("subscriber_email") or "").lower()
+    user = await db.users.find_one({"email": email}, {"_id": 0, "password_hash": 1})
+    if user is None:
+        account_status = "new"
+    elif user.get("password_hash"):
+        account_status = "exists_with_password"
+    else:
+        account_status = "exists_no_password"
+
+    return {
+        "email": email,
+        "name": sub.get("subscriber_name", ""),
+        "phone": sub.get("subscriber_phone", ""),
+        "account_status": account_status,
+    }
+
+
 @router.get("/check-access/{email}")
 async def check_subscription_access(email: str):
     """Check if an email has an active subscription (used during login)"""
