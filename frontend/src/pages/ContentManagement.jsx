@@ -390,6 +390,7 @@ export default function ContentManagement({ user }) {
   const [allContent, setAllContent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [gradeFilter, setGradeFilter] = useState('all'); // Grade filter: 'all' or 0-5
+  const [publishFilter, setPublishFilter] = useState('all'); // 'all' | 'live' | 'draft'
   
   // Repository view states
   const [repoSearchQuery, setRepoSearchQuery] = useState('');
@@ -601,7 +602,11 @@ export default function ContentManagement({ user }) {
     return { ...applyOverrides(topic), subtopics: mergedSubtopics };
   });
   
-  const filteredContent = allContent.filter(matchesGradeFilter);
+  const filteredContent = allContent.filter(matchesGradeFilter).filter(c => {
+    if (publishFilter === 'all') return true;
+    if (publishFilter === 'live') return c.is_published === true;
+    return c.is_published !== true; // 'draft' — anything not explicitly live
+  });
   
   // File upload handlers (using chunked upload for production compatibility)
   const uploadThumbnail = async (file, setForm) => {
@@ -1166,10 +1171,10 @@ export default function ContentManagement({ user }) {
           </div>
           
           {/* Grade Filter */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <span className="text-sm text-gray-600 font-medium">Filter by Grade:</span>
             <Select value={gradeFilter} onValueChange={setGradeFilter}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-40" data-testid="grade-filter-select">
                 <SelectValue placeholder="All Grades" />
               </SelectTrigger>
               <SelectContent>
@@ -1182,6 +1187,23 @@ export default function ContentManagement({ user }) {
             </Select>
             {gradeFilter !== 'all' && (
               <Button variant="ghost" size="sm" onClick={() => setGradeFilter('all')}>
+                <X className="w-4 h-4 mr-1" /> Clear
+              </Button>
+            )}
+
+            <span className="text-sm text-gray-600 font-medium ml-4">Status:</span>
+            <Select value={publishFilter} onValueChange={setPublishFilter}>
+              <SelectTrigger className="w-36" data-testid="publish-filter-select">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All content</SelectItem>
+                <SelectItem value="live">Live only</SelectItem>
+                <SelectItem value="draft">Draft only</SelectItem>
+              </SelectContent>
+            </Select>
+            {publishFilter !== 'all' && (
+              <Button variant="ghost" size="sm" onClick={() => setPublishFilter('all')}>
                 <X className="w-4 h-4 mr-1" /> Clear
               </Button>
             )}

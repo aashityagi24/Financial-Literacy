@@ -114,6 +114,28 @@ export default function AdminSubscriptionManagement({ user }) {
     }
   };
 
+  const deleteSubscription = async (subId) => {
+    if (!confirm('Permanently delete this subscription record? This cannot be undone.')) return;
+    try {
+      await axios.delete(`${API}/subscriptions/admin/${subId}`);
+      setSubscriptions(prev => prev.filter(s => s.subscription_id !== subId));
+      toast.success('Subscription deleted');
+    } catch {
+      toast.error('Failed to delete subscription');
+    }
+  };
+
+  const deleteAllInactive = async () => {
+    if (!confirm('Delete every inactive / expired / non-completed subscription record? Active paid subscriptions will be untouched.')) return;
+    try {
+      const res = await axios.delete(`${API}/subscriptions/admin/inactive/bulk`);
+      toast.success(res.data.message);
+      fetchData();
+    } catch {
+      toast.error('Failed to delete inactive subscriptions');
+    }
+  };
+
   const savePlanConfig = async (planType, duration) => {
     setSavingConfig(true);
     try {
@@ -339,6 +361,15 @@ export default function AdminSubscriptionManagement({ user }) {
                 <Button variant="outline" size="sm" onClick={fetchData}>
                   <RefreshCw className="w-4 h-4" />
                 </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={deleteAllInactive}
+                  data-testid="delete-all-inactive-subs-btn"
+                  className="whitespace-nowrap"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" /> Delete Inactive
+                </Button>
               </div>
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-1.5">
@@ -442,14 +473,32 @@ export default function AdminSubscriptionManagement({ user }) {
                           })()}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <button
-                            data-testid={`view-linked-users-${sub.subscription_id}`}
-                            onClick={() => setLinkedUsersDialog({ open: true, sub })}
-                            className="p-1.5 rounded-md hover:bg-[#1D3557]/10 text-[#3D5A80] transition-colors"
-                            title="View linked users"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              data-testid={`view-linked-users-${sub.subscription_id}`}
+                              onClick={() => setLinkedUsersDialog({ open: true, sub })}
+                              className="p-1.5 rounded-md hover:bg-[#1D3557]/10 text-[#3D5A80] transition-colors"
+                              title="View linked users"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              data-testid={`toggle-sub-${sub.subscription_id}`}
+                              onClick={() => toggleSubscription(sub.subscription_id)}
+                              className="p-1.5 rounded-md hover:bg-amber-50 text-amber-600 transition-colors"
+                              title={sub.is_active ? 'Deactivate' : 'Activate'}
+                            >
+                              {sub.is_active ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                            </button>
+                            <button
+                              data-testid={`delete-sub-${sub.subscription_id}`}
+                              onClick={() => deleteSubscription(sub.subscription_id)}
+                              className="p-1.5 rounded-md hover:bg-red-50 text-red-500 transition-colors"
+                              title="Delete permanently"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

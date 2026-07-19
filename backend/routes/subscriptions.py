@@ -705,3 +705,46 @@ async def admin_toggle_subscription(request: Request, subscription_id: str):
     )
     
     return {"message": f"Subscription {'activated' if new_status else 'deactivated'}", "is_active": new_status}
+
+
+@router.delete("/admin/{subscription_id}")
+async def admin_delete_subscription(request: Request, subscription_id: str):
+    """Admin: Permanently delete a single subscription record.
+    Intended for cleaning up expired / cancelled / test subscriptions."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    res = await db.subscriptions.delete_one({"subscription_id": subscription_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    return {"message": "Subscription deleted"}
+
+
+@router.delete("/admin/inactive/bulk")
+async def admin_delete_inactive_subscriptions(request: Request):
+    """Admin: Bulk-delete every inactive subscription. A subscription is
+    considered inactive if:
+      - `is_active` is False, OR
+      - `payment_status` != "completed" (pending/failed/refunded), OR
+      - `end_date` has passed (expired).
+    Test/live subscriptions that are still active and not expired are kept.
+    """
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    query = {
+        "$or": [
+            {"is_active": False},
+            {"payment_status": {"$ne": "completed"}},
+            {"end_date": {"$lt": now_iso}},
+        ]
+    }
+    res = await db.subscriptions.delete_many(query)
+    return {"message": f"Deleted {res.deleted_count} inactive subscription(s)", "deleted": res.deleted_count}
