@@ -7,6 +7,8 @@ import uuid
 import random
 import string
 
+from services.content_query import child_visible_content_query
+
 _db = None
 
 def init_db(database):
@@ -458,11 +460,9 @@ async def get_student_insights(classroom_id: str, student_id: str, request: Requ
         "completed": True
 })
     grade = student.get("grade", 3) or 0
-    total_lessons = await db.content_items.count_documents({
-        "is_published": True,
-        "min_grade": {"$lte": grade},
-        "max_grade": {"$gte": grade},
-    })
+    total_lessons = await db.content_items.count_documents(
+        child_visible_content_query(grade)
+    )
 
     # Topic / subtopic completion
     grade_topics = await db.content_topics.find(

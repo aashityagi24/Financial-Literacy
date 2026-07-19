@@ -5,6 +5,8 @@ from typing import Optional, List
 from datetime import datetime, timezone, timedelta
 import uuid
 
+from services.content_query import child_visible_content_query
+
 _db = None
 
 def init_db(database):
@@ -98,12 +100,11 @@ async def parent_dashboard(request: Request):
                 "user_id": child["user_id"],
                 "completed": True
             })
-            # Total lessons available for this grade (content items active for this grade range)
-            total_lessons = await db.content_items.count_documents({
-                "is_published": True,
-                "min_grade": {"$lte": grade},
-                "max_grade": {"$gte": grade},
-            })
+            # Total lessons available for this grade (content items active for
+            # this grade range and actually visible to the child).
+            total_lessons = await db.content_items.count_documents(
+                child_visible_content_query(grade)
+            )
 
             # Pending chores awaiting parent approval
             pending_chores = await db.quest_completions.count_documents({
@@ -457,11 +458,9 @@ async def get_child_insights(child_id: str, request: Request):
         "user_id": child_id,
         "completed": True
     })
-    total_lessons = await db.content_items.count_documents({
-        "is_published": True,
-        "min_grade": {"$lte": grade},
-        "max_grade": {"$gte": grade},
-    })
+    total_lessons = await db.content_items.count_documents(
+        child_visible_content_query(grade)
+    )
 
     # Subtopics & topics completed (a subtopic is "completed" when all its content items
     # have a completed progress row for this child; a topic is completed when all its
