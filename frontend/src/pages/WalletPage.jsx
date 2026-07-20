@@ -88,7 +88,9 @@ export default function WalletPage({ user }) {
       savings: { 
         icon: '🐷', 
         label: 'Piggy Bank',
-        color: 'from-[#06D6A0] to-[#42E8B3]',
+        // Bright pink → deeper pink. Matches the piggy, still fun for kids, and
+        // white text passes WCAG AA contrast on both stops.
+        color: 'from-[#EC4899] to-[#DB2777]',
         description: 'Save up for something special!',
         action: { label: 'My Goals', path: '/savings-goals' }
       },

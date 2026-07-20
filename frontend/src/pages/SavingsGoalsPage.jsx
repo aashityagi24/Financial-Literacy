@@ -237,7 +237,7 @@ export default function SavingsGoalsPage({ user }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#E0FBFC] to-[#98C1D9]">
       {/* Header */}
-      <header className="bg-[#06D6A0] border-b-3 border-[#1D3557]">
+      <header className="bg-[#EC4899] border-b-3 border-[#1D3557]">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
