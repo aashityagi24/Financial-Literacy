@@ -94,6 +94,25 @@ export default function PricingSection() {
     setShowCheckout(true);
   };
 
+  // Allow other components (e.g. the LandingPage hero "Start for ₹49" CTA) to
+  // deep-link straight into the 1-day Buy Now flow. Dispatch:
+  //   window.dispatchEvent(new CustomEvent('coinquest:buy-now', { detail: { duration: '1_day' } }))
+  useEffect(() => {
+    const openBuyNow = (evt) => {
+      const duration = evt?.detail?.duration || '1_day';
+      const planType = evt?.detail?.plan_type || 'single_parent';
+      setSelectedPlanType(planType);
+      setSelectedDuration(duration);
+      setNumChildren(1);
+      // Scroll pricing into view so the user has context for the checkout dialog
+      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+      // Small delay so the scroll settles before the modal opens
+      setTimeout(() => setShowCheckout(true), 400);
+    };
+    window.addEventListener('coinquest:buy-now', openBuyNow);
+    return () => window.removeEventListener('coinquest:buy-now', openBuyNow);
+  }, []);
+
   const captureLeadQuietly = (form, leadStatus) => {
     if (form.email?.trim()) {
       axios.post(`${API}/subscriptions/capture-lead`, {

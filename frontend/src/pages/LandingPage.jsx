@@ -180,11 +180,11 @@ export default function LandingPage() {
               <div className="flex flex-wrap gap-4">
                 <button
                   data-testid="get-started-btn"
-                  onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                  onClick={() => window.dispatchEvent(new CustomEvent('coinquest:buy-now', { detail: { duration: '1_day' } }))}
                   className="btn-primary px-8 py-4 text-xl flex items-center gap-2"
                 >
                   <Sparkles className="w-6 h-6" />
-                  View Plans
+                  Start for ₹49
                 </button>
                 <a
                   href="#features"
