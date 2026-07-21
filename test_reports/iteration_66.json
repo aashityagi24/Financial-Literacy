@@ -1,0 +1,24 @@
+{
+  "summary": "Frontend-only verification of Parent Dashboard 'Link Child' nudge fix (defer nudge behind welcome tour via user.has_completed_onboarding). All 4 review bullets PASS.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Link a Child dialog", "issues": ["Radix accessibility warnings: DialogContent missing DialogTitle/aria-describedby (non-blocking a11y warning)"]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Consider adding DialogTitle (or VisuallyHidden wrapper) to Link a Child and any other DialogContent to fix Radix a11y warnings."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "nudge_parent@test.com / testpass123 (no children, onboarding done); wallet_demo_parent@test.com / testpass123 (has Demo Kid)",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "TEST 1 (nudge_parent): parent-dashboard renders, 'Welcome to CoinQuest' text NOT present, 0 open dialogs, link-child-nudge visible with text 'Step 1: Link your child...', parent-link-child-btn has 'nudge-highlight' class. TEST 2: clicking Link Child opens 'Link a Child' dialog and link-child-nudge is absent. TEST 3 (wallet_demo_parent): link-child-nudge absent, button class does NOT contain 'nudge-highlight'. Note: welcome tour DOES appear for wallet_demo_parent (their has_completed_onboarding is false) — expected, not a regression, and the nudge correctly stays hidden regardless. No page console errors on parent-dashboard (only Radix a11y warnings).",
+  "rca of the issue": "Fix in ParentDashboard.jsx (nudge conditional gated on user?.has_completed_onboarding) works as intended. Verified nudge_parent's has_completed_onboarding=true suppresses the welcome tour and shows the nudge without overlap."
+}

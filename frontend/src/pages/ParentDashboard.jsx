@@ -854,7 +854,7 @@ export default function ParentDashboard({ user }) {
               >
                 <DialogTrigger asChild>
                   <button
-                    className={`btn-primary px-4 py-2 flex items-center gap-2 ${(!loading && (dashboard?.children?.length || 0) === 0 && !showLinkChild) ? 'nudge-highlight' : ''}`}
+                    className={`btn-primary px-4 py-2 flex items-center gap-2 ${(!loading && (dashboard?.children?.length || 0) === 0 && !showLinkChild && user?.has_completed_onboarding) ? 'nudge-highlight' : ''}`}
                     data-testid="parent-link-child-btn"
                   >
                     <Plus className="w-4 h-4" /> Link Child
@@ -1007,8 +1007,8 @@ export default function ParentDashboard({ user }) {
                   </Tabs>
                 </DialogContent>
               </Dialog>
-              {/* First-time walkthrough nudge — only when no child is linked */}
-              {!loading && (dashboard?.children?.length || 0) === 0 && !showLinkChild && (
+              {/* First-time walkthrough nudge — only when no child is linked and welcome tour is done */}
+              {!loading && (dashboard?.children?.length || 0) === 0 && !showLinkChild && user?.has_completed_onboarding && (
                 <div
                   className="absolute right-0 top-full mt-3 z-40 flex flex-col items-end pointer-events-none"
                   data-testid="link-child-nudge"
