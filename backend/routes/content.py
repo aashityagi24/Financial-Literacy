@@ -110,6 +110,25 @@ async def is_user_in_test_mode(user, db):
     return await is_user_on_one_day_trial(user, db)
 
 
+async def get_classroom_done_content_ids(user_id: str, db) -> set:
+    """Return content_ids a child inherits as 'done' because a teacher marked
+    them Done in Class for any classroom the child belongs to. Used to unlock
+    the next item without forcing the child to re-do work the class already
+    did together."""
+    if not user_id:
+        return set()
+    memberships = await db.classroom_students.find(
+        {"student_id": user_id}, {"classroom_id": 1, "_id": 0}
+    ).to_list(50)
+    classroom_ids = [m["classroom_id"] for m in memberships]
+    if not classroom_ids:
+        return set()
+    docs = await db.classroom_content_completions.find(
+        {"classroom_id": {"$in": classroom_ids}}, {"content_id": 1, "_id": 0}
+    ).to_list(5000)
+    return {d["content_id"] for d in docs}
+
+
 async def is_user_on_one_day_trial(user, db):
     """True iff the user has an active completed 1-day subscription (their own,
     their parent's, or one that lists their user_id). Distinct from
@@ -171,12 +190,17 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
     parent_topics = await find_with_grade_order(db.content_topics, query, filter_grade, limit=100)
     
     completed_content_ids = set()
+    classroom_done_ids = set()
     test_mode = False
     if is_child and user_id:
         completed_docs = await db.user_content_progress.find(
             {"user_id": user_id, "completed": True}, {"content_id": 1}
         ).to_list(1000)
         completed_content_ids = {doc["content_id"] for doc in completed_docs}
+        # Treat teacher-marked "done in class" items as completed for unlock
+        # gating so the child isn't forced to redo work done together in class.
+        classroom_done_ids = await get_classroom_done_content_ids(user_id, db)
+        completed_content_ids |= classroom_done_ids
         test_mode = await is_user_in_test_mode(user, db)
     
     previous_topic_completed = True
@@ -476,6 +500,9 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
         ).to_list(1000)
         completed_content_ids = {doc["content_id"] for doc in completed_docs}
         coins_earned_map = {doc["content_id"]: doc.get("coins_earned") for doc in completed_docs}
+        # Inherit teacher-marked "done in class" completions for unlock gating.
+        classroom_done_ids = await get_classroom_done_content_ids(user_id, db)
+        completed_content_ids |= classroom_done_ids
         test_mode = await is_user_in_test_mode(user, db)
         
         # Progressive unlock for subtopics
@@ -518,6 +545,13 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
         previous_content_completed = True  # First item always unlocked
         for content in content_items:
             content["is_completed"] = content["content_id"] in completed_content_ids
+            # Flag items completed only via classroom (not by the child directly)
+            # so the UI can show a "Done in class" badge without requiring
+            # personal completion.
+            content["done_in_class"] = (
+                content["content_id"] in classroom_done_ids
+                and content["content_id"] not in {d["content_id"] for d in completed_docs}
+            )
             content["is_unlocked"] = True if test_mode else previous_content_completed
             content["coins_earned"] = coins_earned_map.get(content["content_id"])
             is_mandatory = content.get("is_mandatory", True)

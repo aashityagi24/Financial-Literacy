@@ -42,6 +42,10 @@ export default function TopicPage({ user }) {
   const [downloadStatus, setDownloadStatus] = useState({ is_limited: false, remaining: null, limit: null });
   const [downloading, setDownloading] = useState(false);
   const [showTrialLimitDialog, setShowTrialLimitDialog] = useState(false);
+  // Content IDs the teacher has marked "Done in Class" across their classrooms.
+  // Fetched once for teachers; children see the same info via `content.done_in_class`
+  // returned by the topic API.
+  const [teacherDoneIds, setTeacherDoneIds] = useState(new Set());
   const trialBannerShownRef = useRef(false);
   const showAnimations = useFirstVisitAnimation(`topic-${topicId}`);
   const lastCompletedRef = useRef(null);
@@ -49,6 +53,36 @@ export default function TopicPage({ user }) {
   useEffect(() => {
     fetchTopicData();
   }, [topicId, gradeFilter]);
+
+  // Load the teacher's Done-in-Class list once — TopicPage re-renders will use it
+  // to show the checkbox state next to each content row.
+  useEffect(() => {
+    if (user?.role !== 'teacher') return;
+    (async () => {
+      try {
+        const res = await axios.get(`${API}/teacher/done-in-class`);
+        setTeacherDoneIds(new Set(res.data?.content_ids || []));
+      } catch (e) {
+        /* silent — teacher without classrooms yet */
+      }
+    })();
+  }, [user?.role]);
+
+  const toggleDoneInClass = async (contentId, e) => {
+    e?.stopPropagation();
+    try {
+      const res = await axios.post(`${API}/teacher/content/${contentId}/toggle-done-in-class`);
+      setTeacherDoneIds(prev => {
+        const next = new Set(prev);
+        if (res.data.done_in_class) next.add(contentId);
+        else next.delete(contentId);
+        return next;
+      });
+      toast.success(res.data.message);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Could not update Done-in-Class');
+    }
+  };
   
   // Fetch the user's current trial-download status whenever a downloadable
   // item is opened, so we can show "X downloads left" and disable when zero.
@@ -622,6 +656,32 @@ export default function TopicPage({ user }) {
                           {/* Child's Activity Score */}
                           {user?.role === 'child' && content.content_type === 'activity' && (
                             <ChildActivityScore contentId={content.content_id} user={user} />
+                          )}
+                          {/* Done in class badge for children */}
+                          {user?.role === 'child' && content.done_in_class && (
+                            <span
+                              className="text-xs px-2 py-1 rounded-full font-semibold bg-amber-100 text-amber-700 flex items-center gap-1"
+                              title="Your teacher covered this in class — feel free to skip or revisit."
+                              data-testid={`done-in-class-badge-${content.content_id}`}
+                            >
+                              <Check className="w-3 h-3" /> Done in class
+                            </span>
+                          )}
+                          {/* Teacher's Done-in-Class toggle */}
+                          {user?.role === 'teacher' && (
+                            <button
+                              onClick={(e) => toggleDoneInClass(content.content_id, e)}
+                              className={`text-xs px-2 py-1 rounded-full font-semibold flex items-center gap-1 transition-colors ${
+                                teacherDoneIds.has(content.content_id)
+                                  ? 'bg-[#06D6A0] text-white hover:bg-[#048A6A]'
+                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                              title="Mark this as done in class — students in your classrooms will inherit it as completed."
+                              data-testid={`teacher-done-toggle-${content.content_id}`}
+                            >
+                              <Check className="w-3 h-3" />
+                              {teacherDoneIds.has(content.content_id) ? 'Done in class' : 'Mark done in class'}
+                            </button>
                           )}
                           {/* Teacher Analytics Link */}
                           {user?.role === 'teacher' && content.content_type === 'activity' && (

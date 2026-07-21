@@ -195,8 +195,137 @@ async def delete_classroom(classroom_id: str, request: Request):
     
     await db.classroom_students.delete_many({"classroom_id": classroom_id})
     await db.classroom_challenges.delete_many({"classroom_id": classroom_id})
+    await db.classroom_content_completions.delete_many({"classroom_id": classroom_id})
     
     return {"message": "Classroom deleted"}
+
+
+async def _get_teacher_classroom_or_404(classroom_id: str, teacher_id: str, db):
+    """Ensure the classroom exists AND belongs to the requesting teacher."""
+    classroom = await db.classrooms.find_one({
+        "classroom_id": classroom_id,
+        "teacher_id": teacher_id,
+    })
+    if not classroom:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+    return classroom
+
+
+@router.get("/classrooms/{classroom_id}/done-in-class")
+async def get_done_in_class(classroom_id: str, request: Request):
+    """Return the set of content_ids the teacher has marked 'Done in Class'
+    for this classroom. Used by the teacher UI to render tick marks and by
+    downstream progress logic to unlock those items for every student in the
+    classroom."""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    await _get_teacher_classroom_or_404(classroom_id, teacher["user_id"], db)
+
+    docs = await db.classroom_content_completions.find(
+        {"classroom_id": classroom_id}, {"content_id": 1, "_id": 0}
+    ).to_list(5000)
+    return {"content_ids": [d["content_id"] for d in docs]}
+
+
+@router.post("/classrooms/{classroom_id}/content/{content_id}/toggle-done-in-class")
+async def toggle_done_in_class(classroom_id: str, content_id: str, request: Request):
+    """Toggle a content item's 'Done in Class' state for this classroom.
+    Marking Done unlocks that content item for every student in the classroom
+    without forcing them to redo it individually.
+    """
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    await _get_teacher_classroom_or_404(classroom_id, teacher["user_id"], db)
+
+    # Confirm the content item actually exists so we can't mark ghosts done
+    content = await db.content_items.find_one({"content_id": content_id}, {"content_id": 1, "title": 1})
+    if not content:
+        raise HTTPException(status_code=404, detail="Content not found")
+
+    existing = await db.classroom_content_completions.find_one({
+        "classroom_id": classroom_id, "content_id": content_id,
+    })
+    if existing:
+        await db.classroom_content_completions.delete_one({"_id": existing["_id"]})
+        return {"done_in_class": False, "message": "Unmarked"}
+
+    await db.classroom_content_completions.insert_one({
+        "classroom_content_completion_id": f"ccc_{uuid.uuid4().hex[:12]}",
+        "classroom_id": classroom_id,
+        "content_id": content_id,
+        "content_title": content.get("title", ""),
+        "marked_by_teacher_id": teacher["user_id"],
+        "marked_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"done_in_class": True, "message": "Marked done in class"}
+
+
+@router.get("/done-in-class")
+async def get_done_in_class_for_teacher(request: Request):
+    """Union of content_ids marked Done in Class across ALL classrooms owned
+    by the requesting teacher. Powers the tick indicators on the TopicPage.
+    """
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    classrooms = await db.classrooms.find(
+        {"teacher_id": teacher["user_id"]}, {"classroom_id": 1, "_id": 0}
+    ).to_list(100)
+    classroom_ids = [c["classroom_id"] for c in classrooms]
+    if not classroom_ids:
+        return {"content_ids": []}
+    docs = await db.classroom_content_completions.find(
+        {"classroom_id": {"$in": classroom_ids}}, {"content_id": 1, "_id": 0}
+    ).to_list(5000)
+    # Dedup because the same item can be marked across two classrooms
+    return {"content_ids": list({d["content_id"] for d in docs})}
+
+
+@router.post("/content/{content_id}/toggle-done-in-class")
+async def toggle_done_in_class_all_classrooms(content_id: str, request: Request):
+    """Toggle a content item Done-in-Class for **every** classroom this teacher
+    owns. Convenient default when a teacher runs an exercise for all their
+    classes together. If the item is already marked in any classroom, this
+    unmarks everywhere; otherwise it marks everywhere.
+    """
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+
+    classrooms = await db.classrooms.find(
+        {"teacher_id": teacher["user_id"]}, {"classroom_id": 1, "_id": 0}
+    ).to_list(100)
+    classroom_ids = [c["classroom_id"] for c in classrooms]
+    if not classroom_ids:
+        raise HTTPException(status_code=400, detail="You don't own any classrooms yet")
+
+    content = await db.content_items.find_one({"content_id": content_id}, {"content_id": 1, "title": 1})
+    if not content:
+        raise HTTPException(status_code=404, detail="Content not found")
+
+    any_marked = await db.classroom_content_completions.find_one({
+        "classroom_id": {"$in": classroom_ids}, "content_id": content_id,
+    })
+    if any_marked:
+        res = await db.classroom_content_completions.delete_many({
+            "classroom_id": {"$in": classroom_ids}, "content_id": content_id,
+        })
+        return {"done_in_class": False, "message": f"Unmarked across {res.deleted_count} classroom(s)"}
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    docs = [{
+        "classroom_content_completion_id": f"ccc_{uuid.uuid4().hex[:12]}",
+        "classroom_id": cid,
+        "content_id": content_id,
+        "content_title": content.get("title", ""),
+        "marked_by_teacher_id": teacher["user_id"],
+        "marked_at": now_iso,
+    } for cid in classroom_ids]
+    await db.classroom_content_completions.insert_many(docs)
+    return {"done_in_class": True, "message": f"Marked across {len(docs)} classroom(s)"}
+
 
 @router.post("/classrooms/{classroom_id}/reward")
 async def reward_students(classroom_id: str, reward: ClassroomReward, request: Request):
