@@ -22,6 +22,7 @@ export default function LandingPage() {
   const [walkthroughVideos, setWalkthroughVideos] = useState(null);
   const [selectedVideoTab, setSelectedVideoTab] = useState('child');
   const [selectedGrade, setSelectedGrade] = useState(null);
+  const [heroImageUrl, setHeroImageUrl] = useState(null);
 
   useEffect(() => {
     // Check if redirected due to session expiry
@@ -56,6 +57,11 @@ export default function LandingPage() {
       }
     };
     fetchWalkthroughVideos();
+
+    // Load the admin-configured hero image; falls back silently to default
+    axios.get(`${API}/admin/settings/landing-hero-image`)
+      .then(res => setHeroImageUrl(res.data?.image_url || null))
+      .catch(() => {});
   }, [searchParams]);
   
   // Use custom Google OAuth
@@ -199,7 +205,7 @@ export default function LandingPage() {
             <div className="relative animate-bounce-in stagger-2">
               <div className="card-playful p-8 bg-white">
                 <img 
-                  src="https://images.pexels.com/photos/1602726/pexels-photo-1602726.jpeg" 
+                  src={heroImageUrl ? (heroImageUrl.startsWith('http') ? heroImageUrl : getAssetUrl(heroImageUrl)) : "https://images.pexels.com/photos/1602726/pexels-photo-1602726.jpeg"}
                   alt="Piggy Bank" 
                   className="w-full h-64 object-cover rounded-2xl border-3 border-[#1D3557]"
                 />

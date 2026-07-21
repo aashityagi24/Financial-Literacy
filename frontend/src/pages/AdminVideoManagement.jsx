@@ -5,11 +5,12 @@ import { uploadFile } from '@/utils/chunkedUpload';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
-  ChevronLeft, Video, Upload, Trash2, Save, Play, Loader2, FileVideo, Eye, Users, GraduationCap, Baby
+  ChevronLeft, Video, Upload, Trash2, Save, Play, Loader2, FileVideo, Eye, Users, GraduationCap, Baby, Image as ImageIcon
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import HeroImageCropper from '@/components/HeroImageCropper';
 
 const USER_TYPES = [
   { id: 'child', label: 'Child', icon: Baby, color: '#06D6A0' },
@@ -28,6 +29,12 @@ export default function AdminVideoManagement({ user }) {
   const [saving, setSaving] = useState(false);
   const [uploadingType, setUploadingType] = useState(null);
   const [uploadProgress, setUploadProgress] = useState({});
+  // Landing hero image state
+  const [heroImageUrl, setHeroImageUrl] = useState(null);
+  const [heroPendingFile, setHeroPendingFile] = useState(null); // file selected → crop dialog
+  const [heroCropOpen, setHeroCropOpen] = useState(false);
+  const [heroUploading, setHeroUploading] = useState(false);
+  const heroFileInputRef = useRef(null);
   const [activeTab, setActiveTab] = useState('child');
   
   const [videoData, setVideoData] = useState({
@@ -56,7 +63,57 @@ export default function AdminVideoManagement({ user }) {
       return;
     }
     fetchVideoData();
+    fetchHeroImage();
   }, [user, navigate]);
+
+  const fetchHeroImage = async () => {
+    try {
+      const res = await axios.get(`${API}/admin/settings/landing-hero-image`);
+      setHeroImageUrl(res.data?.image_url || null);
+    } catch (e) { /* ignore — no image yet */ }
+  };
+
+  const onHeroFilePicked = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
+      toast.error('Please pick a JPEG, PNG, or WebP image');
+      return;
+    }
+    setHeroPendingFile(file);
+    setHeroCropOpen(true);
+    // reset so the same file can be re-picked later
+    e.target.value = '';
+  };
+
+  const handleHeroCropDone = async (blob) => {
+    setHeroCropOpen(false);
+    setHeroUploading(true);
+    try {
+      const fileForUpload = new File([blob], `hero-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
+      const uploaded = await uploadFile(fileForUpload, 'image', '/upload/image');
+      const url = uploaded.url;
+      await axios.put(`${API}/admin/settings/landing-hero-image`, { image_url: url });
+      setHeroImageUrl(url);
+      toast.success('Landing hero image updated');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to upload hero image');
+    } finally {
+      setHeroUploading(false);
+      setHeroPendingFile(null);
+    }
+  };
+
+  const removeHeroImage = async () => {
+    if (!confirm('Reset the landing hero image to the built-in default?')) return;
+    try {
+      await axios.delete(`${API}/admin/settings/landing-hero-image`);
+      setHeroImageUrl(null);
+      toast.success('Landing hero image reset');
+    } catch {
+      toast.error('Failed to reset image');
+    }
+  };
 
   const fetchVideoData = async () => {
     try {
@@ -201,6 +258,77 @@ export default function AdminVideoManagement({ user }) {
             <p className="text-[#3D5A80]">Manage landing page videos for each user type</p>
           </div>
         </div>
+
+        {/* Landing Page Hero Image */}
+        <div className="card-playful bg-white p-6 mb-6" data-testid="admin-hero-image-section">
+          <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
+            <div>
+              <h2 className="text-xl font-bold text-[#1D3557] flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+                <ImageIcon className="w-5 h-5" /> Landing Hero Image
+              </h2>
+              <p className="text-sm text-[#3D5A80] mt-1">
+                Shown on the first fold of the home page next to the "Start for ₹49" button.
+              </p>
+              <p className="text-xs text-[#3D5A80] mt-1">
+                Recommended: <strong>1200 × 720 px</strong> (5:3 ratio). If your image is a different
+                shape, you can crop it before uploading.
+              </p>
+            </div>
+            <input
+              ref={heroFileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={onHeroFilePicked}
+              className="hidden"
+              data-testid="hero-image-file-input"
+            />
+            <div className="flex gap-2">
+              <Button
+                onClick={() => heroFileInputRef.current?.click()}
+                disabled={heroUploading}
+                data-testid="hero-image-upload-btn"
+                className="bg-[#1D3557] hover:bg-[#1D3557]/90"
+              >
+                {heroUploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
+                {heroImageUrl ? 'Replace Image' : 'Upload Image'}
+              </Button>
+              {heroImageUrl && (
+                <Button
+                  variant="outline"
+                  onClick={removeHeroImage}
+                  className="border-2 border-red-500 text-red-500 hover:bg-red-50"
+                  data-testid="hero-image-reset-btn"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" /> Reset
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="rounded-2xl border-2 border-dashed border-[#3D5A80]/40 overflow-hidden bg-[#F1FAEE] aspect-[5/3] max-w-lg">
+            {heroImageUrl ? (
+              <img
+                src={heroImageUrl.startsWith('http') ? heroImageUrl : getAssetUrl(heroImageUrl)}
+                alt="Current landing hero"
+                className="w-full h-full object-cover"
+                data-testid="hero-image-preview"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-[#3D5A80]">
+                <div className="text-center">
+                  <ImageIcon className="w-10 h-10 mx-auto mb-2" />
+                  <p className="text-sm">No custom image — using the built-in default</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <HeroImageCropper
+          file={heroPendingFile}
+          open={heroCropOpen}
+          onCancel={() => { setHeroCropOpen(false); setHeroPendingFile(null); }}
+          onCropDone={handleHeroCropDone}
+        />
 
         {/* Global Section Settings */}
         <div className="card-playful bg-white p-6 mb-6">
