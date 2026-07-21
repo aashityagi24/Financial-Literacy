@@ -1,150 +1,444 @@
-<analysis>**original_problem_statement:** 
-The user wants to create a gamified financial literacy learning application, CoinQuest, for children (K-5).
-**PRODUCT REQUIREMENTS:**
-- Tiered per-child pricing for subscriptions and SaaS Subscriptions (Razorpay) gating application access.
-- Hierarchical content system (Topics -> Subtopics -> Content) with progressive unlocks.
-- Grade-specific content curation (ordering, moving, and localized titles/descriptions per grade).
-- Multi-admin real-time syncing for Content Management.
-- Test user bypasses and 1-day trial anti-piracy mechanisms (download limits).
-- Email-less child accounts (username & password only).
-- Hard application lockout for expired subscriptions.
+<analysis>original_problem_statement:
+CoinQuest is a gamified K–5 financial-literacy platform with child, parent, teacher, admin, school, content-management, wallets, subscription/payments, and learning-progress features.
 
-**User's preferred language**: English (INSTRUCT next agent to respond in English)
+Recent user requests covered:
+- Grade-aware content management and learning counts.
+- Money Words/Word Bank branding, content, grade overrides, publishing controls, and categories.
+- Parent/teacher/child dashboard and navigation improvements.
+- Email-less child accounts, linking children, and subscription activation.
+- Razorpay payment completion onboarding.
+- Landing-page CTA, analytics tags, visual card colors.
+- Teacher “Done in class” learning completion.
+- Admin content/subscription controls.
+- **Current request:** replace a landing-page image with a user-provided replacement image.
 
-**what currently exists?** 
-A comprehensive gamified K-5 financial literacy platform featuring robust admin capabilities, tiered SaaS pricing, progressive learning unlocks, and grade-specific content delivery. In this session, the agent implemented massive grade-specific content flexibility (allowing content to have different titles, descriptions, placements, and orders depending on the active grade filter), expanded multi-admin real-time sync across all admin pages, created a robust 1-day trial limit mechanism with UI banners, implemented email-less child accounts via admin/parent/school-CSV, and added a hard lockout screen for users with expired subscriptions.
+PRODUCT REQUIREMENTS:
+- Tiered per-child subscription pricing and Razorpay-gated access.
+- Hierarchical Topics → Subtopics → Content with progressive unlocks.
+- Grade-specific content organization, ordering, moving, titles, and content visibility.
+- Multi-admin content synchronization.
+- Email-less child accounts and parent linkage.
+- Separate play money vs real parent-managed money.
+- Grade-aware child learning and parent/teacher insight counts.
+- Admin-managed publishing state for content and Money Words.
+- Teacher can mark content “Done in class” to unlock child progress.
+- Landing page supports subscriptions, GA/GTM tracking, and branding.
+- User-facing Word Bank is branded “Money Words.”
 
-**Last working item**: 
-- **Last item agent was working:** Hard Subscription Lockout. The user requested that anyone with an expired subscription should be completely blocked from navigating the platform. The agent created  and injected it into  () to display an un-closable payment/upgrade popup for inactive accounts.
-- **Status:** COMPLETED
-- **Agent Testing Done:** Y
-- **Which testing method agent to use?** curl, backend python script, and Frontend Screenshot
-- **User Testing Done:** N
+**User's preferred language**: English. Next agent must respond in English only.
 
-**All Pending/In progress Issue list**:  
-  Issue 1: Failed to initiate payment error on the live site (Production Deployment Issue) - P1
-  Issue 2: Badge images missing and require manual re-upload (Data loss from older fork) - P2
+**what currently exists?**
+- Large React + FastAPI + MongoDB app with established role-specific dashboards and APIs.
+- Admin content management supports grade-scoped moves via , per-grade ordering, live/draft filtering, inline Live/Draft and Mandatory/Optional controls.
+- User-facing Money Words supports grade-aware overrides, grade-specific category/letter filters, term-only search, and live/draft visibility.
+- Email-less child creation/linking and admin-managed subscriptions are functional.
+- Payment completion has a new “complete signup” flow for post-Razorpay password setup and automatic login.
+- Teacher “Done in class” logic is implemented and affects child unlock gating.
+- Landing page has GTM and GA4 tags configured in .
+- The prior temporary “Landing Hero Image manager with crop” feature was rolled back completely.
+- **Current image replacement request has not been implemented yet.** The agent only invoked asset discovery and received a long list of available artifacts.
 
-  Issues Detail:
-  - Issue 1: 
-     - Attempted fixes: Added enhanced error logging to provide specific error messages on the frontend in previous sessions.
-     - Next debug checklist: Advise the user to redeploy their application on their live domain to ensure the latest code and environment variables are active. Look at production logs if the issue persists.
-     - Why fix this issue and what will be achieved with the fix? Critical for application monetization.
-     - Status: BLOCKED (Awaiting user redeployment)
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Backend
-     - Blocked on other issue: None
-  - Issue 2: 
-     - Attempted fixes: None possible via code.
-     - Next debug checklist: Remind the user that the admin must manually re-upload the images for each badge via the Badge Management section of the admin panel.
-     - Why fix this issue and what will be achieved with the fix? Restores visual gamification appeal.
-     - Status: BLOCKED (Requires manual user action)
-     - Is recurring issue? Y
-     - Should Test frontend/backend/both after fix? NA
-     - Blocked on other issue: None
+**Last working item**:
+- Last item agent was working: Locate the exact user-provided replacement image asset and update the landing-page image (likely the hero image currently shown as “Piggy Bank”) to use it.
+- Status: IN PROGRESS
+- Agent Testing Done: N
+- Which testing method agent to use? Frontend screenshot tool after edit; asset selection/inspection first.
+- User Testing Done: N
+
+**All Pending/In progress Issue list**:
+
+Issue 1: Replace requested landing-page image with user-provided image — P0
+- Status: IN PROGRESS
+- Is recurring issue? N
+- Should Test frontend/backend/both after fix? Frontend
+- Blocked on other issue: Asset identification/selection from  output.
+
+Issue 2: Outstanding lint error in  — P1
+- Status: TESTING PENDING
+- Is recurring issue? N
+- Should Test frontend/backend/both after fix? Frontend
+- Blocked on other issue: None.
+
+Issue 3: Potential Razorpay live payment/deployment issue — P1
+- Status: BLOCKED / USER VERIFICATION PENDING
+- Is recurring issue? N
+- Should Test frontend/backend/both after fix? Backend/integration
+- Blocked on other issue: Production redeploy/live payment verification by user.
+
+Issue 4: Badge images missing from historical data — P2
+- Status: BLOCKED
+- Is recurring issue? Y
+- Should Test frontend/backend/both after fix? NA
+- Blocked on other issue: Admin must manually upload replacement images.
+
+Issues Detail:
+- Issue 1:
+  - Attempted fixes: None.  was called and found 227 artifacts, but the relevant exact uploaded image has not been selected or inserted into code.
+  - Next debug checklist:
+    1. Inspect the newest/most likely image artifacts from the  listing; use dimensions/thumbnails/names to identify the supplied replacement image.
+    2. Read current  image markup near lines ~205–220.
+    3. Replace only the targeted image  with the selected customer asset URL.
+    4. Use a single screenshot smoke test of the landing page and verify image cropping/layout.
+  - Why fix this issue and what will be achieved with the fix? Makes the landing hero/card visual match the user’s intended replacement asset.
+  - Status: IN PROGRESS
+  - Is recurring issue? N
+  - Should Test frontend/backend/both after fix? Frontend
+  - Blocked on other issue: Need exact image selection from returned asset list.
+
+- Issue 2:
+  - Attempted fixes:  reported a  error at  after the hook-order fix.
+  - Next debug checklist:
+    1. Open  near line 259.
+    2. Escape apostrophe (, , or JSX string) in visible text.
+    3. Re-run JavaScript lint.
+  - Why fix this issue and what will be achieved with the fix? Restores clean lint and avoids leaving a known code-quality failure.
+  - Status: TESTING PENDING
+  - Is recurring issue? N
+  - Should Test frontend/backend/both after fix? Frontend
+  - Blocked on other issue: None.
+
+- Issue 3:
+  - Attempted fixes: Earlier error logging was added; payment onboarding flow was developed.
+  - Next debug checklist: User must redeploy and perform live Razorpay checkout. Confirm successful order creation, verify payment, redirect to , password setup, and dashboard session.
+  - Why fix this issue and what will be achieved with the fix? Enables actual monetization/paid access.
+  - Status: BLOCKED / USER VERIFICATION PENDING
+  - Is recurring issue? N
+  - Should Test frontend/backend/both after fix? Both
+  - Blocked on other issue: Live environment/redeployment.
+
+- Issue 4:
+  - Attempted fixes: None possible in code.
+  - Next debug checklist: Use Badge Management to re-upload the affected images.
+  - Why fix this issue and what will be achieved with the fix? Restores missing gamification visuals.
+  - Status: BLOCKED
+  - Is recurring issue? Y
+  - Should Test frontend/backend/both after fix? NA
+  - Blocked on other issue: Manual admin action.
 
 **In progress Task List**:
-None.
+Task 1: Landing-page requested image replacement — P0
+- Where to resume:
+  - Review the  result from the latest interaction (Message 979) and identify the two latest user-uploaded image artifacts.
+  - Current target likely in , around lines 205–220, which previously rendered an image with alt text “Piggy Bank.”
+- What will be achieved with this? Replaces the existing landing image with the exact asset supplied by the user.
+- Status: IN PROGRESS
+- Should Test frontend/backend/both after fix? Frontend
+- Blocked on something: Exact artifact selection.
+
+Task 2: Resolve PricingSection lint error — P1
+- Where to resume: , around line 259.
+- What will be achieved with this? Clean JavaScript lint after the hook placement fix.
+- Status: TESTING PENDING
+- Should Test frontend/backend/both after fix? Frontend
+- Blocked on something: None.
 
 **Upcoming and Future Tasks**
-    Upcoming Tasks:
-    - P1: Implement Streak Bonuses & Leaderboards.
-    - P1: Implement Safety Guardrails: Add spending limits and parent approval for large transactions.
+Upcoming Tasks:
+- P1: Verify Razorpay live payment after user redeploys, including new Scenario C password setup / auto-sign-in flow.
+- P1: Optional audit of hardcoded Back links on child pages, if user approves, to prevent other navigation loops.
+- P1: Optional classroom picker for “Done in class” if a teacher owns multiple classrooms; current toggle applies to all teacher classrooms.
+- P1: Optional dashboard parent/teacher learning breakdown for mandatory vs optional lessons.
+- P1: Potential Money Words draft-only filter, if requested.
 
-    Future Tasks:
-    - P2: Teacher/Parent Collaboration Portal.
-    - P2: Collaborative & Seasonal Events.
-    - P2: Tutorial System for new users.
+Future Tasks:
+- P1: Streak bonuses and leaderboards.
+- P1: Safety guardrails: spending limits and parent approval for larger transactions.
+- P2: Teacher/parent collaboration portal.
+- P2: Collaborative and seasonal events.
+- P2: Tutorial system for new users.
+- P2: Refactor large files:
+  - 
+  - 
+  - 
+  - 
 
 **Completed work in this session**
-- Grade-Specific Content Reordering: Implemented  so content ordering changes persist only for the filtered grade. (DONE)
-- Multi-Admin Background Sync: Extracted polling logic into  and applied to all Admin management pages. (DONE)
-- Grade-Specific Moves: Added  so a subtopic/content item can sit under a different parent topic depending on the grade viewing it. (DONE)
-- Per-Grade Titles/Descriptions/Thumbnails: Added  overrides allowing admins to reskin the same topic/subtopic differently per grade. (DONE)
-- Test Users & 1-Day Trial Auto-Unlock: Added Admin UI to create Test Users who bypass progressive unlocking. Auto-applied this bypass for users on the 1-day subscription plan. (DONE)
-- Anti-Piracy Download Throttle: Limited 1-day trial users to 5 downloads maximum. (DONE)
-- 1-Day Trial Persistent Banner: Added  globally and a limit-reached modal () when hitting the throttle. (DONE)
-- Email-less Child Accounts: Built  for auto-generating/handling username+password logins without emails. Rolled out to Admin UI, Parent UI, and School Bulk CSV upload. (DONE)
-- Hard Subscription Lockout: Implemented an un-closable  screen for users whose subscriptions have lapsed. (DONE)
+- Grade-scoped admin content count correction and Know-It Sheet content type support.
+- Inline Mandatory/Optional content toggle in Lesson Plan.
+- User-facing “Word Bank” renamed to “Money Words.”
+- Dashboard footer for child, parent, and teacher dashboards.
+- Money Words search restricted to term/name only.
+- Grade-specific Money Words overrides for all fields except term.
+- Money Words Live/Draft status and user visibility enforcement.
+- Grade-aware Money Words category and alphabet filters.
+- Budgeting category removed; existing budgeting records migrated to Spending; Sharing category added.
+- Drag/drop duplicate content rows fixed by effective-parent re-sync.
+- Saving Goals / My Money back-navigation loop fixed.
+- Admin user list crash caused by email-less children fixed.
+- Subscription activation for email-less children implemented.
+- Parent child linking consolidated into tabs and existing-child username/password linking added.
+- Parent and teacher learning progress total counts made grade/content-visibility-aware.
+- Admin content Live/Draft filter and deletion of inactive subscriptions added.
+- Scenario C post-payment onboarding/auto-sign-in flow added.
+- GTM container and GA4 tag installed in .
+- Piggy Bank card/tile gradient changed from low-contrast green to pink.
+- Teacher “Done in class” completion toggle and child unlock inheritance implemented.
+- Hero CTA changed to “Start for ₹49,” triggering the ₹49 one-day plan checkout flow.
+- Temporary hero image manager/crop feature was fully reverted at user request.
+
+Recently completed:
+- Teacher Done-in-Class content completion/unlock inheritance.
+- “Start for ₹49” landing CTA checkout trigger.
+- Reverted landing hero image manager and removed crop dependency.
+- Fixed conditional React hook invocation in  (but lint remains unresolved).
 
 **Earlier issues found/mentioned but not fixed**
-None.
+- Issue 1: Razorpay live deployment payment initiation/verification needs production confirmation.
+  - Debug checklist: Redeploy; test checkout and payment signature; validate frontend redirect and signup flow.
+  - Why to solve: Core paid-subscription conversion.
+  - Should Test frontend/backend/both after fix: Both.
+  - Is recurring issue? N.
+- Issue 2: Historical badge image data loss.
+  - Debug checklist: Re-upload from admin Badge Management.
+  - Why to solve: Restores badge visuals.
+  - Should Test frontend/backend/both after fix: NA.
+  - Is recurring issue? Y.
+- Issue 3:  currently has a known lint error for unescaped apostrophe.
+  - Debug checklist: Fix line ~259 and run lint.
+  - Why to solve: Leave codebase lint-clean.
+  - Should Test frontend/backend/both after fix: Frontend.
+  - Is recurring issue? N.
 
 **Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: Badge images are missing permanently due to a data loss event in an older fork.
-  - Recurrence count: 2
-  - Status: BLOCKED
+- Issue recurrence in previous fork: Missing badge images due to older data loss.
+- Recurrence count: 4+
+- Status: BLOCKED, requires manual re-upload.
+- Note: Do not attempt code restoration without original image assets.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- React Context/State, custom hooks ().
-- **Grade Overrides Pipeline**: Complex MongoDB aggregation pipelines heavily utilized in  to merge global fields (, , ) with grade-specific overrides (, , ).
+- Frontend: React, React Router, Axios, Tailwind, Shadcn-style UI, Lucide icons, Sonner.
+- Backend: FastAPI async route handlers, Motor/MongoDB.
+- Database: MongoDB.
+- Auth: session token stored in cookie/local storage; email/password, username/password for child accounts, Google OAuth present.
+- Content hierarchy: parent topics, subtopics, content items.
+- Grade-scoped content placement:  overrides root parent IDs.
+- Grade-scoped sorting: .
+- Content unlock logic: mandatory content completion gates next content/subtopics, with optional content not blocking.
+- Classroom completion:  data is treated as completed for students’ progressive unlocks.
+- Money Words grade overrides:  selectively replaces global fields.
+- Subscription state: Razorpay subscription records can map via parent emails or  for email-less children.
+- Analytics: Google Tag Manager GTM-M38LDVBT and GA4 G-4XWZZ3ET5R embedded globally in CRA .
 
 **key DB schema**
-  - , : Expanded to include dictionary fields , , and  (e.g., ).
-  - : Added  boolean flag.
+- 
+  - ,  (may be ), , , , , , , .
+- 
+  - ,  (subtopic parent), , , , , .
+- 
+  - , , , , , , , , , , .
+- 
+  - , , , , coins/progress fields.
+- 
+  - , , grade/class metadata.
+- 
+  - , .
+- 
+  - likely records classroom/content completion state used by child gating (verify exact field names in  and ).
+- 
+  - , , global , , , , , , .
+- 
+  - , , , , , , , , Razorpay order/payment metadata.
+- 
+  - Used for walkthrough settings; landing hero image setting was removed/cleaned during rollback.
 
 **changes in tech stack**
-None.
+-  was temporarily installed for the rolled-back image manager feature, then uninstalled.
+- No active MongoDB-to-PostgreSQL migration or other database stack change.
 
 **All files of reference**
--  (Massively expanded with grade-specific  and  pipelines and download throttling).
--  (Drag & drop logic refactored for grade-specific UI saving).
--  (Created to unify child username logic).
--  (Created for easy multi-admin polling).
--  (Injected trial banner and subscription gate).
--  (Created).
+Created/updated in the broader session:
+- 
+  - Current target for requested image replacement.
+  - Contains hero CTA “Start for ₹49,” default promotional image, landing walkthrough behavior.
+- 
+  - Receives custom  event and triggers configured ₹49 plan.
+  - Has unresolved unescaped-apostrophe lint error around line 259.
+- 
+  - Contains GTM head/body snippets and GA4 gtag snippet.
+- 
+  - New post-payment account completion/password setup page.
+- 
+  - Imports/routes .
+- 
+  - Post-payment context endpoint and subscription management.
+- 
+  - Post-payment signup/session handling updates.
+- 
+  - Grade-aware effective-parent counts, Know-It Sheet, live/draft filter, inline toggles, drag/drop re-sync.
+- 
+  - Know-It Sheet rendering and Done-in-Class UI/badge.
+- 
+  - Grade-aware content APIs/unlock gating with classroom completion injection.
+- 
+  - Teacher done-in-class endpoints and grade-aware learning totals.
+- 
+  - Existing-child linking and grade-aware learning totals.
+- 
+  - Created to share grade/visibility-aware lesson count logic across parent/teacher routes.
+- 
+  - Grade override accordion, term-only behavior support, publish controls, category changes.
+- 
+  - Grade override resolution, user published-only rules, term-only search, filtered categories/letters.
+- 
+  - Money Words label, footer, piggy-bank tile pink gradient.
+- 
+  - “Money Words” branding and grade passed to API.
+- 
+  - New reusable contact/rights footer for role dashboards.
+- 
+  - Footer, unified Link Child dialog with email/no-email/existing-account support.
+- 
+  - Footer.
+- 
+  - Back button behavior corrected; header gradient changed to match pink.
+- 
+  - Piggy Bank card gradient pink.
+- 
+  - Delete single subscription and delete inactive subscriptions UI.
+- 
+  - Email-safe admin listing/subscription management.
+  - Note: temporary hero image endpoints were removed.
+- 
+  - Deleted during rollback; it should not exist now.
+- 
+  - Temporary Hero Image UI was reverted.
 
-**Areas that need refactoring**:
--  and  are extremely large and should be broken down into smaller sub-components for maintainability.
+Important other files:
+- 
+- 
+- 
+- 
+- 
+
+**Areas that need refactoring**
+-  remains very large and complex (~2400 lines) with multiple responsibilities: repository, hierarchy, filters, dialogs, drag/reorder, uploads.
+-  (~2700 lines),  (~2200 lines),  (~1800 lines), and  are oversized.
+- Landing page contains hardcoded image URL(s); if image changes become frequent, a dedicated static branding config may be preferable. Do not reintroduce the reverted admin image manager unless user requests it again.
+- Jar visual configuration is duplicated between , , and .
 
 **key api endpoints**
--  (Returns trial info and downloads remaining).
--  (Now merges grade-specific text, order, and parent overrides).
--  (Modified to support no-email username/password generation).
+Content:
+- 
+- 
+- 
+- 
+- 
+- Existing mandatory toggle endpoint used by ContentManagement (inspect current route if needed).
+- Teacher completion endpoints added in ; inspect decorator names before further work.
+
+Money Words:
+- 
+- 
+- 
+- 
+- Admin create/update/delete/toggle publish glossary routes.
+
+Parent/teacher:
+- 
+- New username/password existing-child link endpoint in  (confirm exact path).
+- 
+- 
+- Teacher student insights endpoint in .
+
+Subscriptions:
+- 
+- 
+- Post-payment context endpoint added in  (confirm exact path; likely )
+- 
+- 
+- 
+- 
+- 
 
 **Critical Info for New Agent**
-- **Grade Fallback Mechanism**: If a user is viewing content under a specific grade filter, the backend merges overrides (, ). If the override is absent, it seamlessly falls back to the default /.
-- **Test Users / Trial Bypass**: Users with  or  automatically bypass progressive unlock rules and see all content unlocked immediately.
-- **Trial Download Throttle**: 1-day subscription users are limited to 5 downloads maximum (enforced in  download endpoint).
-- **Subscription Lockout**:  blocks all routing on the frontend if  is inactive. Ensure  from shadcn is suppressed.
+- The current request is only to replace a displayed landing image. Do not revive the previously rejected “admin landing hero image manager/crop” feature.
+- The user supplied two images in Message 977; asset discovery was called in Message 978 but no image was selected. Use the available asset list to identify the intended new image. The prior user wording indicates “replace this image … with this other image”; likely first image is current/target reference and second is the desired replacement.
+- The direct asset URL must be selected using tools, not invented.
+-  current target image is near lines ~205–220 and originally had alt text “Piggy Bank.”
+- There is a known lint failure in ; correct it before declaring the overall app clean.
+- The prior agent made several implementation changes without the mandated  call for Razorpay/auth changes. Future changes involving Razorpay/auth must invoke the integration playbook first.
+- The post-payment flow was only locally/preview API tested with seeded test subscriptions; it has not been confirmed with an actual Razorpay transaction.
+- The temporary landing hero image settings document was cleaned from MongoDB at rollback. Avoid relying on it.
+- Do not use rollback/git reset to restore the rejected feature; it was manually removed already.
+- User has consistently asked for direct changes and accepts concise execution summaries.
 
 **documents and test reports created in this job**
-  - /app/memory/PRD.md (Updated)
-  - /app/memory/test_credentials.md (Updated)
+Supporting docs:
+- 
+- 
 
-**Last 10 User Messages and any pending HUMAN messages** 
-10. (Feature) Can the topic sub topic content name change from grade to grade? (Fixed - Added grade_titles overrides)
-9. (Feature) In admin allow an option to create a test user... Also anyone buying the 1 day plan is also treates as a test user (Fixed - Added bypass logic)
-8. (Feature) is there a way for you to add a restriction where in if someone with 1 day subscription is downloading more than 5 pieces of content we put a freeze (Fixed - Throttled API limit)
-7. (Feature) on the frontend for these 1 day trial users when they expire the download limit show a popup... add a permanent small header that shows upgrade (Fixed - Trial banner & modal added)
-6. (Feature) all children may not have email id - so there should be an option of creating a unique user id and passwords (Agent asked clarifying questions via ask_human)
-5. (Human Response) Yes, parent creates username/password... Yes add optional columns to CSV and auto-generate (Fixed - Implemented email-less provisioning)
-4. (Feature) If someones subscription has ended - are they still able to login and use the platform? This should not be happening... persistent popup to resubscribe (Fixed - Hard UI lockout implemented)
-*Status: COMPLETED. No pending items.*
+Test reports:
+-  — earlier test report covering Know-It Sheet and grade-scoped content behavior.
+- Additional backend tests were executed through shell/Python one-offs but not consistently persisted as formal reports.
+-  exists, but it concerns walkthrough video functionality; hero image manager tests were rolled back.
+
+**Last 10 User Messages and any pending HUMAN messages**
+Latest to oldest:
+1. **Pending / IN PROGRESS:** “replace this image on the landing page with this other image” with two images. Asset lookup started; replacement not yet made.
+2. **Completed:** “throwing this error” — PricingSection hooks violation fixed, but an unescaped-apostrophe lint error remains.
+3. **Completed:** Requested rollback of landing Hero Image manager with crop — feature was manually removed and dependency uninstalled.
+4. **Completed then rolled back:** Asked for admin video-walkthrough section ability to manage/crop first-fold landing image.
+5. **Completed:** Hero CTA changed from “View Plans” to “Start for ₹49,” invoking ₹49 plan buy flow.
+6. **Completed:** Requested Done-in-Class teacher tick to unlock content for all tagged children and make it optional for them.
+7. **Completed:** Reported dashboard Piggy Bank area remained green — Dashboard tile changed to pink.
+8. **Completed:** Reported white text was unreadable on green Piggy Bank card — Wallet/Savings colors changed to pink.
+9. **Completed:** Asked to install GA4 Google tag; gtag snippet was added, alongside existing GTM.
+10. **Completed:** Asked to install GTM; GTM head/body snippets were added.
+
+Pending human messages:
+- None besides the active image replacement request.
 
 **Project Health Check:**
-- Broken: Razorpay on the production URL (User redeployment blocked).
-- Mocked: None.
+Broken:
+-  lint is currently failing due to a JSX unescaped apostrophe.
+- Live Razorpay end-to-end verification remains pending after deployment.
+- Badge images are historically missing until manually re-uploaded.
+
+Mocked:
+- No intentional product mocks identified.
+- Post-payment onboarding was tested against seeded subscription data, not a real Razorpay transaction.
+- Landing image replacement has not yet been applied.
 
 **3rd Party Integrations**
-- OpenAI GPT-4o — uses Emergent LLM Key 
-- Razorpay (Payments) — requires User API Key
-- Google OAuth — requires User Client ID/Secret
+- Razorpay Payments — requires user/provisioned Razorpay credentials; no Emergent LLM key. Current application integrates checkout script and backend signature verification.
+- Google OAuth — requires Google Client ID/Secret; no Emergent LLM key.
+- Google Tag Manager — GTM-M38LDVBT; configured without user input at runtime; no Emergent LLM key.
+- Google Analytics 4 — G-4XWZZ3ET5R; configured in static frontend HTML; no Emergent LLM key.
+- OpenAI GPT-4o — uses Emergent LLM Key (per prior handoff; verify actual integration before changes).
+- No active  integration; it was uninstalled during rollback.
 
 **Testing status**
-- Testing agent used after significant changes: NO (Main agent handled complex scenarios via curl, aggregation checks, and screenshots effectively).
-- Troubleshoot agent used after agent stuck in loop: NO
-- Test files created: None
-- Known regressions: Missing badge images from old fork.
+- Testing agent used after significant changes: YES, earlier at ; not for the latest image task.
+- Troubleshoot agent used after agent stuck in loop: NO.
+- Test files created:
+  - 
+- Known regressions:
+  - JavaScript lint failure at .
+  - Need to verify payment signup flow on live Razorpay.
+  - Image replacement pending.
+- Recent verification completed:
+  - Email-less child admin listing and subscriptions via curl/shell.
+  - Existing child linking success/duplicate/wrong-password behavior.
+  - Grade-scoped lesson totals.
+  - Teacher Done-in-Class endpoint toggle.
+  - Admin inactive subscription deletion.
+  - GA/GTM served HTML presence.
+- Latest task has no final screenshot/test yet.
 
 **Credentials to test flow:**
+Read  before using auth flows. Known examples:
 - Admin:  / 
-- Teacher:  / 
-- Child (Grade 1):  / 
-- Test User (All Unlocked):  / 
+- Child Grade 1:  / 
+- Other seeded credentials are documented in the file.
+- Avoid modifying credentials unless necessary; update  if any are created or changed.
 
 **What agent forgot to execute**
-The agent executed every user request perfectly, including complex edge cases for the trial mechanisms and grade aggregations. Nothing was forgotten.</analysis>
+- Did not complete the image replacement user asked for; only asset discovery occurred.
+- Did not resolve/re-run lint for the known  unescaped apostrophe error.
+- Did not use  before implementing Razorpay/auth-related post-payment changes, despite system requirements.
+- Did not use the testing agent for the larger Scenario C payment onboarding feature; only local/manual checks with seeded subscriptions were performed.
+- The initial requirement to ask for user approval before each implementation was inconsistently followed in prior work, though the current image-replacement intent is sufficiently clear.
+</analysis>
