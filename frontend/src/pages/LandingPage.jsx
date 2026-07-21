@@ -197,26 +197,13 @@ export default function LandingPage() {
             </div>
             
             <div className="relative animate-bounce-in stagger-2">
-              <div className="card-playful p-8 bg-white">
+              <div className="card-playful p-4 bg-white">
                 <img 
-                  src="https://images.pexels.com/photos/1602726/pexels-photo-1602726.jpeg" 
-                  alt="Piggy Bank" 
-                  className="w-full h-64 object-cover rounded-2xl border-3 border-[#1D3557]"
+                  data-testid="hero-image"
+                  src="https://customer-assets-lxgj4vgw.emergentagent.net/job_0398c744-4209-4c10-8036-86989679bc23/artifacts/js5jy0cl_1.png" 
+                  alt="Child learning about money with CoinQuest" 
+                  className="w-full h-auto rounded-2xl border-3 border-[#1D3557]"
                 />
-                <div className="mt-6 grid grid-cols-3 gap-4">
-                  <div className="text-center p-3 bg-[#FFD23F]/20 rounded-xl border-2 border-[#1D3557]">
-                    <Star className="w-8 h-8 mx-auto text-[#FFD23F]" />
-                    <p className="text-sm font-bold text-[#1D3557] mt-1">Fun Quests</p>
-                  </div>
-                  <div className="text-center p-3 bg-[#06D6A0]/20 rounded-xl border-2 border-[#1D3557]">
-                    <TrendingUp className="w-8 h-8 mx-auto text-[#06D6A0]" />
-                    <p className="text-sm font-bold text-[#1D3557] mt-1">Grow Money</p>
-                  </div>
-                  <div className="text-center p-3 bg-[#EE6C4D]/20 rounded-xl border-2 border-[#1D3557]">
-                    <Trophy className="w-8 h-8 mx-auto text-[#EE6C4D]" />
-                    <p className="text-sm font-bold text-[#1D3557] mt-1">Win Badges</p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

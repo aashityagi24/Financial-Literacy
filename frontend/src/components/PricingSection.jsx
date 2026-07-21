@@ -256,7 +256,7 @@ export default function PricingSection() {
             Choose Your Plan
           </h2>
           <p className="text-base text-[#3D5A80] max-w-xl mx-auto">
-            Start your child's financial literacy journey today.
+            Start your child&apos;s financial literacy journey today.
           </p>
         </div>
 

@@ -933,6 +933,11 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Landing hero image replaced** (June 2026)
+  - Replaced the Piggy Bank pexels photo in the landing hero card with the user-uploaded photo of a child using the CoinQuest app on a tablet. Removed the 3 feature tiles (Fun Quests / Grow Money / Win Badges) below it per user request; now shows the full image un-cropped (`w-full h-auto`). `data-testid="hero-image"`.
+  - Also fixed the known unescaped-apostrophe lint error in `PricingSection.jsx` ("child&apos;s").
+  - Files: `/app/frontend/src/pages/LandingPage.jsx`, `/app/frontend/src/components/PricingSection.jsx`.
+
 - **Money Words: grade-aware category & letter filters** (June 28, 2026)
   - Category chips and A-Z letter buttons on the user Money Words page now show only what's actually available for the viewer's grade. For a Kindergarten child, categories like "Investing" or "Budgeting" (which don't have K words) no longer appear — same for empty letters.
   - Backend (`/app/backend/routes/glossary.py`): `GET /glossary/words` now computes `letters` and `categories` from a base query that respects `is_published != False` (for non-admins) + the child's grade (auto-picked) or `?grade=N` if supplied. Admin GET still returns all letters/categories including from draft words.
