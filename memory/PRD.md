@@ -933,7 +933,13 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
-- **Landing hero image replaced** (June 2026)
+- **Parent first-time "Link Child" walkthrough nudge** (June 2026)
+  - On the Parent Dashboard, when a parent has ZERO children linked, the "Link Child" button now glows with a pulsing highlight ring and an animated pointing cursor + a callout tooltip ("Step 1: Link your child") nudges them to click it.
+  - Only shows when: not loading, no children linked, dialog closed, AND the pre-existing welcome onboarding tour is finished (`user.has_completed_onboarding`), so the two don't overlap. Disappears automatically once a child is linked or the Link dialog is open.
+  - Files: `/app/frontend/src/pages/ParentDashboard.jsx` (nudge block, data-testid `link-child-nudge`), `/app/frontend/src/index.css` (`.nudge-highlight`, `.nudge-cursor`, `.nudge-callout` keyframes).
+  - Verified 100% by testing agent (iteration_65 + iteration_66).
+
+- **Landing hero image replaced + headline update** (June 2026)
   - Replaced the Piggy Bank pexels photo in the landing hero card with the user-uploaded photo of a child using the CoinQuest app on a tablet. Removed the 3 feature tiles (Fun Quests / Grow Money / Win Badges) below it per user request; now shows the full image un-cropped (`w-full h-auto`). `data-testid="hero-image"`.
   - Also fixed the known unescaped-apostrophe lint error in `PricingSection.jsx` ("child&apos;s").
   - Files: `/app/frontend/src/pages/LandingPage.jsx`, `/app/frontend/src/components/PricingSection.jsx`.
