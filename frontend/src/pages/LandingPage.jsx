@@ -202,7 +202,7 @@ export default function LandingPage() {
                   data-testid="hero-image"
                   src="https://customer-assets-lxgj4vgw.emergentagent.net/job_0398c744-4209-4c10-8036-86989679bc23/artifacts/js5jy0cl_1.png" 
                   alt="Child learning about money with CoinQuest" 
-                  className="w-full h-auto rounded-2xl border-3 border-[#1D3557]"
+                  className="w-full h-64 object-cover rounded-2xl border-3 border-[#1D3557]"
                 />
               </div>
             </div>
