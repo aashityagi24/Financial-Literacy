@@ -1,0 +1,35 @@
+{
+  "summary": "Frontend-only test of Parent Dashboard 'Link Child' first-time walkthrough nudge. All 5 requested behaviors verified successfully.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Parent Dashboard - onboarding overlap", "issues": ["The pre-existing 'Welcome to CoinQuest!' tour dialog opens simultaneously on first-time parent login and visually overlays the Link Child nudge callout. Both are correct individually, but stacking them makes the nudge harder to notice until the tour is closed. Consider deferring the Link Child nudge until the welcome tour is dismissed, or auto-closing the tour when there are zero children."]}
+    ],
+    "console_warnings": ["Radix DialogContent requires a DialogTitle warning (pre-existing, not related to nudge feature)"]
+  },
+  "test_results": {
+    "nudge_shown_for_parent_with_no_children": "PASS - [data-testid='link-child-nudge'] present and visible; text 'Step 1: Link your child' rendered; pointer/svg icon present",
+    "link_child_button_has_nudge_highlight_class": "PASS - button class contains 'nudge-highlight'",
+    "clicking_link_child_opens_dialog_and_hides_nudge": "PASS - Link a Child dialog opened with all 3 tabs (Existing Account, By Email, New (no email)); nudge removed from DOM while dialog open",
+    "nudge_absent_for_parent_with_child": "PASS - wallet_demo_parent@test.com (email variant worked; username-only returns 401) shows parent-dashboard with 1 child ('Demo Kid'); [data-testid='link-child-nudge'] absent; button class does NOT have 'nudge-highlight'",
+    "parent_dashboard_renders": "PASS - [data-testid='parent-dashboard'] present; no console errors related to the new feature"
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Login credential note for future testers: wallet_demo_parent authenticates via email 'wallet_demo_parent@test.com', not the bare username. Username-only login returned 401. Please update credential docs accordingly.",
+    "(Optional UX) Consider hiding the Link Child nudge while the 'Welcome to CoinQuest' onboarding tour is visible, or delay the tour until after the nudge is dismissed, to avoid visual stacking."
+  ],
+  "critical_code_review_comments": [
+    "Nudge condition '!loading && (dashboard?.children?.length||0)===0 && !showLinkChild' correctly handles all three states (loading, empty, dialog-open) - good defensive check.",
+    "Pre-existing accessibility issue (not from this feature): several DialogContent instances missing DialogTitle - Radix warns in console. Wrap titles in VisuallyHidden if intentionally hidden."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100%"},
+  "test_credentials": "nudge_parent@test.com / testpass123 (no children - nudge shows); wallet_demo_parent@test.com / testpass123 (has 'Demo Kid' - nudge absent). NOTE: bare username 'wallet_demo_parent' fails login with 401.",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Feature works end-to-end. Only note is that the pre-existing Welcome tour dialog opens simultaneously with the nudge for first-time users; test scripts must close it (button text 'Close' inside the [role=dialog]) before interacting with the Link Child button, otherwise clicks are intercepted."
+}

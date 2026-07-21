@@ -9,7 +9,7 @@ import {
   School, Megaphone, Store, LogOut, User, TrendingUp, TrendingDown,
   Sprout, LineChart, BookOpen, Award, CheckCircle, XCircle, History,
   Filter, ArrowLeft, ArrowRight, HandCoins, AlertTriangle, RefreshCw,
-  Briefcase, Heart, DollarSign, CreditCard, Banknote, IndianRupee
+  Briefcase, Heart, DollarSign, CreditCard, Banknote, IndianRupee, MousePointerClick
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -841,6 +841,7 @@ export default function ParentDashboard({ user }) {
             {/* Children Overview */}
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>My Children</h2>
+              <div className="relative">
               <Dialog
                 open={showLinkChild}
                 onOpenChange={(o) => {
@@ -852,7 +853,10 @@ export default function ParentDashboard({ user }) {
                 }}
               >
                 <DialogTrigger asChild>
-                  <button className="btn-primary px-4 py-2 flex items-center gap-2" data-testid="parent-link-child-btn">
+                  <button
+                    className={`btn-primary px-4 py-2 flex items-center gap-2 ${(!loading && (dashboard?.children?.length || 0) === 0 && !showLinkChild) ? 'nudge-highlight' : ''}`}
+                    data-testid="parent-link-child-btn"
+                  >
                     <Plus className="w-4 h-4" /> Link Child
                   </button>
                 </DialogTrigger>
@@ -1003,6 +1007,23 @@ export default function ParentDashboard({ user }) {
                   </Tabs>
                 </DialogContent>
               </Dialog>
+              {/* First-time walkthrough nudge — only when no child is linked */}
+              {!loading && (dashboard?.children?.length || 0) === 0 && !showLinkChild && (
+                <div
+                  className="absolute right-0 top-full mt-3 z-40 flex flex-col items-end pointer-events-none"
+                  data-testid="link-child-nudge"
+                >
+                  <div className="nudge-callout relative bg-[#1D3557] text-white rounded-2xl px-4 py-3 shadow-lg max-w-[240px] pointer-events-auto">
+                    <div className="absolute -top-2 right-8 w-4 h-4 bg-[#1D3557] rotate-45" />
+                    <p className="text-sm font-bold" style={{ fontFamily: 'Fredoka' }}>Step 1: Link your child</p>
+                    <p className="text-xs text-white/80 mt-1 leading-snug">
+                      Tap <span className="font-semibold text-[#FFD23F]">Link Child</span> to connect your child&apos;s account and start tracking their progress.
+                    </p>
+                    <MousePointerClick className="nudge-cursor absolute -top-6 right-1 w-8 h-8 text-[#EE6C4D] drop-shadow-md" />
+                  </div>
+                </div>
+              )}
+              </div>
             </div>
             
             {dashboard?.children?.length === 0 ? (
