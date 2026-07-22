@@ -623,7 +623,7 @@ export default function ParentDashboard({ user }) {
             { id: 'overview', label: 'Overview', icon: Users, color: '#1D3557', bg: '#1D3557' },
             { id: 'chores', label: 'Chores & Rewards', icon: Target, color: '#06D6A0', bg: '#06D6A0' },
             { id: 'jobs', label: 'Jobs', icon: Briefcase, color: '#EE6C4D', bg: '#EE6C4D' },
-            { id: 'savings', label: 'Money & Goals', icon: Wallet, color: '#FFD23F', bg: '#B8860B' },
+            { id: 'savings', label: 'Money & Goals', icon: Wallet, color: '#B8860B', bg: '#B8860B' },
           ].map(sec => (
             <button
               key={sec.id}
