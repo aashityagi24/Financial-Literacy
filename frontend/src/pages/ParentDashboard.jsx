@@ -425,7 +425,7 @@ export default function ParentDashboard({ user }) {
   
   const handleSetAllowance = async () => {
     try {
-      await axios.post(`${API}/parent/allowance`, allowanceForm);
+      await axios.post(`${API}/parent/allowances`, allowanceForm);
       toast.success('Allowance set up!');
       setShowAllowance(false);
       setShowSendMoney(false);

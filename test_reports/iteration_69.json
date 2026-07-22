@@ -1,0 +1,28 @@
+{
+  "summary": "Retested the allowance persistence fix in Parent Dashboard Money & Goals tab. Allowance now posts to /parent/allowances and persists — after submission the Active Allowances section renders a card with '₹10 weekly'. Toasts 'Allowance set up!' and 'Gave ₹5 to child!' both fire correctly. Cleanup via Cancel button was performed. Fix verified.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Money & Goals — Active Allowances card", "issues": ["Card innerText shows only '₹10 weekly • Next:' — child name is not present as text (may be rendered only via avatar image), and 'Next:' has no date value. Consider displaying child display name and next-run date text for clarity/accessibility."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "(Minor) Show child display name text and next-run date in the Active Allowances card — currently only '₹10 weekly • Next:' is textually visible.",
+    "(Minor) Add aria-describedby / DialogDescription to Send Money DialogContent — radix warns 'Missing Description or aria-describedby for DialogContent'."
+  ],
+  "critical_code_review_comments": [
+    "Send Money DialogContent triggers a Radix a11y warning — add <DialogDescription> or aria-describedby.",
+    "Active Allowances card missing child name/next date in visible text output."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped)", "frontend": "100% for tested flows (allowance + gift)"},
+  "test_credentials": "wallet_demo_parent@test.com / testpass123",
+  "seed_data_creation": "Created a temporary weekly allowance for Demo Kid ₹10 and cancelled it. Sent a ₹5 gift as part of Gift regression (not cleaned — one-time transaction).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "handleSetAllowance -> POST /parent/allowances is working; card renders and 'Cancel' button removes the allowance. Radix DialogDescription warning present but non-blocking.",
+  "rca of the issue": "Previously the frontend posted to the one-time /parent/allowance endpoint so no recurring allowance was persisted; changing to /parent/allowances persists and lists via GET /parent/allowances."
+}
