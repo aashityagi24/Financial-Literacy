@@ -933,6 +933,17 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Parent "Quick Add" dialog (Reward / Penalty / Chore)** (June 2026)
+  - Renamed the "Quick Reward/Penalty" button in Chores & Rewards to **Quick Add** and added a third **📋 Chore** tab so chores can be created inline (alongside Reward and Penalty). Selected child persists across tabs. Chore submits via `POST /api/parent/chores-new` and appears in Active Chores.
+  - Testids: `add-reward-penalty-btn`, `quick-add-tab-reward|penalty|chore`, `quick-add-chore-title`, `quick-add-submit-chore`.
+  - Verified 100% by testing agent (iteration_67).
+
+- **Parent "Money you owe" itemized breakdown** (June 2026)
+  - The "Real Earnings to Pay Your Children" panel now lists each pending entry (description + date + amount) per child instead of just "N pending entries", so parents can trace exactly what they owe. Uses the `pending` array already returned by `GET /api/parent/wallet/pending/{child_id}`. Verified via API + compile.
+
+- **Parent Dashboard misc UI fixes** (June 2026)
+  - "Money & Goals" nav tab: inactive text/icon changed from pale yellow to dark goldenrod (#B8860B) for readable contrast.
+
 - **Parent first-time "Link Child" walkthrough nudge** (June 2026)
   - On the Parent Dashboard, when a parent has ZERO children linked, the "Link Child" button now glows with a pulsing highlight ring and an animated pointing cursor + a callout tooltip ("Step 1: Link your child") nudges them to click it.
   - Only shows when: not loading, no children linked, dialog closed, AND the pre-existing welcome onboarding tour is finished (`user.has_completed_onboarding`), so the two don't overlap. Disappears automatically once a child is linked or the Link dialog is open.
