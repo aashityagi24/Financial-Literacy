@@ -680,7 +680,7 @@ export default function ParentDashboard({ user }) {
         {parentSection === 'overview' && (
         <>
         {/* Compact Action Grid - All actions in one place */}
-        <div className="grid grid-cols-3 md:grid-cols-7 gap-2 mb-5">
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-5">
           <Link to="/parent/shopping-list" className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#EE6C4D] hover:bg-[#E05A3A] transition-colors shadow-sm" data-testid="parent-shopping-link">
             <Store className="w-5 h-5 text-white" />
             <span className="text-[11px] font-bold text-white text-center leading-tight">Shopping List</span>
@@ -693,10 +693,6 @@ export default function ParentDashboard({ user }) {
             <Gift className="w-5 h-5 text-[#1D3557]" />
             <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Give Money</span>
           </button>
-          <button onClick={() => setShowCreateChore(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#3D5A80] hover:bg-[#2D4A6F] transition-colors shadow-sm">
-            <Target className="w-5 h-5 text-white" />
-            <span className="text-[11px] font-bold text-white text-center leading-tight">Add Chore</span>
-          </button>
           <button onClick={() => setShowAllowance(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#9B5DE5] hover:bg-[#8A4DD4] transition-colors shadow-sm">
             <Calendar className="w-5 h-5 text-white" />
             <span className="text-[11px] font-bold text-white text-center leading-tight">Allowance</span>
@@ -704,10 +700,6 @@ export default function ParentDashboard({ user }) {
           <button onClick={() => setShowSavingsGoal(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#F15BB5] hover:bg-[#E04AA4] transition-colors shadow-sm">
             <Wallet className="w-5 h-5 text-white" />
             <span className="text-[11px] font-bold text-white text-center leading-tight">Savings Goal</span>
-          </button>
-          <button onClick={() => setParentSection('jobs')} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#1D3557] hover:bg-[#152A45] transition-colors shadow-sm">
-            <Briefcase className="w-5 h-5 text-white" />
-            <span className="text-[11px] font-bold text-white text-center leading-tight">Jobs</span>
           </button>
         </div>
         
