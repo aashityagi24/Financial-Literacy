@@ -684,7 +684,7 @@ export default function ParentDashboard({ user }) {
         {parentSection === 'overview' && (
         <>
         {/* Compact Action Grid - All actions in one place */}
-        <div className="grid grid-cols-3 gap-2 mb-5">
+        <div className="grid grid-cols-2 gap-2 mb-5">
           <Link to="/parent/shopping-list" className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#EE6C4D] hover:bg-[#E05A3A] transition-colors shadow-sm" data-testid="parent-shopping-link">
             <Store className="w-5 h-5 text-white" />
             <span className="text-[11px] font-bold text-white text-center leading-tight">Shopping List</span>
@@ -692,10 +692,6 @@ export default function ParentDashboard({ user }) {
           <button onClick={() => setShowPurchases(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#06D6A0] hover:bg-[#05C493] transition-colors shadow-sm" data-testid="children-purchases-btn">
             <History className="w-5 h-5 text-white" />
             <span className="text-[11px] font-bold text-white text-center leading-tight">Purchases</span>
-          </button>
-          <button onClick={() => setShowSavingsGoal(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#F15BB5] hover:bg-[#E04AA4] transition-colors shadow-sm">
-            <Wallet className="w-5 h-5 text-white" />
-            <span className="text-[11px] font-bold text-white text-center leading-tight">Savings Goal</span>
           </button>
         </div>
         
@@ -1590,6 +1586,11 @@ export default function ParentDashboard({ user }) {
             {/* Send Money — Gift or Allowance */}
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Money &amp; Goals</h2>
+              <div className="flex items-center gap-2">
+              <button onClick={() => setShowSavingsGoal(true)} className="btn-secondary px-5 py-2.5 flex items-center gap-2 whitespace-nowrap" data-testid="savings-goal-btn">
+                <Wallet className="w-4 h-4" />
+                Savings Goal
+              </button>
               <Dialog open={showSendMoney} onOpenChange={setShowSendMoney}>
                 <DialogTrigger asChild>
                   <button className="btn-secondary px-5 py-2.5 flex items-center gap-2 whitespace-nowrap" data-testid="send-money-btn">
@@ -1682,6 +1683,7 @@ export default function ParentDashboard({ user }) {
                   </div>
                 </DialogContent>
               </Dialog>
+              </div>
             </div>
 
             {/* Allowances */}
