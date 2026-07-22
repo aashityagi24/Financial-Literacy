@@ -1,0 +1,46 @@
+{
+  "summary": "Frontend-only verification of Parent Dashboard cleanup (Overview tile removal, Send Money dialog in Money & Goals, Quick Add button size). All UI-level acceptance criteria pass. One issue: newly-created allowance does NOT appear under 'Active Allowances' — traced to backend endpoint returning success but not persisting an allowance record.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/parent/allowance", "issue": "Returns {\"message\":\"Gave ₹10 allowance\"} (2xx), but subsequent GET /api/parent/allowances still returns []. So the recurring allowance is not persisted, and 'Active Allowances' list in Money & Goals stays empty even after successful setup. Reproduced via curl with a valid child_id (test_child_wallet_demo)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Send Money > Allowance", "issue": "UI shows 'Allowance set up!' toast and closes dialog, but the created allowance never shows under 'Active Allowances' because backend /api/parent/allowances remains empty (see backend_issues.minor). From strict acceptance-criteria perspective this criterion fails, but the failure is on backend side.", "affected_selectors": ["[data-testid='send-money-submit-allowance']"]}
+    ],
+    "design_issues": []
+  },
+  "verified_criteria": [
+    "Overview action grid contains exactly 3 tiles: Shopping List, Purchases, Savings Goal. 'Give Money', 'Allowance', 'Add Chore' tiles are absent. ('Jobs' text seen was the nav tab, NOT an action tile — confirmed by screenshot.)",
+    "Money & Goals tab has [data-testid='send-money-btn']. Clicking opens a dialog with tabs [data-testid='send-money-tab-gift'] and [data-testid='send-money-tab-allowance'].",
+    "Gift tab: selected child, amount=5, submitted via [data-testid='send-money-submit-gift'] → toast 'Gave ₹5 to child!' shown and dialog auto-closed.",
+    "Allowance tab: selected child, amount=10, frequency Weekly, submitted via [data-testid='send-money-submit-allowance'] → toast 'Allowance set up!' shown and dialog auto-closed (Active Allowances list did NOT populate — see integration issue).",
+    "Chores & Rewards tab: 'Quick Add' button [data-testid='add-reward-penalty-btn'] measured 148x50 px, scrollWidth == clientWidth (no clipping). Clicking opens 3-tab dialog (Reward/Penalty/Chore visible in screenshot; role='tab' selector did not match because tabs are custom buttons, not radix Tabs — non-issue).",
+    "Parent dashboard renders (data-testid='parent-dashboard' present)."
+  ],
+  "console_warnings": [
+    "React warning: 'Each child in a list should have a unique key prop.' triggered in ParentDashboard render (non-blocking; likely a `.map` missing a key — recommend investigation).",
+    "Multiple radix Dialog a11y warnings: 'Missing Description or aria-describedby for {DialogContent}' (non-blocking; add DialogDescription for a11y)."
+  ],
+  "test_report_links": [],
+  "action_items": [
+    "Backend: POST /api/parent/allowance should actually persist a recurring allowance record so GET /api/parent/allowances returns it. Currently it appears to only credit a one-time amount and return {\"message\":\"Gave ₹10 allowance\"}.",
+    "Frontend (minor): Fix the missing React `key` prop warning inside ParentDashboard render.",
+    "Frontend (a11y, minor): Add <DialogDescription> or aria-describedby to Send Money / Quick Add dialogs."
+  ],
+  "critical_code_review_comments": [
+    "ParentDashboard.jsx is 2924 lines — should be split into smaller feature modules (SendMoneyDialog, RewardPenaltyDialog, MoneyGoalsSection, etc.).",
+    "Two independent dialogs (showGiveMoney / showAllowance) still exist alongside the new showSendMoney — dead-code risk; remove the old standalone dialogs once Send Money fully replaces them."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (not in scope)", "frontend": "5/6 acceptance items — the 6th (Active Allowances visible) blocked by backend"},
+  "test_credentials": "wallet_demo_parent@test.com / testpass123 (identifier+password on /login)",
+  "seed_data_creation": "None. Test used existing 'Demo Kid'. One gift of ₹5 and one allowance-attempt of ₹10 weekly were submitted during the run.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All Send Money frontend flows work. The only failing acceptance criterion is 'allowance appears under Active Allowances' — root cause is backend POST /api/parent/allowance not persisting a recurring allowance (verified via curl: it returns success message but GET /api/parent/allowances still []). Once backend fix lands, retest by opening Money & Goals > Send Money > Allowance tab and confirming a card appears under Active Allowances after submit.",
+  "rca of the issue": "POST /api/parent/allowance handler appears to trigger a one-time payout path (returns 'Gave ₹X allowance') instead of writing to the allowances collection. GET /api/parent/allowances reads the collection and finds nothing, so filteredAllowances=[] and the conditional block {filteredAllowances.length > 0 && ...} at line ~1688 in ParentDashboard.jsx never renders."
+}

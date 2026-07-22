@@ -99,6 +99,8 @@ export default function ParentDashboard({ user }) {
   const [showRewardPenalty, setShowRewardPenalty] = useState(false);
   const [showGiveMoney, setShowGiveMoney] = useState(false);
   const [showAllowance, setShowAllowance] = useState(false);
+  const [showSendMoney, setShowSendMoney] = useState(false);
+  const [sendMoneyTab, setSendMoneyTab] = useState('gift'); // 'gift' | 'allowance'
   const [showSavingsGoal, setShowSavingsGoal] = useState(false);
   const [activeRPTab, setActiveRPTab] = useState('chores'); // 'chores', 'rewards', 'penalties'
   
@@ -413,6 +415,7 @@ export default function ParentDashboard({ user }) {
       await axios.post(`${API}/parent/give-money`, giveMoneyForm);
       toast.success(`Gave ₹${giveMoneyForm.amount} to child!`);
       setShowGiveMoney(false);
+      setShowSendMoney(false);
       setGiveMoneyForm({ child_id: '', amount: 10, reason: '' });
       fetchData();
     } catch (error) {
@@ -425,6 +428,7 @@ export default function ParentDashboard({ user }) {
       await axios.post(`${API}/parent/allowance`, allowanceForm);
       toast.success('Allowance set up!');
       setShowAllowance(false);
+      setShowSendMoney(false);
       setAllowanceForm({ child_id: '', amount: 10, frequency: 'weekly' });
       fetchData();
     } catch (error) {
@@ -680,7 +684,7 @@ export default function ParentDashboard({ user }) {
         {parentSection === 'overview' && (
         <>
         {/* Compact Action Grid - All actions in one place */}
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-5">
+        <div className="grid grid-cols-3 gap-2 mb-5">
           <Link to="/parent/shopping-list" className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#EE6C4D] hover:bg-[#E05A3A] transition-colors shadow-sm" data-testid="parent-shopping-link">
             <Store className="w-5 h-5 text-white" />
             <span className="text-[11px] font-bold text-white text-center leading-tight">Shopping List</span>
@@ -688,14 +692,6 @@ export default function ParentDashboard({ user }) {
           <button onClick={() => setShowPurchases(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#06D6A0] hover:bg-[#05C493] transition-colors shadow-sm" data-testid="children-purchases-btn">
             <History className="w-5 h-5 text-white" />
             <span className="text-[11px] font-bold text-white text-center leading-tight">Purchases</span>
-          </button>
-          <button onClick={() => setShowGiveMoney(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#FFD23F] hover:bg-[#F0C430] transition-colors shadow-sm">
-            <Gift className="w-5 h-5 text-[#1D3557]" />
-            <span className="text-[11px] font-bold text-[#1D3557] text-center leading-tight">Give Money</span>
-          </button>
-          <button onClick={() => setShowAllowance(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#9B5DE5] hover:bg-[#8A4DD4] transition-colors shadow-sm">
-            <Calendar className="w-5 h-5 text-white" />
-            <span className="text-[11px] font-bold text-white text-center leading-tight">Allowance</span>
           </button>
           <button onClick={() => setShowSavingsGoal(true)} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#F15BB5] hover:bg-[#E04AA4] transition-colors shadow-sm">
             <Wallet className="w-5 h-5 text-white" />
@@ -1185,7 +1181,7 @@ export default function ParentDashboard({ user }) {
                 </h2>
                 <Dialog open={showRewardPenalty} onOpenChange={setShowRewardPenalty}>
                   <DialogTrigger asChild>
-                    <button className="btn-secondary flex items-center gap-2" data-testid="add-reward-penalty-btn">
+                    <button className="btn-secondary px-5 py-2.5 flex items-center gap-2 whitespace-nowrap" data-testid="add-reward-penalty-btn">
                       <Plus className="w-4 h-4" />
                       Quick Add
                     </button>
@@ -1590,6 +1586,103 @@ export default function ParentDashboard({ user }) {
             {parentSection === 'savings' && (
             <>
             <ChildFilter />
+
+            {/* Send Money — Gift or Allowance */}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Money &amp; Goals</h2>
+              <Dialog open={showSendMoney} onOpenChange={setShowSendMoney}>
+                <DialogTrigger asChild>
+                  <button className="btn-secondary px-5 py-2.5 flex items-center gap-2 whitespace-nowrap" data-testid="send-money-btn">
+                    <Gift className="w-4 h-4" />
+                    Send Money
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                      {sendMoneyTab === 'gift' ? '🎁 Give Money' : '📅 Set Up Allowance'}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setSendMoneyTab('gift')}
+                        data-testid="send-money-tab-gift"
+                        className={`flex-1 py-2 rounded-xl font-bold transition-colors ${
+                          sendMoneyTab === 'gift' ? 'bg-[#FFD23F] text-[#1D3557]' : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
+                        }`}
+                      >
+                        🎁 Gift Money
+                      </button>
+                      <button
+                        onClick={() => setSendMoneyTab('allowance')}
+                        data-testid="send-money-tab-allowance"
+                        className={`flex-1 py-2 rounded-xl font-bold transition-colors ${
+                          sendMoneyTab === 'allowance' ? 'bg-[#9B5DE5] text-white' : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
+                        }`}
+                      >
+                        📅 Allowance
+                      </button>
+                    </div>
+
+                    {sendMoneyTab === 'gift' ? (
+                      <>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
+                          <Select value={giveMoneyForm.child_id} onValueChange={(v) => setGiveMoneyForm({...giveMoneyForm, child_id: v})}>
+                            <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Choose a child" /></SelectTrigger>
+                            <SelectContent>
+                              {dashboard?.children?.map((c) => (
+                                <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1D3557] mb-1">Amount (₹) *</label>
+                          <Input type="number" placeholder="Enter amount in Rupees" value={giveMoneyForm.amount} onChange={(e) => setGiveMoneyForm({...giveMoneyForm, amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" data-testid="send-money-gift-amount" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1D3557] mb-1">Reason (Optional)</label>
+                          <Input placeholder="e.g., Birthday gift, Good grades" value={giveMoneyForm.reason} onChange={(e) => setGiveMoneyForm({...giveMoneyForm, reason: e.target.value})} className="border-3 border-[#1D3557]" />
+                        </div>
+                        <button onClick={handleGiveMoney} className="btn-primary w-full py-3" data-testid="send-money-submit-gift">Give Money</button>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
+                          <Select value={allowanceForm.child_id} onValueChange={(v) => setAllowanceForm({...allowanceForm, child_id: v})}>
+                            <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue placeholder="Choose a child" /></SelectTrigger>
+                            <SelectContent>
+                              {dashboard?.children?.map((c) => (
+                                <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1D3557] mb-1">Allowance Amount (₹) *</label>
+                          <Input type="number" placeholder="Enter amount per period" value={allowanceForm.amount} onChange={(e) => setAllowanceForm({...allowanceForm, amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" data-testid="send-money-allowance-amount" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1D3557] mb-1">Frequency *</label>
+                          <Select value={allowanceForm.frequency} onValueChange={(v) => setAllowanceForm({...allowanceForm, frequency: v})}>
+                            <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                              <SelectItem value="biweekly">Bi-weekly</SelectItem>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <button onClick={handleSetAllowance} className="btn-primary w-full py-3" data-testid="send-money-submit-allowance">Set Allowance</button>
+                      </>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
 
             {/* Allowances */}
             {filteredAllowances.length > 0 && (
