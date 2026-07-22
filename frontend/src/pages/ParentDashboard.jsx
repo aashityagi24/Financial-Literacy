@@ -367,6 +367,7 @@ export default function ParentDashboard({ user }) {
       await axios.post(`${API}/parent/chores-new`, choreForm);
       toast.success('Chore created!');
       setShowCreateChore(false);
+      setShowRewardPenalty(false);
       setChoreForm({ child_id: '', title: '', description: '', reward_amount: 5, frequency: 'one_time', weekly_days: [], monthly_date: 1 });
       fetchData();
     } catch (error) {
@@ -1194,19 +1195,20 @@ export default function ParentDashboard({ user }) {
                   <DialogTrigger asChild>
                     <button className="btn-secondary flex items-center gap-2" data-testid="add-reward-penalty-btn">
                       <Plus className="w-4 h-4" />
-                      Quick Reward/Penalty
+                      Quick Add
                     </button>
                   </DialogTrigger>
                   <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
                     <DialogHeader>
                       <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                        {rpForm.category === 'reward' ? '🌟 Give Reward' : '⚠️ Apply Penalty'}
+                        {rpForm.category === 'reward' ? '🌟 Give Reward' : rpForm.category === 'penalty' ? '⚠️ Apply Penalty' : '📋 Create Chore'}
                       </DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 mt-4">
                       <div className="flex gap-2">
                         <button
                           onClick={() => setRpForm({...rpForm, category: 'reward'})}
+                          data-testid="quick-add-tab-reward"
                           className={`flex-1 py-2 rounded-xl font-bold transition-colors ${
                             rpForm.category === 'reward' 
                               ? 'bg-[#06D6A0] text-white' 
@@ -1217,6 +1219,7 @@ export default function ParentDashboard({ user }) {
                         </button>
                         <button
                           onClick={() => setRpForm({...rpForm, category: 'penalty'})}
+                          data-testid="quick-add-tab-penalty"
                           className={`flex-1 py-2 rounded-xl font-bold transition-colors ${
                             rpForm.category === 'penalty' 
                               ? 'bg-[#EE6C4D] text-white' 
@@ -1225,68 +1228,127 @@ export default function ParentDashboard({ user }) {
                         >
                           ⚠️ Penalty
                         </button>
+                        <button
+                          onClick={() => { setRpForm({...rpForm, category: 'chore'}); setChoreForm({...choreForm, child_id: rpForm.child_id || choreForm.child_id, frequency: ['once','daily','weekly'].includes(choreForm.frequency) ? choreForm.frequency : 'once'}); }}
+                          data-testid="quick-add-tab-chore"
+                          className={`flex-1 py-2 rounded-xl font-bold transition-colors ${
+                            rpForm.category === 'chore' 
+                              ? 'bg-[#3D5A80] text-white' 
+                              : 'bg-gray-100 text-[#3D5A80] hover:bg-gray-200'
+                          }`}
+                        >
+                          📋 Chore
+                        </button>
                       </div>
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
-                        <Select value={rpForm.child_id} onValueChange={(v) => setRpForm({...rpForm, child_id: v})}>
-                          <SelectTrigger className="border-3 border-[#1D3557]">
-                            <SelectValue placeholder="Choose child" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {dashboard?.children?.map(c => (
-                              <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">
-                          {rpForm.category === 'reward' ? 'Reason for Reward *' : 'Reason for Penalty *'}
-                        </label>
-                        <Input 
-                          placeholder={rpForm.category === 'reward' ? 'e.g., Reading a chapter' : 'e.g., Slamming the door'}
-                          value={rpForm.title} 
-                          onChange={(e) => setRpForm({...rpForm, title: e.target.value})} 
-                          className="border-3 border-[#1D3557]" 
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Description (optional)</label>
-                        <Textarea 
-                          placeholder="Add more details..." 
-                          value={rpForm.description} 
-                          onChange={(e) => setRpForm({...rpForm, description: e.target.value})} 
-                          className="border-3 border-[#1D3557]" 
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-[#1D3557] mb-1">Amount (₹) *</label>
-                        <Input 
-                          type="number" 
-                          min="1"
-                          placeholder="Amount" 
-                          value={rpForm.amount} 
-                          onChange={(e) => setRpForm({...rpForm, amount: parseFloat(e.target.value) || 0})} 
-                          className="border-3 border-[#1D3557]" 
-                        />
-                      </div>
-                      <p className={`text-sm ${rpForm.category === 'reward' ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
-                        {rpForm.category === 'reward' 
-                          ? `🌟 This will ADD ₹${rpForm.amount || 0} to their spending wallet` 
-                          : `⚠️ This will DEDUCT ₹${rpForm.amount || 0} from their spending wallet (can go negative)`
-                        }
-                      </p>
-                      <button 
-                        onClick={handleCreateRewardPenalty} 
-                        className={`w-full py-3 rounded-xl font-bold text-white transition-colors ${
-                          rpForm.category === 'reward' 
-                            ? 'bg-[#06D6A0] hover:bg-[#05C090]' 
-                            : 'bg-[#EE6C4D] hover:bg-[#DD5B3C]'
-                        }`}
-                        data-testid="submit-reward-penalty"
-                      >
-                        {rpForm.category === 'reward' ? '🌟 Give Reward' : '⚠️ Apply Penalty'}
-                      </button>
+
+                      {rpForm.category !== 'chore' ? (
+                        <>
+                          <div>
+                            <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
+                            <Select value={rpForm.child_id} onValueChange={(v) => setRpForm({...rpForm, child_id: v})}>
+                              <SelectTrigger className="border-3 border-[#1D3557]">
+                                <SelectValue placeholder="Choose child" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {dashboard?.children?.map(c => (
+                                  <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-[#1D3557] mb-1">
+                              {rpForm.category === 'reward' ? 'Reason for Reward *' : 'Reason for Penalty *'}
+                            </label>
+                            <Input 
+                              placeholder={rpForm.category === 'reward' ? 'e.g., Reading a chapter' : 'e.g., Slamming the door'}
+                              value={rpForm.title} 
+                              onChange={(e) => setRpForm({...rpForm, title: e.target.value})} 
+                              className="border-3 border-[#1D3557]" 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-[#1D3557] mb-1">Description (optional)</label>
+                            <Textarea 
+                              placeholder="Add more details..." 
+                              value={rpForm.description} 
+                              onChange={(e) => setRpForm({...rpForm, description: e.target.value})} 
+                              className="border-3 border-[#1D3557]" 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-[#1D3557] mb-1">Amount (₹) *</label>
+                            <Input 
+                              type="number" 
+                              min="1"
+                              placeholder="Amount" 
+                              value={rpForm.amount} 
+                              onChange={(e) => setRpForm({...rpForm, amount: parseFloat(e.target.value) || 0})} 
+                              className="border-3 border-[#1D3557]" 
+                            />
+                          </div>
+                          <p className={`text-sm ${rpForm.category === 'reward' ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
+                            {rpForm.category === 'reward' 
+                              ? `🌟 This will ADD ₹${rpForm.amount || 0} to their spending wallet` 
+                              : `⚠️ This will DEDUCT ₹${rpForm.amount || 0} from their spending wallet (can go negative)`
+                            }
+                          </p>
+                          <button 
+                            onClick={handleCreateRewardPenalty} 
+                            className={`w-full py-3 rounded-xl font-bold text-white transition-colors ${
+                              rpForm.category === 'reward' 
+                                ? 'bg-[#06D6A0] hover:bg-[#05C090]' 
+                                : 'bg-[#EE6C4D] hover:bg-[#DD5B3C]'
+                            }`}
+                            data-testid="submit-reward-penalty"
+                          >
+                            {rpForm.category === 'reward' ? '🌟 Give Reward' : '⚠️ Apply Penalty'}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <label className="block text-sm font-bold text-[#1D3557] mb-1">Select Child *</label>
+                            <Select value={choreForm.child_id} onValueChange={(v) => setChoreForm({...choreForm, child_id: v})}>
+                              <SelectTrigger className="border-3 border-[#1D3557]">
+                                <SelectValue placeholder="Choose a child" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {dashboard?.children?.map((c) => (
+                                  <SelectItem key={c.user_id} value={c.user_id}>{c.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-[#1D3557] mb-1">Chore Title *</label>
+                            <Input placeholder="e.g., Clean your room" value={choreForm.title} onChange={(e) => setChoreForm({...choreForm, title: e.target.value})} className="border-3 border-[#1D3557]" data-testid="quick-add-chore-title" />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-[#1D3557] mb-1">Description (Optional)</label>
+                            <Textarea placeholder="Add more details about the chore" value={choreForm.description} onChange={(e) => setChoreForm({...choreForm, description: e.target.value})} className="border-3 border-[#1D3557]" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-sm font-bold text-[#1D3557] mb-1">Reward (₹) *</label>
+                              <Input type="number" placeholder="Amount" value={choreForm.reward_amount} onChange={(e) => setChoreForm({...choreForm, reward_amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-bold text-[#1D3557] mb-1">Frequency *</label>
+                              <Select value={choreForm.frequency} onValueChange={(v) => setChoreForm({...choreForm, frequency: v})}>
+                                <SelectTrigger className="border-3 border-[#1D3557]"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="once">One-time</SelectItem>
+                                  <SelectItem value="daily">Daily</SelectItem>
+                                  <SelectItem value="weekly">Weekly</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <p className="text-xs text-[#3D5A80]">Your child will need to complete this chore and request approval. You&apos;ll need to validate it before the reward is credited.</p>
+                          <button onClick={handleCreateChore} className="btn-primary w-full py-3" data-testid="quick-add-submit-chore">Create Chore</button>
+                        </>
+                      )}
                     </div>
                   </DialogContent>
                 </Dialog>
