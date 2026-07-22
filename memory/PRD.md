@@ -933,6 +933,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Child-to-child gifts are CoinQuest play money (not parent-owed)** (June 2026)
+  - Bug: a child gifting money to a classmate moved the gifting jar balance correctly, but the receiver's `gift_received` transaction had no `wallet_source`, so it defaulted to `my_wallet` and wrongly showed up in the parent's "Real Earnings to Pay Your Children" list as real cash owed.
+  - Fix: all child-to-child gift transactions (money + item, sent + received) in `/app/backend/routes/child.py` `gift-money` now set `wallet_source: "coinquest"`. Parent give-money gifts still explicitly use `my_wallet` (real money owed) — unchanged.
+  - Migrated 14 existing child-to-child gift transactions to `coinquest` (identified by `gift_type` field / `gift_sent` type) and cleared their stray `settlement_status`.
+  - Verified via curl: fresh gift moves sender gifting jar −5 / receiver +5, both tx tagged `coinquest`, and the entries are excluded from the parent pending/owed list.
+
 - **Parent Overview declutter + "Send Money" dialog** (June 2026)
   - Removed the **Add Chore** and **Jobs** tiles (chores now via Quick Add; Jobs is a top-level tab) and the **Give Money** and **Allowance** tiles from the Overview action grid — now a clean 3-tile grid (Shopping List, Purchases, Savings Goal).
   - Added a **Send Money** button in the Money & Goals tab (mirrors Quick Add) with two tabs: 🎁 Gift Money and 📅 Allowance. Testids: `send-money-btn`, `send-money-tab-gift|allowance`, `send-money-submit-gift|allowance`.
