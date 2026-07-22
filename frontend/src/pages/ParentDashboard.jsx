@@ -37,6 +37,35 @@ import { JobGuideDialog } from '@/components/JobGuideDialog';
 
 const gradeLabels = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
 
+// Friendly label for a pending "My Wallet" transaction so parents can trace what they owe.
+const PENDING_TYPE_LABELS = {
+  chore_reward: 'Chore reward',
+  chore: 'Chore reward',
+  quest_reward: 'Quest reward',
+  lesson_reward: 'Lesson reward',
+  allowance: 'Allowance',
+  reward: 'Reward',
+  gift_received: 'Gift received',
+  gift: 'Gift',
+  job_payment: 'Job payment',
+  job_reward: 'Job payment',
+  penalty: 'Penalty',
+};
+
+function pendingEntryLabel(t) {
+  const desc = (t.description || '').trim();
+  if (desc) return desc;
+  const type = t.transaction_type || t.type || '';
+  return PENDING_TYPE_LABELS[type] || (type ? type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'Earning');
+}
+
+function formatPendingDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
+
 export default function ParentDashboard({ user }) {
   const navigate = useNavigate();
   const [dashboard, setDashboard] = useState(null);
@@ -192,10 +221,11 @@ export default function ParentDashboard({ user }) {
               const pRes = await axios.get(`${API}/parent/wallet/pending/${child.user_id}`);
               pendingData[child.user_id] = {
                 pending_total: pRes.data?.pending_total || 0,
-                pending_count: pRes.data?.pending_count || 0
+                pending_count: pRes.data?.pending_count || 0,
+                pending: pRes.data?.pending || []
               };
             } catch (err) {
-              pendingData[child.user_id] = { pending_total: 0, pending_count: 0 };
+              pendingData[child.user_id] = { pending_total: 0, pending_count: 0, pending: [] };
             }
             
             // Fetch lending data for grade 4-5 children
@@ -244,7 +274,7 @@ export default function ParentDashboard({ user }) {
       toast.success(res.data?.message || 'Settled');
       setChildrenPending(prev => ({
         ...prev,
-        [childId]: { pending_total: 0, pending_count: 0 }
+        [childId]: { pending_total: 0, pending_count: 0, pending: [] }
       }));
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to settle');
@@ -800,36 +830,61 @@ export default function ParentDashboard({ user }) {
                   .filter((c) => (childrenPending[c.user_id]?.pending_total || 0) > 0)
                   .map((child) => {
                     const p = childrenPending[child.user_id] || {};
+                    const entries = p.pending || [];
                     return (
                       <div
                         key={child.user_id}
-                        className="flex items-center justify-between bg-white rounded-xl p-3 border border-sky-100"
+                        className="bg-white rounded-xl p-3 border border-sky-100"
                         data-testid={`owe-row-${child.user_id}`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-sky-100 flex items-center justify-center text-sky-700 font-bold">
-                            {child.name?.[0]?.toUpperCase() || '?'}
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 shrink-0 rounded-full bg-sky-100 flex items-center justify-center text-sky-700 font-bold">
+                              {child.name?.[0]?.toUpperCase() || '?'}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-bold text-[#1D3557]">{child.name}</p>
+                              <p className="text-xs text-[#3D5A80]">
+                                {p.pending_count} pending {p.pending_count === 1 ? 'entry' : 'entries'}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-[#1D3557]">{child.name}</p>
-                            <p className="text-xs text-[#3D5A80]">
-                              {p.pending_count} pending {p.pending_count === 1 ? 'entry' : 'entries'}
-                            </p>
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="text-xl font-bold text-sky-700" style={{ fontFamily: 'Fredoka' }}>
+                              ₹{Number(p.pending_total || 0).toFixed(0)}
+                            </span>
+                            <button
+                              onClick={() => handleSettleChildWallet(child.user_id, child.name, p.pending_total)}
+                              disabled={settling === child.user_id}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white disabled:opacity-50"
+                              data-testid={`settle-btn-${child.user_id}`}
+                            >
+                              {settling === child.user_id ? 'Marking…' : 'Mark as Paid'}
+                            </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-xl font-bold text-sky-700" style={{ fontFamily: 'Fredoka' }}>
-                            ₹{Number(p.pending_total || 0).toFixed(0)}
-                          </span>
-                          <button
-                            onClick={() => handleSettleChildWallet(child.user_id, child.name, p.pending_total)}
-                            disabled={settling === child.user_id}
-                            className="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white disabled:opacity-50"
-                            data-testid={`settle-btn-${child.user_id}`}
-                          >
-                            {settling === child.user_id ? 'Marking…' : 'Mark as Paid'}
-                          </button>
-                        </div>
+                        {entries.length > 0 && (
+                          <ul className="mt-3 pt-3 border-t border-sky-100 space-y-1.5" data-testid={`owe-breakdown-${child.user_id}`}>
+                            {entries.map((t, i) => (
+                              <li
+                                key={t.transaction_id || i}
+                                className="flex items-center justify-between gap-2 text-sm"
+                                data-testid={`owe-entry-${child.user_id}-${i}`}
+                              >
+                                <span className="flex items-center gap-2 min-w-0 text-[#3D5A80]">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0" />
+                                  <span className="truncate">{pendingEntryLabel(t)}</span>
+                                  {formatPendingDate(t.created_at) && (
+                                    <span className="text-xs text-[#8BA0B5] shrink-0">· {formatPendingDate(t.created_at)}</span>
+                                  )}
+                                </span>
+                                <span className="font-bold text-[#1D3557] shrink-0">
+                                  ₹{Number(t.amount || 0).toFixed(0)}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </div>
                     );
                   })}
