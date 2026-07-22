@@ -933,6 +933,13 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Parent Overview declutter + "Send Money" dialog** (June 2026)
+  - Removed the **Add Chore** and **Jobs** tiles (chores now via Quick Add; Jobs is a top-level tab) and the **Give Money** and **Allowance** tiles from the Overview action grid — now a clean 3-tile grid (Shopping List, Purchases, Savings Goal).
+  - Added a **Send Money** button in the Money & Goals tab (mirrors Quick Add) with two tabs: 🎁 Gift Money and 📅 Allowance. Testids: `send-money-btn`, `send-money-tab-gift|allowance`, `send-money-submit-gift|allowance`.
+  - Fixed a pre-existing bug: the allowance form posted to the one-time `/parent/allowance` endpoint, so recurring allowances never persisted. Now posts to `/parent/allowances` (recurring) — appears under Active Allowances. Also polished the Active Allowances card (child name fallback + frequency chip, hides empty "Next:").
+  - Enlarged the "Quick Add" button (`px-5 py-2.5 whitespace-nowrap`) so text isn't clipped.
+  - Verified by testing agent (iterations 68 & 69, 100% for tested flows).
+
 - **Parent "Quick Add" dialog (Reward / Penalty / Chore)** (June 2026)
   - Renamed the "Quick Reward/Penalty" button in Chores & Rewards to **Quick Add** and added a third **📋 Chore** tab so chores can be created inline (alongside Reward and Penalty). Selected child persists across tabs. Chore submits via `POST /api/parent/chores-new` and appears in Active Chores.
   - Testids: `add-reward-penalty-btn`, `quick-add-tab-reward|penalty|chore`, `quick-add-chore-title`, `quick-add-submit-chore`.

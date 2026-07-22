@@ -1689,22 +1689,25 @@ export default function ParentDashboard({ user }) {
               <>
                 <h2 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>Active Allowances</h2>
                 <div className="space-y-3 mb-6">
-                  {filteredAllowances.map((allowance) => (
+                  {filteredAllowances.map((allowance) => {
+                    const allowanceChildName = allowance.child_name || dashboard?.children?.find(c => c.user_id === allowance.child_id)?.name || 'Child';
+                    return (
                     <div key={allowance.allowance_id} className="card-playful p-4">
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-[#1D3557]">{allowance.child_name}</h4>
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-[#FFD23F]/30 text-[#1D3557] font-bold">{(allowance.child_name || '').split(' ')[0]}</span>
+                            <h4 className="font-bold text-[#1D3557]">{allowanceChildName}</h4>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-[#FFD23F]/30 text-[#1D3557] font-bold capitalize">{allowance.frequency}</span>
                           </div>
-                          <p className="text-sm text-[#3D5A80]">₹{allowance.amount} {allowance.frequency} • Next: {allowance.next_date}</p>
+                          <p className="text-sm text-[#3D5A80]">₹{allowance.amount} {allowance.frequency}{allowance.next_date ? ` • Next: ${allowance.next_date}` : ''}</p>
                         </div>
                         <button onClick={() => handleCancelAllowance(allowance.allowance_id)} className="text-[#EE6C4D] text-sm hover:underline">
                           Cancel
                         </button>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </>
             )}
