@@ -1,0 +1,60 @@
+{
+  "summary": "DIAGNOSIS: Could NOT reproduce the reported broken-preview bug for Quest image upload. Uploaded both a WEBP and a PNG via the Create Quest 'Image (optional)' Choose file input as teacher test_teacher_1 in Demo Class. Preview rendered correctly, quest was created, and the child (classmate_g3) sees the image successfully on the Quest Board.",
+  "diagnosis_findings": {
+    "webp_upload": {
+      "upload_endpoint": "POST /api/upload/quest-asset",
+      "upload_response_status": 200,
+      "upload_response_body": "{\"url\":\"/api/uploads/quests/9d79fbdd6181.webp\"}",
+      "preview_img_src": "https://coinquest-staging.preview.emergentagent.com/api/uploads/quests/9d79fbdd6181.webp",
+      "preview_img_naturalWidth": 20,
+      "preview_img_naturalHeight": 20,
+      "preview_img_complete": true,
+      "browser_get_status": 200,
+      "browser_get_content_type": "image/webp",
+      "browser_get_content_length": 84,
+      "console_errors": "None related to upload/preview"
+    },
+    "png_upload": {
+      "upload_endpoint": "POST /api/upload/quest-asset",
+      "upload_response_body": "{\"url\":\"/api/uploads/quests/49a6704dbae7.png\"}",
+      "preview_img_src": "https://coinquest-staging.preview.emergentagent.com/api/uploads/quests/49a6704dbae7.png",
+      "preview_img_naturalWidth": 20,
+      "questForm_state_console_log": "image_url: /api/uploads/quests/49a6704dbae7.png",
+      "quest_created": true,
+      "child_view_src": "https://coinquest-staging.preview.emergentagent.com/api/uploads/quests/49a6704dbae7.png",
+      "child_view_naturalWidth": 20,
+      "child_view_complete": true
+    }
+  },
+  "conclusion": "The frontend flow works exactly as intended: uploadFile() posts to /api/upload/quest-asset, receives {url:'/api/uploads/quests/<hash>.<ext>'}, sets questForm.image_url = res.url, and getAssetUrl() correctly prepends REACT_APP_BACKEND_URL to produce 'https://<host>/api/uploads/quests/<hash>.<ext>'. The <img alt='Preview'> loads with naturalWidth>0 (not broken). Backend GET returns 200 with correct image content-type. Child sees the image too.",
+  "hypotheses_for_teachers_original_report": [
+    "Teacher may have been on an OLD build/cached JS before a recent fix (getAssetUrl was previously missing the /api/ prefix handling). Ask them to hard-refresh.",
+    "Teacher's original webp may have been >512KB, taking the chunked path — but chunked-complete also returns {url:'/api/uploads/quests/...'} so this should still work. Worth double-checking with a real >512KB webp if the report specifically mentions large files.",
+    "If teacher tried an image WHILE offline / on a network that blocks the emergent preview subdomain, the <img> would show broken glyph while backend curl (from server-side) still succeeds.",
+    "Possible transient CORS/cookie issue if teacher was in an iframe context; browser withCredentials fetch to /api/uploads/... would be affected. However, my test succeeded with credentials:'include'."
+  ],
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Create Quest dialog", "issues": ["React warning: Missing Description/aria-describedby on DialogContent (accessibility only, non-blocking)"]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "No code fix needed — bug NOT REPRODUCIBLE on current deployed build.",
+    "Ask reporter to hard-refresh their browser (Ctrl+Shift+R) and retry. If still broken, ask for: (a) exact upload response body from Network tab; (b) exact preview img src; (c) file size and mime type of the webp; (d) any console errors."
+  ],
+  "critical_code_review_comments": [
+    "TeacherDashboard.jsx is 2331 lines — should be split into smaller focused modules.",
+    "handleQuestFileUpload silently swallows error details ('Upload failed') — showing error.response?.data?.detail would help diagnose future upload failures for users."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "100% (upload+preview+child view all work)"},
+  "seed_data_creation": "Created a quest 'TEST_Diag Quest' in Demo Class with a small PNG image and completed the child-side visibility check. Cleanup recommended if noisy.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Login flow for teacher via UI is flaky in headless (session cookie not set from /login form submit). Workaround: POST /api/auth/login with {identifier, password} directly via page.evaluate, then localStorage.setItem('session_token', ...). Then goto /teacher-dashboard. Same pattern for child logins. Test images at /tmp/tiny.png and /tmp/tiny.webp (84 bytes each).",
+  "rca_of_the_issue": "NO BUG FOUND on current build. Upload endpoint returns {url:'/api/uploads/quests/<hash>.<ext>'}. Frontend stores this exactly as-is in questForm.image_url. getAssetUrl() sees path starts with '/api/' and returns `${BACKEND_URL}${path}` = 'https://coinquest-staging.preview.emergentagent.com/api/uploads/quests/<hash>.<ext>'. Browser GET returns HTTP 200 with correct image/webp or image/png content-type. Preview img.naturalWidth is 20 (not 0), img.complete is true. Child GET of same URL returns 200 and renders. The URL is NOT mangled at any step."
+}
