@@ -427,10 +427,14 @@ export default function TeacherDashboard({ user }) {
     if (!file) return;
     try {
       const res = await uploadFile(file, 'quest', '/upload/quest-asset');
+      if (!res?.url) {
+        throw new Error('No file URL returned from server');
+      }
       setQuestForm(prev => ({ ...prev, [type]: res.url }));
       toast.success(`${type === 'image_url' ? 'Image' : 'PDF'} uploaded!`);
     } catch (error) {
-      toast.error('Upload failed');
+      const detail = error.response?.data?.detail || error.message || 'Upload failed';
+      toast.error(`Upload failed: ${detail}`);
     }
   };
   
