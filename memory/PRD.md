@@ -933,6 +933,9 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **"Remember me" on login** (June 2026)
+  - Added a "Remember me" checkbox (checked by default) to the login form in `AuthPage.jsx`. On submit it saves the entered email/username to `localStorage` (`remembered_identifier`); on the next visit the field is pre-filled to reduce login friction. Password is NEVER stored. Unchecking clears the saved identifier. Testid `remember-me-checkbox`.
+
 - **Quest image upload — investigated (June 2026)**
   - Reported: uploaded image shows broken in the Create Quest preview and not shown to the child. Could NOT reproduce on the current build.
   - Verified end-to-end (testing agent iterations 72 & 73): both small (direct `/upload/quest-asset`) and large >512KB (chunked init/part/complete) uploads work — preview renders (naturalWidth>0), byte-perfect assembly, child sees the image. Backend serves webp/png at `/api/uploads/quests/...` (HTTP 200).

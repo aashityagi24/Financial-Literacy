@@ -43,6 +43,16 @@ export default function AuthPage() {
   const [phone, setPhone] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  
+  // Pre-fill the remembered identifier (email/username) to reduce login friction
+  useEffect(() => {
+    const saved = localStorage.getItem('remembered_identifier');
+    if (saved) {
+      setIdentifier(saved);
+      setRememberMe(true);
+    }
+  }, []);
   
   // Captcha state
   const [captcha, setCaptcha] = useState(generateCaptcha());
@@ -76,6 +86,13 @@ export default function AuthPage() {
     }
     
     setIsLoading(true);
+    
+    // Remember (or forget) the identifier for next time — never store the password
+    if (rememberMe) {
+      localStorage.setItem('remembered_identifier', identifier.trim());
+    } else {
+      localStorage.removeItem('remembered_identifier');
+    }
     
     try {
       // Try to determine login type based on identifier
@@ -357,6 +374,19 @@ export default function AuthPage() {
                   </button>
                 </div>
               </div>
+              
+              {mode === 'login' && (
+                <label className="flex items-center gap-2 cursor-pointer select-none" data-testid="remember-me-label">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded border-2 border-gray-300 cursor-pointer accent-[#1D3557]"
+                    data-testid="remember-me-checkbox"
+                  />
+                  <span className="text-sm font-medium text-gray-600">Remember me</span>
+                </label>
+              )}
               
               {mode === 'signup' && (
                 <div>
