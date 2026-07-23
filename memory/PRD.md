@@ -933,6 +933,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Quest image upload — investigated (June 2026)**
+  - Reported: uploaded image shows broken in the Create Quest preview and not shown to the child. Could NOT reproduce on the current build.
+  - Verified end-to-end (testing agent iterations 72 & 73): both small (direct `/upload/quest-asset`) and large >512KB (chunked init/part/complete) uploads work — preview renders (naturalWidth>0), byte-perfect assembly, child sees the image. Backend serves webp/png at `/api/uploads/quests/...` (HTTP 200).
+  - Improvement applied: `handleQuestFileUpload` in `TeacherDashboard.jsx` now throws if the server returns no URL and surfaces the real error detail (`Upload failed: <detail>`) instead of a generic message.
+  - Likely cause for the reporter: stale/cached JS build or transient network. Recommendation: hard-refresh (Ctrl+Shift+R) and retry; the new error toast will reveal any real failure.
+
 - **Quest images & PDFs now shown to child + teacher** (June 2026)
   - Bug: images/PDFs attached to a teacher-created quest (both quest-level "general upload" and per-question) were not visible for review.
   - Backend (`teacher.py` `get_quest_responses`): now returns `quest.image_url`/`quest.pdf_url` and adds `image_url`/`pdf_url`/`max_points` to each `question_details` entry (question_analytics already had them).
