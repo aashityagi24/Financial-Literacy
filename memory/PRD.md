@@ -933,6 +933,13 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Quest images & PDFs now shown to child + teacher** (June 2026)
+  - Bug: images/PDFs attached to a teacher-created quest (both quest-level "general upload" and per-question) were not visible for review.
+  - Backend (`teacher.py` `get_quest_responses`): now returns `quest.image_url`/`quest.pdf_url` and adds `image_url`/`pdf_url`/`max_points` to each `question_details` entry (question_analytics already had them).
+  - Frontend teacher responses modal (`TeacherDashboard.jsx`): shows the quest-level image + "View attached PDF" (data-testid `responses-quest-attachment`) and per-student question images; fixed "10/undefined pts" → "10/10 pts".
+  - Frontend child (`QuestsPage.jsx`): completed quests are now clickable to re-open in **review mode**, showing the general image, View PDF, and per-question images.
+  - Verified 100% by testing agent (iterations 70 & 71). NOTE: a separate pre-existing issue was flagged — username-only ("school child") logins via the /login UI hit `/api/auth/school-login` and 401; `/api/auth/login` works. Not addressed (out of scope).
+
 - **Child-to-child gifts are CoinQuest play money (not parent-owed)** (June 2026)
   - Bug: a child gifting money to a classmate moved the gifting jar balance correctly, but the receiver's `gift_received` transaction had no `wallet_source`, so it defaulted to `my_wallet` and wrongly showed up in the parent's "Real Earnings to Pay Your Children" list as real cash owed.
   - Fix: all child-to-child gift transactions (money + item, sent + received) in `/app/backend/routes/child.py` `gift-money` now set `wallet_source: "coinquest"`. Parent give-money gifts still explicitly use `my_wallet` (real money owed) — unchanged.
