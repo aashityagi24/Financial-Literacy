@@ -515,8 +515,9 @@ export default function QuestsPage({ user }) {
               const isPendingApproval = quest.user_status === 'pending_approval';
               const isExpired = quest.user_status === 'expired' || quest.is_expired;
               
-              // Determine if quest should be disabled (not clickable)
-              const isDisabled = isCompleted || isPendingApproval || isExpired;
+              // Completed quests remain clickable so the child can re-open them in review mode
+              // (see the quest image/PDF and questions again). Pending-approval & expired stay locked.
+              const isDisabled = isPendingApproval || isExpired;
               
               return (
                 <div 
@@ -526,7 +527,7 @@ export default function QuestsPage({ user }) {
                     isExpired
                       ? 'opacity-50 grayscale cursor-not-allowed bg-gray-200 border-2 border-gray-400'
                       : isCompleted 
-                        ? 'opacity-50 grayscale cursor-default bg-gray-100' 
+                        ? 'opacity-70 cursor-pointer hover:shadow-lg bg-gray-100' 
                         : isPendingApproval
                           ? 'opacity-70 cursor-default bg-[#FFD23F]/20 border-2 border-[#FFD23F]'
                           : 'cursor-pointer hover:shadow-lg'
