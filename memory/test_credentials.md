@@ -30,6 +30,11 @@
 - Seeded ledger: CoinQuest ₹150 (lesson + streak demo rows) + My Wallet ₹175 pending (chore ₹50 + allowance ₹100 + reward ₹25)
 
 
+## Quest Media Test (images/PDF on quests — QA)
+- Teacher: test_teacher_1 / testpassword (owns "Demo Class" / demo_classroom_1)
+- Student: classmate_g3 / testpass123 (enrolled active in Demo Class)
+- Seeded quest `quest_media_test_001` in Demo Class with a general image + PDF + one MCQ question with an image, and a completion by classmate_g3 (so teacher analytics has data).
+
 ## Grade-Aware Test Users (Classmates QA — May 28, 2026)
 - `classmate_k` / `testpass123` — Grade 0 (Kindergarten), enrolled in Demo Class
 - `classmate_g1` / `testpass123` — Grade 1, enrolled in Demo Class

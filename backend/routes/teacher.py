@@ -1165,10 +1165,13 @@ async def get_quest_responses(quest_id: str, request: Request):
                 "question_text": q.get("question_text"),
                 "question_type": q.get("question_type"),
                 "options": q.get("options"),
+                "image_url": q.get("image_url"),
+                "pdf_url": q.get("pdf_url"),
                 "user_answer": user_answer,
                 "correct_answer": correct_answer,
                 "is_correct": is_correct,
                 "points": q.get("points", 0),
+                "max_points": q.get("points", 0),
                 "points_earned": q.get("points", 0) if is_correct else 0
             })
         
@@ -1289,6 +1292,8 @@ async def get_quest_responses(quest_id: str, request: Request):
             "quest_id": quest["quest_id"],
             "title": quest["title"],
             "description": quest.get("description", ""),
+            "image_url": quest.get("image_url"),
+            "pdf_url": quest.get("pdf_url"),
             "total_points": quest.get("total_points", 0),
             "questions_count": len(quest.get("questions", [])),
             "due_date": quest.get("due_date"),

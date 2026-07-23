@@ -1775,6 +1775,29 @@ export default function TeacherDashboard({ user }) {
               </div>
             ) : questResponses ? (
               <div className="flex-1 overflow-hidden flex flex-col">
+                {/* Quest attachment (general image / PDF) so teacher recalls the quest */}
+                {(questResponses.quest?.image_url || questResponses.quest?.pdf_url) && (
+                  <div className="flex items-center gap-3 mb-3 p-2 bg-[#F8F9FA] rounded-xl border border-[#E0FBFC]" data-testid="responses-quest-attachment">
+                    {questResponses.quest.image_url && (
+                      <img
+                        src={getAssetUrl(questResponses.quest.image_url)}
+                        alt="Quest attachment"
+                        className="h-16 w-auto rounded-lg border border-[#1D3557]/20 object-cover"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    )}
+                    {questResponses.quest.pdf_url && (
+                      <a
+                        href={getAssetUrl(questResponses.quest.pdf_url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-sm text-[#3D5A80] hover:text-[#1D3557] bg-[#E0FBFC] px-3 py-2 rounded-lg font-medium"
+                      >
+                        <FileText className="w-4 h-4" /> View attached PDF
+                      </a>
+                    )}
+                  </div>
+                )}
                 {/* Summary Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4 p-3 bg-[#E0FBFC] rounded-xl">
                   <div className="text-center">
@@ -1877,6 +1900,30 @@ export default function TeacherDashboard({ user }) {
                                   {q.points_earned}/{q.max_points} pts
                                 </div>
                               </div>
+
+                              {/* Question image / PDF so teacher recalls the question */}
+                              {(q.image_url || q.pdf_url) && (
+                                <div className="ml-7 flex gap-2 mb-2">
+                                  {q.image_url && (
+                                    <img
+                                      src={getAssetUrl(q.image_url)}
+                                      alt="Question"
+                                      className="h-16 w-auto rounded border border-[#1D3557]/20 object-cover"
+                                      onError={(e) => { e.target.style.display = 'none'; }}
+                                    />
+                                  )}
+                                  {q.pdf_url && (
+                                    <a
+                                      href={getAssetUrl(q.pdf_url)}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-1 text-xs text-[#3D5A80] hover:text-[#1D3557] bg-[#E0FBFC] px-2 py-1 rounded"
+                                    >
+                                      <FileText className="w-3 h-3" /> PDF
+                                    </a>
+                                  )}
+                                </div>
+                              )}
                               
                               {/* Show options for MCQ/True-False */}
                               {q.options && (
