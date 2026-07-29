@@ -1269,3 +1269,79 @@ async def submit_quest(quest_id: str, request: Request):
         return {"message": "Quest completed!", "coins_earned": reward}
     
     return {"message": "Quest submitted for review"}
+
+
+# ============================ HOMEWORK (child side) ============================
+
+@router.get("/homework")
+async def get_child_homework(request: Request):
+    """List homework assigned to this child, with due date + done status."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    child_id = user["user_id"]
+
+    hws = await db.homework_assignments.find(
+        {"student_ids": child_id, "is_active": True}, {"_id": 0}
+    ).sort("assigned_at", -1).to_list(200)
+
+    today = datetime.now(timezone.utc).date().isoformat()
+    result = []
+    for hw in hws:
+        is_activity = hw.get("content_type") == "activity"
+        if is_activity:
+            prog = await db.user_content_progress.find_one(
+                {"content_id": hw["content_id"], "user_id": child_id, "completed": True},
+                {"_id": 0, "completed_at": 1}
+            )
+            done = prog is not None
+            done_at = prog.get("completed_at") if prog else None
+        else:
+            cmp = await db.homework_completions.find_one(
+                {"homework_id": hw["homework_id"], "student_id": child_id},
+                {"_id": 0, "marked_at": 1}
+            )
+            done = cmp is not None
+            done_at = cmp.get("marked_at") if cmp else None
+
+        result.append({
+            "homework_id": hw["homework_id"],
+            "content_id": hw["content_id"],
+            "content_type": hw.get("content_type"),
+            "content_title": hw.get("content_title"),
+            "topic_id": hw.get("topic_id"),
+            "classroom_name": hw.get("classroom_name"),
+            "due_date": hw.get("due_date"),
+            "assigned_at": hw.get("assigned_at"),
+            "is_activity": is_activity,
+            "done": done,
+            "done_at": done_at,
+            "overdue": (not done) and bool(hw.get("due_date")) and hw["due_date"] < today,
+        })
+    pending = sum(1 for r in result if not r["done"])
+    return {"homework": result, "pending_count": pending}
+
+
+@router.post("/homework/{homework_id}/mark-done")
+async def mark_homework_done(homework_id: str, request: Request):
+    """Child self-marks a non-activity homework as done (activities auto-track)."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    child_id = user["user_id"]
+
+    hw = await db.homework_assignments.find_one(
+        {"homework_id": homework_id, "is_active": True}, {"_id": 0}
+    )
+    if not hw:
+        raise HTTPException(status_code=404, detail="Homework not found")
+    if child_id not in hw.get("student_ids", []):
+        raise HTTPException(status_code=403, detail="This homework is not assigned to you")
+
+    now = datetime.now(timezone.utc).isoformat()
+    await db.homework_completions.update_one(
+        {"homework_id": homework_id, "student_id": child_id},
+        {"$set": {"homework_id": homework_id, "student_id": child_id, "status": "done", "marked_at": now}},
+        upsert=True
+    )
+    return {"message": "Marked as done", "done": True}

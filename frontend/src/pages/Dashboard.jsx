@@ -13,6 +13,7 @@ import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
 import NotificationCenter from '@/components/NotificationCenter';
 import ClassmatesSection from '@/components/ClassmatesSection';
 import DashboardFooter from '@/components/DashboardFooter';
+import { ChildHomework } from '@/components/ChildHomework';
 import { getDefaultAvatar } from '@/utils/avatars';
 
 export default function Dashboard({ user, setUser }) {
@@ -336,6 +337,9 @@ export default function Dashboard({ user, setUser }) {
             </Link>
           ))}
         </div>
+        
+        {/* Homework assigned by teacher */}
+        <ChildHomework />
         
         {/* Three Card Layout - Money Jars, Savings Goal, Classroom */}
         <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 ${showAnimations ? 'animate-bounce-in stagger-2' : ''}`}>

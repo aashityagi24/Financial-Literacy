@@ -10,6 +10,9 @@ import {
 } from 'lucide-react';
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import ActivityScoresBadge from "@/components/ActivityScoresBadge";
 import ChildActivityScore from "@/components/ChildActivityScore";
 import TrialLimitDialog from "@/components/TrialLimitDialog";
@@ -46,6 +49,13 @@ export default function TopicPage({ user }) {
   // Fetched once for teachers; children see the same info via `content.done_in_class`
   // returned by the topic API.
   const [teacherDoneIds, setTeacherDoneIds] = useState(new Set());
+  // Homework assignment (teacher)
+  const [teacherClassrooms, setTeacherClassrooms] = useState([]);
+  const [showHomeworkDialog, setShowHomeworkDialog] = useState(false);
+  const [homeworkContent, setHomeworkContent] = useState(null);
+  const [hwClassroomId, setHwClassroomId] = useState('');
+  const [hwDueDate, setHwDueDate] = useState('');
+  const [hwLoading, setHwLoading] = useState(false);
   const trialBannerShownRef = useRef(false);
   const showAnimations = useFirstVisitAnimation(`topic-${topicId}`);
   const lastCompletedRef = useRef(null);
@@ -81,6 +91,44 @@ export default function TopicPage({ user }) {
       toast.success(res.data.message);
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Could not update Done-in-Class');
+    }
+  };
+
+  // Load teacher's classrooms once (for the Assign-as-Homework picker)
+  useEffect(() => {
+    if (user?.role !== 'teacher') return;
+    (async () => {
+      try {
+        const res = await axios.get(`${API}/teacher/classrooms`);
+        setTeacherClassrooms(Array.isArray(res.data) ? res.data : (res.data?.classrooms || []));
+      } catch (e) { /* silent */ }
+    })();
+  }, [user?.role]);
+
+  const openAssignHomework = (content, e) => {
+    e?.stopPropagation();
+    setHomeworkContent(content);
+    setHwClassroomId(teacherClassrooms.length === 1 ? teacherClassrooms[0].classroom_id : '');
+    setHwDueDate('');
+    setShowHomeworkDialog(true);
+  };
+
+  const submitHomework = async () => {
+    if (!hwClassroomId) { toast.error('Please select a classroom'); return; }
+    if (!hwDueDate) { toast.error('Please set a due date'); return; }
+    setHwLoading(true);
+    try {
+      const res = await axios.post(`${API}/teacher/homework`, {
+        classroom_id: hwClassroomId,
+        content_id: homeworkContent.content_id,
+        due_date: hwDueDate,
+      });
+      toast.success(`Assigned to ${res.data.student_count} student(s)!`);
+      setShowHomeworkDialog(false);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Could not assign homework');
+    } finally {
+      setHwLoading(false);
     }
   };
   
@@ -683,6 +731,18 @@ export default function TopicPage({ user }) {
                               {teacherDoneIds.has(content.content_id) ? 'Done in class' : 'Mark done in class'}
                             </button>
                           )}
+                          {/* Teacher: Assign as Homework */}
+                          {user?.role === 'teacher' && (
+                            <button
+                              onClick={(e) => openAssignHomework(content, e)}
+                              className="text-xs px-2 py-1 rounded-full font-semibold flex items-center gap-1 bg-[#EE6C4D] text-white hover:bg-[#DD5B3C] transition-colors"
+                              title="Assign this to a classroom as homework with a due date."
+                              data-testid={`assign-homework-${content.content_id}`}
+                            >
+                              <FileText className="w-3 h-3" />
+                              Assign as Homework
+                            </button>
+                          )}
                           {/* Teacher Analytics Link */}
                           {user?.role === 'teacher' && content.content_type === 'activity' && (
                             <button
@@ -966,6 +1026,66 @@ export default function TopicPage({ user }) {
         onClose={() => setShowTrialLimitDialog(false)}
         limit={downloadStatus.limit || 5}
       />
+
+      {/* Assign as Homework dialog (teacher) */}
+      <Dialog open={showHomeworkDialog} onOpenChange={setShowHomeworkDialog}>
+        <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+              Assign as Homework
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            {homeworkContent && (
+              <div className="p-3 rounded-xl bg-[#F8F9FA] border border-gray-200">
+                <p className="text-sm text-[#3D5A80]">Content</p>
+                <p className="font-bold text-[#1D3557]">{homeworkContent.title}</p>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-semibold capitalize">
+                  {homeworkContent.content_type === 'activity' ? 'Interactive activity (auto-tracked)' : `${homeworkContent.content_type} (student marks done)`}
+                </span>
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-bold text-[#1D3557] mb-1">Classroom *</label>
+              <Select value={hwClassroomId} onValueChange={setHwClassroomId}>
+                <SelectTrigger className="border-3 border-[#1D3557]" data-testid="homework-classroom-select">
+                  <SelectValue placeholder="Choose a classroom" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teacherClassrooms.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-gray-500">No classrooms yet</div>
+                  )}
+                  {teacherClassrooms.map((c) => (
+                    <SelectItem key={c.classroom_id} value={c.classroom_id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">All students in this classroom will get it and be notified.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-[#1D3557] mb-1">Due date *</label>
+              <Input
+                type="date"
+                value={hwDueDate}
+                min={new Date().toISOString().split('T')[0]}
+                onChange={(e) => setHwDueDate(e.target.value)}
+                className="border-3 border-[#1D3557]"
+                data-testid="homework-due-date"
+              />
+            </div>
+            <button
+              onClick={submitHomework}
+              disabled={hwLoading}
+              className="btn-primary w-full py-3 disabled:opacity-50"
+              data-testid="homework-assign-submit"
+            >
+              {hwLoading ? 'Assigning…' : 'Assign Homework'}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

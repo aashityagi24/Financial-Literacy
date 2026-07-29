@@ -327,6 +327,185 @@ async def toggle_done_in_class_all_classrooms(content_id: str, request: Request)
     return {"done_in_class": True, "message": f"Marked across {len(docs)} classroom(s)"}
 
 
+# ============================ HOMEWORK ============================
+# Teacher assigns a content item as homework to all students of a classroom,
+# with a due date. Interactive "activity" content is auto-tracked via
+# user_content_progress; other content (book/video/worksheet/etc.) is marked
+# done by the student. Teacher gets per-student Done/Not-Done analytics.
+
+def _activity_types():
+    return {"activity"}
+
+
+@router.post("/homework")
+async def assign_homework(request: Request):
+    """Assign a content item as homework to all active students of a classroom."""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+
+    body = await request.json()
+    classroom_id = (body.get("classroom_id") or "").strip()
+    content_id = (body.get("content_id") or "").strip()
+    due_date = (body.get("due_date") or "").strip()  # YYYY-MM-DD
+
+    if not classroom_id or not content_id or not due_date:
+        raise HTTPException(status_code=400, detail="classroom_id, content_id and due_date are required")
+
+    classroom = await db.classrooms.find_one({"classroom_id": classroom_id, "teacher_id": teacher["user_id"]})
+    if not classroom:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+
+    content = await db.content_items.find_one({"content_id": content_id}, {"_id": 0})
+    if not content:
+        raise HTTPException(status_code=404, detail="Content not found")
+
+    enrollments = await db.classroom_students.find(
+        {"classroom_id": classroom_id, "status": "active"}, {"_id": 0, "student_id": 1}
+    ).to_list(500)
+    student_ids = [e["student_id"] for e in enrollments]
+
+    # Prevent duplicate active homework for the same classroom+content
+    existing = await db.homework_assignments.find_one({
+        "classroom_id": classroom_id, "content_id": content_id, "is_active": True
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="This content is already assigned as homework to this classroom")
+
+    homework_id = f"hw_{uuid.uuid4().hex[:12]}"
+    now = datetime.now(timezone.utc).isoformat()
+    doc = {
+        "homework_id": homework_id,
+        "classroom_id": classroom_id,
+        "classroom_name": classroom.get("name"),
+        "teacher_id": teacher["user_id"],
+        "content_id": content_id,
+        "content_type": content.get("content_type"),
+        "content_title": content.get("title"),
+        "topic_id": content.get("topic_id"),
+        "due_date": due_date,
+        "student_ids": student_ids,
+        "assigned_at": now,
+        "is_active": True,
+    }
+    await db.homework_assignments.insert_one(doc)
+
+    # Notify each student
+    if student_ids:
+        notifications = [{
+            "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
+            "user_id": sid,
+            "type": "homework",
+            "title": f"New Homework from {teacher.get('name', 'Teacher')}",
+            "message": f"'{content.get('title')}' is due {due_date}. Tap to start!",
+            "homework_id": homework_id,
+            "is_read": False,
+            "created_at": now,
+        } for sid in student_ids]
+        await db.notifications.insert_many(notifications)
+
+    return {"message": "Homework assigned", "homework_id": homework_id, "student_count": len(student_ids)}
+
+
+async def _homework_student_status(db, hw):
+    """Return per-student status list for a homework with Done/Not-Done + timestamp."""
+    is_activity = hw.get("content_type") in _activity_types()
+    student_ids = hw.get("student_ids", [])
+    users = await db.users.find({"user_id": {"$in": student_ids}}, {"_id": 0, "user_id": 1, "name": 1, "username": 1}).to_list(500)
+    name_map = {u["user_id"]: (u.get("name") or u.get("username") or "Student") for u in users}
+
+    done_map = {}
+    if is_activity:
+        progress = await db.user_content_progress.find(
+            {"content_id": hw["content_id"], "user_id": {"$in": student_ids}, "completed": True},
+            {"_id": 0, "user_id": 1, "completed_at": 1}
+        ).to_list(500)
+        for p in progress:
+            done_map[p["user_id"]] = p.get("completed_at")
+    else:
+        comps = await db.homework_completions.find(
+            {"homework_id": hw["homework_id"], "student_id": {"$in": student_ids}},
+            {"_id": 0, "student_id": 1, "marked_at": 1}
+        ).to_list(500)
+        for cmp in comps:
+            done_map[cmp["student_id"]] = cmp.get("marked_at")
+
+    students = []
+    for sid in student_ids:
+        students.append({
+            "student_id": sid,
+            "name": name_map.get(sid, "Student"),
+            "done": sid in done_map,
+            "completed_at": done_map.get(sid),
+        })
+    students.sort(key=lambda s: (not s["done"], s["name"].lower()))
+    return students
+
+
+@router.get("/homework")
+async def list_homework(request: Request):
+    """List the teacher's homework assignments with completion summary."""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    hws = await db.homework_assignments.find(
+        {"teacher_id": teacher["user_id"], "is_active": True}, {"_id": 0}
+    ).sort("assigned_at", -1).to_list(200)
+
+    result = []
+    for hw in hws:
+        students = await _homework_student_status(db, hw)
+        total = len(students)
+        done = sum(1 for s in students if s["done"])
+        result.append({
+            **hw,
+            "total_students": total,
+            "completed_count": done,
+            "not_done_count": total - done,
+            "is_activity": hw.get("content_type") in _activity_types(),
+        })
+    return {"homework": result}
+
+
+@router.get("/homework/{homework_id}")
+async def homework_detail(homework_id: str, request: Request):
+    """Per-student Done/Not-Done breakdown for one homework."""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    hw = await db.homework_assignments.find_one(
+        {"homework_id": homework_id, "teacher_id": teacher["user_id"]}, {"_id": 0}
+    )
+    if not hw:
+        raise HTTPException(status_code=404, detail="Homework not found")
+    students = await _homework_student_status(db, hw)
+    done = sum(1 for s in students if s["done"])
+    return {
+        "homework": hw,
+        "is_activity": hw.get("content_type") in _activity_types(),
+        "students": students,
+        "total_students": len(students),
+        "completed_count": done,
+        "not_done_count": len(students) - done,
+    }
+
+
+@router.delete("/homework/{homework_id}")
+async def delete_homework(homework_id: str, request: Request):
+    """Unassign a homework."""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    res = await db.homework_assignments.update_one(
+        {"homework_id": homework_id, "teacher_id": teacher["user_id"]},
+        {"$set": {"is_active": False}}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Homework not found")
+    return {"message": "Homework removed"}
+
+
+
 @router.post("/classrooms/{classroom_id}/reward")
 async def reward_students(classroom_id: str, reward: ClassroomReward, request: Request):
     """Give rewards to students"""

@@ -1,0 +1,28 @@
+{
+  "summary": "End-to-end UI verification of the new 'Assign as Homework' feature across teacher, child, and analytics surfaces. All 5 review scenarios pass: (1) Teacher /learn?grade=3 → Buying Goods Or Services topic → clicked assign-homework-content_07aae589c292 (Candy Shop), dialog opened with classroom select + due date, selected Demo Class, set due 2026-08-05, clicked Assign → 'Assigned to 1 student(s)!' toast shown. (2) Child classmate_g3 dashboard → 'My Homework' section (data-testid='child-homework-section') visible with Candy Shop, Activity badge, Due 2026-08-05, '1 to do' badge, and a 'Start' button (data-testid='homework-start-hw_c63a55c16008') — correct for activity type (the Mark Done path applies only to non-activity content, and grade 3 only has this one Activity item, so the Mark Done path was not UI-exercised but is confirmed by E1's curl and by code review of ChildHomework.jsx). (3) Bell (notification-bell) opened NotificationCenter which contained 'New Homework from TTest — Candy Shop is due 2026-08-05. Tap to start!'. (4) Teacher back in Demo Class shows 'Homework (1)' section (data-testid='teacher-homework-section') with Candy Shop card (data-testid='teacher-homework-<id>'), progress bar and '0/1 done'; expanding it reveals analytics panel (homework-analytics-<id>) with 'Completion (auto-tracked) — 0/1 done' and student row 'Cara G3 → Not done' — correct (activity is auto-tracked and Cara has not played it). (5) No runtime/console errors on any surface; only benign warnings (Radix DialogContent aria-describedby missing) and pre-login 401s from anonymous endpoints.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Assign as Homework dialog (TopicPage)", "issues": ["Radix DialogContent missing Description/aria-describedby — a11y warning in console. Cosmetic only."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "OPTIONAL: Add a non-activity content item (book/video/worksheet) to grade 3 seed so the Mark-Done UI path can be exercised end-to-end (currently only the Candy Shop Activity exists at grade 3, forcing testers to rely on backend curl for that path).",
+    "OPTIONAL a11y: Add <DialogDescription> or aria-describedby to the Assign-as-Homework Dialog and Notifications Dialog to silence Radix warnings."
+  ],
+  "critical_code_review_comments": [
+    "ChildHomework.jsx and TeacherHomework.jsx swallow fetch errors silently (/* silent */) — if /child/homework or /teacher/homework 500s, the section just disappears with no feedback. Consider logging or a subtle error state.",
+    "TeacherHomework.jsx fetches ALL teacher homework then filters by classroomId client-side (line 22-23). Prefer a server-side ?classroom_id= filter to avoid over-fetching once a teacher has many classes.",
+    "The bell notification links to the child dashboard rather than deep-linking to the homework or content — a 'Tap to start' phrasing implies deep-link; consider wiring the notification click to /learn/topic/<topic_id> or the homework section."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (E1 pre-verified via curl)", "frontend": "100% (5/5 review scenarios pass)"},
+  "test_credentials": "Teacher test_teacher_1/testpassword; Child classmate_g3/testpass123",
+  "seed_data_creation": "Created 1 homework via UI: Candy Shop → Demo Class → due 2026-08-05 (hw_c63a55c16008). Left in place for main-agent inspection; can be removed via the Trash icon (remove-homework-hw_c63a55c16008) in the teacher classroom view.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Grade 3 only has one content item (Candy Shop, type='activity') so the child Mark Done button won't appear for grade 3 — pick a different grade with book/video/worksheet content to exercise the homework-markdone-<id> path in the UI. All data-testids match the spec: assign-homework-<content_id>, homework-classroom-select, homework-due-date, homework-assign-submit, child-homework-section, homework-start-<hw_id>, homework-markdone-<hw_id>, homework-done-<hw_id>, teacher-homework-section, teacher-homework-<hw_id>, homework-analytics-<hw_id>, hw-student-<student_id>, remove-homework-<hw_id>."
+}

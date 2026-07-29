@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { getDefaultAvatar } from '@/utils/avatars';
 import DashboardFooter from '@/components/DashboardFooter';
+import { TeacherHomework } from '@/components/TeacherHomework';
 import {
   Dialog,
   DialogContent,
@@ -1205,6 +1206,9 @@ export default function TeacherDashboard({ user }) {
                     <ChevronRight className="w-6 h-6 text-[#1D3557]" />
                   </div>
                 </Link>
+                
+                {/* Homework analytics for this classroom */}
+                <TeacherHomework classroomId={selectedClassroom} />
                 
                 {/* My Quests Section - filtered by current classroom */}
                 {teacherQuests.filter(q => q.classroom_id === selectedClassroom).length > 0 && (
