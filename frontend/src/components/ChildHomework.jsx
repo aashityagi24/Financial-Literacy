@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
-import { ClipboardList, Check, Clock, AlertTriangle } from 'lucide-react';
+import { ClipboardList, Clock, AlertTriangle } from 'lucide-react';
 
 const typeLabel = (t) => {
   const map = { activity: 'Activity', book: 'Story/Book', video: 'Video', worksheet: 'Worksheet', workbook: 'Workbook', know_it_sheet: 'Know-It Sheet' };
@@ -47,10 +47,10 @@ export const ChildHomework = () => {
     else navigate('/learn');
   };
 
-  if (loading || homework.length === 0) return null;
+  if (loading) return null;
 
   const pending = homework.filter((h) => !h.done);
-  const doneList = homework.filter((h) => h.done);
+  if (pending.length === 0) return null;
 
   return (
     <div className="card-playful p-5 mb-6" data-testid="child-homework-section">
@@ -59,18 +59,16 @@ export const ChildHomework = () => {
           <ClipboardList className="w-5 h-5 text-white" />
         </div>
         <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>My Homework</h2>
-        {pending.length > 0 && (
-          <span className="ml-auto text-xs font-bold px-2 py-1 rounded-full bg-[#EE6C4D] text-white" data-testid="homework-pending-count">
-            {pending.length} to do
-          </span>
-        )}
+        <span className="ml-auto text-xs font-bold px-2 py-1 rounded-full bg-[#EE6C4D] text-white" data-testid="homework-pending-count">
+          {pending.length} to do
+        </span>
       </div>
 
       <div className="space-y-3">
-        {[...pending, ...doneList].map((hw) => (
+        {pending.map((hw) => (
           <div
             key={hw.homework_id}
-            className={`flex items-center gap-3 p-3 rounded-xl border-2 ${hw.done ? 'bg-green-50 border-green-200' : hw.overdue ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}
+            className={`flex items-center gap-3 p-3 rounded-xl border-2 ${hw.overdue ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}
             data-testid={`homework-item-${hw.homework_id}`}
           >
             <div className="min-w-0 flex-1">
@@ -83,11 +81,7 @@ export const ChildHomework = () => {
                 </span>
               </div>
             </div>
-            {hw.done ? (
-              <span className="flex items-center gap-1 text-sm font-bold text-green-600 shrink-0" data-testid={`homework-done-${hw.homework_id}`}>
-                <Check className="w-4 h-4" /> Done
-              </span>
-            ) : hw.is_activity ? (
+            {hw.is_activity ? (
               <button
                 onClick={() => openContent(hw)}
                 className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#9B5DE5] hover:bg-[#8A4DD4] text-white shrink-0"
