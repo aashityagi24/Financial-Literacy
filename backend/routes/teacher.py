@@ -492,6 +492,27 @@ async def homework_detail(homework_id: str, request: Request):
     }
 
 
+@router.post("/homework/{homework_id}/close")
+async def close_homework(homework_id: str, request: Request):
+    """Teacher marks a homework as done/closed. It disappears from the teacher's
+    dashboard and from every child's dashboard, regardless of whether each child
+    completed it."""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    res = await db.homework_assignments.update_one(
+        {"homework_id": homework_id, "teacher_id": teacher["user_id"]},
+        {"$set": {
+            "is_active": False,
+            "status": "closed",
+            "closed_at": datetime.now(timezone.utc).isoformat(),
+        }}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Homework not found")
+    return {"message": "Homework marked done"}
+
+
 @router.delete("/homework/{homework_id}")
 async def delete_homework(homework_id: str, request: Request):
     """Unassign a homework."""

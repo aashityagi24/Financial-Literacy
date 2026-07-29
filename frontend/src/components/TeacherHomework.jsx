@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
-import { ClipboardList, Check, X, Trash2, Users, BarChart3 } from 'lucide-react';
+import { ClipboardList, Check, X, Trash2, Users, BarChart3, CheckCircle2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const typeLabel = (t) => {
@@ -47,6 +47,19 @@ export const TeacherHomework = ({ classroomId, refreshKey }) => {
   };
 
   const closeAnalytics = () => { setActiveHw(null); setDetail(null); };
+
+  const markHomeworkDone = async (hw, e) => {
+    e.stopPropagation();
+    if (!window.confirm(`Mark "${hw.content_title}" as done? It will be removed from your dashboard and from all students' dashboards.`)) return;
+    try {
+      await axios.post(`${API}/teacher/homework/${hw.homework_id}/close`);
+      toast.success('Homework marked done');
+      if (activeHw?.homework_id === hw.homework_id) closeAnalytics();
+      fetchHomework();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Could not mark done');
+    }
+  };
 
   const removeHomework = async (hw, e) => {
     e.stopPropagation();
@@ -93,6 +106,15 @@ export const TeacherHomework = ({ classroomId, refreshKey }) => {
                 >
                   <BarChart3 className="w-4 h-4" />
                   Analytics
+                </button>
+                <button
+                  onClick={(e) => markHomeworkDone(hw, e)}
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors bg-[#06D6A0] text-white hover:bg-[#05C090]"
+                  title="Mark this homework as done — removes it from your dashboard and all students' dashboards."
+                  data-testid={`homework-done-btn-${hw.homework_id}`}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Done
                 </button>
                 <button onClick={(e) => removeHomework(hw, e)} className="text-gray-400 hover:text-[#EE6C4D] shrink-0" title="Remove homework" data-testid={`remove-homework-${hw.homework_id}`}>
                   <Trash2 className="w-4 h-4" />
