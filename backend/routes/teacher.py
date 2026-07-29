@@ -396,9 +396,11 @@ async def assign_homework(request: Request):
             "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
             "user_id": sid,
             "type": "homework",
+            "notification_type": "homework",
             "title": f"New Homework from {teacher.get('name', 'Teacher')}",
             "message": f"'{content.get('title')}' is due {due_date}. Tap to start!",
             "homework_id": homework_id,
+            "link": f"/learn/topic/{content.get('topic_id')}" if content.get("topic_id") else "/dashboard",
             "is_read": False,
             "created_at": now,
         } for sid in student_ids]

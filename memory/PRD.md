@@ -933,6 +933,15 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Assign as Homework (teacher → students) with analytics** (June 2026)
+  - Teachers can assign any content item as homework from the Lesson Plan / content view (`TopicPage.jsx` → "Assign as Homework" button → dialog with classroom picker + due date).
+  - All active students of the chosen classroom get it and receive a bell notification (deep-links to the content topic). Child sees a "My Homework" section (`ChildHomework.jsx`) on their dashboard with due date + overdue flag.
+  - Interactive `activity` content is auto-tracked (via `user_content_progress`); story/book/video/worksheet are self-marked "Done" by the child (`homework_completions`). Overdue stays completable, flagged late.
+  - Teacher analytics per homework (`TeacherHomework.jsx`, inside the classroom view): % complete, progress bar, and per-student Done / Not-Done list.
+  - Backend (`teacher.py`): POST/GET/GET{id}/DELETE `/teacher/homework`; (`child.py`): GET `/child/homework`, POST `/child/homework/{id}/mark-done`. Collections: `homework_assignments`, `homework_completions`.
+  - Verified 100% (curl for all backend paths + testing agent iteration_75 for the full UI). data-testids documented in iteration_75.
+  - Known small follow-ups (optional): server-side classroom filter for teacher homework list; non-activity grade-3 seed to UI-exercise Mark-Done; DialogDescription a11y.
+
 - **School Dashboard: map existing accounts by email or username** (June 2026)
   - The "Add User" modal now has a **Create New** vs **Add Existing** mode toggle. In "Add Existing", the school admin enters an existing account's email OR username and it's mapped to the school (sets `school_id`).
   - New backend endpoint `POST /api/school/users/link-existing` (`school.py`): looks up by email or username, validates role match + school membership (rejects already-in-a-school and role mismatches), and for a child honors optional parent/classroom/teacher links.
