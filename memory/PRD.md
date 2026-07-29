@@ -933,6 +933,11 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Homework: "Assigned" state + child highlight** (June 2026)
+  - Teacher content view (`TopicPage.jsx`): after a content item is assigned as homework, its button changes from orange "Assign as Homework" to green "Assigned as Homework" (check icon). Fetched from `GET /teacher/homework` into `assignedContentIds`; flips instantly on assign. Still clickable to assign to another classroom.
+  - Child side (`ChildHomework.jsx` → `TopicPage.jsx`): tapping "Open"/"Start" on a homework to-do navigates with `?highlight=<content_id>`; the target content card gets an orange ring + a "Your Homework — complete this!" badge and scrolls into view so the child knows exactly what to do.
+  - Verified 100% by testing agent (iteration_77). Note: testing agent flagged that unified login doesn't persist `session_token` to localStorage (only signup does) — recommended fix to reduce intermittent auth bounce (deferred; auth change).
+
 - **Fix: teacher clicking a Topic showed "Coming Soon"** (June 2026)
   - Bug: when a teacher clicked a parent Topic card (not a subtopic), the content page showed an empty "Coming Soon" state instead of the topic's subtopics.
   - Root cause: `get_topic_detail` in `content.py` computed subtopic `content_count` only for child/parent/admin roles; for teachers it stayed 0, so the "filter out empty subtopics" step (`if not is_admin`) dropped every subtopic.
