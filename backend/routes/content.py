@@ -604,6 +604,29 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
             )
             subtopic["completed_count"] = sum(1 for c in subtopic_content if c["content_id"] in completed_content_ids)
             subtopic["content_count"] = len(subtopic_content)
+    elif is_teacher:
+        # For teachers: compute subtopic content counts (teacher-visible) so that
+        # non-empty subtopics are shown. Teachers can access everything (unlocked).
+        for subtopic in subtopics:
+            subtopic_id = subtopic["topic_id"]
+            subtopic_content_extra = {
+                "is_published": True,
+                "$or": [
+                    {"visible_to": {"$in": ["child", "teacher"]}},
+                    {"visible_to": {"$exists": False}},
+                    {"visible_to": []},
+                    {"visible_to": None}
+                ]
+            }
+            if filter_grade is not None:
+                subtopic_content_extra["min_grade"] = {"$lte": filter_grade}
+                subtopic_content_extra["max_grade"] = {"$gte": filter_grade}
+            subtopic_content = await find_with_grade_order(
+                db.content_items, subtopic_content_extra, filter_grade,
+                parent_field='topic_id', parent_target=subtopic_id, limit=100
+            )
+            subtopic["is_unlocked"] = True
+            subtopic["content_count"] = len(subtopic_content)
     
     # Filter out empty subtopics for non-admin users
     if not is_admin:
