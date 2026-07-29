@@ -1,444 +1,473 @@
 <analysis>original_problem_statement:
-CoinQuest is a gamified K–5 financial-literacy platform with child, parent, teacher, admin, school, content-management, wallets, subscription/payments, and learning-progress features.
+CoinQuest is a K–5 gamified financial-literacy platform with child, parent, teacher, school, and admin roles. It includes learning content, wallets, subscriptions, Money Words, quests, classroom features, and parent/teacher reporting.
 
-Recent user requests covered:
-- Grade-aware content management and learning counts.
-- Money Words/Word Bank branding, content, grade overrides, publishing controls, and categories.
-- Parent/teacher/child dashboard and navigation improvements.
-- Email-less child accounts, linking children, and subscription activation.
-- Razorpay payment completion onboarding.
-- Landing-page CTA, analytics tags, visual card colors.
-- Teacher “Done in class” learning completion.
-- Admin content/subscription controls.
-- **Current request:** replace a landing-page image with a user-provided replacement image.
+Recent explicit user requirements:
+- Improve teacher homework UI:
+  1. Differentiate **Done in Class** and **Assigned as Homework** visually; one should use a clearly visible blue shade.
+  2. Teacher homework performance should default to analytics/summary, not a long list of all children.
+  3. Homework cards should show an **Analytics** button; detailed student statuses should only appear after clicking/opening analytics.
+- The most recent implementation began these three UI changes but has **not been compiled or tested yet**.
 
 PRODUCT REQUIREMENTS:
-- Tiered per-child subscription pricing and Razorpay-gated access.
-- Hierarchical Topics → Subtopics → Content with progressive unlocks.
-- Grade-specific content organization, ordering, moving, titles, and content visibility.
-- Multi-admin content synchronization.
-- Email-less child accounts and parent linkage.
-- Separate play money vs real parent-managed money.
-- Grade-aware child learning and parent/teacher insight counts.
-- Admin-managed publishing state for content and Money Words.
-- Teacher can mark content “Done in class” to unlock child progress.
-- Landing page supports subscriptions, GA/GTM tracking, and branding.
-- User-facing Word Bank is branded “Money Words.”
+- Tiered per-child subscriptions with Razorpay-gated access.
+- Grade-aware Topics → Subtopics → Content hierarchy and progressive unlocks.
+- Grade-specific content organization, publishing, ordering, and visibility.
+- Child, parent, teacher, school, and admin dashboards.
+- Separate CoinQuest play money and parent-settled real-money wallet concepts.
+- Teacher classroom features: done-in-class completion, quests, homework assignment, deadlines, notifications, analytics.
+- Parent features: child links, chores, rewards, allowance, gifts, savings goals, payment traceability.
+- User-facing Word Bank branding is “Money Words.”
+- Landing page, analytics tracking, and ₹49 CTA checkout flow.
 
 **User's preferred language**: English. Next agent must respond in English only.
 
 **what currently exists?**
-- Large React + FastAPI + MongoDB app with established role-specific dashboards and APIs.
-- Admin content management supports grade-scoped moves via , per-grade ordering, live/draft filtering, inline Live/Draft and Mandatory/Optional controls.
-- User-facing Money Words supports grade-aware overrides, grade-specific category/letter filters, term-only search, and live/draft visibility.
-- Email-less child creation/linking and admin-managed subscriptions are functional.
-- Payment completion has a new “complete signup” flow for post-Razorpay password setup and automatic login.
-- Teacher “Done in class” logic is implemented and affects child unlock gating.
-- Landing page has GTM and GA4 tags configured in .
-- The prior temporary “Landing Hero Image manager with crop” feature was rolled back completely.
-- **Current image replacement request has not been implemented yet.** The agent only invoked asset discovery and received a long list of available artifacts.
+- Large React + FastAPI + MongoDB application with established role-specific routes, dashboards, auth, wallets, learning content, subscriptions, teacher quests, and school account management.
+- A complete “Assign as Homework” feature was recently added and verified:
+  - Teacher assigns one content item to an owned classroom with date-only deadline.
+  - Children receive notification and see a Homework dashboard section.
+  - Activities are auto-tracked through learning progress; non-activity content can be marked done.
+  - Teachers can review homework completion analytics.
+- Homework teacher-side UI is currently being refined so cards stay compact and distinguish classroom completion from homework.
+- Recent parent dashboard improvements, school account mapping, teacher topic browsing, quest-media display, and remember-me identifier storage are present.
+- Existing lint warnings remain in some pages; no new test report exists after the latest incomplete UI refinement.
 
 **Last working item**:
-- Last item agent was working: Locate the exact user-provided replacement image asset and update the landing-page image (likely the hero image currently shown as “Piggy Bank”) to use it.
+- Last item agent was working: Refine the teacher homework visual hierarchy:
+  - change “Assigned as Homework” from green to blue,
+  - change homework performance from an always-visible child list to analytics-first summary,
+  - add an Analytics button that reveals the per-student list only on demand.
 - Status: IN PROGRESS
 - Agent Testing Done: N
-- Which testing method agent to use? Frontend screenshot tool after edit; asset selection/inspection first.
+- Which testing method agent to use? Frontend testing agent, after a compile/smoke check.
 - User Testing Done: N
+
+  - Last item agent was working:
+    - The agent edited  to change the teacher homework “Assigned as Homework” style from green to blue, so it differs from green “Done in Class.”
+    - The agent then edited , adding imports/state and replacing the always-visible student-performance display with an Analytics-button-led interface and collapsible detail list.
+    - The last edit succeeded, but no source inspection, compile, browser check, or testing-agent verification occurred afterward.
+  - Status: IN PROGRESS
+  - Agent Testing Done: N
+  - Which testing method agent to use? Frontend testing agent.
+  - User Testing Done: N
 
 **All Pending/In progress Issue list**:
 
-Issue 1: Replace requested landing-page image with user-provided image — P0
-- Status: IN PROGRESS
-- Is recurring issue? N
-- Should Test frontend/backend/both after fix? Frontend
-- Blocked on other issue: Asset identification/selection from  output.
-
-Issue 2: Outstanding lint error in  — P1
-- Status: TESTING PENDING
-- Is recurring issue? N
-- Should Test frontend/backend/both after fix? Frontend
-- Blocked on other issue: None.
-
-Issue 3: Potential Razorpay live payment/deployment issue — P1
-- Status: BLOCKED / USER VERIFICATION PENDING
-- Is recurring issue? N
-- Should Test frontend/backend/both after fix? Backend/integration
-- Blocked on other issue: Production redeploy/live payment verification by user.
-
-Issue 4: Badge images missing from historical data — P2
-- Status: BLOCKED
-- Is recurring issue? Y
-- Should Test frontend/backend/both after fix? NA
-- Blocked on other issue: Admin must manually upload replacement images.
+Issue 1: Complete and verify the teacher homework analytics UI refinement — P0  
+Issue 2: Existing frontend lint warnings — P1  
+Issue 3: Live Razorpay checkout/post-payment account setup verification — P1  
+Issue 4: Historical missing badge images — P2  
 
 Issues Detail:
 - Issue 1:
-  - Attempted fixes: None.  was called and found 227 artifacts, but the relevant exact uploaded image has not been selected or inserted into code.
+  - Attempted fixes:
+    - : homework assignment badge/button was edited toward a blue style.
+    - : analytics-first/collapsible child details implementation was started and last  succeeded.
   - Next debug checklist:
-    1. Inspect the newest/most likely image artifacts from the  listing; use dimensions/thumbnails/names to identify the supplied replacement image.
-    2. Read current  image markup near lines ~205–220.
-    3. Replace only the targeted image  with the selected customer asset URL.
-    4. Use a single screenshot smoke test of the landing page and verify image cropping/layout.
-  - Why fix this issue and what will be achieved with the fix? Makes the landing hero/card visual match the user’s intended replacement asset.
+    1. Inspect the final modified sections in:
+       - 
+       - 
+    2. Confirm imports and new state are valid; likely inspect for missing , icons, state names, or JSX closing tags.
+    3. Run frontend compile/build diagnostics.
+    4. Seed or reuse a classroom homework record.
+    5. Use testing agent to verify:
+       - Done in Class remains visually distinct, likely green.
+       - Assigned as Homework is blue and readable.
+       - Homework card only presents concise summary by default.
+       - Clicking Analytics opens/reveals completion analytics.
+       - Student-by-student details are hidden until requested.
+       - Existing Remove Homework action still works.
+    6. Read the new testing report and fix every finding before declaring success.
+  - Why fix this issue and what will be achieved with the fix?
+    - It prevents visual ambiguity between two teacher actions and keeps classrooms with 25–40 learners from producing a cluttered performance list.
   - Status: IN PROGRESS
   - Is recurring issue? N
   - Should Test frontend/backend/both after fix? Frontend
-  - Blocked on other issue: Need exact image selection from returned asset list.
+  - Blocked on other issue: None
 
 - Issue 2:
-  - Attempted fixes:  reported a  error at  after the hook-order fix.
+  - Attempted fixes:
+    - No complete cleanup. The following warnings were repeatedly seen:
+      - :  missing  dependency.
+      - :  missing  dependency.
+    - Earlier  unescaped-apostrophe lint error was reported as fixed, but should be re-linted if cleaning warnings broadly.
   - Next debug checklist:
-    1. Open  near line 259.
-    2. Escape apostrophe (, , or JSX string) in visible text.
-    3. Re-run JavaScript lint.
-  - Why fix this issue and what will be achieved with the fix? Restores clean lint and avoids leaving a known code-quality failure.
+    1. Do not alter unrelated code while completing P0.
+    2. If user asks for code-quality cleanup, inspect and fix warning causes safely rather than disabling lint.
+  - Why fix this issue and what will be achieved with the fix?
+    - Keeps build output clean and reduces risk of stale data/effect behavior.
   - Status: TESTING PENDING
   - Is recurring issue? N
   - Should Test frontend/backend/both after fix? Frontend
-  - Blocked on other issue: None.
+  - Blocked on other issue: None
 
 - Issue 3:
-  - Attempted fixes: Earlier error logging was added; payment onboarding flow was developed.
-  - Next debug checklist: User must redeploy and perform live Razorpay checkout. Confirm successful order creation, verify payment, redirect to , password setup, and dashboard session.
-  - Why fix this issue and what will be achieved with the fix? Enables actual monetization/paid access.
+  - Attempted fixes:
+    - Scenario C post-Razorpay signup/password setup/automatic sign-in was implemented and preview/manual API tested against seeded subscription data.
+  - Next debug checklist:
+    1. User redeploys the production site.
+    2. Execute one genuine Razorpay payment.
+    3. Confirm order creation, signature verification, redirect to complete signup, password creation, session creation, and correct dashboard landing.
+  - Why fix this issue and what will be achieved with the fix?
+    - Validates paid conversion, subscription activation, and post-payment onboarding in the real payment environment.
   - Status: BLOCKED / USER VERIFICATION PENDING
   - Is recurring issue? N
   - Should Test frontend/backend/both after fix? Both
-  - Blocked on other issue: Live environment/redeployment.
+  - Blocked on other issue: Requires actual production checkout/redeployment.
 
 - Issue 4:
-  - Attempted fixes: None possible in code.
-  - Next debug checklist: Use Badge Management to re-upload the affected images.
-  - Why fix this issue and what will be achieved with the fix? Restores missing gamification visuals.
+  - Attempted fixes: None possible from current code because source image data was previously lost.
+  - Next debug checklist:
+    - Re-upload affected badge artwork through Badge Management.
+  - Why fix this issue and what will be achieved with the fix?
+    - Restores historical badge visuals.
   - Status: BLOCKED
   - Is recurring issue? Y
   - Should Test frontend/backend/both after fix? NA
-  - Blocked on other issue: Manual admin action.
+  - Blocked on other issue: Requires an admin with original/replacement assets.
 
 **In progress Task List**:
-Task 1: Landing-page requested image replacement — P0
-- Where to resume:
-  - Review the  result from the latest interaction (Message 979) and identify the two latest user-uploaded image artifacts.
-  - Current target likely in , around lines 205–220, which previously rendered an image with alt text “Piggy Bank.”
-- What will be achieved with this? Replaces the existing landing image with the exact asset supplied by the user.
-- Status: IN PROGRESS
-- Should Test frontend/backend/both after fix? Frontend
-- Blocked on something: Exact artifact selection.
+Task 1: Compact teacher homework analytics UI — P0
 
-Task 2: Resolve PricingSection lint error — P1
-- Where to resume: , around line 259.
-- What will be achieved with this? Clean JavaScript lint after the hook placement fix.
-- Status: TESTING PENDING
-- Should Test frontend/backend/both after fix? Frontend
-- Blocked on something: None.
+Task Detail:
+- Task 1:
+  - Where to resume:
+    - 
+    - 
+  - What will be achieved with this?
+    - A readable homework overview for teachers, with a blue homework-assigned state and detailed student performance only after Analytics is opened.
+  - Status: IN PROGRESS
+  - Should Test frontend/backend/both after fix? Frontend
+  - Blocked on something: No; only final validation remains.
 
 **Upcoming and Future Tasks**
 Upcoming Tasks:
-- P1: Verify Razorpay live payment after user redeploys, including new Scenario C password setup / auto-sign-in flow.
-- P1: Optional audit of hardcoded Back links on child pages, if user approves, to prevent other navigation loops.
-- P1: Optional classroom picker for “Done in class” if a teacher owns multiple classrooms; current toggle applies to all teacher classrooms.
-- P1: Optional dashboard parent/teacher learning breakdown for mandatory vs optional lessons.
-- P1: Potential Money Words draft-only filter, if requested.
+- P1: Verify live Razorpay payment and post-payment signup flow after production redeploy.
+- P1: Optionally add overdue reminders/server-side homework filters if requested.
+- P1: Optional classroom picker refinement for Done in Class when teacher owns multiple classrooms; current Done in Class behavior may apply across teacher classrooms.
+- P1: Optional mandatory-vs-optional lesson breakdown in parent/teacher dashboards.
+- P1: Optional audit of child-page Back links for other navigation loops.
+- P1: Optional Money Words draft-only filtering if requested.
 
 Future Tasks:
 - P1: Streak bonuses and leaderboards.
-- P1: Safety guardrails: spending limits and parent approval for larger transactions.
-- P2: Teacher/parent collaboration portal.
+- P1: Parent spending limits and approval flows for larger real-money actions.
+- P2: Parent/teacher collaboration portal.
 - P2: Collaborative and seasonal events.
-- P2: Tutorial system for new users.
-- P2: Refactor large files:
+- P2: First-use tutorial system.
+- P2: Refactor oversized frontend pages:
   - 
   - 
   - 
   - 
 
 **Completed work in this session**
-- Grade-scoped admin content count correction and Know-It Sheet content type support.
-- Inline Mandatory/Optional content toggle in Lesson Plan.
-- User-facing “Word Bank” renamed to “Money Words.”
-- Dashboard footer for child, parent, and teacher dashboards.
-- Money Words search restricted to term/name only.
-- Grade-specific Money Words overrides for all fields except term.
-- Money Words Live/Draft status and user visibility enforcement.
-- Grade-aware Money Words category and alphabet filters.
-- Budgeting category removed; existing budgeting records migrated to Spending; Sharing category added.
-- Drag/drop duplicate content rows fixed by effective-parent re-sync.
-- Saving Goals / My Money back-navigation loop fixed.
-- Admin user list crash caused by email-less children fixed.
-- Subscription activation for email-less children implemented.
-- Parent child linking consolidated into tabs and existing-child username/password linking added.
-- Parent and teacher learning progress total counts made grade/content-visibility-aware.
-- Admin content Live/Draft filter and deletion of inactive subscriptions added.
-- Scenario C post-payment onboarding/auto-sign-in flow added.
-- GTM container and GA4 tag installed in .
-- Piggy Bank card/tile gradient changed from low-contrast green to pink.
-- Teacher “Done in class” completion toggle and child unlock inheritance implemented.
-- Hero CTA changed to “Start for ₹49,” triggering the ₹49 one-day plan checkout flow.
-- Temporary hero image manager/crop feature was fully reverted at user request.
+- Teacher homework assignment workflow with deadlines, notifications, child task surface, completion recording, and teacher analytics.
+- Teacher topic click bug where parent topics incorrectly displayed “Coming Soon.”
+- Homework assigned-state button and child deep-link/highlight behavior.
+- School dashboard mapping of existing accounts by email or username.
+- Remember-me identifier storage on login.
+- Quest image/PDF visibility for child review and teacher response analysis.
+- Parent dashboard declutter, Send Money, Quick Add chore/reward/penalty, recurring allowance endpoint correction, and owed-payment descriptions.
+- Landing image and tile refinements.
 
-Recently completed:
-- Teacher Done-in-Class content completion/unlock inheritance.
-- “Start for ₹49” landing CTA checkout trigger.
-- Reverted landing hero image manager and removed crop dependency.
-- Fixed conditional React hook invocation in  (but lint remains unresolved).
+- Recently completed:
+  - Homework assigned state + child homework highlight — verified in .
+  - Teacher topic detail subtopics fix — verified in .
+  - Homework end-to-end feature — verified in .
 
 **Earlier issues found/mentioned but not fixed**
-- Issue 1: Razorpay live deployment payment initiation/verification needs production confirmation.
-  - Debug checklist: Redeploy; test checkout and payment signature; validate frontend redirect and signup flow.
-  - Why to solve: Core paid-subscription conversion.
+- Issue 1: Live Razorpay production payment flow not verified.
+  - Debug checklist: run real checkout after redeploy and validate signup continuation.
+  - Why to solve: Revenue-critical subscription conversion.
   - Should Test frontend/backend/both after fix: Both.
   - Is recurring issue? N.
-- Issue 2: Historical badge image data loss.
-  - Debug checklist: Re-upload from admin Badge Management.
-  - Why to solve: Restores badge visuals.
+
+- Issue 2: Missing historical badge images.
+  - Debug checklist: Admin must re-upload original/replacement assets.
+  - Why to solve: Restore gamification visuals.
   - Should Test frontend/backend/both after fix: NA.
   - Is recurring issue? Y.
-- Issue 3:  currently has a known lint error for unescaped apostrophe.
-  - Debug checklist: Fix line ~259 and run lint.
-  - Why to solve: Leave codebase lint-clean.
+
+- Issue 3: Existing React Hook lint warnings.
+  - Debug checklist: Inspect affected useEffect hooks and preserve correct fetching behavior.
+  - Why to solve: Keep frontend diagnostic output clean.
   - Should Test frontend/backend/both after fix: Frontend.
   - Is recurring issue? N.
 
 **Known issue recurrence from previous fork**
-- Issue recurrence in previous fork: Missing badge images due to older data loss.
+- Issue recurrence in previous fork: Historical badge images absent because original data/assets were lost.
 - Recurrence count: 4+
-- Status: BLOCKED, requires manual re-upload.
-- Note: Do not attempt code restoration without original image assets.
+- Status: BLOCKED
+- Do not attempt a code-based restoration without original assets; re-upload is required.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- Frontend: React, React Router, Axios, Tailwind, Shadcn-style UI, Lucide icons, Sonner.
-- Backend: FastAPI async route handlers, Motor/MongoDB.
+- Frontend: React, React Router, Axios, Tailwind CSS, Shadcn-style UI, Lucide icons, Sonner.
+- Backend: FastAPI async handlers, Motor/MongoDB.
 - Database: MongoDB.
-- Auth: session token stored in cookie/local storage; email/password, username/password for child accounts, Google OAuth present.
-- Content hierarchy: parent topics, subtopics, content items.
-- Grade-scoped content placement:  overrides root parent IDs.
-- Grade-scoped sorting: .
-- Content unlock logic: mandatory content completion gates next content/subtopics, with optional content not blocking.
-- Classroom completion:  data is treated as completed for students’ progressive unlocks.
-- Money Words grade overrides:  selectively replaces global fields.
-- Subscription state: Razorpay subscription records can map via parent emails or  for email-less children.
-- Analytics: Google Tag Manager GTM-M38LDVBT and GA4 G-4XWZZ3ET5R embedded globally in CRA .
+- Auth: Cookie session () plus token support; email/password, username/password child accounts, school login, Google OAuth.
+- Content model: Parent Topics → Subtopics → Content items; grade-specific parent/order overrides.
+- Child learning progress: .
+- Teacher classroom completion: .
+- Homework: Teacher-created assignments stored separately and matched to child/classroom completion data.
+- Wallet separation:
+  - CoinQuest wallet = play money.
+  - My Wallet = parent-managed/settled real-money ledger.
+- Uploads: Direct and chunked uploads; quest images/PDFs served from .
+- Analytics: GTM and GA4 are statically embedded in frontend .
 
 **key DB schema**
 - 
-  - ,  (may be ), , , , , , , .
+  - ,  nullable, , , , , , , , .
+
 - 
-  - ,  (subtopic parent), , , , , .
+  - , , , , , , .
+
 - 
   - , , , , , , , , , , .
+
 - 
-  - , , , , coins/progress fields.
+  - , , , , activity progress/score-related fields as available.
+
 - 
-  - , , grade/class metadata.
+  - , , grade/classroom metadata.
+
 - 
-  - , .
+  - , , .
+
 - 
-  - likely records classroom/content completion state used by child gating (verify exact field names in  and ).
+  - Classroom/content completion records used by unlock gating.
+
+- Homework collections introduced recently:
+  - Likely  / ; inspect exact field names in  and  before changes.
+  - Core values include homework ID, classroom ID, content ID, teacher ID, due date, student status, completion timestamp, and late state.
+
 - 
-  - , , global , , , , , , .
+  - , , , , , , .
+
 - 
-  - , , , , , , , , Razorpay order/payment metadata.
-- 
-  - Used for walkthrough settings; landing hero image setting was removed/cleaned during rollback.
+  - , , , , , , , Razorpay metadata.
 
 **changes in tech stack**
--  was temporarily installed for the rolled-back image manager feature, then uninstalled.
-- No active MongoDB-to-PostgreSQL migration or other database stack change.
+- No active MongoDB → PostgreSQL migration.
+-  was previously installed for a rejected landing image crop manager and then uninstalled.
+- No new dependency required for homework features.
 
 **All files of reference**
-Created/updated in the broader session:
+Updated/created recently:
 - 
-  - Current target for requested image replacement.
-  - Contains hero CTA “Start for ₹49,” default promotional image, landing walkthrough behavior.
+  - Teacher homework analytics/card UI.
+  - Current P0 file: last changes are untested.
 - 
-  - Receives custom  event and triggers configured ₹49 plan.
-  - Has unresolved unescaped-apostrophe lint error around line 259.
+  - Teacher Assign as Homework UI, already-assigned state, homework content card highlighting.
+  - Current P0 file: assignment badge changed to blue, needs test.
 - 
-  - Contains GTM head/body snippets and GA4 gtag snippet.
+  - New child dashboard homework section; supports opening relevant lesson and marking non-activity homework done.
 - 
-  - New post-payment account completion/password setup page.
+  - Displays .
 - 
-  - Imports/routes .
+  - Embeds teacher homework component in classroom view.
 - 
-  - Post-payment context endpoint and subscription management.
+  - Homework assignment, teacher homework list, analytics and removal routes.
 - 
-  - Post-payment signup/session handling updates.
+  - Child homework listing and Mark as Done route.
 - 
-  - Grade-aware effective-parent counts, Know-It Sheet, live/draft filter, inline toggles, drag/drop re-sync.
+  - Fixed teacher topic detail filtering by calculating subtopic content counts under teacher visibility rules.
 - 
-  - Know-It Sheet rendering and Done-in-Class UI/badge.
+  - Create-new/Add-existing account toggle.
 - 
-  - Grade-aware content APIs/unlock gating with classroom completion injection.
+  - Existing school account mapping by email or username.
 - 
-  - Teacher done-in-class endpoints and grade-aware learning totals.
+  - Remember-me checkbox; stores identifier only, never password.
 - 
-  - Existing-child linking and grade-aware learning totals.
+  - Completed quest cards can be opened for review.
 - 
-  - Created to share grade/visibility-aware lesson count logic across parent/teacher routes.
+  - Several recently completed parent dashboard features; highly large/complex.
 - 
-  - Grade override accordion, term-only behavior support, publish controls, category changes.
+  - Updated in prior finish steps; needs a new entry only after the pending P0 work is tested/completed.
 - 
-  - Grade override resolution, user published-only rules, term-only search, filtered categories/letters.
-- 
-  - Money Words label, footer, piggy-bank tile pink gradient.
-- 
-  - “Money Words” branding and grade passed to API.
-- 
-  - New reusable contact/rights footer for role dashboards.
-- 
-  - Footer, unified Link Child dialog with email/no-email/existing-account support.
-- 
-  - Footer.
-- 
-  - Back button behavior corrected; header gradient changed to match pink.
-- 
-  - Piggy Bank card gradient pink.
-- 
-  - Delete single subscription and delete inactive subscriptions UI.
-- 
-  - Email-safe admin listing/subscription management.
-  - Note: temporary hero image endpoints were removed.
-- 
-  - Deleted during rollback; it should not exist now.
-- 
-  - Temporary Hero Image UI was reverted.
+  - Includes credentials for test flows; read before auth tests.
 
-Important other files:
-- 
-- 
-- 
-- 
-- 
+Other important files:
+-  — API constant, , route definitions.
+-  — notification click routing uses .
+-  — direct/chunked file upload implementation.
+-  — upload persistence and URL construction.
 
 **Areas that need refactoring**
--  remains very large and complex (~2400 lines) with multiple responsibilities: repository, hierarchy, filters, dialogs, drag/reorder, uploads.
--  (~2700 lines),  (~2200 lines),  (~1800 lines), and  are oversized.
-- Landing page contains hardcoded image URL(s); if image changes become frequent, a dedicated static branding config may be preferable. Do not reintroduce the reverted admin image manager unless user requests it again.
-- Jar visual configuration is duplicated between , , and .
+- , , , , and  are oversized and combine multiple concerns.
+-  should remain compact; current implementation should avoid duplicating analytics logic already provided by backend endpoints.
+- Grade-aware content logic in  is sensitive; preserve child, parent, admin, and teacher visibility differences.
+- Landing page hardcodes image assets. Do not restore the rejected admin-managed hero image/crop feature unless user explicitly requests it.
+- Wallet visuals/configuration remain duplicated across Dashboard, Wallet, and Savings pages.
 
 **key api endpoints**
+Authentication:
+- 
+- 
+- School login route exists in ; inspect exact path before testing.
+
 Content:
 - 
 - 
 - 
-- 
-- 
-- Existing mandatory toggle endpoint used by ContentManagement (inspect current route if needed).
-- Teacher completion endpoints added in ; inspect decorator names before further work.
+-  or relevant existing completion route; inspect before modification.
+- Teacher Done-in-Class endpoints exist in .
 
-Money Words:
-- 
-- 
-- 
-- 
-- Admin create/update/delete/toggle publish glossary routes.
+Homework:
+- Teacher homework endpoints are in ; inspect decorators for exact paths before using/modifying.
+- Child homework endpoints are in ; inspect decorators for exact paths before using/modifying.
+- Existing established feature behavior:
+  - Assign to one classroom with date-only deadline.
+  - Child receives  notification with deep-link to relevant topic/content.
+  - Teacher can list/inspect homework and remove it.
+  - Non-activities can be self-marked done; activities leverage learning progress.
 
-Parent/teacher:
-- 
-- New username/password existing-child link endpoint in  (confirm exact path).
+Quests:
 - 
 - 
-- Teacher student insights endpoint in .
+- Teacher quest response/analytics endpoint in .
+- Quest assets use .
+
+School:
+- 
+  - Existing user lookup by email or username.
+  - Maps user to requesting school after role validation.
 
 Subscriptions:
 - 
 - 
-- Post-payment context endpoint added in  (confirm exact path; likely )
-- 
-- 
-- 
-- 
-- 
+- Post-payment context endpoint likely ; confirm before use.
+- Admin subscription endpoints documented in prior PRD.
 
 **Critical Info for New Agent**
-- The current request is only to replace a displayed landing image. Do not revive the previously rejected “admin landing hero image manager/crop” feature.
-- The user supplied two images in Message 977; asset discovery was called in Message 978 but no image was selected. Use the available asset list to identify the intended new image. The prior user wording indicates “replace this image … with this other image”; likely first image is current/target reference and second is the desired replacement.
-- The direct asset URL must be selected using tools, not invented.
--  current target image is near lines ~205–220 and originally had alt text “Piggy Bank.”
-- There is a known lint failure in ; correct it before declaring the overall app clean.
-- The prior agent made several implementation changes without the mandated  call for Razorpay/auth changes. Future changes involving Razorpay/auth must invoke the integration playbook first.
-- The post-payment flow was only locally/preview API tested with seeded test subscriptions; it has not been confirmed with an actual Razorpay transaction.
-- The temporary landing hero image settings document was cleaned from MongoDB at rollback. Avoid relying on it.
-- Do not use rollback/git reset to restore the rejected feature; it was manually removed already.
-- User has consistently asked for direct changes and accepts concise execution summaries.
+- The current P0 is only the final teacher homework UI refinement. Do not broaden scope.
+- The latest successful source edit has not been compiled. First inspect it; do not assume syntax is correct.
+- The user specifically wants:
+  - Homework assignment state blue and visibly distinct.
+  - Done in Class should remain distinguishable.
+  - No default long child list in teacher performance.
+  - An Analytics button that opens/reveals details.
+- The homework assignment feature was previously verified by the testing agent, but the latest compact-analytics UI changes require a fresh testing-agent run.
+- User bug reports include a mandatory testing-agent requirement. Treat the current UI refinement as requiring testing-agent verification before marking it fixed.
+- Do not make auth, Razorpay, or third-party integration changes without invoking the integration expert/playbook first.
+- Testing agent previously noted recurring non-blocking Radix Dialog accessibility warnings due to missing dialog descriptions. Do not ignore actual functional findings, but do not let this distract from P0 unless user asks for accessibility cleanup.
+- The previous agent sometimes made code changes before mandatory user-plan approval and created temporary seed scripts. Do not create unnecessary seed scripts; use existing test data/credentials where possible.
+- Test-created data has occasionally been left behind. After testing, clean only disposable homework/test records without deleting user content.
 
-**documents and test reports created in this job**
+**documents and test reports created in this job** (provide absolute path)
 Supporting docs:
 - 
 - 
 
 Test reports:
--  — earlier test report covering Know-It Sheet and grade-scoped content behavior.
-- Additional backend tests were executed through shell/Python one-offs but not consistently persisted as formal reports.
--  exists, but it concerns walkthrough video functionality; hero image manager tests were rolled back.
+-  — earlier grade/content tests.
+-  — parent Link Child walkthrough.
+-  — onboarding-tour/nudge overlap resolution.
+-  — Quick Add dialog.
+-  — parent cleanup/Send Money; exposed allowance endpoint mismatch.
+-  — allowance persistence retest.
+-  — teacher quest media; child completed-quest review initially blocked.
+-  — child completed quest review fixed.
+-  — small quest upload diagnosis.
+-  — large chunked quest upload verification.
+-  — school existing-account mapping UI.
+-  — homework end-to-end feature.
+-  — teacher topic “Coming Soon” bug fix.
+-  — homework Assigned state + child highlight.
+- No report exists yet for the current analytics compacting/color refinement.
 
 **Last 10 User Messages and any pending HUMAN messages**
 Latest to oldest:
-1. **Pending / IN PROGRESS:** “replace this image on the landing page with this other image” with two images. Asset lookup started; replacement not yet made.
-2. **Completed:** “throwing this error” — PricingSection hooks violation fixed, but an unescaped-apostrophe lint error remains.
-3. **Completed:** Requested rollback of landing Hero Image manager with crop — feature was manually removed and dependency uninstalled.
-4. **Completed then rolled back:** Asked for admin video-walkthrough section ability to manage/crop first-fold landing image.
-5. **Completed:** Hero CTA changed from “View Plans” to “Start for ₹49,” invoking ₹49 plan buy flow.
-6. **Completed:** Requested Done-in-Class teacher tick to unlock content for all tagged children and make it optional for them.
-7. **Completed:** Reported dashboard Piggy Bank area remained green — Dashboard tile changed to pink.
-8. **Completed:** Reported white text was unreadable on green Piggy Bank card — Wallet/Savings colors changed to pink.
-9. **Completed:** Asked to install GA4 Google tag; gtag snippet was added, alongside existing GTM.
-10. **Completed:** Asked to install GTM; GTM head/body snippets were added.
+1. **IN PROGRESS:** Requested blue distinction between Done in Class and Assigned as Homework; analytics-first teacher performance; an Analytics button instead of an expanded child list. No user verification yet.
+2. **Completed:** Requested teacher Assigned state after assignment and child homework Open action highlighting target lesson. Verified in iteration 77.
+3. **Completed:** Reported teacher topic click showed false “Coming Soon”; requested subtopic page like child view. Verified in iteration 76.
+4. **Completed:** Requested Assign as Homework feature with deadlines, notifications, child completion, and teacher analytics. Verified in iteration 75.
+5. **Completed:** Requested school dashboard mapping of existing accounts through email/username. Verified in iteration 74.
+6. **Completed:** Requested Remember Me on login/signup screen to reduce login friction.
+7. **Investigated; could not reproduce:** Reported quest image upload preview/child visibility issue. Small/direct and large/chunked upload flows verified in iterations 72–73.
+8. **Completed:** Requested quest image/PDF visibility for child and teacher analysis. Verified in iterations 70–71.
+9. **Completed:** Requested Savings Goal moved from Overview into Money & Goals next to Send Money.
+10. **Completed:** Clarified child-to-child monetary gifts must use CoinQuest wallet rather than real money owed by parents.
 
 Pending human messages:
-- None besides the active image replacement request.
+- No unanswered question. The latest requested UI changes are actively incomplete.
 
 **Project Health Check:**
 Broken:
--  lint is currently failing due to a JSX unescaped apostrophe.
-- Live Razorpay end-to-end verification remains pending after deployment.
-- Badge images are historically missing until manually re-uploaded.
+- Current latest edits in  and  are unverified; possible compile/JSX issue must be ruled out.
+- Live Razorpay end-to-end payment verification is pending.
+- Historical badge images remain absent unless manually uploaded.
 
-Mocked:
-- No intentional product mocks identified.
-- Post-payment onboarding was tested against seeded subscription data, not a real Razorpay transaction.
-- Landing image replacement has not yet been applied.
+Mocked / test-only:
+- Homework feature has been tested with seeded classroom/student/homework records.
+- Razorpay Scenario C only tested against seeded subscription data, not a live transaction.
+- Historical badge images cannot be reconstructed from code.
+- Quest upload test records were created and mostly cleaned; verify no unneeded test homework remains if testing uses seed data.
 
 **3rd Party Integrations**
-- Razorpay Payments — requires user/provisioned Razorpay credentials; no Emergent LLM key. Current application integrates checkout script and backend signature verification.
-- Google OAuth — requires Google Client ID/Secret; no Emergent LLM key.
-- Google Tag Manager — GTM-M38LDVBT; configured without user input at runtime; no Emergent LLM key.
-- Google Analytics 4 — G-4XWZZ3ET5R; configured in static frontend HTML; no Emergent LLM key.
-- OpenAI GPT-4o — uses Emergent LLM Key (per prior handoff; verify actual integration before changes).
-- No active  integration; it was uninstalled during rollback.
+- Razorpay Payments — requires provisioned Razorpay credentials; no Emergent LLM Key.
+- Google OAuth — requires Google Client ID/Secret; no Emergent LLM Key.
+- Google Tag Manager — static configured container; no Emergent LLM Key.
+- Google Analytics 4 — static configured tag; no Emergent LLM Key.
+- OpenAI GPT-4o — prior handoff indicated this may use Emergent LLM Key; verify actual implementation/configuration before modifying.
+- No active image crop library integration.
 
 **Testing status**
-- Testing agent used after significant changes: YES, earlier at ; not for the latest image task.
+- Testing agent used after significant changes: YES.
 - Troubleshoot agent used after agent stuck in loop: NO.
 - Test files created:
   - 
-- Known regressions:
-  - JavaScript lint failure at .
-  - Need to verify payment signup flow on live Razorpay.
-  - Image replacement pending.
-- Recent verification completed:
-  - Email-less child admin listing and subscriptions via curl/shell.
-  - Existing child linking success/duplicate/wrong-password behavior.
-  - Grade-scoped lesson totals.
-  - Teacher Done-in-Class endpoint toggle.
-  - Admin inactive subscription deletion.
-  - GA/GTM served HTML presence.
-- Latest task has no final screenshot/test yet.
+- Latest relevant testing reports:
+  - Homework overall feature:  — PASS.
+  - Teacher topic navigation:  — PASS.
+  - Assigned state and child homework highlight:  — PASS.
+- Current latest teacher homework analytics UI changes:
+  - Testing agent used after change: NO.
+  - Compile after change: NO.
+  - Known regressions: unknown until compilation and new frontend test report.
+- Known pre-existing warnings:
+  -  missing effect dependency.
+  -  missing effect dependency.
+  - Potential recurring Radix Dialog accessibility warnings.
 
 **Credentials to test flow:**
-Read  before using auth flows. Known examples:
-- Admin:  / 
-- Child Grade 1:  / 
-- Other seeded credentials are documented in the file.
-- Avoid modifying credentials unless necessary; update  if any are created or changed.
+- Read  before any login/auth testing.
+- Known credentials documented there include:
+  - Admin:  / 
+  - Child Grade 1:  / 
+  - Classroom test children: , ,  / 
+- Additional school and homework testing credentials may have been added later in ; use the file as source of truth rather than guessing.
+- The school mapping test used a disposable existing teacher account and may already have been mapped; do not rely on it without checking DB/test data.
 
 **What agent forgot to execute**
-- Did not complete the image replacement user asked for; only asset discovery occurred.
-- Did not resolve/re-run lint for the known  unescaped apostrophe error.
-- Did not use  before implementing Razorpay/auth-related post-payment changes, despite system requirements.
-- Did not use the testing agent for the larger Scenario C payment onboarding feature; only local/manual checks with seeded subscriptions were performed.
-- The initial requirement to ask for user approval before each implementation was inconsistently followed in prior work, though the current image-replacement intent is sufficiently clear.
-</analysis>
+- Did not compile the final teacher homework analytics/card edits.
+- Did not inspect the final  output after replacing the card body.
+- Did not execute a frontend smoke test after the final UI edits.
+- Did not invoke testing agent for the final user-requested homework color/analytics changes.
+- Did not update  for the latest in-progress change because it is not completed.
+- The agent’s opening turn did not use  despite the inherited system requirement, though later homework scope clarification was collected before the larger feature was built.
+
+**Debugging checklist for current issue**
+Issue: Teacher homework card UI refinement is incomplete/unverified.
+
+Frontend files to check:
+
+
+Backend files to check:
+
+
+Database to check:
+
+
+Recommended execution:
+1. Ask the user for approval only if planning is necessary; the latest request is clear and code changes have already begun.
+2. Inspect both modified files.
+3. Compile frontend.
+4. Correct any syntax/layout issue.
+5. Invoke testing agent with exact acceptance criteria.
+6. Read report; resolve all reported functional defects.
+7. Update PRD and finish only after a passing test report.</analysis>

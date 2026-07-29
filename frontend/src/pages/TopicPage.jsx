@@ -760,7 +760,7 @@ export default function TopicPage({ user }) {
                             assignedContentIds.has(content.content_id) ? (
                               <button
                                 onClick={(e) => openAssignHomework(content, e)}
-                                className="text-xs px-2 py-1 rounded-full font-semibold flex items-center gap-1 bg-[#06D6A0] text-white hover:bg-[#05C090] transition-colors"
+                                className="text-xs px-2 py-1 rounded-full font-semibold flex items-center gap-1 bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-colors"
                                 title="Already assigned as homework. Click to assign to another classroom."
                                 data-testid={`assigned-homework-${content.content_id}`}
                               >
