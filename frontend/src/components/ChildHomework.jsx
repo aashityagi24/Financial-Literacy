@@ -43,7 +43,7 @@ export const ChildHomework = () => {
   };
 
   const openContent = (hw) => {
-    if (hw.topic_id) navigate(`/learn/topic/${hw.topic_id}`);
+    if (hw.topic_id) navigate(`/learn/topic/${hw.topic_id}?highlight=${hw.content_id}`);
     else navigate('/learn');
   };
 

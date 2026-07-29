@@ -1,0 +1,24 @@
+{
+  "summary": "Verified two Homework UI enhancements on the staging preview URL. (1) Teacher 'Assigned as Homework' state renders correctly for the pre-seeded homework (content_8edef32730e2 'Testing') on subtopic topic_2731433e0a5b — green pill with check icon, correct data-testid, and NO orange 'assign-homework-<id>' variant present for the same content. (2) Child dashboard 'My Homework' Open button navigates to /learn/topic/topic_2731433e0a5b?highlight=content_8edef32730e2, the matching content card gets an orange ring (ring-4 ring-[#EE6C4D]) and the badge with data-testid='homework-highlight-badge' shows the exact copy 'Your Homework — complete this!'. Zero console errors on both pages. Note: the 'assign flip' scenario could not be exercised on the specified subtopic because it contains only ONE content item ('Testing') which is already assigned; there are no other unassigned items on that subtopic to click and flip. This is a data/seed limitation, not a code bug.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "OPTIONAL: If you want the 'assign flip' scenario retested end-to-end on the same subtopic, seed one additional unassigned content item under topic_2731433e0a5b so the teacher can click 'Assign as Homework' and observe the immediate flip to 'Assigned as Homework'. Right now that subtopic has only one item and it is already assigned, so the flip UX cannot be validated on this page."
+  ],
+  "critical_code_review_comments": [
+    "AuthPage.jsx (line 130-134) — after the successful unified /api/auth/login call, the response.data.session_token is NOT persisted to localStorage (the fallback used by ProtectedRoute's /auth/me Authorization header). Only the signup path at line 211-212 stores it. In normal browsers the HttpOnly cookie carries the session so this is transparent, but in Playwright/preview automation the cookie sometimes doesn't stick across navigations, causing a bounce to '/'. Recommend mirroring the signup behavior: `if (response.data.session_token) localStorage.setItem('session_token', response.data.session_token);` right after the login response. This will also make deep-linked navigations more robust for real users on cross-site cookie-restricted browsers."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend only)", "frontend": "2/2 testable behaviors passing (assign-flip not testable on seed)"},
+  "test_credentials": "Teacher: test_teacher_1 / testpassword. Child: classmate_g3 / testpass123",
+  "seed_data_creation": "None. Existing seed used: homework hw_ae13b88455b0 for content_8edef32730e2 ('Testing') under topic_2731433e0a5b, assigned to Demo Class, due 2026-09-01, for classmate_g3.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "The target subtopic topic_2731433e0a5b contains only one content item ('Testing' / content_8edef32730e2). To test the assign-flip flow, either add a second content item to that subtopic or route the test to another subtopic that has unassigned content for the teacher. To reliably login via Playwright on this preview, POST /api/auth/login directly via page.evaluate() and store the returned session_token to localStorage; ProtectedRoute's /auth/me call falls back to the Authorization header from localStorage.",
+  "rca of the issue": "N/A — both requested behaviors work as specified."
+}

@@ -56,6 +56,9 @@ export default function TopicPage({ user }) {
   const [hwClassroomId, setHwClassroomId] = useState('');
   const [hwDueDate, setHwDueDate] = useState('');
   const [hwLoading, setHwLoading] = useState(false);
+  const [assignedContentIds, setAssignedContentIds] = useState(new Set());
+  // Content id to highlight (child opening homework)
+  const highlightId = searchParams.get('highlight');
   const trialBannerShownRef = useRef(false);
   const showAnimations = useFirstVisitAnimation(`topic-${topicId}`);
   const lastCompletedRef = useRef(null);
@@ -102,8 +105,23 @@ export default function TopicPage({ user }) {
         const res = await axios.get(`${API}/teacher/classrooms`);
         setTeacherClassrooms(Array.isArray(res.data) ? res.data : (res.data?.classrooms || []));
       } catch (e) { /* silent */ }
+      try {
+        const hwRes = await axios.get(`${API}/teacher/homework`);
+        const ids = new Set((hwRes.data?.homework || []).map(h => h.content_id));
+        setAssignedContentIds(ids);
+      } catch (e) { /* silent */ }
     })();
   }, [user?.role]);
+
+  // Scroll to and briefly highlight the homework content item (child opening a to-do)
+  useEffect(() => {
+    if (!highlightId || !topic) return;
+    const t = setTimeout(() => {
+      const el = document.querySelector(`[data-content-id="${highlightId}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 500);
+    return () => clearTimeout(t);
+  }, [highlightId, topic]);
 
   const openAssignHomework = (content, e) => {
     e?.stopPropagation();
@@ -124,6 +142,7 @@ export default function TopicPage({ user }) {
         due_date: hwDueDate,
       });
       toast.success(`Assigned to ${res.data.student_count} student(s)!`);
+      setAssignedContentIds(prev => new Set(prev).add(homeworkContent.content_id));
       setShowHomeworkDialog(false);
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Could not assign homework');
@@ -672,10 +691,15 @@ export default function TopicPage({ user }) {
                   <div
                     key={content.content_id}
                     data-content-id={content.content_id}
-                    className={`card-playful p-5 cursor-pointer hover:scale-[1.01] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/5' : ''}`}
+                    className={`card-playful p-5 cursor-pointer hover:scale-[1.01] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/5' : ''} ${highlightId === content.content_id ? 'ring-4 ring-[#EE6C4D] ring-offset-2 shadow-xl bg-[#EE6C4D]/5' : ''}`}
                     style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
                     onClick={() => openContent(content)}
                   >
+                    {highlightId === content.content_id && (
+                      <div className="mb-3 -mt-1 inline-flex items-center gap-1 text-xs font-bold text-white bg-[#EE6C4D] px-3 py-1 rounded-full" data-testid="homework-highlight-badge">
+                        <FileText className="w-3 h-3" /> Your Homework — complete this!
+                      </div>
+                    )}
                     <div className="flex items-center gap-4">
                       <div className="relative">
                         {content.thumbnail ? (
@@ -733,15 +757,27 @@ export default function TopicPage({ user }) {
                           )}
                           {/* Teacher: Assign as Homework */}
                           {user?.role === 'teacher' && (
-                            <button
-                              onClick={(e) => openAssignHomework(content, e)}
-                              className="text-xs px-2 py-1 rounded-full font-semibold flex items-center gap-1 bg-[#EE6C4D] text-white hover:bg-[#DD5B3C] transition-colors"
-                              title="Assign this to a classroom as homework with a due date."
-                              data-testid={`assign-homework-${content.content_id}`}
-                            >
-                              <FileText className="w-3 h-3" />
-                              Assign as Homework
-                            </button>
+                            assignedContentIds.has(content.content_id) ? (
+                              <button
+                                onClick={(e) => openAssignHomework(content, e)}
+                                className="text-xs px-2 py-1 rounded-full font-semibold flex items-center gap-1 bg-[#06D6A0] text-white hover:bg-[#05C090] transition-colors"
+                                title="Already assigned as homework. Click to assign to another classroom."
+                                data-testid={`assigned-homework-${content.content_id}`}
+                              >
+                                <Check className="w-3 h-3" />
+                                Assigned as Homework
+                              </button>
+                            ) : (
+                              <button
+                                onClick={(e) => openAssignHomework(content, e)}
+                                className="text-xs px-2 py-1 rounded-full font-semibold flex items-center gap-1 bg-[#EE6C4D] text-white hover:bg-[#DD5B3C] transition-colors"
+                                title="Assign this to a classroom as homework with a due date."
+                                data-testid={`assign-homework-${content.content_id}`}
+                              >
+                                <FileText className="w-3 h-3" />
+                                Assign as Homework
+                              </button>
+                            )
                           )}
                           {/* Teacher Analytics Link */}
                           {user?.role === 'teacher' && content.content_type === 'activity' && (
