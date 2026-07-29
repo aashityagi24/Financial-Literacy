@@ -1,0 +1,23 @@
+{
+  "summary": "Verified the analytics-first refinement of the teacher Homework UI and the blue 'Assigned as Homework' color distinction on the TopicPage. Logged in as test_teacher_1, opened Demo Class (2 existing homework: 'Testing' video & 'Candy Shop' activity). Homework cards render compact by default (title, type badge, due date, X/Y done, thin green progress bar) with an Analytics button and trash icon; per-student list is NOT shown by default. Clicking the Analytics button reveals class-level tiles (Done / Not done / Completion%) - student list stays hidden until user clicks the 'View student list (N)' toggle. Clicking the toggle again hides the list. Collapsing analytics via the button hides everything again. On TopicPage (topic_cdac2568de6f), all three teacher action buttons show correct distinct colors: 'Mark done in class' gray/green(#06D6A0 when active), 'Assign as Homework' orange rgb(238,108,77) = #EE6C4D, 'Assigned as Homework' blue rgb(37,99,235) = #2563EB. The blue Assigned state is unmistakably different from the green Done-in-class state.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "TeacherHomework.jsx uses a single global `showStudents` state shared across all cards. It's reset in toggleDetail() when opening a new card, but if a user could open multiple cards simultaneously (not currently possible since only one card can be expanded), this would be a bug. Consider scoping to expanded card id for future-proofing.",
+    "AuthPage.jsx does not persist response.data.session_token to localStorage. The app relies on the HttpOnly `session_token` cookie set by the server (with SameSite=None; Partitioned). This works in normal browsers but Partitioned cookies are not accepted by Playwright chromium in this test harness, so automated tests need to manually seed localStorage. Not a user-facing issue but adds friction for tests."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only)", "frontend": "100%"},
+  "test_credentials": "test_teacher_1 / testpassword (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "No new seed data. Used existing homework records hw_ae13b88455b0 (Testing/Video) and hw_c63a55c16008 (Candy Shop/Activity) in Demo Class.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All 5 required behaviours pass. Note: for automated testing you must seed session_token into localStorage manually after calling POST /api/auth/login via page.request, because the app's session cookie is set with 'Partitioned' attribute which Playwright chromium drops. Direct browser UI login works fine for humans; only test automation needs this workaround.",
+  "rca of the issue": "N/A - no bugs found for this iteration's scope."
+}
