@@ -588,6 +588,72 @@ async def _link_child_to_relationships(db, child_id: str, parent_email: str, cla
                         "enrolled_at": datetime.now(timezone.utc).isoformat()
                     })
 
+@router.post("/school/users/link-existing")
+async def school_link_existing_user(request: Request):
+    """Map an already-existing account (by email OR username) to the school."""
+    from services.auth import require_school
+    db = get_db()
+    school = await require_school(request)
+    school_id = school["school_id"]
+
+    body = await request.json()
+    identifier = (body.get("identifier") or "").strip()
+    user_type = (body.get("user_type") or "").strip().lower()  # teacher | child | parent
+
+    if not identifier:
+        raise HTTPException(status_code=400, detail="Email or username is required")
+    if user_type not in ("teacher", "child", "parent"):
+        raise HTTPException(status_code=400, detail="Invalid user type")
+
+    # Look up by email (case-insensitive) or exact username
+    user = await db.users.find_one({
+        "$or": [
+            {"email": identifier.lower()},
+            {"username": identifier}
+        ]
+    })
+    if not user:
+        raise HTTPException(status_code=404, detail="No account found with that email or username")
+
+    # Role compatibility check
+    current_role = user.get("role")
+    if current_role and current_role != user_type:
+        raise HTTPException(
+            status_code=400,
+            detail=f"This account is registered as a {current_role}, not a {user_type}"
+        )
+
+    # School membership check
+    if user.get("school_id") == school_id:
+        raise HTTPException(status_code=400, detail="This account already belongs to your school")
+    if user.get("school_id") and user["school_id"] != school_id:
+        raise HTTPException(status_code=400, detail="This account already belongs to another school")
+
+    update_fields = {"school_id": school_id, "role": user_type}
+    if user_type == "child":
+        grade = body.get("grade")
+        if grade is not None:
+            update_fields["grade"] = int(grade)
+
+    await db.users.update_one({"user_id": user["user_id"]}, {"$set": update_fields})
+
+    # For a child, honor optional relationship links
+    if user_type == "child":
+        parent_email = (body.get("parent_email") or "").strip().lower()
+        classroom_code = (body.get("classroom_code") or "").strip().upper()
+        teacher_email = (body.get("teacher_email") or "").strip().lower()
+        await _link_child_to_relationships(db, user["user_id"], parent_email, classroom_code, teacher_email)
+
+    updated_user = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    label = "student" if user_type == "child" else user_type
+    return {
+        "message": f"Existing {label} added to your school",
+        "user_id": user["user_id"],
+        "user": updated_user
+    }
+
+
+
 @router.get("/school/users")
 async def school_get_users(request: Request):
     """Get all users associated with the school"""

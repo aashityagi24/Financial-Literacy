@@ -19,6 +19,11 @@
 - Password: testpassword
 
 
+## School Admin (Springfield Elementary — QA)
+- Login: username `springfield` / password `school123` (via /login → school login, or /api/auth/school-login)
+- school_id: school_c0bc3d3734b7
+- Used to test "Add Existing" user mapping (email or username) in the School Dashboard.
+
 ## Nudge Test Parent (no children linked — for Link-Child walkthrough QA)
 - Email: nudge_parent@test.com
 - Password: testpass123

@@ -1,0 +1,24 @@
+{
+  "summary": "Frontend-only verification of School Dashboard 'Add User' Create-New vs Add-Existing mode toggle. Logged in via /school-login (springfield/school123), opened Add User modal, verified toggles, tested Add Existing error path (ghost_user_xyz → 'No account found' error toast, backend returned 404 as expected), tested Add Existing happy path (identifier 'maptest_teacher' → success toast + modal closed + 'Map Test Teacher / maptest_teacher@test.com' appeared in Teachers list, teacher count 0→1), and tested Create New path with a unique email (Test New Teacher / testnew_XXXXX@test.com → 'Teacher created successfully' toast, Teachers count 1→2). All three review scenarios pass.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Add User modal", "issues": ["Radix DialogContent missing Description/aria-describedby (a11y warning in console)"]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "SchoolDashboard.jsx is ~1228 lines — consider splitting Add User modal into a separate component for maintainability.",
+    "Add DialogDescription (or aria-describedby) to the Add User Dialog to remove Radix a11y warnings."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "school: springfield/school123; existing teacher: maptest_teacher / maptest_teacher@test.com",
+  "seed_data_creation": "Linked existing teacher maptest_teacher to Springfield Elementary school, and created a brand-new teacher Test New Teacher (testnew_50283@test.com) during Create New test.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Because the Add Existing test now maps 'maptest_teacher' to the Springfield school, re-running this test again will fail on the happy path with 'user already belongs to a school'. Main agent should unlink the teacher (unset school_id) before rerunning, or use a new unmapped test account."
+}

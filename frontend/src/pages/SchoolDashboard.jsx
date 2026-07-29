@@ -48,7 +48,8 @@ export default function SchoolDashboard() {
   // Individual User Creation State
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [addUserType, setAddUserType] = useState('teacher');
-  const [addUserForm, setAddUserForm] = useState({ name: '', email: '', grade: '3', parent_email: '', classroom_code: '', teacher_email: '' });
+  const [addUserMode, setAddUserMode] = useState('create'); // 'create' | 'existing'
+  const [addUserForm, setAddUserForm] = useState({ name: '', email: '', identifier: '', grade: '3', parent_email: '', classroom_code: '', teacher_email: '' });
   const [addUserLoading, setAddUserLoading] = useState(false);
 
   useEffect(() => {
@@ -222,6 +223,39 @@ export default function SchoolDashboard() {
       fetchDashboardData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to create user');
+    } finally {
+      setAddUserLoading(false);
+    }
+  };
+
+  const handleLinkExisting = async () => {
+    if (!addUserForm.identifier.trim()) {
+      toast.error('Enter an email or username');
+      return;
+    }
+    setAddUserLoading(true);
+    try {
+      const payload = {
+        identifier: addUserForm.identifier.trim(),
+        user_type: addUserType
+      };
+      if (addUserType === 'child') {
+        payload.grade = parseInt(addUserForm.grade);
+        if (addUserForm.parent_email.trim()) payload.parent_email = addUserForm.parent_email.trim().toLowerCase();
+        if (addUserForm.classroom_code.trim()) payload.classroom_code = addUserForm.classroom_code.trim().toUpperCase();
+        if (addUserForm.teacher_email.trim()) payload.teacher_email = addUserForm.teacher_email.trim().toLowerCase();
+      }
+      const response = await axios.post(
+        `${API}/school/users/link-existing`,
+        payload,
+        { withCredentials: true }
+      );
+      toast.success(response.data.message);
+      setShowAddUserModal(false);
+      setAddUserForm({ name: '', email: '', identifier: '', grade: '3', parent_email: '', classroom_code: '', teacher_email: '' });
+      fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to add existing user');
     } finally {
       setAddUserLoading(false);
     }
@@ -963,6 +997,24 @@ export default function SchoolDashboard() {
           </DialogHeader>
           
           <div className="space-y-4 mt-4">
+            {/* Mode toggle: Create New vs Add Existing */}
+            <div className="grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-xl">
+              <button
+                onClick={() => setAddUserMode('create')}
+                data-testid="add-user-mode-create"
+                className={`py-2 rounded-lg text-sm font-semibold transition-colors ${addUserMode === 'create' ? 'bg-white text-[#1D3557] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Create New
+              </button>
+              <button
+                onClick={() => setAddUserMode('existing')}
+                data-testid="add-user-mode-existing"
+                className={`py-2 rounded-lg text-sm font-semibold transition-colors ${addUserMode === 'existing' ? 'bg-white text-[#1D3557] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Add Existing
+              </button>
+            </div>
+
             {/* User Type Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -995,34 +1047,54 @@ export default function SchoolDashboard() {
               </Select>
             </div>
 
-            {/* Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name *
-              </label>
-              <Input
-                placeholder="Enter full name"
-                value={addUserForm.name}
-                onChange={(e) => setAddUserForm({ ...addUserForm, name: e.target.value })}
-                data-testid="user-name-input"
-              />
-            </div>
+            {addUserMode === 'create' ? (
+              <>
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name *
+                  </label>
+                  <Input
+                    placeholder="Enter full name"
+                    value={addUserForm.name}
+                    onChange={(e) => setAddUserForm({ ...addUserForm, name: e.target.value })}
+                    data-testid="user-name-input"
+                  />
+                </div>
 
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address *
-              </label>
-              <Input
-                type="email"
-                placeholder="Enter email address"
-                value={addUserForm.email}
-                onChange={(e) => setAddUserForm({ ...addUserForm, email: e.target.value })}
-                data-testid="user-email-input"
-              />
-            </div>
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address *
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="Enter email address"
+                    value={addUserForm.email}
+                    onChange={(e) => setAddUserForm({ ...addUserForm, email: e.target.value })}
+                    data-testid="user-email-input"
+                  />
+                </div>
+              </>
+            ) : (
+              /* Add Existing: map by email or username */
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email or Username *
+                </label>
+                <Input
+                  placeholder="Enter existing account's email or username"
+                  value={addUserForm.identifier}
+                  onChange={(e) => setAddUserForm({ ...addUserForm, identifier: e.target.value })}
+                  data-testid="user-identifier-input"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  We&apos;ll find the existing account and add it to your school.
+                </p>
+              </div>
+            )}
 
-            {/* Grade (only for child) */}
+            {/* Grade + relationship fields (only for child) */}
             {addUserType === 'child' && (
               <>
                 <div>
@@ -1102,29 +1174,50 @@ export default function SchoolDashboard() {
                 variant="outline"
                 onClick={() => {
                   setShowAddUserModal(false);
-                  setAddUserForm({ name: '', email: '', grade: '3', parent_email: '', classroom_code: '', teacher_email: '' });
+                  setAddUserForm({ name: '', email: '', identifier: '', grade: '3', parent_email: '', classroom_code: '', teacher_email: '' });
                 }}
               >
                 Cancel
               </Button>
-              <Button
-                onClick={handleAddUser}
-                disabled={addUserLoading || !addUserForm.name.trim() || !addUserForm.email.trim()}
-                className="bg-[#3D5A80] hover:bg-[#2D4A70]"
-                data-testid="confirm-add-user-btn"
-              >
-                {addUserLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Creating...
-                  </div>
-                ) : (
-                  <>
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Create {addUserType.charAt(0).toUpperCase() + addUserType.slice(1)}
-                  </>
-                )}
-              </Button>
+              {addUserMode === 'create' ? (
+                <Button
+                  onClick={handleAddUser}
+                  disabled={addUserLoading || !addUserForm.name.trim() || !addUserForm.email.trim()}
+                  className="bg-[#3D5A80] hover:bg-[#2D4A70]"
+                  data-testid="confirm-add-user-btn"
+                >
+                  {addUserLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Creating...
+                    </div>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Create {addUserType.charAt(0).toUpperCase() + addUserType.slice(1)}
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleLinkExisting}
+                  disabled={addUserLoading || !addUserForm.identifier.trim()}
+                  className="bg-[#3D5A80] hover:bg-[#2D4A70]"
+                  data-testid="confirm-link-existing-btn"
+                >
+                  {addUserLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Adding...
+                    </div>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Add Existing {addUserType.charAt(0).toUpperCase() + addUserType.slice(1)}
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </DialogContent>
