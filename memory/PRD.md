@@ -932,6 +932,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P1**: Payment failure on live site (coinquest.co.in) - VERIFIED WORKING in preview. Production needs redeployment with latest code and correct .env variables (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET).
 - **P2**: Badge images missing - requires manual re-upload by admin
 
+- **Homework: analytics-first teacher UI + blue "Assigned" color** (June 2026)
+  - `TeacherHomework.jsx`: homework cards are now compact by default (title, type badge, due date, X/Y done, thin green progress bar). Added an **Analytics** button that reveals class-level tiles (Done / Not done / Completion%); the per-student done/not-done list is hidden until the user clicks a further "View student list (N)" toggle. Keeps classrooms of 25-40 learners readable.
+  - `TopicPage.jsx`: color distinction finalized — "Done in class" green (#06D6A0), "Assign as Homework" orange (#EE6C4D), and "Assigned as Homework" now a clear **blue #2563EB** (previously green, which collided with Done-in-class).
+  - Verified 100% by testing agent (iteration_78). No functional bugs. Non-blocking notes: single shared `showStudents` state (fine since only one card expands at a time); auth session_token cookie is Partitioned (only affects test automation).
+
+
 ## Recently Completed
 - **Homework: "Assigned" state + child highlight** (June 2026)
   - Teacher content view (`TopicPage.jsx`): after a content item is assigned as homework, its button changes from orange "Assign as Homework" to green "Assigned as Homework" (check icon). Fetched from `GET /teacher/homework` into `assignedContentIds`; flips instantly on assign. Still clickable to assign to another classroom.
