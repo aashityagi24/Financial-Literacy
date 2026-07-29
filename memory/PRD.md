@@ -932,6 +932,11 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P1**: Payment failure on live site (coinquest.co.in) - VERIFIED WORKING in preview. Production needs redeployment with latest code and correct .env variables (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET).
 - **P2**: Badge images missing - requires manual re-upload by admin
 
+- **Homework + activity analytics moved to POPUP MODALS** (June 2026)
+  - `TeacherHomework.jsx`: the Analytics button now opens a centered Dialog (`homework-analytics-dialog`) with class-level tiles + per-student list, instead of expanding inline in the card. Cards stay compact.
+  - `TopicPage.jsx` (teacher): removed the inline "Scores" student name-list from under activity content cards (kept inline only for parents). The teacher "Analytics" button now opens a popup (`ActivityAnalyticsDialog.jsx`, new component) that fetches `/activity/teacher/content-overview/{contentId}` and shows summary tiles + Completed/Not-Attempted lists — no separate page navigation.
+  - Verified 100% by testing agent (iteration_79). Non-blocking notes: no abort/stale-response guard on rapid clicks (low impact).
+
 - **Homework: analytics-first teacher UI + blue "Assigned" color** (June 2026)
   - `TeacherHomework.jsx`: homework cards are now compact by default (title, type badge, due date, X/Y done, thin green progress bar). Added an **Analytics** button that reveals class-level tiles (Done / Not done / Completion%); the per-student done/not-done list is hidden until the user clicks a further "View student list (N)" toggle. Keeps classrooms of 25-40 learners readable.
   - `TopicPage.jsx`: color distinction finalized — "Done in class" green (#06D6A0), "Assign as Homework" orange (#EE6C4D), and "Assigned as Homework" now a clear **blue #2563EB** (previously green, which collided with Done-in-class).
