@@ -933,6 +933,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **Fix: teacher clicking a Topic showed "Coming Soon"** (June 2026)
+  - Bug: when a teacher clicked a parent Topic card (not a subtopic), the content page showed an empty "Coming Soon" state instead of the topic's subtopics.
+  - Root cause: `get_topic_detail` in `content.py` computed subtopic `content_count` only for child/parent/admin roles; for teachers it stayed 0, so the "filter out empty subtopics" step (`if not is_admin`) dropped every subtopic.
+  - Fix: added an `elif is_teacher:` branch that computes subtopic `content_count` using teacher-visibility rules (and marks them unlocked). Teachers now see the non-empty subtopics list, matching the child experience.
+  - Verified 100% (testing agent iteration_76, pytest `test_teacher_topic_bugfix.py` + UI). Child behavior unchanged.
+
 - **Assign as Homework (teacher → students) with analytics** (June 2026)
   - Teachers can assign any content item as homework from the Lesson Plan / content view (`TopicPage.jsx` → "Assign as Homework" button → dialog with classroom picker + due date).
   - All active students of the chosen classroom get it and receive a bell notification (deep-links to the content topic). Child sees a "My Homework" section (`ChildHomework.jsx`) on their dashboard with due date + overdue flag.
