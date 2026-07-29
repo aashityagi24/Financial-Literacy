@@ -933,6 +933,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **P2**: Badge images missing - requires manual re-upload by admin
 
 ## Recently Completed
+- **School Dashboard: map existing accounts by email or username** (June 2026)
+  - The "Add User" modal now has a **Create New** vs **Add Existing** mode toggle. In "Add Existing", the school admin enters an existing account's email OR username and it's mapped to the school (sets `school_id`).
+  - New backend endpoint `POST /api/school/users/link-existing` (`school.py`): looks up by email or username, validates role match + school membership (rejects already-in-a-school and role mismatches), and for a child honors optional parent/classroom/teacher links.
+  - Frontend `SchoolDashboard.jsx`: `addUserMode` toggle, identifier input (`user-identifier-input`), `handleLinkExisting`; testids `add-user-mode-create/existing`, `confirm-link-existing-btn`.
+  - Verified 100% (curl for all edge cases + testing agent iteration_74). School QA login: springfield / school123.
+
 - **"Remember me" on login** (June 2026)
   - Added a "Remember me" checkbox (checked by default) to the login form in `AuthPage.jsx`. On submit it saves the entered email/username to `localStorage` (`remembered_identifier`); on the next visit the field is pre-filled to reduce login friction. Password is NEVER stored. Unchecking clears the saved identifier. Testid `remember-me-checkbox`.
 
