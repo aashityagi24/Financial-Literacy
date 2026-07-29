@@ -13,8 +13,9 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import ActivityScoresBadge from "@/components/ActivityScoresBadge";
 import ChildActivityScore from "@/components/ChildActivityScore";
+import ActivityScoresBadge from "@/components/ActivityScoresBadge";
+import ActivityAnalyticsDialog from "@/components/ActivityAnalyticsDialog";
 import TrialLimitDialog from "@/components/TrialLimitDialog";
 
 const CONTENT_TYPE_CONFIG = {
@@ -57,6 +58,8 @@ export default function TopicPage({ user }) {
   const [hwDueDate, setHwDueDate] = useState('');
   const [hwLoading, setHwLoading] = useState(false);
   const [assignedContentIds, setAssignedContentIds] = useState(new Set());
+  // Activity analytics popup (teacher)
+  const [analyticsContent, setAnalyticsContent] = useState(null);
   // Content id to highlight (child opening homework)
   const highlightId = searchParams.get('highlight');
   const trialBannerShownRef = useRef(false);
@@ -779,14 +782,15 @@ export default function TopicPage({ user }) {
                               </button>
                             )
                           )}
-                          {/* Teacher Analytics Link */}
+                          {/* Teacher Analytics — opens popup */}
                           {user?.role === 'teacher' && content.content_type === 'activity' && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                navigate(`/activity-analytics/${content.content_id}`);
+                                setAnalyticsContent(content);
                               }}
                               className="text-xs px-2 py-1 rounded-full font-bold bg-[#3D5A80] text-white hover:bg-[#1D3557] flex items-center gap-1"
+                              data-testid={`activity-analytics-btn-${content.content_id}`}
                             >
                               <BarChart3 className="w-3 h-3" />
                               Analytics
@@ -811,8 +815,8 @@ export default function TopicPage({ user }) {
                           </p>
                         )}
                         
-                        {/* Activity Scores for Parents/Teachers */}
-                        {['parent', 'teacher'].includes(user?.role) && content.content_type === 'activity' && (
+                        {/* Activity Scores inline — parents only (teachers use the Analytics popup) */}
+                        {user?.role === 'parent' && content.content_type === 'activity' && (
                           <ActivityScoresBadge contentId={content.content_id} user={user} />
                         )}
                       </div>
@@ -1122,6 +1126,14 @@ export default function TopicPage({ user }) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Activity Analytics popup (teacher) */}
+      <ActivityAnalyticsDialog
+        contentId={analyticsContent?.content_id}
+        title={analyticsContent?.title}
+        open={!!analyticsContent}
+        onClose={() => setAnalyticsContent(null)}
+      />
     </div>
   );
 }
