@@ -944,7 +944,13 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 
 
 ## Recently Completed
-- **Fix: content "uploaded but not showing" once library exceeds 500 items** (June 2026)
+- **Removed ALL content caps (user request "do not keep any content cap")** (June 2026)
+  - Extended the earlier 500-item admin fix. Audited every content query in `content.py` and `repository.py`:
+    - `find_with_grade_order` (powers the user-facing Learn/topic view) defaulted to 500 but was called with `limit=100` everywhere → children/teachers/parents could not see more than 100 items in a subtopic. Now unbounded.
+    - `admin_get_topics` capped topics/subtopics at 100; `admin_get_items` per-topic capped at 500; `repository.py` topic/subtopic/teacher_repository lists capped at 100/200/500.
+    - All changed to `to_list(length=None)` (drains the full cursor).
+  - Verified by testing agent (iteration_81, backend, 100% / 5 tests): with 574 seeded items, admin list=574, per-subtopic=152, and the user-facing topic detail returns 152 (was hard-capped at 100). Regression: new item still appears. Reusable guard test at `/app/backend/tests/test_content_cap_fix_v2.py`. REQUIRES PRODUCTION REDEPLOY to take effect on the live site.
+
   - Reported on the LIVE site (admin@learnersplanet.com, 500+ content items): adding an activity to certain subtopics showed "Content created" but the item never appeared in Content Management (or to users).
   - Root cause: `GET /api/admin/content/items` (`content.py` `admin_get_items`) used `to_list(500)`. With 500+ total items, newly created items fell outside the 500-item window and were silently dropped from the admin response.
   - Fix: removed the cap → `to_list(length=None)` returns every content item.
