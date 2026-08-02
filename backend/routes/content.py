@@ -880,7 +880,10 @@ async def admin_get_items(request: Request, topic_id: Optional[str] = None):
     await require_admin(request)
     
     query = {"topic_id": topic_id} if topic_id else {}
-    items = await db.content_items.find(query, {"_id": 0}).sort("order", 1).to_list(500)
+    # No cap: the admin management view must show every content item. A fixed
+    # limit (previously 500) silently hid newly-created items once the library
+    # grew past the cap, so they appeared to "not upload".
+    items = await db.content_items.find(query, {"_id": 0}).sort("order", 1).to_list(length=None)
     return items
 
 @router.post("/admin/content/items")
