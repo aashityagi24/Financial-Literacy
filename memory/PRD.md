@@ -944,7 +944,11 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 
 
 ## Recently Completed
-- **Removed ALL content caps (user request "do not keep any content cap")** (June 2026)
+- **Teacher-only content: hide classroom actions + color-code** (June 2026)
+  - For content whose `visible_to` excludes `child` (e.g. a teacher's guide), the teacher Learn/topic card no longer shows "Mark done in class", "Assign as Homework", or "Analytics" — those actions don't apply since students can't see the item.
+  - Such cards now get a purple "Teacher Only" badge and a purple border/tint (`#7C3AED`) so they stand out. Child-visible content is unaffected.
+  - Logic in `TopicPage.jsx`: `isTeacherOnly = visible_to.length>0 && !visible_to.includes('child')`. Verified 100% by testing agent (iteration_82).
+
   - Extended the earlier 500-item admin fix. Audited every content query in `content.py` and `repository.py`:
     - `find_with_grade_order` (powers the user-facing Learn/topic view) defaulted to 500 but was called with `limit=100` everywhere → children/teachers/parents could not see more than 100 items in a subtopic. Now unbounded.
     - `admin_get_topics` capped topics/subtopics at 100; `admin_get_items` per-topic capped at 500; `repository.py` topic/subtopic/teacher_repository lists capped at 100/200/500.
