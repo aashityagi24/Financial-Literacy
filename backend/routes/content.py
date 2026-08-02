@@ -19,7 +19,7 @@ def get_db():
     return db
 
 
-async def find_with_grade_order(collection, query, filter_grade, parent_field=None, parent_target=None, limit=500):
+async def find_with_grade_order(collection, query, filter_grade, parent_field=None, parent_target=None, limit=None):
     """Fetch documents sorted by grade-specific order if filter_grade is set,
     falling back to the global `order` field.
 
@@ -38,7 +38,7 @@ async def find_with_grade_order(collection, query, filter_grade, parent_field=No
         if use_parent_remap:
             full_query[parent_field] = parent_target
         cursor = collection.find(full_query, {"_id": 0}).sort("order", 1)
-        return await cursor.to_list(limit)
+        return await cursor.to_list(length=limit)
 
     pipeline = []
     if query:
@@ -56,7 +56,7 @@ async def find_with_grade_order(collection, query, filter_grade, parent_field=No
     pipeline.append({"$sort": {"effective_order": 1}})
     pipeline.append({"$project": {"_id": 0, "effective_order": 0, "effective_parent": 0}})
     cursor = collection.aggregate(pipeline)
-    return await cursor.to_list(limit)
+    return await cursor.to_list(length=limit)
 
 
 async def count_with_grade_parent(collection, parent_field, parent_target, filter_grade, extra_query=None):
@@ -187,7 +187,7 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
     else:
         query = {"parent_id": None, "min_grade": {"$lte": filter_grade}, "max_grade": {"$gte": filter_grade}}
     
-    parent_topics = await find_with_grade_order(db.content_topics, query, filter_grade, limit=100)
+    parent_topics = await find_with_grade_order(db.content_topics, query, filter_grade, limit=None)
     
     completed_content_ids = set()
     classroom_done_ids = set()
@@ -263,7 +263,7 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
         
         subtopics = await find_with_grade_order(
             db.content_topics, subtopic_extra_query, filter_grade,
-            parent_field='parent_id', parent_target=topic_id, limit=100
+            parent_field='parent_id', parent_target=topic_id, limit=None
         )
         # Apply per-grade text overrides on subtopics (non-admin only).
         if filter_grade is not None and not is_admin:
@@ -302,7 +302,7 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                 
                 subtopic_content = await find_with_grade_order(
                     db.content_items, subtopic_content_extra, filter_grade,
-                    parent_field='topic_id', parent_target=subtopic_id, limit=100
+                    parent_field='topic_id', parent_target=subtopic_id, limit=None
                 )
                 
                 subtopic_completed_count = sum(1 for c in subtopic_content if c["content_id"] in completed_content_ids)
@@ -402,7 +402,7 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
         subtopic_extra_query = {}
     subtopics = await find_with_grade_order(
         db.content_topics, subtopic_extra_query, filter_grade,
-        parent_field='parent_id', parent_target=topic_id, limit=100
+        parent_field='parent_id', parent_target=topic_id, limit=None
     )
     if filter_grade is not None and not is_admin:
         for st in subtopics:
@@ -490,7 +490,7 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
     logging.info(f"TopicDetail: Final content_query={content_query}")
     content_items = await find_with_grade_order(
         db.content_items, content_query, filter_grade,
-        parent_field='topic_id', parent_target=topic_id, limit=100
+        parent_field='topic_id', parent_target=topic_id, limit=None
     )
     logging.info(f"TopicDetail: Found {len(content_items)} content items")
     
@@ -524,7 +524,7 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
                 subtopic_content_extra["max_grade"] = {"$gte": filter_grade}
             subtopic_content = await find_with_grade_order(
                 db.content_items, subtopic_content_extra, filter_grade,
-                parent_field='topic_id', parent_target=subtopic_id, limit=100
+                parent_field='topic_id', parent_target=subtopic_id, limit=None
             )
             subtopic_completed_count = sum(1 for c in subtopic_content if c["content_id"] in completed_content_ids)
             subtopic["completed_count"] = subtopic_completed_count
@@ -600,7 +600,7 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
             
             subtopic_content = await find_with_grade_order(
                 db.content_items, subtopic_content_extra, filter_grade,
-                parent_field='topic_id', parent_target=subtopic_id, limit=100
+                parent_field='topic_id', parent_target=subtopic_id, limit=None
             )
             subtopic["completed_count"] = sum(1 for c in subtopic_content if c["content_id"] in completed_content_ids)
             subtopic["content_count"] = len(subtopic_content)
@@ -623,7 +623,7 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
                 subtopic_content_extra["max_grade"] = {"$gte": filter_grade}
             subtopic_content = await find_with_grade_order(
                 db.content_items, subtopic_content_extra, filter_grade,
-                parent_field='topic_id', parent_target=subtopic_id, limit=100
+                parent_field='topic_id', parent_target=subtopic_id, limit=None
             )
             subtopic["is_unlocked"] = True
             subtopic["content_count"] = len(subtopic_content)
@@ -747,10 +747,10 @@ async def admin_get_topics(request: Request):
     db = get_db()
     await require_admin(request)
     
-    topics = await db.content_topics.find({"parent_id": None}, {"_id": 0}).sort("order", 1).to_list(100)
+    topics = await db.content_topics.find({"parent_id": None}, {"_id": 0}).sort("order", 1).to_list(length=None)
     
     for topic in topics:
-        subtopics = await db.content_topics.find({"parent_id": topic["topic_id"]}, {"_id": 0}).sort("order", 1).to_list(100)
+        subtopics = await db.content_topics.find({"parent_id": topic["topic_id"]}, {"_id": 0}).sort("order", 1).to_list(length=None)
         topic["subtopics"] = subtopics
         topic["content_count"] = await db.content_items.count_documents({"topic_id": topic["topic_id"]})
         for subtopic in subtopics:
@@ -833,7 +833,7 @@ async def admin_delete_topic(topic_id: str, request: Request):
     db = get_db()
     await require_admin(request)
     
-    subtopics = await db.content_topics.find({"parent_id": topic_id}).to_list(100)
+    subtopics = await db.content_topics.find({"parent_id": topic_id}).to_list(length=None)
     for subtopic in subtopics:
         await db.content_items.delete_many({"topic_id": subtopic["topic_id"]})
         await db.content_topics.delete_one({"topic_id": subtopic["topic_id"]})

@@ -1,0 +1,23 @@
+{
+  "summary": "Backend-only verification that ALL content caps have been removed. Extended iteration_80's coverage (which only tested the 500 admin cap) with 4 new cases: per-subtopic > 100, user-facing topic detail = 152 (the key fix), admin topics tree not truncated, and POST regression. All 5 tests pass against the live preview URL.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_content_cap_fix_v2.py",
+    "/app/test_reports/pytest/iter81_cap.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "find_with_grade_order default limit=None + to_list(length=None) is now consistent across all 8 call sites — good. Consider adding an integration test at CI that guards against re-introducing a limit (e.g., asserts >150 items for the seeded subtopic) so future refactors don't silently regress."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_content_cap_fix_v2.py (new)"
+  ],
+  "success_rate": {"backend": "100% (5/5)", "frontend": "n/a"},
+  "test_credentials": "admin@learnersplanet.com / finlit@2026",
+  "seed_data_creation": "Created one __QA_NEW_ITEM__ (worksheet, published, grades 0-5) under topic_0b14de98fc9f — id content_4da696b0b9a9. Main agent should clean up along with __CAPSEED__ items.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Cap-removal fix is fully verified. Key measurements: admin all=574, admin per-topic=152, user topic detail grade=1=152 (was 100), after POST=153. Test file /app/backend/tests/test_content_cap_fix_v2.py is a reusable regression guard.",
+  "rca of the issue": "Prior code called Motor's to_list() with default length or a fixed cap (500 admin, 100 user-facing). Fix: pass length=None everywhere so the entire cursor is drained. Verified end-to-end via seeded 574-item env."
+}

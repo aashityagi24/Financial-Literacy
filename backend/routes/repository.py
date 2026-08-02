@@ -92,10 +92,10 @@ async def get_repository_items(
     if file_type:
         query["file_type"] = file_type
     
-    items = await db.teacher_repository.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
+    items = await db.teacher_repository.find(query, {"_id": 0}).sort("created_at", -1).to_list(length=None)
     
     # Get topics for dropdown
-    topics = await db.content_topics.find({"parent_id": None}, {"_id": 0, "topic_id": 1, "title": 1}).to_list(100)
+    topics = await db.content_topics.find({"parent_id": None}, {"_id": 0, "topic_id": 1, "title": 1}).to_list(length=None)
     
     return {
         "items": items,
@@ -124,7 +124,7 @@ async def get_subtopics_for_topic(request: Request, topic_id: str):
     subtopics = await db.content_topics.find(
         {"parent_id": topic_id}, 
         {"_id": 0, "topic_id": 1, "title": 1}
-    ).to_list(100)
+    ).to_list(length=None)
     
     return {"subtopics": subtopics}
 
@@ -354,10 +354,10 @@ async def teacher_get_repository(
         else:
             query["$or"] = search_conditions
     
-    items = await db.teacher_repository.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
+    items = await db.teacher_repository.find(query, {"_id": 0}).sort("created_at", -1).to_list(length=None)
     
     # Get topics for filtering
-    topics = await db.content_topics.find({"parent_id": None}, {"_id": 0, "topic_id": 1, "title": 1}).to_list(100)
+    topics = await db.content_topics.find({"parent_id": None}, {"_id": 0, "topic_id": 1, "title": 1}).to_list(length=None)
     
     return {
         "items": items,
@@ -378,6 +378,6 @@ async def teacher_get_subtopics(request: Request, topic_id: str):
     subtopics = await db.content_topics.find(
         {"parent_id": topic_id}, 
         {"_id": 0, "topic_id": 1, "title": 1}
-    ).to_list(100)
+    ).to_list(length=None)
     
     return {"subtopics": subtopics}
