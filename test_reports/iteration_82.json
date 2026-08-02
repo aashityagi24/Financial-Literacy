@@ -1,0 +1,16 @@
+{
+  "summary": "Verified teacher-only content gating on /learn/topic/topic_80e910ce6a69 for teacher user. Teacher-only card (content_d08ee5937d95 'Indian Money Teacher's Guide') correctly renders purple 'Teacher Only' badge, has purple border/tint className (border-[#7C3AED] bg-[#7C3AED]/5), and does NOT render Mark-done-in-class toggle, Assign-as-Homework, or Analytics buttons. Normal child-visible activity card (content_8f104ecba025 'Money In The Messy Room') still shows all three teacher action buttons. All acceptance criteria met.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "100%"},
+  "test_credentials": "test_teacher_1 / testpassword (login via {identifier,password} -> session_token)",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Teacher-only gating logic in TopicPage.jsx around line 646-780 works. Verified via DOM query: teacher_only_badge=true, teacher_done_toggle/assign/analytics=false for content_d08ee5937d95; all three actions present for child-visible content_8f104ecba025. Purple styling applied.",
+  "rca of the issue": "N/A - feature verified working"
+}

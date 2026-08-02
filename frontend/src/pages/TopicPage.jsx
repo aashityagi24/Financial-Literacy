@@ -644,6 +644,10 @@ export default function TopicPage({ user }) {
                 const isChild = user?.role === 'child';
                 const isLocked = isChild && content.is_unlocked === false;
                 const isCompleted = (isChild || user?.role === 'parent') && content.is_completed;
+                // Teacher-only content: not visible to children, so classroom
+                // actions (Done in class / Assign Homework / Analytics) don't apply.
+                const _visibleTo = content.visible_to || [];
+                const isTeacherOnly = _visibleTo.length > 0 && !_visibleTo.includes('child');
                 
                 if (isLocked) {
                   return (
@@ -694,7 +698,7 @@ export default function TopicPage({ user }) {
                   <div
                     key={content.content_id}
                     data-content-id={content.content_id}
-                    className={`card-playful p-5 cursor-pointer hover:scale-[1.01] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/5' : ''} ${highlightId === content.content_id ? 'ring-4 ring-[#EE6C4D] ring-offset-2 shadow-xl bg-[#EE6C4D]/5' : ''}`}
+                    className={`card-playful p-5 cursor-pointer hover:scale-[1.01] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/5' : ''} ${isTeacherOnly ? 'border-[#7C3AED] bg-[#7C3AED]/5' : ''} ${highlightId === content.content_id ? 'ring-4 ring-[#EE6C4D] ring-offset-2 shadow-xl bg-[#EE6C4D]/5' : ''}`}
                     style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
                     onClick={() => openContent(content)}
                   >
@@ -742,8 +746,18 @@ export default function TopicPage({ user }) {
                               <Check className="w-3 h-3" /> Done in class
                             </span>
                           )}
+                          {/* Teacher-only content badge (children can't see this) */}
+                          {user?.role === 'teacher' && isTeacherOnly && (
+                            <span
+                              className="text-xs px-2 py-1 rounded-full font-bold bg-[#7C3AED] text-white flex items-center gap-1"
+                              title="This resource is for teachers only — students can't see it, so classroom actions don't apply."
+                              data-testid={`teacher-only-badge-${content.content_id}`}
+                            >
+                              <Lock className="w-3 h-3" /> Teacher Only
+                            </span>
+                          )}
                           {/* Teacher's Done-in-Class toggle */}
-                          {user?.role === 'teacher' && (
+                          {user?.role === 'teacher' && !isTeacherOnly && (
                             <button
                               onClick={(e) => toggleDoneInClass(content.content_id, e)}
                               className={`text-xs px-2 py-1 rounded-full font-semibold flex items-center gap-1 transition-colors ${
@@ -759,7 +773,7 @@ export default function TopicPage({ user }) {
                             </button>
                           )}
                           {/* Teacher: Assign as Homework */}
-                          {user?.role === 'teacher' && (
+                          {user?.role === 'teacher' && !isTeacherOnly && (
                             assignedContentIds.has(content.content_id) ? (
                               <button
                                 onClick={(e) => openAssignHomework(content, e)}
@@ -783,7 +797,7 @@ export default function TopicPage({ user }) {
                             )
                           )}
                           {/* Teacher Analytics — opens popup */}
-                          {user?.role === 'teacher' && content.content_type === 'activity' && (
+                          {user?.role === 'teacher' && !isTeacherOnly && content.content_type === 'activity' && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
