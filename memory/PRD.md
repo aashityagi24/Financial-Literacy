@@ -944,6 +944,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 
 
 ## Recently Completed
+- **Fix: content "uploaded but not showing" once library exceeds 500 items** (June 2026)
+  - Reported on the LIVE site (admin@learnersplanet.com, 500+ content items): adding an activity to certain subtopics showed "Content created" but the item never appeared in Content Management (or to users).
+  - Root cause: `GET /api/admin/content/items` (`content.py` `admin_get_items`) used `to_list(500)`. With 500+ total items, newly created items fell outside the 500-item window and were silently dropped from the admin response.
+  - Fix: removed the cap → `to_list(length=None)` returns every content item.
+  - Verified by testing agent (iteration_80, backend, 100%): seeded 544 items, endpoint returns all 544, and a newly created item appears in both the full and per-topic lists. REQUIRES PRODUCTION REDEPLOY to take effect on the live site.
+
 - **Homework: "Assigned" state + child highlight** (June 2026)
   - Teacher content view (`TopicPage.jsx`): after a content item is assigned as homework, its button changes from orange "Assign as Homework" to green "Assigned as Homework" (check icon). Fetched from `GET /teacher/homework` into `assignedContentIds`; flips instantly on assign. Still clickable to assign to another classroom.
   - Child side (`ChildHomework.jsx` → `TopicPage.jsx`): tapping "Open"/"Start" on a homework to-do navigates with `?highlight=<content_id>`; the target content card gets an orange ring + a "Your Homework — complete this!" badge and scrolls into view so the child knows exactly what to do.
