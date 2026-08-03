@@ -112,6 +112,7 @@ export default function MyJobsPage({ user }) {
     const examples = type === 'family' ? FAMILY_EXAMPLES : PAYDAY_EXAMPLES;
     const accentColor = type === 'family' ? '#EE6C4D' : '#FFD23F';
     const accentBg = type === 'family' ? 'bg-[#EE6C4D]' : 'bg-[#FFD23F]';
+    const accentHoverBg = type === 'family' ? 'hover:bg-[#DD5B3C]' : 'hover:bg-[#F5C518]';
 
     return (
       <div className="bg-white rounded-2xl p-5 shadow-md border-2 border-[#1D3557]/10 space-y-4">
@@ -159,7 +160,7 @@ export default function MyJobsPage({ user }) {
 
         <Button
           onClick={handleAdd}
-          className={`w-full ${accentBg} hover:opacity-90 ${type === 'family' ? 'text-white' : 'text-[#1D3557]'} rounded-xl h-11 font-bold text-sm`}
+          className={`w-full ${accentBg} ${accentHoverBg} ${type === 'family' ? 'text-white' : 'text-[#1D3557]'} rounded-xl h-11 font-bold text-sm`}
           data-testid="job-add-btn"
         >
           <Check className="w-4 h-4 mr-2" /> Add {type === 'family' ? 'Family' : 'Payday'} Job
