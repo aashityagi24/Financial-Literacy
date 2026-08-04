@@ -1,0 +1,20 @@
+{
+  "summary": "Verified conditional-render change on TopicPage for content_8f104ecba025 ('Money In The Messy Room') on /learn/topic/topic_80e910ce6a69 as teacher test_teacher_1. Toggling Done-in-class hides both Assign-as-Homework and Analytics buttons; untoggling restores them. Final state cleaned up back to NOT done-in-class.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "100%"},
+  "test_credentials": "test_teacher_1 / testpassword",
+  "seed_data_creation": "None. content_8f104ecba025 restored to NOT-done-in-class at end of test.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Login via POST /api/auth/login {identifier,password} returns {user, session_token}. Seed both localStorage.session_token and a cookie for the preview host before navigation. Toggle testid teacher-done-toggle-<cid> updates state reactively (no reload). Verified: INITIAL text='Mark done in class', assign+analytics visible. After 1st click text='Done in class', both assign-homework-<cid> and activity-analytics-btn-<cid> testids removed from DOM. After 2nd click reverted with buttons restored.",
+  "rca of the issue": "N/A - feature verification only. The gating `!teacherDoneIds.has(content.content_id)` around both blocks in TopicPage.jsx works as intended; toggleDoneInClass updates local state via POST /api/teacher/content/{id}/toggle-done-in-class and buttons hide/show without reload."
+}

@@ -772,8 +772,8 @@ export default function TopicPage({ user }) {
                               {teacherDoneIds.has(content.content_id) ? 'Done in class' : 'Mark done in class'}
                             </button>
                           )}
-                          {/* Teacher: Assign as Homework */}
-                          {user?.role === 'teacher' && !isTeacherOnly && (
+                          {/* Teacher: Assign as Homework (hidden once marked Done in class) */}
+                          {user?.role === 'teacher' && !isTeacherOnly && !teacherDoneIds.has(content.content_id) && (
                             assignedContentIds.has(content.content_id) ? (
                               <button
                                 onClick={(e) => openAssignHomework(content, e)}
@@ -796,8 +796,8 @@ export default function TopicPage({ user }) {
                               </button>
                             )
                           )}
-                          {/* Teacher Analytics — opens popup */}
-                          {user?.role === 'teacher' && !isTeacherOnly && content.content_type === 'activity' && (
+                          {/* Teacher Analytics — opens popup (hidden once marked Done in class) */}
+                          {user?.role === 'teacher' && !isTeacherOnly && !teacherDoneIds.has(content.content_id) && content.content_type === 'activity' && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
