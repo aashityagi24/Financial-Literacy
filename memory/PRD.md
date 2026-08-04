@@ -944,7 +944,9 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 
 
 ## Recently Completed
-- **Teacher-only content: hide classroom actions + color-code** (June 2026)
+- **Done-in-class items hide Assign Homework + Analytics** (June 2026)
+  - When a teacher marks a content item "Done in class", its "Assign as Homework" and "Analytics" buttons are hidden (it's already covered in class); the green Done-in-class toggle stays. Reactive — updates instantly on toggle, restores on un-toggle. Gated via `!teacherDoneIds.has(content_id)` in `TopicPage.jsx`. Verified 100% by testing agent (iteration_84).
+
   - For content whose `visible_to` excludes `child` (e.g. a teacher's guide), the teacher Learn/topic card no longer shows "Mark done in class", "Assign as Homework", or "Analytics" — those actions don't apply since students can't see the item.
   - Such cards now get a purple "Teacher Only" badge and a purple border/tint (`#7C3AED`) so they stand out. Child-visible content is unaffected.
   - Logic in `TopicPage.jsx`: `isTeacherOnly = visible_to.length>0 && !visible_to.includes('child')`. Verified 100% by testing agent (iteration_82).
