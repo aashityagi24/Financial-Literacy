@@ -11,7 +11,8 @@ import {
   BookOpen, LogOut, User, Target, Calendar, Edit2,
   Wallet, TrendingUp, TrendingDown, Sprout, LineChart,
   Award, Flame, ArrowUpDown, CheckCircle, XCircle, Clock,
-  BarChart3, Image as ImageIcon, FileText, Search, FolderOpen, Filter
+  BarChart3, Image as ImageIcon, FileText, Search, FolderOpen, Filter,
+  Archive, ArchiveRestore
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,6 +49,7 @@ export default function TeacherDashboard({ user }) {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [teacherQuests, setTeacherQuests] = useState([]);
+  const [showArchivedQuests, setShowArchivedQuests] = useState(false);
   const [activeTab, setActiveTab] = useState('classroom');
   const [editingQuest, setEditingQuest] = useState(null);
   const [studentSearch, setStudentSearch] = useState('');
@@ -141,7 +143,7 @@ export default function TeacherDashboard({ user }) {
     try {
       const [dashRes, questsRes] = await Promise.all([
         axios.get(`${API}/teacher/dashboard`),
-        axios.get(`${API}/teacher/quests`).catch(() => ({ data: [] }))
+        axios.get(`${API}/teacher/quests?archived=${showArchivedQuests}`).catch(() => ({ data: [] }))
       ]);
       setDashboard(dashRes.data);
       setTeacherQuests(questsRes.data);
@@ -151,6 +153,17 @@ export default function TeacherDashboard({ user }) {
       setLoading(false);
     }
   };
+
+  const fetchQuests = async () => {
+    try {
+      const res = await axios.get(`${API}/teacher/quests?archived=${showArchivedQuests}`);
+      setTeacherQuests(res.data);
+    } catch (error) {
+      /* silent */
+    }
+  };
+
+  useEffect(() => { if (!loading) fetchQuests(); /* eslint-disable-next-line */ }, [showArchivedQuests]);
   
   const fetchClassroomDetails = async (classroomId) => {
     try {
@@ -218,6 +231,16 @@ export default function TeacherDashboard({ user }) {
       fetchDashboard();
     } catch (error) {
       toast.error('Failed to delete classroom');
+    }
+  };
+  
+  const handleArchiveQuest = async (questId, archive) => {
+    try {
+      await axios.post(`${API}/teacher/quests/${questId}/${archive ? 'archive' : 'unarchive'}`);
+      toast.success(archive ? 'Quest archived' : 'Quest restored');
+      fetchQuests();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Could not update quest');
     }
   };
   
@@ -710,15 +733,6 @@ export default function TeacherDashboard({ user }) {
                           </button>
                         </div>
                       </div>
-                      {/* Delete button - Only show if teacher is NOT connected to a school */}
-                      {!user?.school_id && (
-                        <button 
-                          onClick={() => handleDeleteClassroom(selectedClassroom)}
-                          className="text-white/80 hover:text-white text-sm flex items-center gap-1"
-                        >
-                          <Trash2 className="w-4 h-4" /> Delete
-                        </button>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -1211,17 +1225,34 @@ export default function TeacherDashboard({ user }) {
                 <TeacherHomework classroomId={selectedClassroom} />
                 
                 {/* My Quests Section - filtered by current classroom */}
-                {teacherQuests.filter(q => q.classroom_id === selectedClassroom).length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
-                      <Target className="w-5 h-5 inline mr-2" />
-                      My Quests ({teacherQuests.filter(q => q.classroom_id === selectedClassroom).length})
-                    </h3>
+                {(() => {
+                  const classroomQuests = teacherQuests.filter(q => q.classroom_id === selectedClassroom);
+                  return (
+                  <div className="mb-6" data-testid="teacher-quests-section">
+                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                      <h3 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                        <Target className="w-5 h-5 inline mr-2" />
+                        {showArchivedQuests ? 'Archived Quests' : 'My Quests'} ({classroomQuests.length})
+                      </h3>
+                      <button
+                        onClick={() => setShowArchivedQuests(v => !v)}
+                        className={`text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-colors ${showArchivedQuests ? 'bg-[#3D5A80] text-white hover:bg-[#1D3557]' : 'bg-[#3D5A80]/10 text-[#3D5A80] hover:bg-[#3D5A80]/20'}`}
+                        data-testid="toggle-archived-quests"
+                      >
+                        <Archive className="w-3.5 h-3.5" />
+                        {showArchivedQuests ? 'Back to active quests' : 'Show archived'}
+                      </button>
+                    </div>
+                    {classroomQuests.length === 0 ? (
+                      <p className="text-sm text-[#3D5A80] italic" data-testid="quests-empty-state">
+                        {showArchivedQuests ? 'No archived quests. Archive a quest to tidy up your active list.' : 'No active quests for this classroom yet.'}
+                      </p>
+                    ) : (
                     <div className="space-y-3">
-                      {teacherQuests.filter(q => q.classroom_id === selectedClassroom).map((quest) => {
+                      {classroomQuests.map((quest) => {
                         const questClassroom = (dashboard?.classrooms || []).find(c => c.classroom_id === quest.classroom_id);
                         return (
-                        <div key={quest.quest_id} className="card-playful p-4 bg-[#06D6A0]/10">
+                        <div key={quest.quest_id} className={`card-playful p-4 ${showArchivedQuests ? 'bg-gray-100 opacity-90' : 'bg-[#06D6A0]/10'}`} data-testid={`teacher-quest-${quest.quest_id}`}>
                           <div className="flex items-start justify-between">
                             <div>
                               <h4 className="font-bold text-[#1D3557]">{quest.title}</h4>
@@ -1263,27 +1294,51 @@ export default function TeacherDashboard({ user }) {
                               >
                                 <BarChart3 className="w-4 h-4" />
                               </button>
-                              <button 
-                                onClick={() => openEditQuest(quest)}
-                                className="p-2 hover:bg-[#3D5A80]/20 rounded-lg text-[#3D5A80]"
-                                data-testid={`edit-quest-${quest.quest_id}`}
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                              <button 
-                                onClick={() => handleDeleteQuest(quest.quest_id)}
-                                className="p-2 hover:bg-[#EE6C4D]/20 rounded-lg text-[#EE6C4D]"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                              {showArchivedQuests ? (
+                                <button
+                                  onClick={() => handleArchiveQuest(quest.quest_id, false)}
+                                  className="p-2 hover:bg-[#06D6A0]/20 rounded-lg text-[#06D6A0]"
+                                  title="Restore quest to active list"
+                                  data-testid={`unarchive-quest-${quest.quest_id}`}
+                                >
+                                  <ArchiveRestore className="w-4 h-4" />
+                                </button>
+                              ) : (
+                                <>
+                                  <button 
+                                    onClick={() => openEditQuest(quest)}
+                                    className="p-2 hover:bg-[#3D5A80]/20 rounded-lg text-[#3D5A80]"
+                                    data-testid={`edit-quest-${quest.quest_id}`}
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleArchiveQuest(quest.quest_id, true)}
+                                    className="p-2 hover:bg-[#FFD23F]/30 rounded-lg text-[#B8860B]"
+                                    title="Archive quest (hides it from your dashboard; students are unaffected)"
+                                    data-testid={`archive-quest-${quest.quest_id}`}
+                                  >
+                                    <Archive className="w-4 h-4" />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDeleteQuest(quest.quest_id)}
+                                    className="p-2 hover:bg-[#EE6C4D]/20 rounded-lg text-[#EE6C4D]"
+                                    data-testid={`delete-quest-${quest.quest_id}`}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
                       );
                       })}
                     </div>
+                    )}
                   </div>
-                )}
+                  );
+                })()}
                 
                 {/* Announcements Section */}
                 {announcements.length > 0 && (

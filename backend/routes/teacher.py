@@ -179,25 +179,12 @@ async def get_classroom_details(classroom_id: str, request: Request):
 
 @router.delete("/classrooms/{classroom_id}")
 async def delete_classroom(classroom_id: str, request: Request):
-    """Delete a classroom"""
+    """Deleting a classroom is not permitted for teachers. Classrooms are
+    managed by the school. Kept as an explicit 403 so any stray client call
+    fails safely."""
     from services.auth import require_teacher
-    db = get_db()
-    teacher = await require_teacher(request)
-    
-    result = await db.classrooms.delete_one({
-        "classroom_id": classroom_id,
-        "teacher_id": teacher["user_id"]
-    
-})
-    
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Classroom not found")
-    
-    await db.classroom_students.delete_many({"classroom_id": classroom_id})
-    await db.classroom_challenges.delete_many({"classroom_id": classroom_id})
-    await db.classroom_content_completions.delete_many({"classroom_id": classroom_id})
-    
-    return {"message": "Classroom deleted"}
+    await require_teacher(request)
+    raise HTTPException(status_code=403, detail="Teachers cannot delete classrooms. Please contact your school administrator.")
 
 
 async def _get_teacher_classroom_or_404(classroom_id: str, teacher_id: str, db):
@@ -1217,17 +1204,54 @@ async def create_teacher_quest(request: Request):
     return {"message": "Quest created", "quest_id": quest_id}
 
 @router.get("/quests")
-async def get_teacher_quests(request: Request):
-    """Get quests created by teacher"""
+async def get_teacher_quests(request: Request, archived: bool = False):
+    """Get quests created by teacher. Excludes archived quests by default;
+    pass ?archived=true to fetch the archived ones for the 'Show archived' view.
+    Archiving is teacher-view-only and does NOT affect what students see."""
     from services.auth import require_teacher
     db = get_db()
     teacher = await require_teacher(request)
-    
-    quests = await db.new_quests.find(
-        {"creator_id": teacher["user_id"], "creator_type": "teacher"},
-        {"_id": 0}
-    ).sort("created_at", -1).to_list(100)
+
+    query = {"creator_id": teacher["user_id"], "creator_type": "teacher"}
+    if archived:
+        query["is_archived"] = True
+    else:
+        query["is_archived"] = {"$ne": True}
+    quests = await db.new_quests.find(query, {"_id": 0}).sort("created_at", -1).to_list(length=None)
     return quests
+
+
+@router.post("/quests/{quest_id}/archive")
+async def archive_teacher_quest(quest_id: str, request: Request):
+    """Archive a quest so it stops cluttering the teacher's dashboard. Does
+    NOT change student visibility — students keep any active quest to complete,
+    and completed ones stay in their Completed section."""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    result = await db.new_quests.update_one(
+        {"quest_id": quest_id, "creator_id": teacher["user_id"], "creator_type": "teacher"},
+        {"$set": {"is_archived": True}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    return {"message": "Quest archived"}
+
+
+@router.post("/quests/{quest_id}/unarchive")
+async def unarchive_teacher_quest(quest_id: str, request: Request):
+    """Restore an archived quest back to the teacher's active dashboard list."""
+    from services.auth import require_teacher
+    db = get_db()
+    teacher = await require_teacher(request)
+    result = await db.new_quests.update_one(
+        {"quest_id": quest_id, "creator_id": teacher["user_id"], "creator_type": "teacher"},
+        {"$set": {"is_archived": False}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    return {"message": "Quest unarchived"}
+
 
 @router.get("/quests/{quest_id}")
 async def get_teacher_quest(quest_id: str, request: Request):
