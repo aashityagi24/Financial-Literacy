@@ -944,7 +944,13 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 
 
 ## Recently Completed
-- **Teachers can't delete classrooms + quest archiving** (June 2026)
+- **Teacher added to school → her class students auto-mapped to the school** (June 2026)
+  - When a teacher is added to a school (Add Teacher, Link-Existing teacher, or Bulk CSV upload), every child enrolled in that teacher's classroom(s) is auto-assigned the school's `school_id`, so they show up in the School Dashboard students list. The child profile already surfaces the school via their class.
+  - Children already belonging to a DIFFERENT school are skipped and reported back (`students_mapped` / `students_skipped` with names + other-school), surfaced as toasts in `SchoolDashboard.jsx` (`showMappingResult`).
+  - Forward case: `student.py` `join_classroom` now sets the child's `school_id` to the classroom teacher's school when the child joins later (skips if already in a school). Teacher leaving does NOT unmap children (per user decision).
+  - Helper `_map_teacher_students_to_school` in `school.py`. Verified 100% by testing agent (iteration_86, backend 3/3): mapped 6, skip path (Cara→St. Kabir) correct, forward join-classroom maps school. Env reverted clean.
+  - Note: demo_classroom_1 currently has no `join_code` in seed data (unrelated to this feature).
+
   - Removed the Delete-classroom action from the teacher dashboard; `DELETE /api/teacher/classrooms/{id}` now always returns 403 (classrooms are managed by the school). Classroom *create* was already hidden for school-linked teachers and is unchanged.
   - Added quest **archiving**: per-card Archive/Unarchive + a "Show archived" toggle on the teacher's My Quests section. Backend `is_archived` flag; `GET /teacher/quests?archived=` filters; new `/quests/{id}/archive` + `/unarchive`. Archiving is TEACHER-VIEW-ONLY — child quest queries don't reference `is_archived`, so students still see/complete their quests.
   - Verified 100% by testing agent (iteration_85, backend 9/9 + frontend): delete→403, archive/unarchive flow works, and the assigned student still sees an archived quest.
