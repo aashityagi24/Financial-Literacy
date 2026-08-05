@@ -944,7 +944,11 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 
 
 ## Recently Completed
-- **Done-in-class items hide Assign Homework + Analytics** (June 2026)
+- **Teachers can't delete classrooms + quest archiving** (June 2026)
+  - Removed the Delete-classroom action from the teacher dashboard; `DELETE /api/teacher/classrooms/{id}` now always returns 403 (classrooms are managed by the school). Classroom *create* was already hidden for school-linked teachers and is unchanged.
+  - Added quest **archiving**: per-card Archive/Unarchive + a "Show archived" toggle on the teacher's My Quests section. Backend `is_archived` flag; `GET /teacher/quests?archived=` filters; new `/quests/{id}/archive` + `/unarchive`. Archiving is TEACHER-VIEW-ONLY — child quest queries don't reference `is_archived`, so students still see/complete their quests.
+  - Verified 100% by testing agent (iteration_85, backend 9/9 + frontend): delete→403, archive/unarchive flow works, and the assigned student still sees an archived quest.
+
   - When a teacher marks a content item "Done in class", its "Assign as Homework" and "Analytics" buttons are hidden (it's already covered in class); the green Done-in-class toggle stays. Reactive — updates instantly on toggle, restores on un-toggle. Gated via `!teacherDoneIds.has(content_id)` in `TopicPage.jsx`. Verified 100% by testing agent (iteration_84).
 
   - For content whose `visible_to` excludes `child` (e.g. a teacher's guide), the teacher Learn/topic card no longer shows "Mark done in class", "Assign as Homework", or "Analytics" — those actions don't apply since students can't see the item.
