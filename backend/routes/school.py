@@ -337,7 +337,14 @@ async def school_create_teacher(request: Request):
             if class_name:
                 await _create_classroom_for_teacher(db, updated_user["user_id"], class_name, grade)
             
-            return {"message": "Existing user added to school as teacher", "user_id": updated_user["user_id"], "user": updated_user}
+            mapping = await _map_teacher_students_to_school(db, updated_user["user_id"], school_id)
+            return {
+                "message": "Existing user added to school as teacher",
+                "user_id": updated_user["user_id"],
+                "user": updated_user,
+                "students_mapped": mapping["mapped"],
+                "students_skipped": mapping["skipped"],
+            }
         elif existing.get("school_id") == school_id:
             return {"message": "User already belongs to this school", "user_id": existing["user_id"]}
         else:
@@ -360,9 +367,16 @@ async def school_create_teacher(request: Request):
     if class_name:
         await _create_classroom_for_teacher(db, user_id, class_name, grade)
     
+    mapping = await _map_teacher_students_to_school(db, user_id, school_id)
     # Fetch the clean user without _id
     created_user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
-    return {"message": "Teacher created successfully", "user_id": user_id, "user": created_user}
+    return {
+        "message": "Teacher created successfully",
+        "user_id": user_id,
+        "user": created_user,
+        "students_mapped": mapping["mapped"],
+        "students_skipped": mapping["skipped"],
+    }
 
 
 async def _create_classroom_for_teacher(db, teacher_id: str, class_name: str, grade: int = None):
@@ -382,6 +396,46 @@ async def _create_classroom_for_teacher(db, teacher_id: str, class_name: str, gr
     }
     await db.classrooms.insert_one(classroom_doc)
     return classroom_doc["classroom_id"], join_code
+
+
+async def _map_teacher_students_to_school(db, teacher_id: str, school_id: str):
+    """When a teacher is added to a school, map every child enrolled in that
+    teacher's classroom(s) to the same school so they appear in the School
+    Dashboard. Children already belonging to a DIFFERENT school are skipped
+    and reported back to the caller."""
+    classrooms = await db.classrooms.find(
+        {"teacher_id": teacher_id}, {"_id": 0, "classroom_id": 1}
+    ).to_list(length=None)
+    classroom_ids = [c["classroom_id"] for c in classrooms]
+    if not classroom_ids:
+        return {"mapped": 0, "skipped": []}
+
+    links = await db.classroom_students.find(
+        {"classroom_id": {"$in": classroom_ids}, "status": {"$ne": "removed"}},
+        {"_id": 0, "student_id": 1}
+    ).to_list(length=None)
+    student_ids = list({l["student_id"] for l in links})
+
+    mapped = 0
+    skipped = []
+    for sid in student_ids:
+        child = await db.users.find_one({"user_id": sid, "role": "child"})
+        if not child:
+            continue
+        existing_school = child.get("school_id")
+        if existing_school == school_id:
+            continue
+        if existing_school:
+            other = await db.schools.find_one({"school_id": existing_school}, {"_id": 0, "name": 1})
+            skipped.append({
+                "student_id": sid,
+                "name": child.get("name") or child.get("username") or child.get("email"),
+                "other_school": (other or {}).get("name", "another school"),
+            })
+            continue
+        await db.users.update_one({"user_id": sid}, {"$set": {"school_id": school_id}})
+        mapped += 1
+    return {"mapped": mapped, "skipped": skipped}
 
 
 @router.post("/school/users/parent")
@@ -644,12 +698,19 @@ async def school_link_existing_user(request: Request):
         teacher_email = (body.get("teacher_email") or "").strip().lower()
         await _link_child_to_relationships(db, user["user_id"], parent_email, classroom_code, teacher_email)
 
+    # For a teacher, map their existing classroom students to this school
+    mapping = {"mapped": 0, "skipped": []}
+    if user_type == "teacher":
+        mapping = await _map_teacher_students_to_school(db, user["user_id"], school_id)
+
     updated_user = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0})
     label = "student" if user_type == "child" else user_type
     return {
         "message": f"Existing {label} added to your school",
         "user_id": user["user_id"],
-        "user": updated_user
+        "user": updated_user,
+        "students_mapped": mapping["mapped"],
+        "students_skipped": mapping["skipped"],
     }
 
 
@@ -697,6 +758,8 @@ async def school_upload_teachers(request: Request):
     created = 0
     classrooms_created = 0
     errors = []
+    students_mapped = 0
+    students_skipped = []
     
     for row in csv_data:
         name = row.get("name", "").strip()
@@ -764,8 +827,20 @@ async def school_upload_teachers(request: Request):
                 }
                 await db.classrooms.insert_one(classroom_doc)
                 classrooms_created += 1
+        
+        # Map any children already enrolled in this teacher's classroom(s)
+        if user_id:
+            mapping = await _map_teacher_students_to_school(db, user_id, school_id)
+            students_mapped += mapping["mapped"]
+            students_skipped.extend(mapping["skipped"])
     
-    return {"created": created, "classrooms_created": classrooms_created, "errors": errors}
+    return {
+        "created": created,
+        "classrooms_created": classrooms_created,
+        "errors": errors,
+        "students_mapped": students_mapped,
+        "students_skipped": students_skipped,
+    }
 
 @router.post("/school/upload/students")
 async def school_upload_students(request: Request):

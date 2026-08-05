@@ -169,6 +169,7 @@ export default function SchoolDashboard() {
       
       setUploadResult(response.data);
       toast.success(`Successfully processed ${response.data.created || 0} ${uploadType}`);
+      showMappingResult(response.data);
       fetchDashboardData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Upload failed');
@@ -218,6 +219,7 @@ export default function SchoolDashboard() {
       );
       
       toast.success(response.data.message);
+      showMappingResult(response.data);
       setShowAddUserModal(false);
       setAddUserForm({ name: '', email: '', grade: '3', parent_email: '', classroom_code: '', teacher_email: '' });
       fetchDashboardData();
@@ -225,6 +227,16 @@ export default function SchoolDashboard() {
       toast.error(error.response?.data?.detail || 'Failed to create user');
     } finally {
       setAddUserLoading(false);
+    }
+  };
+
+  const showMappingResult = (data) => {
+    if (typeof data?.students_mapped === 'number' && data.students_mapped > 0) {
+      toast.success(`${data.students_mapped} student${data.students_mapped > 1 ? 's' : ''} from this teacher's class auto-added to your school`);
+    }
+    if (Array.isArray(data?.students_skipped) && data.students_skipped.length > 0) {
+      const names = data.students_skipped.map(s => s.name).filter(Boolean).slice(0, 3).join(', ');
+      toast.warning(`${data.students_skipped.length} student${data.students_skipped.length > 1 ? 's' : ''} skipped (already in another school)${names ? `: ${names}` : ''}`);
     }
   };
 
@@ -251,6 +263,7 @@ export default function SchoolDashboard() {
         { withCredentials: true }
       );
       toast.success(response.data.message);
+      showMappingResult(response.data);
       setShowAddUserModal(false);
       setAddUserForm({ name: '', email: '', identifier: '', grade: '3', parent_email: '', classroom_code: '', teacher_email: '' });
       fetchDashboardData();

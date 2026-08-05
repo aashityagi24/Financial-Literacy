@@ -1,0 +1,31 @@
+{
+  "summary": "Verified school auto-mapping feature for teacher's students via link-existing (backend) and forward-case (child join-classroom). All 3 pytest tests PASS. Environment fully reverted after tests.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_school_teacher_student_mapping.py",
+    "/app/test_reports/pytest/mapping_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "student.py join_classroom uses classroom_code.upper() but join_codes stored in DB might be case-sensitive; recommend normalising both sides. In test we inserted an uppercase code to avoid this. demo_classroom_1 currently has NO join_code set in DB, so the join-classroom flow will always 404 for real users on that specific classroom until a code is provisioned. Not a regression from this feature but worth noting for demo/seed data.",
+    "school.py link-existing teacher branch correctly returns students_mapped / students_skipped; skip entry contains a Cara-identifying name field and other_school='St. Kabir' — behaviour matches the requirement."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_school_teacher_student_mapping.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "N/A (backend-only request)"},
+  "test_credentials": "School: springfield / school123 via POST /api/auth/school-login (cookie session). Teacher email ttest@t.com. Springfield school_id=school_c0bc3d3734b7, St. Kabir school_id=school_daee554c6477.",
+  "seed_data_creation": "None persisted. Test 3 temporarily added a join_code to demo_classroom_1, a user_sessions doc for a random test child, and a classroom_students enrollment — ALL removed in the test teardown.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Post-run DB state verified clean: teacher t_test_1 and all 6 demo_classroom_1 students have NO school_id; classroom has no join_code; enrollments back to original 6. If re-running the forward-case test, note that user documents use `user_id` (not `id`), classrooms use `classroom_id`, enrollments live in `classroom_students`, and no classroom currently has a join_code — the test injects one temporarily.",
+  "rca of the issue": "N/A — feature verified working end-to-end."
+}

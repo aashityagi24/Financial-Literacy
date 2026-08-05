@@ -76,6 +76,18 @@ async def join_classroom(request: Request):
             {"$set": {"grade": classroom["grade"]}}
         )
     
+    # Auto-map the student to the teacher's school (skip if the child already
+    # belongs to a different school).
+    teacher_full = await db.users.find_one(
+        {"user_id": classroom.get("teacher_id")}, {"_id": 0, "school_id": 1}
+    )
+    teacher_school = (teacher_full or {}).get("school_id")
+    if teacher_school and not user.get("school_id"):
+        await db.users.update_one(
+            {"user_id": user["user_id"]},
+            {"$set": {"school_id": teacher_school}}
+        )
+    
     return {"message": "Joined classroom successfully", "classroom": classroom}
 
 @router.get("/classrooms")
