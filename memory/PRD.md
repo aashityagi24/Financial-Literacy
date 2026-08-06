@@ -944,7 +944,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 
 
 ## Recently Completed
-- **Unified School bulk upload (one CSV creates + links teacher/student/parent)** (June 2026)
+- **Change Password for all users + School Dashboard user management** (June 2026)
+  - **Profile/Change Password**: the Security → Change Password card now shows for children and teachers (was parent-only); Teacher dashboard gained a Profile button → `/profile`. `/api/auth/me` now returns `has_password` so the UI knows whether to ask for the current password (reuses existing `PUT /api/auth/change-password`; no auth logic changed).
+  - **School Dashboard delete** (full account delete, behind a Confirm-Delete popup): `DELETE /api/school/users/{id}` — teacher delete removes teacher + their class(es) but keeps students (they become classless); student delete removes the student; parent delete keeps their children.
+  - **Class codes**: Teachers tab shows each teacher's class code; Students tab shows the student's class code, and classless students get an **Assign class** action (`POST /api/school/students/{id}/assign-class`) to enrol into an existing class. Dashboard payload now includes `join_code`, `parents[]`, and `classrooms[]`.
+  - Verified 100% by testing agent (iteration_89, backend 9/9 + frontend). All test data cleaned. Non-blocking: school.py growing (~1440 lines); student learning progress is intentionally retained when a teacher is deleted.
+
   - Replaced the 3 separate uploads (teachers/students/parents) with ONE unified CSV — **one row per student** carrying that student's teacher(+class) and parent. A single upload creates every account, enrols the student in the teacher's classroom, links parent↔child, and maps everyone to the school. Teachers/parents repeated across rows are created once.
   - Required cols: student_name, student_grade(0-5), teacher_name, teacher_email, class_name, parent_name, parent_email. Optional: student_email, student_username, student_password, subscription(active), subscription_duration(1_day/1_week/1_month).
   - **Credentials**: email-less students get auto username+password; teachers & parents get an auto password (so non-Google users log in with email+password). All generated logins shown post-upload in a Name/Role/Login/Password table + **Download all credentials CSV**. A **Download sample** button provides the template with the 12 headers in order.
