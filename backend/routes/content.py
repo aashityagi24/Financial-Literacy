@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, Request
 from typing import Optional
 from datetime import datetime, timezone
 import uuid
+import copy
 
 router = APIRouter(tags=["content"])
 
@@ -925,6 +926,40 @@ async def admin_create_item(request: Request):
     await db.content_items.insert_one(content_doc)
     
     return {"message": "Content created", "content_id": content_id}
+
+@router.post("/admin/content/items/{content_id}/duplicate")
+async def admin_duplicate_item(content_id: str, request: Request):
+    """Duplicate a content item — copies every field (title, thumbnail, grade
+    range, visibility, uploaded file references in content_data, etc.) into a
+    new draft item under the same topic so the admin can tweak it. Topics and
+    subtopics are NOT duplicated by this endpoint."""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+
+    original = await db.content_items.find_one({"content_id": content_id}, {"_id": 0})
+    if not original:
+        raise HTTPException(status_code=404, detail="Content item not found")
+
+    new_id = f"content_{uuid.uuid4().hex[:12]}"
+    max_order = await db.content_items.find_one(
+        {"topic_id": original.get("topic_id")}, sort=[("order", -1)]
+    )
+    new_order = (max_order["order"] + 1) if max_order and "order" in max_order else 0
+
+    # Deep-copy the original then override identity/order/publish fields.
+    new_doc = copy.deepcopy(original)
+    new_doc["content_id"] = new_id
+    new_doc["title"] = f"{original.get('title', 'Untitled')} (Copy)"
+    new_doc["order"] = new_order
+    new_doc["is_published"] = False  # start as draft so it isn't shown until reviewed
+    new_doc["created_at"] = datetime.now(timezone.utc).isoformat()
+    new_doc.pop("_id", None)
+
+    await db.content_items.insert_one(new_doc)
+    new_doc.pop("_id", None)
+    return {"message": "Content duplicated", "content_id": new_id, "item": new_doc}
+
 
 @router.put("/admin/content/items/{content_id}")
 async def admin_update_item(content_id: str, request: Request):

@@ -8,7 +8,7 @@ import {
   Shield, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   Plus, Trash2, Edit2, Save, X, FolderOpen, FileText, BookOpen,
   FileSpreadsheet, Gamepad2, Upload, Image, Eye, EyeOff, Download,
-  Video, Book, Layers, ListOrdered, Library, Settings, Info, GripVertical, MoveRight, Database, Search, Lightbulb
+  Video, Book, Layers, ListOrdered, Library, Settings, Info, GripVertical, MoveRight, Database, Search, Lightbulb, Copy
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -254,7 +254,7 @@ function SortableSubtopicItem({ subtopic, isSelected, onSelect, onEdit, onDelete
 }
 
 // Sortable Content Item Component for Lesson Plan
-function SortableContentItem({ content, onEdit, onDelete, onMove, onTogglePublish, onToggleMandatory, typeConfig }) {
+function SortableContentItem({ content, onEdit, onDelete, onMove, onDuplicate, onTogglePublish, onToggleMandatory, typeConfig }) {
   const {
     attributes,
     listeners,
@@ -370,6 +370,9 @@ function SortableContentItem({ content, onEdit, onDelete, onMove, onTogglePublis
         )}
         <Button size="sm" variant="ghost" className="text-blue-500 hover:text-blue-600" onClick={onMove}>
           <MoveRight className="w-3 h-3 mr-1" /> Move
+        </Button>
+        <Button size="sm" variant="ghost" className="text-purple-500 hover:text-purple-600" onClick={onDuplicate} data-testid={`duplicate-content-${content.content_id}`}>
+          <Copy className="w-3 h-3 mr-1" /> Duplicate
         </Button>
         <Button size="sm" variant="ghost" onClick={onEdit}>
           <Edit2 className="w-3 h-3 mr-1" /> Edit
@@ -803,6 +806,17 @@ export default function ContentManagement({ user }) {
       fetchData();
     } catch (error) {
       toast.error('Failed to delete content');
+    }
+  };
+  
+  const duplicateContent = async (contentId) => {
+    try {
+      const res = await axios.post(`${API}/admin/content/items/${contentId}/duplicate`);
+      toast.success('Content duplicated — edit the copy as needed');
+      await fetchData();
+      if (res.data?.item) openEditContent(res.data.item);
+    } catch (error) {
+      toast.error('Failed to duplicate content');
     }
   };
   
@@ -1820,6 +1834,7 @@ export default function ContentManagement({ user }) {
                             onEdit={() => openEditContent(content)}
                             onDelete={() => deleteContent(content.content_id)}
                             onMove={() => openMoveContent(content)}
+                            onDuplicate={() => duplicateContent(content.content_id)}
                             onTogglePublish={() => togglePublish(content.content_id)}
                             onToggleMandatory={() => toggleMandatory(content.content_id)}
                           />
