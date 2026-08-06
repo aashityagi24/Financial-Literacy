@@ -944,7 +944,10 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 
 
 ## Recently Completed
-- **Teacher added to school → her class students auto-mapped to the school** (June 2026)
+- **Duplicate content item** (June 2026)
+  - Admin Content Management: each content row has a **Duplicate** button (content items only — not topics/subtopics). It deep-copies the whole item (title + " (Copy)", thumbnail, grade range, visibility, reward, mandatory flag, and content_data incl. uploaded file references) into a new DRAFT item under the same subtopic, then opens the Edit dialog pre-filled so the admin can tweak and save.
+  - Backend: `POST /api/admin/content/items/{id}/duplicate` returns `{content_id, item}`. Editing the copy doesn't affect the original (shared file references are intentional). Verified 100% by testing agent (iteration_87, backend 3/3 + frontend). Non-blocking: pre-existing "setState during render" console warning in ContentManagement (unrelated).
+
   - When a teacher is added to a school (Add Teacher, Link-Existing teacher, or Bulk CSV upload), every child enrolled in that teacher's classroom(s) is auto-assigned the school's `school_id`, so they show up in the School Dashboard students list. The child profile already surfaces the school via their class.
   - Children already belonging to a DIFFERENT school are skipped and reported back (`students_mapped` / `students_skipped` with names + other-school), surfaced as toasts in `SchoolDashboard.jsx` (`showMappingResult`).
   - Forward case: `student.py` `join_classroom` now sets the child's `school_id` to the classroom teacher's school when the child joins later (skips if already in a school). Teacher leaving does NOT unmap children (per user decision).
