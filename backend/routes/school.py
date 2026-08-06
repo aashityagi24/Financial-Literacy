@@ -1084,3 +1084,230 @@ async def school_upload_parents(request: Request):
                     linked_to_child += 1
     
     return {"created": created, "linked_to_child": linked_to_child, "subscribed": subscribed, "errors": errors}
+
+
+
+# Column order used for the downloadable sample template and the unified upload.
+UNIFIED_UPLOAD_COLUMNS = [
+    "student_name", "student_grade", "student_email", "student_username",
+    "student_password", "teacher_name", "teacher_email", "class_name",
+    "parent_name", "parent_email", "subscription", "subscription_duration",
+]
+
+
+@router.post("/school/upload/unified")
+async def school_upload_unified(request: Request):
+    """One CSV that creates AND links teachers, students and parents together.
+
+    One row per student. Each row also carries that student's teacher (+class)
+    and parent, so a single upload provisions every account, enrols the student
+    in the right classroom, links the parent to the child, and maps everyone to
+    the school. Teachers/parents repeated across rows are created once.
+
+    Auto-generated credentials (for accounts that had no password) are returned
+    so the school can share them with families and staff.
+    """
+    from services.auth import require_school
+    from services.user_provisioning import resolve_username, auto_generate_password
+    db = get_db()
+    school = await require_school(request)
+    school_id = school["school_id"]
+
+    body = await request.json()
+    rows = body.get("data", [])
+
+    def now_iso():
+        return datetime.now(timezone.utc).isoformat()
+
+    def hash_pw(p):
+        return hashlib.sha256(p.encode()).hexdigest()
+
+    result = {
+        "students_created": 0, "teachers_created": 0, "parents_created": 0,
+        "classrooms_created": 0, "enrollments": 0, "parent_links": 0,
+        "subscribed": 0, "errors": [], "credentials": [],
+    }
+
+    teacher_cache = {}    # email -> user_id
+    parent_cache = {}     # email -> user_id
+    classroom_cache = {}  # (teacher_id, class_name_lower) -> classroom_id
+
+    async def ensure_staff(name, email, role):
+        """Create/reuse a teacher or parent by email; ensure they have a
+        password so non-Google login works. Returns user_id."""
+        cache = teacher_cache if role == "teacher" else parent_cache
+        if email in cache:
+            return cache[email]
+        existing = await db.users.find_one({"email": email})
+        if existing:
+            if existing.get("role") and existing["role"] != role:
+                raise ValueError(f"{email} already exists as a {existing['role']}, not a {role}")
+            if existing.get("school_id") and existing["school_id"] != school_id:
+                raise ValueError(f"{role} {email} belongs to another school")
+            uid = existing["user_id"]
+            set_fields = {"role": role}
+            if not existing.get("school_id"):
+                set_fields["school_id"] = school_id
+            if not existing.get("password_hash"):
+                pw = auto_generate_password()
+                set_fields["password_hash"] = hash_pw(pw)
+                result["credentials"].append({"name": existing.get("name") or name, "role": role, "login": email, "password": pw})
+            await db.users.update_one({"user_id": uid}, {"$set": set_fields})
+        else:
+            uid = f"user_{uuid.uuid4().hex[:12]}"
+            pw = auto_generate_password()
+            await db.users.insert_one({
+                "user_id": uid, "email": email, "name": name or email, "role": role,
+                "school_id": school_id, "password_hash": hash_pw(pw),
+                "created_at": now_iso(), "created_by_school": True,
+            })
+            result["teachers_created" if role == "teacher" else "parents_created"] += 1
+            result["credentials"].append({"name": name or email, "role": role, "login": email, "password": pw})
+        cache[email] = uid
+        return uid
+
+    async def ensure_classroom(teacher_id, class_name, grade):
+        import random, string
+        key = (teacher_id, class_name.lower())
+        if key in classroom_cache:
+            return classroom_cache[key]
+        existing = await db.classrooms.find_one({"teacher_id": teacher_id, "name": class_name})
+        if existing:
+            cid = existing["classroom_id"]
+        else:
+            cid = f"class_{uuid.uuid4().hex[:12]}"
+            join_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+            await db.classrooms.insert_one({
+                "classroom_id": cid, "teacher_id": teacher_id, "name": class_name,
+                "grade_level": grade, "grade": grade, "join_code": join_code,
+                "created_at": now_iso(),
+            })
+            result["classrooms_created"] += 1
+        classroom_cache[key] = cid
+        return cid
+
+    for idx, row in enumerate(rows):
+        rownum = idx + 2  # +1 for header, +1 for 1-based
+        try:
+            sname = (row.get("student_name") or "").strip()
+            sgrade_raw = row.get("student_grade")
+            semail = (row.get("student_email") or "").strip().lower()
+            susername = (row.get("student_username") or "").strip()
+            spassword = (row.get("student_password") or "").strip()
+            tname = (row.get("teacher_name") or "").strip()
+            temail = (row.get("teacher_email") or "").strip().lower()
+            cname = (row.get("class_name") or "").strip()
+            pname = (row.get("parent_name") or "").strip()
+            pemail = (row.get("parent_email") or "").strip().lower()
+            subscription = (row.get("subscription") or "").strip().lower()
+            sub_dur = (row.get("subscription_duration") or "1_month").strip().lower()
+
+            required = [
+                ("student_name", sname), ("teacher_name", tname), ("teacher_email", temail),
+                ("class_name", cname), ("parent_name", pname), ("parent_email", pemail),
+            ]
+            missing = [f for f, v in required if not v]
+            if sgrade_raw in (None, ""):
+                missing.append("student_grade")
+            if missing:
+                result["errors"].append(f"Row {rownum}: missing {', '.join(missing)}")
+                continue
+            try:
+                grade = int(sgrade_raw)
+            except (ValueError, TypeError):
+                result["errors"].append(f"Row {rownum}: invalid student_grade '{sgrade_raw}'")
+                continue
+
+            # 1) Teacher + classroom
+            teacher_id = await ensure_staff(tname, temail, "teacher")
+            classroom_id = await ensure_classroom(teacher_id, cname, grade)
+
+            # 2) Student (create or reuse)
+            existing_student = None
+            if semail:
+                existing_student = await db.users.find_one({"email": semail})
+            elif susername:
+                existing_student = await db.users.find_one({"username": susername})
+
+            if existing_student:
+                if existing_student.get("role") and existing_student["role"] != "child":
+                    result["errors"].append(f"Row {rownum}: {semail or susername} already exists as a {existing_student['role']}")
+                    continue
+                if existing_student.get("school_id") and existing_student["school_id"] != school_id:
+                    result["errors"].append(f"Row {rownum}: student {semail or susername} belongs to another school")
+                    continue
+                student_id = existing_student["user_id"]
+                set_fields = {"school_id": school_id, "role": "child", "grade": grade}
+                if not existing_student.get("password_hash"):
+                    pw = spassword or auto_generate_password()
+                    set_fields["password_hash"] = hash_pw(pw)
+                    result["credentials"].append({
+                        "name": existing_student.get("name") or sname, "role": "student",
+                        "login": existing_student.get("email") or existing_student.get("username"), "password": pw,
+                    })
+                await db.users.update_one({"user_id": student_id}, {"$set": set_fields})
+            else:
+                try:
+                    final_username = await resolve_username(db, susername or None, sname, semail or None)
+                except ValueError as ve:
+                    result["errors"].append(f"Row {rownum}: {ve}")
+                    continue
+                final_password = spassword or auto_generate_password()
+                if len(final_password) < 6:
+                    result["errors"].append(f"Row {rownum}: student_password must be at least 6 characters")
+                    continue
+                student_id = f"user_{uuid.uuid4().hex[:12]}"
+                await db.users.insert_one({
+                    "user_id": student_id, "email": semail or None, "username": final_username,
+                    "password_hash": hash_pw(final_password), "name": sname, "role": "child",
+                    "grade": grade, "school_id": school_id, "streak_count": 0, "balance": 100.0,
+                    "created_at": now_iso(), "created_by_school": True,
+                })
+                for account_type in ["spending", "savings", "investing", "gifting"]:
+                    await db.wallet_accounts.insert_one({
+                        "account_id": f"acc_{uuid.uuid4().hex[:12]}", "user_id": student_id,
+                        "account_type": account_type, "balance": 100.0 if account_type == "spending" else 0.0,
+                        "created_at": now_iso(),
+                    })
+                result["students_created"] += 1
+                result["credentials"].append({
+                    "name": sname, "role": "student",
+                    "login": semail or final_username, "password": final_password,
+                })
+
+            # 3) Enrol student in the classroom
+            existing_enroll = await db.classroom_students.find_one({
+                "classroom_id": classroom_id, "student_id": student_id,
+            })
+            if not existing_enroll:
+                await db.classroom_students.insert_one({
+                    "enrollment_id": f"enroll_{uuid.uuid4().hex[:12]}",
+                    "classroom_id": classroom_id, "student_id": student_id,
+                    "status": "active", "enrolled_at": now_iso(),
+                })
+                result["enrollments"] += 1
+
+            # 4) Parent + link to this student
+            parent_id = await ensure_staff(pname, pemail, "parent")
+            existing_link = await db.parent_child_links.find_one({
+                "parent_id": parent_id, "child_id": student_id,
+            })
+            if not existing_link:
+                await db.parent_child_links.insert_one({
+                    "link_id": f"link_{uuid.uuid4().hex[:12]}",
+                    "parent_id": parent_id, "child_id": student_id,
+                    "status": "active", "created_at": now_iso(),
+                })
+                result["parent_links"] += 1
+
+            # 5) Subscription (granted to the parent, who covers their children)
+            if subscription == "active":
+                granted = await _grant_subscription(db, pemail, pname, sub_dur)
+                if granted:
+                    result["subscribed"] += 1
+        except ValueError as ve:
+            result["errors"].append(f"Row {rownum}: {ve}")
+        except Exception as e:  # pragma: no cover - defensive
+            result["errors"].append(f"Row {rownum}: {e}")
+
+    return result

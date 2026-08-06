@@ -122,24 +122,11 @@ export default function SchoolDashboard() {
           row[header] = values[index] || '';
         });
         
-        // Validate required fields based on upload type
-        if (uploadType === 'students') {
-          if (row.name && row.email && row.grade !== undefined) {
-            row.grade = parseInt(row.grade) || 0;
-            row.subscription = row.subscription || '';
-            row.subscription_duration = row.subscription_duration || '1_month';
-            data.push(row);
-          }
-        } else if (uploadType === 'parents') {
-          if (row.name && row.email) {
-            row.subscription = row.subscription || '';
-            row.subscription_duration = row.subscription_duration || '1_month';
-            data.push(row);
-          }
-        } else {
-          if (row.name && row.email) {
-            data.push(row);
-          }
+        // Unified format: one row per student. Keep any row that has a student name;
+        // full validation (required teacher/parent/class) happens server-side and
+        // is reported back per row.
+        if (row.student_name) {
+          data.push(row);
         }
       }
       
@@ -160,16 +147,15 @@ export default function SchoolDashboard() {
     setUploadResult(null);
 
     try {
-      const endpoint = `/school/upload/${uploadType}`;
       const response = await axios.post(
-        `${API}${endpoint}`,
+        `${API}/school/upload/unified`,
         { data: csvData },
         { withCredentials: true }
       );
       
       setUploadResult(response.data);
-      toast.success(`Successfully processed ${response.data.created || 0} ${uploadType}`);
-      showMappingResult(response.data);
+      const r = response.data;
+      toast.success(`Created ${r.students_created || 0} students, ${r.teachers_created || 0} teachers, ${r.parents_created || 0} parents`);
       fetchDashboardData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Upload failed');
@@ -177,6 +163,27 @@ export default function SchoolDashboard() {
     } finally {
       setUploadLoading(false);
     }
+  };
+
+  const downloadSampleCsv = () => {
+    const headers = [
+      'student_name', 'student_grade', 'student_email', 'student_username',
+      'student_password', 'teacher_name', 'teacher_email', 'class_name',
+      'parent_name', 'parent_email', 'subscription', 'subscription_duration',
+    ];
+    const sampleRows = [
+      ['Aarav Sharma', '2', '', '', '', 'Priya Nair', 'priya.nair@school.com', 'Grade 2A', 'Rohan Sharma', 'rohan.sharma@gmail.com', 'active', '1_month'],
+      ['Diya Patel', '2', 'diya.patel@gmail.com', '', '', 'Priya Nair', 'priya.nair@school.com', 'Grade 2A', 'Meera Patel', 'meera.patel@gmail.com', 'active', '1_month'],
+      ['Kabir Singh', '3', '', 'kabir_s', 'Kabir@123', 'Anil Verma', 'anil.verma@school.com', 'Grade 3B', 'Rohan Sharma', 'rohan.sharma@gmail.com', '', '1_month'],
+    ];
+    const csv = [headers.join(',')].concat(sampleRows.map(r => r.join(','))).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'coinquest_bulk_upload_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const resetUploadModal = () => {
@@ -783,53 +790,29 @@ export default function SchoolDashboard() {
           </DialogHeader>
           
           <div className="space-y-4 mt-4">
-            {/* Upload Type Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Upload Type
-              </label>
-              <Select value={uploadType} onValueChange={setUploadType}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="teachers">Teachers</SelectItem>
-                  <SelectItem value="students">Students</SelectItem>
-                  <SelectItem value="parents">Parents</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* CSV Format Info */}
+            {/* Unified CSV Format Info */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-800 mb-2 flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                CSV Format
-              </h4>
-              <div className="text-sm text-blue-700">
-                {uploadType === 'teachers' ? (
-                  <>
-                    <p><strong>Required:</strong> <code className="bg-blue-100 px-1 rounded">name</code>, <code className="bg-blue-100 px-1 rounded">email</code></p>
-                    <p className="mt-1"><strong>Optional:</strong> <code className="bg-blue-100 px-1 rounded">grade</code> (0-5), <code className="bg-blue-100 px-1 rounded">class_name</code></p>
-                    <p className="text-xs text-blue-600 mt-1">If class_name is provided, a classroom will be created automatically</p>
-                  </>
-                ) : uploadType === 'students' ? (
-                  <>
-                    <p><strong>Required:</strong> <code className="bg-blue-100 px-1 rounded">name</code>, <code className="bg-blue-100 px-1 rounded">grade</code> (0-5)</p>
-                    <p className="mt-1"><strong>One of:</strong> <code className="bg-blue-100 px-1 rounded">email</code> <em>or</em> <code className="bg-blue-100 px-1 rounded">username</code> — leave both blank to auto-generate a username + password</p>
-                    <p className="mt-1"><strong>Optional:</strong> <code className="bg-blue-100 px-1 rounded">password</code>, <code className="bg-blue-100 px-1 rounded">teacher_email</code>, <code className="bg-blue-100 px-1 rounded">subscription</code> (active), <code className="bg-blue-100 px-1 rounded">subscription_duration</code> (1_day / 1_week / 1_month)</p>
-                    <p className="text-xs text-blue-600 mt-1">Children without email IDs sign in using <strong>username + password</strong>. Auto-generated credentials are shown after upload so you can share them with families.</p>
-                  </>
-                ) : (
-                  <>
-                    <p><strong>Required:</strong> <code className="bg-blue-100 px-1 rounded">name</code>, <code className="bg-blue-100 px-1 rounded">email</code></p>
-                    <p className="mt-1"><strong>Optional:</strong> <code className="bg-blue-100 px-1 rounded">child_email</code>, <code className="bg-blue-100 px-1 rounded">subscription</code> (active), <code className="bg-blue-100 px-1 rounded">subscription_duration</code> (1_day / 1_week / 1_month)</p>
-                    <p className="text-xs text-blue-600 mt-1">Set subscription=active to grant immediate platform access</p>
-                  </>
-                )}
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-medium text-blue-800 flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  One unified CSV — creates & links everyone
+                </h4>
+                <button
+                  onClick={downloadSampleCsv}
+                  className="text-xs font-semibold text-white bg-[#06D6A0] hover:bg-[#05C090] px-3 py-1.5 rounded-lg flex items-center gap-1"
+                  data-testid="download-sample-btn"
+                >
+                  <Download className="w-3.5 h-3.5" /> Download sample
+                </button>
+              </div>
+              <div className="text-sm text-blue-700 space-y-1">
+                <p><strong>One row per student.</strong> Each row also carries the student's teacher, class and parent — everything is created and linked in one go.</p>
+                <p className="mt-1"><strong>Required:</strong> <code className="bg-blue-100 px-1 rounded">student_name</code>, <code className="bg-blue-100 px-1 rounded">student_grade</code> (0-5), <code className="bg-blue-100 px-1 rounded">teacher_name</code>, <code className="bg-blue-100 px-1 rounded">teacher_email</code>, <code className="bg-blue-100 px-1 rounded">class_name</code>, <code className="bg-blue-100 px-1 rounded">parent_name</code>, <code className="bg-blue-100 px-1 rounded">parent_email</code></p>
+                <p className="mt-1"><strong>Optional:</strong> <code className="bg-blue-100 px-1 rounded">student_email</code>, <code className="bg-blue-100 px-1 rounded">student_username</code>, <code className="bg-blue-100 px-1 rounded">student_password</code>, <code className="bg-blue-100 px-1 rounded">subscription</code> (active), <code className="bg-blue-100 px-1 rounded">subscription_duration</code> (1_day / 1_week / 1_month)</p>
+                <p className="text-xs text-blue-600 mt-1">Leave student email &amp; username blank to auto-generate a login. Teachers and parents get an auto-generated password if they don&apos;t have one, so they can sign in with email + password (or Google). All generated logins are shown below after upload and downloadable.</p>
               </div>
               <p className="text-xs text-blue-600 mt-2 pt-2 border-t border-blue-200">
-                First row should contain headers. Existing users without a school will be added to your school.
+                First row must contain the headers (use the sample template). Existing users without a school are added to your school; users in another school are skipped with a note.
               </p>
             </div>
 
@@ -852,40 +835,28 @@ export default function SchoolDashboard() {
               <div className="border border-gray-200 rounded-lg overflow-hidden">
                 <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
                   <span className="font-medium text-gray-700">
-                    Preview ({csvData.length} valid rows)
+                    Preview ({csvData.length} rows)
                   </span>
                 </div>
                 <div className="overflow-x-auto max-h-48">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-100">
                       <tr>
-                        <th className="text-left py-2 px-3">Name</th>
-                        <th className="text-left py-2 px-3">Email</th>
-                        {uploadType === 'students' && (
-                          <th className="text-left py-2 px-3">Grade</th>
-                        )}
-                        {(uploadType === 'students' || uploadType === 'parents') && (
-                          <th className="text-left py-2 px-3">Subscription</th>
-                        )}
+                        <th className="text-left py-2 px-3">Student</th>
+                        <th className="text-left py-2 px-3">Grade</th>
+                        <th className="text-left py-2 px-3">Class</th>
+                        <th className="text-left py-2 px-3">Teacher</th>
+                        <th className="text-left py-2 px-3">Parent</th>
                       </tr>
                     </thead>
                     <tbody>
                       {csvPreview.map((row, idx) => (
                         <tr key={idx} className="border-t border-gray-100">
-                          <td className="py-2 px-3">{row.name}</td>
-                          <td className="py-2 px-3">{row.email}</td>
-                          {uploadType === 'students' && (
-                            <td className="py-2 px-3">{row.grade}</td>
-                          )}
-                          {(uploadType === 'students' || uploadType === 'parents') && (
-                            <td className="py-2 px-3">
-                              {row.subscription?.toLowerCase() === 'active' ? (
-                                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{row.subscription_duration || '1_month'}</span>
-                              ) : (
-                                <span className="text-xs text-gray-400">-</span>
-                              )}
-                            </td>
-                          )}
+                          <td className="py-2 px-3">{row.student_name}</td>
+                          <td className="py-2 px-3">{row.student_grade}</td>
+                          <td className="py-2 px-3">{row.class_name}</td>
+                          <td className="py-2 px-3">{row.teacher_email}</td>
+                          <td className="py-2 px-3">{row.parent_email}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -897,49 +868,57 @@ export default function SchoolDashboard() {
             {/* Upload Result */}
             {uploadResult && (
               <div className={`border rounded-lg p-4 ${
-                uploadResult.errors?.length > 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
+                uploadResult.errors?.length > 0 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'
               }`}>
-                {uploadResult.created !== undefined && (
-                  <p className="flex items-center gap-2 text-green-700 mb-2">
-                    <Check className="w-5 h-5" />
-                    Successfully created: {uploadResult.created}
-                  </p>
+                {(uploadResult.students_created !== undefined) && (
+                  <div className="text-green-800 text-sm mb-2" data-testid="upload-summary">
+                    <p className="flex items-center gap-2 font-semibold mb-1">
+                      <Check className="w-5 h-5" /> Upload complete
+                    </p>
+                    <ul className="list-disc list-inside">
+                      <li>{uploadResult.students_created} students, {uploadResult.teachers_created} teachers, {uploadResult.parents_created} parents created</li>
+                      <li>{uploadResult.classrooms_created} classrooms created, {uploadResult.enrollments} enrolments, {uploadResult.parent_links} parent links</li>
+                      {uploadResult.subscribed > 0 && <li>{uploadResult.subscribed} subscriptions granted</li>}
+                    </ul>
+                  </div>
                 )}
                 {uploadResult.errors?.length > 0 && (
-                  <div className="text-red-700">
+                  <div className="text-amber-700">
                     <p className="flex items-center gap-2 font-medium mb-1">
                       <AlertCircle className="w-5 h-5" />
-                      Errors:
+                      {uploadResult.errors.length} row issue(s):
                     </p>
-                    <ul className="list-disc list-inside text-sm">
-                      {uploadResult.errors.slice(0, 5).map((err, idx) => (
+                    <ul className="list-disc list-inside text-sm max-h-32 overflow-y-auto">
+                      {uploadResult.errors.slice(0, 10).map((err, idx) => (
                         <li key={idx}>{err}</li>
                       ))}
                     </ul>
                   </div>
                 )}
-                {uploadResult.auto_generated_credentials?.length > 0 && (
+                {uploadResult.credentials?.length > 0 && (
                   <div className="mt-3 border-t border-green-200 pt-3" data-testid="auto-creds-section">
                     <p className="font-semibold text-green-800 mb-2">
-                      Auto-generated credentials ({uploadResult.auto_generated_credentials.length})
+                      Login credentials ({uploadResult.credentials.length})
                     </p>
                     <p className="text-xs text-green-700 mb-2">
-                      These children had no email. Share these credentials with their families — they won&apos;t be shown again.
+                      Share these with the respective students, teachers and parents — they won&apos;t be shown again.
                     </p>
                     <div className="max-h-48 overflow-y-auto border border-green-200 rounded bg-white">
                       <table className="w-full text-xs">
                         <thead className="bg-green-100 text-green-800">
                           <tr>
                             <th className="px-2 py-1 text-left">Name</th>
-                            <th className="px-2 py-1 text-left">Username</th>
+                            <th className="px-2 py-1 text-left">Role</th>
+                            <th className="px-2 py-1 text-left">Login</th>
                             <th className="px-2 py-1 text-left">Password</th>
                           </tr>
                         </thead>
                         <tbody className="font-mono text-gray-800">
-                          {uploadResult.auto_generated_credentials.map((c, idx) => (
+                          {uploadResult.credentials.map((c, idx) => (
                             <tr key={idx} className="border-t border-green-100">
                               <td className="px-2 py-1 font-sans">{c.name}</td>
-                              <td className="px-2 py-1">{c.username}</td>
+                              <td className="px-2 py-1 font-sans capitalize">{c.role}</td>
+                              <td className="px-2 py-1">{c.login}</td>
                               <td className="px-2 py-1">{c.password}</td>
                             </tr>
                           ))}
@@ -948,20 +927,21 @@ export default function SchoolDashboard() {
                     </div>
                     <button
                       onClick={() => {
-                        const text = ['name,username,password']
-                          .concat(uploadResult.auto_generated_credentials.map(c => `${c.name},${c.username},${c.password}`))
+                        const text = ['name,role,login,password']
+                          .concat(uploadResult.credentials.map(c => `${c.name},${c.role},${c.login},${c.password}`))
                           .join('\n');
                         const blob = new Blob([text], { type: 'text/csv' });
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
-                        a.download = `student_credentials_${new Date().toISOString().slice(0,10)}.csv`;
+                        a.download = `coinquest_credentials_${new Date().toISOString().slice(0,10)}.csv`;
                         a.click();
                         URL.revokeObjectURL(url);
                       }}
                       className="mt-2 text-xs font-medium text-green-700 hover:underline"
+                      data-testid="download-credentials-btn"
                     >
-                      Download as CSV
+                      Download all credentials as CSV
                     </button>
                   </div>
                 )}
@@ -990,7 +970,7 @@ export default function SchoolDashboard() {
                 ) : (
                   <>
                     <Upload className="w-4 h-4 mr-2" />
-                    Upload {csvData.length} {uploadType}
+                    Upload {csvData.length} rows
                   </>
                 )}
               </Button>

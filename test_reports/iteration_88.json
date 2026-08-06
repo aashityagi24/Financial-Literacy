@@ -1,0 +1,33 @@
+{
+  "summary": "Verified the new unified School Bulk Upload flow end-to-end. Backend: 10/10 pytest cases pass (POST /api/school/upload/unified) — dedup of teacher/parent/classroom across rows, per-row error handling, credentials generation for all 3 roles, DB integrity (school_id, password_hash, parent_child_links x2 for shared parent, classroom_students x2, student grade), subscription grant, and generated parent + generated student (both explicit and auto-generated) can POST /api/auth/login with 200. Frontend: School Dashboard bulk upload modal now shows a single unified format (no 'Upload Type' selector), download-sample-btn produces a CSV with the exact 12 headers in the documented order, csv-file-input previews rows, confirm-upload-btn posts to /school/upload/unified, upload-summary and auto-creds-section render with correct counts, and download-credentials-btn produces a properly formatted credentials CSV. All 'QA_' and 'QAUI' test data was cleaned up; Springfield (school_c0bc3d3734b7) has 0 students remaining post-test.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Bulk Upload Dialog", "issues": ["Non-blocking a11y warning: 'Missing Description or aria-describedby for DialogContent'. Consider adding <DialogDescription> to the Bulk Upload and Add User dialogs."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_school_unified_upload.py",
+    "/app/test_reports/pytest/unified_upload.xml"
+  ],
+  "action_items": [
+    "(Optional) Add <DialogDescription> to Bulk Upload / Add User dialogs to silence Radix a11y warning."
+  ],
+  "critical_code_review_comments": [
+    "school.py school_upload_unified is now ~215 lines inside a single function and school.py itself is >1300 lines. Consider extracting ensure_staff/ensure_classroom + row handler into services/school_provisioning.py for readability and unit-testability.",
+    "Subscription is granted only when subscription == 'active' (lowercased). Consider also accepting 'yes'/'true'/'1' or documenting explicitly in the sample template (currently the sample column header only exists, no example value).",
+    "auto_generate_password() produces short passwords (checked to be >= 6 for explicit ones only) but generated ones are not validated for length — trust in the helper. Fine, but add a note.",
+    "Response returns raw exception messages via `except Exception as e: result['errors'].append(f'Row {rownum}: {e}')` — safe here (no PII), but consider logging and returning a generic message in production.",
+    "No transaction / rollback: if a row partially succeeds (teacher created, then student insert fails), the teacher/classroom/parent stays. Acceptable given idempotent design (cache + $set), but worth documenting."
+  ],
+  "updated_files": ["/app/backend/tests/test_school_unified_upload.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "School: springfield / school123 (POST /api/auth/school-login, cookie session). Generated per-run credentials logged in via POST /api/auth/login {identifier, password}.",
+  "seed_data_creation": "Per-run 'QA_<hash>' backend rows (3 students, 2 teachers, 2 parents, 2 classrooms, 1 subscription) and 'QAUI' frontend rows (2 students, 1 teacher, 1 parent, 1 classroom, 1 subscription). All cleaned up in teardown_module and post-frontend script. Verified: 0 QA_/QAUI users, 0 QA_/QAUI classrooms, Springfield students=0, teachers=2 (pre-existing, not created by these tests).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Endpoint POST /api/school/upload/unified expects {data:[rows]} where each row uses the 12 UNIFIED_UPLOAD_COLUMNS. Required: student_name, student_grade(0-5 int), teacher_name, teacher_email, class_name, parent_name, parent_email. Optional: student_email, student_username, student_password, subscription('active'), subscription_duration('1_day'|'1_week'|'1_month'). Response fields: students_created, teachers_created, parents_created, classrooms_created, enrollments, parent_links, subscribed, errors[], credentials[{name,role,login,password}]. Subscription doc uses subscriber_email + parent_emails[] (NOT 'email'). Frontend selectors: bulk-upload-btn, download-sample-btn, csv-file-input, confirm-upload-btn, upload-summary, auto-creds-section, download-credentials-btn. Old per-type endpoints /school/upload/{teachers|students|parents} still exist server-side but the UI no longer uses them.",
+  "rca of the issue": "N/A — feature implemented and working as spec'd."
+}
