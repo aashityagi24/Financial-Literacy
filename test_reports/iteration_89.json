@@ -1,0 +1,24 @@
+{
+  "summary": "Verified iteration 89 features end-to-end. Backend (9/9 pytest passing): GET /api/auth/me returns has_password:true for test_teacher_1; PUT /api/auth/change-password works for classmate_g3 (changed to temp then reverted to 'testpass123', login re-verified). School dashboard now returns teachers[].join_code, parents[], classrooms[] and students[].in_class. DELETE /api/school/users/{teacher_id} removes teacher+classrooms but student stays with role=child and empty enrolments (verified classless). POST /api/school/students/{sid}/assign-class enrols the classless student and returns join_code. DELETE parent keeps children; DELETE student removes student. Frontend: teacher header shows teacher-profile-link -> /profile; ProfilePage security-card + change-password-btn + current-password-input rendered for teacher AND child (has_password=true). School Dashboard Teachers tab shows Class Code column, delete-teacher-<id> buttons open confirm-delete-dialog with cancel/confirm; Students tab shows delete-student-<id> and Assign class (assign-class-<id>) opening assign-class-dialog with assign-class-select. All QAUI_/qa_ seed data cleaned up: Springfield ends with 0 students, 2 pre-existing teachers, 0 parents. classmate_g3 password left as 'testpass123'; test_teacher_1 password unchanged.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_school_delete_assign.py",
+    "/app/test_reports/pytest/it89.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "school.py is now ~1437 lines. The new DELETE and assign-class endpoints are fine, but the file continues to grow — consider extracting user-management endpoints to routes/school_users.py.",
+    "DELETE /school/users/{id} for a teacher hard-deletes classroom_content_completions but NOT any student progress inside those classrooms (quest_completions, content_completions). Confirm this is intentional (data-retention/analytics implication).",
+    "assign-class endpoint returns 200 with 'Student is already in this class' — good idempotency, but consider 200 vs 409 semantics.",
+    "ProfilePage.jsx line 495 gates Security card on role in (parent,child,teacher). If school-admin accounts ever land on /profile they will not see it — acceptable since school session is cookie-based and does not use this page."
+  ],
+  "updated_files": ["/app/backend/tests/test_school_delete_assign.py", "/app/test_reports/iteration_89.json"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "springfield/school123 (school-login cookie); test_teacher_1/testpassword; classmate_g3/testpass123 (final).",
+  "seed_data_creation": "Per-run tag-suffixed QA_/QAUI_ teachers/students/parents/classrooms created via POST /api/school/upload/unified and all removed via DELETE /api/school/users/{id}. Final Springfield state: students=0, teachers=2 (Map Test Teacher, Test New Teacher — pre-existing), parents=0.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "New endpoints: DELETE /api/school/users/{user_id} (role-aware; response includes {role, classrooms, enrollments}); POST /api/school/students/{sid}/assign-class {classroom_id} -> {message, join_code, classroom_name}. Dashboard now returns teachers[].join_code, parents[] with num_children, classrooms[]{teacher_name,name,grade,join_code}, students[].in_class + students[].join_code. Frontend testids: teacher-profile-link, security-card, change-password-btn, current-password-input, new-password-input, confirm-password-input, delete-teacher-<id>, delete-student-<id>, assign-class-<id>, confirm-delete-dialog, cancel-delete-btn, confirm-delete-btn, assign-class-dialog, assign-class-select, confirm-assign-class-btn. School dashboard tabs are plain buttons (not role=tab) — click via text 'Teachers'/'Students'. School login is cookie-based (Partitioned) — use /api/auth/school-login with credentials:'include'.",
+  "rca of the issue": "N/A — features work as specified."
+}

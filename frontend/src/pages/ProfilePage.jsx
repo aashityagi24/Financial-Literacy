@@ -208,7 +208,7 @@ export default function ProfilePage({ user, setUser }) {
       <header className="bg-white border-b-3 border-[#1D3557]">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Link to={user?.role === 'parent' ? '/parent-dashboard' : '/dashboard'} className="p-2 rounded-xl border-2 border-[#1D3557] hover:bg-[#E0FBFC]">
+            <Link to={user?.role === 'parent' ? '/parent-dashboard' : user?.role === 'teacher' ? '/teacher-dashboard' : '/dashboard'} className="p-2 rounded-xl border-2 border-[#1D3557] hover:bg-[#E0FBFC]">
               <ChevronLeft className="w-5 h-5 text-[#1D3557]" />
             </Link>
             <div className="flex items-center gap-3">
@@ -491,8 +491,8 @@ export default function ProfilePage({ user, setUser }) {
           </div>
         )}
         
-        {/* Parent: Security & Password */}
-        {user?.role === 'parent' && (
+        {/* Security & Password — available to all users */}
+        {(user?.role === 'parent' || user?.role === 'child' || user?.role === 'teacher') && (
           <div className="card-playful p-6 mb-6 animate-bounce-in stagger-2" data-testid="security-card">
             <h3 className="text-lg font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
               <Lock className="w-5 h-5 inline mr-2" />
@@ -506,13 +506,13 @@ export default function ProfilePage({ user, setUser }) {
               >
                 <span className="flex items-center gap-2 text-[#1D3557] font-medium">
                   <KeyRound className="w-4 h-4" />
-                  {user?.password_hash ? 'Change Password' : 'Set Password'}
+                  {user?.has_password ? 'Change Password' : 'Set Password'}
                 </span>
                 <Edit2 className="w-4 h-4 text-[#3D5A80]" />
               </button>
             ) : (
               <div className="space-y-3">
-                {user?.password_hash && (
+                {user?.has_password && (
                   <div>
                     <label className="text-xs font-medium text-[#3D5A80] mb-1 block">Current Password</label>
                     <Input

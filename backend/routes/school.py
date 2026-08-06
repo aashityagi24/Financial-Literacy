@@ -180,29 +180,60 @@ async def get_school_dashboard(request: Request):
         {"_id": 0}
     ).to_list(500)
     
-    # Enrich teachers with their classroom info
+    # Enrich teachers with their classroom info (name, grade, class code)
     for teacher in teachers:
         teacher_classrooms = [c for c in classrooms if c.get("teacher_id") == teacher["user_id"]]
+        teacher["classrooms"] = [
+            {"classroom_id": c["classroom_id"], "name": c.get("name", "-"),
+             "grade": c.get("grade", "-"), "join_code": c.get("join_code")}
+            for c in teacher_classrooms
+        ]
         if teacher_classrooms:
             teacher["classroom_name"] = teacher_classrooms[0].get("name", "-")
             teacher["classroom_grade"] = teacher_classrooms[0].get("grade", "-")
+            teacher["join_code"] = teacher_classrooms[0].get("join_code")
         else:
             teacher["classroom_name"] = "-"
             teacher["classroom_grade"] = "-"
+            teacher["join_code"] = None
     
     for student in students:
+        student["in_class"] = False
         for classroom in classrooms:
             classroom_students = await db.classroom_students.find(
                 {"classroom_id": classroom["classroom_id"]},
                 {"_id": 0}
-            ).to_list(100)
+            ).to_list(length=None)
             if student["user_id"] in [s.get("student_id") for s in classroom_students]:
                 student["teacher_name"] = next(
                     (t["name"] for t in teachers if t["user_id"] == classroom["teacher_id"]),
                     "Unknown"
                 )
                 student["classroom_name"] = classroom["name"]
+                student["classroom_id"] = classroom["classroom_id"]
+                student["join_code"] = classroom.get("join_code")
+                student["in_class"] = True
                 break
+    
+    parents = await db.users.find(
+        {"school_id": school_id, "role": "parent"},
+        {"_id": 0, "password": 0, "password_hash": 0}
+    ).to_list(length=None)
+    # Enrich parents with their linked children names
+    for parent in parents:
+        links = await db.parent_child_links.find(
+            {"parent_id": parent["user_id"]}, {"_id": 0, "child_id": 1}
+        ).to_list(length=None)
+        child_ids = [l["child_id"] for l in links]
+        parent["children"] = [s.get("name") for s in students if s["user_id"] in child_ids]
+    
+    # Classrooms available for assigning classless students
+    available_classrooms = [
+        {"classroom_id": c["classroom_id"], "name": c.get("name", "-"),
+         "grade": c.get("grade"), "join_code": c.get("join_code"),
+         "teacher_name": next((t["name"] for t in teachers if t["user_id"] == c.get("teacher_id")), "Unknown")}
+        for c in classrooms
+    ]
     
     return {
         "school": {
@@ -215,7 +246,9 @@ async def get_school_dashboard(request: Request):
             "total_classrooms": len(classrooms)
         },
         "teachers": teachers,
-        "students": students
+        "students": students,
+        "parents": parents,
+        "classrooms": available_classrooms
     }
 
 @router.get("/school/students/comparison")
@@ -1311,3 +1344,93 @@ async def school_upload_unified(request: Request):
             result["errors"].append(f"Row {rownum}: {e}")
 
     return result
+
+
+@router.delete("/school/users/{user_id}")
+async def school_delete_user(user_id: str, request: Request):
+    """Fully delete a teacher, student or parent that belongs to this school.
+
+    - Teacher: the teacher account and their classroom(s) are removed; the
+      enrolled students remain (they simply become classless).
+    - Student: the student account, their enrolments, wallets and parent links
+      are removed.
+    - Parent: the parent account and their child links are removed (children stay).
+    """
+    from services.auth import require_school
+    db = get_db()
+    school = await require_school(request)
+    school_id = school["school_id"]
+
+    target = await db.users.find_one({"user_id": user_id})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    if target.get("school_id") != school_id:
+        raise HTTPException(status_code=403, detail="This user does not belong to your school")
+
+    role = target.get("role")
+    removed = {"classrooms": 0, "enrollments": 0}
+
+    if role == "teacher":
+        classrooms = await db.classrooms.find({"teacher_id": user_id}, {"_id": 0, "classroom_id": 1}).to_list(length=None)
+        classroom_ids = [c["classroom_id"] for c in classrooms]
+        if classroom_ids:
+            enr = await db.classroom_students.delete_many({"classroom_id": {"$in": classroom_ids}})
+            removed["enrollments"] = enr.deleted_count
+            await db.classroom_content_completions.delete_many({"classroom_id": {"$in": classroom_ids}})
+            cl = await db.classrooms.delete_many({"classroom_id": {"$in": classroom_ids}})
+            removed["classrooms"] = cl.deleted_count
+    elif role == "child":
+        await db.classroom_students.delete_many({"student_id": user_id})
+        await db.wallet_accounts.delete_many({"user_id": user_id})
+        await db.parent_child_links.delete_many({"child_id": user_id})
+    elif role == "parent":
+        await db.parent_child_links.delete_many({"parent_id": user_id})
+    else:
+        raise HTTPException(status_code=400, detail=f"Cannot delete a user with role '{role}' here")
+
+    # Remove any active sessions and the account itself
+    await db.sessions.delete_many({"user_id": user_id})
+    await db.users.delete_one({"user_id": user_id})
+
+    return {"message": f"{role.capitalize()} deleted", "role": role, **removed}
+
+
+@router.post("/school/students/{student_id}/assign-class")
+async def school_assign_class(student_id: str, request: Request):
+    """Enrol a classless student into one of the school's existing classrooms."""
+    from services.auth import require_school
+    db = get_db()
+    school = await require_school(request)
+    school_id = school["school_id"]
+
+    body = await request.json()
+    classroom_id = (body.get("classroom_id") or "").strip()
+    if not classroom_id:
+        raise HTTPException(status_code=400, detail="classroom_id is required")
+
+    student = await db.users.find_one({"user_id": student_id, "role": "child"})
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    if student.get("school_id") != school_id:
+        raise HTTPException(status_code=403, detail="Student does not belong to your school")
+
+    classroom = await db.classrooms.find_one({"classroom_id": classroom_id}, {"_id": 0})
+    if not classroom:
+        raise HTTPException(status_code=404, detail="Classroom not found")
+    teacher = await db.users.find_one({"user_id": classroom.get("teacher_id")}, {"_id": 0, "school_id": 1})
+    if not teacher or teacher.get("school_id") != school_id:
+        raise HTTPException(status_code=403, detail="Classroom does not belong to your school")
+
+    existing = await db.classroom_students.find_one({"classroom_id": classroom_id, "student_id": student_id})
+    if existing:
+        return {"message": "Student is already in this class", "join_code": classroom.get("join_code")}
+
+    await db.classroom_students.insert_one({
+        "enrollment_id": f"enroll_{uuid.uuid4().hex[:12]}",
+        "classroom_id": classroom_id,
+        "student_id": student_id,
+        "status": "active",
+        "enrolled_at": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"message": "Student enrolled", "join_code": classroom.get("join_code"), "classroom_name": classroom.get("name")}
+

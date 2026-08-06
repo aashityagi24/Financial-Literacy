@@ -7,7 +7,7 @@ import {
   School, Users, GraduationCap, BookOpen, LogOut, BarChart3, 
   Upload, ChevronDown, ChevronUp, Search, Download, FileText,
   TrendingUp, Wallet, Target, Award, RefreshCw, X, Check, AlertCircle,
-  UserPlus, Baby
+  UserPlus, Baby, Trash2, AlertTriangle
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,11 @@ export default function SchoolDashboard() {
   const [addUserType, setAddUserType] = useState('teacher');
   const [addUserMode, setAddUserMode] = useState('create'); // 'create' | 'existing'
   const [addUserForm, setAddUserForm] = useState({ name: '', email: '', identifier: '', grade: '3', parent_email: '', classroom_code: '', teacher_email: '' });
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [assignTarget, setAssignTarget] = useState(null);
+  const [assignClassroomId, setAssignClassroomId] = useState('');
+  const [assigning, setAssigning] = useState(false);
   const [addUserLoading, setAddUserLoading] = useState(false);
 
   useEffect(() => {
@@ -162,6 +167,40 @@ export default function SchoolDashboard() {
       setUploadResult({ errors: [error.response?.data?.detail || 'Upload failed'] });
     } finally {
       setUploadLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await axios.delete(`${API}/school/users/${deleteTarget.user_id}`, { withCredentials: true });
+      toast.success(res.data?.message || 'Deleted');
+      setDeleteTarget(null);
+      fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleAssignClass = async () => {
+    if (!assignTarget || !assignClassroomId) {
+      toast.error('Please pick a class');
+      return;
+    }
+    setAssigning(true);
+    try {
+      const res = await axios.post(`${API}/school/students/${assignTarget.user_id}/assign-class`, { classroom_id: assignClassroomId }, { withCredentials: true });
+      toast.success(res.data?.message || 'Student enrolled');
+      setAssignTarget(null);
+      setAssignClassroomId('');
+      fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to assign class');
+    } finally {
+      setAssigning(false);
     }
   };
 
@@ -553,7 +592,9 @@ export default function SchoolDashboard() {
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Email</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Class</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Grade</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Class Code</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
+                    <th className="text-right py-3 px-4 font-medium text-gray-600">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -574,9 +615,28 @@ export default function SchoolDashboard() {
                       <td className="py-3 px-4 text-gray-600">{teacher.classroom_name || '-'}</td>
                       <td className="py-3 px-4 text-gray-600">{teacher.classroom_grade || '-'}</td>
                       <td className="py-3 px-4">
+                        {teacher.join_code ? (
+                          <span className="px-2 py-1 bg-[#3D5A80]/10 text-[#3D5A80] text-xs rounded-md font-mono font-bold tracking-wider" data-testid={`teacher-class-code-${teacher.user_id}`}>
+                            {teacher.join_code}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs">No class</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
                         <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
                           Active
                         </span>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          onClick={() => setDeleteTarget({ ...teacher, role: 'teacher' })}
+                          className="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50"
+                          title="Delete teacher"
+                          data-testid={`delete-teacher-${teacher.user_id}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -616,6 +676,8 @@ export default function SchoolDashboard() {
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Email</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Grade</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Teacher</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Class Code</th>
+                    <th className="text-right py-3 px-4 font-medium text-gray-600">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -632,13 +694,38 @@ export default function SchoolDashboard() {
                           <span className="font-medium text-gray-800">{student.name}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-gray-600">{student.email}</td>
+                      <td className="py-3 px-4 text-gray-600">{student.email || <span className="text-gray-400 text-xs">username login</span>}</td>
                       <td className="py-3 px-4">
                         <span className="px-2 py-1 bg-[#FFD23F]/20 text-[#1D3557] text-xs rounded-full font-medium">
                           {getGradeLabel(student.grade)}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-gray-600">{student.teacher_name || '-'}</td>
+                      <td className="py-3 px-4">
+                        {student.join_code ? (
+                          <span className="px-2 py-1 bg-[#06D6A0]/10 text-[#048A6A] text-xs rounded-md font-mono font-bold tracking-wider" data-testid={`student-class-code-${student.user_id}`}>
+                            {student.join_code}
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => { setAssignTarget(student); setAssignClassroomId(''); }}
+                            className="px-2 py-1 bg-[#EE6C4D]/10 text-[#EE6C4D] text-xs rounded-md font-semibold hover:bg-[#EE6C4D]/20 flex items-center gap-1"
+                            data-testid={`assign-class-${student.user_id}`}
+                          >
+                            <School className="w-3 h-3" /> Assign class
+                          </button>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          onClick={() => setDeleteTarget({ ...student, role: 'child' })}
+                          className="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50"
+                          title="Delete student"
+                          data-testid={`delete-student-${student.user_id}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1212,6 +1299,75 @@ export default function SchoolDashboard() {
                 </Button>
               )}
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm Delete Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
+        <DialogContent className="max-w-md" data-testid="confirm-delete-dialog">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" /> Confirm deletion
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-sm text-gray-700 space-y-2">
+            <p>
+              Are you sure you want to permanently delete{' '}
+              <strong>{deleteTarget?.name}</strong>
+              {deleteTarget?.email ? ` (${deleteTarget.email})` : ''}? This cannot be undone.
+            </p>
+            {deleteTarget?.role === 'teacher' && (
+              <p className="text-xs bg-amber-50 border border-amber-200 rounded-lg p-2 text-amber-700">
+                Their class(es) will be removed. Enrolled students are <strong>not</strong> deleted — they simply become classless.
+              </p>
+            )}
+            {deleteTarget?.role === 'parent' && (
+              <p className="text-xs bg-blue-50 border border-blue-200 rounded-lg p-2 text-blue-700">
+                Their linked children are <strong>not</strong> deleted.
+              </p>
+            )}
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => setDeleteTarget(null)} data-testid="cancel-delete-btn">Cancel</Button>
+            <Button onClick={handleDeleteUser} disabled={deleting} className="bg-red-500 hover:bg-red-600 text-white" data-testid="confirm-delete-btn">
+              {deleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Class Dialog */}
+      <Dialog open={!!assignTarget} onOpenChange={(o) => { if (!o) { setAssignTarget(null); setAssignClassroomId(''); } }}>
+        <DialogContent className="max-w-md" data-testid="assign-class-dialog">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-[#1D3557]">
+              <School className="w-5 h-5" /> Assign class to {assignTarget?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-gray-700">Choose a class</label>
+            <Select value={assignClassroomId} onValueChange={setAssignClassroomId}>
+              <SelectTrigger data-testid="assign-class-select">
+                <SelectValue placeholder="Select a class" />
+              </SelectTrigger>
+              <SelectContent>
+                {(dashboardData?.classrooms || []).map((c) => (
+                  <SelectItem key={c.classroom_id} value={c.classroom_id}>
+                    {c.name} · {c.teacher_name} {c.join_code ? `(${c.join_code})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(dashboardData?.classrooms || []).length === 0 && (
+              <p className="text-xs text-amber-600">No classes exist yet. Add a teacher with a class first.</p>
+            )}
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={() => { setAssignTarget(null); setAssignClassroomId(''); }}>Cancel</Button>
+            <Button onClick={handleAssignClass} disabled={assigning || !assignClassroomId} className="bg-[#06D6A0] hover:bg-[#05C090] text-white" data-testid="confirm-assign-class-btn">
+              {assigning ? 'Assigning...' : 'Assign'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

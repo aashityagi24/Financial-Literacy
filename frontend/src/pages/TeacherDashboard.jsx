@@ -580,13 +580,18 @@ export default function TeacherDashboard({ user }) {
               <h1 className="text-2xl font-bold text-white" style={{ fontFamily: 'Fredoka' }}>Teacher Dashboard</h1>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-2 bg-white/20 rounded-xl">
+              <button
+                onClick={() => navigate('/profile')}
+                className="flex items-center gap-2 px-3 py-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors"
+                data-testid="teacher-profile-link"
+                title="My Profile"
+              >
                 <User className="w-4 h-4 text-white" />
                 <span className="text-sm font-medium text-white">
                   {user?.name || 'Teacher'}
                   {user?.school_name && <span className="text-white/80"> • {user.school_name}</span>}
                 </span>
-              </div>
+              </button>
               <button
                 onClick={handleLogout}
                 className="p-2 rounded-xl border-2 border-white hover:bg-white/20 transition-colors"

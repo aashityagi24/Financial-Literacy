@@ -708,6 +708,12 @@ async def get_me(request: Request):
     db = get_db()
     user = await get_current_user(request)
     
+    # Expose whether the account has a password set (so the profile UI knows
+    # whether to ask for the current password when changing it).
+    if user and user.get("user_id"):
+        raw = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0, "password_hash": 1})
+        user["has_password"] = bool(raw and raw.get("password_hash"))
+    
     # If teacher has school_id, fetch school name
     if user and user.get("role") == "teacher" and user.get("school_id"):
         school = await db.schools.find_one({"school_id": user["school_id"]}, {"_id": 0, "name": 1})
