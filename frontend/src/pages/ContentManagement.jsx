@@ -357,28 +357,29 @@ function SortableContentItem({ content, onEdit, onDelete, onMove, onDuplicate, o
         )}
       </div>
       
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         {previewUrl && (
           <Button 
-            size="sm" 
+            size="icon" 
             variant="ghost" 
-            className="text-green-500 hover:text-green-600"
+            className="text-green-500 hover:text-green-600 h-8 w-8"
             onClick={() => window.open(previewUrl, '_blank')}
+            title="View"
           >
-            <Eye className="w-3 h-3 mr-1" /> View
+            <Eye className="w-4 h-4" />
           </Button>
         )}
-        <Button size="sm" variant="ghost" className="text-blue-500 hover:text-blue-600" onClick={onMove}>
-          <MoveRight className="w-3 h-3 mr-1" /> Move
+        <Button size="icon" variant="ghost" className="text-blue-500 hover:text-blue-600 h-8 w-8" onClick={onMove} title="Move">
+          <MoveRight className="w-4 h-4" />
         </Button>
-        <Button size="sm" variant="ghost" className="text-purple-500 hover:text-purple-600" onClick={onDuplicate} data-testid={`duplicate-content-${content.content_id}`}>
-          <Copy className="w-3 h-3 mr-1" /> Duplicate
+        <Button size="icon" variant="ghost" className="text-purple-500 hover:text-purple-600 h-8 w-8" onClick={onDuplicate} title="Duplicate" data-testid={`duplicate-content-${content.content_id}`}>
+          <Copy className="w-4 h-4" />
         </Button>
-        <Button size="sm" variant="ghost" onClick={onEdit}>
-          <Edit2 className="w-3 h-3 mr-1" /> Edit
+        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onEdit} title="Edit">
+          <Edit2 className="w-4 h-4" />
         </Button>
-        <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={onDelete}>
-          <Trash2 className="w-3 h-3 mr-1" /> Delete
+        <Button size="icon" variant="ghost" className="text-red-500 hover:text-red-600 h-8 w-8" onClick={onDelete} title="Delete">
+          <Trash2 className="w-4 h-4" />
         </Button>
       </div>
     </div>
