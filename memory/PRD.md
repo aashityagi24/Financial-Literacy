@@ -1273,3 +1273,10 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Ledger paginated 10/page, newest first (Back/Next). Backend GET /api/wallet/my-wallet?page=&page_size= returns balance, in/out totals, breakdown{spend,save,give with sub-categories}, entries, page, total_pages.
   - Colourful donut chart (`components/MoneyBreakdownChart.jsx`) shows Spend/Save/Give split + sub-category chips. Visible to child (/my-wallet) and parent (ParentDashboard 'Money Story' panel/dialog via GET /api/parent/child/{child_id}/money-story).
   - Verified by testing agent (iteration_94.json): backend 11/11 pytest + all frontend flows (child spend/save/give/income, validation, pagination, parent dialog + chart) 100% pass. Regression: /app/backend/tests/test_my_wallet.py.
+
+- **My Wallet: Save-to-a-Goal + Undo/Fix entry (Aug 7, 2026)**
+  - Save flow now asks "Where should it go?" — General Piggy Bank (savings jar) OR a specific active savings goal. Saving to a goal deducts My Wallet and increments that goal's current_amount (marks completed when reached).
+  - Manual "by me" entries (manual_income/spend, wallet_save/give) now have edit (pencil) and delete (trash) controls. Delete reverses the money movement (returns to My Wallet, removes from jar/goal/income); edit adjusts balance & goal by the DIFFERENCE only.
+  - Backend (routes/wallet.py): add_my_wallet_entry accepts optional goal_id; new DELETE and PUT /api/wallet/my-wallet/entry/{id}; helpers _reverse_entry_effect & _apply_entry_effect_raw with guards (non-manual -> 400, already-spent -> 400, unknown goal -> 404).
+  - Verified by testing agent (iteration_95.json): 23/23 pytest + all frontend flows (save-to-goal, save-to-piggybank, edit-by-difference, undo, validation, non-manual guard) 100% pass. Regression: /app/backend/tests/test_my_wallet.py.
+  - Known low-risk hardening (non-blocking, from code review): multi-write flows aren't wrapped in a Mongo txn; edit reapply doesn't re-check goal existence after reversal; delete uses window.confirm.
