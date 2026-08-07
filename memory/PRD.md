@@ -944,7 +944,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 
 
 ## Recently Completed
-- **Fix: wrong-password login bounced user to landing page** (June 2026)
+- **Fix: no Harvest button on a fully-grown Money Garden plant** (June 2026)
+  - Reported: "the flower is ready" but the child had no button to cut/harvest and then sell it.
+  - Root cause: `garden.py` `get_farm` applied watering-overdue penalties (water_needed/wilting/dead) BEFORE checking growth, so a plant that reached 100% growth while overdue for water got stuck in `water_needed` and never became `ready` — and the harvest UI only renders when `status==='ready'`.
+  - Fix: compute growth from elapsed time FIRST; a fully-grown plant (>=100%) is `ready`/harvestable regardless of thirst; watering penalties only apply while still growing. Frontend: 75-99% bucket relabeled 'Almost Ready!' (was misleadingly 'Ready!'), harvest button now reads '🎁 Harvest' with `data-testid='harvest-btn'`; sell buttons got testids.
+  - Verified 100% by testing agent (iteration_91, backend 5/5 + frontend 7/7): grown+thirsty plot returns ready, harvest works, crop appears in shop. (Sell requires the in-app market open 7AM-5PM IST.) Test data cleaned.
+
   - Reported: entering an incorrect password refreshed to the home/landing page instead of showing an error and staying on sign-in — confusing the user.
   - Root cause: the global axios 401 response interceptor (`App.js`) redirected to `/?session_expired=true` on ANY 401, including wrong-password login attempts (login is `/login`, which wasn't excluded), pre-empting AuthPage's own error toast.
   - Fix: the interceptor now returns early (no redirect) when the failing request is an auth attempt (`/api/auth/login|admin-login|school-login|signup|register`) and also excludes the `/login` path. AuthPage's catch block shows the error toast and keeps the user on the page.
