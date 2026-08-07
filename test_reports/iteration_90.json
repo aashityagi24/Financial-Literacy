@@ -1,0 +1,43 @@
+{
+  "summary": "Frontend-only verification of the 401 axios interceptor fix on /login. Confirmed wrong-password submissions no longer redirect to landing/'?session_expired=true'; user stays on /login with a clear error toast. Correct login regression passed and navigates to /teacher-dashboard.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "tests_executed": [
+    {
+      "name": "Wrong password (email identifier)",
+      "input": "admin@learnersplanet.com / wrongpass",
+      "expected": "Stay on /login, show error toast",
+      "actual": "URL remained /login; toast 'Invalid credentials' shown; 401 observed in console; form fields still visible",
+      "result": "PASS"
+    },
+    {
+      "name": "Wrong password (username identifier)",
+      "input": "test_teacher_1 / wrongpass",
+      "expected": "Stay on /login (school-login 401 caught, unified login 401 handled by AuthPage), show error toast",
+      "actual": "URL remained /login; two 401s observed (school-login then unified login); toast 'Invalid email/username or password' shown",
+      "result": "PASS"
+    },
+    {
+      "name": "Correct login regression",
+      "input": "test_teacher_1 / testpassword",
+      "expected": "Successful login, navigation to /teacher-dashboard",
+      "actual": "Navigated to /teacher-dashboard; Teacher Dashboard rendered with classroom data",
+      "result": "PASS"
+    }
+  ],
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (not in scope)", "frontend": "100% (3/3)"},
+  "test_credentials": "teacher: test_teacher_1/testpassword; admin: admin@learnersplanet.com (wrongpass used for negative test only)",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Bug fix for the axios 401 interceptor confirmed working end-to-end on /login. Interceptor correctly skips redirect for auth endpoints and for the /login path; AuthPage shows its own error toast. No regressions on the happy path.",
+  "rca of the issue": "Original: a global axios response interceptor in App.js redirected any 401 to '/?session_expired=true', catching wrong-password login 401s and bouncing the user off /login before AuthPage could surface the toast. Fix (verified): interceptor now returns early when error.config.url matches /api/auth/(login|admin-login|school-login|signup|register) and when the current path is /login, allowing AuthPage's catch block to display toast.error(message) while keeping the user on /login."
+}

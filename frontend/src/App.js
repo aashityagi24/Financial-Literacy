@@ -86,10 +86,18 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      // A 401 from a login/auth attempt is an expected failure (e.g. wrong
+      // password) that the auth page handles itself — do NOT treat it as an
+      // expired session or redirect away, or the user never sees the error.
+      const reqUrl = error.config?.url || '';
+      const isAuthAttempt = /\/api\/auth\/(login|admin-login|school-login|signup|register)/.test(reqUrl);
+      if (isAuthAttempt) {
+        return Promise.reject(error);
+      }
       // Session is invalid - user may have logged in on another device
       const currentPath = window.location.pathname;
       // Don't redirect if already on auth pages
-      if (currentPath !== '/' && currentPath !== '/auth' && currentPath !== '/auth/callback') {
+      if (currentPath !== '/' && currentPath !== '/auth' && currentPath !== '/auth/callback' && currentPath !== '/login') {
         localStorage.removeItem('session_token');
         // Show message and redirect
         window.location.href = '/?session_expired=true';
