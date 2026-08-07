@@ -377,18 +377,13 @@ code {
   background: rgba(255, 255, 255, 0.7);
 }
 
-.goal-pct-label {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Fredoka', sans-serif;
-  font-weight: 800;
-  font-size: 0.85rem;
-  letter-spacing: 0.02em;
-  z-index: 2;
-  pointer-events: none;
+/* Compact variant for dashboard widget */
+.goal-track.compact {
+  height: 1.5rem;
+  border-width: 2px;
+}
+.goal-track.compact .goal-coin {
+  font-size: 1.05rem;
 }
 
 /* Confetti burst on completed goal cards */

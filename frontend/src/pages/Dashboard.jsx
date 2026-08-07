@@ -429,7 +429,10 @@ export default function Dashboard({ user, setUser }) {
             
             {savingsGoals.length > 0 ? (
               <div className="flex-1 space-y-2">
-                {savingsGoals.slice(0, 2).map((goal) => (
+                {savingsGoals.slice(0, 2).map((goal) => {
+                  const gp = Math.min(((goal.current_amount || 0) / goal.target_amount) * 100, 100);
+                  const gpCoin = `${Math.min(Math.max(gp, 4), 96)}%`;
+                  return (
                   <Link key={goal.goal_id} to="/savings-goals" className="bg-[#F8F9FA] rounded-xl p-3 border border-[#E0E0E0] block hover:bg-[#E0FBFC] transition-colors">
                     <div className="flex gap-3 items-center mb-2">
                       {goal.image_url ? (
@@ -446,7 +449,13 @@ export default function Dashboard({ user, setUser }) {
                       <h3 className="font-bold text-[#1D3557] text-sm flex-1 truncate">{goal.title}</h3>
                     </div>
                     
-                    <Progress value={Math.min(((goal.current_amount || 0) / goal.target_amount) * 100, 100)} className="h-2 mb-2" />
+                    <div className="goal-track compact mb-2" data-testid={`dash-goal-bar-${goal.goal_id}`}>
+                      {[25, 50, 75].map((m) => (
+                        <span key={m} className={`goal-milestone ${gp >= m ? 'reached' : ''}`} style={{ left: `${m}%` }} />
+                      ))}
+                      <div className={`goal-fill ${gp >= 100 ? 'is-complete' : ''}`} style={{ width: `${Math.max(gp, 4)}%` }} />
+                      <span className="goal-coin" style={{ left: gpCoin }} role="img" aria-label="coin">🪙</span>
+                    </div>
                     
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-[#06D6A0] font-bold">₹{goal.current_amount?.toFixed(0) || 0} saved</span>
@@ -456,7 +465,8 @@ export default function Dashboard({ user, setUser }) {
                       </span>
                     </div>
                   </Link>
-                ))}
+                  );
+                })}
                 {savingsGoals.length > 2 && (
                   <Link to="/savings-goals" className="text-xs text-center text-[#3D5A80] hover:text-[#1D3557] block">
                     +{savingsGoals.length - 2} more goals →

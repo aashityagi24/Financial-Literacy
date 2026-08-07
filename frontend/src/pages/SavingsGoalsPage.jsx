@@ -361,12 +361,6 @@ export default function SavingsGoalsPage({ user }) {
                                 />
                                 {/* moving coin marker */}
                                 <span className="goal-coin" style={{ left: coinLeft }} role="img" aria-label="coin">🪙</span>
-                                <span
-                                  className={`goal-pct-label ${progress > 52 ? 'text-white' : 'text-[#1D3557]'}`}
-                                  data-testid={`goal-progress-pct-${goal.goal_id}`}
-                                >
-                                  {Math.round(progress)}%
-                                </span>
                               </div>
                               <p className="text-center text-sm font-bold text-[#1D3557] mt-2" style={{ fontFamily: 'Fredoka' }} data-testid={`goal-milestone-msg-${goal.goal_id}`}>
                                 {milestoneMsg}
