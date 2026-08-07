@@ -12,6 +12,7 @@ import AuthCallback from "@/pages/AuthCallback";
 import RoleSelection from "@/pages/RoleSelection";
 import Dashboard from "@/pages/Dashboard";
 import WalletPage from "@/pages/WalletPage";
+import MyWalletPage from "@/pages/MyWalletPage";
 import StorePage from "@/pages/StorePage";
 import QuestsPage from "@/pages/QuestsPage";
 import AchievementsPage from "@/pages/AchievementsPage";
@@ -319,6 +320,11 @@ function AppRouter() {
       <Route path="/savings-goals" element={
         <ProtectedRoute>
           {({ user }) => <SavingsGoalsPage user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/my-wallet" element={
+        <ProtectedRoute>
+          {({ user }) => <MyWalletPage user={user} />}
         </ProtectedRoute>
       } />
       <Route path="/admin/content" element={

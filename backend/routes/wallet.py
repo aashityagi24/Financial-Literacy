@@ -314,6 +314,171 @@ async def get_wallet_summary(request: Request):
     }
 
 
+class MyWalletEntryCreate(BaseModel):
+    entry_type: str          # 'spend' | 'income'
+    amount: float
+    category: str = "other"
+    note: str = ""
+
+
+def _friendly_label(t: dict) -> str:
+    """Human-friendly title for an auto-generated my_wallet transaction."""
+    tt = t.get("transaction_type", "")
+    labels = {
+        "chore_reward": "Chore reward",
+        "job_payment": "Job payment",
+        "allowance": "Allowance",
+        "gift_received": "Gift from family",
+        "parent_gift": "Gift from parent",
+        "parent_reward": "Reward",
+        "parent_penalty": "Penalty",
+        "parent_settlement": "Parent paid you in cash",
+    }
+    return t.get("description") or labels.get(tt, "Money entry")
+
+
+@router.get("/wallet/my-wallet")
+async def get_my_wallet(request: Request):
+    """Full 'My Wallet' money story for a child: real balance + every earning &
+    spend entry (auto-tracked chores/jobs/rewards/gifts + child-logged entries)."""
+    from services.auth import get_current_user
+    from services.wallet_sources import classify_source
+    db = get_db()
+    user = await get_current_user(request)
+    user_id = user["user_id"]
+
+    # Ensure the my_wallet account exists.
+    acc = await db.wallet_accounts.find_one(
+        {"user_id": user_id, "account_type": "my_wallet"}, {"_id": 0, "balance": 1}
+    )
+    if not acc:
+        await db.wallet_accounts.insert_one({
+            "account_id": f"acc_{uuid.uuid4().hex[:12]}",
+            "user_id": user_id, "account_type": "my_wallet", "balance": 0.0,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+        balance = 0.0
+    else:
+        balance = float(acc.get("balance", 0) or 0)
+
+    raw = await db.transactions.find(
+        {"user_id": user_id}, {"_id": 0}
+    ).sort("created_at", -1).to_list(2000)
+
+    month_prefix = datetime.now(timezone.utc).strftime("%Y-%m")
+    entries = []
+    total_in = total_out = month_in = month_out = 0.0
+    pending_count = 0
+    for t in raw:
+        src = t.get("wallet_source") or classify_source(t.get("transaction_type", "") or t.get("type", ""))
+        if src != "my_wallet":
+            continue
+        tt = t.get("transaction_type", "")
+        amount = float(t.get("amount", 0) or 0)
+        created = t.get("created_at", "") or ""
+        is_month = created.startswith(month_prefix)
+
+        if tt == "parent_settlement":
+            # Informational only — doesn't change balance or in/out totals.
+            entries.append({
+                "transaction_id": t.get("transaction_id"),
+                "direction": "info",
+                "amount": abs(amount),
+                "transaction_type": tt,
+                "category": "cash",
+                "title": _friendly_label(t),
+                "created_at": created,
+                "is_manual": False,
+                "settlement_status": "paid",
+            })
+            continue
+
+        direction = "in" if amount >= 0 else "out"
+        if direction == "in":
+            total_in += amount
+            if is_month:
+                month_in += amount
+            if t.get("settlement_status") != "paid":
+                pending_count += 1
+        else:
+            total_out += abs(amount)
+            if is_month:
+                month_out += abs(amount)
+
+        entries.append({
+            "transaction_id": t.get("transaction_id"),
+            "direction": direction,
+            "amount": abs(amount),
+            "transaction_type": tt,
+            "category": t.get("category") or ("spend" if direction == "out" else "income"),
+            "title": _friendly_label(t),
+            "created_at": created,
+            "is_manual": tt in ("manual_income", "manual_spend"),
+            "settlement_status": t.get("settlement_status", "paid"),
+        })
+
+    return {
+        "balance": balance,
+        "total_in": total_in,
+        "total_out": total_out,
+        "month_in": month_in,
+        "month_out": month_out,
+        "pending_count": pending_count,
+        "entries": entries,
+    }
+
+
+@router.post("/wallet/my-wallet/entry")
+async def add_my_wallet_entry(body: MyWalletEntryCreate, request: Request):
+    """Child logs a manual money entry against their real My Wallet balance.
+
+    entry_type 'spend' decreases the balance; 'income' increases it. Both are
+    recorded on the my_wallet ledger (settled — it's the child's own money)."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can log wallet entries")
+    user_id = user["user_id"]
+
+    if body.entry_type not in ("spend", "income"):
+        raise HTTPException(status_code=400, detail="entry_type must be 'spend' or 'income'")
+    amount = round(float(body.amount or 0), 2)
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be greater than zero")
+
+    acc = await db.wallet_accounts.find_one({"user_id": user_id, "account_type": "my_wallet"})
+    balance = float(acc.get("balance", 0) or 0) if acc else 0.0
+
+    if body.entry_type == "spend" and amount > balance:
+        raise HTTPException(status_code=400, detail="You don't have that much in your wallet")
+
+    delta = amount if body.entry_type == "income" else -amount
+    await db.wallet_accounts.update_one(
+        {"user_id": user_id, "account_type": "my_wallet"},
+        {"$inc": {"balance": delta},
+         "$setOnInsert": {"account_id": f"acc_{uuid.uuid4().hex[:12]}", "user_id": user_id, "account_type": "my_wallet"}},
+        upsert=True,
+    )
+
+    now = datetime.now(timezone.utc).isoformat()
+    tx = {
+        "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+        "user_id": user_id,
+        "amount": delta,
+        "transaction_type": "manual_income" if body.entry_type == "income" else "manual_spend",
+        "wallet_source": "my_wallet",
+        "settlement_status": "paid",
+        "category": (body.category or "other").strip().lower(),
+        "description": (body.note or "").strip() or ("Money added" if body.entry_type == "income" else "Money spent"),
+        "created_at": now,
+    }
+    await db.transactions.insert_one(tx)
+
+    return {"message": "Entry added", "transaction_id": tx["transaction_id"], "balance": balance + delta}
+
+
+
 
 class SettleRequest(BaseModel):
     child_id: str

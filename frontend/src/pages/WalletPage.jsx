@@ -407,8 +407,9 @@ export default function WalletPage({ user }) {
             <p className="text-xs opacity-90 mt-1">{coinquestDescription}</p>
           </div>
 
-          <div
-            className="rounded-2xl p-5 bg-gradient-to-br from-[#0EA5E9] to-[#38BDF8] text-white shadow-lg border-2 border-white/40"
+          <Link
+            to="/my-wallet"
+            className="rounded-2xl p-5 bg-gradient-to-br from-[#0EA5E9] to-[#38BDF8] text-white shadow-lg border-2 border-white/40 block hover:scale-[1.02] transition-transform cursor-pointer"
             data-testid="my-wallet-card"
           >
             <div className="flex items-center justify-between mb-1">
@@ -429,7 +430,10 @@ export default function WalletPage({ user }) {
                 ? ` ${summary.my_wallet_pending_count} entries waiting for parent payout.`
                 : ''}
             </p>
-          </div>
+            <p className="text-xs font-bold opacity-95 mt-2 inline-flex items-center gap-1">
+              Tap to see your money story →
+            </p>
+          </Link>
         </div>
         
         {/* Account Cards — spending jar hidden (shown as CoinQuest Wallet above) */}

@@ -363,7 +363,7 @@ export default function Dashboard({ user, setUser }) {
                 const getAccountPath = (type) => {
                   switch(type) {
                     case 'spending': return '/store';
-                    case 'my_wallet': return '/wallet';
+                    case 'my_wallet': return '/my-wallet';
                     case 'savings': return '/savings-goals';
                     case 'gifting': return '/gifting';
                     case 'investing': return grade <= 2 ? '/garden' : '/stock-market';
