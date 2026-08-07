@@ -1280,3 +1280,8 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Backend (routes/wallet.py): add_my_wallet_entry accepts optional goal_id; new DELETE and PUT /api/wallet/my-wallet/entry/{id}; helpers _reverse_entry_effect & _apply_entry_effect_raw with guards (non-manual -> 400, already-spent -> 400, unknown goal -> 404).
   - Verified by testing agent (iteration_95.json): 23/23 pytest + all frontend flows (save-to-goal, save-to-piggybank, edit-by-difference, undo, validation, non-manual guard) 100% pass. Regression: /app/backend/tests/test_my_wallet.py.
   - Known low-risk hardening (non-blocking, from code review): multi-write flows aren't wrapped in a Mongo txn; edit reapply doesn't re-check goal existence after reversal; delete uses window.confirm.
+
+- **My Wallet: removed percentages (Aug 7, 2026)**
+  - Chart legend (MoneyBreakdownChart.jsx) now shows only ₹ amounts per bucket (no % figure); donut still conveys proportion visually.
+  - Save-to-goal picker (MyWalletPage.jsx) shows "₹315 of ₹2000" instead of a % badge.
+  - Scope confirmed by user: leave % as-is on all other screens (child quiz/activity scores, stock market, teacher/parent/admin analytics).
