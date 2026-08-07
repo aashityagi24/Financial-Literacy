@@ -24,7 +24,7 @@ const GROWTH_STAGES = [
   { min: 0, max: 25, label: 'Seed', emoji: '🌰', color: '#8B4513' },
   { min: 25, max: 50, label: 'Sprout', emoji: '🌱', color: '#90EE90' },
   { min: 50, max: 75, label: 'Growing', emoji: '🌿', color: '#32CD32' },
-  { min: 75, max: 100, label: 'Ready!', emoji: '🌻', color: '#228B22' }
+  { min: 75, max: 100, label: 'Almost Ready!', emoji: '🌼', color: '#228B22' }
 ];
 
 const getGrowthStage = (progress) => {
@@ -479,9 +479,10 @@ export default function MoneyGardenPage({ user }) {
                   {canHarvest && (
                     <button
                       onClick={handleHarvest}
-                      className="flex-1 max-w-[120px] py-3 rounded-xl font-bold text-lg flex items-center justify-center gap-2 border-2 bg-white border-[#FF8F00] text-[#FF8F00] hover:bg-[#FFF8E1] shadow-md animate-bounce"
+                      className="flex-1 py-3 rounded-xl font-bold text-base flex items-center justify-center gap-2 border-2 bg-white border-[#FF8F00] text-[#FF8F00] hover:bg-[#FFF8E1] shadow-md animate-bounce"
+                      data-testid="harvest-btn"
                     >
-                      🎁
+                      🎁 Harvest
                     </button>
                   )}
                 </div>
@@ -574,6 +575,7 @@ export default function MoneyGardenPage({ user }) {
                           onClick={() => openSellDialog(item)}
                           disabled={!farm.is_market_open}
                           className="bg-[#06D6A0] hover:bg-[#05C995] disabled:bg-gray-300 text-white px-4 py-2 rounded-xl font-bold"
+                          data-testid={`sell-item-${item.plant_id}`}
                         >
                           Sell
                         </button>
@@ -799,6 +801,7 @@ export default function MoneyGardenPage({ user }) {
                 <button
                   onClick={handleSell}
                   className="flex-1 py-3 bg-[#06D6A0] hover:bg-[#05C995] text-white font-bold rounded-xl"
+                  data-testid="confirm-sell-btn"
                 >
                   💰 Sell Now
                 </button>

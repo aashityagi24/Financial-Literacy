@@ -1,0 +1,29 @@
+{
+  "summary": "Verified the CoinQuest Money Garden harvest-when-overdue-water bug fix end-to-end. Backend: GET /api/garden/farm returns the QA fully-grown but water-overdue plot with status 'ready' and growth_progress 100, and persists 'ready' to Mongo. POST /api/garden/harvest/{plot_id} succeeds, resets the plot to empty, and creates an inventory row. Frontend: /garden route renders 'Ready to Harvest!' with data-testid='harvest-btn' visible; clicking it shows the harvest toast, resets the plot to 'Empty Plot', and the harvested Sunflower appears in the Shop with sell-item-plant_0eb737e556d3. Market is currently CLOSED (17:45 IST > 17:00), so per instructions the Sell button was verified present-and-disabled with the '🌙 Closed (7AM-5PM)' indicator (Sell click / confirm-sell-btn not exercised as spec allowed). Label change to 'Almost Ready!' confirmed in source (75-100 stage). All QA data cleaned up.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "tests_executed": [
+    {"name": "Login classmate_g1", "expected": "200 + session_token", "actual": "200, user_id matches", "result": "PASS"},
+    {"name": "GET /api/garden/farm on grown+overdue plot", "expected": "status 'ready', growth 100", "actual": "status='ready', growth_progress=100", "result": "PASS"},
+    {"name": "'ready' persisted to Mongo", "expected": "farm_plots doc status='ready'", "actual": "confirmed", "result": "PASS"},
+    {"name": "POST /api/garden/harvest/QA_garden_plot", "expected": "200 + inventory row + plot reset", "actual": "200; plot status='empty', plant_id=None; inventory row created", "result": "PASS"},
+    {"name": "UI harvest button on ready plot", "expected": "data-testid='harvest-btn' visible with '🎁 Harvest'", "actual": "visible; 'Ready to Harvest!' shown", "result": "PASS"},
+    {"name": "UI harvest → shop", "expected": "plot becomes Empty Plot; sell-item-plant_0eb737e556d3 appears", "actual": "Empty Plot shown; Sell button rendered in shop-section", "result": "PASS"},
+    {"name": "Market closed handling (17:45 IST)", "expected": "Sell disabled + 'Closed (7AM-5PM)' indicator", "actual": "Sell button disabled=true; 'Closed (7AM-5PM)' text visible", "result": "PASS"}
+  ],
+  "test_report_links": ["/app/backend/tests/test_garden_harvest.py", "/app/test_reports/pytest/pytest_garden.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Market open check uses IST (7-17 Asia/Kolkata), but the review request assumed UTC. Not a bug (comment/docstring in is_market_open() already says IST), but consider surfacing the timezone label to children in the UI ('7AM-5PM IST') to avoid confusion.",
+    "MoneyGardenPage renders only farm.plots[0] (single-plot UX) while backend supports up to 50 plots and buy-plot endpoint. Multi-plot UI seems missing; only relevant if product intends multiple plots for grade 1-2.",
+    "get_farm ordering is insertion-order (no sort); if the initial 4 plots exist first and a new plot is bought, it becomes plots[4]. Not a concern for the current single-plot UX but worth being explicit."
+  ],
+  "updated_files": ["/app/backend/tests/test_garden_harvest.py", "/app/test_reports/iteration_91.json"],
+  "success_rate": {"backend": "100% (5/5 pytest)", "frontend": "100% (7/7 UI checks)"},
+  "test_credentials": "classmate_g1 / testpass123 (user_id 50604e17-3caa-44d4-9815-1fea21d8a58b)",
+  "seed_data_creation": "Inserted farm_plots doc plot_id='QA_garden_plot' (Sunflower, planted 3 days ago, status water_needed, growth 100). Cleaned up: 1 plot + 1 harvest_inventory row deleted post-test. Verified 0 remaining docs for the test user.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Bug fix verified end-to-end. get_farm computes growth from elapsed time first and marks growth>=100 as 'ready' even if water is overdue. UI harvest-btn / sell-item-<plant_id> / confirm-sell-btn testids are in place. Sell flow completion was not exercised because market IST hours were closed at time of test (~17:45 IST); a re-test between 7-17 IST could exercise confirm-sell-btn and validate coins increase. All QA data cleaned up.",
+  "rca of the issue": "Original: get_farm applied watering-overdue penalties (water_needed/wilting/dead) BEFORE checking growth, so a plant that had reached growth_progress>=100 while overdue for water was stuck in water_needed and never moved to 'ready'; the frontend's harvest button only renders when plot.status==='ready', so the child had no way to harvest. Fix (verified in /app/backend/routes/garden.py:74-108): compute growth_progress from (now - planted_at) FIRST; if >=100 set status='ready' and persist; only apply watering penalties while growth<100. Frontend also renamed 75-99% label from 'Ready!' to 'Almost Ready!' to reduce confusion."
+}

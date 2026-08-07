@@ -74,29 +74,37 @@ async def get_farm(request: Request):
         if plot.get("plant_id") and plot.get("status") not in ["empty", "dead", "ready"]:
             plant = await db.investment_plants.find_one({"plant_id": plot["plant_id"]}, {"_id": 0})
             if plant:
-                last_watered = plot.get("last_watered")
-                if last_watered:
-                    last_water_time = datetime.fromisoformat(last_watered.replace('Z', '+00:00'))
-                    hours_since_water = (now - last_water_time).total_seconds() / 3600
-                    water_freq = plant.get("water_frequency_hours", 24)
-                    
-                    if hours_since_water > water_freq * 2:
-                        plot["status"] = "dead"
-                        await db.farm_plots.update_one({"plot_id": plot["plot_id"]}, {"$set": {"status": "dead"}})
-                    elif hours_since_water > water_freq * 1.5:
-                        plot["status"] = "wilting"
-                    elif hours_since_water > water_freq:
-                        plot["status"] = "water_needed"
-                    else:
-                        planted_at = datetime.fromisoformat(plot["planted_at"].replace('Z', '+00:00'))
-                        hours_growing = (now - planted_at).total_seconds() / 3600
-                        total_growth_hours = plant["growth_days"] * 24
-                        growth_progress = min(100, (hours_growing / total_growth_hours) * 100)
-                        plot["growth_progress"] = round(growth_progress, 1)
-                        
-                        if growth_progress >= 100:
-                            plot["status"] = "ready"
-                            await db.farm_plots.update_one({"plot_id": plot["plot_id"]}, {"$set": {"status": "ready", "growth_progress": 100}})
+                # Compute overall growth from time since planting FIRST — a fully
+                # grown plant is always harvestable, even if it's currently due
+                # for water. This prevents a "ready" flower from losing its
+                # harvest button just because watering is overdue.
+                planted_at = datetime.fromisoformat(plot["planted_at"].replace('Z', '+00:00'))
+                hours_growing = (now - planted_at).total_seconds() / 3600
+                total_growth_hours = plant["growth_days"] * 24
+                growth_progress = min(100, (hours_growing / total_growth_hours) * 100)
+                plot["growth_progress"] = round(growth_progress, 1)
+
+                if growth_progress >= 100:
+                    plot["status"] = "ready"
+                    await db.farm_plots.update_one(
+                        {"plot_id": plot["plot_id"]},
+                        {"$set": {"status": "ready", "growth_progress": 100}}
+                    )
+                else:
+                    # Still growing — apply watering state.
+                    last_watered = plot.get("last_watered")
+                    if last_watered:
+                        last_water_time = datetime.fromisoformat(last_watered.replace('Z', '+00:00'))
+                        hours_since_water = (now - last_water_time).total_seconds() / 3600
+                        water_freq = plant.get("water_frequency_hours", 24)
+
+                        if hours_since_water > water_freq * 2:
+                            plot["status"] = "dead"
+                            await db.farm_plots.update_one({"plot_id": plot["plot_id"]}, {"$set": {"status": "dead"}})
+                        elif hours_since_water > water_freq * 1.5:
+                            plot["status"] = "wilting"
+                        elif hours_since_water > water_freq:
+                            plot["status"] = "water_needed"
                         else:
                             plot["status"] = "growing"
     
