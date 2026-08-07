@@ -160,7 +160,10 @@ export default function MyWalletPage({ user }) {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 max-w-2xl">
+      <main className="container mx-auto px-4 py-6 max-w-6xl">
+        <div className="grid lg:grid-cols-12 gap-6 items-start">
+          {/* Left column: balance, actions, chart */}
+          <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-6">
         {/* Balance card */}
         <div className="rounded-3xl p-6 bg-gradient-to-br from-[#0EA5E9] to-[#38BDF8] text-white shadow-lg border-3 border-[#1D3557] mb-5" data-testid="my-wallet-balance-card">
           <div className="flex items-center justify-between mb-1">
@@ -203,13 +206,16 @@ export default function MyWalletPage({ user }) {
         </div>
 
         {/* Chart */}
-        <h2 className="text-lg font-bold text-[#1D3557] mb-3 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
-          📊 Where my money went
-        </h2>
-        <div className="mb-6">
+        <div>
+          <h2 className="text-lg font-bold text-[#1D3557] mb-3 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+            📊 Where my money went
+          </h2>
           <MoneyBreakdownChart breakdown={data?.breakdown} />
         </div>
+          </div>
 
+          {/* Right column: money story */}
+          <div className="lg:col-span-7">
         {/* Ledger */}
         <h2 className="text-lg font-bold text-[#1D3557] mb-3 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
           <Sparkles className="w-5 h-5 text-[#0EA5E9]" /> Money Story
@@ -284,6 +290,8 @@ export default function MyWalletPage({ user }) {
             )}
           </>
         )}
+          </div>
+        </div>
       </main>
 
       {/* Add/Use dialog */}
