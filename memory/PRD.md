@@ -1259,3 +1259,10 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Root causes: (1) the homework content could be removed by the topic view's grade/visibility filters; (2) a stale `topic_id` stored on the homework assignment.
   - Fix: `GET /api/content/topics/{topic_id}` now takes an optional `highlight` param that force-includes that content item (published-only) even if outside grade/visibility filters; `GET /api/child/homework` resolves each item's CURRENT `topic_id` from the live content doc; `TopicPage.jsx` forwards the `highlight` param.
   - Verified by testing agent (iteration_92.json): backend 4/4 pytest (`/app/backend/tests/test_homework_highlight.py`), frontend click-through highlights all 3 homework items including the grade-excluded regression case. 100% pass.
+
+- **My Wallet dedicated page + manual money tracking (feature, Aug 7, 2026)**
+  - New child page `/my-wallet` (`MyWalletPage.jsx`) opens when tapping the My Wallet card from BOTH the Dashboard tile (`jar-my_wallet`) and the Wallet page card (`my-wallet-card`).
+  - Shows real (parent-settled) balance, month In/Out totals, and a "Money Story" ledger of every earning (auto chores/jobs/rewards/gifts/allowance, with 'waiting for payout' badges on unsettled) with kid-friendly category icons.
+  - Kids can log manual entries: "I got money" (income → increases balance) and "I spent money" (spend → decreases balance), each with icon categories + optional note. Overspend and amount<=0 rejected client + server side.
+  - Backend (`routes/wallet.py`): `GET /api/wallet/my-wallet` (balance + summary + entries) and `POST /api/wallet/my-wallet/entry` (records transaction wallet_source='my_wallet', settlement_status='paid', new types manual_income/manual_spend added to `services/wallet_sources.py`). parent_settlement rows shown as neutral info entries.
+  - Verified by testing agent (iteration_93.json): backend 6/6 pytest + full frontend flows, 100% pass. Regression: `/app/backend/tests/test_my_wallet.py`.
