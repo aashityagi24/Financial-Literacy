@@ -34,6 +34,7 @@ import NotificationCenter from '@/components/NotificationCenter';
 import DashboardFooter from '@/components/DashboardFooter';
 import { getDefaultAvatar } from '@/utils/avatars';
 import { JobGuideDialog } from '@/components/JobGuideDialog';
+import { MoneyBreakdownChart } from '@/components/MoneyBreakdownChart';
 
 const gradeLabels = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
 
@@ -77,6 +78,10 @@ export default function ParentDashboard({ user }) {
   const [childrenPurchases, setChildrenPurchases] = useState([]);
   const [childrenPending, setChildrenPending] = useState({}); // { [childId]: { pending_total, pending_count } }
   const [settling, setSettling] = useState(null); // childId currently being settled
+  const [moneyStoryChild, setMoneyStoryChild] = useState(null);
+  const [moneyStory, setMoneyStory] = useState(null);
+  const [moneyStoryPage, setMoneyStoryPage] = useState(1);
+  const [moneyStoryLoading, setMoneyStoryLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedChild, setSelectedChild] = useState(null);
   const [childProgress, setChildProgress] = useState(null);
@@ -262,6 +267,21 @@ export default function ParentDashboard({ user }) {
     }
   };
   
+  const openMoneyStory = async (child, p = 1) => {
+    setMoneyStoryChild(child);
+    setMoneyStoryPage(p);
+    setMoneyStoryLoading(true);
+    try {
+      const res = await axios.get(`${API}/parent/child/${child.user_id}/money-story?page=${p}&page_size=10`);
+      setMoneyStory(res.data);
+    } catch (e) {
+      toast.error('Could not load money story');
+    } finally {
+      setMoneyStoryLoading(false);
+    }
+  };
+
+
   const handleSettleChildWallet = async (childId, childName, total) => {
     if (!total || total <= 0) {
       toast.info('Nothing to settle for this child');
@@ -783,6 +803,28 @@ export default function ParentDashboard({ user }) {
                   {child.name} <span className="opacity-60">({gradeLabels[child.grade]})</span>
                   <ChevronRight className="w-3 h-3" />
                 </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Money Story — per-child real money breakdown */}
+        {dashboard?.children?.length > 0 && (
+          <div className="bg-white rounded-2xl border-2 border-[#1D3557]/10 p-4 mb-5" data-testid="money-story-panel">
+            <h3 className="text-base font-bold text-[#1D3557] flex items-center gap-1.5 mb-2" style={{ fontFamily: 'Fredoka' }}>
+              📊 Money Story
+            </h3>
+            <p className="text-xs text-[#3D5A80] mb-3">See how each child spends, saves & gives their real money.</p>
+            <div className="flex flex-wrap gap-2">
+              {dashboard.children.map((child) => (
+                <button
+                  key={child.user_id}
+                  onClick={() => openMoneyStory(child)}
+                  className="flex items-center gap-1.5 bg-[#0EA5E9]/10 hover:bg-[#0EA5E9]/20 border-2 border-[#0EA5E9]/30 px-3 py-1.5 rounded-xl text-[#1D3557] text-sm font-bold transition-colors"
+                  data-testid={`money-story-btn-${child.user_id}`}
+                >
+                  {child.name.split(' ')[0]}'s money <ChevronRight className="w-4 h-4" />
+                </button>
               ))}
             </div>
           </div>
@@ -2921,6 +2963,82 @@ export default function ParentDashboard({ user }) {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Money Story dialog (per child) */}
+        <Dialog open={!!moneyStoryChild} onOpenChange={(o) => { if (!o) { setMoneyStoryChild(null); setMoneyStory(null); } }}>
+          <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-lg max-h-[90vh] overflow-y-auto" data-testid="money-story-dialog">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                📊 {moneyStoryChild?.name?.split(' ')[0]}'s Money Story
+              </DialogTitle>
+            </DialogHeader>
+            {moneyStoryLoading ? (
+              <div className="py-10 text-center text-[#3D5A80]">Loading…</div>
+            ) : moneyStory ? (
+              <div className="space-y-4 pt-1">
+                <div className="rounded-2xl p-4 bg-gradient-to-br from-[#0EA5E9] to-[#38BDF8] text-white">
+                  <p className="text-sm opacity-90">Real money right now</p>
+                  <p className="text-4xl font-bold" style={{ fontFamily: 'Fredoka' }}>₹{Number(moneyStory.balance || 0).toFixed(0)}</p>
+                  <div className="flex gap-4 mt-2 text-sm">
+                    <span>In this month: <strong>₹{Number(moneyStory.month_in || 0).toFixed(0)}</strong></span>
+                    <span>Out: <strong>₹{Number(moneyStory.month_out || 0).toFixed(0)}</strong></span>
+                  </div>
+                </div>
+
+                <MoneyBreakdownChart breakdown={moneyStory.breakdown} />
+
+                <div>
+                  <h4 className="font-bold text-[#1D3557] mb-2">Recent entries</h4>
+                  <div className="space-y-2">
+                    {(moneyStory.entries || []).map((e) => {
+                      const isInfo = e.direction === 'info';
+                      const isIn = e.direction === 'in';
+                      return (
+                        <div key={e.transaction_id} className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-[#1D3557]/10 bg-[#F8F9FA]">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-[#1D3557] text-sm truncate">{e.title}</p>
+                            <p className="text-xs text-[#3D5A80]">{e.created_at ? new Date(e.created_at).toLocaleDateString() : ''}</p>
+                          </div>
+                          {isInfo ? (
+                            <span className="text-sm font-bold text-[#3D5A80] shrink-0">₹{Number(e.amount).toFixed(0)}</span>
+                          ) : (
+                            <span className={`text-sm font-bold shrink-0 ${isIn ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
+                              {isIn ? '+' : '−'}₹{Number(e.amount).toFixed(0)}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {(moneyStory.entries || []).length === 0 && (
+                      <p className="text-sm text-[#3D5A80] text-center py-4">No entries yet.</p>
+                    )}
+                  </div>
+
+                  {moneyStory.total_pages > 1 && (
+                    <div className="flex items-center justify-center gap-3 mt-3">
+                      <button
+                        onClick={() => openMoneyStory(moneyStoryChild, Math.max(1, moneyStoryPage - 1))}
+                        disabled={moneyStoryPage <= 1}
+                        className="px-3 py-1.5 rounded-lg border-2 border-[#1D3557] bg-white font-bold text-[#1D3557] text-sm disabled:opacity-40"
+                      >
+                        Back
+                      </button>
+                      <span className="text-sm font-bold text-[#1D3557]">Page {moneyStory.page} of {moneyStory.total_pages}</span>
+                      <button
+                        onClick={() => openMoneyStory(moneyStoryChild, Math.min(moneyStory.total_pages, moneyStoryPage + 1))}
+                        disabled={moneyStoryPage >= moneyStory.total_pages}
+                        className="px-3 py-1.5 rounded-lg border-2 border-[#1D3557] bg-white font-bold text-[#1D3557] text-sm disabled:opacity-40"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : null}
+          </DialogContent>
+        </Dialog>
+
       </main>
       <DashboardFooter />
     </div>

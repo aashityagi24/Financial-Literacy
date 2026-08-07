@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
-import { ChevronLeft, IndianRupee, ArrowDownCircle, ArrowUpCircle, Plus, Minus, Sparkles } from 'lucide-react';
+import { ChevronLeft, IndianRupee, ArrowDownCircle, ArrowUpCircle, Plus, Minus, Sparkles, ChevronRight } from 'lucide-react';
 import BackButton from '@/components/BackButton';
+import { MoneyBreakdownChart } from '@/components/MoneyBreakdownChart';
 import {
   Dialog,
   DialogContent,
@@ -12,56 +13,71 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 
-// Kid-friendly category picker for manual entries
-const SPEND_CATEGORIES = [
-  { key: 'toys', label: 'Toys', emoji: '🧸' },
-  { key: 'food', label: 'Food & Snacks', emoji: '🍎' },
-  { key: 'books', label: 'Books', emoji: '📚' },
-  { key: 'games', label: 'Games', emoji: '🎮' },
-  { key: 'clothes', label: 'Clothes', emoji: '👕' },
-  { key: 'charity', label: 'Charity', emoji: '❤️' },
-  { key: 'gift', label: 'A Gift', emoji: '🎁' },
-  { key: 'other', label: 'Something Else', emoji: '💸' },
+// The three ways to USE money
+const USE_BUCKETS = [
+  { key: 'spend', label: 'Spend', emoji: '🛍️', hint: 'Buy something', color: '#EE6C4D' },
+  { key: 'save', label: 'Save', emoji: '🐷', hint: 'Keep for later', color: '#06D6A0' },
+  { key: 'give', label: 'Give', emoji: '❤️', hint: 'Help others', color: '#9B5DE5' },
 ];
 
-const INCOME_CATEGORIES = [
-  { key: 'cash', label: 'Cash from Family', emoji: '💵' },
-  { key: 'gift', label: 'A Gift', emoji: '🎁' },
-  { key: 'found', label: 'Found Money', emoji: '🪙' },
-  { key: 'chore', label: 'Extra Chore', emoji: '🧹' },
-  { key: 'other', label: 'Something Else', emoji: '✨' },
-];
+const CATEGORIES = {
+  spend: [
+    { key: 'toys', label: 'Toys', emoji: '🧸' },
+    { key: 'food', label: 'Food & Snacks', emoji: '🍎' },
+    { key: 'books', label: 'Books', emoji: '📚' },
+    { key: 'games', label: 'Games', emoji: '🎮' },
+    { key: 'clothes', label: 'Clothes', emoji: '👕' },
+    { key: 'gift', label: 'A Gift', emoji: '🎁' },
+    { key: 'other', label: 'Something Else', emoji: '✨' },
+  ],
+  save: [
+    { key: 'goal', label: 'A Big Goal', emoji: '🎯' },
+    { key: 'later', label: 'For Later', emoji: '🔮' },
+    { key: 'emergency', label: 'Emergency', emoji: '🚨' },
+    { key: 'other', label: 'Just Saving', emoji: '🐷' },
+  ],
+  give: [
+    { key: 'charity', label: 'Charity', emoji: '❤️' },
+    { key: 'friend', label: 'A Friend', emoji: '🧑‍🤝‍🧑' },
+    { key: 'family', label: 'Family', emoji: '👪' },
+    { key: 'other', label: 'Something Else', emoji: '✨' },
+  ],
+  income: [
+    { key: 'cash', label: 'Cash from Family', emoji: '💵' },
+    { key: 'gift', label: 'A Gift', emoji: '🎁' },
+    { key: 'found', label: 'Found Money', emoji: '🪙' },
+    { key: 'other', label: 'Something Else', emoji: '✨' },
+  ],
+};
 
-// Icon + colour for each ledger entry
 const entryVisual = (entry) => {
-  const catEmoji = { toys: '🧸', food: '🍎', books: '📚', games: '🎮', clothes: '👕', charity: '❤️', gift: '🎁', cash: '💵', found: '🪙', chore: '🧹' };
+  const catEmoji = { toys: '🧸', food: '🍎', books: '📚', games: '🎮', clothes: '👕', charity: '❤️', gift: '🎁', cash: '💵', found: '🪙', goal: '🎯', later: '🔮', emergency: '🚨', friend: '🧑‍🤝‍🧑', family: '👪', piggybank: '🐷', giving: '💝' };
   const typeEmoji = {
     chore_reward: '🧹', job_payment: '💼', allowance: '📅', gift_received: '🎁',
     parent_gift: '🎁', parent_reward: '⭐', parent_penalty: '⚠️', parent_settlement: '💵',
-    manual_income: '✨', manual_spend: '🛍️',
+    manual_income: '✨', manual_spend: '🛍️', wallet_save: '🐷', wallet_give: '❤️', savings_contribution: '🎯',
   };
   return catEmoji[entry.category] || typeEmoji[entry.transaction_type] || (entry.direction === 'out' ? '🛍️' : '💰');
 };
 
 const formatDate = (iso) => {
   if (!iso) return '';
-  try {
-    return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  } catch {
-    return '';
-  }
+  try { return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+  catch { return ''; }
 };
 
 export default function MyWalletPage({ user }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [dialogType, setDialogType] = useState(null); // 'spend' | 'income' | null
+  const [page, setPage] = useState(1);
+  // dialog: null | { mode: 'use' | 'income', bucket: null | 'spend'|'save'|'give' }
+  const [dialog, setDialog] = useState(null);
   const [form, setForm] = useState({ amount: '', category: '', note: '' });
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = async (p = page) => {
     try {
-      const res = await axios.get(`${API}/wallet/my-wallet`);
+      const res = await axios.get(`${API}/wallet/my-wallet?page=${p}&page_size=10`);
       setData(res.data);
     } catch (e) {
       toast.error('Could not load your wallet');
@@ -70,38 +86,30 @@ export default function MyWalletPage({ user }) {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(page); /* eslint-disable-next-line */ }, [page]);
 
-  const openDialog = (type) => {
-    setForm({ amount: '', category: '', note: '' });
-    setDialogType(type);
-  };
+  const openUse = () => { setForm({ amount: '', category: '', note: '' }); setDialog({ mode: 'use', bucket: null }); };
+  const openIncome = () => { setForm({ amount: '', category: '', note: '' }); setDialog({ mode: 'income', bucket: null }); };
+
+  const activeBucket = dialog?.mode === 'income' ? 'income' : dialog?.bucket;
+  const categories = activeBucket ? CATEGORIES[activeBucket] : [];
 
   const submitEntry = async () => {
     const amount = parseFloat(form.amount);
-    if (!amount || amount <= 0) {
-      toast.error('Please enter how much');
-      return;
-    }
-    if (!form.category) {
-      toast.error('Please pick a reason');
-      return;
-    }
-    if (dialogType === 'spend' && amount > (data?.balance || 0)) {
-      toast.error("That's more than you have!");
-      return;
-    }
+    if (!amount || amount <= 0) { toast.error('Please enter how much'); return; }
+    if (!form.category) { toast.error('Please pick a reason'); return; }
+    const entryType = dialog.mode === 'income' ? 'income' : dialog.bucket;
+    if (entryType !== 'income' && amount > (data?.balance || 0)) { toast.error("That's more than you have!"); return; }
     setSubmitting(true);
     try {
       await axios.post(`${API}/wallet/my-wallet/entry`, {
-        entry_type: dialogType,
-        amount,
-        category: form.category,
-        note: form.note,
+        entry_type: entryType, amount, category: form.category, note: form.note,
       });
-      toast.success(dialogType === 'spend' ? 'Spending saved! 🛍️' : 'Money added! ✨');
-      setDialogType(null);
-      fetchData();
+      const msg = { spend: 'Spending saved! 🛍️', save: 'Saved! 🐷', give: 'Given! ❤️', income: 'Money added! ✨' }[entryType];
+      toast.success(msg);
+      setDialog(null);
+      setPage(1);
+      fetchData(1);
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Could not save entry');
     } finally {
@@ -122,7 +130,13 @@ export default function MyWalletPage({ user }) {
 
   const balance = data?.balance || 0;
   const entries = data?.entries || [];
-  const categories = dialogType === 'spend' ? SPEND_CATEGORIES : INCOME_CATEGORIES;
+  const totalPages = data?.total_pages || 1;
+
+  const dialogTitle = dialog?.mode === 'income'
+    ? '✨ I got money'
+    : dialog?.bucket
+      ? `${USE_BUCKETS.find(b => b.key === dialog.bucket)?.emoji} I want to ${dialog.bucket}`
+      : '💰 I used money';
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#E0FBFC] to-[#98C1D9]" data-testid="my-wallet-page">
@@ -173,19 +187,27 @@ export default function MyWalletPage({ user }) {
         {/* Action buttons */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           <button
-            onClick={() => openDialog('income')}
+            onClick={openIncome}
             className="py-3 font-bold rounded-2xl border-3 border-[#1D3557] bg-[#06D6A0] text-white hover:bg-[#05b88a] flex items-center justify-center gap-2 shadow-md hover:scale-[1.02] transition-transform"
             data-testid="add-income-btn"
           >
             <Plus className="w-5 h-5" /> I got money
           </button>
           <button
-            onClick={() => openDialog('spend')}
+            onClick={openUse}
             className="py-3 font-bold rounded-2xl border-3 border-[#1D3557] bg-[#EE6C4D] text-white hover:bg-[#e05a3b] flex items-center justify-center gap-2 shadow-md hover:scale-[1.02] transition-transform"
-            data-testid="add-spend-btn"
+            data-testid="use-money-btn"
           >
-            <Minus className="w-5 h-5" /> I spent money
+            <Minus className="w-5 h-5" /> I used money
           </button>
+        </div>
+
+        {/* Chart */}
+        <h2 className="text-lg font-bold text-[#1D3557] mb-3 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+          📊 Where my money went
+        </h2>
+        <div className="mb-6">
+          <MoneyBreakdownChart breakdown={data?.breakdown} />
         </div>
 
         {/* Ledger */}
@@ -197,119 +219,179 @@ export default function MyWalletPage({ user }) {
           <div className="card-playful p-8 text-center">
             <div className="text-4xl mb-3">👛</div>
             <p className="text-[#1D3557] font-bold mb-1">No entries yet</p>
-            <p className="text-sm text-[#3D5A80]">Money you earn and spend will show up here!</p>
+            <p className="text-sm text-[#3D5A80]">Money you earn and use will show up here!</p>
           </div>
         ) : (
-          <div className="space-y-2" data-testid="my-wallet-ledger">
-            {entries.map((e) => {
-              const isInfo = e.direction === 'info';
-              const isIn = e.direction === 'in';
-              return (
-                <div
-                  key={e.transaction_id}
-                  className={`flex items-center gap-3 p-3 rounded-2xl border-2 bg-white ${isInfo ? 'border-dashed border-[#98C1D9]' : 'border-[#1D3557]/10'}`}
-                  data-testid={`ledger-entry-${e.transaction_id}`}
-                >
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 ${isInfo ? 'bg-[#E0FBFC]' : isIn ? 'bg-[#06D6A0]/15' : 'bg-[#EE6C4D]/15'}`}>
-                    {entryVisual(e)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-[#1D3557] truncate">{e.title}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-[#3D5A80]">{formatDate(e.created_at)}</span>
-                      {e.is_manual && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E0FBFC] text-[#3D5A80] font-semibold">by me</span>
-                      )}
-                      {!isInfo && isIn && e.settlement_status !== 'paid' && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">waiting for payout</span>
-                      )}
+          <>
+            <div className="space-y-2" data-testid="my-wallet-ledger">
+              {entries.map((e) => {
+                const isInfo = e.direction === 'info';
+                const isIn = e.direction === 'in';
+                return (
+                  <div
+                    key={e.transaction_id}
+                    className={`flex items-center gap-3 p-3 rounded-2xl border-2 bg-white ${isInfo ? 'border-dashed border-[#98C1D9]' : 'border-[#1D3557]/10'}`}
+                    data-testid={`ledger-entry-${e.transaction_id}`}
+                  >
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 ${isInfo ? 'bg-[#E0FBFC]' : isIn ? 'bg-[#06D6A0]/15' : 'bg-[#EE6C4D]/15'}`}>
+                      {entryVisual(e)}
                     </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-[#1D3557] truncate">{e.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-[#3D5A80]">{formatDate(e.created_at)}</span>
+                        {e.is_manual && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E0FBFC] text-[#3D5A80] font-semibold">by me</span>
+                        )}
+                        {!isInfo && isIn && e.settlement_status !== 'paid' && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">waiting for payout</span>
+                        )}
+                      </div>
+                    </div>
+                    {isInfo ? (
+                      <span className="text-sm font-bold text-[#3D5A80] shrink-0">₹{Number(e.amount).toFixed(0)}</span>
+                    ) : (
+                      <span className={`text-lg font-bold shrink-0 ${isIn ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`} style={{ fontFamily: 'Fredoka' }}>
+                        {isIn ? '+' : '−'}₹{Number(e.amount).toFixed(0)}
+                      </span>
+                    )}
                   </div>
-                  {isInfo ? (
-                    <span className="text-sm font-bold text-[#3D5A80] shrink-0">💵 ₹{Number(e.amount).toFixed(0)}</span>
-                  ) : (
-                    <span className={`text-lg font-bold shrink-0 ${isIn ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`} style={{ fontFamily: 'Fredoka' }}>
-                      {isIn ? '+' : '−'}₹{Number(e.amount).toFixed(0)}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 mt-5" data-testid="my-wallet-pagination">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  className="px-4 py-2 rounded-xl border-2 border-[#1D3557] bg-white font-bold text-[#1D3557] disabled:opacity-40 flex items-center gap-1"
+                  data-testid="wallet-prev-page"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Back
+                </button>
+                <span className="text-sm font-bold text-[#1D3557]" data-testid="wallet-page-indicator">Page {page} of {totalPages}</span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="px-4 py-2 rounded-xl border-2 border-[#1D3557] bg-white font-bold text-[#1D3557] disabled:opacity-40 flex items-center gap-1"
+                  data-testid="wallet-next-page"
+                >
+                  Next <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </>
         )}
       </main>
 
-      {/* Add entry dialog */}
-      <Dialog open={!!dialogType} onOpenChange={(o) => { if (!o) setDialogType(null); }}>
+      {/* Add/Use dialog */}
+      <Dialog open={!!dialog} onOpenChange={(o) => { if (!o) setDialog(null); }}>
         <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-              {dialogType === 'spend' ? '🛍️ I spent money' : '✨ I got money'}
+              {dialogTitle}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div>
-              <label className="text-sm font-bold text-[#1D3557] mb-1 block">How much? (₹)</label>
-              <Input
-                type="number"
-                inputMode="numeric"
-                placeholder="e.g., 50"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                className="border-3 border-[#1D3557] rounded-xl text-lg"
-                data-testid="entry-amount-input"
-              />
-              {dialogType === 'spend' && (
-                <p className="text-xs text-[#3D5A80] mt-1">You have ₹{Number(balance).toFixed(0)} to spend.</p>
-              )}
-            </div>
 
-            <div>
-              <label className="text-sm font-bold text-[#1D3557] mb-2 block">
-                {dialogType === 'spend' ? 'What did you buy?' : 'Where did it come from?'}
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {categories.map((c) => (
+          {/* Step 1 for "use": pick Spend / Save / Give */}
+          {dialog?.mode === 'use' && !dialog?.bucket ? (
+            <div className="space-y-3 pt-2">
+              <p className="text-sm text-[#3D5A80]">What do you want to do with your money?</p>
+              <p className="text-xs text-[#3D5A80]">You have ₹{Number(balance).toFixed(0)}.</p>
+              <div className="grid grid-cols-1 gap-3">
+                {USE_BUCKETS.map((b) => (
                   <button
-                    key={c.key}
-                    onClick={() => setForm({ ...form, category: c.key })}
-                    className={`flex items-center gap-2 p-2.5 rounded-xl border-2 text-left font-semibold text-sm transition-colors ${form.category === c.key ? 'border-[#0EA5E9] bg-[#0EA5E9]/10 text-[#1D3557]' : 'border-[#1D3557]/15 bg-white text-[#3D5A80] hover:bg-[#E0FBFC]'}`}
-                    data-testid={`category-${c.key}`}
+                    key={b.key}
+                    onClick={() => { setForm({ amount: '', category: '', note: '' }); setDialog({ mode: 'use', bucket: b.key }); }}
+                    className="flex items-center gap-3 p-4 rounded-2xl border-3 text-left hover:scale-[1.01] transition-transform"
+                    style={{ borderColor: b.color, background: `${b.color}12` }}
+                    data-testid={`bucket-${b.key}`}
                   >
-                    <span className="text-lg">{c.emoji}</span> {c.label}
+                    <span className="text-3xl">{b.emoji}</span>
+                    <div>
+                      <p className="font-bold text-[#1D3557] text-lg">{b.label}</p>
+                      <p className="text-xs text-[#3D5A80]">{b.hint}</p>
+                    </div>
                   </button>
                 ))}
               </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Add a note (optional)</label>
-              <Input
-                placeholder={dialogType === 'spend' ? 'e.g., Ice cream with friends' : 'e.g., Birthday money from Grandma'}
-                value={form.note}
-                onChange={(e) => setForm({ ...form, note: e.target.value })}
-                className="border-3 border-[#1D3557] rounded-xl"
-                data-testid="entry-note-input"
-              />
-            </div>
-
-            <div className="flex gap-3 pt-1">
               <button
-                onClick={() => setDialogType(null)}
-                className="flex-1 py-3 font-bold rounded-xl border-3 border-[#1D3557] bg-white text-[#1D3557] hover:bg-[#E0FBFC]"
+                onClick={() => setDialog(null)}
+                className="w-full py-3 font-bold rounded-xl border-3 border-[#1D3557] bg-white text-[#1D3557] hover:bg-[#E0FBFC] mt-1"
               >
                 Cancel
               </button>
-              <button
-                onClick={submitEntry}
-                disabled={submitting}
-                className="flex-1 btn-primary py-3 disabled:opacity-50"
-                data-testid="entry-submit-btn"
-              >
-                {submitting ? 'Saving...' : 'Save'}
-              </button>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4 pt-2">
+              <div>
+                <label className="text-sm font-bold text-[#1D3557] mb-1 block">How much? (₹)</label>
+                <Input
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="e.g., 50"
+                  value={form.amount}
+                  onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                  className="border-3 border-[#1D3557] rounded-xl text-lg"
+                  data-testid="entry-amount-input"
+                />
+                {dialog?.mode !== 'income' && (
+                  <p className="text-xs text-[#3D5A80] mt-1">You have ₹{Number(balance).toFixed(0)} to use.</p>
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm font-bold text-[#1D3557] mb-2 block">
+                  {dialog?.mode === 'income' ? 'Where did it come from?'
+                    : dialog?.bucket === 'spend' ? 'What did you buy?'
+                    : dialog?.bucket === 'save' ? 'What are you saving for?'
+                    : 'Who did you help?'}
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {categories.map((c) => (
+                    <button
+                      key={c.key}
+                      onClick={() => setForm({ ...form, category: c.key })}
+                      className={`flex items-center gap-2 p-2.5 rounded-xl border-2 text-left font-semibold text-sm transition-colors ${form.category === c.key ? 'border-[#0EA5E9] bg-[#0EA5E9]/10 text-[#1D3557]' : 'border-[#1D3557]/15 bg-white text-[#3D5A80] hover:bg-[#E0FBFC]'}`}
+                      data-testid={`category-${c.key}`}
+                    >
+                      <span className="text-lg">{c.emoji}</span> {c.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-bold text-[#1D3557] mb-1 block">Add a note (optional)</label>
+                <Input
+                  placeholder="e.g., Ice cream with friends"
+                  value={form.note}
+                  onChange={(e) => setForm({ ...form, note: e.target.value })}
+                  className="border-3 border-[#1D3557] rounded-xl"
+                  data-testid="entry-note-input"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button
+                  onClick={() => dialog?.mode === 'use' ? setDialog({ mode: 'use', bucket: null }) : setDialog(null)}
+                  className="flex-1 py-3 font-bold rounded-xl border-3 border-[#1D3557] bg-white text-[#1D3557] hover:bg-[#E0FBFC]"
+                >
+                  {dialog?.mode === 'use' ? 'Back' : 'Cancel'}
+                </button>
+                <button
+                  onClick={submitEntry}
+                  disabled={submitting}
+                  className="flex-1 btn-primary py-3 disabled:opacity-50"
+                  data-testid="entry-submit-btn"
+                >
+                  {submitting ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

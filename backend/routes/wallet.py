@@ -228,6 +228,17 @@ async def transfer_money(transaction: TransactionCreate, request: Request):
         "description": transaction.description,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
+    # Real money leaving My Wallet toward Piggy Bank / Giving is part of the child's
+    # money story — tag it so it auto-appears in the My Wallet ledger & chart.
+    if transaction.from_account == "my_wallet" and transaction.to_account in ("savings", "gifting"):
+        bucket = "save" if transaction.to_account == "savings" else "give"
+        trans_doc["transaction_type"] = "wallet_save" if bucket == "save" else "wallet_give"
+        trans_doc["wallet_source"] = "my_wallet"
+        trans_doc["settlement_status"] = "paid"
+        trans_doc["bucket"] = bucket
+        trans_doc["amount"] = -abs(transaction.amount)
+        trans_doc["category"] = "piggybank" if bucket == "save" else "giving"
+        trans_doc["description"] = "Saved to Piggy Bank" if bucket == "save" else "Moved to Giving Jar"
     await db.transactions.insert_one(trans_doc)
     
     # Award "Money Mover" badge for first transfer
@@ -315,14 +326,22 @@ async def get_wallet_summary(request: Request):
 
 
 class MyWalletEntryCreate(BaseModel):
-    entry_type: str          # 'spend' | 'income'
+    entry_type: str          # 'spend' | 'save' | 'give' | 'income'
     amount: float
     category: str = "other"
     note: str = ""
 
 
+# Which outflow bucket a transaction belongs to (spend / save / give).
+_OUT_BUCKET_BY_TYPE = {
+    "manual_spend": "spend",
+    "wallet_save": "save",
+    "wallet_give": "give",
+}
+
+
 def _friendly_label(t: dict) -> str:
-    """Human-friendly title for an auto-generated my_wallet transaction."""
+    """Human-friendly title for a my_wallet transaction."""
     tt = t.get("transaction_type", "")
     labels = {
         "chore_reward": "Chore reward",
@@ -333,16 +352,135 @@ def _friendly_label(t: dict) -> str:
         "parent_reward": "Reward",
         "parent_penalty": "Penalty",
         "parent_settlement": "Parent paid you in cash",
+        "wallet_save": "Saved to Piggy Bank",
+        "wallet_give": "Moved to Giving Jar",
+        "savings_contribution": "Put toward a savings goal",
     }
     return t.get("description") or labels.get(tt, "Money entry")
 
 
-@router.get("/wallet/my-wallet")
-async def get_my_wallet(request: Request):
-    """Full 'My Wallet' money story for a child: real balance + every earning &
-    spend entry (auto-tracked chores/jobs/rewards/gifts + child-logged entries)."""
-    from services.auth import get_current_user
+async def _build_money_story(db, user_id: str, page: int = 1, page_size: int = 10) -> dict:
+    """Assemble a child's real-money story: balance, in/out totals, a spend/save/give
+    breakdown for the chart, and a paginated (newest-first) list of entries."""
     from services.wallet_sources import classify_source
+
+    acc = await db.wallet_accounts.find_one(
+        {"user_id": user_id, "account_type": "my_wallet"}, {"_id": 0, "balance": 1}
+    )
+    balance = float(acc.get("balance", 0) or 0) if acc else 0.0
+
+    raw = await db.transactions.find(
+        {"user_id": user_id}, {"_id": 0}
+    ).sort("created_at", -1).to_list(5000)
+
+    month_prefix = datetime.now(timezone.utc).strftime("%Y-%m")
+    all_entries = []
+    total_in = total_out = month_in = month_out = 0.0
+    pending_count = 0
+    # breakdown[bucket] = {"total": x, "categories": {cat: amount}}
+    breakdown = {b: {"total": 0.0, "categories": {}} for b in ("spend", "save", "give")}
+
+    for t in raw:
+        src = t.get("wallet_source") or classify_source(t.get("transaction_type", "") or t.get("type", ""))
+        if src != "my_wallet":
+            continue
+        tt = t.get("transaction_type", "")
+        amount = abs(float(t.get("amount", 0) or 0))
+        created = t.get("created_at", "") or ""
+        is_month = created.startswith(month_prefix)
+
+        # Informational rows: don't affect balance / totals / breakdown.
+        if tt in ("parent_settlement", "savings_contribution"):
+            all_entries.append({
+                "transaction_id": t.get("transaction_id"),
+                "direction": "info",
+                "bucket": "save" if tt == "savings_contribution" else "cash",
+                "amount": amount,
+                "transaction_type": tt,
+                "category": t.get("category") or ("save" if tt == "savings_contribution" else "cash"),
+                "title": _friendly_label(t),
+                "created_at": created,
+                "is_manual": False,
+                "settlement_status": "paid",
+            })
+            continue
+
+        bucket = t.get("bucket") or _OUT_BUCKET_BY_TYPE.get(tt)
+        raw_amount = float(t.get("amount", 0) or 0)
+        if bucket in ("spend", "save", "give"):
+            direction = "out"
+        else:
+            direction = "in" if raw_amount >= 0 else "out"
+            if direction == "out":
+                bucket = "spend"
+
+        if direction == "in":
+            total_in += amount
+            if is_month:
+                month_in += amount
+            if t.get("settlement_status") != "paid":
+                pending_count += 1
+            cat = "income"
+        else:
+            total_out += amount
+            if is_month:
+                month_out += amount
+            cat = (t.get("category") or "other").lower()
+            b = breakdown[bucket]
+            b["total"] += amount
+            b["categories"][cat] = b["categories"].get(cat, 0.0) + amount
+
+        all_entries.append({
+            "transaction_id": t.get("transaction_id"),
+            "direction": direction,
+            "bucket": bucket if direction == "out" else "income",
+            "amount": amount,
+            "transaction_type": tt,
+            "category": (t.get("category") or ("income" if direction == "in" else "other")),
+            "title": _friendly_label(t),
+            "created_at": created,
+            "is_manual": tt in ("manual_income", "manual_spend", "wallet_save", "wallet_give"),
+            "settlement_status": t.get("settlement_status", "paid"),
+        })
+
+    # Shape breakdown into a chart-friendly list.
+    breakdown_out = {}
+    for b, data in breakdown.items():
+        breakdown_out[b] = {
+            "total": round(data["total"], 2),
+            "categories": sorted(
+                [{"category": c, "amount": round(a, 2)} for c, a in data["categories"].items()],
+                key=lambda x: -x["amount"],
+            ),
+        }
+
+    total_entries = len(all_entries)
+    page = max(1, int(page or 1))
+    page_size = max(1, int(page_size or 10))
+    total_pages = max(1, (total_entries + page_size - 1) // page_size)
+    start = (page - 1) * page_size
+    page_entries = all_entries[start:start + page_size]
+
+    return {
+        "balance": balance,
+        "total_in": round(total_in, 2),
+        "total_out": round(total_out, 2),
+        "month_in": round(month_in, 2),
+        "month_out": round(month_out, 2),
+        "pending_count": pending_count,
+        "breakdown": breakdown_out,
+        "entries": page_entries,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+        "total_entries": total_entries,
+    }
+
+
+@router.get("/wallet/my-wallet")
+async def get_my_wallet(request: Request, page: int = 1, page_size: int = 10):
+    """Full 'My Wallet' money story for the current child."""
+    from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
     user_id = user["user_id"]
@@ -357,83 +495,34 @@ async def get_my_wallet(request: Request):
             "user_id": user_id, "account_type": "my_wallet", "balance": 0.0,
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
-        balance = 0.0
-    else:
-        balance = float(acc.get("balance", 0) or 0)
 
-    raw = await db.transactions.find(
-        {"user_id": user_id}, {"_id": 0}
-    ).sort("created_at", -1).to_list(2000)
+    return await _build_money_story(db, user_id, page, page_size)
 
-    month_prefix = datetime.now(timezone.utc).strftime("%Y-%m")
-    entries = []
-    total_in = total_out = month_in = month_out = 0.0
-    pending_count = 0
-    for t in raw:
-        src = t.get("wallet_source") or classify_source(t.get("transaction_type", "") or t.get("type", ""))
-        if src != "my_wallet":
-            continue
-        tt = t.get("transaction_type", "")
-        amount = float(t.get("amount", 0) or 0)
-        created = t.get("created_at", "") or ""
-        is_month = created.startswith(month_prefix)
 
-        if tt == "parent_settlement":
-            # Informational only — doesn't change balance or in/out totals.
-            entries.append({
-                "transaction_id": t.get("transaction_id"),
-                "direction": "info",
-                "amount": abs(amount),
-                "transaction_type": tt,
-                "category": "cash",
-                "title": _friendly_label(t),
-                "created_at": created,
-                "is_manual": False,
-                "settlement_status": "paid",
-            })
-            continue
+@router.get("/parent/child/{child_id}/money-story")
+async def get_child_money_story(child_id: str, request: Request, page: int = 1, page_size: int = 10):
+    """Parent view of a linked child's real-money story (balance, breakdown, entries)."""
+    from services.auth import require_parent
+    db = get_db()
+    parent = await require_parent(request)
 
-        direction = "in" if amount >= 0 else "out"
-        if direction == "in":
-            total_in += amount
-            if is_month:
-                month_in += amount
-            if t.get("settlement_status") != "paid":
-                pending_count += 1
-        else:
-            total_out += abs(amount)
-            if is_month:
-                month_out += abs(amount)
+    link = await db.parent_child_links.find_one({
+        "parent_id": parent["user_id"], "child_id": child_id, "status": "active"
+    })
+    if not link:
+        raise HTTPException(status_code=403, detail="Not authorized for this child")
 
-        entries.append({
-            "transaction_id": t.get("transaction_id"),
-            "direction": direction,
-            "amount": abs(amount),
-            "transaction_type": tt,
-            "category": t.get("category") or ("spend" if direction == "out" else "income"),
-            "title": _friendly_label(t),
-            "created_at": created,
-            "is_manual": tt in ("manual_income", "manual_spend"),
-            "settlement_status": t.get("settlement_status", "paid"),
-        })
-
-    return {
-        "balance": balance,
-        "total_in": total_in,
-        "total_out": total_out,
-        "month_in": month_in,
-        "month_out": month_out,
-        "pending_count": pending_count,
-        "entries": entries,
-    }
+    child = await db.users.find_one({"user_id": child_id}, {"_id": 0, "name": 1, "username": 1})
+    story = await _build_money_story(db, child_id, page, page_size)
+    story["child_name"] = (child or {}).get("name") or (child or {}).get("username") or "Your child"
+    return story
 
 
 @router.post("/wallet/my-wallet/entry")
 async def add_my_wallet_entry(body: MyWalletEntryCreate, request: Request):
-    """Child logs a manual money entry against their real My Wallet balance.
-
-    entry_type 'spend' decreases the balance; 'income' increases it. Both are
-    recorded on the my_wallet ledger (settled — it's the child's own money)."""
+    """Child logs how they USED their real money — Spend, Save or Give — or records
+    money they GOT. Spend money is gone; Save moves it to the Piggy Bank; Give moves
+    it to the Giving Jar; income increases the balance. All are settled (own money)."""
     from services.auth import get_current_user
     db = get_db()
     user = await get_current_user(request)
@@ -441,8 +530,8 @@ async def add_my_wallet_entry(body: MyWalletEntryCreate, request: Request):
         raise HTTPException(status_code=403, detail="Only children can log wallet entries")
     user_id = user["user_id"]
 
-    if body.entry_type not in ("spend", "income"):
-        raise HTTPException(status_code=400, detail="entry_type must be 'spend' or 'income'")
+    if body.entry_type not in ("spend", "save", "give", "income"):
+        raise HTTPException(status_code=400, detail="entry_type must be spend, save, give or income")
     amount = round(float(body.amount or 0), 2)
     if amount <= 0:
         raise HTTPException(status_code=400, detail="Amount must be greater than zero")
@@ -450,32 +539,54 @@ async def add_my_wallet_entry(body: MyWalletEntryCreate, request: Request):
     acc = await db.wallet_accounts.find_one({"user_id": user_id, "account_type": "my_wallet"})
     balance = float(acc.get("balance", 0) or 0) if acc else 0.0
 
-    if body.entry_type == "spend" and amount > balance:
+    if body.entry_type in ("spend", "save", "give") and amount > balance:
         raise HTTPException(status_code=400, detail="You don't have that much in your wallet")
 
-    delta = amount if body.entry_type == "income" else -amount
-    await db.wallet_accounts.update_one(
-        {"user_id": user_id, "account_type": "my_wallet"},
-        {"$inc": {"balance": delta},
-         "$setOnInsert": {"account_id": f"acc_{uuid.uuid4().hex[:12]}", "user_id": user_id, "account_type": "my_wallet"}},
-        upsert=True,
-    )
-
     now = datetime.now(timezone.utc).isoformat()
+
+    if body.entry_type == "income":
+        await db.wallet_accounts.update_one(
+            {"user_id": user_id, "account_type": "my_wallet"},
+            {"$inc": {"balance": amount},
+             "$setOnInsert": {"account_id": f"acc_{uuid.uuid4().hex[:12]}", "user_id": user_id, "account_type": "my_wallet"}},
+            upsert=True,
+        )
+        tx = {
+            "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+            "user_id": user_id, "amount": amount,
+            "transaction_type": "manual_income", "wallet_source": "my_wallet",
+            "settlement_status": "paid", "bucket": "income",
+            "category": (body.category or "other").strip().lower(),
+            "description": (body.note or "").strip() or "Money added", "created_at": now,
+        }
+        await db.transactions.insert_one(tx)
+        return {"message": "Entry added", "transaction_id": tx["transaction_id"], "balance": balance + amount}
+
+    # Outflow: spend / save / give. Always leaves my_wallet; save/give land in a jar.
+    await db.wallet_accounts.update_one(
+        {"user_id": user_id, "account_type": "my_wallet"}, {"$inc": {"balance": -amount}}
+    )
+    dest = {"save": "savings", "give": "gifting"}.get(body.entry_type)
+    if dest:
+        await db.wallet_accounts.update_one(
+            {"user_id": user_id, "account_type": dest},
+            {"$inc": {"balance": amount},
+             "$setOnInsert": {"account_id": f"acc_{uuid.uuid4().hex[:12]}", "user_id": user_id, "account_type": dest}},
+            upsert=True,
+        )
+
+    tx_type = {"spend": "manual_spend", "save": "wallet_save", "give": "wallet_give"}[body.entry_type]
+    default_desc = {"spend": "Money spent", "save": "Saved to Piggy Bank", "give": "Moved to Giving Jar"}[body.entry_type]
     tx = {
         "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
-        "user_id": user_id,
-        "amount": delta,
-        "transaction_type": "manual_income" if body.entry_type == "income" else "manual_spend",
-        "wallet_source": "my_wallet",
-        "settlement_status": "paid",
+        "user_id": user_id, "amount": -amount,
+        "transaction_type": tx_type, "wallet_source": "my_wallet",
+        "settlement_status": "paid", "bucket": body.entry_type,
         "category": (body.category or "other").strip().lower(),
-        "description": (body.note or "").strip() or ("Money added" if body.entry_type == "income" else "Money spent"),
-        "created_at": now,
+        "description": (body.note or "").strip() or default_desc, "created_at": now,
     }
     await db.transactions.insert_one(tx)
-
-    return {"message": "Entry added", "transaction_id": tx["transaction_id"], "balance": balance + delta}
+    return {"message": "Entry added", "transaction_id": tx["transaction_id"], "balance": balance - amount}
 
 
 

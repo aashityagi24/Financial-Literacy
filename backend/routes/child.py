@@ -248,7 +248,11 @@ async def contribute_to_goal(goal_id: str, request: Request):
         "from_account": "savings",
         "amount": amount,
         "transaction_type": "savings_contribution",
-        "description": f"Contribution to: {goal['title']}",
+        "wallet_source": "my_wallet",
+        "settlement_status": "paid",
+        "bucket": "save",
+        "category": "piggybank",
+        "description": f"Put ₹{amount:.0f} toward: {goal['title']}",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     

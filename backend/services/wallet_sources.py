@@ -21,6 +21,8 @@ MY_WALLET_TX_TYPES = {
     "parent_settlement",  # the settlement record itself stays on my_wallet ledger
     "manual_income",   # child-logged "I got money" entry
     "manual_spend",    # child-logged "I spent money" entry
+    "wallet_save",     # real money moved into the Piggy Bank (savings jar)
+    "wallet_give",     # real money moved into the Giving jar
 }
 
 
