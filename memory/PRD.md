@@ -1246,3 +1246,10 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Phone surfaces in Admin → Users table (new "Phone" column) and in a new "CSV" download button on the Users toolbar (includes Phone, Subscription Status, Sign Up & Last Login dates).
   - Regression suite: `/app/backend/tests/test_signup_phone.py` — 5 tests covering required field, invalid formats, valid variants normalization, leading-digit rule, and admin payload exposure. 20/20 tests across all suites green.
 
+
+- **Playful Savings Goal progress bar** (June 2026)
+  - Redesigned the Savings Goals progress bar in `/app/frontend/src/pages/SavingsGoalsPage.jsx` to be highly visual & exciting per user request.
+  - Features: striped animated green fill (moving stripes), a bouncing 🪙 coin marker that slides to the % position, milestone flag markers at 25/50/75%, a centered % label, and motivational milestone messages ("You're on your way!" → "Halfway there!" → "Almost there — keep going!" → "Goal reached!").
+  - Completed goal cards now burst with falling confetti (🎉⭐🪙🎊💫🏆); a rainbow shimmer variant kicks in at 100%.
+  - CSS animations added to `/app/frontend/src/index.css` (`.goal-track`, `.goal-fill`, `.goal-coin`, `.goal-milestone`, `.goal-confetti` + keyframes).
+  - Verified visually with seeded goals on `wallet_demo_child` at 15% / 53% / 80% / completed — all percentages compute correctly.

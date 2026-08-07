@@ -314,7 +314,15 @@ export default function SavingsGoalsPage({ user }) {
                   {activeGoals.map((goal) => {
                     const progress = Math.min(((goal.current_amount || 0) / goal.target_amount) * 100, 100);
                     const remaining = goal.target_amount - (goal.current_amount || 0);
-                    
+                    const milestoneMsg =
+                      progress >= 100 ? '🎉 Goal reached! Amazing!' :
+                      progress >= 75 ? '🔥 Almost there — keep going!' :
+                      progress >= 50 ? '💪 Halfway there!' :
+                      progress >= 25 ? '🌟 Great start!' :
+                      progress > 0 ? '🚀 You\'re on your way!' :
+                      '🐷 Start saving!';
+                    const coinLeft = `${Math.min(Math.max(progress, 4), 96)}%`;
+
                     return (
                       <div key={goal.goal_id} className="card-playful p-5">
                         <div className="flex gap-4">
@@ -337,24 +345,32 @@ export default function SavingsGoalsPage({ user }) {
                             )}
                             
                             <div className="mt-3">
-                              {/* Exciting animated progress bar */}
-                              <div className="relative w-full h-7 bg-[#E0FBFC] rounded-full border-2 border-[#1D3557]/15 overflow-hidden" data-testid={`goal-progress-bar-${goal.goal_id}`}>
+                              {/* Exciting animated progress bar with moving coin & milestones */}
+                              <div className="goal-track" data-testid={`goal-progress-bar-${goal.goal_id}`}>
+                                {/* milestone flags */}
+                                {[25, 50, 75].map((m) => (
+                                  <span
+                                    key={m}
+                                    className={`goal-milestone ${progress >= m ? 'reached' : ''}`}
+                                    style={{ left: `${m}%` }}
+                                  />
+                                ))}
                                 <div
-                                  className="h-full rounded-full bg-gradient-to-r from-[#06D6A0] to-[#22c55e] transition-all duration-700 ease-out flex items-center justify-end"
-                                  style={{ width: `${Math.max(progress, 6)}%` }}
-                                >
-                                  {progress >= 12 && (
-                                    <span className="text-sm mr-1.5 drop-shadow-sm" role="img" aria-label="coin">🪙</span>
-                                  )}
-                                </div>
+                                  className={`goal-fill ${progress >= 100 ? 'is-complete' : ''}`}
+                                  style={{ width: `${Math.max(progress, 4)}%` }}
+                                />
+                                {/* moving coin marker */}
+                                <span className="goal-coin" style={{ left: coinLeft }} role="img" aria-label="coin">🪙</span>
                                 <span
-                                  className={`absolute inset-0 flex items-center justify-center text-xs font-extrabold ${progress > 55 ? 'text-white' : 'text-[#1D3557]'}`}
-                                  style={{ fontFamily: 'Fredoka' }}
+                                  className={`goal-pct-label ${progress > 52 ? 'text-white' : 'text-[#1D3557]'}`}
                                   data-testid={`goal-progress-pct-${goal.goal_id}`}
                                 >
-                                  {progress >= 100 ? '🎉 Goal reached!' : `${Math.round(progress)}% there!`}
+                                  {Math.round(progress)}%
                                 </span>
                               </div>
+                              <p className="text-center text-sm font-bold text-[#1D3557] mt-2" style={{ fontFamily: 'Fredoka' }} data-testid={`goal-milestone-msg-${goal.goal_id}`}>
+                                {milestoneMsg}
+                              </p>
                               <div className="flex items-center justify-between text-sm mt-2">
                                 <span className="text-[#06D6A0] font-bold">₹{(goal.current_amount || 0).toFixed(0)} saved</span>
                                 <span className="text-[#EE6C4D] font-medium">₹{remaining.toFixed(0)} to go</span>
@@ -407,7 +423,16 @@ export default function SavingsGoalsPage({ user }) {
                 </h2>
                 <div className="space-y-4">
                   {completedGoals.map((goal) => (
-                    <div key={goal.goal_id} className="card-playful p-5 bg-[#06D6A0]/10 border-[#06D6A0]">
+                    <div key={goal.goal_id} className="card-playful p-5 bg-[#06D6A0]/10 border-[#06D6A0] relative overflow-hidden">
+                      {[8, 24, 42, 60, 78, 92].map((left, i) => (
+                        <span
+                          key={i}
+                          className="goal-confetti"
+                          style={{ left: `${left}%`, animationDelay: `${i * 0.35}s` }}
+                        >
+                          {['🎉', '⭐', '🪙', '🎊', '💫', '🏆'][i]}
+                        </span>
+                      ))}
                       <div className="flex gap-4 items-center">
                         {goal.image_url ? (
                           <img 
