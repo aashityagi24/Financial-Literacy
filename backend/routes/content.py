@@ -364,7 +364,7 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
     return parent_topics
 
 @router.get("/content/topics/{topic_id}")
-async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int] = None):
+async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int] = None, highlight: Optional[str] = None):
     """Get topic details with content items"""
     from services.auth import get_current_user
     import logging
@@ -632,6 +632,26 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
     # Filter out empty subtopics for non-admin users
     if not is_admin:
         subtopics = [st for st in subtopics if st.get("content_count", 0) > 0]
+    
+    # A specifically requested item (e.g. a child opening assigned homework)
+    # must always be reachable & highlightable, even if it falls outside the
+    # grade / visibility filters that normally gate the topic view.
+    if highlight and not any(c["content_id"] == highlight for c in content_items):
+        hi = await db.content_items.find_one(
+            {"content_id": highlight, "topic_id": topic_id}, {"_id": 0}
+        )
+        if hi and (is_admin or hi.get("is_published")):
+            hi["is_unlocked"] = True
+            prog = None
+            if user_id:
+                prog = await db.user_content_progress.find_one(
+                    {"user_id": user_id, "content_id": highlight, "completed": True},
+                    {"_id": 0, "coins_earned": 1}
+                )
+            hi["is_completed"] = prog is not None
+            hi["done_in_class"] = False
+            hi["coins_earned"] = prog.get("coins_earned") if prog else None
+            content_items.insert(0, hi)
     
     return {"topic": topic, "subtopics": subtopics, "content_items": content_items}
 

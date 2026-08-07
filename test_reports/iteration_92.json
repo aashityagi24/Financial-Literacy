@@ -1,0 +1,20 @@
+{
+  "summary": "Verified Homework Open->highlight fix. Backend: 4/4 pytest tests pass (topic without highlight excludes grade-mismatched item; with highlight injects it; /api/child/homework returns resolved topic_ids for all 3 seeded HW items; Candy Shop topic includes candy content). Frontend: logged in as classmate_g3, dashboard 'My Homework' widget shows 3 pending items ('3 to do'). Clicked Open on both worksheet/video HW and Start on the Candy Shop activity HW - all three navigated to /learn/topic/<topic_id>?highlight=<content_id> and rendered the homework-highlight-badge on the assigned item, including the grade-excluded worksheet (regression case).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_homework_highlight.py",
+    "/app/test_reports/pytest/homework_highlight.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "ChildHomework.jsx renders a 'Start' button (data-testid=homework-start-<id>) for is_activity homework instead of 'Open' (data-testid=homework-open-<id>). The review spec referenced only homework-open-<id>; if QA/tests key off that testid pattern they will miss activity-type homework. Consider standardising testid to `homework-open-<id>` regardless of button label, or documenting both."
+  ],
+  "updated_files": ["/app/backend/tests/test_homework_highlight.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "classmate_g3 / testpass123",
+  "seed_data_creation": "None - used existing seeded HW items (hw_gradeexcl_test, hw_ae13b88455b0 (Testing), hw_c63a55c16008 (Candy Shop)).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Login endpoint returns `session_token` (not access_token); backend accepts it via Authorization: Bearer <session_token> header OR session_token cookie. Topic detail response shape uses keys: topic, subtopics, content_items."
+}

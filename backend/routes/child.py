@@ -1286,6 +1286,16 @@ async def get_child_homework(request: Request):
     ).sort("assigned_at", -1).to_list(200)
 
     today = datetime.now(timezone.utc).date().isoformat()
+    # Resolve each homework's CURRENT topic_id from the live content item so a
+    # moved/re-parented content still opens the correct topic (stale topic_id
+    # on the assignment would otherwise land the child on the wrong topic).
+    content_ids = list({hw.get("content_id") for hw in hws if hw.get("content_id")})
+    content_topic_map = {}
+    if content_ids:
+        async for ci in db.content_items.find(
+            {"content_id": {"$in": content_ids}}, {"_id": 0, "content_id": 1, "topic_id": 1}
+        ):
+            content_topic_map[ci["content_id"]] = ci.get("topic_id")
     result = []
     for hw in hws:
         is_activity = hw.get("content_type") == "activity"
@@ -1309,7 +1319,7 @@ async def get_child_homework(request: Request):
             "content_id": hw["content_id"],
             "content_type": hw.get("content_type"),
             "content_title": hw.get("content_title"),
-            "topic_id": hw.get("topic_id"),
+            "topic_id": content_topic_map.get(hw["content_id"]) or hw.get("topic_id"),
             "classroom_name": hw.get("classroom_name"),
             "due_date": hw.get("due_date"),
             "assigned_at": hw.get("assigned_at"),

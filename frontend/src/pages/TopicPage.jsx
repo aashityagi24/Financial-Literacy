@@ -324,8 +324,15 @@ export default function TopicPage({ user }) {
     try {
       // Build API URL with grade filter for teachers/parents
       let url = `${API}/content/topics/${topicId}`;
+      const params = [];
       if (gradeFilter !== null && gradeFilter !== undefined) {
-        url += `?grade=${gradeFilter}`;
+        params.push(`grade=${gradeFilter}`);
+      }
+      if (highlightId) {
+        params.push(`highlight=${highlightId}`);
+      }
+      if (params.length) {
+        url += `?${params.join('&')}`;
       }
       const res = await axios.get(url);
       setTopic(res.data);
