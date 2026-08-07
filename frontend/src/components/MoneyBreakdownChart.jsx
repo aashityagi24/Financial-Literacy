@@ -76,7 +76,6 @@ export const MoneyBreakdownChart = ({ breakdown }) => {
                 <span className="text-lg">{meta.emoji}</span>
                 <span className="font-bold text-[#1D3557] text-sm flex-1">{meta.label}</span>
                 <span className="font-bold text-[#1D3557] text-sm">₹{val.toFixed(0)}</span>
-                <span className="text-xs text-[#3D5A80] w-10 text-right">{Math.round(pct(val))}%</span>
               </div>
             );
           })}

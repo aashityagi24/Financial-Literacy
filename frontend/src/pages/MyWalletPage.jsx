@@ -451,7 +451,6 @@ export default function MyWalletPage({ user }) {
                       <span className="text-lg">🐷</span> General Piggy Bank
                     </button>
                     {goals.map((g) => {
-                      const pct = g.target_amount ? Math.min(Math.round(((g.current_amount || 0) / g.target_amount) * 100), 100) : 0;
                       return (
                         <button
                           key={g.goal_id}
@@ -461,7 +460,7 @@ export default function MyWalletPage({ user }) {
                         >
                           <span className="text-lg">🎯</span>
                           <span className="flex-1 truncate">{g.title}</span>
-                          <span className="text-xs text-[#3D5A80]">{pct}%</span>
+                          <span className="text-xs text-[#3D5A80] shrink-0">₹{Number(g.current_amount || 0).toFixed(0)} of ₹{Number(g.target_amount || 0).toFixed(0)}</span>
                         </button>
                       );
                     })}
