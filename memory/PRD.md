@@ -944,7 +944,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 
 
 ## Recently Completed
-- **Change Password for all users + School Dashboard user management** (June 2026)
+- **Fix: wrong-password login bounced user to landing page** (June 2026)
+  - Reported: entering an incorrect password refreshed to the home/landing page instead of showing an error and staying on sign-in — confusing the user.
+  - Root cause: the global axios 401 response interceptor (`App.js`) redirected to `/?session_expired=true` on ANY 401, including wrong-password login attempts (login is `/login`, which wasn't excluded), pre-empting AuthPage's own error toast.
+  - Fix: the interceptor now returns early (no redirect) when the failing request is an auth attempt (`/api/auth/login|admin-login|school-login|signup|register`) and also excludes the `/login` path. AuthPage's catch block shows the error toast and keeps the user on the page.
+  - Verified 100% by testing agent (iteration_90, frontend 3/3): wrong password (email + username identifiers) stays on /login with an error; correct login still navigates to the dashboard.
+
   - **Profile/Change Password**: the Security → Change Password card now shows for children and teachers (was parent-only); Teacher dashboard gained a Profile button → `/profile`. `/api/auth/me` now returns `has_password` so the UI knows whether to ask for the current password (reuses existing `PUT /api/auth/change-password`; no auth logic changed).
   - **School Dashboard delete** (full account delete, behind a Confirm-Delete popup): `DELETE /api/school/users/{id}` — teacher delete removes teacher + their class(es) but keeps students (they become classless); student delete removes the student; parent delete keeps their children.
   - **Class codes**: Teachers tab shows each teacher's class code; Students tab shows the student's class code, and classless students get an **Assign class** action (`POST /api/school/students/{id}/assign-class`) to enrol into an existing class. Dashboard payload now includes `join_code`, `parents[]`, and `classrooms[]`.
