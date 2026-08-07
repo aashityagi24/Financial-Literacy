@@ -1253,3 +1253,9 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Completed goal cards now burst with falling confetti (🎉⭐🪙🎊💫🏆); a rainbow shimmer variant kicks in at 100%.
   - CSS animations added to `/app/frontend/src/index.css` (`.goal-track`, `.goal-fill`, `.goal-coin`, `.goal-milestone`, `.goal-confetti` + keyframes).
   - Verified visually with seeded goals on `wallet_demo_child` at 15% / 53% / 80% / completed — all percentages compute correctly.
+
+- **Homework "Open" → correct topic + highlight (bug fix, Aug 7, 2026)**
+  - Bug: clicking "Open" on a child's homework card landed on a random/wrong topic and didn't highlight the assigned item.
+  - Root causes: (1) the homework content could be removed by the topic view's grade/visibility filters; (2) a stale `topic_id` stored on the homework assignment.
+  - Fix: `GET /api/content/topics/{topic_id}` now takes an optional `highlight` param that force-includes that content item (published-only) even if outside grade/visibility filters; `GET /api/child/homework` resolves each item's CURRENT `topic_id` from the live content doc; `TopicPage.jsx` forwards the `highlight` param.
+  - Verified by testing agent (iteration_92.json): backend 4/4 pytest (`/app/backend/tests/test_homework_highlight.py`), frontend click-through highlights all 3 homework items including the grade-excluded regression case. 100% pass.
