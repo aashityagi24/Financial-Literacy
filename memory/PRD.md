@@ -1266,3 +1266,10 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Kids can log manual entries: "I got money" (income → increases balance) and "I spent money" (spend → decreases balance), each with icon categories + optional note. Overspend and amount<=0 rejected client + server side.
   - Backend (`routes/wallet.py`): `GET /api/wallet/my-wallet` (balance + summary + entries) and `POST /api/wallet/my-wallet/entry` (records transaction wallet_source='my_wallet', settlement_status='paid', new types manual_income/manual_spend added to `services/wallet_sources.py`). parent_settlement rows shown as neutral info entries.
   - Verified by testing agent (iteration_93.json): backend 6/6 pytest + full frontend flows, 100% pass. Regression: `/app/backend/tests/test_my_wallet.py`.
+
+- **My Wallet: Use money (Spend/Save/Give) + auto-tracking + pagination + chart (Aug 7, 2026)**
+  - "I used money" replaces "I spent money": two-step dialog — pick Spend / Save / Give, then amount + category + note. Save moves my_wallet→Piggy Bank jar, Give moves my_wallet→Giving jar, Spend just deducts. "I got money" adds income.
+  - Auto-tracking: my_wallet→savings transfers tagged 'save' (wallet_save), my_wallet→gifting tagged 'give' (wallet_give); savings-goal contributions appear as informational 'save' entries. Parent chores/jobs/rewards/gifts/allowance already inflow.
+  - Ledger paginated 10/page, newest first (Back/Next). Backend GET /api/wallet/my-wallet?page=&page_size= returns balance, in/out totals, breakdown{spend,save,give with sub-categories}, entries, page, total_pages.
+  - Colourful donut chart (`components/MoneyBreakdownChart.jsx`) shows Spend/Save/Give split + sub-category chips. Visible to child (/my-wallet) and parent (ParentDashboard 'Money Story' panel/dialog via GET /api/parent/child/{child_id}/money-story).
+  - Verified by testing agent (iteration_94.json): backend 11/11 pytest + all frontend flows (child spend/save/give/income, validation, pagination, parent dialog + chart) 100% pass. Regression: /app/backend/tests/test_my_wallet.py.

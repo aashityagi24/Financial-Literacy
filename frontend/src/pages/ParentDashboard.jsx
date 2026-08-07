@@ -3020,14 +3020,16 @@ export default function ParentDashboard({ user }) {
                         onClick={() => openMoneyStory(moneyStoryChild, Math.max(1, moneyStoryPage - 1))}
                         disabled={moneyStoryPage <= 1}
                         className="px-3 py-1.5 rounded-lg border-2 border-[#1D3557] bg-white font-bold text-[#1D3557] text-sm disabled:opacity-40"
+                        data-testid="money-story-prev-page"
                       >
                         Back
                       </button>
-                      <span className="text-sm font-bold text-[#1D3557]">Page {moneyStory.page} of {moneyStory.total_pages}</span>
+                      <span className="text-sm font-bold text-[#1D3557]" data-testid="money-story-page-indicator">Page {moneyStory.page} of {moneyStory.total_pages}</span>
                       <button
                         onClick={() => openMoneyStory(moneyStoryChild, Math.min(moneyStory.total_pages, moneyStoryPage + 1))}
                         disabled={moneyStoryPage >= moneyStory.total_pages}
                         className="px-3 py-1.5 rounded-lg border-2 border-[#1D3557] bg-white font-bold text-[#1D3557] text-sm disabled:opacity-40"
+                        data-testid="money-story-next-page"
                       >
                         Next
                       </button>
