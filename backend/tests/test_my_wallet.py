@@ -183,3 +183,243 @@ def test_parent_unlinked_forbidden(parent_client):
     session, _ = parent_client
     r = session.get(f"{API}/parent/child/nonexistent_child_xyz/money-story")
     assert r.status_code == 403
+
+
+# ============================================================
+# NEW FEATURES: Save-to-goal, Undo/Delete, Edit/Fix, Guards
+# ============================================================
+
+def _get_goals(child_client):
+    r = child_client.get(f"{API}/child/savings-goals")
+    assert r.status_code == 200, r.text
+    return [g for g in r.json() if not g.get("completed")]
+
+
+def _get_balance(child_client):
+    return child_client.get(f"{API}/wallet/my-wallet").json()["balance"]
+
+
+def _get_goal(child_client, goal_id):
+    goals = child_client.get(f"{API}/child/savings-goals").json()
+    return next((g for g in goals if g.get("goal_id") == goal_id), None)
+
+
+def _ensure_balance(child_client, needed):
+    """Top up my_wallet with income if balance too low."""
+    bal = _get_balance(child_client)
+    if bal < needed:
+        child_client.post(f"{API}/wallet/my-wallet/entry",
+                          json={"entry_type": "income", "amount": (needed - bal) + 50,
+                                "category": "cash", "note": "TEST_topup"})
+
+
+# Save into a specific goal increments that goal's current_amount and decreases my_wallet
+def test_save_to_specific_goal(child_client):
+    goals = _get_goals(child_client)
+    assert goals, "No active savings goals seeded"
+    goal = goals[0]
+    goal_id = goal["goal_id"]
+    _ensure_balance(child_client, 30)
+    bal_before = _get_balance(child_client)
+    goal_before = float(goal.get("current_amount", 0) or 0)
+
+    r = child_client.post(f"{API}/wallet/my-wallet/entry",
+                          json={"entry_type": "save", "amount": 15, "goal_id": goal_id,
+                                "note": "TEST_save_goal"})
+    assert r.status_code == 200, r.text
+
+    goal_after = float(_get_goal(child_client, goal_id).get("current_amount", 0) or 0)
+    bal_after = _get_balance(child_client)
+    assert round(goal_after - goal_before, 2) == 15.0
+    assert round(bal_before - bal_after, 2) == 15.0
+
+    top = child_client.get(f"{API}/wallet/my-wallet").json()["entries"][0]
+    assert top["is_manual"] is True
+    assert top["bucket"] == "save"
+    assert goal["title"].lower() in top["title"].lower() or "goal" in top["title"].lower()
+
+
+# Save to a non-existent goal returns 404
+def test_save_to_invalid_goal_404(child_client):
+    _ensure_balance(child_client, 20)
+    r = child_client.post(f"{API}/wallet/my-wallet/entry",
+                          json={"entry_type": "save", "amount": 5,
+                                "goal_id": "nonexistent_goal_xyz", "note": "TEST_bad_goal"})
+    assert r.status_code == 404
+
+
+# DELETE a manual spend restores balance
+def test_delete_manual_spend_restores_balance(child_client):
+    _ensure_balance(child_client, 25)
+    bal_before = _get_balance(child_client)
+    r = child_client.post(f"{API}/wallet/my-wallet/entry",
+                          json={"entry_type": "spend", "amount": 12, "category": "toys",
+                                "note": "TEST_del_spend"})
+    tx_id = r.json()["transaction_id"]
+    assert _get_balance(child_client) == pytest.approx(bal_before - 12, abs=0.01)
+
+    d = child_client.delete(f"{API}/wallet/my-wallet/entry/{tx_id}")
+    assert d.status_code == 200, d.text
+    assert _get_balance(child_client) == pytest.approx(bal_before, abs=0.01)
+
+
+# DELETE a save-to-goal entry reverses goal.current_amount and returns wallet money
+def test_delete_save_to_goal_reverses_goal(child_client):
+    goals = _get_goals(child_client)
+    assert goals
+    goal_id = goals[0]["goal_id"]
+    _ensure_balance(child_client, 25)
+
+    bal_before = _get_balance(child_client)
+    goal_before = float(_get_goal(child_client, goal_id).get("current_amount", 0) or 0)
+
+    r = child_client.post(f"{API}/wallet/my-wallet/entry",
+                          json={"entry_type": "save", "amount": 10, "goal_id": goal_id,
+                                "note": "TEST_del_save_goal"})
+    tx_id = r.json()["transaction_id"]
+    assert float(_get_goal(child_client, goal_id).get("current_amount", 0)) == pytest.approx(goal_before + 10, abs=0.01)
+
+    d = child_client.delete(f"{API}/wallet/my-wallet/entry/{tx_id}")
+    assert d.status_code == 200, d.text
+    assert float(_get_goal(child_client, goal_id).get("current_amount", 0)) == pytest.approx(goal_before, abs=0.01)
+    assert _get_balance(child_client) == pytest.approx(bal_before, abs=0.01)
+
+
+# DELETE a manual_income entry decreases balance
+def test_delete_manual_income_decreases_balance(child_client):
+    bal_before = _get_balance(child_client)
+    r = child_client.post(f"{API}/wallet/my-wallet/entry",
+                          json={"entry_type": "income", "amount": 30, "category": "cash",
+                                "note": "TEST_del_income"})
+    tx_id = r.json()["transaction_id"]
+    assert _get_balance(child_client) == pytest.approx(bal_before + 30, abs=0.01)
+
+    d = child_client.delete(f"{API}/wallet/my-wallet/entry/{tx_id}")
+    assert d.status_code == 200, d.text
+    assert _get_balance(child_client) == pytest.approx(bal_before, abs=0.01)
+
+
+# Cannot delete a non-manual entry (e.g., a chore_reward or savings_contribution)
+def test_delete_non_manual_rejected(child_client):
+    # Find a non-manual my_wallet entry in the ledger
+    story = child_client.get(f"{API}/wallet/my-wallet?page=1&page_size=50").json()
+    non_manual = None
+    for pg in range(1, story.get("total_pages", 1) + 1):
+        page_data = child_client.get(f"{API}/wallet/my-wallet?page={pg}&page_size=50").json()
+        for e in page_data["entries"]:
+            if not e.get("is_manual") and e.get("transaction_id"):
+                non_manual = e
+                break
+        if non_manual:
+            break
+    if not non_manual:
+        pytest.skip("No non-manual entry available to test guard")
+    r = child_client.delete(f"{API}/wallet/my-wallet/entry/{non_manual['transaction_id']}")
+    assert r.status_code == 400
+    assert "yourself" in r.json().get("detail", "").lower() or "undo" in r.json().get("detail", "").lower()
+
+
+# DELETE non-existent transaction returns 404
+def test_delete_nonexistent_returns_404(child_client):
+    r = child_client.delete(f"{API}/wallet/my-wallet/entry/trans_doesnotexist_xyz")
+    assert r.status_code == 404
+
+
+# EDIT amount up: balance adjusts by delta
+def test_edit_spend_amount_adjusts_balance_by_delta(child_client):
+    _ensure_balance(child_client, 50)
+    bal0 = _get_balance(child_client)
+    r = child_client.post(f"{API}/wallet/my-wallet/entry",
+                          json={"entry_type": "spend", "amount": 10, "category": "toys",
+                                "note": "TEST_edit"})
+    tx_id = r.json()["transaction_id"]
+    assert _get_balance(child_client) == pytest.approx(bal0 - 10, abs=0.01)
+
+    # Edit to 25 (delta -15 more from wallet)
+    up = child_client.put(f"{API}/wallet/my-wallet/entry/{tx_id}",
+                          json={"amount": 25, "note": "TEST_edit_updated"})
+    assert up.status_code == 200, up.text
+    assert _get_balance(child_client) == pytest.approx(bal0 - 25, abs=0.01)
+
+    # Edit down to 4 (return 21)
+    up2 = child_client.put(f"{API}/wallet/my-wallet/entry/{tx_id}", json={"amount": 4})
+    assert up2.status_code == 200, up2.text
+    assert _get_balance(child_client) == pytest.approx(bal0 - 4, abs=0.01)
+
+    # Cleanup: delete
+    child_client.delete(f"{API}/wallet/my-wallet/entry/{tx_id}")
+
+
+# EDIT save-to-goal amount adjusts goal.current_amount by DIFFERENCE (not double-apply)
+def test_edit_save_goal_adjusts_by_difference(child_client):
+    goals = _get_goals(child_client)
+    goal_id = goals[0]["goal_id"]
+    _ensure_balance(child_client, 60)
+    bal0 = _get_balance(child_client)
+    g0 = float(_get_goal(child_client, goal_id).get("current_amount", 0))
+
+    r = child_client.post(f"{API}/wallet/my-wallet/entry",
+                          json={"entry_type": "save", "amount": 15, "goal_id": goal_id,
+                                "note": "TEST_edit_goal"})
+    tx_id = r.json()["transaction_id"]
+    assert float(_get_goal(child_client, goal_id).get("current_amount", 0)) == pytest.approx(g0 + 15, abs=0.01)
+
+    # Edit to 25 (goal should go +10, wallet -10 more)
+    up = child_client.put(f"{API}/wallet/my-wallet/entry/{tx_id}", json={"amount": 25})
+    assert up.status_code == 200, up.text
+    assert float(_get_goal(child_client, goal_id).get("current_amount", 0)) == pytest.approx(g0 + 25, abs=0.01)
+    assert _get_balance(child_client) == pytest.approx(bal0 - 25, abs=0.01)
+
+    # Cleanup: delete (also verifies goal returns to g0)
+    d = child_client.delete(f"{API}/wallet/my-wallet/entry/{tx_id}")
+    assert d.status_code == 200
+    assert float(_get_goal(child_client, goal_id).get("current_amount", 0)) == pytest.approx(g0, abs=0.01)
+    assert _get_balance(child_client) == pytest.approx(bal0, abs=0.01)
+
+
+# EDIT to zero rejected
+def test_edit_zero_amount_rejected(child_client):
+    _ensure_balance(child_client, 20)
+    r = child_client.post(f"{API}/wallet/my-wallet/entry",
+                          json={"entry_type": "spend", "amount": 5, "category": "toys",
+                                "note": "TEST_edit_zero"})
+    tx_id = r.json()["transaction_id"]
+    up = child_client.put(f"{API}/wallet/my-wallet/entry/{tx_id}", json={"amount": 0})
+    assert up.status_code == 400
+    child_client.delete(f"{API}/wallet/my-wallet/entry/{tx_id}")
+
+
+# EDIT non-manual rejected
+def test_edit_non_manual_rejected(child_client):
+    for pg in range(1, 10):
+        page_data = child_client.get(f"{API}/wallet/my-wallet?page={pg}&page_size=50").json()
+        for e in page_data["entries"]:
+            if not e.get("is_manual") and e.get("transaction_id"):
+                r = child_client.put(f"{API}/wallet/my-wallet/entry/{e['transaction_id']}",
+                                     json={"amount": 5})
+                assert r.status_code == 400
+                return
+        if pg >= page_data.get("total_pages", 1):
+            break
+    pytest.skip("No non-manual entry available")
+
+
+# EDIT amount that exceeds wallet balance rejected AND rollback restores original
+def test_edit_exceeds_balance_rolls_back(child_client):
+    _ensure_balance(child_client, 30)
+    bal0 = _get_balance(child_client)
+    r = child_client.post(f"{API}/wallet/my-wallet/entry",
+                          json={"entry_type": "spend", "amount": 5, "category": "toys",
+                                "note": "TEST_edit_over"})
+    tx_id = r.json()["transaction_id"]
+    bal_after_create = _get_balance(child_client)
+    assert bal_after_create == pytest.approx(bal0 - 5, abs=0.01)
+
+    # Try editing to a huge amount
+    up = child_client.put(f"{API}/wallet/my-wallet/entry/{tx_id}",
+                          json={"amount": bal0 + 10000})
+    assert up.status_code == 400
+    # Balance should be back to bal_after_create (i.e., original spend restored)
+    assert _get_balance(child_client) == pytest.approx(bal_after_create, abs=0.01)
+    child_client.delete(f"{API}/wallet/my-wallet/entry/{tx_id}")
+

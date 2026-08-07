@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
-import { ChevronLeft, IndianRupee, ArrowDownCircle, ArrowUpCircle, Plus, Minus, Sparkles, ChevronRight } from 'lucide-react';
+import { ChevronLeft, IndianRupee, ArrowDownCircle, ArrowUpCircle, Plus, Minus, Sparkles, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import { MoneyBreakdownChart } from '@/components/MoneyBreakdownChart';
 import {
@@ -70,10 +70,15 @@ export default function MyWalletPage({ user }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [goals, setGoals] = useState([]);
   // dialog: null | { mode: 'use' | 'income', bucket: null | 'spend'|'save'|'give' }
   const [dialog, setDialog] = useState(null);
   const [form, setForm] = useState({ amount: '', category: '', note: '' });
   const [submitting, setSubmitting] = useState(false);
+  // edit/delete
+  const [editEntry, setEditEntry] = useState(null); // the entry being edited
+  const [editForm, setEditForm] = useState({ amount: '', note: '' });
+  const [deletingId, setDeletingId] = useState(null);
 
   const fetchData = async (p = page) => {
     try {
@@ -86,7 +91,15 @@ export default function MyWalletPage({ user }) {
     }
   };
 
+  const fetchGoals = async () => {
+    try {
+      const res = await axios.get(`${API}/child/savings-goals`);
+      setGoals((res.data || []).filter((g) => !g.completed));
+    } catch (e) { /* silent */ }
+  };
+
   useEffect(() => { fetchData(page); /* eslint-disable-next-line */ }, [page]);
+  useEffect(() => { fetchGoals(); }, []);
 
   const openUse = () => { setForm({ amount: '', category: '', note: '' }); setDialog({ mode: 'use', bucket: null }); };
   const openIncome = () => { setForm({ amount: '', category: '', note: '' }); setDialog({ mode: 'income', bucket: null }); };
@@ -102,16 +115,64 @@ export default function MyWalletPage({ user }) {
     if (entryType !== 'income' && amount > (data?.balance || 0)) { toast.error("That's more than you have!"); return; }
     setSubmitting(true);
     try {
-      await axios.post(`${API}/wallet/my-wallet/entry`, {
-        entry_type: entryType, amount, category: form.category, note: form.note,
-      });
+      const payload = { entry_type: entryType, amount, category: form.category, note: form.note };
+      if (entryType === 'save') {
+        // form.category holds 'piggybank' or a goal_id
+        if (form.category !== 'piggybank') {
+          payload.goal_id = form.category;
+          payload.category = 'goal';
+        } else {
+          payload.category = 'piggybank';
+        }
+      }
+      await axios.post(`${API}/wallet/my-wallet/entry`, payload);
       const msg = { spend: 'Spending saved! 🛍️', save: 'Saved! 🐷', give: 'Given! ❤️', income: 'Money added! ✨' }[entryType];
       toast.success(msg);
       setDialog(null);
       setPage(1);
       fetchData(1);
+      fetchGoals();
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Could not save entry');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (entry) => {
+    if (!window.confirm('Undo this entry? Your money will go back.')) return;
+    setDeletingId(entry.transaction_id);
+    try {
+      await axios.delete(`${API}/wallet/my-wallet/entry/${entry.transaction_id}`);
+      toast.success('Entry removed');
+      fetchData(page);
+      fetchGoals();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Could not undo');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const openEdit = (entry) => {
+    setEditEntry(entry);
+    setEditForm({ amount: String(entry.amount), note: entry.title || '' });
+  };
+
+  const submitEdit = async () => {
+    const amount = parseFloat(editForm.amount);
+    if (!amount || amount <= 0) { toast.error('Please enter a valid amount'); return; }
+    setSubmitting(true);
+    try {
+      await axios.put(`${API}/wallet/my-wallet/entry/${editEntry.transaction_id}`, {
+        amount, note: editForm.note,
+      });
+      toast.success('Entry fixed! ✏️');
+      setEditEntry(null);
+      fetchData(page);
+      fetchGoals();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Could not fix entry');
     } finally {
       setSubmitting(false);
     }
@@ -257,9 +318,32 @@ export default function MyWalletPage({ user }) {
                     {isInfo ? (
                       <span className="text-sm font-bold text-[#3D5A80] shrink-0">₹{Number(e.amount).toFixed(0)}</span>
                     ) : (
-                      <span className={`text-lg font-bold shrink-0 ${isIn ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`} style={{ fontFamily: 'Fredoka' }}>
-                        {isIn ? '+' : '−'}₹{Number(e.amount).toFixed(0)}
-                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`text-lg font-bold ${isIn ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`} style={{ fontFamily: 'Fredoka' }}>
+                          {isIn ? '+' : '−'}₹{Number(e.amount).toFixed(0)}
+                        </span>
+                        {e.is_manual && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => openEdit(e)}
+                              className="p-1.5 rounded-lg text-[#3D5A80] hover:bg-[#E0FBFC] hover:text-[#0EA5E9] transition-colors"
+                              title="Fix this entry"
+                              data-testid={`edit-entry-${e.transaction_id}`}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(e)}
+                              disabled={deletingId === e.transaction_id}
+                              className="p-1.5 rounded-lg text-[#3D5A80] hover:bg-red-50 hover:text-[#EE6C4D] transition-colors disabled:opacity-40"
+                              title="Undo this entry"
+                              data-testid={`delete-entry-${e.transaction_id}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 );
@@ -354,21 +438,51 @@ export default function MyWalletPage({ user }) {
                 <label className="text-sm font-bold text-[#1D3557] mb-2 block">
                   {dialog?.mode === 'income' ? 'Where did it come from?'
                     : dialog?.bucket === 'spend' ? 'What did you buy?'
-                    : dialog?.bucket === 'save' ? 'What are you saving for?'
+                    : dialog?.bucket === 'save' ? 'Where should it go?'
                     : 'Who did you help?'}
                 </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {categories.map((c) => (
+                {dialog?.bucket === 'save' ? (
+                  <div className="grid grid-cols-1 gap-2">
                     <button
-                      key={c.key}
-                      onClick={() => setForm({ ...form, category: c.key })}
-                      className={`flex items-center gap-2 p-2.5 rounded-xl border-2 text-left font-semibold text-sm transition-colors ${form.category === c.key ? 'border-[#0EA5E9] bg-[#0EA5E9]/10 text-[#1D3557]' : 'border-[#1D3557]/15 bg-white text-[#3D5A80] hover:bg-[#E0FBFC]'}`}
-                      data-testid={`category-${c.key}`}
+                      onClick={() => setForm({ ...form, category: 'piggybank' })}
+                      className={`flex items-center gap-2 p-2.5 rounded-xl border-2 text-left font-semibold text-sm transition-colors ${form.category === 'piggybank' ? 'border-[#06D6A0] bg-[#06D6A0]/10 text-[#1D3557]' : 'border-[#1D3557]/15 bg-white text-[#3D5A80] hover:bg-[#E0FBFC]'}`}
+                      data-testid="save-target-piggybank"
                     >
-                      <span className="text-lg">{c.emoji}</span> {c.label}
+                      <span className="text-lg">🐷</span> General Piggy Bank
                     </button>
-                  ))}
-                </div>
+                    {goals.map((g) => {
+                      const pct = g.target_amount ? Math.min(Math.round(((g.current_amount || 0) / g.target_amount) * 100), 100) : 0;
+                      return (
+                        <button
+                          key={g.goal_id}
+                          onClick={() => setForm({ ...form, category: g.goal_id })}
+                          className={`flex items-center gap-2 p-2.5 rounded-xl border-2 text-left font-semibold text-sm transition-colors ${form.category === g.goal_id ? 'border-[#06D6A0] bg-[#06D6A0]/10 text-[#1D3557]' : 'border-[#1D3557]/15 bg-white text-[#3D5A80] hover:bg-[#E0FBFC]'}`}
+                          data-testid={`save-target-goal-${g.goal_id}`}
+                        >
+                          <span className="text-lg">🎯</span>
+                          <span className="flex-1 truncate">{g.title}</span>
+                          <span className="text-xs text-[#3D5A80]">{pct}%</span>
+                        </button>
+                      );
+                    })}
+                    {goals.length === 0 && (
+                      <p className="text-xs text-[#3D5A80]">No goals yet — money goes to your Piggy Bank.</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    {categories.map((c) => (
+                      <button
+                        key={c.key}
+                        onClick={() => setForm({ ...form, category: c.key })}
+                        className={`flex items-center gap-2 p-2.5 rounded-xl border-2 text-left font-semibold text-sm transition-colors ${form.category === c.key ? 'border-[#0EA5E9] bg-[#0EA5E9]/10 text-[#1D3557]' : 'border-[#1D3557]/15 bg-white text-[#3D5A80] hover:bg-[#E0FBFC]'}`}
+                        data-testid={`category-${c.key}`}
+                      >
+                        <span className="text-lg">{c.emoji}</span> {c.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -402,6 +516,56 @@ export default function MyWalletPage({ user }) {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Edit entry dialog */}
+      <Dialog open={!!editEntry} onOpenChange={(o) => { if (!o) setEditEntry(null); }}>
+        <DialogContent className="bg-white border-3 border-[#1D3557] rounded-3xl max-w-md" data-testid="edit-entry-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+              ✏️ Fix this entry
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">How much? (₹)</label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={editForm.amount}
+                onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
+                className="border-3 border-[#1D3557] rounded-xl text-lg"
+                data-testid="edit-amount-input"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Note</label>
+              <Input
+                value={editForm.note}
+                onChange={(e) => setEditForm({ ...editForm, note: e.target.value })}
+                className="border-3 border-[#1D3557] rounded-xl"
+                data-testid="edit-note-input"
+              />
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setEditEntry(null)}
+                className="flex-1 py-3 font-bold rounded-xl border-3 border-[#1D3557] bg-white text-[#1D3557] hover:bg-[#E0FBFC]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitEdit}
+                disabled={submitting}
+                className="flex-1 btn-primary py-3 disabled:opacity-50"
+                data-testid="edit-submit-btn"
+              >
+                {submitting ? 'Saving...' : 'Save changes'}
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

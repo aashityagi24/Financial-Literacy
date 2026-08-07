@@ -330,6 +330,13 @@ class MyWalletEntryCreate(BaseModel):
     amount: float
     category: str = "other"
     note: str = ""
+    goal_id: str | None = None   # optional: save straight into a specific goal
+
+
+class MyWalletEntryUpdate(BaseModel):
+    amount: float | None = None
+    category: str | None = None
+    note: str | None = None
 
 
 # Which outflow bucket a transaction belongs to (spend / save / give).
@@ -562,31 +569,190 @@ async def add_my_wallet_entry(body: MyWalletEntryCreate, request: Request):
         await db.transactions.insert_one(tx)
         return {"message": "Entry added", "transaction_id": tx["transaction_id"], "balance": balance + amount}
 
-    # Outflow: spend / save / give. Always leaves my_wallet; save/give land in a jar.
+    # Outflow: spend / save / give. Always leaves my_wallet.
     await db.wallet_accounts.update_one(
         {"user_id": user_id, "account_type": "my_wallet"}, {"$inc": {"balance": -amount}}
     )
-    dest = {"save": "savings", "give": "gifting"}.get(body.entry_type)
-    if dest:
-        await db.wallet_accounts.update_one(
-            {"user_id": user_id, "account_type": dest},
-            {"$inc": {"balance": amount},
-             "$setOnInsert": {"account_id": f"acc_{uuid.uuid4().hex[:12]}", "user_id": user_id, "account_type": dest}},
-            upsert=True,
-        )
 
+    goal_id = None
+    category = (body.category or "other").strip().lower()
     tx_type = {"spend": "manual_spend", "save": "wallet_save", "give": "wallet_give"}[body.entry_type]
     default_desc = {"spend": "Money spent", "save": "Saved to Piggy Bank", "give": "Moved to Giving Jar"}[body.entry_type]
+
+    if body.entry_type == "save" and body.goal_id:
+        # Save straight into a specific goal (bypasses the general Piggy Bank).
+        goal = await db.savings_goals.find_one({"goal_id": body.goal_id, "child_id": user_id})
+        if not goal:
+            raise HTTPException(status_code=404, detail="Goal not found")
+        new_amount = float(goal.get("current_amount", 0) or 0) + amount
+        await db.savings_goals.update_one(
+            {"goal_id": body.goal_id},
+            {"$set": {"current_amount": new_amount, "completed": new_amount >= goal.get("target_amount", 0)}},
+        )
+        goal_id = body.goal_id
+        category = "goal"
+        default_desc = f"Saved to {goal.get('title', 'a goal')}"
+    else:
+        dest = {"save": "savings", "give": "gifting"}.get(body.entry_type)
+        if dest:
+            await db.wallet_accounts.update_one(
+                {"user_id": user_id, "account_type": dest},
+                {"$inc": {"balance": amount},
+                 "$setOnInsert": {"account_id": f"acc_{uuid.uuid4().hex[:12]}", "user_id": user_id, "account_type": dest}},
+                upsert=True,
+            )
+
     tx = {
         "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
         "user_id": user_id, "amount": -amount,
         "transaction_type": tx_type, "wallet_source": "my_wallet",
         "settlement_status": "paid", "bucket": body.entry_type,
-        "category": (body.category or "other").strip().lower(),
+        "category": category,
+        "goal_id": goal_id,
         "description": (body.note or "").strip() or default_desc, "created_at": now,
     }
     await db.transactions.insert_one(tx)
     return {"message": "Entry added", "transaction_id": tx["transaction_id"], "balance": balance - amount}
+
+
+_EDITABLE_TYPES = ("manual_income", "manual_spend", "wallet_save", "wallet_give")
+
+
+async def _reverse_entry_effect(db, user_id: str, tx: dict, amount: float):
+    """Undo the money movement of a manual entry (used by delete & edit).
+    Raises HTTPException if the money is no longer available to reverse."""
+    tt = tx.get("transaction_type")
+    if tt == "manual_income":
+        acc = await db.wallet_accounts.find_one({"user_id": user_id, "account_type": "my_wallet"})
+        if float((acc or {}).get("balance", 0) or 0) < amount:
+            raise HTTPException(status_code=400, detail="You've already used this money, so it can't be undone")
+        await db.wallet_accounts.update_one(
+            {"user_id": user_id, "account_type": "my_wallet"}, {"$inc": {"balance": -amount}})
+        return
+    # Outflows: return the money to my_wallet and take it back from where it went.
+    if tt == "wallet_save" and tx.get("goal_id"):
+        goal = await db.savings_goals.find_one({"goal_id": tx["goal_id"], "child_id": user_id})
+        if not goal or float(goal.get("current_amount", 0) or 0) < amount:
+            raise HTTPException(status_code=400, detail="This saved money has already moved, so it can't be undone")
+        new_amount = float(goal.get("current_amount", 0) or 0) - amount
+        await db.savings_goals.update_one(
+            {"goal_id": tx["goal_id"]},
+            {"$set": {"current_amount": new_amount, "completed": new_amount >= goal.get("target_amount", 0)}})
+    else:
+        dest = {"wallet_save": "savings", "wallet_give": "gifting"}.get(tt)
+        if dest:
+            dacc = await db.wallet_accounts.find_one({"user_id": user_id, "account_type": dest})
+            if float((dacc or {}).get("balance", 0) or 0) < amount:
+                raise HTTPException(status_code=400, detail="That money has already been used, so it can't be undone")
+            await db.wallet_accounts.update_one(
+                {"user_id": user_id, "account_type": dest}, {"$inc": {"balance": -amount}})
+    await db.wallet_accounts.update_one(
+        {"user_id": user_id, "account_type": "my_wallet"}, {"$inc": {"balance": amount}})
+
+
+@router.delete("/wallet/my-wallet/entry/{transaction_id}")
+async def delete_my_wallet_entry(transaction_id: str, request: Request):
+    """Undo a manual wallet entry the child logged, reversing its money movement."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can undo their entries")
+    user_id = user["user_id"]
+
+    tx = await db.transactions.find_one({"transaction_id": transaction_id, "user_id": user_id}, {"_id": 0})
+    if not tx:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    if tx.get("transaction_type") not in _EDITABLE_TYPES:
+        raise HTTPException(status_code=400, detail="Only entries you added yourself can be undone")
+
+    await _reverse_entry_effect(db, user_id, tx, abs(float(tx.get("amount", 0) or 0)))
+    await db.transactions.delete_one({"transaction_id": transaction_id, "user_id": user_id})
+    return {"message": "Entry removed"}
+
+
+@router.put("/wallet/my-wallet/entry/{transaction_id}")
+async def update_my_wallet_entry(transaction_id: str, body: MyWalletEntryUpdate, request: Request):
+    """Fix a manual wallet entry: change its amount, category or note. The money
+    movement is adjusted by the difference (same bucket / destination)."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can fix their entries")
+    user_id = user["user_id"]
+
+    tx = await db.transactions.find_one({"transaction_id": transaction_id, "user_id": user_id}, {"_id": 0})
+    if not tx:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    tt = tx.get("transaction_type")
+    if tt not in _EDITABLE_TYPES:
+        raise HTTPException(status_code=400, detail="Only entries you added yourself can be fixed")
+
+    old_amount = abs(float(tx.get("amount", 0) or 0))
+    updates = {}
+
+    if body.amount is not None:
+        new_amount = round(float(body.amount), 2)
+        if new_amount <= 0:
+            raise HTTPException(status_code=400, detail="Amount must be greater than zero")
+        if new_amount != old_amount:
+            # Reverse the old movement, then re-apply the new one.
+            await _reverse_entry_effect(db, user_id, tx, old_amount)
+            reapply = MyWalletEntryCreate(
+                entry_type=tx.get("bucket") or ("income" if tt == "manual_income" else "spend"),
+                amount=new_amount,
+                category=tx.get("category", "other"),
+                note=(body.note if body.note is not None else tx.get("description", "")),
+                goal_id=tx.get("goal_id"),
+            )
+            # Apply new movement inline (mirror of add endpoint) without a new tx.
+            acc = await db.wallet_accounts.find_one({"user_id": user_id, "account_type": "my_wallet"})
+            bal = float((acc or {}).get("balance", 0) or 0)
+            if reapply.entry_type == "income":
+                await db.wallet_accounts.update_one(
+                    {"user_id": user_id, "account_type": "my_wallet"}, {"$inc": {"balance": new_amount}})
+            else:
+                if new_amount > bal:
+                    # roll back the reversal so nothing is lost
+                    await _apply_entry_effect_raw(db, user_id, tt, old_amount, tx.get("goal_id"))
+                    raise HTTPException(status_code=400, detail="You don't have that much in your wallet")
+                await _apply_entry_effect_raw(db, user_id, tt, new_amount, tx.get("goal_id"))
+            updates["amount"] = new_amount if tt == "manual_income" else -new_amount
+
+    if body.category is not None:
+        updates["category"] = body.category.strip().lower()
+    if body.note is not None:
+        updates["description"] = body.note.strip() or tx.get("description", "")
+
+    if updates:
+        await db.transactions.update_one({"transaction_id": transaction_id, "user_id": user_id}, {"$set": updates})
+    return {"message": "Entry updated"}
+
+
+async def _apply_entry_effect_raw(db, user_id: str, tt: str, amount: float, goal_id: str | None):
+    """Apply a manual entry's money movement (used when re-applying an edit)."""
+    if tt == "manual_income":
+        await db.wallet_accounts.update_one(
+            {"user_id": user_id, "account_type": "my_wallet"}, {"$inc": {"balance": amount}})
+        return
+    await db.wallet_accounts.update_one(
+        {"user_id": user_id, "account_type": "my_wallet"}, {"$inc": {"balance": -amount}})
+    if tt == "wallet_save" and goal_id:
+        goal = await db.savings_goals.find_one({"goal_id": goal_id, "child_id": user_id})
+        if goal:
+            new_amount = float(goal.get("current_amount", 0) or 0) + amount
+            await db.savings_goals.update_one(
+                {"goal_id": goal_id},
+                {"$set": {"current_amount": new_amount, "completed": new_amount >= goal.get("target_amount", 0)}})
+    else:
+        dest = {"wallet_save": "savings", "wallet_give": "gifting"}.get(tt)
+        if dest:
+            await db.wallet_accounts.update_one(
+                {"user_id": user_id, "account_type": dest},
+                {"$inc": {"balance": amount},
+                 "$setOnInsert": {"account_id": f"acc_{uuid.uuid4().hex[:12]}", "user_id": user_id, "account_type": dest}},
+                upsert=True)
 
 
 

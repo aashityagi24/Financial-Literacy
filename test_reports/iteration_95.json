@@ -1,0 +1,23 @@
+{
+  "summary": "Independently verified both new My Wallet features (SAVE TO A GOAL + UNDO/FIX ENTRY) end-to-end. Extended /app/backend/tests/test_my_wallet.py from 11 to 23 pytest cases — all 23 PASS against the public URL. Playwright UI flow on /my-wallet (wallet_demo_child): (1) 'I used money' -> Save shows 'Where should it go?' with save-target-piggybank + save-target-goal-<goal_id> for every active goal (verified New Bicycle etc.). Selecting the New Bicycle goal and saving ₹7 dropped my_wallet 265->258 and lifted goal.current_amount 315->322; entry title reads 'Saved to New Bicycle 🚲', is_manual=true. (2) Editing that same entry to ₹12 through the pencil dialog (edit-entry-dialog / edit-amount-input / edit-submit-btn) adjusted by DIFFERENCE only: my_wallet 258->253 (net -5), goal 322->327 (net +5) — no double-apply. (3) Deleting via the trash icon (confirm dialog accepted) fully reversed: my_wallet 253->265, goal 327->315, entry vanishes from ledger. (4) Save to General Piggy Bank (no goal_id) increased savings jar 75->78 and inserted a 'Saved to Piggy Bank' entry; delete/undo works. Validation: overspend (>balance) and empty amount both keep the dialog open with error toast, no submit. Guard rows: gift_received (non-manual) exposes zero edit/delete buttons; every 'by me' entry exposes exactly one edit and one delete testid. Backend guards independently confirmed: DELETE/PUT on non-manual entry -> 400 'Only entries you added yourself can be…'; DELETE non-existent -> 404; save to unknown goal_id -> 404; PUT amount<=0 -> 400; PUT with new amount > wallet balance -> 400 AND the old spend is rolled back so nothing is lost.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_my_wallet.py",
+    "/app/test_reports/pytest/my_wallet_v2.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "wallet.py update_my_wallet_entry re-applies via _apply_entry_effect_raw but on a save-to-goal edit it does not re-check that the destination (goal) still exists after the reversal — if the goal was deleted between fetches the reapply silently no-ops on the goal branch. Low risk given UI flow, worth a guard.",
+    "add_my_wallet_entry + _reverse_entry_effect + _apply_entry_effect_raw perform 2-3 separate Mongo writes without a transactional session. A mid-call failure (e.g. during edit) could leave wallet debited but goal not credited. Consider wrapping these multi-write flows in a Motor session txn.",
+    "handleDelete uses window.confirm which is not styled/testable across mobile shells — consider a shadcn AlertDialog with data-testid='delete-confirm-btn' for a11y & consistency.",
+    "openEdit prefills editForm.note with entry.title, which for auto-defaulted rows is the friendly label ('Saved to Piggy Bank'), not the child's own note. On save this overwrites description with the label. Prefer keeping the raw stored description separate."
+  ],
+  "updated_files": ["/app/backend/tests/test_my_wallet.py"],
+  "success_rate": {"backend": "100% (23/23)", "frontend": "100% (save-to-goal, save-to-piggybank, edit-by-difference, undo, validation, non-manual guard)"},
+  "test_credentials": "child wallet_demo_child / testpass123 (has ~₹265 balance, goals: New Bicycle 315/2000, Video Game etc.).",
+  "seed_data_creation": "Test suite creates TEST_ prefixed transient entries during a run and deletes them; net balance/goal state is restored per test. Prior iter's TEST_income/spend/save/give entries remain in ledger from earlier runs.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Save-to-goal + edit + delete are fully working and covered by 12 new pytest cases in /app/backend/tests/test_my_wallet.py (total 23). Seeded savings goals remain intact after each run — do NOT delete them. UI uses window.confirm() for delete — Playwright must register a page.once('dialog', accept) BEFORE clicking the trash. Save target picker only renders when dialog.bucket==='save'."
+}
