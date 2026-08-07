@@ -743,7 +743,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 **Google Cloud Console Configuration**:
 To complete the OAuth setup, add these redirect URIs to your Google Cloud Console OAuth 2.0 credentials:
-- For Preview: `https://homework-blue-state.preview.emergentagent.com/api/auth/google/callback`
+- For Preview: `https://savings-goals-test.preview.emergentagent.com/api/auth/google/callback`
 - For Production: `https://coinquest.co.in/api/auth/google/callback`
 
 ### Session 12 Updates (February 9, 2026)

@@ -337,8 +337,25 @@ export default function SavingsGoalsPage({ user }) {
                             )}
                             
                             <div className="mt-3">
-                              <Progress value={progress} className="h-3 mb-2" />
-                              <div className="flex items-center justify-between text-sm">
+                              {/* Exciting animated progress bar */}
+                              <div className="relative w-full h-7 bg-[#E0FBFC] rounded-full border-2 border-[#1D3557]/15 overflow-hidden" data-testid={`goal-progress-bar-${goal.goal_id}`}>
+                                <div
+                                  className="h-full rounded-full bg-gradient-to-r from-[#06D6A0] to-[#22c55e] transition-all duration-700 ease-out flex items-center justify-end"
+                                  style={{ width: `${Math.max(progress, 6)}%` }}
+                                >
+                                  {progress >= 12 && (
+                                    <span className="text-sm mr-1.5 drop-shadow-sm" role="img" aria-label="coin">🪙</span>
+                                  )}
+                                </div>
+                                <span
+                                  className={`absolute inset-0 flex items-center justify-center text-xs font-extrabold ${progress > 55 ? 'text-white' : 'text-[#1D3557]'}`}
+                                  style={{ fontFamily: 'Fredoka' }}
+                                  data-testid={`goal-progress-pct-${goal.goal_id}`}
+                                >
+                                  {progress >= 100 ? '🎉 Goal reached!' : `${Math.round(progress)}% there!`}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between text-sm mt-2">
                                 <span className="text-[#06D6A0] font-bold">₹{(goal.current_amount || 0).toFixed(0)} saved</span>
                                 <span className="text-[#EE6C4D] font-medium">₹{remaining.toFixed(0)} to go</span>
                                 <span className="text-[#1D3557] font-bold flex items-center gap-1">
