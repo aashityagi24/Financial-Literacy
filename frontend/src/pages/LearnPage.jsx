@@ -5,7 +5,7 @@ import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
   BookOpen, ChevronLeft, ChevronRight, Trophy, FolderOpen,
-  FileText, FileSpreadsheet, Gamepad2, Video, Book, Lock, CheckCircle, Lightbulb, Star, Sparkles, Flag
+  FileText, FileSpreadsheet, Gamepad2, Video, Book, Lock, CheckCircle, Lightbulb
 } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
@@ -20,112 +20,6 @@ const CONTENT_TYPE_ICONS = {
 };
 
 const gradeLabels = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
-
-// Winding adventure path of top-level topics for the child Learn view.
-function JourneyMap({ topics, gradeFilter, showAnimations, onLockedClick }) {
-  // The "current" stop = first unlocked topic that isn't fully completed.
-  const currentIndex = topics.findIndex((t) => t.is_unlocked !== false && !t.is_completed);
-
-  return (
-    <div className="relative max-w-2xl mx-auto py-2" data-testid="learn-journey-map">
-      {/* Winding dashed path down the middle */}
-      {topics.length > 1 && (
-        <div className="journey-path absolute top-4 bottom-4 left-1/2 -translate-x-1/2 w-1.5 rounded-full" aria-hidden="true" />
-      )}
-
-      <div className="relative space-y-6">
-        {topics.map((topic, index) => {
-          const isLocked = topic.is_unlocked === false;
-          const isCompleted = topic.is_completed;
-          const isCurrent = index === currentIndex;
-          const side = index % 2 === 0 ? 'start' : 'end';
-          const itemCount = (topic.content_count || 0) + (topic.subtopics?.reduce((s, st) => s + (st.content_count || 0), 0) || 0);
-
-          const ring = isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]'
-            : isCurrent ? 'border-[#1D3557] bg-[#FFD23F]'
-            : isLocked ? 'border-gray-400 bg-gray-200'
-            : 'border-[#1D3557] bg-white';
-
-          const node = (
-            <div className="flex flex-col items-center gap-1.5 w-40">
-              {isCurrent && (
-                <div className="journey-marker flex flex-col items-center -mb-1">
-                  <span className="text-2xl" role="img" aria-label="you are here">🐣</span>
-                  <span className="text-[10px] font-bold text-[#EE6C4D] bg-white px-2 py-0.5 rounded-full border-2 border-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-                    Start here!
-                  </span>
-                </div>
-              )}
-              <div className="relative">
-                {isCurrent && (
-                  <span className="absolute inset-0 rounded-full border-4 border-[#FFD23F] animate-ping" aria-hidden="true" />
-                )}
-                <div className={`relative w-20 h-20 rounded-full border-[4px] ${ring} shadow-[3px_3px_0px_#1D3557] flex items-center justify-center overflow-hidden`}>
-                  {topic.thumbnail ? (
-                    <img
-                      src={getAssetUrl(topic.thumbnail)}
-                      alt={topic.title}
-                      className={`w-full h-full object-contain bg-white ${isLocked ? 'grayscale' : ''}`}
-                    />
-                  ) : isCompleted ? (
-                    <Star className="w-9 h-9 text-white" fill="white" />
-                  ) : isLocked ? (
-                    <Lock className="w-8 h-8 text-gray-500" />
-                  ) : (
-                    <FolderOpen className="w-9 h-9 text-[#1D3557]" />
-                  )}
-                  {isLocked && topic.thumbnail && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                      <Lock className="w-7 h-7 text-white" />
-                    </div>
-                  )}
-                </div>
-                {isCompleted && (
-                  <div className="absolute -top-1 -right-1 w-7 h-7 bg-[#06D6A0] rounded-full flex items-center justify-center border-2 border-white shadow">
-                    <CheckCircle className="w-4 h-4 text-white" />
-                  </div>
-                )}
-                {index === topics.length - 1 && !isLocked && (
-                  <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#FFD23F] rounded-full flex items-center justify-center border-2 border-[#1D3557]">
-                    <Flag className="w-4 h-4 text-[#1D3557]" />
-                  </div>
-                )}
-              </div>
-              <p className={`text-center text-sm font-bold leading-tight ${isLocked ? 'text-gray-400' : 'text-[#1D3557]'}`} style={{ fontFamily: 'Fredoka' }}>
-                {topic.title}
-              </p>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isLocked ? 'bg-gray-200 text-gray-500' : 'bg-[#06D6A0]/20 text-[#06D6A0]'}`}>
-                {isLocked ? '🔒 Locked' : `${itemCount} items`}
-              </span>
-            </div>
-          );
-
-          return (
-            <div
-              key={topic.topic_id}
-              className={`flex ${side === 'start' ? 'justify-start pr-4' : 'justify-end pl-4'} ${showAnimations ? 'animate-bounce-in' : ''}`}
-              style={showAnimations ? { animationDelay: `${index * 0.08}s` } : {}}
-              data-testid={`journey-stop-${topic.topic_id}`}
-            >
-              {isLocked ? (
-                <button onClick={onLockedClick} className="cursor-not-allowed" data-testid={`journey-stop-locked-${topic.topic_id}`}>
-                  {node}
-                </button>
-              ) : (
-                <Link
-                  to={`/learn/topic/${topic.topic_id}${gradeFilter !== null ? `?grade=${gradeFilter}` : ''}`}
-                  className="hover:-translate-y-1 transition-transform"
-                >
-                  {node}
-                </Link>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 export default function LearnPage({ user }) {
   const navigate = useNavigate();
@@ -227,13 +121,6 @@ export default function LearnPage({ user }) {
         {/* Topics List */}
         {topics.length === 0 ? (
           <p className="text-center text-[#3D5A80] py-4 text-lg">Exciting learning content is coming soon!</p>
-        ) : user?.role === 'child' ? (
-          <JourneyMap
-            topics={topics}
-            gradeFilter={gradeFilter}
-            showAnimations={showAnimations}
-            onLockedClick={() => toast.info('Finish the stop before it to unlock this one!')}
-          />
         ) : (
           <div className="grid gap-5">
             {topics.map((topic, index) => {

@@ -14,7 +14,6 @@ import NotificationCenter from '@/components/NotificationCenter';
 import ClassmatesSection from '@/components/ClassmatesSection';
 import DashboardFooter from '@/components/DashboardFooter';
 import { ChildHomework } from '@/components/ChildHomework';
-import { CelebrationMuteToggle } from '@/components/CelebrationMuteToggle';
 import { getDefaultAvatar } from '@/utils/avatars';
 
 export default function Dashboard({ user, setUser }) {
@@ -269,9 +268,6 @@ export default function Dashboard({ user, setUser }) {
                 <Flame className="w-5 h-5 text-[#EE6C4D]" />
                 <span className="font-bold text-[#1D3557]">{streak.streak || user?.streak_count || 0}</span>
               </div>
-
-              {/* Celebration sound toggle */}
-              <CelebrationMuteToggle />
               
               {/* Total balance - removed, shown on dashboard */}
               
@@ -359,12 +355,13 @@ export default function Dashboard({ user, setUser }) {
             </div>
             
             <div className="grid grid-cols-2 gap-2 flex-1">
-              {(() => {
-                const liquidColors = { spending: '#EE6C4D', my_wallet: '#0EA5E9', savings: '#EC4899', gifting: '#9B5DE5', investing: grade <= 2 ? '#228B22' : '#3D5A80' };
-                const balFor = (a) => (a.account_type === 'savings' || a.account_type === 'investing') ? (a.available_balance ?? a.balance) : a.balance;
-                const maxBal = Math.max(...filteredAccounts.map((a) => balFor(a) || 0), 1);
+              {filteredAccounts.map((account) => {
+                const config = accountColors[account.account_type];
+                const displayLabel = config?.label || account.account_type;
+                
+                // Define navigation path for each account type
                 const getAccountPath = (type) => {
-                  switch (type) {
+                  switch(type) {
                     case 'spending': return '/store';
                     case 'my_wallet': return '/my-wallet';
                     case 'savings': return '/savings-goals';
@@ -373,35 +370,30 @@ export default function Dashboard({ user, setUser }) {
                     default: return '/wallet';
                   }
                 };
-                return filteredAccounts.map((account) => {
-                  const config = accountColors[account.account_type];
-                  const displayLabel = config?.label || account.account_type;
-                  const bal = balFor(account) || 0;
-                  const fill = bal > 0 ? Math.min(Math.max((bal / maxBal) * 100, 10), 100) : 0;
-                  const liquid = liquidColors[account.account_type] || '#3D5A80';
-                  return (
-                    <Link
-                      to={getAccountPath(account.account_type)}
-                      key={account.account_type}
-                      data-testid={`jar-${account.account_type}`}
-                      className="bg-[#F8F9FA] rounded-xl border-2 border-[#1D3557]/15 p-2 flex flex-col items-center hover:bg-[#E0FBFC] hover:-translate-y-0.5 transition-all cursor-pointer"
-                    >
-                      <span className="text-xs font-bold text-[#1D3557] text-center leading-tight mb-1 line-clamp-1">{displayLabel}</span>
-                      <div className="relative w-11 h-16 bg-white border-[3px] border-[#1D3557] rounded-b-2xl rounded-t-md overflow-hidden shadow-inner">
-                        <div
-                          className="jar-fill absolute bottom-0 left-0 w-full"
-                          style={{ height: `${fill}%`, backgroundColor: liquid }}
-                        />
-                        <span className="absolute inset-x-0 top-1.5 text-center text-base drop-shadow-sm">{config?.icon}</span>
-                      </div>
-                      <span className="text-sm font-bold text-[#1D3557] mt-1" style={{ fontFamily: 'Fredoka' }}>₹{bal.toFixed(0)}</span>
-                      {(account.account_type === 'savings' || account.account_type === 'investing') && (
-                        <span className="text-[9px] text-[#3D5A80] -mt-0.5">Available</span>
-                      )}
-                    </Link>
-                  );
-                });
-              })()}
+                
+                return (
+                  <Link
+                    to={getAccountPath(account.account_type)}
+                    key={account.account_type}
+                    data-testid={`jar-${account.account_type}`}
+                    className={`${config?.bg || 'bg-gray-400'} rounded-xl border-2 border-[#1D3557] p-3 text-white hover:scale-[1.02] transition-transform cursor-pointer`}
+                  >
+                    <div className="text-xl mb-1">{config?.icon}</div>
+                    <p className="text-sm font-bold capitalize">{displayLabel}</p>
+                    {/* Show Available balance for savings/investing, total for others */}
+                    <p className="text-lg font-bold">
+                      ₹{(account.account_type === 'savings' || account.account_type === 'investing'
+                        ? (account.available_balance ?? account.balance)
+                        : account.balance
+                      )?.toFixed(0)}
+                    </p>
+                    {/* Show "Available" label for savings/investing */}
+                    {(account.account_type === 'savings' || account.account_type === 'investing') && (
+                      <p className="text-[10px] opacity-80">Available</p>
+                    )}
+                  </Link>
+                );
+              })}
             </div>
           </div>
           

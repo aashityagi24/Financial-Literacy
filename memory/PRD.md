@@ -1293,3 +1293,9 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - /learn for CHILDREN = winding JOURNEY MAP of top-level topics (LearnPage JourneyMap): locked (padlock + toast), current (🐣 'Start here!' + pulse), completed (star/check), last stop gets a flag. Teacher/parent keep the old list.
   - Added dep: canvas-confetti. Verified by testing agent (iteration_96.json): 8/8 frontend flows 100% pass, no bugs.
   - Suggested-but-deferred (per user): dashboard mascot; child quiz/stock %/adult analytics left unchanged.
+
+- **REVERTED: "more-visual child UX" batch (Aug 8, 2026)**
+  - Per user request, fully rolled back the last batch: filling money jars, homework "My Missions" cards, big-win celebrations (confetti/sound + mute toggle), and the Learn journey map.
+  - Method: restored Dashboard.jsx, LearnPage.jsx, ChildHomework.jsx, SavingsGoalsPage.jsx, AchievementsPage.jsx, index.css from pre-batch commit 3cb5076; deleted utils/celebrate.js and components/CelebrationMuteToggle.jsx; removed canvas-confetti dep.
+  - KEPT (unaffected): My Wallet page + buckets + pagination + chart, save-to-goal + undo/edit, %-removal, savings-goal playful bars, /my-wallet routing, homework Open→highlight fix.
+  - Verified via screenshot: dashboard shows original tile "My Money" grid (no jars/mute), Learn shows original card list (no journey map); frontend compiles clean.

@@ -6,7 +6,6 @@ import { uploadFile } from '@/utils/chunkedUpload';
 import { toast } from 'sonner';
 import { Target, ChevronLeft, Plus, Check, Calendar, Wallet, ArrowLeftRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { playCelebration } from '@/utils/celebrate';
 import BackButton from '@/components/BackButton';
 import {
   Dialog,
@@ -137,16 +136,8 @@ export default function SavingsGoalsPage({ user }) {
       await axios.post(`${API}/child/savings-goals/${goalId}/contribute`, {
         amount: parseFloat(amount)
       });
-
-      // Celebrate if this contribution completed the goal
-      const goal = savingsGoals.find((g) => g.goal_id === goalId);
-      const willComplete = goal && ((goal.current_amount || 0) + parseFloat(amount)) >= goal.target_amount;
-      if (willComplete) {
-        playCelebration();
-        toast.success('Goal reached! 🎉 Amazing job!');
-      } else {
-        toast.success('Money added to your goal! 🎯');
-      }
+      
+      toast.success('Money added to your goal! 🎯');
       setAllocateOpen(false);
       setAllocateData({ goal_id: '', amount: '' });
       fetchData();

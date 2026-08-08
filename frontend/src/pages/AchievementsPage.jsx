@@ -5,7 +5,6 @@ import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { Trophy, ChevronLeft, Lock, Check, Star } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
-import { playCelebration } from '@/utils/celebrate';
 
 export default function AchievementsPage({ user }) {
   const [achievements, setAchievements] = useState([]);
@@ -30,8 +29,7 @@ export default function AchievementsPage({ user }) {
   const handleClaim = async (achievementId) => {
     try {
       const response = await axios.post(`${API}/achievements/${achievementId}/claim`);
-      playCelebration();
-      toast.success(`Badge earned! 🎉 +${response.data.points_earned} points!`);
+      toast.success(`Badge claimed! Earned ${response.data.points_earned} points!`);
       fetchAchievements();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to claim badge');
