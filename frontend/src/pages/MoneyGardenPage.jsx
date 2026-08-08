@@ -322,14 +322,14 @@ export default function MoneyGardenPage({ user }) {
         </div>
       </header>
       
-      {/* Main 2x2 Grid */}
+      {/* Main 2x2 Grid (stacks to one column on phones) */}
       <main className="flex-1 p-4">
-        <div className="grid grid-cols-2 gap-4 h-full" style={{ minHeight: 'calc(100vh - 80px)' }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:h-full md:min-h-[calc(100vh-80px)]">
           
           {/* TOP LEFT: Garden Money */}
           <div 
             ref={sectionRefs['wallet-section']}
-            className={`card-playful p-5 bg-[#FFFACD] border-3 border-[#DAA520] transition-all flex flex-col ${
+            className={`card-playful p-5 bg-[#FFFACD] border-3 border-[#DAA520] transition-all flex flex-col min-h-[240px] md:min-h-0 ${
               malliTarget === 'wallet-section' ? 'ring-4 ring-[#FFD700] ring-offset-2' : ''
             }`} 
             data-testid="wallet-section"
@@ -374,7 +374,7 @@ export default function MoneyGardenPage({ user }) {
           {/* TOP RIGHT: My Garden (ONE Plot with clear stages) */}
           <div 
             ref={sectionRefs['garden-section']}
-            className={`card-playful p-5 bg-[#F0FFF0] border-3 border-[#228B22] transition-all flex flex-col ${
+            className={`card-playful p-5 bg-[#F0FFF0] border-3 border-[#228B22] transition-all flex flex-col min-h-[360px] md:min-h-0 ${
               malliTarget === 'garden-section' ? 'ring-4 ring-[#228B22] ring-offset-2' : ''
             }`} 
             data-testid="garden-section"
@@ -493,7 +493,7 @@ export default function MoneyGardenPage({ user }) {
           {/* BOTTOM LEFT: The Market */}
           <div 
             ref={sectionRefs['market-section']}
-            className={`card-playful p-5 bg-[#E8E4F0] border-3 border-[#845EC2] transition-all flex flex-col ${
+            className={`card-playful p-5 bg-[#E8E4F0] border-3 border-[#845EC2] transition-all flex flex-col min-h-[260px] md:min-h-0 ${
               malliTarget === 'market-section' ? 'ring-4 ring-[#845EC2] ring-offset-2' : ''
             }`} 
             data-testid="market-section"
@@ -513,10 +513,10 @@ export default function MoneyGardenPage({ user }) {
                 <div className="space-y-2">
                   {displaySeeds.map((seed) => (
                     <div key={seed.plant_id} className="bg-white rounded-xl p-3 border-2 border-[#845EC2]/30 flex items-center gap-3">
-                      <span className="text-3xl">{seed.emoji}</span>
+                      <span className="text-3xl shrink-0">{seed.emoji}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-[#1D3557]">{seed.name}</p>
-                        <p className="text-xs text-[#3D5A80]">
+                        <p className="font-bold text-[#1D3557] truncate">{seed.name}</p>
+                        <p className="text-xs text-[#3D5A80] truncate">
                           ₹{Math.round(seed.seed_cost)} • {seed.growth_days} days
                         </p>
                       </div>
@@ -526,7 +526,7 @@ export default function MoneyGardenPage({ user }) {
                           setShowPlantDialog(true);
                         }}
                         disabled={!canPlant}
-                        className={`px-4 py-2 rounded-xl font-bold ${
+                        className={`shrink-0 px-4 py-2 rounded-xl font-bold ${
                           canPlant 
                             ? 'bg-[#845EC2] hover:bg-[#6F42C1] text-white' 
                             : 'bg-gray-200 text-gray-400 cursor-not-allowed'
@@ -544,7 +544,7 @@ export default function MoneyGardenPage({ user }) {
           {/* BOTTOM RIGHT: My Shop */}
           <div 
             ref={sectionRefs['shop-section']}
-            className={`card-playful p-5 bg-[#FFE4E1] border-3 border-[#E63946] transition-all flex flex-col ${
+            className={`card-playful p-5 bg-[#FFE4E1] border-3 border-[#E63946] transition-all flex flex-col min-h-[220px] md:min-h-0 ${
               malliTarget === 'shop-section' ? 'ring-4 ring-[#E63946] ring-offset-2' : ''
             }`} 
             data-testid="shop-section"
@@ -566,15 +566,15 @@ export default function MoneyGardenPage({ user }) {
                     const price = getMarketPrice(item.plant_id);
                     return (
                       <div key={item.inventory_id} className="bg-white rounded-xl p-3 border-2 border-[#E63946]/30 flex items-center gap-3">
-                        <span className="text-3xl">{item.plant_emoji}</span>
+                        <span className="text-3xl shrink-0">{item.plant_emoji}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-[#1D3557]">{item.plant_name}</p>
-                          <p className="text-sm text-[#3D5A80]">You have {item.quantity}</p>
+                          <p className="font-bold text-[#1D3557] truncate">{item.plant_name}</p>
+                          <p className="text-sm text-[#3D5A80] truncate">You have {item.quantity}</p>
                         </div>
                         <button
                           onClick={() => openSellDialog(item)}
                           disabled={!farm.is_market_open}
-                          className="bg-[#06D6A0] hover:bg-[#05C995] disabled:bg-gray-300 text-white px-4 py-2 rounded-xl font-bold"
+                          className="shrink-0 bg-[#06D6A0] hover:bg-[#05C995] disabled:bg-gray-300 text-white px-4 py-2 rounded-xl font-bold"
                           data-testid={`sell-item-${item.plant_id}`}
                         >
                           Sell

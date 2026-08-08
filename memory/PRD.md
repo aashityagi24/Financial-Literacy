@@ -1304,3 +1304,8 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - In the Money Garden seed-detail card (MoneyGardenPage.jsx ~line 709), Grade 2 now shows "Price per <unit>" (e.g. "Price per piece ₹2", "Price per kg ₹X") instead of the pre-computed "Total Income", so the child must multiply Harvest Yield × unit price themselves.
   - Gated on gradeLevel === 2 only; Grade 1 and all other grades keep "Total Income" unchanged. Unit singularized (pieces→piece, flowers→flower, kg→kg).
   - Verified via screenshot as classmate_g2: Red Chilli shows "Harvest Yield 15 pieces" + "Price per piece ₹2".
+
+- **Money Garden mobile layout fix (Aug 8, 2026)**
+  - The garden's 2×2 quadrant grid was forced to 2 columns on phones, cramming each quadrant into ~180px and causing the Market/Shop "Buy"/"Sell" buttons to overlap the seed name/price.
+  - Fix (MoneyGardenPage.jsx): grid now `grid-cols-1 md:grid-cols-2` (stacks on phones, 2×2 on md+); full-viewport min-height applied md+ only; each quadrant card got a mobile min-height so internal flex areas render; Market/Shop rows got `shrink-0` on the action button + `truncate` on text to prevent overlap.
+  - Verified via 390px screenshot as classmate_g2: single-column, no overlap, 0px horizontal overflow. Desktop 2×2 unchanged.
