@@ -1285,3 +1285,11 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Chart legend (MoneyBreakdownChart.jsx) now shows only ₹ amounts per bucket (no % figure); donut still conveys proportion visually.
   - Save-to-goal picker (MyWalletPage.jsx) shows "₹315 of ₹2000" instead of a % badge.
   - Scope confirmed by user: leave % as-is on all other screens (child quiz/activity scores, stock market, teacher/parent/admin analytics).
+
+- **More-visual child UX: filling jars, mission cards, celebrations, Learn journey map (Aug 8, 2026)**
+  - Dashboard 'My Money' card: each account is now a FILLING JAR (liquid level = balance vs largest jar) with ₹ amount; each jar links to its feature. CSS `.jar-fill` in index.css.
+  - Homework redesigned as 'My Missions' cards (ChildHomework.jsx): content-type icon, due date/overdue badge, Open/Start + Mark-done.
+  - Big-win CELEBRATION: canvas-confetti + Web-Audio chime fire ONLY on savings-goal completion (SavingsGoalsPage handleAllocateToGoal) and badge claim (AchievementsPage handleClaim). Reusable util /utils/celebrate.js; persistent mute toggle (localStorage 'coinquest_mute') in dashboard header (CelebrationMuteToggle.jsx). User choice: celebrate big wins only; sound on with mute toggle.
+  - /learn for CHILDREN = winding JOURNEY MAP of top-level topics (LearnPage JourneyMap): locked (padlock + toast), current (🐣 'Start here!' + pulse), completed (star/check), last stop gets a flag. Teacher/parent keep the old list.
+  - Added dep: canvas-confetti. Verified by testing agent (iteration_96.json): 8/8 frontend flows 100% pass, no bugs.
+  - Suggested-but-deferred (per user): dashboard mascot; child quiz/stock %/adult analytics left unchanged.
