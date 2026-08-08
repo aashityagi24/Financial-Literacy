@@ -707,8 +707,25 @@ export default function MoneyGardenPage({ user }) {
                     <span className="font-bold text-[#1D3557]">{seedDetailView.harvest_yield} {seedDetailView.yield_unit}</span>
                   </div>
                   <div className="flex justify-between py-1.5">
-                    <span className="text-[#3D5A80]">Total Income</span>
-                    <span className="font-bold text-[#06D6A0]">₹{Math.round(seedDetailView.harvest_yield * seedDetailView.base_sell_price)}</span>
+                    {(() => {
+                      const gradeLevel = user?.grade ?? user?.grade_level ?? 5;
+                      const unit = seedDetailView.yield_unit || 'kg';
+                      const perUnitLabel = unit.toLowerCase() === 'kg' ? 'kg' : unit.replace(/s$/i, '');
+                      if (gradeLevel === 2) {
+                        return (
+                          <>
+                            <span className="text-[#3D5A80]">Price per {perUnitLabel}</span>
+                            <span className="font-bold text-[#06D6A0]">₹{Math.round(seedDetailView.base_sell_price)}</span>
+                          </>
+                        );
+                      }
+                      return (
+                        <>
+                          <span className="text-[#3D5A80]">Total Income</span>
+                          <span className="font-bold text-[#06D6A0]">₹{Math.round(seedDetailView.harvest_yield * seedDetailView.base_sell_price)}</span>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>

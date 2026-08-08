@@ -1299,3 +1299,8 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Method: restored Dashboard.jsx, LearnPage.jsx, ChildHomework.jsx, SavingsGoalsPage.jsx, AchievementsPage.jsx, index.css from pre-batch commit 3cb5076; deleted utils/celebrate.js and components/CelebrationMuteToggle.jsx; removed canvas-confetti dep.
   - KEPT (unaffected): My Wallet page + buckets + pagination + chart, save-to-goal + undo/edit, %-removal, savings-goal playful bars, /my-wallet routing, homework Open→highlight fix.
   - Verified via screenshot: dashboard shows original tile "My Money" grid (no jars/mute), Learn shows original card list (no journey map); frontend compiles clean.
+
+- **Garden: per-unit price for Grade 2 (Aug 8, 2026)**
+  - In the Money Garden seed-detail card (MoneyGardenPage.jsx ~line 709), Grade 2 now shows "Price per <unit>" (e.g. "Price per piece ₹2", "Price per kg ₹X") instead of the pre-computed "Total Income", so the child must multiply Harvest Yield × unit price themselves.
+  - Gated on gradeLevel === 2 only; Grade 1 and all other grades keep "Total Income" unchanged. Unit singularized (pieces→piece, flowers→flower, kg→kg).
+  - Verified via screenshot as classmate_g2: Red Chilli shows "Harvest Yield 15 pieces" + "Price per piece ₹2".
