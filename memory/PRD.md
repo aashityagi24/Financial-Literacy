@@ -1309,3 +1309,8 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - The garden's 2×2 quadrant grid was forced to 2 columns on phones, cramming each quadrant into ~180px and causing the Market/Shop "Buy"/"Sell" buttons to overlap the seed name/price.
   - Fix (MoneyGardenPage.jsx): grid now `grid-cols-1 md:grid-cols-2` (stacks on phones, 2×2 on md+); full-viewport min-height applied md+ only; each quadrant card got a mobile min-height so internal flex areas render; Market/Shop rows got `shrink-0` on the action button + `truncate` on text to prevent overlap.
   - Verified via 390px screenshot as classmate_g2: single-column, no overlap, 0px horizontal overflow. Desktop 2×2 unchanged.
+
+- **School dashboard: teacher last-login (Aug 15, 2026)**
+  - Added teacher "Last Login" to the School dashboard — a new "Last Login" column in the Teachers tab table and a "Last login" line in the overview Recent Teachers list (SchoolDashboard.jsx).
+  - Uses existing users.last_login_at (already set on login in auth.py); backend school dashboard already returns it (only _id/password excluded). New formatLastLogin() helper shows Today / Yesterday / N days ago / "12 Jun 2026", and "Never" when the teacher hasn't logged in.
+  - Verified via screenshot as school admin (springfield): both teachers show "Never" (correct — no logins yet).

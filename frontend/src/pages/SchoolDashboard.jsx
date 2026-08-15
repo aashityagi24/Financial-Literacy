@@ -25,6 +25,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Human-friendly "last login" (e.g., "Today", "Yesterday", "3 days ago", "12 Jun 2026")
+const formatLastLogin = (iso) => {
+  if (!iso) return 'Never';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return 'Never';
+  const now = new Date();
+  const startOfDay = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate());
+  const days = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
+  if (days <= 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days} days ago`;
+  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
 export default function SchoolDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -526,6 +540,10 @@ export default function SchoolDashboard() {
                       <p className="font-medium text-gray-800 truncate">{teacher.name}</p>
                       <p className="text-sm text-gray-500 truncate">{teacher.email}</p>
                     </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[10px] text-gray-400 uppercase tracking-wide">Last login</p>
+                      <p className="text-xs font-medium text-gray-600">{formatLastLogin(teacher.last_login_at)}</p>
+                    </div>
                   </div>
                 ))}
                 {(!dashboardData?.teachers || dashboardData.teachers.length === 0) && (
@@ -593,6 +611,7 @@ export default function SchoolDashboard() {
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Class</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Grade</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Class Code</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-600">Last Login</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
                     <th className="text-right py-3 px-4 font-medium text-gray-600">Actions</th>
                   </tr>
@@ -622,6 +641,9 @@ export default function SchoolDashboard() {
                         ) : (
                           <span className="text-gray-400 text-xs">No class</span>
                         )}
+                      </td>
+                      <td className="py-3 px-4 text-gray-600 text-sm" data-testid={`teacher-last-login-${teacher.user_id}`}>
+                        {formatLastLogin(teacher.last_login_at)}
                       </td>
                       <td className="py-3 px-4">
                         <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
