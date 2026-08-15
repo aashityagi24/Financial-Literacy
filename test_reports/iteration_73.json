@@ -10,7 +10,7 @@
     "complete_returned_url": "/api/uploads/quests/0bcdd74efcd244da.webp",
     "teacher_preview_img": {
       "alt": "Preview",
-      "src": "https://savings-goals-test.preview.emergentagent.com/api/uploads/quests/0bcdd74efcd244da.webp",
+      "src": "https://gamified-learn-hub-1.preview.emergentagent.com/api/uploads/quests/0bcdd74efcd244da.webp",
       "naturalWidth": 1600,
       "naturalHeight": 1200,
       "complete": true
@@ -25,7 +25,7 @@
     "child_view": {
       "route": "/quests",
       "quest_title_visible": "TEST_LargeUpload_Quest",
-      "quest_image_src": "https://savings-goals-test.preview.emergentagent.com/api/uploads/quests/0bcdd74efcd244da.webp",
+      "quest_image_src": "https://gamified-learn-hub-1.preview.emergentagent.com/api/uploads/quests/0bcdd74efcd244da.webp",
       "naturalWidth": 1600,
       "naturalHeight": 1200,
       "renders": true

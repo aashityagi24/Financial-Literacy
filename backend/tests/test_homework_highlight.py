@@ -9,7 +9,7 @@ import os
 import pytest
 import requests
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://savings-goals-test.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://gamified-learn-hub-1.preview.emergentagent.com').rstrip('/')
 
 CHILD_IDENT = "classmate_g3"
 CHILD_PASS = "testpass123"

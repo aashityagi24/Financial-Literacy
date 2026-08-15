@@ -835,6 +835,13 @@ async def admin_update_topic(topic_id: str, request: Request):
         for field in ["title", "description", "thumbnail"]:
             if field in body:
                 update_fields[f"grade_overrides.{grade_key}.{field}"] = body[field]
+        # Grade range (min_grade/max_grade) is a structural, global property of
+        # the topic/subtopic — it cannot be a per-grade override. Always apply it
+        # globally so editing the grade range reflects even when a grade filter
+        # is active.
+        for field in ["min_grade", "max_grade"]:
+            if field in body:
+                update_fields[field] = body[field]
         # Allow clearing all overrides for this grade by sending grade_overrides_clear: true
         if body.get("grade_overrides_clear"):
             await db.content_topics.update_one(

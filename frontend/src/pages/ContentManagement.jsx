@@ -1917,7 +1917,7 @@ export default function ContentManagement({ user }) {
               <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800 flex items-start justify-between gap-3">
                 <div>
                   <p className="font-medium">Editing for {gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only</p>
-                  <p className="text-xs mt-1">Title, description and thumbnail will be saved as a per-grade override. The global values stay unchanged.</p>
+                  <p className="text-xs mt-1">Title, description and thumbnail will be saved as a per-grade override. Grade range (min/max) always saves globally for every grade.</p>
                 </div>
                 {getCurrentGradeOverride(editingItem) && (
                   <Button
@@ -1982,7 +1982,7 @@ export default function ContentManagement({ user }) {
               <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800 flex items-start justify-between gap-3">
                 <div>
                   <p className="font-medium">Editing for {gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only</p>
-                  <p className="text-xs mt-1">Title, description and thumbnail will be saved as a per-grade override. The global values stay unchanged.</p>
+                  <p className="text-xs mt-1">Title, description and thumbnail will be saved as a per-grade override. Grade range (min/max) always saves globally for every grade.</p>
                 </div>
                 {getCurrentGradeOverride(editingItem) && (
                   <Button

@@ -743,7 +743,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 
 **Google Cloud Console Configuration**:
 To complete the OAuth setup, add these redirect URIs to your Google Cloud Console OAuth 2.0 credentials:
-- For Preview: `https://savings-goals-test.preview.emergentagent.com/api/auth/google/callback`
+- For Preview: `https://gamified-learn-hub-1.preview.emergentagent.com/api/auth/google/callback`
 - For Production: `https://coinquest.co.in/api/auth/google/callback`
 
 ### Session 12 Updates (February 9, 2026)
@@ -1314,3 +1314,10 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Added teacher "Last Login" to the School dashboard — a new "Last Login" column in the Teachers tab table and a "Last login" line in the overview Recent Teachers list (SchoolDashboard.jsx).
   - Uses existing users.last_login_at (already set on login in auth.py); backend school dashboard already returns it (only _id/password excluded). New formatLastLogin() helper shows Today / Yesterday / N days ago / "12 Jun 2026", and "Never" when the teacher hasn't logged in.
   - Verified via screenshot as school admin (springfield): both teachers show "Never" (correct — no logins yet).
+
+- **Content Management: grade-range edit not reflecting (Aug 15, 2026) — FIXED**
+  - Bug (reported on production): editing a topic/subtopic and changing its Min/Max Grade did not reflect in the UI when a grade filter was active.
+  - Root cause: ContentManagement.jsx adds `payload.grade = gradeFilter` to the PUT whenever a grade filter is active (to save per-grade text overrides). Backend `admin_update_topic` (content.py) then took the override branch and only saved title/description/thumbnail under `grade_overrides.<grade>` — silently ignoring min_grade/max_grade.
+  - Fix (backend content.py `admin_update_topic`): in the per-grade branch, always apply min_grade/max_grade as GLOBAL `$set` (grade range is a structural, global property and can't be a per-grade override). Also updated the edit-dialog amber hint text in ContentManagement.jsx to say the grade range always saves globally.
+  - Verified: curl PUT with `grade:"1"` + changed min/max now updates global min_grade/max_grade while keeping text overrides; full UI e2e (Grade-1 filter → Edit topic → change Max Grade → badge live-updated K-5→K-3 → reverted). Data left clean.
+  - NOTE: fix is in preview/codebase; production must be REDEPLOYED for the user to see it live.
