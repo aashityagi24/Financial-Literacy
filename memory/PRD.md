@@ -1321,3 +1321,10 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Fix (backend content.py `admin_update_topic`): in the per-grade branch, always apply min_grade/max_grade as GLOBAL `$set` (grade range is a structural, global property and can't be a per-grade override). Also updated the edit-dialog amber hint text in ContentManagement.jsx to say the grade range always saves globally.
   - Verified: curl PUT with `grade:"1"` + changed min/max now updates global min_grade/max_grade while keeping text overrides; full UI e2e (Grade-1 filter → Edit topic → change Max Grade → badge live-updated K-5→K-3 → reverted). Data left clean.
   - NOTE: fix is in preview/codebase; production must be REDEPLOYED for the user to see it live.
+
+- **New content item types: Group Project & Class Discussion (Aug 15, 2026)**
+  - Added two new content types alongside Worksheet/Know-It Sheet/etc. Admins upload content for them the same way (PDF/HTML/link/instructions).
+  - Teacher-oriented: selecting either type in the Add Content dialog defaults visibility to ['teacher'] (TEACHER_ONLY_TYPES in ContentManagement.jsx). Not shown to kids by default; admin can still adjust visibility per item.
+  - Icons/colors: Group Project = Users (teal), Class Discussion = MessagesSquare (pink).
+  - Registered across: ContentManagement.jsx (CONTENT_TYPES + default-visibility on both type pickers), TopicPage.jsx (CONTENT_TYPE_CONFIG + added to WORKSHEET_LIKE_TYPES so they use the PDF viewer/download/mark-done UI), LearnPage.jsx (CONTENT_TYPE_ICONS), TeacherHomework.jsx & ChildHomework.jsx (label maps).
+  - Backend needs no change (content_type is free-form string; no enum). Verified: API create persists content_type='group_project' with visible_to=['teacher']; frontend compiles; Add Content grid shows both new cards.

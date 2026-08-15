@@ -6,7 +6,7 @@ import { ClipboardList, Check, X, Trash2, Users, BarChart3, CheckCircle2 } from 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const typeLabel = (t) => {
-  const map = { activity: 'Activity', book: 'Story/Book', video: 'Video', worksheet: 'Worksheet', workbook: 'Workbook', know_it_sheet: 'Know-It Sheet' };
+  const map = { activity: 'Activity', book: 'Story/Book', video: 'Video', worksheet: 'Worksheet', workbook: 'Workbook', know_it_sheet: 'Know-It Sheet', group_project: 'Group Project', class_discussion: 'Class Discussion' };
   return map[t] || 'Lesson';
 };
 

@@ -8,7 +8,8 @@ import {
   Shield, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   Plus, Trash2, Edit2, Save, X, FolderOpen, FileText, BookOpen,
   FileSpreadsheet, Gamepad2, Upload, Image, Eye, EyeOff, Download,
-  Video, Book, Layers, ListOrdered, Library, Settings, Info, GripVertical, MoveRight, Database, Search, Lightbulb, Copy
+  Video, Book, Layers, ListOrdered, Library, Settings, Info, GripVertical, MoveRight, Database, Search, Lightbulb, Copy,
+  Users, MessagesSquare
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,7 +53,12 @@ const CONTENT_TYPES = [
   { value: 'workbook', label: 'Workbook', icon: Book, color: 'bg-blue-100 text-blue-600', description: 'Exercise books' },
   { value: 'know_it_sheet', label: 'Know-It Sheet', icon: Lightbulb, color: 'bg-yellow-100 text-yellow-700', description: 'Knowledge sheets' },
   { value: 'video', label: 'Video', icon: Video, color: 'bg-red-100 text-red-600', description: 'Educational videos' },
+  { value: 'group_project', label: 'Group Project', icon: Users, color: 'bg-teal-100 text-teal-600', description: 'Collaborative team work' },
+  { value: 'class_discussion', label: 'Class Discussion', icon: MessagesSquare, color: 'bg-pink-100 text-pink-600', description: 'Guided class talk' },
 ];
+
+// Teacher-oriented types: default visibility is teacher-only (not shown to kids).
+const TEACHER_ONLY_TYPES = ['group_project', 'class_discussion'];
 
 const GRADE_OPTIONS = [
   { value: 0, label: 'Kindergarten' },
@@ -2058,7 +2064,7 @@ export default function ContentManagement({ user }) {
                     <button
                       key={type.value}
                       type="button"
-                      onClick={() => setContentForm(prev => ({ ...prev, content_type: type.value }))}
+                      onClick={() => setContentForm(prev => ({ ...prev, content_type: type.value, ...(TEACHER_ONLY_TYPES.includes(type.value) ? { visible_to: ['teacher'] } : {}) }))}
                       className={`flex items-center gap-2 p-2 border rounded-lg text-left transition-all ${
                         isActive ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-200' : 'border-gray-200 hover:border-gray-300'
                       }`}

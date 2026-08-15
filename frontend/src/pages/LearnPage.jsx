@@ -5,7 +5,7 @@ import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
   BookOpen, ChevronLeft, ChevronRight, Trophy, FolderOpen,
-  FileText, FileSpreadsheet, Gamepad2, Video, Book, Lock, CheckCircle, Lightbulb
+  FileText, FileSpreadsheet, Gamepad2, Video, Book, Lock, CheckCircle, Lightbulb, Users, MessagesSquare
 } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
@@ -17,6 +17,8 @@ const CONTENT_TYPE_ICONS = {
   workbook: { icon: Book, color: 'text-blue-500', bg: 'bg-blue-100' },
   know_it_sheet: { icon: Lightbulb, color: 'text-yellow-600', bg: 'bg-yellow-100' },
   video: { icon: Video, color: 'text-red-500', bg: 'bg-red-100' },
+  group_project: { icon: Users, color: 'text-teal-600', bg: 'bg-teal-100' },
+  class_discussion: { icon: MessagesSquare, color: 'text-pink-600', bg: 'bg-pink-100' },
 };
 
 const gradeLabels = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
