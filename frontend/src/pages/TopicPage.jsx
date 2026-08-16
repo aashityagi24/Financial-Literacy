@@ -940,17 +940,29 @@ export default function TopicPage({ user }) {
                     )}
                   </button>
                 )}
-                {/* Open in new tab for worksheets/workbooks (for teachers/parents) */}
+                {/* Open in new tab for worksheets/workbooks (for teachers/parents).
+                    Blocked for test users so PDFs can't be grabbed. */}
                 {user?.role !== 'child' && isWorksheetLike(selectedContent.content_type) && selectedContent.content_data?.pdf_url && (
-                  <a 
-                    href={getAssetUrl(selectedContent.content_data.pdf_url)} 
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 hover:bg-gray-100 rounded-xl border-2 border-[#1D3557]"
-                    title="Open in new tab"
-                  >
-                    <ExternalLink className="w-5 h-5 text-[#1D3557]" />
-                  </a>
+                  user?.is_test_user ? (
+                    <button
+                      onClick={() => toast.error('Test users cannot download the content.')}
+                      className="p-2 hover:bg-gray-100 rounded-xl border-2 border-gray-300"
+                      title="Test users cannot download the content — viewing only"
+                      data-testid="open-tab-blocked-worksheet"
+                    >
+                      <Lock className="w-5 h-5 text-gray-500" />
+                    </button>
+                  ) : (
+                    <a 
+                      href={getAssetUrl(selectedContent.content_data.pdf_url)} 
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 hover:bg-gray-100 rounded-xl border-2 border-[#1D3557]"
+                      title="Open in new tab"
+                    >
+                      <ExternalLink className="w-5 h-5 text-[#1D3557]" />
+                    </a>
+                  )
                 )}
                 {/* Open in new tab for activities */}
                 {selectedContent.content_type === 'activity' && selectedContent.content_data?.html_url && (
@@ -976,17 +988,28 @@ export default function TopicPage({ user }) {
                     <ExternalLink className="w-5 h-5 text-[#1D3557]" />
                   </a>
                 )}
-                {/* Open in new tab for books with PDF */}
+                {/* Open in new tab for books with PDF. Blocked for test users. */}
                 {selectedContent.content_type === 'book' && selectedContent.content_data?.pdf_url && (
-                  <a 
-                    href={getAssetUrl(selectedContent.content_data.pdf_url)} 
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 hover:bg-gray-100 rounded-xl border-2 border-[#1D3557]"
-                    title="Open in new tab"
-                  >
-                    <ExternalLink className="w-5 h-5 text-[#1D3557]" />
-                  </a>
+                  user?.is_test_user ? (
+                    <button
+                      onClick={() => toast.error('Test users cannot download the content.')}
+                      className="p-2 hover:bg-gray-100 rounded-xl border-2 border-gray-300"
+                      title="Test users cannot download the content — viewing only"
+                      data-testid="open-tab-blocked-book"
+                    >
+                      <Lock className="w-5 h-5 text-gray-500" />
+                    </button>
+                  ) : (
+                    <a 
+                      href={getAssetUrl(selectedContent.content_data.pdf_url)} 
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 hover:bg-gray-100 rounded-xl border-2 border-[#1D3557]"
+                      title="Open in new tab"
+                    >
+                      <ExternalLink className="w-5 h-5 text-[#1D3557]" />
+                    </a>
+                  )
                 )}
                 <button 
                   onClick={closeViewer}
