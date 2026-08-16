@@ -196,6 +196,12 @@ export default function TopicPage({ user }) {
   
   const handleDownload = async () => {
     if (!selectedContent?.content_id) return;
+    // Admin-flagged test users can view but never download — show the message
+    // and skip the API call entirely.
+    if (downloadStatus.download_blocked) {
+      toast.error(downloadStatus.block_reason || 'Test users cannot download the content.');
+      return;
+    }
     // Pre-empt the round trip when we already know the trial allowance is
     // exhausted so the user immediately sees the upsell modal.
     if (downloadStatus.is_limited && downloadStatus.remaining === 0) {
@@ -231,7 +237,10 @@ export default function TopicPage({ user }) {
     } catch (err) {
       const status = err.response?.status;
       const detail = err.response?.data?.detail || 'Download failed';
-      if (status === 403) {
+      if (status === 403 && (downloadStatus.download_blocked || /test user/i.test(detail))) {
+        // Test-user block (not a trial cap) — just surface the message.
+        toast.error(detail);
+      } else if (status === 403) {
         setDownloadStatus({ is_limited: true, remaining: 0, limit: downloadStatus.limit || 5 });
         window.dispatchEvent(new Event('trial-status-refresh'));
         // Hard wall → show the explanation modal.
@@ -900,12 +909,16 @@ export default function TopicPage({ user }) {
                     onClick={handleDownload}
                     disabled={downloading}
                     className={`p-2 rounded-xl border-2 border-[#1D3557] flex items-center gap-1.5 transition-colors ${
-                      downloadStatus.is_limited && downloadStatus.remaining === 0
+                      downloadStatus.download_blocked
+                        ? 'bg-gray-50 border-gray-300 hover:bg-gray-100'
+                        : downloadStatus.is_limited && downloadStatus.remaining === 0
                         ? 'bg-orange-50 border-orange-400 hover:bg-orange-100'
                         : 'hover:bg-gray-100'
                     } ${downloading ? 'opacity-50 cursor-wait' : ''}`}
                     title={
-                      downloadStatus.is_limited
+                      downloadStatus.download_blocked
+                        ? 'Test users cannot download the content — viewing only'
+                        : downloadStatus.is_limited
                         ? (downloadStatus.remaining === 0
                             ? 'Trial download limit reached — click to see upgrade options'
                             : `${downloadStatus.remaining} of ${downloadStatus.limit} trial downloads left`)
@@ -913,12 +926,14 @@ export default function TopicPage({ user }) {
                     }
                     data-testid="content-download-btn"
                   >
-                    {downloadStatus.is_limited && downloadStatus.remaining === 0 ? (
+                    {downloadStatus.download_blocked ? (
+                      <Lock className="w-5 h-5 text-gray-500" />
+                    ) : downloadStatus.is_limited && downloadStatus.remaining === 0 ? (
                       <Lock className="w-5 h-5 text-orange-600" />
                     ) : (
                       <Download className="w-5 h-5 text-[#1D3557]" />
                     )}
-                    {downloadStatus.is_limited && typeof downloadStatus.remaining === 'number' && (
+                    {!downloadStatus.download_blocked && downloadStatus.is_limited && typeof downloadStatus.remaining === 'number' && (
                       <span className={`text-xs font-semibold ${downloadStatus.remaining === 0 ? 'text-orange-700' : 'text-[#1D3557]'}`}>
                         {downloadStatus.remaining}/{downloadStatus.limit}
                       </span>

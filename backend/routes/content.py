@@ -1270,6 +1270,18 @@ async def get_download_status(content_id: str, request: Request):
     
     is_trial = await is_user_on_one_day_trial(user, db)
     if not is_trial:
+        # Admin-flagged test users can view content but must not download it
+        # (prevents free harvesting of paid PDFs). The UI uses this to show a
+        # clear message and keep the button non-functional for downloads.
+        if user.get("is_test_user"):
+            return {
+                "is_limited": False,
+                "download_blocked": True,
+                "block_reason": "Test users cannot download the content.",
+                "limit": None,
+                "used": 0,
+                "remaining": None,
+            }
         return {"is_limited": False, "limit": None, "used": 0, "remaining": None}
     
     used = await db.user_downloads.count_documents({"user_id": user.get("user_id")})
@@ -1293,6 +1305,14 @@ async def request_content_download(content_id: str, request: Request):
     user = await get_current_user(request)
     if not user:
         raise HTTPException(status_code=401, detail="Login required to download")
+
+    # Admin-flagged test users may view content but are blocked from downloading
+    # any file, so they cannot harvest paid PDFs for free. Viewing is unaffected.
+    if user.get("is_test_user"):
+        raise HTTPException(
+            status_code=403,
+            detail="Test users cannot download the content. You can still view it online.",
+        )
     
     content = await db.content_items.find_one({"content_id": content_id}, {"_id": 0})
     if not content:

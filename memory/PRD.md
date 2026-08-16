@@ -1334,3 +1334,9 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Default visibility now teacher + parent (DEFAULT_VISIBILITY map in ContentManagement.jsx replaced the old TEACHER_ONLY_TYPES; group_project stays teacher-only, discussion = ['teacher','parent']). Helper defaultVisibilityFor() used by both new-content grid and in-dialog type switcher.
   - Updated in ContentManagement.jsx, TopicPage.jsx (config + WORKSHEET_LIKE_TYPES), LearnPage.jsx, TeacherHomework.jsx, ChildHomework.jsx. No stale class_discussion refs remain.
   - Verified: API persist type='discussion' visible_to=['teacher','parent']; frontend compiles; Add Content grid shows the "Discussion" card.
+
+- **Block downloads for test users (Aug 16, 2026)**
+  - Admin-flagged test users (is_test_user=True) can VIEW content but are blocked from DOWNLOADING PDFs/files (prevents free harvesting of paid content).
+  - Backend (content.py): POST /content/{id}/download now returns 403 "Test users cannot download the content. You can still view it online." for is_test_user; GET /content/{id}/download-status returns {download_blocked:true, block_reason} for test users. Non-test users unaffected (verified admin download still 200).
+  - Frontend (TopicPage.jsx): download button renders a lock icon + "viewing only" tooltip for blocked users; handleDownload pre-empts with a toast (no API call); 403 test-user responses show the message instead of the trial-upsell modal. Inline PDF viewer (viewing) unchanged.
+  - Verified: API (test user 403 + download_blocked status; non-test 200) and full UI e2e as test child classmate_k — worksheet opened (view works), download click showed the toast "Test users cannot download the content."
