@@ -1328,3 +1328,9 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Icons/colors: Group Project = Users (teal), Class Discussion = MessagesSquare (pink).
   - Registered across: ContentManagement.jsx (CONTENT_TYPES + default-visibility on both type pickers), TopicPage.jsx (CONTENT_TYPE_CONFIG + added to WORKSHEET_LIKE_TYPES so they use the PDF viewer/download/mark-done UI), LearnPage.jsx (CONTENT_TYPE_ICONS), TeacherHomework.jsx & ChildHomework.jsx (label maps).
   - Backend needs no change (content_type is free-form string; no enum). Verified: API create persists content_type='group_project' with visible_to=['teacher']; frontend compiles; Add Content grid shows both new cards.
+
+- **Renamed "Class Discussion" → "Discussion" (Aug 16, 2026)**
+  - Type value renamed class_discussion → discussion; label "Discussion", description "Talk it out — in class or at home" (can be a class talk or an at-home talk).
+  - Default visibility now teacher + parent (DEFAULT_VISIBILITY map in ContentManagement.jsx replaced the old TEACHER_ONLY_TYPES; group_project stays teacher-only, discussion = ['teacher','parent']). Helper defaultVisibilityFor() used by both new-content grid and in-dialog type switcher.
+  - Updated in ContentManagement.jsx, TopicPage.jsx (config + WORKSHEET_LIKE_TYPES), LearnPage.jsx, TeacherHomework.jsx, ChildHomework.jsx. No stale class_discussion refs remain.
+  - Verified: API persist type='discussion' visible_to=['teacher','parent']; frontend compiles; Add Content grid shows the "Discussion" card.

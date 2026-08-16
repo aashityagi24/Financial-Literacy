@@ -54,11 +54,16 @@ const CONTENT_TYPES = [
   { value: 'know_it_sheet', label: 'Know-It Sheet', icon: Lightbulb, color: 'bg-yellow-100 text-yellow-700', description: 'Knowledge sheets' },
   { value: 'video', label: 'Video', icon: Video, color: 'bg-red-100 text-red-600', description: 'Educational videos' },
   { value: 'group_project', label: 'Group Project', icon: Users, color: 'bg-teal-100 text-teal-600', description: 'Collaborative team work' },
-  { value: 'class_discussion', label: 'Class Discussion', icon: MessagesSquare, color: 'bg-pink-100 text-pink-600', description: 'Guided class talk' },
+  { value: 'discussion', label: 'Discussion', icon: MessagesSquare, color: 'bg-pink-100 text-pink-600', description: 'Talk it out — in class or at home' },
 ];
 
-// Teacher-oriented types: default visibility is teacher-only (not shown to kids).
-const TEACHER_ONLY_TYPES = ['group_project', 'class_discussion'];
+// Default visibility per teacher/parent-oriented type (not shown to kids by
+// default). Discussion can be a class talk (teacher) or an at-home talk (parent).
+const DEFAULT_VISIBILITY = {
+  group_project: ['teacher'],
+  discussion: ['teacher', 'parent'],
+};
+const defaultVisibilityFor = (type) => DEFAULT_VISIBILITY[type] || ['child'];
 
 const GRADE_OPTIONS = [
   { value: 0, label: 'Kindergarten' },
@@ -1889,7 +1894,7 @@ export default function ContentManagement({ user }) {
                           <button
                             key={type.value}
                             onClick={() => { 
-                              setContentForm(prev => ({ ...prev, content_type: type.value, content_data: {} }));
+                              setContentForm(prev => ({ ...prev, content_type: type.value, content_data: {}, visible_to: defaultVisibilityFor(type.value) }));
                               setEditingItem(null);
                               setShowContentDialog(true);
                             }}
@@ -2064,7 +2069,7 @@ export default function ContentManagement({ user }) {
                     <button
                       key={type.value}
                       type="button"
-                      onClick={() => setContentForm(prev => ({ ...prev, content_type: type.value, ...(TEACHER_ONLY_TYPES.includes(type.value) ? { visible_to: ['teacher'] } : {}) }))}
+                      onClick={() => setContentForm(prev => ({ ...prev, content_type: type.value, ...(DEFAULT_VISIBILITY[type.value] ? { visible_to: DEFAULT_VISIBILITY[type.value] } : {}) }))}
                       className={`flex items-center gap-2 p-2 border rounded-lg text-left transition-all ${
                         isActive ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-200' : 'border-gray-200 hover:border-gray-300'
                       }`}

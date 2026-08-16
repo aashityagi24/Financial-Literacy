@@ -26,11 +26,11 @@ const CONTENT_TYPE_CONFIG = {
   know_it_sheet: { icon: Lightbulb, color: 'text-yellow-700', bg: 'bg-yellow-100', label: 'Know-It Sheet' },
   video: { icon: Video, color: 'text-red-600', bg: 'bg-red-100', label: 'Video' },
   group_project: { icon: Users, color: 'text-teal-600', bg: 'bg-teal-100', label: 'Group Project' },
-  class_discussion: { icon: MessagesSquare, color: 'text-pink-600', bg: 'bg-pink-100', label: 'Class Discussion' },
+  discussion: { icon: MessagesSquare, color: 'text-pink-600', bg: 'bg-pink-100', label: 'Discussion' },
 };
 
 // Worksheet-style content types: they share the same PDF viewer/download/edit UI.
-const WORKSHEET_LIKE_TYPES = new Set(['worksheet', 'workbook', 'know_it_sheet', 'group_project', 'class_discussion']);
+const WORKSHEET_LIKE_TYPES = new Set(['worksheet', 'workbook', 'know_it_sheet', 'group_project', 'discussion']);
 const isWorksheetLike = (type) => WORKSHEET_LIKE_TYPES.has(type);
 
 export default function TopicPage({ user }) {

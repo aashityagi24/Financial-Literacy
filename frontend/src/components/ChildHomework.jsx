@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { ClipboardList, Clock, AlertTriangle } from 'lucide-react';
 
 const typeLabel = (t) => {
-  const map = { activity: 'Activity', book: 'Story/Book', video: 'Video', worksheet: 'Worksheet', workbook: 'Workbook', know_it_sheet: 'Know-It Sheet', group_project: 'Group Project', class_discussion: 'Class Discussion' };
+  const map = { activity: 'Activity', book: 'Story/Book', video: 'Video', worksheet: 'Worksheet', workbook: 'Workbook', know_it_sheet: 'Know-It Sheet', group_project: 'Group Project', discussion: 'Discussion' };
   return map[t] || 'Lesson';
 };
 

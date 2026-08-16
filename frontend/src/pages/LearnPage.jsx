@@ -18,7 +18,7 @@ const CONTENT_TYPE_ICONS = {
   know_it_sheet: { icon: Lightbulb, color: 'text-yellow-600', bg: 'bg-yellow-100' },
   video: { icon: Video, color: 'text-red-500', bg: 'bg-red-100' },
   group_project: { icon: Users, color: 'text-teal-600', bg: 'bg-teal-100' },
-  class_discussion: { icon: MessagesSquare, color: 'text-pink-600', bg: 'bg-pink-100' },
+  discussion: { icon: MessagesSquare, color: 'text-pink-600', bg: 'bg-pink-100' },
 };
 
 const gradeLabels = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
