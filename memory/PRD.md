@@ -1345,3 +1345,9 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Extends the test-user download block: the viewer's "Open in new tab" link for worksheet/workbook PDFs and book PDFs is now replaced with a lock button for is_test_user accounts. Clicking it shows the toast "Test users cannot download the content."
   - Uses user.is_test_user (returned by /api/auth/me) in TopicPage.jsx. Inline PDF viewer (viewing) unchanged. HTML/activity "open in new tab" links left as-is (not file downloads).
   - Verified via UI e2e as test parent (wallet_demo_parent): both the download and open-in-tab controls render as locks; open-in-tab click shows the toast; content still viewable inline.
+
+- **Hid Store from child + Store/Purchases from parent dashboards (Aug 20, 2026)**
+  - Added feature flag /app/frontend/src/config/features.js → STORE_ENABLED (currently false). Flip to true to re-enable everything.
+  - Child (Dashboard.jsx): "Store" nav tile hidden; the spending ("Wallet") jar now links to /wallet instead of /store while the flag is off.
+  - Parent (ParentDashboard.jsx): the action grid with "Shopping List" (store) and "Purchases" buttons is hidden (Purchases dialog kept in code, just not triggerable).
+  - /store route and StorePage are NOT deleted — only the dashboard entry points are hidden. Verified via screenshots on child (classmate_g1) and parent (wallet_demo_parent) dashboards.

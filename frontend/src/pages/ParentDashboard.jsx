@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { STORE_ENABLED } from '@/config/features';
 import {
   Dialog,
   DialogContent,
@@ -704,6 +705,7 @@ export default function ParentDashboard({ user }) {
         {parentSection === 'overview' && (
         <>
         {/* Compact Action Grid - All actions in one place */}
+        {STORE_ENABLED && (
         <div className="grid grid-cols-2 gap-2 mb-5">
           <Link to="/parent/shopping-list" className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#EE6C4D] hover:bg-[#E05A3A] transition-colors shadow-sm" data-testid="parent-shopping-link">
             <Store className="w-5 h-5 text-white" />
@@ -714,6 +716,7 @@ export default function ParentDashboard({ user }) {
             <span className="text-[11px] font-bold text-white text-center leading-tight">Purchases</span>
           </button>
         </div>
+        )}
         
         {/* Invite Second Parent - only for two_parents plan */}
         {subscription?.plan_type === 'two_parents' && subscription?.parent_emails?.length < 2 && (

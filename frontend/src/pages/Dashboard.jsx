@@ -15,6 +15,7 @@ import ClassmatesSection from '@/components/ClassmatesSection';
 import DashboardFooter from '@/components/DashboardFooter';
 import { ChildHomework } from '@/components/ChildHomework';
 import { getDefaultAvatar } from '@/utils/avatars';
+import { STORE_ENABLED } from '@/config/features';
 
 export default function Dashboard({ user, setUser }) {
   const navigate = useNavigate();
@@ -131,7 +132,7 @@ export default function Dashboard({ user, setUser }) {
   const navItems = [
     { icon: BookOpen, label: 'Learn', path: '/learn', color: '#FFD23F' },
     { icon: Wallet, label: 'My Money', path: '/wallet', color: '#3D5A80' },
-    { icon: Store, label: 'Store', path: '/store', color: '#EE6C4D' },
+    ...(STORE_ENABLED ? [{ icon: Store, label: 'Store', path: '/store', color: '#EE6C4D' }] : []),
     investmentItem,
     { icon: Target, label: 'Quests', path: '/quests', color: '#9B5DE5' },
     { icon: BookMarked, label: 'Money Words', path: '/glossary', color: '#4A90A4' },
@@ -362,7 +363,7 @@ export default function Dashboard({ user, setUser }) {
                 // Define navigation path for each account type
                 const getAccountPath = (type) => {
                   switch(type) {
-                    case 'spending': return '/store';
+                    case 'spending': return STORE_ENABLED ? '/store' : '/wallet';
                     case 'my_wallet': return '/my-wallet';
                     case 'savings': return '/savings-goals';
                     case 'gifting': return '/gifting';
