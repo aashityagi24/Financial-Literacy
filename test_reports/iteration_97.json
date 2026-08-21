@@ -1,0 +1,31 @@
+{
+  "summary": "Frontend-only verification of the 'Money You Can Spend' fix on /wallet (WalletPage.jsx). Logged in as 4 children (wallet_demo_child, classmate_g1, classmate_g2 n/a, classmate_g3, classmate_k), read data-testid='total-balance' and compared it against GET /api/wallet accounts. In every case total-balance == sum over accounts where account_type != 'gifting' of (available_balance ?? balance). Gifting excluded, savings allocated (In Goals ₹2645) excluded, individual jar cards intact. Also did a live transfer (My Wallet ₹10 -> Giving) and confirmed the total dropped ₹470 -> ₹460 immediately, proving gifting money is no longer counted as spendable. The reported bug is FIXED.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/wallet/transfer", "issue": "UI/backend rule mismatch: WalletPage allowedDestsFor('gifting') offers Giving -> My Wallet in the Move Money dropdowns, but backend rejects it with 'Giving money can only leave by sending a gift to a friend.' Either remove that option from the dropdown or allow the transfer."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional: totalAvailable iterates wallet.accounts directly instead of getFilteredAccounts(); for Kindergarten (grade 0) the 'investing' jar is hidden from the grid but its balance would still be counted in 'Money You Can Spend'. Currently invisible because K accounts have investing=0, but it is a latent inconsistency.",
+    "Semantics review: total still includes savings 'Available' (Piggy Bank), yet Piggy Bank can never be a transfer source and money leaves only via a savings-goal contribution - so that portion is arguably not 'spendable'. Also includes My Wallet balance that has 8 entries pending parent payout. Confirm both are intended per product spec.",
+    "Fix the Giving -> My Wallet dropdown option / backend rule mismatch in the Move Money dialog."
+  ],
+  "critical_code_review_comments": [
+    "WalletPage.jsx line ~249: use getFilteredAccounts() (grade-aware) rather than wallet.accounts for the totalAvailable reduce, so hidden jars can never contribute to the displayed spendable total."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested (frontend-only request)", "frontend": "100% (4/4 wallet totals correct + 1 dynamic transfer check)"},
+  "seed_data_creation": "No new users. NOTE: wallet_demo_child seed balances were mutated by the dynamic test: ₹10 moved My Wallet -> Giving (now my_wallet ₹255, gifting ₹59; previously ₹265 / ₹49). Revert attempt failed because backend forbids Giving -> My Wallet transfers. Spendable total is now ₹460.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": true,
+  "test_credentials": "children: wallet_demo_child / classmate_g1 / classmate_g3 / classmate_k, all password testpass123 (login field placeholder 'email@example.com or username')",
+  "context_for_next_testing_agent": "Verified data: wallet_demo_child accounts = spending 180, savings 25 avail (2645 in goals), gifting 59, investing 0, my_wallet 255 -> total-balance ₹460. classmate_g1: spending 15, gifting 5 -> ₹15. classmate_g3: spending 125, gifting 10, my_wallet 45 -> ₹170. classmate_k (grade 0, no garden jar): spending 10 -> ₹10. Login flow: /login, page.get_by_placeholder('email@example.com or username') then password + 'Sign In'. Wallet accounts can be read in-page via fetch('/api/wallet') with the JWT from localStorage.",
+  "rca_of_the_issue": "Original inflated total summed every account balance including the gifting jar and allocated (goal/invested) amounts. Fix now skips account_type 'gifting' and uses available_balance ?? balance; verified against live API data for 4 children."
+}

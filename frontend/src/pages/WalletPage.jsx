@@ -241,9 +241,18 @@ export default function WalletPage({ user }) {
   };
   
   const filteredAccounts = getFilteredAccounts();
-  // Total balance = sum across ALL accounts (incl. spending which we hide as a jar).
-  const totalAvailable = (wallet?.accounts || []).reduce(
-    (sum, acc) => sum + (acc.available_balance ?? acc.balance ?? 0),
+  // "Money You Can Spend" = spendable money only. Excludes the Giving jar
+  // (earmarked to give away) and — via available_balance — any money locked in a
+  // savings goal or invested in the garden. Counting those confused kids because
+  // e.g. ₹25 sitting in the Giving jar was being shown as spendable.
+  // Iterate the grade-filtered accounts so a jar hidden for the child's grade
+  // (e.g. Kindergarten has no garden) can never contribute to the total.
+  const NON_SPENDABLE_ACCOUNT_TYPES = ['gifting'];
+  const totalAvailable = (filteredAccounts || []).reduce(
+    (sum, acc) =>
+      NON_SPENDABLE_ACCOUNT_TYPES.includes(acc.account_type)
+        ? sum
+        : sum + (acc.available_balance ?? acc.balance ?? 0),
     0
   ) || 0;
   

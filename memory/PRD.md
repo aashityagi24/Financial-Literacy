@@ -1351,3 +1351,9 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Child (Dashboard.jsx): "Store" nav tile hidden; the spending ("Wallet") jar now links to /wallet instead of /store while the flag is off.
   - Parent (ParentDashboard.jsx): the action grid with "Shopping List" (store) and "Purchases" buttons is hidden (Purchases dialog kept in code, just not triggerable).
   - /store route and StorePage are NOT deleted — only the dashboard entry points are hidden. Verified via screenshots on child (classmate_g1) and parent (wallet_demo_parent) dashboards.
+
+- **Fixed "Money You Can Spend" total counting Giving jar (Aug 20, 2026)**
+  - Bug: WalletPage /wallet top card summed ALL jar balances incl. Giving (gifting), so ₹25 earmarked for giving inflated spendable total (e.g. 115+25=140).
+  - Fix (WalletPage.jsx ~line 243): totalAvailable now excludes account_type 'gifting' and iterates getFilteredAccounts() (grade-aware, so hidden jars like Kindergarten garden never count); uses available_balance ?? balance so goal-allocated (savings In Goals) and invested (garden) money is excluded too.
+  - Verified by testing_agent (iteration_97.json): 4/4 child wallets show total == sum of non-gifting accounts' available_balance; live transfer My Wallet->Giving dropped the spendable total immediately. FIXED.
+  - Known separate/pre-existing issue surfaced by tester (NOT part of this fix): the Move Money dialog offers Giving->My Wallet but backend rejects it ("Giving money can only leave by sending a gift"). Backlog. Also tester mutated wallet_demo_child seed (my_wallet 265->255, gifting 49->59) and couldn't revert due to that rule.
