@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, Request
 from datetime import datetime, timezone, timedelta
 import uuid
 import hashlib
+from services.curricula import normalize_curricula, DEFAULT_CURRICULUM, CURRICULA
 
 # Database injection
 _db = None
@@ -103,6 +104,7 @@ async def admin_create_school(request: Request):
         "password_hash": password_hash,
         "address": address,
         "contact_email": contact_email,
+        "curricula": normalize_curricula(data.get("curricula")),
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
@@ -112,6 +114,21 @@ async def admin_create_school(request: Request):
         "school_id": school_id,
         "message": f"School '{name}' created successfully"
     }
+
+@router.put("/admin/schools/{school_id}/curricula")
+async def admin_set_school_curricula(school_id: str, request: Request):
+    """Set which curricula are enabled for a school (admin only)."""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+    data = await request.json()
+    curricula = normalize_curricula(data.get("curricula"))
+    result = await db.schools.update_one(
+        {"school_id": school_id}, {"$set": {"curricula": curricula}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="School not found")
+    return {"message": "Curricula updated", "curricula": curricula}
 
 @router.get("/admin/schools")
 async def admin_get_schools(request: Request):
@@ -123,6 +140,7 @@ async def admin_get_schools(request: Request):
     schools = await db.schools.find({}, {"_id": 0, "password_hash": 0}).to_list(100)
     
     for school in schools:
+        school.setdefault("curricula", [DEFAULT_CURRICULUM])
         school["teacher_count"] = await db.users.count_documents({
             "school_id": school["school_id"],
             "role": "teacher"

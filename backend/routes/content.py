@@ -4,8 +4,23 @@ from typing import Optional
 from datetime import datetime, timezone
 import uuid
 import copy
+from services.curricula import (
+    get_active_curricula, content_curricula_clause, normalize_curricula,
+    CURRICULA, CURRICULUM_IDS, DEFAULT_CURRICULUM,
+)
 
 router = APIRouter(tags=["content"])
+
+
+def _apply_curricula(query, active_curricula):
+    """AND-merge the active-curricula clause onto a content-item query.
+    No-op for admins (active_curricula is None)."""
+    clause = content_curricula_clause(active_curricula)
+    if not clause:
+        return query
+    if not query:
+        return clause
+    return {"$and": [query, clause]}
 
 # Database reference (initialized by server.py)
 db = None
@@ -159,6 +174,23 @@ async def is_user_on_one_day_trial(user, db):
 # ============== USER CONTENT ROUTES ==============
 
 
+@router.get("/curricula")
+async def list_curricula(request: Request):
+    """Public list of all curricula. For authenticated non-admin users, also
+    returns which curricula are enabled for them (their school's, or the
+    default for D2C users) so the UI can show a switcher only when >1."""
+    from services.auth import get_current_user
+    db = get_db()
+    try:
+        user = await get_current_user(request)
+    except Exception:
+        user = None
+    active = None
+    if user and user.get("role") != "admin":
+        active = await get_active_curricula(user, db)
+    return {"curricula": CURRICULA, "active": active}
+
+
 @router.get("/content/topics")
 async def get_all_topics(request: Request, grade: Optional[int] = None):
     """Get all topics with hierarchy and unlock status"""
@@ -172,6 +204,12 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
     is_teacher = user_role == "teacher"
     is_parent = user_role == "parent"
     is_admin = user_role == "admin"
+    # Curriculum scoping: admins see everything (None); everyone else is scoped
+    # to their school's enabled curricula (or Financial Literacy for D2C users).
+    active_curricula = None if is_admin else await get_active_curricula(user, db)
+    requested_curriculum = request.query_params.get("curriculum")
+    if requested_curriculum and active_curricula is not None and requested_curriculum in active_curricula:
+        active_curricula = [requested_curriculum]
     
     # Determine grade filter based on role
     filter_grade = None
@@ -272,7 +310,7 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                 apply_grade_overrides(st, filter_grade)
         topic["subtopics"] = subtopics
         topic["content_count"] = await count_with_grade_parent(
-            db.content_items, 'topic_id', topic_id, filter_grade, content_extra_query
+            db.content_items, 'topic_id', topic_id, filter_grade, _apply_curricula(content_extra_query, active_curricula)
         )
         
         if is_child:
@@ -296,6 +334,7 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                         {"visible_to": None}
                     ]
                 }
+                subtopic_content_extra = _apply_curricula(subtopic_content_extra, active_curricula)
                 subtopic["content_count"] = await count_with_grade_parent(
                     db.content_items, 'topic_id', subtopic_id, filter_grade, subtopic_content_extra
                 )
@@ -351,6 +390,7 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
                         ]
                 else:
                     subtopic_content_extra = {"is_published": True}
+                subtopic_content_extra = _apply_curricula(subtopic_content_extra, active_curricula)
                 subtopic["content_count"] = await count_with_grade_parent(
                     db.content_items, 'topic_id', subtopic_id, filter_grade, subtopic_content_extra
                 )
@@ -377,6 +417,11 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
     is_parent = user_role == "parent"
     user_id = user.get("user_id") if user else None
     user_grade = user.get("grade") if user else None
+    # Curriculum scoping (admins unscoped).
+    active_curricula = None if is_admin else await get_active_curricula(user, db)
+    requested_curriculum = request.query_params.get("curriculum")
+    if requested_curriculum and active_curricula is not None and requested_curriculum in active_curricula:
+        active_curricula = [requested_curriculum]
     
     # Determine grade filter based on role
     # If grade param is passed, always use it (allows admin preview and teacher/parent filtering)
@@ -489,6 +534,7 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
             ]
     
     logging.info(f"TopicDetail: Final content_query={content_query}")
+    content_query = _apply_curricula(content_query, active_curricula)
     content_items = await find_with_grade_order(
         db.content_items, content_query, filter_grade,
         parent_field='topic_id', parent_target=topic_id, limit=None
@@ -523,6 +569,7 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
             if filter_grade is not None:
                 subtopic_content_extra["min_grade"] = {"$lte": filter_grade}
                 subtopic_content_extra["max_grade"] = {"$gte": filter_grade}
+            subtopic_content_extra = _apply_curricula(subtopic_content_extra, active_curricula)
             subtopic_content = await find_with_grade_order(
                 db.content_items, subtopic_content_extra, filter_grade,
                 parent_field='topic_id', parent_target=subtopic_id, limit=None
@@ -599,6 +646,7 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
                 subtopic_content_extra["min_grade"] = {"$lte": filter_grade}
                 subtopic_content_extra["max_grade"] = {"$gte": filter_grade}
             
+            subtopic_content_extra = _apply_curricula(subtopic_content_extra, active_curricula)
             subtopic_content = await find_with_grade_order(
                 db.content_items, subtopic_content_extra, filter_grade,
                 parent_field='topic_id', parent_target=subtopic_id, limit=None
@@ -622,6 +670,7 @@ async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int]
             if filter_grade is not None:
                 subtopic_content_extra["min_grade"] = {"$lte": filter_grade}
                 subtopic_content_extra["max_grade"] = {"$gte": filter_grade}
+            subtopic_content_extra = _apply_curricula(subtopic_content_extra, active_curricula)
             subtopic_content = await find_with_grade_order(
                 db.content_items, subtopic_content_extra, filter_grade,
                 parent_field='topic_id', parent_target=subtopic_id, limit=None
@@ -804,6 +853,7 @@ async def admin_create_topic(request: Request):
         "order": new_order,
         "min_grade": body.get("min_grade", 0),
         "max_grade": body.get("max_grade", 5),
+        "curricula": normalize_curricula(body.get("curricula")),
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.content_topics.insert_one(topic_doc)
@@ -830,6 +880,8 @@ async def admin_update_topic(topic_id: str, request: Request):
         for field in ["title", "description", "thumbnail", "icon", "min_grade", "max_grade", "order"]:
             if field in body:
                 update_fields[field] = body[field]
+        if "curricula" in body:
+            update_fields["curricula"] = normalize_curricula(body.get("curricula"))
     else:
         # Per-grade override for the human-facing fields only.
         for field in ["title", "description", "thumbnail"]:
@@ -943,6 +995,7 @@ async def admin_create_item(request: Request):
         "max_grade": body.get("max_grade", 5),
         "reward_coins": body.get("reward_coins", 5),
         "is_published": body.get("is_published", False),
+        "curricula": normalize_curricula(body.get("curricula")),
         # When True (default), the child MUST complete this item before the next
         # one unlocks. When False the next item unlocks automatically — useful
         # for supplementary worksheets/activities admins want to offer but not
@@ -1002,6 +1055,8 @@ async def admin_update_item(content_id: str, request: Request):
                   "is_published", "is_mandatory"]:
         if field in body:
             update_fields[field] = body[field]
+    if "curricula" in body:
+        update_fields["curricula"] = normalize_curricula(body.get("curricula"))
     
     if update_fields:
         await db.content_items.update_one({"content_id": content_id}, {"$set": update_fields})

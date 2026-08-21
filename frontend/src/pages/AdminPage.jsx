@@ -432,6 +432,29 @@ export default function AdminPage({ user }) {
       toast.error(error.response?.data?.detail || 'Failed to delete school');
     }
   };
+
+  const CURRICULA = [
+    { id: 'financial_literacy', name: 'Financial Literacy' },
+    { id: 'money_entrepreneurship', name: 'Money Masters & Entrepreneurship' },
+  ];
+
+  const handleToggleSchoolCurriculum = async (school, curriculumId, enabled) => {
+    const current = school.curricula || ['financial_literacy'];
+    let next = enabled ? [...new Set([...current, curriculumId])] : current.filter(c => c !== curriculumId);
+    if (next.length === 0) {
+      toast.error('A school must have at least one curriculum');
+      return;
+    }
+    // Optimistic update
+    setSchools(prev => prev.map(s => s.school_id === school.school_id ? { ...s, curricula: next } : s));
+    try {
+      await axios.put(`${API}/admin/schools/${school.school_id}/curricula`, { curricula: next });
+      toast.success('Curriculum access updated');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update curricula');
+      fetchData();
+    }
+  };
   
   if (loading) {
     return (
@@ -692,6 +715,7 @@ export default function AdminPage({ user }) {
           ].map((tab) => (
             <button
               key={tab.id}
+              data-testid={`admin-tab-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors ${
                 activeTab === tab.id 
@@ -1506,6 +1530,25 @@ export default function AdminPage({ user }) {
                       {school.contact_email && (
                         <p className="text-white/60 text-xs mt-2 truncate">{school.contact_email}</p>
                       )}
+                      <div className="mt-3 pt-3 border-t border-white/15">
+                        <p className="text-white/70 text-xs font-medium mb-2">Curriculum access</p>
+                        <div className="flex flex-col gap-1.5">
+                          {CURRICULA.map(c => {
+                            const enabled = (school.curricula || ['financial_literacy']).includes(c.id);
+                            return (
+                              <label key={c.id} className="flex items-center gap-2 cursor-pointer text-sm" data-testid={`school-curriculum-${school.school_id}-${c.id}`}>
+                                <input
+                                  type="checkbox"
+                                  checked={enabled}
+                                  onChange={(e) => handleToggleSchoolCurriculum(school, c.id, e.target.checked)}
+                                  className="w-4 h-4 rounded accent-[#FFD23F]"
+                                />
+                                <span className="text-white/90">{c.name}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}

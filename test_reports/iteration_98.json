@@ -1,0 +1,46 @@
+{
+  "summary": "Full backend + frontend verification of the new multi-curriculum feature. Backend: created /app/backend/tests/test_curricula.py (16 pytest cases, 16/16 PASS) covering GET /api/curricula (admin active=null, D2C child active=[financial_literacy]), admin topic/item curricula create+PUT persistence, invalid-curricula normalization, school curriculum PUT persistence + reflection in GET /api/admin/schools, non-admin 403 on the school PUT, and delivery scoping (D2C child cannot see ENT topic/content; admin sees everything; school-enabled ENT makes it visible; ?curriculum= filter returns only that curriculum's topics). Frontend (Playwright, preview URL): Admin Schools tab curriculum checkboxes persist with 'Curriculum access updated' toast and block removing the last curriculum; Content Management topic/subtopic/content dialogs all show data-testid='curricula-selector' with both options, topic selection persists after save + reload; Learn page shows no switcher for the D2C child and shows the switcher with All/FL/ENT tabs (each filtering correctly) for a child whose school has 2 curricula. ALL temporary data (test topics/items, school curricula, classmate_g1 school_id) was reverted - baseline verified: 88 topics, 25 items, both schools financial_literacy only, classmate_g1 has no school_id.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/curricula", "issue": "Docstring says 'Public list of all curricula' but the handler calls get_current_user() which raises 401 for anonymous callers. Works for all authenticated flows (LearnPage), but the endpoint is not public as documented - either wrap in try/except to return {curricula, active:[financial_literacy]} for anonymous, or fix the docstring."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "ContentManagement CurriculaSelector", "issue": "Deselecting the last remaining curriculum silently re-selects Financial Literacy (onChange falls back to ['financial_literacy']) with no message. AdminPage's school toggle shows a clear 'A school must have at least one curriculum' toast; the content editor should show the same feedback so admins understand why their checkbox flipped back.", "selector": "[data-testid=\"curricula-opt-financial_literacy\"] input", "priority": "LOW"},
+      {"component": "LearnPage topic card (pre-existing, surfaced during ENT test)", "issue": "A topic that has direct content items but ZERO subtopics is rendered with a green 'COMPLETE' badge even though the child completed nothing (get_all_topics sets is_completed from subtopic completion only, so a subtopic-less topic is vacuously complete). Not caused by the curriculum feature but will show up on any curriculum whose topics hold content directly.", "selector": "topic card badge on /learn", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Admin dashboard tabs (/admin)", "issues": ["Tab buttons had no data-testid; added data-testid=\"admin-tab-{id}\" for testability (only change made)."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_curricula.py",
+    "/app/backend/tests/setup_curriculum_ui.py",
+    "/app/test_reports/pytest/curricula_results.xml"
+  ],
+  "action_items": [
+    "Optional: make GET /api/curricula tolerate anonymous callers (or correct the 'public' docstring).",
+    "Optional UX: show a 'At least one curriculum is required' toast in ContentManagement's CurriculaSelector instead of silently reverting to Financial Literacy.",
+    "Pre-existing bug worth fixing: topics with direct content items and no subtopics are marked COMPLETE on /learn regardless of child progress."
+  ],
+  "critical_code_review_comments": [
+    "content_curricula_clause() treats missing/empty `curricula` as visible to EVERY curriculum. Today all 25 items are tagged, but any future item saved without the field will leak into every curriculum (including money_entrepreneurship-only schools). Consider defaulting legacy/missing docs to financial_literacy instead of matching all.",
+    "?curriculum= override is correctly ignored when the requested id is not in the user's active list (no leakage) - good; note admins cannot use the filter at all since active_curricula is None for them (admin Learn view is unscoped).",
+    "ContentManagement.jsx is ~2490 lines - exceeds the 700-line guideline; the curricula selector work is fine but the file should be split."
+  ],
+  "updated_files": [
+    "/app/frontend/src/pages/AdminPage.jsx (added data-testid to admin tab buttons only)",
+    "/app/backend/tests/test_curricula.py (new)",
+    "/app/backend/tests/setup_curriculum_ui.py (new helper for temporary UI test state)"
+  ],
+  "success_rate": {"backend": "100% (16/16)", "frontend": "100% of curriculum flows verified"},
+  "seed_data_creation": "Temporary only: TEST_ENT/TEST_FL/TEST_LEARN/TEST_UI topics+items, St. Kabir curricula=[FL,ENT], classmate_g1.school_id=school_daee554c6477. ALL reverted/deleted; baseline re-verified (88 topics, 25 items, both schools FL-only, classmate_g1 school-less).",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": true,
+  "test_credentials": "admin@learnersplanet.com / finlit@2026 (field 'identifier'); classmate_g1 / testpass123. Login response returns 'session_token' (not 'token') - use Authorization: Bearer <session_token>.",
+  "context_for_next_testing_agent": "Run backend curriculum regression with: pytest /app/backend/tests/test_curricula.py. It self-cleans, but if a run aborts mid-setup, stray TEST_* topics/items or St. Kabir curricula=[ENT] can remain - use /app/backend/tests/setup_curriculum_ui.py teardown to restore baseline. Content Management step-4 content-type cards are picked by their subtitle text ('Practice sheets' etc.); the data-testid='content-type-pick-*' ids only exist inside the opened content dialog. Note there is no 'lesson' content type in the UI grid.",
+  "rca_of_the_issue": "N/A - no functional defect found in the multi-curriculum feature. The only earlier red flag (an extra topic appearing under ?curriculum=money_entrepreneurship) was traced to a leftover test topic from an aborted fixture run, not to the filter logic; after cleanup the filter returned exactly one topic."
+}

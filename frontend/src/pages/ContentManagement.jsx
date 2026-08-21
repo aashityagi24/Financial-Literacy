@@ -65,6 +65,41 @@ const DEFAULT_VISIBILITY = {
 };
 const defaultVisibilityFor = (type) => DEFAULT_VISIBILITY[type] || ['child'];
 
+// Curriculums content can belong to. Content items drive delivery scoping to a
+// school's enabled curricula; topics/subtopics carry the tag for organisation.
+const CURRICULA = [
+  { id: 'financial_literacy', name: 'Financial Literacy' },
+  { id: 'money_entrepreneurship', name: 'Money Masters & Entrepreneurship' },
+];
+
+const CurriculaSelector = ({ value = [], onChange }) => (
+  <div className="space-y-2" data-testid="curricula-selector">
+    <label className="block text-sm font-medium text-gray-700">Curriculum</label>
+    <p className="text-xs text-gray-500">Which curriculum(s) this belongs to. Schools only see curricula they've enabled.</p>
+    <div className="flex flex-wrap gap-3">
+      {CURRICULA.map(c => (
+        <label key={c.id} className="flex items-center gap-2 cursor-pointer" data-testid={`curricula-opt-${c.id}`}>
+          <input
+            type="checkbox"
+            checked={(value || []).includes(c.id)}
+            onChange={(e) => {
+              const next = e.target.checked
+                ? [...(value || []), c.id]
+                : (value || []).filter(x => x !== c.id);
+              if (!next.length) {
+                toast.error('At least one curriculum is required');
+              }
+              onChange(next.length ? next : ['financial_literacy']);
+            }}
+            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <span className="text-sm text-gray-700">{c.name}</span>
+        </label>
+      ))}
+    </div>
+  </div>
+);
+
 const GRADE_OPTIONS = [
   { value: 0, label: 'Kindergarten' },
   { value: 1, label: '1st Grade' },
@@ -454,12 +489,13 @@ export default function ContentManagement({ user }) {
   const [moveTargetId, setMoveTargetId] = useState('');
   
   // Form states
-  const [topicForm, setTopicForm] = useState({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5 });
-  const [subtopicForm, setSubtopicForm] = useState({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5 });
+  const [topicForm, setTopicForm] = useState({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'] });
+  const [subtopicForm, setSubtopicForm] = useState({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'] });
   const [contentForm, setContentForm] = useState({
     title: '', description: '', content_type: 'worksheet', thumbnail: '',
     min_grade: 0, max_grade: 5, reward_coins: 5, is_published: false, is_mandatory: true, content_data: {},
-    visible_to: ['child'] // Default visibility to child
+    visible_to: ['child'], // Default visibility to child
+    curricula: ['financial_literacy']
   });
   
   // File refs
@@ -716,7 +752,7 @@ export default function ContentManagement({ user }) {
       }
       setShowTopicDialog(false);
       setEditingItem(null);
-      setTopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5 });
+      setTopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'] });
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to save topic');
@@ -742,7 +778,7 @@ export default function ContentManagement({ user }) {
       }
       setShowSubtopicDialog(false);
       setEditingItem(null);
-      setSubtopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5 });
+      setSubtopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'] });
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to save subtopic');
@@ -786,7 +822,8 @@ export default function ContentManagement({ user }) {
       setContentForm({
         title: '', description: '', content_type: 'worksheet', thumbnail: '',
         min_grade: 0, max_grade: 5, reward_coins: 5, is_published: false, is_mandatory: true, content_data: {},
-        visible_to: ['child']
+        visible_to: ['child'],
+        curricula: ['financial_literacy']
       });
       fetchData();
     } catch (error) {
@@ -1112,7 +1149,8 @@ export default function ContentManagement({ user }) {
       description: override?.description ?? topic.description,
       thumbnail: (override?.thumbnail ?? topic.thumbnail) || '',
       min_grade: topic.min_grade,
-      max_grade: topic.max_grade
+      max_grade: topic.max_grade,
+      curricula: topic.curricula || ['financial_literacy']
     });
     setShowTopicDialog(true);
   };
@@ -1125,7 +1163,8 @@ export default function ContentManagement({ user }) {
       description: override?.description ?? subtopic.description,
       thumbnail: (override?.thumbnail ?? subtopic.thumbnail) || '',
       min_grade: subtopic.min_grade,
-      max_grade: subtopic.max_grade
+      max_grade: subtopic.max_grade,
+      curricula: subtopic.curricula || ['financial_literacy']
     });
     setShowSubtopicDialog(true);
   };
@@ -1143,7 +1182,8 @@ export default function ContentManagement({ user }) {
       is_published: content.is_published || false,
       is_mandatory: content.is_mandatory !== false, // default true
       content_data: content.content_data || {},
-      visible_to: content.visible_to || ['child']
+      visible_to: content.visible_to || ['child'],
+      curricula: content.curricula || ['financial_literacy']
     });
     setShowContentDialog(true);
   };
@@ -1661,7 +1701,7 @@ export default function ContentManagement({ user }) {
                       : `Drag and drop to reorder topics for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label}. Order is saved for this grade only.`}
                   </p>
                 </div>
-                <Button onClick={() => { setEditingItem(null); setTopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5 }); setShowTopicDialog(true); }}>
+                <Button onClick={() => { setEditingItem(null); setTopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'] }); setShowTopicDialog(true); }}>
                   <Plus className="w-4 h-4 mr-2" /> Add Topic
                 </Button>
               </div>
@@ -1722,7 +1762,7 @@ export default function ContentManagement({ user }) {
                   </p>
                 </div>
                 <Button 
-                  onClick={() => { setEditingItem(null); setSubtopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5 }); setShowSubtopicDialog(true); }}
+                  onClick={() => { setEditingItem(null); setSubtopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'] }); setShowSubtopicDialog(true); }}
                   disabled={!selectedTopic}
                 >
                   <Plus className="w-4 h-4 mr-2" /> Add Subtopic
@@ -1971,6 +2011,7 @@ export default function ContentManagement({ user }) {
                 </Select>
               </div>
             </div>
+            <CurriculaSelector value={topicForm.curricula} onChange={v => setTopicForm(p => ({ ...p, curricula: v }))} />
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowTopicDialog(false)}>Cancel</Button>
               <Button onClick={saveTopic} disabled={!topicForm.title}>{editingItem ? 'Update' : 'Create'}</Button>
@@ -2036,6 +2077,7 @@ export default function ContentManagement({ user }) {
                 </Select>
               </div>
             </div>
+            <CurriculaSelector value={subtopicForm.curricula} onChange={v => setSubtopicForm(p => ({ ...p, curricula: v }))} />
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowSubtopicDialog(false)}>Cancel</Button>
               <Button onClick={saveSubtopic} disabled={!subtopicForm.title}>{editingItem ? 'Update' : 'Create'}</Button>
@@ -2362,6 +2404,8 @@ export default function ContentManagement({ user }) {
                 <p className="text-xs text-orange-500 mt-1">Warning: No roles selected. Content will not be visible to anyone.</p>
               )}
             </div>
+
+            <CurriculaSelector value={contentForm.curricula} onChange={v => setContentForm(p => ({ ...p, curricula: v }))} />
             
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowContentDialog(false)}>Cancel</Button>

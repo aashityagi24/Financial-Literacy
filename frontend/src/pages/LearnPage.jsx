@@ -28,22 +28,37 @@ export default function LearnPage({ user }) {
   const [searchParams] = useSearchParams();
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [curricula, setCurricula] = useState([]);
+  const [activeCurricula, setActiveCurricula] = useState(null);
+  const [selectedCurriculum, setSelectedCurriculum] = useState(null);
   const showAnimations = useFirstVisitAnimation('learn');
   
   // Get grade filter from URL (for teacher view)
   const gradeFilter = searchParams.get('grade');
   
   useEffect(() => {
+    // Load curricula meta once to decide whether to show a switcher.
+    const loadCurricula = async () => {
+      try {
+        const res = await axios.get(`${API}/curricula`);
+        setCurricula(res.data.curricula || []);
+        setActiveCurricula(res.data.active || null);
+      } catch (e) { /* non-fatal */ }
+    };
+    loadCurricula();
+  }, []);
+  
+  useEffect(() => {
     fetchTopics();
-  }, [gradeFilter]);
+  }, [gradeFilter, selectedCurriculum]);
   
   const fetchTopics = async () => {
     try {
-      // Build API URL with grade filter if present
-      let url = `${API}/content/topics`;
-      if (gradeFilter !== null && gradeFilter !== undefined) {
-        url += `?grade=${gradeFilter}`;
-      }
+      // Build API URL with grade + curriculum filters if present
+      const params = [];
+      if (gradeFilter !== null && gradeFilter !== undefined) params.push(`grade=${gradeFilter}`);
+      if (selectedCurriculum) params.push(`curriculum=${selectedCurriculum}`);
+      const url = `${API}/content/topics${params.length ? `?${params.join('&')}` : ''}`;
       const res = await axios.get(url);
       setTopics(res.data);
     } catch (error) {
@@ -52,6 +67,10 @@ export default function LearnPage({ user }) {
       setLoading(false);
     }
   };
+  
+  // Show a curriculum switcher only when the user's school has more than one.
+  const showCurriculumSwitcher = Array.isArray(activeCurricula) && activeCurricula.length > 1;
+  const curriculumName = (id) => (curricula.find(c => c.id === id)?.name) || id;
   
   if (loading) {
     return (
@@ -109,6 +128,28 @@ export default function LearnPage({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
+        {/* Curriculum switcher — only when the school has more than one */}
+        {showCurriculumSwitcher && (
+          <div className="mb-5 flex flex-wrap items-center gap-2" data-testid="curriculum-switcher">
+            <button
+              onClick={() => setSelectedCurriculum(null)}
+              className={`px-4 py-2 rounded-full border-3 border-[#1D3557] font-bold text-sm transition-colors ${!selectedCurriculum ? 'bg-[#1D3557] text-white' : 'bg-white text-[#1D3557] hover:bg-[#FFD23F]/20'}`}
+              data-testid="curriculum-tab-all"
+            >
+              All
+            </button>
+            {activeCurricula.map(id => (
+              <button
+                key={id}
+                onClick={() => setSelectedCurriculum(id)}
+                className={`px-4 py-2 rounded-full border-3 border-[#1D3557] font-bold text-sm transition-colors ${selectedCurriculum === id ? 'bg-[#1D3557] text-white' : 'bg-white text-[#1D3557] hover:bg-[#FFD23F]/20'}`}
+                data-testid={`curriculum-tab-${id}`}
+              >
+                {curriculumName(id)}
+              </button>
+            ))}
+          </div>
+        )}
         {/* Explanation Banner */}
         <div className="p-5 mb-6 bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-3xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557]">
           <h2 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
