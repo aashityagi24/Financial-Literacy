@@ -1365,3 +1365,7 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Frontend: ContentManagement CurriculaSelector in topic/subtopic/content editors; AdminPage school-card 'Curriculum access' toggles (PUT); LearnPage curriculum switcher shown only when the school has >1 curriculum (passes ?curriculum=).
   - Verified: testing_agent iteration_98 (backend 16/16 pytest incl. delivery scoping + school PUT + admin CRUD; all frontend flows). Baseline restored (both schools FL-only). Test suite at /app/backend/tests/test_curricula.py.
   - KNOWN pre-existing bug surfaced (NOT caused by this feature, will show on ENT topics): a topic that has direct content items and NO subtopics is marked COMPLETE on /learn regardless of child progress (get_all_topics derives is_completed from subtopic completion only). Fix pending user go-ahead.
+
+- **Content Management: Curriculum filter (Aug 22, 2026)**
+  - Added a "Curriculum" dropdown in the Content Management header (next to Filter by Grade + Status): All Curriculums / Financial Literacy / Money Masters & Entrepreneurship (data-testid='curriculum-filter-select').
+  - curriculumFilter state + matchesCurriculumFilter() applied to filteredTopics (topics + subtopics + grafted) and filteredContent. Legacy/untagged items count as financial_literacy. Verified: selecting ENT hides the all-FL topics ("No topics yet").

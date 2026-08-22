@@ -440,6 +440,7 @@ export default function ContentManagement({ user }) {
   const [allContent, setAllContent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [gradeFilter, setGradeFilter] = useState('all'); // Grade filter: 'all' or 0-5
+  const [curriculumFilter, setCurriculumFilter] = useState('all'); // Curriculum filter: 'all' or a curriculum id
   const [publishFilter, setPublishFilter] = useState('all'); // 'all' | 'live' | 'draft'
   
   // Repository view states
@@ -561,6 +562,13 @@ export default function ContentManagement({ user }) {
     const grade = parseInt(gradeFilter);
     return item.min_grade <= grade && item.max_grade >= grade;
   };
+
+  // Curriculum filter - legacy/untagged items count as Financial Literacy.
+  const matchesCurriculumFilter = (item) => {
+    if (curriculumFilter === 'all') return true;
+    const cur = (item?.curricula && item.curricula.length) ? item.curricula : ['financial_literacy'];
+    return cur.includes(curriculumFilter);
+  };
   
   // Returns the order to use for the active grade filter.
   // When a grade is selected, prefer grade_orders[grade] (set when admin
@@ -637,8 +645,8 @@ export default function ContentManagement({ user }) {
   // are regrouped under their *effective* parent (grade_parents overrides
   // parent_id) so admins see the per-grade hierarchy.
   const allSubtopics = topics.flatMap(t => t.subtopics || []);
-  const filteredTopics = topics.filter(matchesGradeFilter).map(topic => {
-    const own = (topic.subtopics || []).filter(matchesGradeFilter);
+  const filteredTopics = topics.filter(matchesGradeFilter).filter(matchesCurriculumFilter).map(topic => {
+    const own = (topic.subtopics || []).filter(matchesGradeFilter).filter(matchesCurriculumFilter);
     if (gradeFilter === 'all') {
       return { ...topic, subtopics: own };
     }
@@ -646,14 +654,14 @@ export default function ContentManagement({ user }) {
     const grafted = allSubtopics.filter(s =>
       !ownIds.has(s.topic_id) &&
       s.grade_parents?.[gradeFilter] === topic.topic_id &&
-      matchesGradeFilter(s)
+      matchesGradeFilter(s) && matchesCurriculumFilter(s)
     );
     const retained = own.filter(s => effectiveSubtopicParent(s) === topic.topic_id);
     const mergedSubtopics = [...retained, ...grafted].map(applyOverrides);
     return { ...applyOverrides(topic), subtopics: mergedSubtopics };
   });
   
-  const filteredContent = allContent.filter(matchesGradeFilter).filter(c => {
+  const filteredContent = allContent.filter(matchesGradeFilter).filter(matchesCurriculumFilter).filter(c => {
     if (publishFilter === 'all') return true;
     if (publishFilter === 'live') return c.is_published === true;
     return c.is_published !== true; // 'draft' — anything not explicitly live
@@ -1270,6 +1278,24 @@ export default function ContentManagement({ user }) {
             </Select>
             {publishFilter !== 'all' && (
               <Button variant="ghost" size="sm" onClick={() => setPublishFilter('all')}>
+                <X className="w-4 h-4 mr-1" /> Clear
+              </Button>
+            )}
+
+            <span className="text-sm text-gray-600 font-medium ml-4">Curriculum:</span>
+            <Select value={curriculumFilter} onValueChange={setCurriculumFilter}>
+              <SelectTrigger className="w-56" data-testid="curriculum-filter-select">
+                <SelectValue placeholder="All Curriculums" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Curriculums</SelectItem>
+                {CURRICULA.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {curriculumFilter !== 'all' && (
+              <Button variant="ghost" size="sm" onClick={() => setCurriculumFilter('all')}>
                 <X className="w-4 h-4 mr-1" /> Clear
               </Button>
             )}
