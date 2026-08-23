@@ -1,9 +1,53 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  PiggyBank, Rocket, TrendingUp, CalendarDays, Users, Gamepad2, GraduationCap, ArrowRight,
+  PiggyBank, Rocket, TrendingUp, CalendarDays, Users, GraduationCap, ArrowRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const workshopSteps = [
+  { color: '#FFD23F', title: 'Book a free trial class', description: 'Pick a slot. Your child joins a live class with kids their own age — no payment up front.' },
+  { color: '#06D6A0', title: 'Join their age batch', description: 'Weekly live classes, plus platform games and worksheets between sessions to keep it going.' },
+  { color: '#F4A9B7', title: 'Watch them run a venture', description: "By the end of the batch they've earned, budgeted, priced and sold something themselves." },
+];
+
+const platformSteps = [
+  { color: '#FFD23F', title: 'Pick a plan & grade', description: "Choose a subscription plan and your child's grade — content adapts automatically from KG to Class 5." },
+  { color: '#06D6A0', title: 'Play & learn daily', description: 'Kids explore the Money Garden, Wallet and quests at their own pace, earning badges as they go.' },
+  { color: '#F4A9B7', title: 'Track progress as a parent', description: "Check the parent dashboard anytime to see what they've learned, saved and earned." },
+];
+
+function HowItWorks({ id, testId, eyebrow, title, steps, bg }) {
+  return (
+    <section id={id} className="py-16" style={{ backgroundColor: bg }} data-testid={testId}>
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-14">
+          {eyebrow && (
+            <span className="inline-block bg-white text-[#1D3557] font-bold text-sm px-4 py-1.5 rounded-full border-2 border-[#1D3557] mb-4">{eyebrow}</span>
+          )}
+          <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{title}</h2>
+        </div>
+        <div className="grid md:grid-cols-3 gap-8 md:gap-4 max-w-4xl mx-auto relative">
+          {steps.map((step, idx) => (
+            <div key={idx} className="relative text-center px-2">
+              {idx < steps.length - 1 && (
+                <div className="hidden md:block absolute top-7 left-[calc(50%+32px)] right-[calc(-50%+32px)] border-t-2 border-dashed border-[#1D3557]/30"></div>
+              )}
+              <div
+                className="relative z-10 w-14 h-14 mx-auto mb-4 rounded-full border-3 border-[#1D3557] shadow-[3px_3px_0px_0px_rgba(29,53,87,0.3)] flex items-center justify-center text-xl font-bold text-[#1D3557]"
+                style={{ backgroundColor: step.color, fontFamily: 'Fredoka' }}
+              >
+                {idx + 1}
+              </div>
+              <h3 className="text-lg font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>{step.title}</h3>
+              <p className="text-[#3D5A80] text-sm leading-relaxed">{step.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -17,13 +61,6 @@ export default function LandingPage() {
       window.history.replaceState({}, '', '/');
     }
   }, [searchParams]);
-
-  const trustPoints = [
-    { icon: Gamepad2, label: "Game-Based Learning" },
-    { icon: GraduationCap, label: "KG - Class 5" },
-    { icon: CalendarDays, label: "Live Classes" },
-    { icon: Users, label: "Parent & School Ready" },
-  ];
 
   return (
     <div className="min-h-screen bg-[#E0FBFC]">
@@ -66,7 +103,7 @@ export default function LandingPage() {
             <p className="text-xl text-[#3D5A80] mb-10 leading-relaxed" data-testid="hub-hero-subtext">
               No one is born an entrepreneur — they're raised as one. 30 live classes where your child learns to earn, price, pitch and sell for real.
             </p>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 mb-6">
               <button
                 data-testid="hero-book-trial-btn"
                 onClick={() => navigate('/entrepreneurship-workshop?trial=1')}
@@ -82,16 +119,16 @@ export default function LandingPage() {
                 See the platform
               </a>
             </div>
-          </div>
 
-          {/* Trust strip */}
-          <div className="flex flex-wrap gap-3 mb-6" data-testid="trust-strip">
-            {trustPoints.map((t, idx) => (
-              <div key={idx} className="flex items-center gap-2 bg-white border-2 border-[#1D3557] rounded-full px-4 py-2 shadow-[3px_3px_0px_0px_#1D3557]">
-                <t.icon className="w-4 h-4 text-[#1D3557]" />
-                <span className="text-sm font-bold text-[#1D3557]">{t.label}</span>
+            {/* Trust element */}
+            <div className="flex items-center gap-3" data-testid="trust-element">
+              <div className="flex -space-x-3">
+                <span className="w-8 h-8 rounded-full bg-[#FFD23F] border-2 border-white"></span>
+                <span className="w-8 h-8 rounded-full bg-[#06D6A0] border-2 border-white"></span>
+                <span className="w-8 h-8 rounded-full bg-[#F4A9B7] border-2 border-white"></span>
               </div>
-            ))}
+              <span className="text-[#3D5A80] font-medium">Trusted by hundreds of children & parents across India</span>
+            </div>
           </div>
         </div>
       </header>
@@ -107,34 +144,10 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch">
-            {/* Financial Literacy Platform card */}
-            <div
-              data-testid="fl-product-card"
-              className="card-playful p-8 bg-[#FFF9E8] flex flex-col animate-bounce-in cursor-pointer group"
-              onClick={() => navigate('/financial-literacy')}
-            >
-              <div className="w-16 h-16 rounded-2xl border-3 border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] flex items-center justify-center mb-5 bg-[#FFD23F]">
-                <PiggyBank className="w-9 h-9 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>Financial Literacy Platform</h3>
-              <p className="text-[#3D5A80] mb-5">Digital wallet, Money Garden, quests and badges that teach earning, saving, sharing and investing — grade by grade, KG through Class 5.</p>
-              <ul className="space-y-2 mb-6 text-sm text-[#3D5A80]">
-                <li className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-[#FFD23F]" /> Game-based money lessons</li>
-                <li className="flex items-center gap-2"><Users className="w-4 h-4 text-[#FFD23F]" /> Parent dashboard, chores & allowance</li>
-                <li className="flex items-center gap-2"><GraduationCap className="w-4 h-4 text-[#FFD23F]" /> Plans from ₹49</li>
-              </ul>
-              <button
-                data-testid="explore-fl-btn"
-                className="mt-auto flex items-center justify-center gap-2 bg-[#1D3557] text-white font-bold px-6 py-3 rounded-full group-hover:-translate-y-1 transition-all"
-              >
-                Explore Financial Literacy <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-
             {/* Entrepreneurship Workshop card */}
             <div
               data-testid="ew-product-card"
-              className="card-playful p-8 bg-[#F3E8FF] flex flex-col animate-bounce-in stagger-2 cursor-pointer group"
+              className="card-playful p-8 bg-[#F3E8FF] flex flex-col animate-bounce-in cursor-pointer group"
               onClick={() => navigate('/entrepreneurship-workshop')}
             >
               <div className="w-16 h-16 rounded-2xl border-3 border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] flex items-center justify-center mb-5 bg-[#5B21B6]">
@@ -151,38 +164,74 @@ export default function LandingPage() {
                 data-testid="explore-ew-btn"
                 className="mt-auto flex items-center justify-center gap-2 bg-[#5B21B6] text-white font-bold px-6 py-3 rounded-full group-hover:-translate-y-1 transition-all"
               >
-                Explore Entrepreneurship Workshop <ArrowRight className="w-4 h-4" />
+                Guided Workshop <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Financial Literacy Platform card */}
+            <div
+              data-testid="fl-product-card"
+              className="card-playful p-8 bg-[#FFF9E8] flex flex-col animate-bounce-in stagger-2 cursor-pointer group"
+              onClick={() => navigate('/financial-literacy')}
+            >
+              <div className="w-16 h-16 rounded-2xl border-3 border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] flex items-center justify-center mb-5 bg-[#FFD23F]">
+                <PiggyBank className="w-9 h-9 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>Financial Literacy Platform</h3>
+              <p className="text-[#3D5A80] mb-5">Digital wallet, Money Garden, quests and badges that teach earning, saving, sharing and investing — grade by grade, KG through Class 5.</p>
+              <ul className="space-y-2 mb-6 text-sm text-[#3D5A80]">
+                <li className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-[#FFD23F]" /> Game-based money lessons</li>
+                <li className="flex items-center gap-2"><Users className="w-4 h-4 text-[#FFD23F]" /> Parent dashboard, chores & allowance</li>
+                <li className="flex items-center gap-2"><GraduationCap className="w-4 h-4 text-[#FFD23F]" /> Plans from ₹49</li>
+              </ul>
+              <button
+                data-testid="explore-fl-btn"
+                className="mt-auto flex items-center justify-center gap-2 bg-[#1D3557] text-white font-bold px-6 py-3 rounded-full group-hover:-translate-y-1 transition-all"
+              >
+                DIY Platform <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* User Types Section */}
+      {/* How the Workshop Works */}
+      <HowItWorks
+        id="how-workshop-works"
+        testId="how-workshop-works-section"
+        eyebrow="ENTREPRENEURSHIP WORKSHOP"
+        title="How the Workshop Works"
+        steps={workshopSteps}
+        bg="#FDF6E3"
+      />
+
+      {/* How the Platform Works */}
+      <HowItWorks
+        id="how-platform-works"
+        testId="how-platform-works-section"
+        eyebrow="FINANCIAL LITERACY PLATFORM"
+        title="How the Platform Works"
+        steps={platformSteps}
+        bg="#F3F9FB"
+      />
+
+      {/* For Parents & Schools Section */}
       <section className="py-20 bg-[#3D5A80]">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'Fredoka' }}>
-              For Kids, Parents & Teachers
+              For Parents & Schools
             </h2>
-            <p className="text-xl text-[#98C1D9]">Everyone plays a role, whichever program you choose</p>
+            <p className="text-xl text-[#98C1D9]">Both programs, built to fit however you want to bring them in</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">
-              <div className="w-20 h-20 mx-auto mb-4 bg-[#FFD23F] rounded-full border-3 border-[#1D3557] flex items-center justify-center overflow-hidden p-2">
-                <img src="https://customer-assets.emergentagent.com/job_coinquest-kids-2/artifacts/hnfemth6_children.png" alt="Kids" className="w-full h-full object-contain" />
-              </div>
-              <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Kids</h3>
-              <p className="text-[#3D5A80]">Learn money skills and business ideas through games! Grow gardens, pitch ventures, earn rewards. No boring stuff—just fun!</p>
-            </div>
-
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">
               <div className="w-20 h-20 mx-auto mb-4 bg-[#06D6A0] rounded-full border-3 border-[#1D3557] flex items-center justify-center overflow-hidden p-2">
                 <img src="https://customer-assets.emergentagent.com/job_coinquest-kids-2/artifacts/u42iscql_family.png" alt="Family" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Parents</h3>
-              <p className="text-[#3D5A80]">Give your child a lifetime advantage — pick Financial Literacy, the Entrepreneurship Workshop, or both. Parent dashboard included.</p>
+              <p className="text-[#3D5A80]">Give your child a lifetime advantage. Let them explore money skills at their own pace on the Financial Literacy Platform, or join live, guided sessions in the Entrepreneurship Workshop — pick one or both, and track everything from a single parent dashboard.</p>
             </div>
 
             <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">
@@ -190,7 +239,7 @@ export default function LandingPage() {
                 <img src="https://customer-assets.emergentagent.com/job_coinquest-kids-2/artifacts/reffqcdx_school.png" alt="School" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Schools</h3>
-              <p className="text-[#3D5A80]">Engage students with game-based curricula, automatic assessments, and detailed analytics. No preparation needed—just click and teach.</p>
+              <p className="text-[#3D5A80]">Bring both programs into your classroom: the self-paced Financial Literacy Platform for daily lessons with automatic assessments, and the live Entrepreneurship Workshop for hands-on venture-building — with detailed analytics for every student either way.</p>
             </div>
           </div>
         </div>
@@ -208,18 +257,18 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <button
-                data-testid="cta-explore-fl-btn"
-                onClick={() => navigate('/financial-literacy')}
-                className="bg-[#FFD23F] text-[#1D3557] font-bold text-lg px-8 py-4 rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_#1D3557] transition-all"
-              >
-                Financial Literacy Platform
-              </button>
-              <button
                 data-testid="cta-explore-ew-btn"
                 onClick={() => navigate('/entrepreneurship-workshop')}
                 className="bg-[#5B21B6] text-white font-bold text-lg px-8 py-4 rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_#1D3557] transition-all"
               >
                 Entrepreneurship Workshop
+              </button>
+              <button
+                data-testid="cta-explore-fl-btn"
+                onClick={() => navigate('/financial-literacy')}
+                className="bg-[#FFD23F] text-[#1D3557] font-bold text-lg px-8 py-4 rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_#1D3557] transition-all"
+              >
+                Financial Literacy Platform
               </button>
             </div>
           </div>
@@ -271,3 +320,4 @@ export default function LandingPage() {
     </div>
   );
 }
+
