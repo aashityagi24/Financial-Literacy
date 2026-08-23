@@ -19,8 +19,8 @@ const workshopSteps = [
 ];
 
 const moneySkills = [
-  { emoji: '💰', title: 'Earning', description: 'Effort, value and the first rupee they make themselves.', bg: '#1D3557', text: 'white' },
-  { emoji: '🏦', title: 'Saving', description: "Goals, jars, and waiting for the thing that's worth it.", bg: '#5B21B6', text: 'white' },
+  { emoji: '₹', title: 'Earning', description: 'Effort, value and the first rupee they make themselves.', bg: '#1D3557', text: 'white' },
+  { emoji: '🐷', title: 'Saving', description: "Goals, jars, and waiting for the thing that's worth it.", bg: '#5B21B6', text: 'white' },
   { emoji: '🛒', title: 'Spending', description: 'Needs vs wants, budgets, and the cost of an impulse.', bg: '#FFD23F', text: 'white' },
   { emoji: '🤝', title: 'Sharing', description: 'Giving and using money for someone other than yourself.', bg: '#06D6A0', text: 'dark' },
   { emoji: '📈', title: 'Business Sense', description: 'Cost, price, profit and customers — learned by selling.', bg: '#EE6C4D', text: 'white' },
@@ -238,7 +238,12 @@ export default function LandingPage() {
                 className="rounded-3xl p-7 animate-bounce-in"
                 style={{ backgroundColor: skill.bg, animationDelay: `${idx * 0.08}s` }}
               >
-                <div className="text-3xl mb-3">{skill.emoji}</div>
+                <div
+                  className="text-3xl font-bold mb-3"
+                  style={{ color: skill.text === 'white' ? '#FFFFFF' : '#1D3557' }}
+                >
+                  {skill.emoji}
+                </div>
                 <h3
                   className="text-xl font-bold mb-2"
                   style={{ fontFamily: 'Fredoka', color: skill.text === 'white' ? '#FFFFFF' : '#1D3557' }}
