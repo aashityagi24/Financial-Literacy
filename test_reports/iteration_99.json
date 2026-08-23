@@ -1,0 +1,53 @@
+{
+  "summary": "Full backend + frontend test of the new Live Classes module. Backend: 25 pytest cases (admin CRUD, RBAC, grade-range scoping, curriculum scoping, draft/publish, sorting, parent union) all PASS; 6 additional edge cases documented as xfail validation gaps. Frontend: admin /admin/live-classes create/edit/delete flow, child /calendar upcoming-live-past split with join/recording links and hidden-class scoping, parent header link + parent calendar, and mobile layout all PASS. All test data was deleted; DB live_classes collection back to 0 docs, no user/school mutations made.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/admin/live-classes, PUT /api/admin/live-classes/{id}", "issue": "Unhandled ValueError -> HTTP 500 when min_grade/max_grade/duration_minutes are non-numeric (e.g. min_grade='abc', duration_minutes='xyz'). int() is called on raw body outside any try/validation. Should return 400.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "POST/PUT /api/admin/live-classes", "issue": "scheduled_at is stored verbatim with no ISO-8601 validation; 'not-a-date' is accepted (200). The stored string is also used for the Mongo sort, so mixed/invalid formats break ordering, and the UI then renders 'Invalid Date' and buckets the class into Past Classes."},
+      {"endpoint": "POST /api/admin/live-classes", "issue": "Whitespace-only title ('   ') accepted; title is not trimmed before the required-field check."},
+      {"endpoint": "POST/PUT /api/admin/live-classes", "issue": "No range validation: min_grade > max_grade accepted (creates a class invisible to every user), grades outside 0-5 accepted, negative duration_minutes (-30) accepted."},
+      {"endpoint": "POST/PUT /api/admin/live-classes", "issue": "meeting_link / recording_url scheme not validated - 'javascript:alert(1)' is stored and rendered directly into an <a href> shown to children/parents (admin-only input, so low exploitability, but should be restricted to http/https)."},
+      {"endpoint": "GET /api/live-classes", "issue": "No pydantic response model; endpoint relies on to_list(1000) with no pagination. Fine at current scale, worth noting."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/calendar - Past Classes", "issues": ["Past classes are sorted oldest-first (16 Aug listed above 17 Aug) because the backend sorts scheduled_at ascending for both buckets. Past/recording lists read better most-recent-first."]},
+      {"screen": "/calendar - upcoming card", "issues": ["Future (non-live) class CTA is labelled 'Join Link' which is awkward wording for K-5 users; 'Join' or 'Open Join Link' would be clearer."]},
+      {"screen": "Parent dashboard header", "issues": ["'Live Classes' link is white text on the light-green header pill - contrast is on the low side (matches existing sibling links, so pre-existing pattern, cosmetic only)."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_live_classes.py",
+    "/app/backend/tests/seed_live_classes_ui.py",
+    "/app/test_reports/pytest/live_classes_results.xml"
+  ],
+  "action_items": [
+    "Wrap int() coercions in POST/PUT /api/admin/live-classes (min_grade, max_grade, duration_minutes) with validation and return 400 instead of 500 - ideally move the whole body to a Pydantic model.",
+    "Validate scheduled_at as ISO-8601 on create/update (and normalise to UTC) so sorting and UI date rendering cannot break.",
+    "Trim title and reject whitespace-only; validate min_grade <= max_grade, grades within 0-5, duration_minutes > 0.",
+    "Restrict meeting_link / recording_url to http(s) URLs before storing.",
+    "OPTIONAL UX: render Past Classes newest-first on /calendar."
+  ],
+  "critical_code_review_comments": [
+    "routes/live_classes.py create/update: `int(body.get(...))` on unvalidated request JSON is the only 500 in the module - use a Pydantic request model (LiveClassCreate/LiveClassUpdate) to get 422/400 for free and to document the contract.",
+    "scheduled_at is both the sort key and a raw client string - a single malformed value corrupts ordering for all users; parse with datetime.fromisoformat and store a canonical UTC ISO string.",
+    "GET /live-classes falls through to the child branch for any non-parent authed role (teacher/school admin) using user['grade'] which teachers do not have -> they get grade 0 scoping silently. Consider an explicit role check or an admin/teacher-specific view.",
+    "Frontend LiveClassesPage.fetchClasses only console.errors on failure - there is no visible error state; a failed GET is indistinguishable from 'no classes scheduled yet'."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_live_classes.py",
+    "/app/backend/tests/seed_live_classes_ui.py"
+  ],
+  "success_rate": {"backend": "100% (25/25 functional; 6 known validation gaps recorded as xfail)", "frontend": "100% (all admin/child/parent flows passed)"},
+  "seed_data_creation": "Created and then deleted 7 TEST_UI live classes (upcoming, live-now, past+recording, past-no-recording, ENT-only, grade 4-5, draft) plus all TEST_LC pytest classes. Verified db.live_classes count is 0 afterwards. No users, schools or parent_child_links were modified.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": true,
+  "test_credentials": "admin@learnersplanet.com/finlit@2026; classmate_g1 & classmate_g2/testpass123; wallet_demo_parent/testpass123 (linked child grade 3, used for parent union); nudge_parent@test.com/testpass123 (no children -> empty list)",
+  "context_for_next_testing_agent": "Live Classes module is functionally complete and verified end-to-end. Regression suite: /app/backend/tests/test_live_classes.py (25 pass + 6 xfail documenting validation gaps). Use /app/backend/tests/seed_live_classes_ui.py [seed|clean] to seed the 7 UI-scenario classes for /calendar UI testing and to clean them up afterwards. Login route is /login (not /auth). Delete on the admin page uses window.confirm - handle page.once('dialog', accept). Environment date is 22 Aug 2026 UTC; /calendar shows IST (+5:30). When the xfail tests start passing, remove the xfail markers.",
+  "rca_of_the_issue": "The 500s come from routes/live_classes.py calling int() directly on unvalidated request-body values (create: min_grade/max_grade/duration_minutes; update: same three fields). A non-numeric string raises ValueError before any HTTPException can be produced, so FastAPI returns 500 (confirmed in backend.err.log: \"ValueError: invalid literal for int() with base 10: 'xyz'\"). The other findings are the same root cause class: the endpoint accepts a free-form dict instead of a Pydantic model, so title, scheduled_at, grade range, duration and URL fields are all unvalidated."
+}

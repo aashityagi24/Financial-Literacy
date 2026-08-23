@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { 
   Coins, Wallet, Store, TrendingUp, Target, Trophy, 
   User, LogOut, Flame, Gift, Sparkles,
-  ChevronRight, Star, BookOpen, Shield, GraduationCap, Users, Award, HandCoins, BookMarked, Briefcase, Heart, IndianRupee
+  ChevronRight, Star, BookOpen, Shield, GraduationCap, Users, Award, HandCoins, BookMarked, Briefcase, Heart, IndianRupee, CalendarDays
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
@@ -136,6 +136,7 @@ export default function Dashboard({ user, setUser }) {
     investmentItem,
     { icon: Target, label: 'Quests', path: '/quests', color: '#9B5DE5' },
     { icon: BookMarked, label: 'Money Words', path: '/glossary', color: '#4A90A4' },
+    { icon: CalendarDays, label: 'Calendar', path: '/calendar', color: '#EF476F' },
     specialFeatureItem,
   ].filter(Boolean); // Remove null items
   

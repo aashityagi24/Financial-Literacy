@@ -652,6 +652,10 @@ export default function ParentDashboard({ user }) {
             </div>
             <div className="flex items-center gap-3">
               <NotificationCenter />
+              <Link to="/calendar" className="flex items-center gap-2 px-3 py-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors" data-testid="parent-calendar-link">
+                <Calendar className="w-4 h-4 text-white" />
+                <span className="text-sm font-medium text-white hidden sm:inline">Live Classes</span>
+              </Link>
               <Link to="/profile" className="flex items-center gap-2 px-3 py-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors" data-testid="parent-profile-link">
                 <User className="w-4 h-4 text-white" />
                 <span className="text-sm font-medium text-white">{user?.name || 'Parent'}</span>

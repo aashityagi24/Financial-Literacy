@@ -516,6 +516,23 @@ export default function AdminPage({ user }) {
             </div>
           </Link>
           
+          {/* Live Classes Card */}
+          <Link 
+            to="/admin/live-classes" 
+            className="block bg-gradient-to-r from-[#EF476F] to-[#F87393] rounded-xl p-4 hover:shadow-lg transition-shadow"
+            data-testid="live-classes-link"
+          >
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <CalendarIcon className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Live Classes</h3>
+                <p className="text-white/70 text-xs">Schedule & recordings</p>
+              </div>
+            </div>
+          </Link>
+          
           {/* Quest Management Card */}
           <Link 
             to="/admin/quests" 

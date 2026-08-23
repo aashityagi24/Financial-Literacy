@@ -25,6 +25,8 @@ import AdminPage from "@/pages/AdminPage";
 import TeacherDashboard from "@/pages/TeacherDashboard";
 import ParentDashboard from "@/pages/ParentDashboard";
 import ContentManagement from "@/pages/ContentManagement";
+import LiveClassesPage from "@/pages/LiveClassesPage";
+import LiveClassesAdmin from "@/pages/LiveClassesAdmin";
 import AdminStoreManagement from "@/pages/AdminStoreManagement";
 import AdminInvestmentManagement from "@/pages/AdminInvestmentManagement";
 import ClassmatesPage from "@/pages/ClassmatesPage";
@@ -390,6 +392,16 @@ function AppRouter() {
       <Route path="/glossary" element={
         <ProtectedRoute>
           {({ user }) => <GlossaryPage user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/calendar" element={
+        <ProtectedRoute>
+          {({ user }) => <LiveClassesPage user={user} />}
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/live-classes" element={
+        <ProtectedRoute>
+          {({ user }) => <LiveClassesAdmin user={user} />}
         </ProtectedRoute>
       } />
       <Route path="/activity-scores" element={

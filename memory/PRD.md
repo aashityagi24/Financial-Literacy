@@ -1369,3 +1369,10 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **Content Management: Curriculum filter (Aug 22, 2026)**
   - Added a "Curriculum" dropdown in the Content Management header (next to Filter by Grade + Status): All Curriculums / Financial Literacy / Money Masters & Entrepreneurship (data-testid='curriculum-filter-select').
   - curriculumFilter state + matchesCurriculumFilter() applied to filteredTopics (topics + subtopics + grafted) and filteredContent. Legacy/untagged items count as financial_literacy. Verified: selecting ENT hides the all-FL topics ("No topics yet").
+
+- **Live Classes module (Aug 22, 2026)**
+  - Admin-managed calendar of dated live sessions: title, brief, date/time (IST), duration, join link (Zoom/Meet), optional recording link (added later), grade RANGE (min-max), curricula tag (grade + curriculum scoped), publish toggle.
+  - Delivery: subscribed CHILDREN see published classes matching their grade + their school's enabled curricula; PARENTS see the union across their linked children; teachers/others see none (child+parent surface). D2C children default to Financial Literacy.
+  - Backend: routes/live_classes.py (admin CRUD + GET /live-classes) registered in server.py; reuses services/curricula.py for scoping. Full input validation (400 not 500) on grades/duration/datetime(ISO->UTC)/title/URL(http-s only)/min<=max.
+  - Frontend: LiveClassesAdmin.jsx (/admin/live-classes, tile on Admin dashboard); LiveClassesPage.jsx (/calendar) read-only with Upcoming/Live vs Past split, Join buttons + Watch Recording, IST times, error+retry state. New 'Calendar' child nav tab (after Money Words). Parent dashboard header 'Live Classes' link.
+  - Verified: testing_agent iteration_99 (backend 25/25 + all frontend flows). Fixed all flagged validation gaps; regression suite /app/backend/tests/test_live_classes.py now 31/31 pass. live_classes collection left empty (baseline).
