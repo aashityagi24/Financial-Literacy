@@ -20,6 +20,7 @@
 - Money Masters: TTL/cleanup for abandoned pending batch-purchase subscription rows.
 
 ## Recently completed (Aug 23, 2026)
+- **Hub page hero redesign**: replaced the neutral two-product hero with an Entrepreneurship-led hero matching a user-supplied reference — soft green→peach gradient, "Nurture the founder in your child." headline with a marker-highlighted "founder", "Book a free trial class" (deep-links to `/entrepreneurship-workshop?trial=1` which auto-opens the trial dialog) and "See the platform" (scrolls to the two product cards below, `#programs`). Two-product-card section retained below the hero.
 - **Landing page split into hub + two product pages**: `/` is now a neutral hub (two product cards: Financial Literacy Platform, Entrepreneurship Workshop), `/financial-literacy` carries the old homepage content + PricingSection, `/entrepreneurship-workshop` is new (highlights, open batches by grade fetched publicly, "Book a Free Trial" lead form). New public endpoints `GET .../money-masters/public-batches` and `POST .../money-masters/trial-enquiry`; new admin "Trial Requests" tab mirroring the school-enquiries pattern (`db.entrepreneurship_trial_leads`).
 - Fixed a route-shadowing bug where `DELETE /admin/{subscription_id}` (registered earlier) swallowed `DELETE /admin/trial-enquiries-bulk` — reordered routes, now 19/19 `test_trial_enquiries.py` pass.
 - Fixed session-expired toast never appearing on any page (Toaster was mounted after BrowserRouter, missing mount-time toasts) by moving `<Toaster/>` above `<BrowserRouter>` in `App.js`.

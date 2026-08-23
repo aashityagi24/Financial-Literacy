@@ -28,9 +28,12 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#E0FBFC]">
       {/* Nav + Hero */}
-      <header className="relative overflow-hidden">
-        <div className="absolute top-32 right-20 w-16 h-16 bg-[#EE6C4D] rounded-full opacity-60 animate-float stagger-2"></div>
-        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-[#06D6A0] rounded-full opacity-60 animate-float stagger-3"></div>
+      <header
+        className="relative overflow-hidden"
+        style={{ background: 'linear-gradient(120deg, #EAF7EE 0%, #FDF6E3 45%, #FDE9C8 100%)' }}
+      >
+        <div className="absolute top-32 right-20 w-16 h-16 bg-[#EE6C4D] rounded-full opacity-30 animate-float stagger-2"></div>
+        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-[#06D6A0] rounded-full opacity-30 animate-float stagger-3"></div>
 
         <div className="container mx-auto px-6 pb-6">
           <nav className="flex justify-between items-center mb-4">
@@ -51,17 +54,38 @@ export default function LandingPage() {
             </button>
           </nav>
 
-          <div className="text-center max-w-3xl mx-auto animate-bounce-in">
+          <div className="max-w-2xl animate-bounce-in pb-12">
             <h1 className="text-5xl lg:text-6xl font-bold text-[#1D3557] mb-6 leading-tight" style={{ fontFamily: 'Fredoka' }}>
-              Two Ways to Raise a <span className="text-[#EE6C4D]">Money-Smart Kid</span>
+              Nurture the{' '}
+              <span className="relative inline-block">
+                <span className="relative z-10 text-[#EE6C4D]">founder</span>
+                <span className="absolute left-[-4px] right-[-4px] bottom-[6px] h-3 bg-[#FFD23F] -rotate-1 -z-0"></span>
+              </span>{' '}
+              in your child.
             </h1>
-            <p className="text-xl text-[#3D5A80] mb-10 leading-relaxed">
-              CoinQuest by Learners' Planet gives KG-Class 5 kids the money skills and business mindset they won't learn in a textbook — through games, live classes, and real-world simulations.
+            <p className="text-xl text-[#3D5A80] mb-10 leading-relaxed" data-testid="hub-hero-subtext">
+              No one is born an entrepreneur — they're raised as one. 30 live classes where your child learns to earn, price, pitch and sell for real.
             </p>
+            <div className="flex flex-wrap gap-4">
+              <button
+                data-testid="hero-book-trial-btn"
+                onClick={() => navigate('/entrepreneurship-workshop?trial=1')}
+                className="bg-[#EE6C4D] text-white font-bold px-7 py-4 text-lg rounded-full shadow-[0_6px_16px_rgba(238,108,77,0.4)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(238,108,77,0.5)] transition-all flex items-center gap-2"
+              >
+                Book a free trial class <ArrowRight className="w-4 h-4" />
+              </button>
+              <a
+                href="#programs"
+                data-testid="hero-see-platform-btn"
+                className="bg-white text-[#1D3557] font-bold px-7 py-4 text-lg rounded-full border-2 border-[#1D3557] shadow-[0_4px_12px_rgba(29,53,87,0.15)] hover:-translate-y-0.5 transition-all"
+              >
+                See the platform
+              </a>
+            </div>
           </div>
 
           {/* Trust strip */}
-          <div className="flex flex-wrap justify-center gap-3 mb-6" data-testid="trust-strip">
+          <div className="flex flex-wrap gap-3 mb-6" data-testid="trust-strip">
             {trustPoints.map((t, idx) => (
               <div key={idx} className="flex items-center gap-2 bg-white border-2 border-[#1D3557] rounded-full px-4 py-2 shadow-[3px_3px_0px_0px_#1D3557]">
                 <t.icon className="w-4 h-4 text-[#1D3557]" />

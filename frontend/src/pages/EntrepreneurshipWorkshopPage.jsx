@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import {
@@ -32,6 +32,7 @@ const highlights = [
 
 export default function EntrepreneurshipWorkshopPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [batches, setBatches] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -42,6 +43,14 @@ export default function EntrepreneurshipWorkshopPage() {
       .then((res) => setBatches(res.data || []))
       .catch(() => setBatches([]));
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get('trial') === '1') {
+      setForm(EMPTY_FORM);
+      setDialogOpen(true);
+      window.history.replaceState({}, '', '/entrepreneurship-workshop');
+    }
+  }, [searchParams]);
 
   const batchesByGrade = GRADE_LABELS.map((label, grade) => ({
     grade, label, items: batches.filter((b) => b.grade === grade),
