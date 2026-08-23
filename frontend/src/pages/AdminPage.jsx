@@ -7,7 +7,7 @@ import { uploadFile } from '@/utils/chunkedUpload';
 import NotificationCenter from '@/components/NotificationCenter';
 import { 
   Shield, ChevronLeft, ChevronRight, Users, BookOpen, BarChart3,
-  Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus, School, Video, BookMarked, Eye, EyeOff, CreditCard, Clock, Phone, Calendar as CalendarIcon, Filter, X, Download
+  Trash2, Edit2, Library, Store, TrendingUp, LogOut, User, Target, Plus, School, Video, BookMarked, Eye, EyeOff, CreditCard, Clock, Phone, Calendar as CalendarIcon, Filter, X, Download, Rocket
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +84,8 @@ export default function AdminPage({ user }) {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [enquiries, setEnquiries] = useState([]);
   const [selectedEnquiries, setSelectedEnquiries] = useState(new Set());
+  const [trialEnquiries, setTrialEnquiries] = useState([]);
+  const [selectedTrialEnquiries, setSelectedTrialEnquiries] = useState(new Set());
   const [userDateFrom, setUserDateFrom] = useState(null);
   const [userDateTo, setUserDateTo] = useState(null);
   
@@ -113,6 +115,11 @@ export default function AdminPage({ user }) {
     if (activeTab === 'enquiries') {
       axios.get(`${API}/admin/school-enquiries`).then(res => {
         setEnquiries(res.data);
+      }).catch(() => {});
+    }
+    if (activeTab === 'trial_requests') {
+      axios.get(`${API}/subscriptions/admin/trial-enquiries`).then(res => {
+        setTrialEnquiries(res.data);
       }).catch(() => {});
     }
   }, [activeTab]);
@@ -281,6 +288,27 @@ export default function AdminPage({ user }) {
       setEnquiries(prev => prev.filter(e => !selectedEnquiries.has(e.enquiry_id)));
       setSelectedEnquiries(new Set());
       toast.success('Enquiries deleted');
+    } catch { toast.error('Failed to delete'); }
+  };
+
+  const deleteTrialEnquiry = async (id) => {
+    if (!confirm('Permanently delete this trial request?')) return;
+    try {
+      await axios.delete(`${API}/subscriptions/admin/trial-enquiries/${id}`);
+      setTrialEnquiries(prev => prev.filter(e => e.enquiry_id !== id));
+      setSelectedTrialEnquiries(prev => { const s = new Set(prev); s.delete(id); return s; });
+      toast.success('Trial request deleted');
+    } catch { toast.error('Failed to delete'); }
+  };
+
+  const bulkDeleteTrialEnquiries = async () => {
+    if (!selectedTrialEnquiries.size) return;
+    if (!confirm(`Delete ${selectedTrialEnquiries.size} trial requests permanently?`)) return;
+    try {
+      await axios.delete(`${API}/subscriptions/admin/trial-enquiries-bulk`, { data: { enquiry_ids: [...selectedTrialEnquiries] } });
+      setTrialEnquiries(prev => prev.filter(e => !selectedTrialEnquiries.has(e.enquiry_id)));
+      setSelectedTrialEnquiries(new Set());
+      toast.success('Trial requests deleted');
     } catch { toast.error('Failed to delete'); }
   };
 
@@ -728,6 +756,7 @@ export default function AdminPage({ user }) {
             { id: 'users', label: 'Users', icon: Users },
             { id: 'schools', label: 'Schools', icon: School },
             { id: 'enquiries', label: 'Enquiries', icon: Phone },
+            { id: 'trial_requests', label: `Trial Requests${trialEnquiries.length ? ` (${trialEnquiries.length})` : ''}`, icon: Rocket },
             { id: 'guidebook', label: 'Jobs Guide', icon: BookOpen },
           ].map((tab) => (
             <button
@@ -1683,6 +1712,102 @@ export default function AdminPage({ user }) {
                         </td>
                         <td className="py-3 px-2">
                           <button onClick={() => deleteEnquiry(enq.enquiry_id)} className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Trial Requests Tab (Entrepreneurship Workshop) */}
+        {activeTab === 'trial_requests' && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <Rocket className="w-5 h-5 text-[#5B21B6]" />
+                Entrepreneurship Workshop — Free Trial Requests
+                {trialEnquiries.length > 0 && (
+                  <span className="text-xs bg-[#5B21B6] text-white px-2 py-0.5 rounded-full">{trialEnquiries.length}</span>
+                )}
+              </h2>
+              {trialEnquiries.length > 0 && (
+                <div className="flex gap-2">
+                  {selectedTrialEnquiries.size > 0 && (
+                    <Button size="sm" variant="destructive" onClick={bulkDeleteTrialEnquiries} data-testid="bulk-delete-trial-requests">
+                      <Trash2 className="w-3 h-3 mr-1" />Delete {selectedTrialEnquiries.size}
+                    </Button>
+                  )}
+                  <Button size="sm" variant="outline" data-testid="download-trial-requests-csv" onClick={() => downloadCSV(
+                    trialEnquiries,
+                    ['created_at','parent_name','phone','email','child_name','child_grade','batch_name','status'],
+                    'entrepreneurship_trial_requests.csv'
+                  )}>
+                    <Download className="w-3 h-3 mr-1" />CSV
+                  </Button>
+                </div>
+              )}
+            </div>
+            {trialEnquiries.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">No trial requests yet.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" data-testid="trial-requests-table">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="py-3 px-2 w-8"><input type="checkbox" checked={selectedTrialEnquiries.size === trialEnquiries.length && trialEnquiries.length > 0} onChange={() => setSelectedTrialEnquiries(prev => prev.size === trialEnquiries.length ? new Set() : new Set(trialEnquiries.map(e => e.enquiry_id)))} /></th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Date</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Parent</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Phone</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Email</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Child</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Grade</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Batch</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Status</th>
+                      <th className="py-3 px-2 w-10"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {trialEnquiries.map((enq) => (
+                      <tr key={enq.enquiry_id} className="border-b border-gray-100 hover:bg-gray-50" data-testid={`trial-request-row-${enq.enquiry_id}`}>
+                        <td className="py-3 px-2"><input type="checkbox" checked={selectedTrialEnquiries.has(enq.enquiry_id)} onChange={() => setSelectedTrialEnquiries(prev => { const s = new Set(prev); s.has(enq.enquiry_id) ? s.delete(enq.enquiry_id) : s.add(enq.enquiry_id); return s; })} /></td>
+                        <td className="py-3 px-3 text-gray-500 whitespace-nowrap">
+                          {new Date(enq.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td className="py-3 px-3 font-medium text-gray-800">{enq.parent_name}</td>
+                        <td className="py-3 px-3">{enq.phone}</td>
+                        <td className="py-3 px-3 text-blue-600">{enq.email}</td>
+                        <td className="py-3 px-3">{enq.child_name || '-'}</td>
+                        <td className="py-3 px-3">{enq.child_grade === 0 ? 'K' : `Grade ${enq.child_grade}`}</td>
+                        <td className="py-3 px-3">{enq.batch_name || <span className="text-gray-400">-</span>}</td>
+                        <td className="py-3 px-3">
+                          <Select
+                            value={enq.status}
+                            onValueChange={async (val) => {
+                              try {
+                                await axios.put(`${API}/subscriptions/admin/trial-enquiries/${enq.enquiry_id}/status`, { status: val });
+                                setTrialEnquiries(prev => prev.map(e => e.enquiry_id === enq.enquiry_id ? { ...e, status: val } : e));
+                                toast.success('Status updated');
+                              } catch { toast.error('Failed to update'); }
+                            }}
+                          >
+                            <SelectTrigger className="w-28 h-8 text-xs" data-testid={`trial-request-status-${enq.enquiry_id}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="new"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />New</span></SelectItem>
+                              <SelectItem value="contacted"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />Contacted</span></SelectItem>
+                              <SelectItem value="converted"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400 inline-block" />Converted</span></SelectItem>
+                              <SelectItem value="closed"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-400 inline-block" />Closed</span></SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="py-3 px-2">
+                          <button data-testid={`delete-trial-request-${enq.enquiry_id}`} onClick={() => deleteTrialEnquiry(enq.enquiry_id)} className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </td>

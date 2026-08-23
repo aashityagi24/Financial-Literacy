@@ -761,6 +761,24 @@ async def admin_update_plan_config(request: Request, config: PlanConfigUpdate):
     return {"message": "Plan pricing updated"}
 
 
+@router.delete("/admin/trial-enquiries-bulk")
+async def admin_bulk_delete_trial_enquiries(request: Request):
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    body = await request.json()
+    ids = body.get("enquiry_ids", [])
+    if not ids:
+        raise HTTPException(status_code=400, detail="No IDs provided")
+    result = await db.entrepreneurship_trial_leads.delete_many({"enquiry_id": {"$in": ids}})
+    return {"message": f"Deleted {result.deleted_count} trial requests"}
+
+
+# NOTE: this route MUST be registered before the generic "/admin/{subscription_id}"
+# catch-all below, otherwise FastAPI matches "trial-enquiries-bulk" as a
+# subscription_id path param (single path segment) and this never gets hit.
 @router.put("/admin/{subscription_id}/toggle")
 async def admin_toggle_subscription(request: Request, subscription_id: str):
     """Admin: Activate or deactivate a subscription"""
@@ -1098,3 +1116,123 @@ async def get_my_money_masters_batches(request: Request):
         "parent_emails": (user.get("email") or "").lower(),
     }, {"_id": 0}).sort("created_at", -1).to_list(50)
     return subs
+
+
+# ---------------------------------------------------------------- Public marketing (Entrepreneurship Workshop landing page)
+
+class TrialEnquiryRequest(BaseModel):
+    parent_name: str
+    phone: str
+    email: str
+    child_name: Optional[str] = ""
+    child_grade: int
+    batch_id: Optional[str] = None
+
+
+@router.get("/money-masters/public-batches")
+async def list_public_money_masters_batches():
+    """Public: all currently open batches (any grade) for the marketing page's
+    'Book a Free Trial' batch picker. No auth — safe subset of fields only."""
+    db = get_db()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    batches = await db.money_masters_batches.find({
+        "is_active": True,
+        "end_date": {"$gt": now_iso},
+    }, {"_id": 0, "batch_id": 1, "name": 1, "grade": 1, "start_date": 1, "end_date": 1, "price": 1}).sort("grade", 1).to_list(200)
+    return batches
+
+
+@router.post("/money-masters/trial-enquiry")
+async def submit_trial_enquiry(enquiry: TrialEnquiryRequest):
+    """Public: 'Book a Free Trial' form on the Entrepreneurship Workshop
+    landing page. Stored like a school enquiry for admin follow-up."""
+    db = get_db()
+    parent_name = enquiry.parent_name.strip()
+    phone = enquiry.phone.strip()
+    email = enquiry.email.strip().lower()
+
+    if not parent_name:
+        raise HTTPException(status_code=400, detail="Name is required")
+    if not phone or len(phone.replace(" ", "").replace("+", "")) < 10:
+        raise HTTPException(status_code=400, detail="Valid phone number is required")
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Valid email is required")
+    if enquiry.child_grade < 0 or enquiry.child_grade > 5:
+        raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 5")
+
+    batch_name = None
+    if enquiry.batch_id:
+        batch = await db.money_masters_batches.find_one({"batch_id": enquiry.batch_id}, {"_id": 0, "name": 1})
+        batch_name = batch["name"] if batch else None
+
+    lead = {
+        "enquiry_id": f"trial_{uuid.uuid4().hex[:12]}",
+        "parent_name": parent_name,
+        "phone": phone,
+        "email": email,
+        "child_name": (enquiry.child_name or "").strip(),
+        "child_grade": enquiry.child_grade,
+        "batch_id": enquiry.batch_id,
+        "batch_name": batch_name,
+        "status": "new",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.entrepreneurship_trial_leads.insert_one(lead)
+
+    try:
+        from routes.notifications import notify_admins
+        await notify_admins(
+            "new_trial_enquiry",
+            "New Entrepreneurship Workshop Trial Request",
+            f"{parent_name} ({phone}) requested a free trial for Grade {enquiry.child_grade}" + (f" — {batch_name}" if batch_name else ""),
+            related_id=lead["enquiry_id"]
+        )
+    except Exception:
+        pass
+
+    return {"message": "Trial request submitted", "enquiry_id": lead["enquiry_id"]}
+
+
+@router.get("/admin/trial-enquiries")
+async def admin_list_trial_enquiries(request: Request):
+    """Admin: list all Entrepreneurship Workshop trial requests."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    leads = await db.entrepreneurship_trial_leads.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return leads
+
+
+@router.put("/admin/trial-enquiries/{enquiry_id}/status")
+async def admin_update_trial_enquiry_status(enquiry_id: str, request: Request):
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    body = await request.json()
+    status = (body.get("status") or "").strip()
+    if status not in ["new", "contacted", "converted", "closed"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    result = await db.entrepreneurship_trial_leads.update_one(
+        {"enquiry_id": enquiry_id},
+        {"$set": {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Trial request not found")
+    return {"message": "Status updated"}
+
+
+@router.delete("/admin/trial-enquiries/{enquiry_id}")
+async def admin_delete_trial_enquiry(enquiry_id: str, request: Request):
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    result = await db.entrepreneurship_trial_leads.delete_one({"enquiry_id": enquiry_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Trial request not found")
+    return {"message": "Trial request deleted"}

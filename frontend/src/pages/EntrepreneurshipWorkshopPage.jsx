@@ -1,0 +1,339 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'sonner';
+import {
+  ArrowLeft, Rocket, Lightbulb, Users, Trophy, CalendarDays, Video, Sparkles, Store, PiggyBank,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
+const GRADE_LABELS = ['Kindergarten', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5'];
+
+const EMPTY_FORM = { parent_name: '', phone: '', email: '', child_name: '', child_grade: '', batch_id: '' };
+
+const formatDate = (iso) => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+const highlights = [
+  { icon: Lightbulb, title: "Idea to Pitch", description: "Kids dream up a business idea and learn to pitch it with confidence, just like real founders.", color: "#FFD23F" },
+  { icon: Store, title: "Run a Mini Venture", description: "Simulate running a shop or venture — pricing, costs, profit — in a safe, game-based world.", color: "#EE6C4D" },
+  { icon: Users, title: "Teamwork & Leadership", description: "Collaborate on group projects that build negotiation, leadership and communication skills.", color: "#06D6A0" },
+  { icon: Video, title: "Live Expert-Led Classes", description: "Every batch includes scheduled live classes with recordings — no extra purchase needed.", color: "#3D5A80" },
+];
+
+export default function EntrepreneurshipWorkshopPage() {
+  const navigate = useNavigate();
+  const [batches, setBatches] = useState([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    axios.get(`${API}/subscriptions/money-masters/public-batches`)
+      .then((res) => setBatches(res.data || []))
+      .catch(() => setBatches([]));
+  }, []);
+
+  const batchesByGrade = GRADE_LABELS.map((label, grade) => ({
+    grade, label, items: batches.filter((b) => b.grade === grade),
+  })).filter((g) => g.items.length > 0);
+
+  const openTrialForm = (batch = null) => {
+    setForm({ ...EMPTY_FORM, batch_id: batch?.batch_id || '', child_grade: batch ? String(batch.grade) : '' });
+    setDialogOpen(true);
+  };
+
+  const eligibleBatches = form.child_grade === '' ? batches : batches.filter((b) => b.grade === parseInt(form.child_grade));
+
+  const submitTrial = async () => {
+    if (!form.parent_name.trim()) { toast.error('Please enter your name'); return; }
+    if (!form.phone.trim() || form.phone.replace(/\D/g, '').length < 10) { toast.error('Please enter a valid phone number'); return; }
+    if (!form.email.trim() || !form.email.includes('@')) { toast.error('Please enter a valid email'); return; }
+    if (form.child_grade === '') { toast.error("Please select your child's grade"); return; }
+    setSubmitting(true);
+    try {
+      await axios.post(`${API}/subscriptions/money-masters/trial-enquiry`, {
+        parent_name: form.parent_name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        child_name: form.child_name.trim(),
+        child_grade: parseInt(form.child_grade),
+        batch_id: form.batch_id || null,
+      });
+      toast.success("Trial request sent! Our team will reach out to you shortly.");
+      setDialogOpen(false);
+      setForm(EMPTY_FORM);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to submit request');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#E0FBFC]">
+      {/* Hero */}
+      <header className="relative overflow-hidden bg-[#5B21B6]">
+        <div className="absolute top-24 right-16 w-16 h-16 bg-[#FFD23F] rounded-full opacity-40 animate-float stagger-2"></div>
+        <div className="absolute bottom-16 left-1/5 w-12 h-12 bg-[#06D6A0] rounded-full opacity-40 animate-float stagger-3"></div>
+
+        <div className="container mx-auto px-6 pb-6">
+          <nav className="flex justify-between items-center pt-6 mb-4">
+            <button
+              data-testid="ew-back-to-home-link"
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 text-white font-bold hover:text-[#FFD23F] transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" /> CoinQuest Home
+            </button>
+            <button
+              data-testid="login-btn-nav"
+              onClick={() => navigate('/login')}
+              className="bg-white text-[#5B21B6] font-bold px-6 py-3 rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] hover:-translate-y-1 transition-all text-lg"
+            >
+              Sign In
+            </button>
+          </nav>
+
+          <div className="grid lg:grid-cols-2 gap-12 items-center py-10">
+            <div className="animate-bounce-in">
+              <span className="inline-block bg-[#FFD23F] text-[#1D3557] font-bold text-sm px-4 py-1.5 rounded-full border-2 border-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
+                ENTREPRENEURSHIP WORKSHOP
+              </span>
+              <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight" style={{ fontFamily: 'Fredoka' }}>
+                Turn Big Ideas Into <span className="text-[#FFD23F]">Real Ventures!</span>
+              </h1>
+              <p className="text-xl text-white/85 mb-8 leading-relaxed">
+                A grade-specific, batch-based program where kids build a business mindset — creativity, pitching, teamwork and money-smart decisions — through live classes and hands-on challenges.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Button
+                  data-testid="book-trial-hero-btn"
+                  onClick={() => openTrialForm()}
+                  className="bg-[#FFD23F] text-[#1D3557] hover:bg-[#FFD23F]/90 font-bold px-8 py-6 text-xl rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] hover:-translate-y-1 transition-all"
+                >
+                  <Sparkles className="w-6 h-6 mr-2" /> Book a Free Trial
+                </Button>
+                <a
+                  href="#batches"
+                  className="bg-white/10 text-white font-bold px-8 py-4 text-xl rounded-full border-3 border-white/40 hover:bg-white/20 transition-all flex items-center gap-2"
+                >
+                  <CalendarDays className="w-6 h-6" /> See Batches
+                </a>
+              </div>
+            </div>
+
+            <div className="relative animate-bounce-in stagger-2">
+              <div className="card-playful p-8 bg-white">
+                <div className="w-full h-56 rounded-2xl border-3 border-[#1D3557] bg-gradient-to-br from-[#FFD23F] to-[#EE6C4D] flex items-center justify-center">
+                  <Rocket className="w-24 h-24 text-white" strokeWidth={2} />
+                </div>
+                <div className="mt-6 grid grid-cols-3 gap-4">
+                  <div className="text-center p-3 bg-[#FFD23F]/20 rounded-xl border-2 border-[#1D3557]">
+                    <Lightbulb className="w-8 h-8 mx-auto text-[#FFD23F]" />
+                    <p className="text-sm font-bold text-[#1D3557] mt-1">Big Ideas</p>
+                  </div>
+                  <div className="text-center p-3 bg-[#06D6A0]/20 rounded-xl border-2 border-[#1D3557]">
+                    <Users className="w-8 h-8 mx-auto text-[#06D6A0]" />
+                    <p className="text-sm font-bold text-[#1D3557] mt-1">Teamwork</p>
+                  </div>
+                  <div className="text-center p-3 bg-[#EE6C4D]/20 rounded-xl border-2 border-[#1D3557]">
+                    <Trophy className="w-8 h-8 mx-auto text-[#EE6C4D]" />
+                    <p className="text-sm font-bold text-[#1D3557] mt-1">Real Ventures</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Highlights */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
+              What Your Child Will Build
+            </h2>
+            <p className="text-xl text-[#3D5A80]">A hands-on, business-mindset program alongside CoinQuest's money skills</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {highlights.map((h, index) => (
+              <div key={index} className="card-playful p-6 animate-bounce-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                <div
+                  className="w-16 h-16 rounded-2xl border-3 border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] flex items-center justify-center mb-4"
+                  style={{ backgroundColor: h.color }}
+                >
+                  <h.icon className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>{h.title}</h3>
+                <p className="text-[#3D5A80]">{h.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Batches */}
+      <section id="batches" className="py-20">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
+              Open Batches by Grade
+            </h2>
+            <p className="text-xl text-[#3D5A80] max-w-2xl mx-auto">Each batch includes its curriculum content and all scheduled live classes — no separate purchase.</p>
+          </div>
+
+          {batchesByGrade.length === 0 ? (
+            <div className="max-w-md mx-auto text-center card-playful p-8 bg-white" data-testid="ew-no-batches">
+              <CalendarDays className="w-12 h-12 mx-auto text-[#3D5A80] mb-3" />
+              <p className="text-[#3D5A80] font-medium">New batches are being scheduled — book a free trial and we'll notify you the moment one opens for your child's grade.</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto" data-testid="ew-batches-grid">
+              {batchesByGrade.flatMap((g) => g.items.map((b) => (
+                <div key={b.batch_id} className="card-playful p-6 bg-white flex flex-col" data-testid={`ew-batch-card-${b.batch_id}`}>
+                  <span className="inline-block self-start bg-[#5B21B6]/10 text-[#5B21B6] text-xs font-bold px-3 py-1 rounded-full mb-3">{g.label}</span>
+                  <h3 className="text-lg font-bold text-[#1D3557] mb-1" style={{ fontFamily: 'Fredoka' }}>{b.name}</h3>
+                  <p className="text-sm text-[#3D5A80] flex items-center gap-1 mb-4">
+                    <CalendarDays className="w-4 h-4" /> {formatDate(b.start_date)} – {formatDate(b.end_date)}
+                  </p>
+                  <div className="mt-auto flex items-center justify-between">
+                    <span className="text-2xl font-bold text-[#5B21B6]" style={{ fontFamily: 'Fredoka' }}>₹{b.price.toLocaleString('en-IN')}</span>
+                    <Button
+                      data-testid={`ew-book-trial-${b.batch_id}`}
+                      onClick={() => openTrialForm(b)}
+                      className="bg-[#1D3557] hover:bg-[#2D4A6F] text-white rounded-full"
+                    >
+                      Book Free Trial
+                    </Button>
+                  </div>
+                </div>
+              )))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="card-playful p-12 bg-[#5B21B6] text-center">
+            <PiggyBank className="w-14 h-14 mx-auto text-[#FFD23F] mb-4" />
+            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6" style={{ fontFamily: 'Fredoka' }}>
+              Ready to Build Something Big?
+            </h2>
+            <p className="text-xl text-white/85 mb-8 max-w-2xl mx-auto">
+              Book a free trial class and see the Entrepreneurship Workshop in action.
+            </p>
+            <Button
+              data-testid="ew-cta-book-trial-btn"
+              onClick={() => openTrialForm()}
+              className="bg-[#FFD23F] text-[#1D3557] hover:bg-[#FFD23F]/90 font-bold text-xl px-10 py-6 rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] hover:-translate-y-1 transition-all"
+            >
+              Book a Free Trial
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-[#1D3557] py-8">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+            <div className="flex flex-col items-center md:items-start">
+              <img
+                src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/ul81dgc9_Friendly%20%27Money%20Matter%27%20Logo%20Design%20%281%29.png"
+                alt="CoinQuest Logo"
+                className="h-36 w-auto"
+              />
+            </div>
+            <div className="flex flex-col items-center md:items-start gap-3">
+              <h3 className="text-white font-bold text-lg" style={{ fontFamily: 'Fredoka' }}>Contact Us</h3>
+              <a href="mailto:hello@coinquest.co.in" className="text-[#98C1D9] hover:text-white transition-colors">hello@coinquest.co.in</a>
+              <a href="tel:+919924117051" className="text-[#98C1D9] hover:text-white transition-colors">+91 9924117051</a>
+            </div>
+            <div className="flex flex-col items-center md:items-end gap-3">
+              <p className="text-[#98C1D9] text-sm text-center md:text-right mt-2">
+                © Learners' Planet<br/>
+                Educating kids in fun and interactive ways!
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* Book a Free Trial Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-md" data-testid="trial-enquiry-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Book a Free Trial</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              data-testid="trial-parent-name-input"
+              placeholder="Your Name"
+              value={form.parent_name}
+              onChange={(e) => setForm((p) => ({ ...p, parent_name: e.target.value }))}
+            />
+            <Input
+              data-testid="trial-phone-input"
+              placeholder="Phone Number"
+              value={form.phone}
+              onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+            />
+            <Input
+              data-testid="trial-email-input"
+              type="email"
+              placeholder="Email Address"
+              value={form.email}
+              onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+            />
+            <Input
+              data-testid="trial-child-name-input"
+              placeholder="Child's Name (optional)"
+              value={form.child_name}
+              onChange={(e) => setForm((p) => ({ ...p, child_name: e.target.value }))}
+            />
+            <Select value={form.child_grade} onValueChange={(v) => setForm((p) => ({ ...p, child_grade: v, batch_id: '' }))}>
+              <SelectTrigger data-testid="trial-grade-select"><SelectValue placeholder="Child's Grade" /></SelectTrigger>
+              <SelectContent>
+                {GRADE_LABELS.map((label, idx) => (
+                  <SelectItem key={idx} value={String(idx)}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {form.child_grade !== '' && (
+              <Select value={form.batch_id} onValueChange={(v) => setForm((p) => ({ ...p, batch_id: v }))}>
+                <SelectTrigger data-testid="trial-batch-select"><SelectValue placeholder={eligibleBatches.length ? 'Preferred Batch (optional)' : 'No open batches for this grade yet'} /></SelectTrigger>
+                <SelectContent>
+                  {eligibleBatches.map((b) => (
+                    <SelectItem key={b.batch_id} value={b.batch_id}>{b.name} (₹{b.price.toLocaleString('en-IN')})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Button
+              data-testid="submit-trial-enquiry-btn"
+              onClick={submitTrial}
+              disabled={submitting}
+              className="w-full bg-[#5B21B6] hover:bg-[#4C1D95] text-white mt-2"
+            >
+              {submitting ? 'Sending...' : 'Request Free Trial'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

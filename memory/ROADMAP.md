@@ -19,5 +19,11 @@
 - Existing React `useEffect` exhaustive-deps warnings — audit large pages, add only legitimate deps, no blanket lint-disable.
 - Money Masters: TTL/cleanup for abandoned pending batch-purchase subscription rows.
 
+## Recently completed (Aug 23, 2026)
+- **Landing page split into hub + two product pages**: `/` is now a neutral hub (two product cards: Financial Literacy Platform, Entrepreneurship Workshop), `/financial-literacy` carries the old homepage content + PricingSection, `/entrepreneurship-workshop` is new (highlights, open batches by grade fetched publicly, "Book a Free Trial" lead form). New public endpoints `GET .../money-masters/public-batches` and `POST .../money-masters/trial-enquiry`; new admin "Trial Requests" tab mirroring the school-enquiries pattern (`db.entrepreneurship_trial_leads`).
+- Fixed a route-shadowing bug where `DELETE /admin/{subscription_id}` (registered earlier) swallowed `DELETE /admin/trial-enquiries-bulk` — reordered routes, now 19/19 `test_trial_enquiries.py` pass.
+- Fixed session-expired toast never appearing on any page (Toaster was mounted after BrowserRouter, missing mount-time toasts) by moving `<Toaster/>` above `<BrowserRouter>` in `App.js`.
+- Fixed hub page's two product cards having mismatched height/alignment (`items-stretch` on the grid).
+
 ## Blocked (needs manual/external action, not a code fix)
 - **Historical missing badge images** — original assets lost; admin must re-upload via Badge Management. Recurrence count 5+.
