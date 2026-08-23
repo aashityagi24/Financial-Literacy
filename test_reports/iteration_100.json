@@ -1,0 +1,79 @@
+{
+  "summary": "Full backend + frontend verification of the new standalone 'Money Masters & Entrepreneurship' batch subscription. Created /app/backend/tests/test_money_masters.py (39 pytest cases: admin batch CRUD/validation, toggle, parent batch listing, create-order guards, verify-payment end_date branching, curricula gating, my-batches, admin users active_plans). 38/39 pass. Frontend verified via Playwright: admin Money Masters Batches tab (create with validation, edit, toggle Open/Closed, table render), admin Users plan badges (Full Plan blue + 'Money Masters — <batch>' purple, both shown together), and the full parent purchase flow up to (not through) the live Razorpay checkout widget (create-order 200, Razorpay modal opened with correct Rs.1,799 amount and batch name; no payment completed). ONE CRITICAL functional bug found in curriculum gating: a child whose PARENT holds the base Financial Literacy plan LOSES all Financial Literacy access the moment a Money Masters batch is activated for that child.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "GET /api/curricula, /api/content/topics (services/curricula.py get_d2c_subscribed_curricula)",
+        "issue": "Child loses Financial Literacy after a Money Masters purchase. Base-plan subscriptions store only parent_emails (child_user_ids is always [] for single_parent/two_parents — see routes/subscriptions.py create_order line ~299), so a child's own subscription lookup finds NO base plan and previously fell back to DEFAULT_CURRICULUM ('financial_literacy'). Once a money_masters sub exists (which DOES set child_user_ids=[child_id]), subscribed=['money_entrepreneurship'] and the fallback no longer applies -> the child sees ONLY Money Masters. Verified end-to-end: wallet_demo_child returned active=['financial_literacy'] and 1 topic before, and active=['money_entrepreneurship'] with 0 topics after activating a Money Masters sub. Fix: in get_d2c_subscribed_curricula, for role=='child' also resolve the parent's subscriptions via db.parent_child_links -> parent email (and/or add the child's user_id to child_user_ids when a base plan/child link is created).",
+        "priority": "CRITICAL"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "GET /api/curricula",
+        "issue": "Returns active:null for unauthenticated callers (pre-existing behaviour, documented here for context — not a regression)."
+      },
+      {
+        "endpoint": "content data",
+        "issue": "No content item / topic / live class in the DB is tagged curricula=['money_entrepreneurship'] (0 rows). A money-masters-only user therefore currently sees an EMPTY learn page (0 topics). Needs curriculum content tagging + an empty-state message."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "AdminSubscriptionManagement — '+ New Batch' button",
+        "issue": "Invisible label: computed color rgb(29,53,87) == background rgb(29,53,87). The button works but reads as a blank dark rectangle. Add text-white to the Button className.",
+        "selector": "[data-testid=\"create-batch-btn\"]",
+        "priority": "HIGH"
+      },
+      {
+        "component": "Batch dialog date pickers",
+        "issue": "shadcn Calendar allows selecting the greyed-out outside days of the adjacent month (e.g. clicking '28' in the first August row silently sets 28 Jul), producing an invalid end<start range that only fails server-side. Suggest disabling outside days and setting fromDate={start_date} on the End Date calendar.",
+        "selector": "[data-testid=\"batch-end-date\"]",
+        "priority": "MEDIUM"
+      },
+      {
+        "component": "saveBatch client validation",
+        "issue": "No client-side end_date > start_date check; relies on the backend 400 toast ('end_date must be after start_date'). Toasts also stack (price + date errors visible simultaneously). Cosmetic/UX only.",
+        "selector": "[data-testid=\"save-batch-btn\"]",
+        "priority": "LOW"
+      },
+      {
+        "component": "MoneyMastersPurchase Razorpay options",
+        "issue": "No prefill.email/contact passed to Razorpay, so the payer re-types their mobile in the checkout widget even though the parent is logged in (base-plan PricingSection collects it). Minor conversion friction.",
+        "selector": "[data-testid^=\"mm-buy-btn-\"]",
+        "priority": "LOW"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Parent Dashboard Overview",
+        "issues": ["Purple Money Masters promo card renders correctly at the top of Overview with readable contrast; 'Invite Second Parent' block is not rendered for this test parent so relative ordering could not be visually confirmed (card is above all other Overview content)."]
+      }
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_money_masters.py", "/app/test_reports/pytest/mm_results.xml"],
+  "action_items": [
+    "CRITICAL: fix get_d2c_subscribed_curricula so a child inherits the parent's active base plan (via parent_child_links) — otherwise buying Money Masters revokes Financial Literacy for the child.",
+    "Fix invisible '+ New Batch' button label (text color == background).",
+    "Disable outside/adjacent-month days (and set a min date on End Date) in the batch date pickers; add client-side end>start validation.",
+    "Tag at least one topic/content item and live class with curricula=['money_entrepreneurship'] so purchasers actually get content; add an empty-state.",
+    "Optional: pass prefill (email/contact) to Razorpay in MoneyMastersPurchase."
+  ],
+  "critical_code_review_comments": [
+    "services/curricula.py get_d2c_subscribed_curricula: subscription->curricula mapping only matches child_user_ids/parent_emails on the subscription doc; children of D2C base-plan parents are never listed there, so the function silently relied on the DEFAULT fallback. Resolve the parent link explicitly.",
+    "routes/subscriptions.py verify_payment: money_masters branch is correct (end_date untouched, no DURATION_MAP lookup); base plans still recalculate from duration — both verified with real HMAC-signed calls.",
+    "routes/admin.py get_users: active_plans list build is correct and _id is excluded; note that a child row can only show 'Full Plan' if the base sub lists the child's user_id — same root cause as the curricula bug (admin UI shows only the Money Masters badge for such children).",
+    "routes/subscriptions.py create_money_masters_order stores the pending sub even if the parent abandons checkout; consider a TTL/cleanup as pending money_masters rows accumulate."
+  ],
+  "updated_files": ["/app/backend/tests/test_money_masters.py", "/app/backend/tests/_seed_mm_badge.py"],
+  "success_rate": {"backend": "97% (38/39 pytest cases)", "frontend": "90% (all flows functional; 1 high-visibility styling bug)"},
+  "seed_data_creation": "Money Masters batch 'QA MM Grade 3 Batch' (mmb_b8b19d8b2bfe, Grade 3, 25-30 Aug 2026, Rs.1799, Open) left in db.money_masters_batches for further UI testing. Helper /app/backend/tests/_seed_mm_badge.py add|del grants/revokes an active money_masters sub for wallet_demo_parent + wallet_demo_child. All pending Razorpay orders created during testing were deleted; no real payment was made.",
+  "should_call_test_agent_after_fix": true,
+  "should_main_agent_self_test": false,
+  "test_credentials": "admin@learnersplanet.com / finlit@2026 ; wallet_demo_parent / testpass123 ; wallet_demo_child / testpass123 (Grade 3)",
+  "context_for_next_testing_agent": "Run `pytest /app/backend/tests/test_money_masters.py` — the only expected failure is test_child_of_base_plan_parent_keeps_fl_after_buying_money_masters, which encodes the CRITICAL curricula bug; it must pass after the fix. Verify-payment branching is covered with self-computed HMAC signatures against DB-seeded pending orders (no Razorpay call needed). Do NOT complete a Razorpay payment (LIVE key). Admin batch CRUD/toggle/edit and the parent buy dialog were verified in the browser and are working.",
+  "rca_of_the_issue": "Base-plan (single_parent/two_parents) subscription documents never populate child_user_ids, so services/curricula.get_d2c_subscribed_curricula() cannot see a child's base plan; children previously got Financial Literacy only through the `subscribed or [DEFAULT_CURRICULUM]` fallback. Adding a money_masters subscription (which does populate child_user_ids) makes `subscribed` non-empty, suppressing the fallback and collapsing the child's access to money_entrepreneurship only — reproduced with wallet_demo_child (1 topic -> 0 topics)."
+}

@@ -54,6 +54,28 @@ class PlanConfigUpdate(BaseModel):
     extra_child_per_day: float = 0
 
 
+class BatchCreate(BaseModel):
+    name: str
+    grade: int  # 0-5 (K-5)
+    start_date: str  # ISO date
+    end_date: str    # ISO date
+    price: int        # INR
+
+
+class BatchUpdate(BaseModel):
+    name: Optional[str] = None
+    grade: Optional[int] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    price: Optional[int] = None
+    is_active: Optional[bool] = None
+
+
+class MoneyMastersOrderRequest(BaseModel):
+    batch_id: str
+    child_id: str
+
+
 # ============== HELPER FUNCTIONS ==============
 
 DURATION_MAP = {
@@ -326,21 +348,26 @@ async def verify_payment(payment: VerifyPaymentRequest):
     if subscription["payment_status"] == "completed":
         return {"message": "Payment already verified", "subscription_id": subscription["subscription_id"]}
     
-    # Activate subscription
+    # Activate subscription. Money Masters batch subscriptions already carry
+    # their real end_date (the batch's end_date, set at order creation) — that
+    # must not be overwritten by the generic duration-based calculation used
+    # by the base plans.
     now = datetime.now(timezone.utc)
-    duration_info = DURATION_MAP[subscription["duration"]]
-    end_date = now + timedelta(days=duration_info["days"])
-    
+    is_money_masters = subscription.get("plan_type") == "money_masters"
+    updates = {
+        "razorpay_payment_id": payment.razorpay_payment_id,
+        "payment_status": "completed",
+        "is_active": True,
+        "start_date": now.isoformat(),
+        "activated_at": now.isoformat(),
+    }
+    if not is_money_masters:
+        duration_info = DURATION_MAP[subscription["duration"]]
+        updates["end_date"] = (now + timedelta(days=duration_info["days"])).isoformat()
+
     await db.subscriptions.update_one(
         {"razorpay_order_id": payment.razorpay_order_id},
-        {"$set": {
-            "razorpay_payment_id": payment.razorpay_payment_id,
-            "payment_status": "completed",
-            "is_active": True,
-            "start_date": now.isoformat(),
-            "end_date": end_date.isoformat(),
-            "activated_at": now.isoformat(),
-        }}
+        {"$set": updates}
     )
     
     # Mark lead as converted
@@ -352,14 +379,22 @@ async def verify_payment(payment: VerifyPaymentRequest):
     # Notify admins of new subscription
     try:
         from routes.notifications import notify_admins
-        plan_label = "Two Parents" if subscription.get("plan_type") == "two_parents" else "Single Parent"
-        dur_label = DURATION_MAP.get(subscription.get("duration", ""), {}).get("label", subscription.get("duration", ""))
-        await notify_admins(
-            "new_subscription",
-            "New Subscription",
-            f"{subscription.get('subscriber_name', subscription.get('subscriber_email', 'Someone'))} subscribed to {plan_label} ({dur_label}, {subscription.get('num_children', 1)} child{'ren' if subscription.get('num_children', 1) > 1 else ''}) - Rs.{subscription.get('amount', 0)}",
-            related_id=subscription.get("subscription_id")
-        )
+        if is_money_masters:
+            await notify_admins(
+                "new_subscription",
+                "New Money Masters Subscription",
+                f"{subscription.get('subscriber_name', subscription.get('subscriber_email', 'Someone'))} subscribed to Money Masters batch '{subscription.get('batch_name', '')}' - Rs.{subscription.get('amount', 0)}",
+                related_id=subscription.get("subscription_id")
+            )
+        else:
+            plan_label = "Two Parents" if subscription.get("plan_type") == "two_parents" else "Single Parent"
+            dur_label = DURATION_MAP.get(subscription.get("duration", ""), {}).get("label", subscription.get("duration", ""))
+            await notify_admins(
+                "new_subscription",
+                "New Subscription",
+                f"{subscription.get('subscriber_name', subscription.get('subscriber_email', 'Someone'))} subscribed to {plan_label} ({dur_label}, {subscription.get('num_children', 1)} child{'ren' if subscription.get('num_children', 1) > 1 else ''}) - Rs.{subscription.get('amount', 0)}",
+                related_id=subscription.get("subscription_id")
+            )
     except Exception:
         pass
     
@@ -789,3 +824,277 @@ async def admin_delete_inactive_subscriptions(request: Request):
     }
     res = await db.subscriptions.delete_many(query)
     return {"message": f"Deleted {res.deleted_count} inactive subscription(s)", "deleted": res.deleted_count}
+
+
+# ============== MONEY MASTERS BATCHES ==============
+# Money Masters & Entrepreneurship is sold as a standalone module (content +
+# its live classes), independent of the base Financial Literacy plan. Admin
+# creates dated "batches" per grade with their own price; parents buy a
+# batch for one of their already-linked children.
+
+def _clean_batch(doc):
+    doc.pop("_id", None)
+    return doc
+
+
+def _validate_batch_dates(start_date, end_date):
+    try:
+        start = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
+        end = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+    except (ValueError, AttributeError):
+        raise HTTPException(status_code=400, detail="start_date/end_date must be valid ISO dates")
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=timezone.utc)
+    if end.tzinfo is None:
+        end = end.replace(tzinfo=timezone.utc)
+    if end <= start:
+        raise HTTPException(status_code=400, detail="end_date must be after start_date")
+    return start.astimezone(timezone.utc).isoformat(), end.astimezone(timezone.utc).isoformat()
+
+
+@router.post("/admin/money-masters/batches")
+async def create_money_masters_batch(batch: BatchCreate, request: Request):
+    """Admin: create a Money Masters batch (grade + dates + price)."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    name = batch.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Batch name is required")
+    if batch.grade < 0 or batch.grade > 5:
+        raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 5")
+    if batch.price <= 0:
+        raise HTTPException(status_code=400, detail="Price must be greater than 0")
+    start_date, end_date = _validate_batch_dates(batch.start_date, batch.end_date)
+
+    doc = {
+        "batch_id": f"mmb_{uuid.uuid4().hex[:12]}",
+        "name": name,
+        "grade": batch.grade,
+        "start_date": start_date,
+        "end_date": end_date,
+        "price": batch.price,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.money_masters_batches.insert_one(doc)
+    return _clean_batch(doc)
+
+
+@router.get("/admin/money-masters/batches")
+async def admin_list_money_masters_batches(request: Request):
+    """Admin: list all Money Masters batches with enrollment counts."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    batches = await db.money_masters_batches.find({}, {"_id": 0}).sort("start_date", -1).to_list(500)
+    for b in batches:
+        b["enrolled_count"] = await db.subscriptions.count_documents({
+            "plan_type": "money_masters",
+            "batch_id": b["batch_id"],
+            "payment_status": "completed",
+        })
+    return batches
+
+
+@router.put("/admin/money-masters/batches/{batch_id}")
+async def update_money_masters_batch(batch_id: str, updates: BatchUpdate, request: Request):
+    """Admin: update a Money Masters batch. Does not retroactively change
+    already-purchased subscriptions' end_date."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    existing = await db.money_masters_batches.find_one({"batch_id": batch_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Batch not found")
+
+    fields = {}
+    if updates.name is not None:
+        name = updates.name.strip()
+        if not name:
+            raise HTTPException(status_code=400, detail="Batch name cannot be empty")
+        fields["name"] = name
+    if updates.grade is not None:
+        if updates.grade < 0 or updates.grade > 5:
+            raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 5")
+        fields["grade"] = updates.grade
+    if updates.price is not None:
+        if updates.price <= 0:
+            raise HTTPException(status_code=400, detail="Price must be greater than 0")
+        fields["price"] = updates.price
+    if updates.start_date is not None or updates.end_date is not None:
+        start_date, end_date = _validate_batch_dates(
+            updates.start_date or existing["start_date"], updates.end_date or existing["end_date"]
+        )
+        fields["start_date"] = start_date
+        fields["end_date"] = end_date
+    if updates.is_active is not None:
+        fields["is_active"] = updates.is_active
+
+    if not fields:
+        raise HTTPException(status_code=400, detail="No fields to update")
+
+    await db.money_masters_batches.update_one({"batch_id": batch_id}, {"$set": fields})
+    return {"message": "Batch updated"}
+
+
+@router.delete("/admin/money-masters/batches/{batch_id}")
+async def delete_money_masters_batch(batch_id: str, request: Request):
+    """Admin: permanently delete a batch (existing purchases are unaffected)."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    res = await db.money_masters_batches.delete_one({"batch_id": batch_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Batch not found")
+    return {"message": "Batch deleted"}
+
+
+# ---------------------------------------------------------------- Parent purchase flow
+
+@router.get("/money-masters/batches")
+async def list_open_money_masters_batches(request: Request, child_id: str):
+    """Parent: batches open for purchase matching the given (linked) child's grade."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if not user or user.get("role") != "parent":
+        raise HTTPException(status_code=403, detail="Parent access required")
+
+    link = await db.parent_child_links.find_one({
+        "parent_id": user["user_id"], "child_id": child_id, "status": "active"
+    })
+    if not link:
+        raise HTTPException(status_code=404, detail="Child not linked to your account")
+    child = await db.users.find_one({"user_id": child_id}, {"_id": 0, "grade": 1})
+    if not child:
+        raise HTTPException(status_code=404, detail="Child not found")
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    batches = await db.money_masters_batches.find({
+        "grade": child.get("grade", 0) or 0,
+        "is_active": True,
+        "end_date": {"$gt": now_iso},
+    }, {"_id": 0}).sort("start_date", 1).to_list(100)
+    return batches
+
+
+@router.post("/money-masters/create-order")
+async def create_money_masters_order(order: MoneyMastersOrderRequest, request: Request):
+    """Parent: create a Razorpay order to buy a Money Masters batch for a linked child."""
+    from services.auth import get_current_user
+    if not razorpay_client:
+        raise HTTPException(status_code=500, detail="Payment gateway not configured")
+    db = get_db()
+    user = await get_current_user(request)
+    if not user or user.get("role") != "parent":
+        raise HTTPException(status_code=403, detail="Parent access required")
+
+    link = await db.parent_child_links.find_one({
+        "parent_id": user["user_id"], "child_id": order.child_id, "status": "active"
+    })
+    if not link:
+        raise HTTPException(status_code=404, detail="Child not linked to your account")
+    child = await db.users.find_one({"user_id": order.child_id}, {"_id": 0, "name": 1, "grade": 1})
+    if not child:
+        raise HTTPException(status_code=404, detail="Child not found")
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    batch = await db.money_masters_batches.find_one({"batch_id": order.batch_id}, {"_id": 0})
+    if not batch or not batch.get("is_active") or batch["end_date"] <= now_iso:
+        raise HTTPException(status_code=400, detail="This batch is no longer open for purchase")
+    if batch.get("grade") != (child.get("grade", 0) or 0):
+        raise HTTPException(status_code=400, detail="This batch does not match the child's grade")
+
+    existing = await db.subscriptions.find_one({
+        "plan_type": "money_masters",
+        "child_user_ids": order.child_id,
+        "payment_status": "completed",
+        "is_active": True,
+        "end_date": {"$gt": now_iso},
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail=f"{child.get('name', 'This child')} already has an active Money Masters subscription until {existing['end_date'][:10]}")
+
+    amount_paise = batch["price"] * 100
+    subscription_id = f"sub_{uuid.uuid4().hex[:12]}"
+    receipt = subscription_id[:40]
+
+    try:
+        razor_order = razorpay_client.order.create({
+            "amount": amount_paise,
+            "currency": "INR",
+            "receipt": receipt,
+            "payment_capture": 1,
+            "notes": {
+                "subscription_id": subscription_id,
+                "plan_type": "money_masters",
+                "batch_id": order.batch_id,
+                "child_id": order.child_id,
+            }
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Payment order creation failed: {str(e)}")
+
+    subscription = {
+        "subscription_id": subscription_id,
+        "plan_type": "money_masters",
+        "batch_id": order.batch_id,
+        "batch_name": batch["name"],
+        "grade": batch["grade"],
+        "num_parents": 1,
+        "num_children": 1,
+        "amount": batch["price"],
+        "razorpay_order_id": razor_order["id"],
+        "razorpay_payment_id": None,
+        "payment_status": "pending",
+        "subscriber_name": user.get("name", ""),
+        "subscriber_email": (user.get("email") or "").lower(),
+        "subscriber_phone": user.get("phone", ""),
+        "parent_emails": [(user.get("email") or "").lower()],
+        "child_user_ids": [order.child_id],
+        "child_name": child.get("name", ""),
+        "start_date": now_iso,
+        "end_date": batch["end_date"],
+        "is_active": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.subscriptions.insert_one(subscription)
+
+    return {
+        "order_id": razor_order["id"],
+        "amount": amount_paise,
+        "currency": "INR",
+        "subscription_id": subscription_id,
+        "key_id": RAZORPAY_KEY_ID,
+    }
+
+
+@router.get("/money-masters/my-batches")
+async def get_my_money_masters_batches(request: Request):
+    """Parent: all Money Masters subscriptions (any status) for their children."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if not user or user.get("role") != "parent":
+        raise HTTPException(status_code=403, detail="Parent access required")
+
+    subs = await db.subscriptions.find({
+        "plan_type": "money_masters",
+        "parent_emails": (user.get("email") or "").lower(),
+    }, {"_id": 0}).sort("created_at", -1).to_list(50)
+    return subs

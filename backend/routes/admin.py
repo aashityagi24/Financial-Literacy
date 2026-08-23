@@ -75,32 +75,55 @@ async def get_users(request: Request):
     all_subs = await db.subscriptions.find({
         "payment_status": "completed",
         "is_active": True,
-    }, {"_id": 0, "parent_emails": 1, "child_user_ids": 1, "end_date": 1, "plan_type": 1, "duration": 1, "granted_by_admin": 1}).to_list(1000)
+    }, {"_id": 0, "parent_emails": 1, "child_user_ids": 1, "end_date": 1, "plan_type": 1, "duration": 1, "granted_by_admin": 1, "batch_name": 1, "grade": 1}).to_list(1000)
     
     # Build lookup maps for both parent_emails (adult accounts) and
     # child_user_ids (used for email-less children granted a subscription).
-    sub_map = {}         # email -> sub summary
-    sub_map_child = {}   # user_id -> sub summary (email-less children only)
+    # Each key maps to a LIST because a user may hold more than one active
+    # plan at once (e.g. the base Financial Literacy plan plus a standalone
+    # Money Masters batch subscription).
+    subs_by_email = {}
+    subs_by_child = {}
 
-    def _record(target_map, key, sub, is_active):
-        existing = target_map.get(key)
-        if not existing or (is_active and existing["subscription_status"] != "active"):
-            target_map[key] = {
-                "subscription_status": "active" if is_active else "expired",
-                "end_date": sub["end_date"],
-                "plan_type": sub.get("plan_type", ""),
-                "duration": sub.get("duration", ""),
-                "granted_by_admin": sub.get("granted_by_admin", False),
-            }
+    def _entry(sub, is_active):
+        return {
+            "subscription_status": "active" if is_active else "expired",
+            "end_date": sub["end_date"],
+            "plan_type": sub.get("plan_type", ""),
+            "duration": sub.get("duration", ""),
+            "granted_by_admin": sub.get("granted_by_admin", False),
+            "batch_name": sub.get("batch_name"),
+            "grade": sub.get("grade"),
+        }
 
     for sub in all_subs:
-        is_active = sub["end_date"] > now
+        entry = _entry(sub, sub["end_date"] > now)
         for email in sub.get("parent_emails", []) or []:
-            _record(sub_map, email, sub, is_active)
+            subs_by_email.setdefault(email, []).append(entry)
         for uid in sub.get("child_user_ids", []) or []:
-            _record(sub_map_child, uid, sub, is_active)
+            subs_by_child.setdefault(uid, []).append(entry)
+
+    # Base-plan subscriptions are keyed only by the buying parent's email
+    # (never child_user_ids), so a child row would otherwise show no plan at
+    # all even though their linked parent is actively subscribed. Resolve
+    # each child's linked parent(s) so their inherited base plan also shows.
+    child_ids = [u["user_id"] for u in users if u.get("role") == "child"]
+    child_to_parent_emails = {}
+    if child_ids:
+        links = await db.parent_child_links.find(
+            {"child_id": {"$in": child_ids}, "status": "active"}, {"_id": 0, "parent_id": 1, "child_id": 1}
+        ).to_list(5000)
+        parent_ids = list({l["parent_id"] for l in links})
+        parent_users = await db.users.find(
+            {"user_id": {"$in": parent_ids}}, {"_id": 0, "user_id": 1, "email": 1}
+        ).to_list(5000)
+        parent_email_map = {p["user_id"]: (p.get("email") or "").lower() for p in parent_users}
+        for l in links:
+            pe = parent_email_map.get(l["parent_id"])
+            if pe:
+                child_to_parent_emails.setdefault(l["child_id"], []).append(pe)
     
-    # Add school_name and subscription_status to each user
+    # Add school_name and subscription plan info to each user
     for user in users:
         school_id = user.get("school_id")
         user["school_name"] = school_map.get(school_id) if school_id else None
@@ -108,13 +131,38 @@ async def get_users(request: Request):
         # (children created without email have `email: None`). Guard with `or ""`
         # so `.lower()` never crashes and we simply treat them as email-less.
         email = (user.get("email") or "").lower()
-        matched = sub_map.get(email) if email else sub_map_child.get(user.get("user_id"))
-        if matched:
-            user["subscription_status"] = matched["subscription_status"]
-            user["subscription_end_date"] = matched["end_date"]
-            user["subscription_granted_by_admin"] = matched.get("granted_by_admin", False)
+        entries = (subs_by_email.get(email, []) if email else []) + subs_by_child.get(user.get("user_id"), [])
+        if user.get("role") == "child":
+            # Only inherit the parent's BASE plan (money_masters is always
+            # purchased per-child and already captured via child_user_ids).
+            for pe in child_to_parent_emails.get(user.get("user_id"), []):
+                entries += [e for e in subs_by_email.get(pe, []) if e["plan_type"] != "money_masters"]
+        if entries:
+            active_entries = [e for e in entries if e["subscription_status"] == "active"]
+            relevant = active_entries or entries
+            user["subscription_status"] = "active" if active_entries else "expired"
+            base = next((e for e in relevant if e["plan_type"] != "money_masters"), None)
+            money_masters = next((e for e in relevant if e["plan_type"] == "money_masters"), None)
+            if base:
+                user["subscription_end_date"] = base["end_date"]
+                user["subscription_granted_by_admin"] = base.get("granted_by_admin", False)
+            if money_masters:
+                user["money_masters_batch"] = {
+                    "batch_name": money_masters.get("batch_name"),
+                    "grade": money_masters.get("grade"),
+                    "end_date": money_masters["end_date"],
+                }
+            user["active_plans"] = [
+                {
+                    "plan_type": e["plan_type"],
+                    "label": f"Money Masters — {e.get('batch_name') or 'Batch'}" if e["plan_type"] == "money_masters" else "Full Plan",
+                    "end_date": e["end_date"],
+                }
+                for e in relevant
+            ]
         else:
             user["subscription_status"] = "inactive"
+            user["active_plans"] = []
     
     return users
 

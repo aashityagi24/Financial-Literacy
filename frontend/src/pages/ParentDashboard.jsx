@@ -36,6 +36,7 @@ import DashboardFooter from '@/components/DashboardFooter';
 import { getDefaultAvatar } from '@/utils/avatars';
 import { JobGuideDialog } from '@/components/JobGuideDialog';
 import { MoneyBreakdownChart } from '@/components/MoneyBreakdownChart';
+import { MoneyMastersPurchase } from '@/components/MoneyMastersPurchase';
 
 const gradeLabels = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
 
@@ -722,6 +723,9 @@ export default function ParentDashboard({ user }) {
         </div>
         )}
         
+        {/* Money Masters & Entrepreneurship standalone module */}
+        <MoneyMastersPurchase children={dashboard?.children || []} user={user} />
+
         {/* Invite Second Parent - only for two_parents plan */}
         {subscription?.plan_type === 'two_parents' && subscription?.parent_emails?.length < 2 && (
           <div className="bg-[#FFF3E0] border-2 border-[#EE6C4D]/30 rounded-xl p-4 mb-5 flex flex-col sm:flex-row items-start sm:items-center gap-3" data-testid="invite-second-parent">

@@ -1,0 +1,23 @@
+# CoinQuest — Roadmap / Backlog
+
+## P0
+- **User verification of Live Classes module** — implemented + auto-tested (31/31), awaiting the user's own acceptance pass (admin create/edit/delete a class; child/parent see only entitled grade+curriculum sessions; join/recording links work).
+- **Tag Money Masters content** — no topic/content item/live class currently carries `curricula: ['money_entrepreneurship']`. A parent who buys a Money Masters batch today lands on an empty Learn page (graceful empty-state, but no real content). Admin should tag existing/new content via the Content Management curriculum selector, and schedule at least one Money Masters live class per active batch's grade.
+
+## P1
+- **Live Razorpay checkout + post-payment setup verification** — run one genuine payment (base plan and/or a Money Masters batch) in production and confirm subscription/access activates and the post-payment account-setup flow completes correctly.
+- **Grade 2 Money Garden sell-screen clarity** — show per-kg/per-flower pricing at harvest/sell time with a quantity math helper before selling (`MoneyGardenPage.jsx`).
+- **Mobile child UI polish** — ensure child interactive controls are ≥44px touch targets across `Dashboard.jsx`, `MoneyGardenPage.jsx`, wallet/learn pages.
+- **PWA / Add to Home Screen** — installable app shell, especially useful for Calendar/live-class and Money Masters purchase conversion.
+
+## P2
+- Parent/teacher collaboration portal.
+- Collaborative and seasonal events.
+- First-use tutorial/onboarding.
+- Refactor oversized pages: `ContentManagement.jsx`, `SchoolDashboard.jsx`, `TeacherDashboard.jsx`, `ParentDashboard.jsx`.
+- School curriculum badges on admin school list.
+- Existing React `useEffect` exhaustive-deps warnings — audit large pages, add only legitimate deps, no blanket lint-disable.
+- Money Masters: TTL/cleanup for abandoned pending batch-purchase subscription rows.
+
+## Blocked (needs manual/external action, not a code fix)
+- **Historical missing badge images** — original assets lost; admin must re-upload via Badge Management. Recurrence count 5+.

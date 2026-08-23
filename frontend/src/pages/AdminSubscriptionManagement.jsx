@@ -37,7 +37,12 @@ const PLAN_LABELS = {
   'single_parent': 'Single Parent',
   'two_parents': 'Dual Parent',
   'admin_granted': 'Admin Granted',
+  'money_masters': 'Money Masters',
 };
+
+const GRADE_LABELS = ['K', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5'];
+
+const EMPTY_BATCH_FORM = { name: '', grade: '0', start_date: null, end_date: null, price: '' };
 
 const isExpired = (endDate) => {
   if (!endDate) return false;
@@ -71,6 +76,10 @@ export default function AdminSubscriptionManagement({ user }) {
   const [dateTo, setDateTo] = useState(null);
   const [linkedUsersDialog, setLinkedUsersDialog] = useState({ open: false, sub: null });
   const [subStatusTab, setSubStatusTab] = useState('active'); // 'active' | 'inactive'
+  const [batches, setBatches] = useState([]);
+  const [batchDialog, setBatchDialog] = useState({ open: false, editingId: null });
+  const [batchForm, setBatchForm] = useState(EMPTY_BATCH_FORM);
+  const [savingBatch, setSavingBatch] = useState(false);
 
   useEffect(() => {
     if (user?.role !== 'admin') {
@@ -78,7 +87,84 @@ export default function AdminSubscriptionManagement({ user }) {
       return;
     }
     fetchData();
+    fetchBatches();
   }, [user, navigate]);
+
+  const fetchBatches = async () => {
+    try {
+      const res = await axios.get(`${API}/subscriptions/admin/money-masters/batches`);
+      setBatches(res.data || []);
+    } catch (err) {
+      toast.error('Failed to load Money Masters batches');
+    }
+  };
+
+  const openBatchDialog = (batch = null) => {
+    if (batch) {
+      setBatchForm({
+        name: batch.name,
+        grade: String(batch.grade),
+        start_date: new Date(batch.start_date),
+        end_date: new Date(batch.end_date),
+        price: String(batch.price),
+      });
+      setBatchDialog({ open: true, editingId: batch.batch_id });
+    } else {
+      setBatchForm(EMPTY_BATCH_FORM);
+      setBatchDialog({ open: true, editingId: null });
+    }
+  };
+
+  const saveBatch = async () => {
+    if (!batchForm.name.trim()) { toast.error('Batch name is required'); return; }
+    if (!batchForm.start_date || !batchForm.end_date) { toast.error('Start and end dates are required'); return; }
+    if (batchForm.end_date <= batchForm.start_date) { toast.error('End date must be after start date'); return; }
+    if (!batchForm.price || parseInt(batchForm.price) <= 0) { toast.error('Enter a valid price'); return; }
+    setSavingBatch(true);
+    try {
+      const payload = {
+        name: batchForm.name.trim(),
+        grade: parseInt(batchForm.grade),
+        start_date: batchForm.start_date.toISOString(),
+        end_date: batchForm.end_date.toISOString(),
+        price: parseInt(batchForm.price),
+      };
+      if (batchDialog.editingId) {
+        await axios.put(`${API}/subscriptions/admin/money-masters/batches/${batchDialog.editingId}`, payload);
+        toast.success('Batch updated');
+      } else {
+        await axios.post(`${API}/subscriptions/admin/money-masters/batches`, payload);
+        toast.success('Batch created');
+      }
+      setBatchDialog({ open: false, editingId: null });
+      fetchBatches();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to save batch');
+    } finally {
+      setSavingBatch(false);
+    }
+  };
+
+  const toggleBatchActive = async (batch) => {
+    try {
+      await axios.put(`${API}/subscriptions/admin/money-masters/batches/${batch.batch_id}`, { is_active: !batch.is_active });
+      toast.success(batch.is_active ? 'Batch closed for new purchases' : 'Batch reopened');
+      fetchBatches();
+    } catch {
+      toast.error('Failed to update batch');
+    }
+  };
+
+  const deleteBatch = async (batchId) => {
+    if (!confirm('Delete this batch permanently? Existing purchases are unaffected.')) return;
+    try {
+      await axios.delete(`${API}/subscriptions/admin/money-masters/batches/${batchId}`);
+      setBatches(prev => prev.filter(b => b.batch_id !== batchId));
+      toast.success('Batch deleted');
+    } catch {
+      toast.error('Failed to delete batch');
+    }
+  };
 
   const fetchData = async (silent = false) => {
     try {
@@ -299,6 +385,7 @@ export default function AdminSubscriptionManagement({ user }) {
             { id: 'subscriptions', label: 'Subscriptions', icon: CreditCard },
             { id: 'leads', label: `Checkout Leads${checkoutLeads.length ? ` (${checkoutLeads.length})` : ''}`, icon: Users },
             { id: 'pricing', label: 'Plan Pricing', icon: DollarSign },
+            { id: 'batches', label: 'Money Masters Batches', icon: CalendarIcon },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -455,7 +542,14 @@ export default function AdminSubscriptionManagement({ user }) {
                             {sub.is_renewal && <span className="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded font-medium" data-testid={`renewal-badge-${sub.subscription_id}`}>Renewed</span>}
                           </div>
                         </td>
-                        <td className="px-4 py-3">{PLAN_LABELS[sub.plan_type] || sub.plan_type}</td>
+                        <td className="px-4 py-3">
+                          {sub.plan_type === 'money_masters' ? (
+                            <div>
+                              <span className="font-medium">{PLAN_LABELS.money_masters}</span>
+                              <p className="text-[11px] text-purple-600">{sub.batch_name} &middot; {GRADE_LABELS[sub.grade] || `Grade ${sub.grade}`}</p>
+                            </div>
+                          ) : (PLAN_LABELS[sub.plan_type] || sub.plan_type)}
+                        </td>
                         <td className="px-4 py-3">{sub.duration_label || DURATION_LABELS[sub.duration]}</td>
                         <td className="px-4 py-3 text-center">{sub.num_children}</td>
                         <td className="px-4 py-3 font-medium">{sub.amount ? `₹${sub.amount.toLocaleString('en-IN')}` : 'Free'}</td>
@@ -661,7 +755,184 @@ export default function AdminSubscriptionManagement({ user }) {
             ))}
           </div>
         )}
+
+        {/* Money Masters Batches Tab */}
+        {activeTab === 'batches' && (
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-[#1D3557]">Money Masters & Entrepreneurship Batches</h3>
+                <p className="text-sm text-gray-500">Grade-specific cohorts parents can buy standalone, includes that batch's live classes</p>
+              </div>
+              <Button
+                data-testid="create-batch-btn"
+                size="sm"
+                onClick={() => openBatchDialog()}
+                className="bg-[#1D3557] hover:bg-[#2D4A6F] text-white"
+              >
+                + New Batch
+              </Button>
+            </div>
+            {batches.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <CalendarIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p className="font-medium">No batches yet — create one to start selling Money Masters</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" data-testid="batches-table">
+                  <thead>
+                    <tr className="bg-gray-50 text-left">
+                      <th className="px-4 py-3 font-medium text-gray-600">Batch</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">Grade</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">Start</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">End</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">Price</th>
+                      <th className="px-4 py-3 font-medium text-gray-600 text-center">Enrolled</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">Status</th>
+                      <th className="px-4 py-3 font-medium text-gray-600 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {batches.map((b) => (
+                      <tr key={b.batch_id} className="border-t border-gray-100 hover:bg-gray-50" data-testid={`batch-row-${b.batch_id}`}>
+                        <td className="px-4 py-3 font-medium text-[#1D3557]">{b.name}</td>
+                        <td className="px-4 py-3">{GRADE_LABELS[b.grade] || `Grade ${b.grade}`}</td>
+                        <td className="px-4 py-3">{formatDate(b.start_date)}</td>
+                        <td className="px-4 py-3">{formatDate(b.end_date)}</td>
+                        <td className="px-4 py-3 font-medium">₹{b.price?.toLocaleString('en-IN')}</td>
+                        <td className="px-4 py-3 text-center">{b.enrolled_count || 0}</td>
+                        <td className="px-4 py-3">
+                          <button
+                            data-testid={`toggle-batch-${b.batch_id}`}
+                            onClick={() => toggleBatchActive(b)}
+                            className={`text-[10px] px-2 py-0.5 rounded font-medium ${
+                              b.is_active && new Date(b.end_date) > new Date()
+                                ? 'bg-green-50 text-green-700'
+                                : 'bg-gray-100 text-gray-600'
+                            }`}
+                          >
+                            {new Date(b.end_date) <= new Date() ? 'Ended' : b.is_active ? 'Open' : 'Closed'}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              data-testid={`edit-batch-${b.batch_id}`}
+                              onClick={() => openBatchDialog(b)}
+                              className="p-1.5 rounded-md hover:bg-[#1D3557]/10 text-[#3D5A80] transition-colors"
+                              title="Edit batch"
+                            >
+                              <Save className="w-4 h-4" />
+                            </button>
+                            <button
+                              data-testid={`delete-batch-${b.batch_id}`}
+                              onClick={() => deleteBatch(b.batch_id)}
+                              className="p-1.5 rounded-md hover:bg-red-50 text-red-500 transition-colors"
+                              title="Delete permanently"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Batch Create/Edit Dialog */}
+      <Dialog open={batchDialog.open} onOpenChange={(open) => setBatchDialog({ open, editingId: open ? batchDialog.editingId : null })}>
+        <DialogContent className="max-w-md" data-testid="batch-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+              {batchDialog.editingId ? 'Edit Batch' : 'New Money Masters Batch'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Batch Name</label>
+              <Input
+                data-testid="batch-name-input"
+                placeholder="e.g. Money Masters — Grade 3 — Sep Batch"
+                value={batchForm.name}
+                onChange={(e) => setBatchForm(prev => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Grade</label>
+              <Select value={batchForm.grade} onValueChange={(v) => setBatchForm(prev => ({ ...prev, grade: v }))}>
+                <SelectTrigger data-testid="batch-grade-select"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {GRADE_LABELS.map((label, idx) => (
+                    <SelectItem key={idx} value={String(idx)}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-bold text-[#1D3557] mb-1 block">Start Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button data-testid="batch-start-date" className="w-full h-10 px-3 text-sm border rounded-md flex items-center gap-2 hover:bg-gray-50">
+                      <CalendarIcon className="w-4 h-4 text-gray-400" />
+                      {batchForm.start_date ? batchForm.start_date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Pick date'}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" showOutsideDays={false} selected={batchForm.start_date} onSelect={(d) => setBatchForm(prev => ({ ...prev, start_date: d }))} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <label className="text-sm font-bold text-[#1D3557] mb-1 block">End Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button data-testid="batch-end-date" className="w-full h-10 px-3 text-sm border rounded-md flex items-center gap-2 hover:bg-gray-50">
+                      <CalendarIcon className="w-4 h-4 text-gray-400" />
+                      {batchForm.end_date ? batchForm.end_date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Pick date'}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      showOutsideDays={false}
+                      selected={batchForm.end_date}
+                      onSelect={(d) => setBatchForm(prev => ({ ...prev, end_date: d }))}
+                      disabled={batchForm.start_date ? { before: batchForm.start_date } : undefined}
+                      fromDate={batchForm.start_date || undefined}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Subscription Price (₹)</label>
+              <Input
+                data-testid="batch-price-input"
+                type="number"
+                placeholder="e.g. 999"
+                value={batchForm.price}
+                onChange={(e) => setBatchForm(prev => ({ ...prev, price: e.target.value }))}
+              />
+            </div>
+            <Button
+              data-testid="save-batch-btn"
+              onClick={saveBatch}
+              disabled={savingBatch}
+              className="w-full bg-[#1D3557] hover:bg-[#2D4A6F]"
+            >
+              <Save className="w-4 h-4 mr-1" />
+              {savingBatch ? 'Saving...' : batchDialog.editingId ? 'Save Changes' : 'Create Batch'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Linked Users Dialog */}
       <Dialog open={linkedUsersDialog.open} onOpenChange={(open) => setLinkedUsersDialog({ open, sub: open ? linkedUsersDialog.sub : null })}>

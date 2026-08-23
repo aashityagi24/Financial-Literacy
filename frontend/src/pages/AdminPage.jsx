@@ -1318,23 +1318,39 @@ export default function AdminPage({ user }) {
                       </td>
                       <td className="py-3 px-4">
                         {(u.role === 'parent' || u.role === 'child') ? (
-                          <button
-                            onClick={() => {
-                              setSubDialog({ open: true, userId: u.user_id, userName: u.name, currentStatus: u.subscription_status });
-                              setSubDuration('1_month');
-                            }}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${
-                              u.subscription_status === 'active'
-                                ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                : u.subscription_status === 'expired'
-                                ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                                : 'bg-red-100 text-red-700 hover:bg-red-200'
-                            }`}
-                            data-testid={`sub-status-${u.user_id}`}
-                          >
-                            <CreditCard className="w-3 h-3" />
-                            {u.subscription_status === 'active' ? 'Active' : u.subscription_status === 'expired' ? 'Expired' : 'Inactive'}
-                          </button>
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={() => {
+                                setSubDialog({ open: true, userId: u.user_id, userName: u.name, currentStatus: u.subscription_status });
+                                setSubDuration('1_month');
+                              }}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${
+                                u.subscription_status === 'active'
+                                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                  : u.subscription_status === 'expired'
+                                  ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                                  : 'bg-red-100 text-red-700 hover:bg-red-200'
+                              }`}
+                              data-testid={`sub-status-${u.user_id}`}
+                            >
+                              <CreditCard className="w-3 h-3" />
+                              {u.subscription_status === 'active' ? 'Active' : u.subscription_status === 'expired' ? 'Expired' : 'Inactive'}
+                            </button>
+                            {(u.active_plans || []).length > 0 && (
+                              <div className="flex flex-wrap gap-1" data-testid={`plan-badges-${u.user_id}`}>
+                                {u.active_plans.map((p, i) => (
+                                  <span
+                                    key={i}
+                                    className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                                      p.plan_type === 'money_masters' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700'
+                                    }`}
+                                  >
+                                    {p.label}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <span className="text-gray-400 text-xs">N/A</span>
                         )}
