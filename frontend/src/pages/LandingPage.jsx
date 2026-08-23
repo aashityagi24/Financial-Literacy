@@ -18,6 +18,15 @@ const workshopSteps = [
   { color: '#F4A9B7', title: 'Watch them run a venture', description: "By the end of the batch they've earned, budgeted, priced and sold something themselves." },
 ];
 
+const moneySkills = [
+  { emoji: '💰', title: 'Earning', description: 'Effort, value and the first rupee they make themselves.', bg: '#1D3557', text: 'white' },
+  { emoji: '🏦', title: 'Saving', description: "Goals, jars, and waiting for the thing that's worth it.", bg: '#5B21B6', text: 'white' },
+  { emoji: '🛒', title: 'Spending', description: 'Needs vs wants, budgets, and the cost of an impulse.', bg: '#FFD23F', text: 'white' },
+  { emoji: '🤝', title: 'Sharing', description: 'Giving and using money for someone other than yourself.', bg: '#06D6A0', text: 'dark' },
+  { emoji: '📈', title: 'Business Sense', description: 'Cost, price, profit and customers — learned by selling.', bg: '#EE6C4D', text: 'white' },
+  { emoji: '🎤', title: 'Confidence', description: 'Pitching out loud, taking a no, trying again next week.', bg: '#F4A9B7', text: 'dark' },
+];
+
 const platformSteps = [
   { color: '#FFD23F', title: 'Pick a plan & grade', description: "Choose a subscription plan and your child's grade — content adapts automatically from KG to Class 5." },
   { color: '#06D6A0', title: 'Watch them learn', description: 'Every topic mixes videos, games, quizzes, live sessions and hands-on activities — so it never feels like a textbook.' },
@@ -210,6 +219,40 @@ export default function LandingPage() {
         steps={platformSteps}
         bg="#F3F9FB"
       />
+
+      {/* Six Money Skills Section */}
+      <section className="py-20 bg-white" data-testid="money-skills-section">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-14">
+            <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
+              Six money skills, one arc
+            </h2>
+            <p className="text-xl text-[#3D5A80]">Every track covers all six — the depth changes with age.</p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {moneySkills.map((skill, idx) => (
+              <div
+                key={idx}
+                data-testid={`money-skill-card-${idx}`}
+                className="rounded-3xl p-7 animate-bounce-in"
+                style={{ backgroundColor: skill.bg, animationDelay: `${idx * 0.08}s` }}
+              >
+                <div className="text-3xl mb-3">{skill.emoji}</div>
+                <h3
+                  className="text-xl font-bold mb-2"
+                  style={{ fontFamily: 'Fredoka', color: skill.text === 'white' ? '#FFFFFF' : '#1D3557' }}
+                >
+                  {skill.title}
+                </h3>
+                <p style={{ color: skill.text === 'white' ? 'rgba(255,255,255,0.85)' : '#2D4A6F' }}>
+                  {skill.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* For Parents & Schools Section */}
       <section className="py-20 bg-[#3D5A80]">
