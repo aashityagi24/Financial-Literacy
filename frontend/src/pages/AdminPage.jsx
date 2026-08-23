@@ -86,6 +86,8 @@ export default function AdminPage({ user }) {
   const [selectedEnquiries, setSelectedEnquiries] = useState(new Set());
   const [trialEnquiries, setTrialEnquiries] = useState([]);
   const [selectedTrialEnquiries, setSelectedTrialEnquiries] = useState(new Set());
+  const [callRequests, setCallRequests] = useState([]);
+  const [selectedCallRequests, setSelectedCallRequests] = useState(new Set());
   const [userDateFrom, setUserDateFrom] = useState(null);
   const [userDateTo, setUserDateTo] = useState(null);
   
@@ -120,6 +122,11 @@ export default function AdminPage({ user }) {
     if (activeTab === 'trial_requests') {
       axios.get(`${API}/subscriptions/admin/trial-enquiries`).then(res => {
         setTrialEnquiries(res.data);
+      }).catch(() => {});
+    }
+    if (activeTab === 'call_requests') {
+      axios.get(`${API}/subscriptions/admin/call-requests`).then(res => {
+        setCallRequests(res.data);
       }).catch(() => {});
     }
   }, [activeTab]);
@@ -309,6 +316,27 @@ export default function AdminPage({ user }) {
       setTrialEnquiries(prev => prev.filter(e => !selectedTrialEnquiries.has(e.enquiry_id)));
       setSelectedTrialEnquiries(new Set());
       toast.success('Trial requests deleted');
+    } catch { toast.error('Failed to delete'); }
+  };
+
+  const deleteCallRequest = async (id) => {
+    if (!confirm('Permanently delete this call request?')) return;
+    try {
+      await axios.delete(`${API}/subscriptions/admin/call-requests/${id}`);
+      setCallRequests(prev => prev.filter(e => e.request_id !== id));
+      setSelectedCallRequests(prev => { const s = new Set(prev); s.delete(id); return s; });
+      toast.success('Call request deleted');
+    } catch { toast.error('Failed to delete'); }
+  };
+
+  const bulkDeleteCallRequests = async () => {
+    if (!selectedCallRequests.size) return;
+    if (!confirm(`Delete ${selectedCallRequests.size} call requests permanently?`)) return;
+    try {
+      await axios.delete(`${API}/subscriptions/admin/call-requests-bulk`, { data: { request_ids: [...selectedCallRequests] } });
+      setCallRequests(prev => prev.filter(e => !selectedCallRequests.has(e.request_id)));
+      setSelectedCallRequests(new Set());
+      toast.success('Call requests deleted');
     } catch { toast.error('Failed to delete'); }
   };
 
@@ -757,6 +785,7 @@ export default function AdminPage({ user }) {
             { id: 'schools', label: 'Schools', icon: School },
             { id: 'enquiries', label: 'Enquiries', icon: Phone },
             { id: 'trial_requests', label: `Trial Requests${trialEnquiries.length ? ` (${trialEnquiries.length})` : ''}`, icon: Rocket },
+            { id: 'call_requests', label: `Call Requests${callRequests.length ? ` (${callRequests.length})` : ''}`, icon: Phone },
             { id: 'guidebook', label: 'Jobs Guide', icon: BookOpen },
           ].map((tab) => (
             <button
@@ -1808,6 +1837,102 @@ export default function AdminPage({ user }) {
                         </td>
                         <td className="py-3 px-2">
                           <button data-testid={`delete-trial-request-${enq.enquiry_id}`} onClick={() => deleteTrialEnquiry(enq.enquiry_id)} className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Call Requests Tab (Homepage "Book a Call") */}
+        {activeTab === 'call_requests' && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <Phone className="w-5 h-5 text-[#EE6C4D]" />
+                Homepage Call Requests
+                {callRequests.length > 0 && (
+                  <span className="text-xs bg-[#EE6C4D] text-white px-2 py-0.5 rounded-full">{callRequests.length}</span>
+                )}
+              </h2>
+              {callRequests.length > 0 && (
+                <div className="flex gap-2">
+                  {selectedCallRequests.size > 0 && (
+                    <Button size="sm" variant="destructive" onClick={bulkDeleteCallRequests} data-testid="bulk-delete-call-requests">
+                      <Trash2 className="w-3 h-3 mr-1" />Delete {selectedCallRequests.size}
+                    </Button>
+                  )}
+                  <Button size="sm" variant="outline" data-testid="download-call-requests-csv" onClick={() => downloadCSV(
+                    callRequests,
+                    ['created_at','name','phone','email','program','audience','child_grade','status'],
+                    'call_requests.csv'
+                  )}>
+                    <Download className="w-3 h-3 mr-1" />CSV
+                  </Button>
+                </div>
+              )}
+            </div>
+            {callRequests.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">No call requests yet.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" data-testid="call-requests-table">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="py-3 px-2 w-8"><input type="checkbox" checked={selectedCallRequests.size === callRequests.length && callRequests.length > 0} onChange={() => setSelectedCallRequests(prev => prev.size === callRequests.length ? new Set() : new Set(callRequests.map(e => e.request_id)))} /></th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Date</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Name</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Phone</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Email</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Program</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Parent/School</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Grade</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">Status</th>
+                      <th className="py-3 px-2 w-10"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {callRequests.map((req) => (
+                      <tr key={req.request_id} className="border-b border-gray-100 hover:bg-gray-50" data-testid={`call-request-row-${req.request_id}`}>
+                        <td className="py-3 px-2"><input type="checkbox" checked={selectedCallRequests.has(req.request_id)} onChange={() => setSelectedCallRequests(prev => { const s = new Set(prev); s.has(req.request_id) ? s.delete(req.request_id) : s.add(req.request_id); return s; })} /></td>
+                        <td className="py-3 px-3 text-gray-500 whitespace-nowrap">
+                          {new Date(req.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td className="py-3 px-3 font-medium text-gray-800">{req.name}</td>
+                        <td className="py-3 px-3">{req.phone}</td>
+                        <td className="py-3 px-3 text-blue-600">{req.email}</td>
+                        <td className="py-3 px-3">{req.program === 'workshop' ? 'Entrepreneurship Workshop' : 'Financial Literacy Platform'}</td>
+                        <td className="py-3 px-3 capitalize">{req.audience}</td>
+                        <td className="py-3 px-3">{req.child_grade === 0 ? 'K' : `Grade ${req.child_grade}`}</td>
+                        <td className="py-3 px-3">
+                          <Select
+                            value={req.status}
+                            onValueChange={async (val) => {
+                              try {
+                                await axios.put(`${API}/subscriptions/admin/call-requests/${req.request_id}/status`, { status: val });
+                                setCallRequests(prev => prev.map(e => e.request_id === req.request_id ? { ...e, status: val } : e));
+                                toast.success('Status updated');
+                              } catch { toast.error('Failed to update'); }
+                            }}
+                          >
+                            <SelectTrigger className="w-28 h-8 text-xs" data-testid={`call-request-status-${req.request_id}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="new"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />New</span></SelectItem>
+                              <SelectItem value="contacted"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />Contacted</span></SelectItem>
+                              <SelectItem value="converted"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400 inline-block" />Converted</span></SelectItem>
+                              <SelectItem value="closed"><span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-400 inline-block" />Closed</span></SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="py-3 px-2">
+                          <button data-testid={`delete-call-request-${req.request_id}`} onClick={() => deleteCallRequest(req.request_id)} className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </td>

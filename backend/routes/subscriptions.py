@@ -5,6 +5,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 import uuid
 import os
+import re
 import razorpay
 import hmac
 import hashlib
@@ -776,6 +777,21 @@ async def admin_bulk_delete_trial_enquiries(request: Request):
     return {"message": f"Deleted {result.deleted_count} trial requests"}
 
 
+@router.delete("/admin/call-requests-bulk")
+async def admin_bulk_delete_call_requests(request: Request):
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    body = await request.json()
+    ids = body.get("request_ids", [])
+    if not ids:
+        raise HTTPException(status_code=400, detail="No IDs provided")
+    result = await db.call_requests.delete_many({"request_id": {"$in": ids}})
+    return {"message": f"Deleted {result.deleted_count} call requests"}
+
+
 # NOTE: this route MUST be registered before the generic "/admin/{subscription_id}"
 # catch-all below, otherwise FastAPI matches "trial-enquiries-bulk" as a
 # subscription_id path param (single path segment) and this never gets hit.
@@ -1127,6 +1143,120 @@ class TrialEnquiryRequest(BaseModel):
     child_name: Optional[str] = ""
     child_grade: int
     batch_id: Optional[str] = None
+
+
+INDIAN_PHONE_RE = re.compile(r"^[6-9]\d{9}$")
+
+
+def _normalize_indian_phone(phone: str) -> str:
+    digits = re.sub(r"\D", "", phone or "")
+    if digits.startswith("91") and len(digits) == 12:
+        digits = digits[2:]
+    return digits
+
+
+class CallRequest(BaseModel):
+    name: str
+    phone: str
+    email: str
+    program: str  # "workshop" | "platform"
+    audience: str  # "parent" | "school"
+    child_grade: int
+
+
+@router.post("/call-request")
+async def submit_call_request(req: CallRequest):
+    """Public: homepage 'Book a Call' form. Stored for admin follow-up,
+    same pattern as school enquiries / trial enquiries."""
+    db = get_db()
+    name = req.name.strip()
+    email = req.email.strip().lower()
+    phone_digits = _normalize_indian_phone(req.phone)
+
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required")
+    if not INDIAN_PHONE_RE.match(phone_digits):
+        raise HTTPException(status_code=400, detail="Enter a valid 10-digit Indian mobile number")
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Valid email is required")
+    if req.program not in ["workshop", "platform"]:
+        raise HTTPException(status_code=400, detail="Invalid program selection")
+    if req.audience not in ["parent", "school"]:
+        raise HTTPException(status_code=400, detail="Invalid audience selection")
+    if req.child_grade < 0 or req.child_grade > 5:
+        raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 5")
+
+    call_request = {
+        "request_id": f"call_{uuid.uuid4().hex[:12]}",
+        "name": name,
+        "phone": phone_digits,
+        "email": email,
+        "program": req.program,
+        "audience": req.audience,
+        "child_grade": req.child_grade,
+        "status": "new",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.call_requests.insert_one(call_request)
+
+    try:
+        from routes.notifications import notify_admins
+        program_label = "Entrepreneurship Workshop" if req.program == "workshop" else "Financial Literacy Platform"
+        await notify_admins(
+            "new_call_request",
+            "New Call Request",
+            f"{name} ({phone_digits}, {req.audience}) requested a call about {program_label} for Grade {req.child_grade}",
+            related_id=call_request["request_id"]
+        )
+    except Exception:
+        pass
+
+    return {"message": "Call request submitted", "request_id": call_request["request_id"]}
+
+
+@router.get("/admin/call-requests")
+async def admin_list_call_requests(request: Request):
+    """Admin: list all 'Book a Call' requests from the homepage."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    requests_list = await db.call_requests.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return requests_list
+
+
+@router.put("/admin/call-requests/{request_id}/status")
+async def admin_update_call_request_status(request_id: str, request: Request):
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    body = await request.json()
+    status = (body.get("status") or "").strip()
+    if status not in ["new", "contacted", "converted", "closed"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    result = await db.call_requests.update_one(
+        {"request_id": request_id},
+        {"$set": {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Call request not found")
+    return {"message": "Status updated"}
+
+
+@router.delete("/admin/call-requests/{request_id}")
+async def admin_delete_call_request(request_id: str, request: Request):
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    result = await db.call_requests.delete_one({"request_id": request_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Call request not found")
+    return {"message": "Call request deleted"}
 
 
 @router.get("/money-masters/public-batches")

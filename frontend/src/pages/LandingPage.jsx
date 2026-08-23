@@ -4,6 +4,13 @@ import {
   PiggyBank, Rocket, TrendingUp, CalendarDays, Users, GraduationCap, ArrowRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { BookCallButton } from '@/components/BookCallDialog';
+
+const PARENT_AVATARS = [
+  'https://static.prod-images.emergentagent.com/jobs/5f108aa9-f735-40f8-8a41-389db6115b0a/images/6e9d1b311fdb60b83fdafadb83d0334b813d041063d07092835b78881ba6ce8f.jpeg',
+  'https://static.prod-images.emergentagent.com/jobs/5f108aa9-f735-40f8-8a41-389db6115b0a/images/ba64de098a72d6e31c0770b900cf8a37f452d73edb6609a7f16e887f5837b63c.jpeg',
+  'https://static.prod-images.emergentagent.com/jobs/5f108aa9-f735-40f8-8a41-389db6115b0a/images/01574c1a7f85463d429c8a5f8ec66559da0901760c7f95f48cc8a73ddae1541b.jpeg',
+];
 
 const workshopSteps = [
   { color: '#FFD23F', title: 'Book a free trial class', description: 'Pick a slot. Your child joins a live class with kids their own age — no payment up front.' },
@@ -13,8 +20,8 @@ const workshopSteps = [
 
 const platformSteps = [
   { color: '#FFD23F', title: 'Pick a plan & grade', description: "Choose a subscription plan and your child's grade — content adapts automatically from KG to Class 5." },
-  { color: '#06D6A0', title: 'Play & learn daily', description: 'Kids explore the Money Garden, Wallet and quests at their own pace, earning badges as they go.' },
-  { color: '#F4A9B7', title: 'Track progress as a parent', description: "Check the parent dashboard anytime to see what they've learned, saved and earned." },
+  { color: '#06D6A0', title: 'Watch them learn', description: 'Every topic mixes videos, games, quizzes, live sessions and hands-on activities — so it never feels like a textbook.' },
+  { color: '#F4A9B7', title: 'Implement at home', description: "Set up chores, allowance and savings goals so lessons turn into real money habits you can track together." },
 ];
 
 function HowItWorks({ id, testId, eyebrow, title, steps, bg }) {
@@ -104,28 +111,17 @@ export default function LandingPage() {
               No one is born an entrepreneur — they're raised as one. 30 live classes where your child learns to earn, price, pitch and sell for real.
             </p>
             <div className="flex flex-wrap gap-4 mb-6">
-              <button
-                data-testid="hero-book-trial-btn"
-                onClick={() => navigate('/entrepreneurship-workshop?trial=1')}
-                className="bg-[#EE6C4D] text-white font-bold px-7 py-4 text-lg rounded-full shadow-[0_6px_16px_rgba(238,108,77,0.4)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(238,108,77,0.5)] transition-all flex items-center gap-2"
-              >
-                Book a free trial class <ArrowRight className="w-4 h-4" />
-              </button>
-              <a
-                href="#programs"
-                data-testid="hero-see-platform-btn"
-                className="bg-white text-[#1D3557] font-bold px-7 py-4 text-lg rounded-full border-2 border-[#1D3557] shadow-[0_4px_12px_rgba(29,53,87,0.15)] hover:-translate-y-0.5 transition-all"
-              >
-                See the platform
-              </a>
+              <BookCallButton
+                className="bg-[#EE6C4D] text-white font-bold px-7 py-4 text-lg rounded-full shadow-[0_6px_16px_rgba(238,108,77,0.4)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(238,108,77,0.5)] transition-all"
+              />
             </div>
 
             {/* Trust element */}
             <div className="flex items-center gap-3" data-testid="trust-element">
               <div className="flex -space-x-3">
-                <span className="w-8 h-8 rounded-full bg-[#FFD23F] border-2 border-white"></span>
-                <span className="w-8 h-8 rounded-full bg-[#06D6A0] border-2 border-white"></span>
-                <span className="w-8 h-8 rounded-full bg-[#F4A9B7] border-2 border-white"></span>
+                <img src={PARENT_AVATARS[0]} alt="Parent" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
+                <img src={PARENT_AVATARS[1]} alt="Parent" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
+                <img src={PARENT_AVATARS[2]} alt="Parent" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
               </div>
               <span className="text-[#3D5A80] font-medium">Trusted by hundreds of children & parents across India</span>
             </div>
