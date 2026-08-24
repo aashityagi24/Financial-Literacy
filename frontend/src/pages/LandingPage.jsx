@@ -139,14 +139,10 @@ export default function LandingPage() {
 
             <div className="flex-shrink-0 mx-auto lg:mx-0 lg:ml-auto animate-bounce-in stagger-2">
               <img
-                src="https://customer-assets-wrfwihn1.emergentagent.net/job_6ec61167-a99e-48d2-8723-ad239cc8065f/artifacts/znvftlg5_ChatGPT%20Image%20Aug%2024%2C%202026%20at%2006_06_06%20PM.png"
+                src="https://customer-assets-wrfwihn1.emergentagent.net/job_6ec61167-a99e-48d2-8723-ad239cc8065f/artifacts/9g23ww52_6c392fdc-37e3-41b7-9940-3c7374922acc.png"
                 alt="A young entrepreneur proudly selling her handmade crafts and counting the coins she earned"
                 data-testid="hero-earner-image"
-                className="w-[300px] h-[380px] sm:w-[340px] sm:h-[420px] lg:w-[420px] lg:h-[500px] object-cover object-[50%_72%]"
-                style={{
-                  WebkitMaskImage: 'radial-gradient(ellipse 72% 78% at 50% 42%, black 55%, transparent 100%)',
-                  maskImage: 'radial-gradient(ellipse 72% 78% at 50% 42%, black 55%, transparent 100%)',
-                }}
+                className="w-[260px] h-auto sm:w-[300px] lg:w-[360px] object-contain"
               />
             </div>
           </div>
