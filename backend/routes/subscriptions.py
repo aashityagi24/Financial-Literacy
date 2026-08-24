@@ -1164,6 +1164,8 @@ class TrialEnquiryRequest(BaseModel):
     child_name: Optional[str] = ""
     child_grade: int
     batch_id: Optional[str] = None
+    state: str
+    city: str
 
 
 INDIAN_PHONE_RE = re.compile(r"^[6-9]\d{9}$")
@@ -1310,6 +1312,12 @@ async def submit_trial_enquiry(enquiry: TrialEnquiryRequest):
         raise HTTPException(status_code=400, detail="Valid email is required")
     if enquiry.child_grade < 0 or enquiry.child_grade > 5:
         raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 5")
+    state = enquiry.state.strip()
+    city = enquiry.city.strip()
+    if not state:
+        raise HTTPException(status_code=400, detail="State is required")
+    if not city:
+        raise HTTPException(status_code=400, detail="City is required")
 
     batch_name = None
     if enquiry.batch_id:
@@ -1325,6 +1333,8 @@ async def submit_trial_enquiry(enquiry: TrialEnquiryRequest):
         "child_grade": enquiry.child_grade,
         "batch_id": enquiry.batch_id,
         "batch_name": batch_name,
+        "state": state,
+        "city": city,
         "status": "new",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -1335,7 +1345,7 @@ async def submit_trial_enquiry(enquiry: TrialEnquiryRequest):
         await notify_admins(
             "new_trial_enquiry",
             "New Entrepreneurship Workshop Trial Request",
-            f"{parent_name} ({phone}) requested a free trial for Grade {enquiry.child_grade}" + (f" — {batch_name}" if batch_name else ""),
+            f"{parent_name} ({phone}) requested a free trial for Grade {enquiry.child_grade}" + (f" — {batch_name}" if batch_name else "") + f" — {city}, {state}",
             related_id=lead["enquiry_id"]
         )
     except Exception:

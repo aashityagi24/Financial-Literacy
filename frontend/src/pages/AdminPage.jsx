@@ -86,6 +86,8 @@ export default function AdminPage({ user }) {
   const [selectedEnquiries, setSelectedEnquiries] = useState(new Set());
   const [trialEnquiries, setTrialEnquiries] = useState([]);
   const [selectedTrialEnquiries, setSelectedTrialEnquiries] = useState(new Set());
+  const [trialStateFilter, setTrialStateFilter] = useState('all');
+  const [trialCityFilter, setTrialCityFilter] = useState('all');
   const [callRequests, setCallRequests] = useState([]);
   const [selectedCallRequests, setSelectedCallRequests] = useState(new Set());
   const [userDateFrom, setUserDateFrom] = useState(null);
@@ -1754,26 +1756,47 @@ export default function AdminPage({ user }) {
         )}
 
         {/* Trial Requests Tab (Entrepreneurship Workshop) */}
-        {activeTab === 'trial_requests' && (
+        {activeTab === 'trial_requests' && (() => {
+          const trialStates = [...new Set(trialEnquiries.map(e => e.state).filter(Boolean))].sort();
+          const trialCities = [...new Set(trialEnquiries.filter(e => trialStateFilter === 'all' || e.state === trialStateFilter).map(e => e.city).filter(Boolean))].sort();
+          const filteredTrialEnquiries = trialEnquiries.filter(e =>
+            (trialStateFilter === 'all' || e.state === trialStateFilter) &&
+            (trialCityFilter === 'all' || e.city === trialCityFilter)
+          );
+          return (
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                 <Rocket className="w-5 h-5 text-[#5B21B6]" />
                 Entrepreneurship Workshop — Free Trial Requests
                 {trialEnquiries.length > 0 && (
-                  <span className="text-xs bg-[#5B21B6] text-white px-2 py-0.5 rounded-full">{trialEnquiries.length}</span>
+                  <span className="text-xs bg-[#5B21B6] text-white px-2 py-0.5 rounded-full">{filteredTrialEnquiries.length}/{trialEnquiries.length}</span>
                 )}
               </h2>
               {trialEnquiries.length > 0 && (
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
+                  <Select value={trialStateFilter} onValueChange={(v) => { setTrialStateFilter(v); setTrialCityFilter('all'); }}>
+                    <SelectTrigger className="w-36 h-8 text-xs" data-testid="trial-filter-state"><SelectValue placeholder="State" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All States</SelectItem>
+                      {trialStates.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={trialCityFilter} onValueChange={setTrialCityFilter}>
+                    <SelectTrigger className="w-32 h-8 text-xs" data-testid="trial-filter-city"><SelectValue placeholder="City" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Cities</SelectItem>
+                      {trialCities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                   {selectedTrialEnquiries.size > 0 && (
                     <Button size="sm" variant="destructive" onClick={bulkDeleteTrialEnquiries} data-testid="bulk-delete-trial-requests">
                       <Trash2 className="w-3 h-3 mr-1" />Delete {selectedTrialEnquiries.size}
                     </Button>
                   )}
                   <Button size="sm" variant="outline" data-testid="download-trial-requests-csv" onClick={() => downloadCSV(
-                    trialEnquiries,
-                    ['created_at','parent_name','phone','email','child_name','child_grade','batch_name','status'],
+                    filteredTrialEnquiries,
+                    ['created_at','parent_name','phone','email','child_name','child_grade','state','city','batch_name','status'],
                     'entrepreneurship_trial_requests.csv'
                   )}>
                     <Download className="w-3 h-3 mr-1" />CSV
@@ -1781,27 +1804,29 @@ export default function AdminPage({ user }) {
                 </div>
               )}
             </div>
-            {trialEnquiries.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No trial requests yet.</p>
+            {filteredTrialEnquiries.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">{trialEnquiries.length === 0 ? 'No trial requests yet.' : 'No trial requests match this filter.'}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm" data-testid="trial-requests-table">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="py-3 px-2 w-8"><input type="checkbox" checked={selectedTrialEnquiries.size === trialEnquiries.length && trialEnquiries.length > 0} onChange={() => setSelectedTrialEnquiries(prev => prev.size === trialEnquiries.length ? new Set() : new Set(trialEnquiries.map(e => e.enquiry_id)))} /></th>
+                      <th className="py-3 px-2 w-8"><input type="checkbox" checked={selectedTrialEnquiries.size === filteredTrialEnquiries.length && filteredTrialEnquiries.length > 0} onChange={() => setSelectedTrialEnquiries(prev => prev.size === filteredTrialEnquiries.length ? new Set() : new Set(filteredTrialEnquiries.map(e => e.enquiry_id)))} /></th>
                       <th className="text-left py-3 px-3 font-medium text-gray-600">Date</th>
                       <th className="text-left py-3 px-3 font-medium text-gray-600">Parent</th>
                       <th className="text-left py-3 px-3 font-medium text-gray-600">Phone</th>
                       <th className="text-left py-3 px-3 font-medium text-gray-600">Email</th>
                       <th className="text-left py-3 px-3 font-medium text-gray-600">Child</th>
                       <th className="text-left py-3 px-3 font-medium text-gray-600">Grade</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">State</th>
+                      <th className="text-left py-3 px-3 font-medium text-gray-600">City</th>
                       <th className="text-left py-3 px-3 font-medium text-gray-600">Batch</th>
                       <th className="text-left py-3 px-3 font-medium text-gray-600">Status</th>
                       <th className="py-3 px-2 w-10"></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {trialEnquiries.map((enq) => (
+                    {filteredTrialEnquiries.map((enq) => (
                       <tr key={enq.enquiry_id} className="border-b border-gray-100 hover:bg-gray-50" data-testid={`trial-request-row-${enq.enquiry_id}`}>
                         <td className="py-3 px-2"><input type="checkbox" checked={selectedTrialEnquiries.has(enq.enquiry_id)} onChange={() => setSelectedTrialEnquiries(prev => { const s = new Set(prev); s.has(enq.enquiry_id) ? s.delete(enq.enquiry_id) : s.add(enq.enquiry_id); return s; })} /></td>
                         <td className="py-3 px-3 text-gray-500 whitespace-nowrap">
@@ -1812,6 +1837,8 @@ export default function AdminPage({ user }) {
                         <td className="py-3 px-3 text-blue-600">{enq.email}</td>
                         <td className="py-3 px-3">{enq.child_name || '-'}</td>
                         <td className="py-3 px-3">{enq.child_grade === 0 ? 'K' : `Grade ${enq.child_grade}`}</td>
+                        <td className="py-3 px-3">{enq.state || <span className="text-gray-400">-</span>}</td>
+                        <td className="py-3 px-3">{enq.city || <span className="text-gray-400">-</span>}</td>
                         <td className="py-3 px-3">{enq.batch_name || <span className="text-gray-400">-</span>}</td>
                         <td className="py-3 px-3">
                           <Select
@@ -1847,7 +1874,8 @@ export default function AdminPage({ user }) {
               </div>
             )}
           </div>
-        )}
+          );
+        })()}
 
         {/* Call Requests Tab (Homepage "Book a Call") */}
         {activeTab === 'call_requests' && (

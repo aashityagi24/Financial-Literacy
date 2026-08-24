@@ -13,13 +13,14 @@ import { Input } from '@/components/ui/input';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { INDIA_STATES, getCitiesForState } from '@/data/indiaStatesCities';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const GRADE_LABELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5'];
 
-const EMPTY_FORM = { parent_name: '', phone: '', email: '', child_name: '', child_grade: '', batch_id: '' };
+const EMPTY_FORM = { parent_name: '', phone: '', email: '', child_name: '', child_grade: '', batch_id: '', state: '', city: '' };
 
 const formatDate = (iso) => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -68,6 +69,8 @@ export default function EntrepreneurshipWorkshopPage() {
     if (!form.phone.trim() || form.phone.replace(/\D/g, '').length < 10) { toast.error('Please enter a valid phone number'); return; }
     if (!form.email.trim() || !form.email.includes('@')) { toast.error('Please enter a valid email'); return; }
     if (form.child_grade === '') { toast.error("Please select your child's grade"); return; }
+    if (!form.state) { toast.error('Please select your state'); return; }
+    if (!form.city) { toast.error('Please select your city'); return; }
     setSubmitting(true);
     try {
       await axios.post(`${API}/subscriptions/money-masters/trial-enquiry`, {
@@ -77,6 +80,8 @@ export default function EntrepreneurshipWorkshopPage() {
         child_name: form.child_name.trim(),
         child_grade: parseInt(form.child_grade),
         batch_id: form.batch_id || null,
+        state: form.state,
+        city: form.city,
       });
       toast.success("Trial request sent! Our team will reach out to you shortly.");
       setDialogOpen(false);
@@ -314,6 +319,22 @@ export default function EntrepreneurshipWorkshopPage() {
               value={form.child_name}
               onChange={(e) => setForm((p) => ({ ...p, child_name: e.target.value }))}
             />
+            <Select value={form.state} onValueChange={(v) => setForm((p) => ({ ...p, state: v, city: '' }))}>
+              <SelectTrigger data-testid="trial-state-select"><SelectValue placeholder="State" /></SelectTrigger>
+              <SelectContent>
+                {INDIA_STATES.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={form.city} onValueChange={(v) => setForm((p) => ({ ...p, city: v }))} disabled={!form.state}>
+              <SelectTrigger data-testid="trial-city-select"><SelectValue placeholder={form.state ? 'City' : 'Select a state first'} /></SelectTrigger>
+              <SelectContent>
+                {getCitiesForState(form.state).map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select value={form.child_grade} onValueChange={(v) => setForm((p) => ({ ...p, child_grade: v, batch_id: '' }))}>
               <SelectTrigger data-testid="trial-grade-select"><SelectValue placeholder="Child's Grade" /></SelectTrigger>
               <SelectContent>

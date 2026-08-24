@@ -2,6 +2,16 @@
 
 Chronological implementation log. See PRD.md for the static problem statement and ROADMAP.md for pending work.
 
+### Recent Updates (August 24, 2026)
+
+**Entrepreneurship Workshop — State/City lead capture + "Smart Money Management" highlight** ✅
+- `EntrepreneurshipWorkshopPage.jsx`: replaced the "Live Expert-Led Classes" highlight card with "Smart Money Management" (financial literacy framing: save/spend/budget the money kids have and earn).
+- Trial enquiry form now captures State then City (cascading dropdown, city disabled until state chosen, resets on state change) for admin reporting uniformity — new static lookup `frontend/src/data/indiaStatesCities.js` (INDIA_STATES, getCitiesForState()).
+- Backend `TrialEnquiryRequest` (`subscriptions.py`) requires `state`/`city`; stored on `entrepreneurship_trial_leads`.
+- Admin `AdminPage.jsx` Trial Requests tab: State/City table columns, cascading State/City filter dropdowns (filtered/total badge), CSV export includes state/city.
+- Verified: testing_agent iteration_102 — 24/24 backend pytest, 100% frontend Playwright (form validation, cascading dropdowns, admin filters/CSV, regression on status/delete). No defects; test leads cleaned up.
+- Deferred by user: tagging existing content/live-classes with the `money_entrepreneurship` curriculum — user will do this manually via the already-verified Content Management curriculum selector.
+
 ### Recent Updates (February 20, 2026)
 
 **Session 17 - Teacher Repository & Quest Answer Bugs:**

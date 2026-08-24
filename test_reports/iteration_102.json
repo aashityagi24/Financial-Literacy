@@ -1,0 +1,33 @@
+{
+  "summary": "Full backend + frontend verification of the new State/City capture on the Entrepreneurship Workshop 'Book a Free Trial' lead form and the admin Trial Requests State/City columns, filters and CSV export. Backend: rewrote /app/backend/tests/test_trial_enquiries.py to include state/city (previous payloads were now 422) and added new cases (persistence of state/city, trimming, missing vs blank state/city) -> 24/24 passed. Frontend: full Playwright walkthrough of the public form (city disabled until state chosen, city list scoped to state, city reset on state change, both validation toasts, successful submit + dialog close) and admin tab (State/City columns, cascading State/City filter dropdowns, filtered/total badge, All States reset, CSV with state/city header) -> all passed. Regression on Trial Requests tab (status change + persistence, single delete, bulk delete) passed. All 3 TEST_ leads created were cleaned up via the admin UI (table now empty).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Trial enquiry dialog (/entrepreneurship-workshop?trial=1)", "issues": ["Form fields are placeholder-only (no labels / no required-field markers) for State, City and Grade - once a value is picked the user loses the field's identity; minor a11y/UX nit, not a blocker"]},
+      {"screen": "Admin > Trial Requests", "issues": ["State/City filter Selects and CSV button are hidden entirely when there are zero leads (existing pattern, acceptable but means filters vanish after bulk delete)"]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_trial_enquiries.py",
+    "/app/backend/tests/seed_trial_state_city.py",
+    "/app/test_reports/pytest/trial_enquiries.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "AdminPage.jsx is 2192 lines - the Trial Requests tab (with its own filter state, table, CSV) should be extracted into its own component/file per the <700 line guideline.",
+    "State/City are validated as non-empty strings only on the backend; there is no server-side check that the city actually belongs to the submitted state (the frontend list is the only guard). If uniformity matters for reporting, consider validating against a shared server-side state->city map.",
+    "The India states/cities list is duplicated only on the frontend; if any other lead form (e.g. homepage 'Book a Call') later needs location, reuse /app/frontend/src/data/indiaStatesCities.js rather than re-declaring."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_trial_enquiries.py",
+    "/app/backend/tests/seed_trial_state_city.py"
+  ],
+  "success_rate": {"backend": "100% (24/24 pytest)", "frontend": "100% (all 14 assertions in 3 Playwright flows passed)"},
+  "seed_data_creation": "3 TEST_ trial leads (Karnataka/Bengaluru via UI form, Maharashtra/Pune and Tamil Nadu/Chennai via seed script) - ALL deleted afterwards using the admin single-delete + bulk-delete flow; entrepreneurship_trial_leads is now empty.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "test_trial_enquiries.py now uses a base_payload() helper that always includes state/city - any new required field on TrialEnquiryRequest must be added there or all 24 tests will 422. Missing state/city -> 422 (pydantic), blank/whitespace -> 400 (handler). seed_trial_state_city.py can be re-run to repopulate leads for admin filter testing. Admin login: admin@learnersplanet.com / finlit@2026 via /login (auth-identifier-input / auth-password-input / auth-submit-btn), then /admin -> admin-tab-trial_requests.",
+  "rca_of_the_issue": "N/A - no defects found. The only failures encountered were in the pre-existing backend test file whose payloads predated the new required state/city fields; those tests were updated (test-code-only change, in scope)."
+}
