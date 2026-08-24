@@ -137,13 +137,16 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="flex-shrink-0 mx-auto lg:mx-0 lg:ml-auto animate-bounce-in stagger-2 relative" data-testid="hero-image-wrapper">
-              <div className="absolute -top-4 -right-4 w-16 h-16 bg-[#FFD23F] rounded-full opacity-70 -z-10"></div>
+            <div className="flex-shrink-0 mx-auto lg:mx-0 lg:ml-auto animate-bounce-in stagger-2">
               <img
                 src="https://customer-assets-wrfwihn1.emergentagent.net/job_6ec61167-a99e-48d2-8723-ad239cc8065f/artifacts/znvftlg5_ChatGPT%20Image%20Aug%2024%2C%202026%20at%2006_06_06%20PM.png"
                 alt="A young entrepreneur proudly selling her handmade crafts and counting the coins she earned"
                 data-testid="hero-earner-image"
-                className="w-[280px] h-[360px] sm:w-[320px] sm:h-[400px] lg:w-[380px] lg:h-[460px] object-cover object-[50%_72%] rounded-[2rem] border-4 border-[#1D3557] shadow-[10px_10px_0px_0px_#1D3557]"
+                className="w-[300px] h-[380px] sm:w-[340px] sm:h-[420px] lg:w-[420px] lg:h-[500px] object-cover object-[50%_72%]"
+                style={{
+                  WebkitMaskImage: 'radial-gradient(ellipse 72% 78% at 50% 42%, black 55%, transparent 100%)',
+                  maskImage: 'radial-gradient(ellipse 72% 78% at 50% 42%, black 55%, transparent 100%)',
+                }}
               />
             </div>
           </div>

@@ -5,7 +5,8 @@ Chronological implementation log. See PRD.md for the static problem statement an
 ### Recent Updates (August 24, 2026, hero image)
 
 **Landing page hero — added right-side image** ✅
-- `LandingPage.jsx`: hero header restructured to a two-column flex layout (text left, image right on desktop; stacked on mobile). Added user-provided image of a girl selling handmade crafts/succulents and counting coins she earned, cropped via `object-[50%_72%]` to focus on the subject, styled with the app's signature thick navy border + offset shadow card treatment.
+- `LandingPage.jsx`: hero header restructured to a two-column flex layout (text left, image right on desktop; stacked on mobile). Added user-provided image of a girl selling handmade crafts/succulents and counting coins she earned, cropped via `object-[50%_72%]` to focus on the subject.
+- Follow-up: removed the bordered/shadowed card frame per user feedback ("doesn't look good in that frame") — image now uses a soft radial CSS mask (`WebkitMaskImage`/`maskImage`) to feather its edges so it blends into the hero section instead of looking like an embedded box.
 - Self-tested via screenshot (desktop + mobile) — renders correctly both breakpoints, no layout regression to nav/CTA/trust row.
 
 ### Recent Updates (August 24, 2026, bug fix)
