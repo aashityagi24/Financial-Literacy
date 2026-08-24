@@ -7,7 +7,7 @@ Chronological implementation log. See PRD.md for the static problem statement an
 **Landing page hero — added right-side image** ✅
 - `LandingPage.jsx`: hero header restructured to a two-column flex layout (text left, image right on desktop; stacked on mobile). Uses a user-supplied PNG (already background-removed with true alpha transparency) of a girl selling handmade crafts/succulents and counting coins she earned — blends naturally into the gradient hero, no card frame or CSS mask needed.
 - Follow-up: cropped the hero PNG's built-in transparent padding (bounding-box crop via PIL, saved to `frontend/public/hero-earner.png`, served as a static asset) — the source file had ~390px of empty transparent margin above the subject, which was making the image (and hero section) far taller than the text content. Also repositioned a decorative floating dot that started overlapping the trust row once the section shrank.
-- Follow-up 2: fixed the large gap between nav and heading — the logo PNG also had huge built-in transparent top/bottom padding (500x500 canvas, actual logo content only 478x185). Cropped to `frontend/public/coinquest-logo.png`, dropped the old `h-72 -mt-12` sizing hack for a plain `h-16`, closing the gap entirely.
+- Follow-up 2 (Aug 24): attempted logo crop to close the nav-to-heading gap, but user found it looked odd — reverted to the original logo asset/sizing (`h-72 -mt-12`). Not pursuing further for now.
 - Self-tested via screenshot (desktop + mobile) — hero section is now compact, image height matches the heading/description/button block instead of towering over it.
 
 ### Recent Updates (August 24, 2026, bug fix)
