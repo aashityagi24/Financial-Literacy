@@ -1376,3 +1376,4 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Replaced the placeholder Rocket-icon box in the workshop hero (right side, `/entrepreneurship-workshop`) with a real photo (user-provided: child selling cookies to a customer).
   - Relabeled the 3 highlight tiles: "Big Ideas"->"Built a product" (Hammer icon), "Teamwork"->"Pitched to real buyers" (Mic icon), "Real Ventures"->"Made their first sale" (IndianRupee icon).
   - Verified via screenshot on desktop + mobile — compiles clean, image renders correctly, no layout regressions.
+  - Follow-up: image was cropped because the box used a fixed short landscape height (h-56) for a portrait (1122x1402, 4:5) source photo. Fixed by changing the container to `aspect-[4/5]` so the full photo renders without cropping.

@@ -204,7 +204,7 @@ export default function EntrepreneurshipWorkshopPage() {
 
             <div className="relative animate-bounce-in stagger-2">
               <div className="card-playful p-8 bg-white">
-                <div className="w-full h-56 rounded-2xl border-3 border-[#1D3557] overflow-hidden">
+                <div className="w-full aspect-[4/5] rounded-2xl border-3 border-[#1D3557] overflow-hidden">
                   <img
                     data-testid="workshop-hero-image"
                     src="https://customer-assets-lxgj4vgw.emergentagent.net/job_85829736-07ce-43cd-b04d-86af92418734/artifacts/3kuncu9i_ChatGPT%20Image%20Aug%2024%2C%202026%20at%2009_04_59%20PM.png"
