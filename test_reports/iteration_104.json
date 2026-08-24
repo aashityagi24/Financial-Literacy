@@ -1,0 +1,24 @@
+{
+  "summary": "Verified the index.css @layer components fix for the production-build-only styling bug. Ran a real `yarn build` (success, 18s) and served build/ via `npx serve -s build -l 4173`, then visually + computed-style verified the Entrepreneurship Workshop bottom CTA in that PRODUCTION build: card bg = rgb(91,33,182) solid purple, heading rgb(255,255,255), paragraph rgba(255,255,255,0.85), PiggyBank icon rgb(255,210,63), pill button bg rgb(255,210,63) / text rgb(29,53,87) (data-testid=ew-cta-book-trial-btn). Bug is FIXED. Also confirmed compiled CSS ordering: .card-playful{ @6065 and .btn-primary{ @6485 now precede .bg-\\[\\#5B21B6\\]{ @35165. Regression checks in prod build (LandingPage bg-[#F3E8FF]/bg-[#FFF9E8]/bg-[#E0FBFC] cards, FinancialLiteracy CTA bg-[#E0FBFC], btn-primary yellow) and in the DEV preview (EW CTA + ew-track-detail, landing cards, authenticated child dashboard account gradient cards, /wallet gradient cards, /savings-goals bg-[#06D6A0]/10, /store 44 btn-primary buttons) all render identically with no visual regression.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Side effect of moving classes into @layer components: Tailwind now PURGES any of these classes not found in ./src content. Verified purged-and-unused: .btn-accent, .panel-cyan, .input-playful, .account-spending/savings/investing/giving, .progress-bar, .progress-fill, .nav-item-active (zero references in src/**/*.jsx|js, so harmless today). If any of these are reintroduced via a dynamically composed className string (e.g. `btn-${variant}` or class names built in a DB/CMS field), Tailwind's scanner will not see them and they will silently vanish in production builds. Recommend either adding them to tailwind safelist or always using full literal class names.",
+    "index.css now has two separate @layer components blocks (lines ~107-220 and ~473-496) plus unlayered rules in between; consider consolidating into one block for maintainability.",
+    ".card-playful[class*=\"bg-gradient\"] { background-color: transparent } is a brittle attribute-substring hack that only works for the gradient case; a same-specificity bg-[#hex] utility now wins only because of the layer ordering. Fine as-is, but note that any future plain-CSS rule appended after @tailwind utilities without a @layer wrapper will reintroduce this exact class of bug."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (not in scope)", "frontend": "100%"},
+  "seed_data_creation": "None. Used existing wallet_demo_child / testpass123 for the authenticated dev-preview regression pass.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": false,
+  "test_credentials": "/app/memory/test_credentials.md - used wallet_demo_child / testpass123 (Grade 3 child)",
+  "context_for_next_testing_agent": "To reproduce prod-only CSS bugs: cd /app/frontend && yarn build, then `npx --yes serve -s build -l 4173 &` and point Playwright at http://localhost:4173. NOTE: authenticated flows CANNOT be tested on that origin - backend CORS rejects http://localhost:4173 (both /api/auth/login and /api/auth/school-login fail with a CORS preflight error), so do authenticated regression checks on the dev preview URL instead. Remember to `pkill -f 'serve -s build'` after. The /app/frontend/build folder is left in the repo from this run.",
+  "rca_of_the_issue": "Confirmed the main agent's RCA. Plain CSS rules placed after `@tailwind utilities;` in index.css were emitted after the generated utilities in the concatenated production stylesheet; with equal specificity (single class), .card-playful{background-color:white} won the cascade tie over .bg-[#5B21B6]. Dev server injects CSS chunks separately, hiding it. Wrapping those rules in @layer components makes PostCSS/Tailwind hoist them into the components layer (before utilities), so utilities now win. Verified by byte-offset comparison in the compiled CSS and by live computed styles on a served production build."
+}

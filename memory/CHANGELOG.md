@@ -2,6 +2,14 @@
 
 Chronological implementation log. See PRD.md for the static problem statement and ROADMAP.md for pending work.
 
+### Recent Updates (August 24, 2026, bug fix)
+
+**Production-only CSS bug: CTA/card backgrounds not applying on deployed build** ✅ FIXED
+- Root cause: `.card-playful`, `.btn-primary/secondary/accent`, `.panel-cyan`, `.input-playful`, `.account-*`, `.progress-bar/fill`, `.nav-item-active` in `index.css` were plain global rules positioned after `@tailwind utilities;` but not wrapped in `@layer components`. In production builds (`yarn build`), all CSS concatenates in literal source order, so these rules landed AFTER Tailwind's generated utilities — at equal specificity, the LATER rule wins, so e.g. `.card-playful`'s hardcoded `background-color: white` silently beat `bg-[#5B21B6]` on any element using both classes. Dev server (`yarn start`) injects CSS via separate `<style>` tags with different ordering, so this never showed in preview — only on real production builds (which is why the user's externally-hosted coinquest.co.in deployment showed a white CTA card with invisible white-on-white text, while preview looked fine).
+- Fix: wrapped all the above classes in `@layer components { ... }` in `index.css` so Tailwind hoists them before the utilities layer regardless of file position.
+- Verified: testing_agent iteration_104 — ran a real `yarn build`, served it, and confirmed via computed styles that the CTA now shows correct purple bg/white text/yellow icon/button. Zero regressions across dev preview (landing cards, dashboard gradient cards, wallet/savings pages, store buttons) and prod build.
+- Note (code review, not urgent): moving these into `@layer components` means Tailwind now purges any of them not referenced as literal strings in JSX. `.btn-accent`, `.panel-cyan`, `.input-playful`, `.account-*`, `.progress-bar/fill`, `.nav-item-active` are currently unused (verified harmless) — if any of these get reintroduced via a dynamically-composed className (e.g. template string), add them to the Tailwind safelist first.
+
 ### Recent Updates (August 24, 2026, later)
 
 **Teen trial booking + real curriculum content for all 3 tracks** ✅

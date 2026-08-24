@@ -96,117 +96,127 @@ code {
   background: var(--primary-foreground);
 }
 
-/* Card styles */
-.card-playful {
-  background-color: white;
-  border: 3px solid var(--border-dark);
-  border-radius: 1.5rem;
-  box-shadow: 4px 4px 0px 0px var(--border-dark);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+/* Card, button, panel and input component classes are wrapped in
+   @layer components so Tailwind emits them BEFORE the utilities layer
+   in the concatenated production build. Without this, source order in
+   this file (they appear after `@tailwind utilities`) makes their
+   plain background/color rules win the cascade over same-specificity
+   Tailwind utilities (e.g. bg-[#hex]) in production builds only — the
+   dev server injects each CSS chunk separately so this never surfaced
+   there, only in `yarn build` output. */
+@layer components {
+  /* Card styles */
+  .card-playful {
+    background-color: white;
+    border: 3px solid var(--border-dark);
+    border-radius: 1.5rem;
+    box-shadow: 4px 4px 0px 0px var(--border-dark);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
 
-/* Allow gradient backgrounds to override card-playful white background */
-.card-playful[class*="bg-gradient"] {
-  background-color: transparent;
-}
+  /* Allow gradient backgrounds to override card-playful white background */
+  .card-playful[class*="bg-gradient"] {
+    background-color: transparent;
+  }
 
-.card-playful:hover {
-  transform: translateY(-2px);
-  box-shadow: 6px 6px 0px 0px var(--border-dark);
-}
+  .card-playful:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0px 0px var(--border-dark);
+  }
 
-/* Button styles */
-.btn-primary {
-  background: var(--primary);
-  color: var(--primary-foreground);
-  font-weight: 700;
-  border: 3px solid var(--border-dark);
-  border-radius: 9999px;
-  box-shadow: 4px 4px 0px 0px var(--border-dark);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  cursor: pointer;
-}
+  /* Button styles */
+  .btn-primary {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-weight: 700;
+    border: 3px solid var(--border-dark);
+    border-radius: 9999px;
+    box-shadow: 4px 4px 0px 0px var(--border-dark);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+  }
 
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 6px 6px 0px 0px var(--border-dark);
-}
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0px 0px var(--border-dark);
+  }
 
-.btn-primary:active {
-  transform: translateY(2px);
-  box-shadow: 2px 2px 0px 0px var(--border-dark);
-}
+  .btn-primary:active {
+    transform: translateY(2px);
+    box-shadow: 2px 2px 0px 0px var(--border-dark);
+  }
 
-.btn-secondary {
-  background: var(--secondary);
-  color: white;
-  font-weight: 700;
-  border: 3px solid var(--border-dark);
-  border-radius: 9999px;
-  box-shadow: 4px 4px 0px 0px var(--border-dark);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  cursor: pointer;
-}
+  .btn-secondary {
+    background: var(--secondary);
+    color: white;
+    font-weight: 700;
+    border: 3px solid var(--border-dark);
+    border-radius: 9999px;
+    box-shadow: 4px 4px 0px 0px var(--border-dark);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+  }
 
-.btn-secondary:hover {
-  transform: translateY(-2px);
-  box-shadow: 6px 6px 0px 0px var(--border-dark);
-}
+  .btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0px 0px var(--border-dark);
+  }
 
-.btn-accent {
-  background: var(--accent);
-  color: white;
-  font-weight: 700;
-  border: 3px solid var(--border-dark);
-  border-radius: 9999px;
-  box-shadow: 4px 4px 0px 0px var(--border-dark);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  cursor: pointer;
-}
+  .btn-accent {
+    background: var(--accent);
+    color: white;
+    font-weight: 700;
+    border: 3px solid var(--border-dark);
+    border-radius: 9999px;
+    box-shadow: 4px 4px 0px 0px var(--border-dark);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+  }
 
-.btn-accent:hover {
-  transform: translateY(-2px);
-  box-shadow: 6px 6px 0px 0px var(--border-dark);
-}
+  .btn-accent:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0px 0px var(--border-dark);
+  }
 
-/* Panel styles */
-.panel-cyan {
-  background: var(--background);
-  border: 3px solid var(--border-dark);
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-}
+  /* Panel styles */
+  .panel-cyan {
+    background: var(--background);
+    border: 3px solid var(--border-dark);
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+  }
 
-/* Input styles */
-.input-playful {
-  background: white;
-  border: 3px solid var(--border-dark);
-  border-radius: 0.75rem;
-  padding: 0.75rem 1rem;
-  font-weight: 500;
-  transition: box-shadow 0.2s ease;
-}
+  /* Input styles */
+  .input-playful {
+    background: white;
+    border: 3px solid var(--border-dark);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+    transition: box-shadow 0.2s ease;
+  }
 
-.input-playful:focus {
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(255, 210, 63, 0.5);
-}
+  .input-playful:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(255, 210, 63, 0.5);
+  }
 
-/* Account type colors */
-.account-spending {
-  background: linear-gradient(135deg, #EE6C4D 0%, #FF8A6C 100%);
-}
+  /* Account type colors */
+  .account-spending {
+    background: linear-gradient(135deg, #EE6C4D 0%, #FF8A6C 100%);
+  }
 
-.account-savings {
-  background: linear-gradient(135deg, #06D6A0 0%, #42E8B3 100%);
-}
+  .account-savings {
+    background: linear-gradient(135deg, #06D6A0 0%, #42E8B3 100%);
+  }
 
-.account-investing {
-  background: linear-gradient(135deg, #3D5A80 0%, #5A7BA0 100%);
-}
+  .account-investing {
+    background: linear-gradient(135deg, #3D5A80 0%, #5A7BA0 100%);
+  }
 
-.account-giving {
-  background: linear-gradient(135deg, #9B5DE5 0%, #B47EE5 100%);
+  .account-giving {
+    background: linear-gradient(135deg, #9B5DE5 0%, #B47EE5 100%);
+  }
 }
 
 /* Animations */
@@ -457,27 +467,32 @@ code {
   opacity: 0.5;
 }
 
-/* Progress bar */
-.progress-bar {
-  background: var(--muted);
-  border-radius: 9999px;
-  overflow: hidden;
-  border: 2px solid var(--border-dark);
-}
+/* Wrapped in @layer components (see note above) so these plain
+   background/color rules don't win over same-specificity Tailwind
+   utilities in production builds. */
+@layer components {
+  /* Progress bar */
+  .progress-bar {
+    background: var(--muted);
+    border-radius: 9999px;
+    overflow: hidden;
+    border: 2px solid var(--border-dark);
+  }
 
-.progress-fill {
-  background: linear-gradient(90deg, var(--success), #42E8B3);
-  height: 100%;
-  border-radius: 9999px;
-  transition: width 0.5s ease;
-}
+  .progress-fill {
+    background: linear-gradient(90deg, var(--success), #42E8B3);
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.5s ease;
+  }
 
-/* Navigation active state */
-.nav-item-active {
-  background: var(--primary);
-  color: var(--primary-foreground);
-  border: 3px solid var(--border-dark);
-  box-shadow: 2px 2px 0px 0px var(--border-dark);
+  /* Navigation active state */
+  .nav-item-active {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border: 3px solid var(--border-dark);
+    box-shadow: 2px 2px 0px 0px var(--border-dark);
+  }
 }
 
 /* Toast customization */
