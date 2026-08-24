@@ -5,7 +5,7 @@
       "upload_endpoint": "POST /api/upload/quest-asset",
       "upload_response_status": 200,
       "upload_response_body": "{\"url\":\"/api/uploads/quests/9d79fbdd6181.webp\"}",
-      "preview_img_src": "https://skillquest-deploy.preview.emergentagent.com/api/uploads/quests/9d79fbdd6181.webp",
+      "preview_img_src": "https://smart-money-learn-5.preview.emergentagent.com/api/uploads/quests/9d79fbdd6181.webp",
       "preview_img_naturalWidth": 20,
       "preview_img_naturalHeight": 20,
       "preview_img_complete": true,
@@ -17,11 +17,11 @@
     "png_upload": {
       "upload_endpoint": "POST /api/upload/quest-asset",
       "upload_response_body": "{\"url\":\"/api/uploads/quests/49a6704dbae7.png\"}",
-      "preview_img_src": "https://skillquest-deploy.preview.emergentagent.com/api/uploads/quests/49a6704dbae7.png",
+      "preview_img_src": "https://smart-money-learn-5.preview.emergentagent.com/api/uploads/quests/49a6704dbae7.png",
       "preview_img_naturalWidth": 20,
       "questForm_state_console_log": "image_url: /api/uploads/quests/49a6704dbae7.png",
       "quest_created": true,
-      "child_view_src": "https://skillquest-deploy.preview.emergentagent.com/api/uploads/quests/49a6704dbae7.png",
+      "child_view_src": "https://smart-money-learn-5.preview.emergentagent.com/api/uploads/quests/49a6704dbae7.png",
       "child_view_naturalWidth": 20,
       "child_view_complete": true
     }
@@ -56,5 +56,5 @@
   "retest_needed": false,
   "main_agent_can_self_test": true,
   "context_for_next_testing_agent": "Login flow for teacher via UI is flaky in headless (session cookie not set from /login form submit). Workaround: POST /api/auth/login with {identifier, password} directly via page.evaluate, then localStorage.setItem('session_token', ...). Then goto /teacher-dashboard. Same pattern for child logins. Test images at /tmp/tiny.png and /tmp/tiny.webp (84 bytes each).",
-  "rca_of_the_issue": "NO BUG FOUND on current build. Upload endpoint returns {url:'/api/uploads/quests/<hash>.<ext>'}. Frontend stores this exactly as-is in questForm.image_url. getAssetUrl() sees path starts with '/api/' and returns `${BACKEND_URL}${path}` = 'https://skillquest-deploy.preview.emergentagent.com/api/uploads/quests/<hash>.<ext>'. Browser GET returns HTTP 200 with correct image/webp or image/png content-type. Preview img.naturalWidth is 20 (not 0), img.complete is true. Child GET of same URL returns 200 and renders. The URL is NOT mangled at any step."
+  "rca_of_the_issue": "NO BUG FOUND on current build. Upload endpoint returns {url:'/api/uploads/quests/<hash>.<ext>'}. Frontend stores this exactly as-is in questForm.image_url. getAssetUrl() sees path starts with '/api/' and returns `${BACKEND_URL}${path}` = 'https://smart-money-learn-5.preview.emergentagent.com/api/uploads/quests/<hash>.<ext>'. Browser GET returns HTTP 200 with correct image/webp or image/png content-type. Preview img.naturalWidth is 20 (not 0), img.complete is true. Child GET of same URL returns 200 and renders. The URL is NOT mangled at any step."
 }

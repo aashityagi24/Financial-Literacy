@@ -3,8 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import {
-  ArrowLeft, Rocket, Lightbulb, Users, Trophy, CalendarDays, Sparkles, Store, PiggyBank,
-  Video, Clock, GraduationCap, BookOpen, Layers,
+  ArrowLeft, Rocket, Lightbulb, Users, Trophy, CalendarDays, Sparkles, Store, PiggyBank, Hammer,
+  Video, Clock, GraduationCap, BookOpen, Layers, Mic, IndianRupee,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -204,21 +204,26 @@ export default function EntrepreneurshipWorkshopPage() {
 
             <div className="relative animate-bounce-in stagger-2">
               <div className="card-playful p-8 bg-white">
-                <div className="w-full h-56 rounded-2xl border-3 border-[#1D3557] bg-gradient-to-br from-[#FFD23F] to-[#EE6C4D] flex items-center justify-center">
-                  <Rocket className="w-24 h-24 text-white" strokeWidth={2} />
+                <div className="w-full h-56 rounded-2xl border-3 border-[#1D3557] overflow-hidden">
+                  <img
+                    data-testid="workshop-hero-image"
+                    src="https://customer-assets-lxgj4vgw.emergentagent.net/job_85829736-07ce-43cd-b04d-86af92418734/artifacts/3kuncu9i_ChatGPT%20Image%20Aug%2024%2C%202026%20at%2009_04_59%20PM.png"
+                    alt="Child selling handmade cookies to a customer"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="mt-6 grid grid-cols-3 gap-4">
-                  <div className="text-center p-3 bg-[#FFD23F]/20 rounded-xl border-2 border-[#1D3557]">
-                    <Lightbulb className="w-8 h-8 mx-auto text-[#FFD23F]" />
-                    <p className="text-sm font-bold text-[#1D3557] mt-1">Big Ideas</p>
+                  <div data-testid="workshop-highlight-built-product" className="text-center p-3 bg-[#FFD23F]/20 rounded-xl border-2 border-[#1D3557]">
+                    <Hammer className="w-8 h-8 mx-auto text-[#FFD23F]" />
+                    <p className="text-sm font-bold text-[#1D3557] mt-1">Built a product</p>
                   </div>
-                  <div className="text-center p-3 bg-[#06D6A0]/20 rounded-xl border-2 border-[#1D3557]">
-                    <Users className="w-8 h-8 mx-auto text-[#06D6A0]" />
-                    <p className="text-sm font-bold text-[#1D3557] mt-1">Teamwork</p>
+                  <div data-testid="workshop-highlight-pitched-buyers" className="text-center p-3 bg-[#06D6A0]/20 rounded-xl border-2 border-[#1D3557]">
+                    <Mic className="w-8 h-8 mx-auto text-[#06D6A0]" />
+                    <p className="text-sm font-bold text-[#1D3557] mt-1">Pitched to real buyers</p>
                   </div>
-                  <div className="text-center p-3 bg-[#EE6C4D]/20 rounded-xl border-2 border-[#1D3557]">
-                    <Trophy className="w-8 h-8 mx-auto text-[#EE6C4D]" />
-                    <p className="text-sm font-bold text-[#1D3557] mt-1">Real Ventures</p>
+                  <div data-testid="workshop-highlight-first-sale" className="text-center p-3 bg-[#EE6C4D]/20 rounded-xl border-2 border-[#1D3557]">
+                    <IndianRupee className="w-8 h-8 mx-auto text-[#EE6C4D]" />
+                    <p className="text-sm font-bold text-[#1D3557] mt-1">Made their first sale</p>
                   </div>
                 </div>
               </div>

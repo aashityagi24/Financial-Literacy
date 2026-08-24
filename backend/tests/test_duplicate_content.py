@@ -2,7 +2,7 @@ import os
 import pytest
 import requests
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://skillquest-deploy.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://smart-money-learn-5.preview.emergentagent.com').rstrip('/')
 ADMIN_EMAIL = "admin@learnersplanet.com"
 ADMIN_PASSWORD = "finlit@2026"
 TOPIC_ID = "topic_80e910ce6a69"

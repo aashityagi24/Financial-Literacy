@@ -727,7 +727,7 @@ Chronological implementation log. See PRD.md for the static problem statement an
 
 **Google Cloud Console Configuration**:
 To complete the OAuth setup, add these redirect URIs to your Google Cloud Console OAuth 2.0 credentials:
-- For Preview: `https://skillquest-deploy.preview.emergentagent.com/api/auth/google/callback`
+- For Preview: `https://smart-money-learn-5.preview.emergentagent.com/api/auth/google/callback`
 - For Production: `https://coinquest.co.in/api/auth/google/callback`
 
 ### Session 12 Updates (February 9, 2026)
@@ -1371,3 +1371,8 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Also fixed: invisible "+ New Batch" button (text color matched background), batch-dialog date pickers allowed selecting adjacent-month "outside days" and end<start ranges (added `showOutsideDays={false}` + `disabled={{before: start}}` + `fromDate`), added client-side end>start validation, added Razorpay `prefill` (name/email/contact) in the parent purchase dialog.
   - Verified: testing_agent iteration_100 — new `/app/backend/tests/test_money_masters.py` (39 pytest cases: batch CRUD/validation/toggle, create-order guards, verify-payment end_date branching, curricula gating incl. the critical child-inheritance case, admin active_plans) — 39/39 pass after the fix. Full Playwright pass on admin batch CRUD, admin Users badges, and the parent purchase dialog up to (not through) the live Razorpay widget. Regression-checked `test_curricula.py` (47) and `test_live_classes.py` unaffected.
   - Known follow-up (not yet done): no topic/content item/live class is currently tagged `curricula=['money_entrepreneurship']`, so a money-masters-only purchaser sees an empty Learn page (existing "content coming soon" empty-state renders, no crash) until admin tags content via the existing Content Management curriculum selector.
+
+- **Entrepreneurship Workshop hero image (Aug 24, 2026)**
+  - Replaced the placeholder Rocket-icon box in the workshop hero (right side, `/entrepreneurship-workshop`) with a real photo (user-provided: child selling cookies to a customer).
+  - Relabeled the 3 highlight tiles: "Big Ideas"->"Built a product" (Hammer icon), "Teamwork"->"Pitched to real buyers" (Mic icon), "Real Ventures"->"Made their first sale" (IndianRupee icon).
+  - Verified via screenshot on desktop + mobile — compiles clean, image renders correctly, no layout regressions.
