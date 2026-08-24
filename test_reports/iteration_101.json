@@ -1,0 +1,23 @@
+{
+  "summary": "Frontend-only verification of the ScrollToTop route-change fix. Measured window.scrollY after every cross-page client-side navigation from the hub page and validated anchor/in-page scrolling regressions. All 9 checks passed: explore-ew-btn (scrollY 736 -> 0), explore-fl-btn (736 -> 0), cta-explore-ew-btn (3274 -> 0), cta-explore-fl-btn (3274 -> 0), FL product-card body click (255 -> 0), #batches anchor on /entrepreneurship-workshop still scrolls to 1374 (not reset), #features anchor on /financial-literacy still scrolls to 532 (not reset), /entrepreneurship-workshop?trial=1 client-side deep link opens trial dialog with scrollY 0, and hub -> /login nav from scrollY 1200 lands at 0. No console errors observed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "ScrollToTop only depends on pathname (correct) so search/hash changes are unaffected — anchor navigation and ?trial=1 deep links both verified working.",
+    "Informational: the hub hero currently has no 'Book a free trial class' button/trial=1 deep link (only 'Book a Call'); the review request's 'hero-book-trial-btn' does not exist on LandingPage. The trial=1 deep link was verified directly on /entrepreneurship-workshop instead.",
+    "Optional polish: window.scrollTo(0,0) is instant; if smooth is ever desired use behavior:'instant' explicitly to avoid inheriting a global scroll-behavior:smooth from CSS (currently fine)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested", "frontend": "100% (9/9 scroll checks passed)"},
+  "seed_data_creation": "none",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Scroll-restoration bug is fixed and verified with explicit scrollY measurements. Browser back button still restores prior hub scroll position (255px) as expected, so the fix did not break history scroll restoration. No further scroll testing needed.",
+  "rca_of_the_issue": "Original bug: react-router client-side route change preserves window scroll position. Fix (ScrollToTop component keyed on pathname in AppRouter) resolves it without impacting same-page hash/anchor scrolling since pathname is unchanged for anchors."
+}

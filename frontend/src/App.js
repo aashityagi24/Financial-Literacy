@@ -207,6 +207,19 @@ export const ProtectedRoute = ({ children }) => {
   );
 };
 
+// Scrolls the window to the top whenever the route path changes, so
+// navigating to a new page (e.g. clicking a product card link) always
+// starts at that page's hero instead of preserving the previous scroll
+// position. Anchor-only navigation (e.g. href="#programs") does not change
+// the pathname, so it is unaffected.
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 // App Router with session_id detection
 function AppRouter() {
   const location = useLocation();
@@ -218,7 +231,9 @@ function AppRouter() {
   }
   
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/financial-literacy" element={<FinancialLiteracyPage />} />
       <Route path="/entrepreneurship-workshop" element={<EntrepreneurshipWorkshopPage />} />
@@ -429,6 +444,7 @@ function AppRouter() {
         </ProtectedRoute>
       } />
     </Routes>
+    </>
   );
 }
 
