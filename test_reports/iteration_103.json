@@ -1,0 +1,51 @@
+{
+  "summary": "Tested the new 'Choose Your Child's Track' section on /entrepreneurship-workshop (3 age tracks, Overview/Lessons sub-tabs, live public-curriculum fetch, empty state, grade-scoped topic seeding) plus the platform-wide grade scale extension 0-5 -> 0-9 across Content Management, Live Classes Admin, Money Masters Batches and the public lead forms. Backend: created /app/backend/tests/test_ew_tracks_grade9.py (21 tests, all passing) covering the new public-curriculum endpoint (auth-free, grade-overlap scoping, curricula filter, no _id leakage, 422 on missing params) and grade-cap validators (0/5/9 accepted, 10/-1 rejected with 400) on call-request, trial-enquiry, live classes and Money Masters batches. Frontend: full Playwright pass on track tabs, age badge, sub-tabs, 4 generic overview tiles (identical across all 3 tracks), lessons empty state, seeded-topic rendering with subtopic chip and correct cross-track exclusion, Overview reset on track switch, Book-a-Free-Trial end-to-end (State/City cascade + Grade 1-5 dropdown unchanged), and all 3 admin grade dropdowns now exposing K..Grade 9 with successful creation of a topic (7-9), a live class (7-9) and grade-8 batch option. One real defect found: the new track tab bar overflows the viewport horizontally on mobile (390px).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "EntrepreneurshipWorkshopPage - Age Tracks tab bar",
+        "issue": "On mobile (390x844) the track tab pill container is 575px wide inside a 390px viewport, making the whole page horizontally scrollable (document.scrollWidth = 599 vs innerWidth = 390). The 'Teenpreneur' tab is off-screen and the entire page can be dragged sideways. Verified this container is the ONLY element causing the overflow (scanned all elements: only ew-track-tabs and its youngpreneur/teenpreneur children exceed the viewport). No overflow at 768px or 1280px. Suggested fix: make the tab strip wrap (flex-wrap) or scrollable (overflow-x-auto + full-width container instead of inline-flex ... self-start).",
+        "selector": "[data-testid=\"ew-track-tabs\"]",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Entrepreneurship Workshop - Age Tracks section (desktop)",
+        "issues": [
+          "Cosmetic: Lessons grid is sm:grid-cols-2, so with a single topic the card only fills the left half and the right half is empty white space. Fine once several topics are tagged, just noting it.",
+          "Cosmetic: topic icon is rendered as a raw string ({topic.icon || '📚'}). Real content uses emoji so it renders fine, but if an admin types a non-emoji value (e.g. a lucide icon name) the literal text is printed next to the title. Consider validating/falling back."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_ew_tracks_grade9.py",
+    "/app/backend/tests/_seed_ew_track_topic.py",
+    "/app/test_reports/pytest/pytest_results_ew_tracks.xml"
+  ],
+  "action_items": [
+    "Fix mobile horizontal overflow of [data-testid=\"ew-track-tabs\"] on /entrepreneurship-workshop (wrap or horizontally scroll the 3 track pills below ~640px)."
+  ],
+  "critical_code_review_comments": [
+    "GET /api/subscriptions/money-masters/public-curriculum has no bounds on min_grade/max_grade and no cap on inverted ranges; it is public and unauthenticated. Consider validating 0<=min_grade<=max_grade<=9 (currently min_grade=9&max_grade=0 just returns []) — low risk, but keeps the public surface tight. Projection correctly excludes _id and sorts by order; N+1 subtopic queries are bounded (<=200 topics) so acceptable for now.",
+    "EntrepreneurshipWorkshopPage.jsx useEffect that fetches the curriculum depends on [trackDetailTab, selectedTrack] but reads activeTrack.minGrade/maxGrade from a value derived outside the dep array — currently safe because activeTrack is derived from selectedTrack, but eslint exhaustive-deps would flag it. Also the cached-per-track fetch means new admin content will not appear until a page reload within the same session (acceptable for a marketing page, just noting).",
+    "PRE-EXISTING / OUT OF SCOPE (not flagging as a new bug per instructions): the trial form's grade dropdown reuses the 0-indexed GRADE_LABELS = ['Grade 1'..'Grade 5'], so selecting 'Grade 5' in the UI posts child_grade=4 to /trial-enquiry (verified in the stored lead). It is internally consistent with the 'Open Batches by Grade' mapping, but the stored lead grade is off by one from what the parent picked. Worth a deliberate decision at some point since the platform grade scale is now 0-9 elsewhere."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ew_tracks_grade9.py",
+    "/app/backend/tests/_seed_ew_track_topic.py"
+  ],
+  "success_rate": {"backend": "100% (21/21)", "frontend": "95% (all functional flows pass; 1 mobile responsive defect)"},
+  "seed_data_creation": "All seed data cleaned up: 2 content topics (TEST_QA Kidpreneur Basics + subtopic TEST_QA What Is Money, grades 1-3, money_entrepreneurship) deleted; UI-created topic 'TEST_QA Teen Topic UI' (grades 7-9) deleted; UI-created live class 'TEST_QA LC Grade 7-9' deleted; 3 TEST_QA call-requests and 7 TEST_QA trial-enquiries deleted. Verified public-curriculum returns no TEST_ data afterwards. Pre-existing 'QA MM Grade 3 Batch' (grade 3) left untouched - not created by this iteration.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": true,
+  "test_credentials": "Admin admin@learnersplanet.com / finlit@2026 (login uses field 'identifier', response returns 'session_token' used as Bearer token)",
+  "context_for_next_testing_agent": "Backend regression suite for this feature: /app/backend/tests/test_ew_tracks_grade9.py (21 tests, run with `cd /app/backend && python -m pytest tests/test_ew_tracks_grade9.py -q`). It self-seeds and self-cleans content topics / live classes / batches. Helper /app/backend/tests/_seed_ew_track_topic.py 'seed'|'cleanup' seeds a kidpreneur (grade 1-3, money_entrepreneurship) topic+subtopic for UI Lessons-tab testing. Verified endpoints/paths: POST /api/auth/login {identifier,password} -> session_token; POST /api/admin/content/topics (returns only {message, topic_id}); POST /api/admin/live-classes (body: title, brief, scheduled_at, duration_minutes, join_url, min_grade, max_grade); POST /api/subscriptions/admin/money-masters/batches (body: name, grade, start_date, end_date, price). Trial dialog submit button testid is 'submit-trial-enquiry-btn' (not 'trial-submit-button'). Everything in the review request passed except the mobile tab-bar overflow.",
+  "rca_of_the_issue": "Mobile overflow RCA: the track tab strip is rendered as `<div className=\"inline-flex bg-white/10 rounded-full p-1.5 gap-1 self-start\">` with three non-shrinking pills (~190px each) and no wrap/scroll fallback, so its intrinsic width (575px) exceeds small viewports and expands the document scroll width. Reproduce: open /entrepreneurship-workshop at 390x844, scroll to 'Choose Your Child's Track' - the page scrolls horizontally and the Teenpreneur pill is clipped. Mitigation: add flex-wrap (or overflow-x-auto on a full-width wrapper) for the sub-640px breakpoint."
+}

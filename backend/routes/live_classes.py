@@ -56,8 +56,8 @@ def _parse_grade(v, name):
         g = int(v)
     except (TypeError, ValueError):
         raise HTTPException(status_code=400, detail=f"{name} must be a number")
-    if g < 0 or g > 5:
-        raise HTTPException(status_code=400, detail=f"{name} must be between 0 and 5")
+    if g < 0 or g > 9:
+        raise HTTPException(status_code=400, detail=f"{name} must be between 0 and 9")
     return g
 
 

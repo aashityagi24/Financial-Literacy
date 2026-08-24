@@ -107,6 +107,10 @@ const GRADE_OPTIONS = [
   { value: 3, label: '3rd Grade' },
   { value: 4, label: '4th Grade' },
   { value: 5, label: '5th Grade' },
+  { value: 6, label: '6th Grade' },
+  { value: 7, label: '7th Grade' },
+  { value: 8, label: '8th Grade' },
+  { value: 9, label: '9th Grade' },
 ];
 
 // Thumbnail dimensions recommendation
@@ -1219,6 +1223,10 @@ export default function ContentManagement({ user }) {
     { value: '3', label: 'Grade 3' },
     { value: '4', label: 'Grade 4' },
     { value: '5', label: 'Grade 5' },
+    { value: '6', label: 'Grade 6' },
+    { value: '7', label: 'Grade 7' },
+    { value: '8', label: 'Grade 8' },
+    { value: '9', label: 'Grade 9' },
   ];
   
   if (loading) {

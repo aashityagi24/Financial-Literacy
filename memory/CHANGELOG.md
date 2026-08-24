@@ -4,6 +4,15 @@ Chronological implementation log. See PRD.md for the static problem statement an
 
 ### Recent Updates (August 24, 2026)
 
+**Entrepreneurship Workshop — Age Tracks (Kidpreneur/Youngpreneur/Teenpreneur) + platform grade scale extended to 0-9** ✅
+- New "Choose Your Child's Track" section on `/entrepreneurship-workshop`: 3 age-track tabs — Kidpreneur (Ages 6-8, grades 1-3), Youngpreneur (Ages 9-11, grades 4-6), Teenpreneur (Ages 12-15, grades 7-9). Each track has Overview (description + 4 generic program tiles: Group Sessions/Teacher-Led Sessions/60 Minutes Per Session/Small Batch Sizes) and Lessons (live-fetched topics+subtopics from new public `GET /api/subscriptions/money-masters/public-curriculum?min_grade=&max_grade=`, scoped to `curricula=money_entrepreneurship`; graceful "coming soon" empty state until admin tags content).
+- Platform grade scale extended 0-5 → 0-9 to support Teenpreneur: `live_classes.py` `_parse_grade` cap, Money Masters batch grade validators, `call-request`/`trial-enquiry` child_grade validators (`subscriptions.py`), and admin UI grade dropdowns in `ContentManagement.jsx`, `LiveClassesAdmin.jsx`, `AdminSubscriptionManagement.jsx` (content_topics themselves had no prior server-side grade cap, only UI dropdowns were limited).
+- Fixed mobile (390px) horizontal page overflow caused by the new track tab strip (now wrapped in its own `overflow-x-auto` container).
+- Verified: testing_agent iteration_103 — 21/21 backend pytest, 95%→100% after fix frontend (only defect found was the mobile overflow, now fixed). Pre-existing off-by-one quirk in the OLD "Open Batches by Grade" section's grade labels was flagged but is out of scope (predates this session).
+- Note: the existing "Book a Free Trial" form's grade dropdown intentionally still only offers Grade 1-5 (untouched, per this session's scope) — booking a trial for a Teenpreneur-age child isn't yet wired to the new grade range.
+
+### Recent Updates (August 24, 2026)
+
 **Entrepreneurship Workshop — State/City lead capture + "Smart Money Management" highlight** ✅
 - `EntrepreneurshipWorkshopPage.jsx`: replaced the "Live Expert-Led Classes" highlight card with "Smart Money Management" (financial literacy framing: save/spend/budget the money kids have and earn).
 - Trial enquiry form now captures State then City (cascading dropdown, city disabled until state chosen, resets on state change) for admin reporting uniformity — new static lookup `frontend/src/data/indiaStatesCities.js` (INDIA_STATES, getCitiesForState()).

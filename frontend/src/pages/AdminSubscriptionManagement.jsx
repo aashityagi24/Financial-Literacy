@@ -40,7 +40,7 @@ const PLAN_LABELS = {
   'money_masters': 'Money Masters',
 };
 
-const GRADE_LABELS = ['K', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5'];
+const GRADE_LABELS = ['K', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9'];
 
 const EMPTY_BATCH_FORM = { name: '', grade: '0', start_date: null, end_date: null, price: '' };
 

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import {
   ArrowLeft, Rocket, Lightbulb, Users, Trophy, CalendarDays, Sparkles, Store, PiggyBank,
+  Video, Clock, GraduationCap, BookOpen, Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +32,42 @@ const highlights = [
   { icon: PiggyBank, title: "Smart Money Management", description: "Build core financial literacy skills — save, spend and budget wisely with the money they have and the money they earn.", color: "#3D5A80" },
 ];
 
+// Age tracks. Grade numbers follow the platform-wide K=0..9 scale (backend
+// content topics / live classes / Money Masters batches are tagged this way).
+const TRACKS = [
+  {
+    id: 'kidpreneur',
+    label: 'Kidpreneur',
+    ageLabel: 'Ages 6–8',
+    minGrade: 1,
+    maxGrade: 3,
+    description: "Money starts as a story: where it comes from, why we can't buy everything, and how saving in small jars turns a wish into a plan. Kids meet their first business idea through play.",
+  },
+  {
+    id: 'youngpreneur',
+    label: 'Youngpreneur',
+    ageLabel: 'Ages 9–11',
+    minGrade: 4,
+    maxGrade: 6,
+    description: "From pocket money to a plan: budgeting, smart spending choices, and the basics of running a mini venture — pricing a product, tracking costs and making a first real sale.",
+  },
+  {
+    id: 'teenpreneur',
+    label: 'Teenpreneur',
+    ageLabel: 'Ages 12–15',
+    minGrade: 7,
+    maxGrade: 9,
+    description: "Building a real founder mindset: market research, pitching to investors, managing a venture's finances, and the money habits (saving, investing, credit) that carry into adulthood.",
+  },
+];
+
+const OVERVIEW_POINTS = [
+  { icon: Users, title: "Group Sessions", description: "Learn financial literacy and entrepreneurship with a batch of peers." },
+  { icon: Video, title: "Teacher-Led Sessions", description: "Real-time interaction and feedback from a dedicated instructor." },
+  { icon: Clock, title: "60 Minutes Per Session", description: "Focused, deep-dive live classes that hold attention start to finish." },
+  { icon: GraduationCap, title: "Small Batch Sizes", description: "Personal attention for every child in every live class." },
+];
+
 export default function EntrepreneurshipWorkshopPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -38,6 +75,10 @@ export default function EntrepreneurshipWorkshopPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState(TRACKS[0].id);
+  const [trackDetailTab, setTrackDetailTab] = useState('overview');
+  const [curriculumByTrack, setCurriculumByTrack] = useState({});
+  const [curriculumLoading, setCurriculumLoading] = useState(false);
 
   useEffect(() => {
     axios.get(`${API}/subscriptions/money-masters/public-batches`)
@@ -52,6 +93,21 @@ export default function EntrepreneurshipWorkshopPage() {
       window.history.replaceState({}, '', '/entrepreneurship-workshop');
     }
   }, [searchParams]);
+
+  const activeTrack = TRACKS.find((t) => t.id === selectedTrack);
+
+  useEffect(() => {
+    if (trackDetailTab !== 'lessons' || curriculumByTrack[selectedTrack]) return;
+    setCurriculumLoading(true);
+    axios.get(`${API}/subscriptions/money-masters/public-curriculum`, {
+      params: { min_grade: activeTrack.minGrade, max_grade: activeTrack.maxGrade },
+    })
+      .then((res) => setCurriculumByTrack((p) => ({ ...p, [selectedTrack]: res.data || [] })))
+      .catch(() => setCurriculumByTrack((p) => ({ ...p, [selectedTrack]: [] })))
+      .finally(() => setCurriculumLoading(false));
+  }, [trackDetailTab, selectedTrack]);
+
+  const activeLessons = curriculumByTrack[selectedTrack];
 
   const batchesByGrade = GRADE_LABELS.map((label, grade) => ({
     grade, label, items: batches.filter((b) => b.grade === grade),
@@ -194,6 +250,108 @@ export default function EntrepreneurshipWorkshopPage() {
                 <p className="text-[#3D5A80]">{h.description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Age Tracks */}
+      <section className="py-20 bg-[#1D3557]" data-testid="ew-tracks-section">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-10">
+            <div>
+              <h2 className="text-4xl lg:text-5xl font-bold text-white mb-3" style={{ fontFamily: 'Fredoka' }}>
+                Choose Your Child's Track
+              </h2>
+              <p className="text-lg text-[#98C1D9] max-w-xl">A journey that grows with your child — from first coins to first pitch.</p>
+            </div>
+            <div className="max-w-full overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0 sm:self-start">
+              <div className="inline-flex bg-white/10 rounded-full p-1.5 gap-1 w-max" data-testid="ew-track-tabs">
+                {TRACKS.map((t) => (
+                  <button
+                    key={t.id}
+                    data-testid={`ew-track-tab-${t.id}`}
+                    onClick={() => { setSelectedTrack(t.id); setTrackDetailTab('overview'); }}
+                    className={`px-5 py-2.5 rounded-full font-bold text-sm transition-all whitespace-nowrap ${
+                      selectedTrack === t.id ? 'bg-[#FFD23F] text-[#1D3557]' : 'text-[#98C1D9] hover:text-white'
+                    }`}
+                    style={{ fontFamily: 'Fredoka' }}
+                  >
+                    {t.label} <span className="opacity-70 font-normal">{t.ageLabel}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="card-playful bg-white p-6 sm:p-10" data-testid="ew-track-detail">
+            <div className="flex items-center gap-4 mb-6">
+              <span className="inline-block bg-[#5B21B6]/10 text-[#5B21B6] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">{activeTrack.ageLabel}</span>
+              <div className="inline-flex bg-[#E0FBFC] rounded-full p-1 gap-1">
+                {[['overview', 'Overview', BookOpen], ['lessons', 'Lessons', Layers]].map(([id, label, Icon]) => (
+                  <button
+                    key={id}
+                    data-testid={`ew-track-detail-tab-${id}`}
+                    onClick={() => setTrackDetailTab(id)}
+                    className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold transition-all ${
+                      trackDetailTab === id ? 'bg-[#1D3557] text-white' : 'text-[#3D5A80]'
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />{label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {trackDetailTab === 'overview' ? (
+              <div>
+                <h3 className="text-2xl lg:text-3xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>{activeTrack.label}</h3>
+                <p className="text-[#3D5A80] text-lg max-w-3xl mb-8">{activeTrack.description}</p>
+                <div className="grid sm:grid-cols-2 gap-6">
+                  {OVERVIEW_POINTS.map((p, i) => (
+                    <div key={i} className="flex items-start gap-4" data-testid={`ew-overview-point-${i}`}>
+                      <div className="w-12 h-12 rounded-xl bg-[#06D6A0]/20 border-2 border-[#1D3557] flex items-center justify-center flex-shrink-0">
+                        <p.icon className="w-6 h-6 text-[#1D3557]" strokeWidth={2.5} />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{p.title}</h4>
+                        <p className="text-sm text-[#3D5A80]">{p.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div data-testid="ew-lessons-panel">
+                <h3 className="text-2xl lg:text-3xl font-bold text-[#1D3557] mb-1" style={{ fontFamily: 'Fredoka' }}>{activeTrack.label} Curriculum</h3>
+                <p className="text-[#3D5A80] mb-6">Topics your child will explore in this track.</p>
+                {curriculumLoading ? (
+                  <div className="py-10 text-center text-[#3D5A80]">Loading lessons...</div>
+                ) : !activeLessons || activeLessons.length === 0 ? (
+                  <div className="text-center py-10 border-2 border-dashed border-[#3D5A80]/30 rounded-2xl" data-testid="ew-lessons-empty">
+                    <Layers className="w-10 h-10 mx-auto text-[#3D5A80]/50 mb-3" />
+                    <p className="text-[#3D5A80] font-medium">Detailed lessons for this track are being added — check back soon!</p>
+                  </div>
+                ) : (
+                  <div className="grid sm:grid-cols-2 gap-5">
+                    {activeLessons.map((topic) => (
+                      <div key={topic.topic_id} className="rounded-2xl border-2 border-[#1D3557]/15 p-5 bg-[#E0FBFC]/40" data-testid={`ew-lesson-topic-${topic.topic_id}`}>
+                        <h4 className="font-bold text-[#1D3557] mb-1 flex items-center gap-2" style={{ fontFamily: 'Fredoka' }}>
+                          <span>{topic.icon || '📚'}</span>{topic.title}
+                        </h4>
+                        {topic.description && <p className="text-sm text-[#3D5A80] mb-3">{topic.description}</p>}
+                        {topic.subtopics?.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {topic.subtopics.map((st) => (
+                              <span key={st.topic_id} className="text-xs font-semibold bg-white text-[#5B21B6] border border-[#5B21B6]/30 px-3 py-1 rounded-full">{st.title}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -914,8 +914,8 @@ async def create_money_masters_batch(batch: BatchCreate, request: Request):
     name = batch.name.strip()
     if not name:
         raise HTTPException(status_code=400, detail="Batch name is required")
-    if batch.grade < 0 or batch.grade > 5:
-        raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 5")
+    if batch.grade < 0 or batch.grade > 9:
+        raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 9")
     if batch.price <= 0:
         raise HTTPException(status_code=400, detail="Price must be greater than 0")
     start_date, end_date = _validate_batch_dates(batch.start_date, batch.end_date)
@@ -977,8 +977,8 @@ async def update_money_masters_batch(batch_id: str, updates: BatchUpdate, reques
             raise HTTPException(status_code=400, detail="Batch name cannot be empty")
         fields["name"] = name
     if updates.grade is not None:
-        if updates.grade < 0 or updates.grade > 5:
-            raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 5")
+        if updates.grade < 0 or updates.grade > 9:
+            raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 9")
         fields["grade"] = updates.grade
     if updates.price is not None:
         if updates.price <= 0:
@@ -1206,8 +1206,8 @@ async def submit_call_request(req: CallRequest):
         raise HTTPException(status_code=400, detail="Invalid program selection")
     if req.audience not in ["parent", "school"]:
         raise HTTPException(status_code=400, detail="Invalid audience selection")
-    if req.child_grade < 0 or req.child_grade > 5:
-        raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 5")
+    if req.child_grade < 0 or req.child_grade > 9:
+        raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 9")
 
     call_request = {
         "request_id": f"call_{uuid.uuid4().hex[:12]}",
@@ -1295,6 +1295,32 @@ async def list_public_money_masters_batches():
     return batches
 
 
+@router.get("/money-masters/public-curriculum")
+async def public_money_masters_curriculum(min_grade: int, max_grade: int):
+    """Public: topics (with subtopics) tagged for the Money Masters &
+    Entrepreneurship curriculum whose grade range overlaps [min_grade, max_grade].
+    Powers the 'Lessons' tab on the Entrepreneurship Workshop age-track
+    section. No auth, no completion/unlock state — display only."""
+    db = get_db()
+    if not (0 <= min_grade <= max_grade <= 9):
+        raise HTTPException(status_code=400, detail="Grade range must satisfy 0 <= min_grade <= max_grade <= 9")
+    projection = {"_id": 0, "topic_id": 1, "title": 1, "description": 1, "icon": 1, "order": 1}
+    topics = await db.content_topics.find({
+        "parent_id": None,
+        "curricula": "money_entrepreneurship",
+        "min_grade": {"$lte": max_grade},
+        "max_grade": {"$gte": min_grade},
+    }, projection).sort("order", 1).to_list(200)
+    for topic in topics:
+        topic["subtopics"] = await db.content_topics.find({
+            "parent_id": topic["topic_id"],
+            "curricula": "money_entrepreneurship",
+            "min_grade": {"$lte": max_grade},
+            "max_grade": {"$gte": min_grade},
+        }, projection).sort("order", 1).to_list(200)
+    return topics
+
+
 @router.post("/money-masters/trial-enquiry")
 async def submit_trial_enquiry(enquiry: TrialEnquiryRequest):
     """Public: 'Book a Free Trial' form on the Entrepreneurship Workshop
@@ -1310,8 +1336,8 @@ async def submit_trial_enquiry(enquiry: TrialEnquiryRequest):
         raise HTTPException(status_code=400, detail="Valid phone number is required")
     if not email or "@" not in email:
         raise HTTPException(status_code=400, detail="Valid email is required")
-    if enquiry.child_grade < 0 or enquiry.child_grade > 5:
-        raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 5")
+    if enquiry.child_grade < 0 or enquiry.child_grade > 9:
+        raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 9")
     state = enquiry.state.strip()
     city = enquiry.city.strip()
     if not state:
