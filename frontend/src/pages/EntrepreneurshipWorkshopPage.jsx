@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import {
-  ArrowLeft, Rocket, Lightbulb, Users, Trophy, CalendarDays, Video, Sparkles, Store, PiggyBank,
+  ArrowLeft, Rocket, Lightbulb, Users, Trophy, CalendarDays, Sparkles, Store, PiggyBank,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +17,7 @@ import {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const GRADE_LABELS = ['Kindergarten', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5'];
+const GRADE_LABELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5'];
 
 const EMPTY_FORM = { parent_name: '', phone: '', email: '', child_name: '', child_grade: '', batch_id: '' };
 
@@ -27,7 +27,7 @@ const highlights = [
   { icon: Lightbulb, title: "Idea to Pitch", description: "Kids dream up a business idea and learn to pitch it with confidence, just like real founders.", color: "#FFD23F" },
   { icon: Store, title: "Run a Mini Venture", description: "Simulate running a shop or venture — pricing, costs, profit — in a safe, game-based world.", color: "#EE6C4D" },
   { icon: Users, title: "Teamwork & Leadership", description: "Collaborate on group projects that build negotiation, leadership and communication skills.", color: "#06D6A0" },
-  { icon: Video, title: "Live Expert-Led Classes", description: "Every batch includes scheduled live classes with recordings — no extra purchase needed.", color: "#3D5A80" },
+  { icon: PiggyBank, title: "Smart Money Management", description: "Build core financial literacy skills — save, spend and budget wisely with the money they have and the money they earn.", color: "#3D5A80" },
 ];
 
 export default function EntrepreneurshipWorkshopPage() {
@@ -122,7 +122,7 @@ export default function EntrepreneurshipWorkshopPage() {
                 Turn Big Ideas Into <span className="text-[#FFD23F]">Real Ventures!</span>
               </h1>
               <p className="text-xl text-white/85 mb-8 leading-relaxed">
-                A grade-specific, batch-based program where kids build a business mindset — creativity, pitching, teamwork and money-smart decisions — through live classes and hands-on challenges.
+                Your child could be running a real business by the end of this. 30 live classes where they earn actual money, price their first product, pitch to real buyers, and make their first sale — no textbooks, just doing.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Button
