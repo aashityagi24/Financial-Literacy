@@ -2,6 +2,13 @@
 
 Chronological implementation log. See PRD.md for the static problem statement and ROADMAP.md for pending work.
 
+### Recent Updates (August 24, 2026, later)
+
+**Teen trial booking + real curriculum content for all 3 tracks** ✅
+- `EntrepreneurshipWorkshopPage.jsx`: "Book a Free Trial" grade dropdown extended from Grade 1-5 to Kindergarten–Grade 9 (also fixes a pre-existing off-by-one where the array was 0-indexed to "Grade 1" instead of true K=0 semantics — batch grade matching/display in "Open Batches by Grade" is now correctly aligned with the platform-wide scale).
+- Seeded real curriculum content for all 3 Entrepreneurship Workshop tracks (topics + subtopics, tagged `curricula: money_entrepreneurship`): Kidpreneur (grades 1-3) — "Where Money Comes From", "My First Business Idea"; Youngpreneur (grades 4-6) — "Smart Money Habits", "Running a Mini Venture"; Teenpreneur (grades 7-9) — "Founder Mindset", "Managing Venture Finances", "Money Habits for Life". All 7 topics/17 subtopics now render live in each track's Lessons tab via the public-curriculum endpoint.
+- Verified via curl + screenshot (small scoped change, self-tested, no testing_agent needed): all 3 tracks' Lessons tabs show correct scoped content, trial-enquiry accepts grade up to 9.
+
 ### Recent Updates (August 24, 2026)
 
 **Entrepreneurship Workshop — Age Tracks (Kidpreneur/Youngpreneur/Teenpreneur) + platform grade scale extended to 0-9** ✅

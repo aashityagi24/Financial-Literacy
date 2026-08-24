@@ -19,7 +19,7 @@ import { INDIA_STATES, getCitiesForState } from '@/data/indiaStatesCities';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const GRADE_LABELS = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5'];
+const GRADE_LABELS = ['Kindergarten', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9'];
 
 const EMPTY_FORM = { parent_name: '', phone: '', email: '', child_name: '', child_grade: '', batch_id: '', state: '', city: '' };
 
