@@ -107,32 +107,44 @@ export default function LandingPage() {
             </button>
           </nav>
 
-          <div className="max-w-2xl animate-bounce-in pb-12">
-            <h1 className="text-5xl lg:text-6xl font-bold text-[#1D3557] mb-6 leading-tight" style={{ fontFamily: 'Fredoka' }}>
-              Nurture the{' '}
-              <span className="relative inline-block">
-                <span className="relative z-10 text-[#EE6C4D]">founder</span>
-                <span className="absolute left-[-4px] right-[-4px] bottom-[6px] h-3 bg-[#FFD23F] -rotate-1 -z-0"></span>
-              </span>{' '}
-              in your child.
-            </h1>
-            <p className="text-xl text-[#3D5A80] mb-10 leading-relaxed" data-testid="hub-hero-subtext">
-              Raise a child who's confident with money and fearless with ideas. They learn financial literacy at their own pace, or join live workshops where they turn ideas into real businesses.
-            </p>
-            <div className="flex flex-wrap gap-4 mb-6">
-              <BookCallButton
-                className="bg-[#EE6C4D] text-white font-bold px-7 py-4 text-lg rounded-full shadow-[0_6px_16px_rgba(238,108,77,0.4)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(238,108,77,0.5)] transition-all"
-              />
+          <div className="flex flex-col lg:flex-row lg:items-center gap-10 lg:gap-8">
+            <div className="max-w-2xl animate-bounce-in pb-12 lg:pb-0">
+              <h1 className="text-5xl lg:text-6xl font-bold text-[#1D3557] mb-6 leading-tight" style={{ fontFamily: 'Fredoka' }}>
+                Nurture the{' '}
+                <span className="relative inline-block">
+                  <span className="relative z-10 text-[#EE6C4D]">founder</span>
+                  <span className="absolute left-[-4px] right-[-4px] bottom-[6px] h-3 bg-[#FFD23F] -rotate-1 -z-0"></span>
+                </span>{' '}
+                in your child.
+              </h1>
+              <p className="text-xl text-[#3D5A80] mb-10 leading-relaxed" data-testid="hub-hero-subtext">
+                Raise a child who's confident with money and fearless with ideas. They learn financial literacy at their own pace, or join live workshops where they turn ideas into real businesses.
+              </p>
+              <div className="flex flex-wrap gap-4 mb-6">
+                <BookCallButton
+                  className="bg-[#EE6C4D] text-white font-bold px-7 py-4 text-lg rounded-full shadow-[0_6px_16px_rgba(238,108,77,0.4)] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(238,108,77,0.5)] transition-all"
+                />
+              </div>
+
+              {/* Trust element */}
+              <div className="flex items-center gap-3" data-testid="trust-element">
+                <div className="flex -space-x-3">
+                  <img src={PARENT_AVATARS[0]} alt="Parent" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
+                  <img src={PARENT_AVATARS[1]} alt="Parent" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
+                  <img src={PARENT_AVATARS[2]} alt="Parent" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
+                </div>
+                <span className="text-[#3D5A80] font-medium">Trusted by hundreds of children & parents across India</span>
+              </div>
             </div>
 
-            {/* Trust element */}
-            <div className="flex items-center gap-3" data-testid="trust-element">
-              <div className="flex -space-x-3">
-                <img src={PARENT_AVATARS[0]} alt="Parent" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
-                <img src={PARENT_AVATARS[1]} alt="Parent" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
-                <img src={PARENT_AVATARS[2]} alt="Parent" className="w-9 h-9 rounded-full border-2 border-white object-cover" />
-              </div>
-              <span className="text-[#3D5A80] font-medium">Trusted by hundreds of children & parents across India</span>
+            <div className="flex-shrink-0 mx-auto lg:mx-0 lg:ml-auto animate-bounce-in stagger-2 relative" data-testid="hero-image-wrapper">
+              <div className="absolute -top-4 -right-4 w-16 h-16 bg-[#FFD23F] rounded-full opacity-70 -z-10"></div>
+              <img
+                src="https://customer-assets-wrfwihn1.emergentagent.net/job_6ec61167-a99e-48d2-8723-ad239cc8065f/artifacts/znvftlg5_ChatGPT%20Image%20Aug%2024%2C%202026%20at%2006_06_06%20PM.png"
+                alt="A young entrepreneur proudly selling her handmade crafts and counting the coins she earned"
+                data-testid="hero-earner-image"
+                className="w-[280px] h-[360px] sm:w-[320px] sm:h-[400px] lg:w-[380px] lg:h-[460px] object-cover object-[50%_72%] rounded-[2rem] border-4 border-[#1D3557] shadow-[10px_10px_0px_0px_#1D3557]"
+              />
             </div>
           </div>
         </div>
