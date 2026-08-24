@@ -89,12 +89,12 @@ export default function LandingPage() {
         <div className="absolute bottom-6 left-[45%] w-12 h-12 bg-[#06D6A0] rounded-full opacity-30 animate-float stagger-3"></div>
 
         <div className="container mx-auto px-6 pb-6">
-          <nav className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-3 -mt-12">
+          <nav className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-3">
               <img
-                src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/ul81dgc9_Friendly%20%27Money%20Matter%27%20Logo%20Design%20%281%29.png"
+                src="/coinquest-logo.png"
                 alt="CoinQuest Logo"
-                className="h-72 w-auto cursor-pointer"
+                className="h-16 w-auto cursor-pointer"
                 onClick={() => window.location.reload()}
               />
             </div>
