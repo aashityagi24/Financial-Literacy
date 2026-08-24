@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from datetime import datetime, timezone, timedelta
-from typing import Optional
+from typing import Optional, List
 import uuid
 import os
 import re
@@ -61,6 +61,7 @@ class BatchCreate(BaseModel):
     start_date: str  # ISO date
     end_date: str    # ISO date
     price: int        # INR
+    class_ids: Optional[List[str]] = []
 
 
 class BatchUpdate(BaseModel):
@@ -70,6 +71,7 @@ class BatchUpdate(BaseModel):
     end_date: Optional[str] = None
     price: Optional[int] = None
     is_active: Optional[bool] = None
+    class_ids: Optional[List[str]] = None
 
 
 class MoneyMastersOrderRequest(BaseModel):
@@ -886,6 +888,20 @@ def _validate_batch_dates(start_date, end_date):
     return start.astimezone(timezone.utc).isoformat(), end.astimezone(timezone.utc).isoformat()
 
 
+async def _validate_class_ids(class_ids, db):
+    """Dedup + verify every provided class_id refers to an existing Live
+    Class before linking it to a batch."""
+    ids = list(dict.fromkeys(class_ids or []))
+    if not ids:
+        return []
+    found = await db.live_classes.find({"class_id": {"$in": ids}}, {"_id": 0, "class_id": 1}).to_list(len(ids))
+    found_ids = {c["class_id"] for c in found}
+    missing = [cid for cid in ids if cid not in found_ids]
+    if missing:
+        raise HTTPException(status_code=400, detail=f"Unknown class id(s): {', '.join(missing)}")
+    return ids
+
+
 @router.post("/admin/money-masters/batches")
 async def create_money_masters_batch(batch: BatchCreate, request: Request):
     """Admin: create a Money Masters batch (grade + dates + price)."""
@@ -903,6 +919,7 @@ async def create_money_masters_batch(batch: BatchCreate, request: Request):
     if batch.price <= 0:
         raise HTTPException(status_code=400, detail="Price must be greater than 0")
     start_date, end_date = _validate_batch_dates(batch.start_date, batch.end_date)
+    class_ids = await _validate_class_ids(batch.class_ids, db)
 
     doc = {
         "batch_id": f"mmb_{uuid.uuid4().hex[:12]}",
@@ -911,6 +928,7 @@ async def create_money_masters_batch(batch: BatchCreate, request: Request):
         "start_date": start_date,
         "end_date": end_date,
         "price": batch.price,
+        "class_ids": class_ids,
         "is_active": True,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -934,6 +952,7 @@ async def admin_list_money_masters_batches(request: Request):
             "batch_id": b["batch_id"],
             "payment_status": "completed",
         })
+        b.setdefault("class_ids", [])
     return batches
 
 
@@ -973,6 +992,8 @@ async def update_money_masters_batch(batch_id: str, updates: BatchUpdate, reques
         fields["end_date"] = end_date
     if updates.is_active is not None:
         fields["is_active"] = updates.is_active
+    if updates.class_ids is not None:
+        fields["class_ids"] = await _validate_class_ids(updates.class_ids, db)
 
     if not fields:
         raise HTTPException(status_code=400, detail="No fields to update")

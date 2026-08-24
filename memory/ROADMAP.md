@@ -1,8 +1,8 @@
 # CoinQuest — Roadmap / Backlog
 
 ## P0
-- **User verification of Live Classes module** — implemented + auto-tested (31/31), awaiting the user's own acceptance pass (admin create/edit/delete a class; child/parent see only entitled grade+curriculum sessions; join/recording links work).
-- **Tag Money Masters content** — no topic/content item/live class currently carries `curricula: ['money_entrepreneurship']`. A parent who buys a Money Masters batch today lands on an empty Learn page (graceful empty-state, but no real content). Admin should tag existing/new content via the Content Management curriculum selector, and schedule at least one Money Masters live class per active batch's grade.
+- **User verification of Live Classes module** — implemented + auto-tested (31/31), still awaiting the user's own acceptance pass (admin create/edit/delete a class; child/parent see only entitled grade+curriculum sessions; join/recording links work). Deferred by user for now.
+- **Tag Money Masters content** — CLOSED (Aug 2026): user will manually tag topics/content items/live-classes with the `money_entrepreneurship` curriculum via the existing Content Management curriculum selector and Live Class form. Both selectors verified working by user; no code changes needed. No content is tagged yet — first Money Masters batch buyer still lands on an empty Learn page until the user tags content.
 
 ## P1
 - **Live Razorpay checkout + post-payment setup verification** — run one genuine payment (base plan and/or a Money Masters batch) in production and confirm subscription/access activates and the post-payment account-setup flow completes correctly.

@@ -685,7 +685,7 @@ Chronological implementation log. See PRD.md for the static problem statement an
 
 **Google Cloud Console Configuration**:
 To complete the OAuth setup, add these redirect URIs to your Google Cloud Console OAuth 2.0 credentials:
-- For Preview: `https://gamified-learn-hub-1.preview.emergentagent.com/api/auth/google/callback`
+- For Preview: `https://skillquest-deploy.preview.emergentagent.com/api/auth/google/callback`
 - For Production: `https://coinquest.co.in/api/auth/google/callback`
 
 ### Session 12 Updates (February 9, 2026)
