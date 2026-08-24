@@ -86,7 +86,7 @@ export default function LandingPage() {
         style={{ background: 'linear-gradient(120deg, #EAF7EE 0%, #FDF6E3 45%, #FDE9C8 100%)' }}
       >
         <div className="absolute top-32 right-20 w-16 h-16 bg-[#EE6C4D] rounded-full opacity-30 animate-float stagger-2"></div>
-        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-[#06D6A0] rounded-full opacity-30 animate-float stagger-3"></div>
+        <div className="absolute bottom-6 left-[45%] w-12 h-12 bg-[#06D6A0] rounded-full opacity-30 animate-float stagger-3"></div>
 
         <div className="container mx-auto px-6 pb-6">
           <nav className="flex justify-between items-center mb-4">
@@ -139,7 +139,7 @@ export default function LandingPage() {
 
             <div className="flex-shrink-0 mx-auto lg:mx-0 lg:ml-auto animate-bounce-in stagger-2">
               <img
-                src="https://customer-assets-wrfwihn1.emergentagent.net/job_6ec61167-a99e-48d2-8723-ad239cc8065f/artifacts/9g23ww52_6c392fdc-37e3-41b7-9940-3c7374922acc.png"
+                src="/hero-earner.png"
                 alt="A young entrepreneur proudly selling her handmade crafts and counting the coins she earned"
                 data-testid="hero-earner-image"
                 className="w-[260px] h-auto sm:w-[300px] lg:w-[360px] object-contain"
