@@ -117,7 +117,7 @@ export default function LandingPage() {
               in your child.
             </h1>
             <p className="text-xl text-[#3D5A80] mb-10 leading-relaxed" data-testid="hub-hero-subtext">
-              No one is born an entrepreneur — they're raised as one. 30 live classes where your child learns to earn, price, pitch and sell for real.
+              Raise a child who's confident with money and fearless with ideas. They learn financial literacy at their own pace, or join live workshops where they turn ideas into real businesses.
             </p>
             <div className="flex flex-wrap gap-4 mb-6">
               <BookCallButton
