@@ -202,17 +202,17 @@ export default function EntrepreneurshipWorkshopPage() {
               </div>
             </div>
 
-            <div className="relative animate-bounce-in stagger-2">
-              <div className="card-playful p-8 bg-white">
-                <div className="w-full aspect-[4/5] rounded-2xl border-3 border-[#1D3557] overflow-hidden">
+            <div className="relative animate-bounce-in stagger-2 max-w-md mx-auto lg:mx-0 lg:max-w-none">
+              <div className="card-playful p-6 bg-white">
+                <div className="w-full aspect-square rounded-2xl border-3 border-[#1D3557] overflow-hidden">
                   <img
                     data-testid="workshop-hero-image"
-                    src="https://customer-assets-lxgj4vgw.emergentagent.net/job_85829736-07ce-43cd-b04d-86af92418734/artifacts/3kuncu9i_ChatGPT%20Image%20Aug%2024%2C%202026%20at%2009_04_59%20PM.png"
+                    src="/workshop-hero.png"
                     alt="Child selling handmade cookies to a customer"
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="mt-6 grid grid-cols-3 gap-4">
+                <div className="mt-5 grid grid-cols-3 gap-3">
                   <div data-testid="workshop-highlight-built-product" className="text-center p-3 bg-[#FFD23F]/20 rounded-xl border-2 border-[#1D3557]">
                     <Hammer className="w-8 h-8 mx-auto text-[#FFD23F]" />
                     <p className="text-sm font-bold text-[#1D3557] mt-1">Built a product</p>
