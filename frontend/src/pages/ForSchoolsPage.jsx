@@ -95,7 +95,7 @@ export default function ForSchoolsPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="animate-bounce-in">
               <h1 className="text-5xl md:text-6xl font-bold text-[#1D3557] mb-6 leading-tight" style={{ fontFamily: 'Fredoka' }}>
-                Beyond academics: raise students who{' '}
+                Beyond academics: raise kids who{' '}
                 <span className="text-[#EE6C4D]">understand money and think like founders.</span>
               </h1>
               <p className="text-lg text-[#3D5A80] mb-8 leading-relaxed" data-testid="for-schools-hero-subtext">
