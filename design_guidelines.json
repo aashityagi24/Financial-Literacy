@@ -1,112 +1,121 @@
 {
-  "project_name": "CoinQuest Neo-Playful Redesign",
   "theme": "light",
   "typography": {
-    "headings": "Fredoka, sans-serif",
-    "body": "Nunito, system-ui, sans-serif",
-    "rules": [
-      "Use Fredoka for all headings (H1-H4), buttons, and numbers.",
-      "Use Nunito for supporting body text, descriptions, and minor labels.",
-      "Never use default sans-serif (like Inter or Roboto) for primary UI elements in this app."
-    ]
+    "font_families": {
+      "headings": "Fredoka, 'Cabinet Grotesk', sans-serif",
+      "body": "Nunito, Quicksand, 'Inter', sans-serif"
+    },
+    "hierarchy": {
+      "hero_title": "font-fredoka text-5xl md:text-6xl font-bold tracking-tight leading-[1.1] text-[#1D3557]",
+      "section_title": "font-fredoka text-4xl md:text-5xl font-bold text-[#1D3557] tracking-tight mb-4",
+      "program_badge": "font-fredoka text-lg md:text-xl font-bold uppercase tracking-wider",
+      "card_title": "font-fredoka text-xl md:text-2xl font-bold text-[#1D3557] mb-2",
+      "body_text": "text-base md:text-lg text-[#1D3557]/80 leading-relaxed",
+      "small_text": "text-sm text-[#1D3557]/70 font-medium"
+    },
+    "guidelines": "Use 'Fredoka' for all headings to maintain the playful, K-9 appropriate brand identity, while ensuring the scale is massive enough (text-4xl to text-6xl) to immediately grab the attention of school administrators. Body text must remain highly readable."
   },
   "colors": {
-    "primary": "#FFD23F",
-    "secondary": "#3D5A80",
-    "accent": "#EE6C4D",
-    "success": "#06D6A0",
-    "background": "#E0FBFC",
-    "border_shadow": "#1D3557",
-    "locked_grey": "#A8B8D0",
-    "white": "#FFFFFF"
-  },
-  "visual_enhancers": {
-    "borders": "border-[3px] border-[#1D3557]",
-    "shadows": "shadow-[4px_4px_0px_#1D3557]",
-    "shadows_hover": "shadow-[2px_2px_0px_#1D3557] translate-y-[2px]",
-    "radius": "rounded-2xl sm:rounded-3xl",
-    "buttons": "transform transition-all active:translate-y-[4px] active:shadow-none hover:-translate-y-1 hover:shadow-[6px_6px_0px_#1D3557]",
-    "glassmorphism": "Avoid glassmorphism. Use solid, opaque colors to maintain the high-contrast neo-brutalist cartoon feel.",
-    "icons": "Use lucide-react with stroke-width 2.5 or 3 for a chunkier feel, colored in #1D3557. Use emojis purely as playful decorative elements."
-  },
-  "grids": {
-    "default": "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6",
-    "dense": "grid-cols-2 gap-4"
-  },
-  "layouts": {
-    "page_padding": "p-6 md:p-8 lg:p-12",
-    "card_padding": "p-6"
-  },
-  "components": {
-    "MoneyJars": {
-      "purpose": "Dashboard visual representation of account balances.",
-      "layout": "Grid layout. Each jar is a vertical flex container.",
-      "structure": "Container with thick border, text above/below, and a central 'Jar' element.",
-      "jar_visual": "A div with fixed w-20 h-28, border-[3px] border-[#1D3557], rounded-b-2xl rounded-t-md bg-white relative overflow-hidden shadow-inner.",
-      "fill_technique": "Inner div absolute at bottom-0, w-full, with dynamic inline style `height: ${percent}%`. Use distinct bright colors for each account type's liquid (e.g., green for Piggy Bank, blue for Wallet). Add a subtle CSS transition `transition-[height] duration-1000 ease-out` on mount."
+    "brand": {
+      "navy": "#1D3557",
+      "yellow": "#FFD23F",
+      "teal": "#06D6A0",
+      "coral": "#EE6C4D",
+      "purple": "#5B21B6",
+      "cream": "#FDF6E3",
+      "light_cyan": "#E0FBFC",
+      "white": "#FFFFFF"
     },
-    "MissionCards": {
-      "purpose": "Playful display of child homework/missions.",
-      "layout": "Flex column on mobile, row on desktop. White background, thick border, hard shadow.",
-      "anatomy": [
-        "Icon Block: A vibrant colored square/circle (e.g., #FFD23F) holding a Lucide icon representing the subject.",
-        "Content Block: Bold Mission Title (Fredoka), subtle subject label.",
-        "Due Date Badge: Small pill shape with clock icon, colored orange (#EE6C4D) if urgent, otherwise secondary (#3D5A80).",
-        "Action Button: Chunky button saying 'Open Mission 🚀' or 'Start' utilizing the visual_enhancers buttons classes."
-      ]
-    },
-    "JourneyMap": {
-      "purpose": "Learn page winding adventure map.",
-      "layout": "Vertical timeline. Use flex-col with gap-12. Topics alternate left/right using `self-start ml-4` and `self-end mr-4`.",
-      "node_anatomy": "Circular or squircle nodes. Thick borders. Contains the topic icon.",
-      "states": {
-        "locked": "bg-[#E0FBFC] border-[#A8B8D0] text-[#A8B8D0] shadow-none opacity-80. Display a Lock icon.",
-        "unlocked_current": "bg-[#FFD23F] border-[#1D3557] shadow-[6px_6px_0px_#1D3557] scale-110 animate-pulse. Add a floating map marker or star above it.",
-        "completed": "bg-[#06D6A0] text-white border-[#1D3557] shadow-[4px_4px_0px_#1D3557]. Display a Checkmark."
-      },
-      "connector_line": "Absolute SVG or CSS dashed border connecting nodes vertically behind them (z-[-1]). Use stroke-[#1D3557] and stroke-width-4."
-    },
-    "BigWinCelebration": {
-      "purpose": "Celebrate goals and badges.",
-      "library": "canvas-confetti",
-      "trigger": "Fire confetti on specific state changes (goal hit 100%, badge array length increases).",
-      "audio": "Play a cheerful 'Ta-Da' sound. Ensure volume is reasonable.",
-      "mute_toggle": "Floating button fixed to bottom-right or header: `🔊/🔇`. Reads from/writes to `localStorage.getItem('coinquest_mute')`. Default to unmuted (false)."
+    "usage": {
+      "primary_text": "#1D3557",
+      "borders_and_shadows": "#1D3557",
+      "primary_button": "bg-[#FFD23F] hover:bg-[#FFD23F]/90 text-[#1D3557]",
+      "program_1_accent": "#06D6A0",
+      "program_2_accent": "#EE6C4D",
+      "comparison_check": "#06D6A0",
+      "comparison_cross": "#EE6C4D"
     }
   },
-  "motion": {
-    "page_transitions": "None needed. Keep it snappy.",
-    "hover_effects": "Translate Y and shadow size changes (see visual enhancers).",
-    "jar_fill": "Scale/Height transition on load.",
-    "current_level": "Bounce or pulse animation to attract attention."
+  "visual_enhancers": {
+    "playful_brutalism": {
+      "borders": "border-[3px] border-[#1D3557]",
+      "shadows_static": "shadow-[4px_4px_0px_#1D3557]",
+      "shadows_hover": "hover:shadow-[6px_6px_0px_#1D3557] hover:-translate-y-1 transition-all duration-200",
+      "radii": "rounded-2xl"
+    },
+    "stickers": {
+      "badge_base": "inline-block px-4 py-2 border-[3px] border-[#1D3557] rounded-full shadow-[3px_3px_0px_#1D3557] transform",
+      "badge_rotate_left": "-rotate-2",
+      "badge_rotate_right": "rotate-2"
+    },
+    "bento_grid": {
+      "container": "grid grid-cols-1 md:grid-cols-3 gap-6",
+      "card_wide": "md:col-span-2 p-6 md:p-8 bg-white border-[3px] border-[#1D3557] rounded-2xl shadow-[4px_4px_0px_#1D3557]",
+      "card_standard": "md:col-span-1 p-6 bg-white border-[3px] border-[#1D3557] rounded-2xl shadow-[4px_4px_0px_#1D3557]"
+    },
+    "icons": {
+      "wrapper": "w-12 h-12 rounded-xl border-2 border-[#1D3557] flex items-center justify-center mb-4 text-2xl shadow-[2px_2px_0px_#1D3557]"
+    }
+  },
+  "layouts": {
+    "section_spacing": "py-20 md:py-28 px-6 md:px-12 max-w-7xl mx-auto",
+    "alternating_backgrounds": [
+      "Hero: bg-gradient-to-br from-[#FDF6E3] to-[#E0FBFC]",
+      "Program 1: bg-[#FFFFFF]",
+      "Program 2: bg-[#FDF6E3]",
+      "Comparison: bg-[#FFFFFF]",
+      "Final CTA: bg-[#E0FBFC]"
+    ]
+  },
+  "component_instructions": {
+    "hero_section": {
+      "background": "bg-gradient-to-br from-[#FDF6E3] to-[#E0FBFC]",
+      "layout": "grid grid-cols-1 lg:grid-cols-2 gap-12 items-center",
+      "left_column": "Title: 'Beyond academics: raise students who understand money and think like builders.' (text-5xl/6xl). Description: 'Coinquest brings financial literacy and entrepreneurship programs into your school...' CTA: Single 'Enquire Now' button, massive, yellow bg.",
+      "right_column": "Leave visually blank (empty div with lg:min-h-[400px]). NO PLACEHOLDER GRAPHIC OR TEXT.",
+      "testid": "hero-section"
+    },
+    "program_1_section": {
+      "background": "bg-[#FFFFFF]",
+      "header_treatment": "Badge: 'Program 1' in Teal (#06D6A0) sticker style (-rotate-2). Title: 'Financial Literacy' (massive, text-5xl). Subtitle: e.g., '36 hours of hands-on learning'.",
+      "layout": "Bento Grid (3 columns max). Card 1 (Wide, col-span-2): 'What students walk away with'. Card 2 (col-span-1): 'Who delivers it'. Card 3 (col-span-1): 'What we provide'. Card 4 (col-span-1): 'How it fits your schedule'. Card 5 (col-span-1): 'Everything print-ready'.",
+      "card_styling": "Each card must have a distinct icon wrapped in a colored block (e.g., Teal, Yellow, Light Cyan) with thick borders. Remove all CTA buttons from within the cards.",
+      "testid": "program-1-section"
+    },
+    "program_2_section": {
+      "background": "bg-[#FDF6E3]",
+      "header_treatment": "Badge: 'Program 2' in Coral (#EE6C4D) sticker style (rotate-2). Title: 'Entrepreneurship Workshop'.",
+      "layout": "Identical Bento Grid structure to Program 1. Card 1 (Wide): 'What students walk away with'. Card 2: 'Who delivers it'. Card 3: 'What we provide'. Card 4: 'How it fits your schedule'. Card 5: 'Culmination day on campus'.",
+      "card_styling": "Use Purple (#5B21B6) and Coral (#EE6C4D) for icon wrapper backgrounds to distinguish from Program 1. Remove all CTA buttons.",
+      "testid": "program-2-section"
+    },
+    "comparison_section": {
+      "background": "bg-[#FFFFFF]",
+      "title": "'Which one fits your school?' centered, text-4xl.",
+      "table_styling": "Render as a responsive thick-bordered card layout. Use a grid or table element wrapper with border-[3px] border-[#1D3557] rounded-2xl overflow-hidden shadow-[8px_8px_0px_#1D3557].",
+      "table_rows": "7 Rows: 'Who teaches', 'Hours', 'Scheduling', 'What we provide', 'Prep for your staff', 'Students walk away with', 'Best for'.",
+      "table_columns": "Column 1: Features (bg-gray-50/50). Column 2: Program 1. Column 3: Program 2. Add border-b-2 border-[#1D3557] to rows.",
+      "testid": "comparison-table-section"
+    },
+    "final_cta_section": {
+      "background": "bg-[#E0FBFC]",
+      "layout": "Centered layout, max-w-3xl mx-auto text-center py-24.",
+      "content": "Heading: 'Get started now' (text-5xl). DO NOT include the 3-step flow. Action: Single large 'Enquire Now' button.",
+      "testid": "final-cta-section"
+    },
+    "dialogs": {
+      "enquire_now": "All 'Enquire Now' buttons must trigger the shared school-enquiry lead form dialog. Ensure data-testid='enquire-now-button' is present on all."
+    }
   },
   "accessibility": {
-    "contrast": "Maintain thick #1D3557 borders around all interactive elements ensuring WCAG AAA contrast against light backgrounds.",
-    "focus": "focus:outline-none focus:ring-4 focus:ring-[#EE6C4D] focus:ring-offset-2",
-    "data_testid": "MANDATORY. Add `data-testid` to all interactable items (mission cards, jars, map nodes, mute toggle)."
+    "contrast": "Ensure text over color backgrounds meets WCAG AA standards. #1D3557 over #FFD23F, #E0FBFC, and #FDF6E3 is highly accessible.",
+    "focus_states": "All buttons and interactive elements must have focus-visible:outline-dashed focus-visible:outline-4 focus-visible:outline-[#5B21B6] focus-visible:outline-offset-4.",
+    "reduced_motion": "Wrap hover translations in @media (prefers-reduced-motion: no-preference)."
   },
-  "media": {
-    "audio_url": "https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3",
-    "audio_notes": "Use this free mixkit positive notification sound or similar for the celebration."
-  },
-  "3d_libraries": {
-    "usage": "Not required. Use pure CSS, canvas-confetti, and 2D Lucide icons to maintain the flat Neo-Brutalist cartoon style."
-  },
-  "instructions_to_main_agent": [
-    "INSTALLATION: Add `canvas-confetti` and `lucide-react` via yarn if not present.",
-    "THEME CONTEXT: Use the colors and visual enhancers specified above across all new components.",
-    "SOUND CONTEXT: Create a useCelebration hook or Context that manages the sound object and confetti function. It should expose a `playCelebration()` function and a `toggleMute()` function.",
-    "COMPONENT 1: Modify the MyMoney dashboard card. Map through the balances and render a Flex Row/Grid of vertical jars. Implement the inline style height calculation safely.",
-    "COMPONENT 2: Refactor `ChildHomework` to map over the missions and render chunky MissionCards. Use solid background colors like white or pale cyan for the card body.",
-    "COMPONENT 3: Refactor `LearnPage.jsx`. Implement the winding path. A simple CSS way is a wrapper div with relative positioning, mapping the nodes with alternating `items-start` and `items-end`, and drawing an absolute SVG line top-to-bottom behind them.",
-    "Do NOT use inline styles for anything other than dynamic variables like the Jar fill percentage or dynamic SVG path coordinates.",
-    "Do NOT use glassmorphism (backdrop-blur). Adhere strictly to the solid, playful, Neo-Brutalist aesthetic."
-  ],
-  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
-    "Always use 'data-testid' on interactive elements.",
-    "Ensure all buttons and interactive cards have the thick border and solid hard shadow defined in visual_enhancers.",
-    "Colors should not be used as gradients. Use solid block colors.",
-    "Do not use transparent backgrounds for any overlapping content or dropdowns.",
-    "Icons should use chunky stroke widths (2.5 or 3)."
-  ]
+  "universal_guidelines": {
+    "testing": "All interactive and key informational elements MUST include a 'data-testid' attribute.",
+    "no_transparent_headers": "Header backgrounds must have solid or glassmorphism backgrounds to prevent text overlay issues.",
+    "file_extensions": "Use .js files for React components as specified, avoiding TypeScript syntax.",
+    "no_ai_slop": "Avoid generic centered layouts except for the final CTA. Rely on the heavy stroke borders, bold neo-brutalist shadows, and bento-grid layouts to establish a premium yet playful brand identity."
+  }
 }

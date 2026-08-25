@@ -1404,3 +1404,11 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Follow-up: hero gradient ended in a peach that blended into the (then-cream) Program 1 section with no visible boundary. Swapped section backgrounds — Program 1 now white, Program 2 now cream (#FDF6E3) — so hero->Program1->Program2 each have clear contrast, matching the convention used on the Hub/Platform/Workshop pages.
   - Removed the "Get Teacher Access" (Program 1) and "Request a Pilot" (Program 2) buttons per user request — each program section now just shows the badge/title + subtitle, no per-program CTA.
   - Added the standard site footer (logo, Contact Us, copyright) matching the pattern used on Landing/Financial Literacy/Workshop pages.
+
+- **Redesigned "For Schools" page for stronger visual hierarchy (Aug 25, 2026)**
+  - User feedback: page felt "underwhelming", headings not standing out. Called design_agent -> new `/app/design_guidelines.json` ("Playful Brutalism" bento-grid direction).
+  - Program section headers redesigned: rotated sticker-style badges (teal "Program 1" / coral "Program 2", -rotate-2/rotate-2), massive program titles (text-4xl/5xl, purple for Program 2), subtitle now full-width below instead of squeezed into a flex row.
+  - Feature cards upgraded to a bento grid: "What students walk away with" is now a wide (col-span-2) lead card; all cards got thicker 3px borders, hard drop-shadows with hover lift, and colored icon-block backgrounds (teal/yellow/cyan for Program 1, purple/coral for Program 2) instead of flat cyan icon boxes.
+  - Comparison table: bigger heading (text-4xl/5xl), thicker border + 8px hard shadow container, column headers color-coded (teal/yellow) to match each program.
+  - Final CTA: bigger heading + button (yellow bg, 6px shadow) for more presence.
+  - Verified via full-page screenshot scroll — hero, both program sections, comparison table and final CTA all confirmed rendering correctly with the new hierarchy.
