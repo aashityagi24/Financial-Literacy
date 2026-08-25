@@ -34,7 +34,7 @@ export function SiteHeader() {
   };
 
   return (
-    <div className="bg-[#FDF6E3] border-b-2 border-[#1D3557]/10" data-testid="site-header">
+    <div className="sticky top-0 z-50 bg-[#FDF6E3] border-b-2 border-[#1D3557]/10 shadow-[0_2px_10px_rgba(29,53,87,0.08)]" data-testid="site-header">
       <div className="container mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
         <img
           src="/coinquest-logo.png"

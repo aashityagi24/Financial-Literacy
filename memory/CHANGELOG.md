@@ -1391,3 +1391,5 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Extracted the School Subscription Enquiry dialog out of `PricingSection.jsx` into a standalone reusable `components/SchoolEnquiryDialog.jsx` (controlled via open/onOpenChange) so both PricingSection and SiteHeader share the same form + `/admin/school-enquiry` submit logic without duplication.
   - Added `SiteHeader` to `SchoolLogin.jsx` too (was previously missing it) and removed its now-redundant "Back to Home" link, matching the pattern already applied to the Hub/Platform/Workshop pages.
   - Verified via live click-through on all 4 contexts (Workshop trial dialog opens, Platform navigates to /signup, School enquiry dialog opens, Hub shows default Sign In) — screenshots confirm correct CTA label + behavior on each page.
+
+- **Sticky header (Aug 25, 2026)**: `SiteHeader.jsx` changed from static to `sticky top-0 z-50` with a subtle shadow, so it stays visible while scrolling on all pages that use it. Verified via screenshot after scrolling.
