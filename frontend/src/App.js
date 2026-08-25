@@ -10,6 +10,7 @@ import SubscriptionExpiredGate from "@/components/SubscriptionExpiredGate";
 import LandingPage from "@/pages/LandingPage";
 import FinancialLiteracyPage from "@/pages/FinancialLiteracyPage";
 import EntrepreneurshipWorkshopPage from "@/pages/EntrepreneurshipWorkshopPage";
+import ForSchoolsPage from "@/pages/ForSchoolsPage";
 import AuthCallback from "@/pages/AuthCallback";
 import RoleSelection from "@/pages/RoleSelection";
 import Dashboard from "@/pages/Dashboard";
@@ -237,6 +238,7 @@ function AppRouter() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/financial-literacy" element={<FinancialLiteracyPage />} />
       <Route path="/entrepreneurship-workshop" element={<EntrepreneurshipWorkshopPage />} />
+      <Route path="/for-schools" element={<ForSchoolsPage />} />
       <Route path="/login" element={<AuthPage />} />
       <Route path="/signup" element={<AuthPage />} />
       <Route path="/complete-signup" element={<CompleteSignupPage />} />

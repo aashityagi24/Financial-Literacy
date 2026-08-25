@@ -1393,3 +1393,11 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Verified via live click-through on all 4 contexts (Workshop trial dialog opens, Platform navigates to /signup, School enquiry dialog opens, Hub shows default Sign In) — screenshots confirm correct CTA label + behavior on each page.
 
 - **Sticky header (Aug 25, 2026)**: `SiteHeader.jsx` changed from static to `sticky top-0 z-50` with a subtle shadow, so it stays visible while scrolling on all pages that use it. Verified via screenshot after scrolling.
+
+- **New "For Schools" marketing page (Aug 25, 2026)**
+  - Built `pages/ForSchoolsPage.jsx` at new route `/for-schools`, replacing the raw school-login form as the "For Schools" nav destination (login form still lives at `/school-login`, now reachable only via SchoolDashboard's own redirect).
+  - Hero: exact user-provided copy ("Beyond academics: raise students who understand money and think like builders." + description), single "Enquire Now" CTA, right column intentionally left blank pending a future image.
+  - Two beautified program sections (Financial Literacy — yellow badge/cream bg; Entrepreneurship Workshop — purple badge/white bg), each with a title+subtitle+CTA row and a 5-card icon grid (who delivers it / what we provide / schedule fit / student outcome / print-ready or culmination day), copy matched to the user's mockups.
+  - Comparison table "Which one fits your school?" (7 rows) + simplified final CTA section — replaced the mockup's 3-step "getting started" flow with just a "Get Started Now" heading and a single Enquire Now button, per explicit request.
+  - `SiteHeader.jsx` "For Schools" nav now points to `/for-schools` (was `/school-login`); CTA map updated to match. All 4 Enquire Now buttons on the page open the same shared `SchoolEnquiryDialog`.
+  - Verified via screenshot (desktop + mobile hero, all sections) and live click-through confirming the enquiry dialog opens correctly.

@@ -5,13 +5,13 @@ import { SchoolEnquiryDialog } from '@/components/SchoolEnquiryDialog';
 const NAV_LINKS = [
   { label: 'Workshop', path: '/entrepreneurship-workshop', testId: 'workshop' },
   { label: 'Platform', path: '/financial-literacy', testId: 'platform' },
-  { label: 'For Schools', path: '/school-login', testId: 'for-schools' },
+  { label: 'For Schools', path: '/for-schools', testId: 'for-schools' },
 ];
 
 const CTA_BY_PATH = {
   '/entrepreneurship-workshop': { label: 'Book a Free Trial' },
   '/financial-literacy': { label: 'Sign Up' },
-  '/school-login': { label: 'Enquire Now' },
+  '/for-schools': { label: 'Enquire Now' },
 };
 
 export function SiteHeader() {
@@ -26,7 +26,7 @@ export function SiteHeader() {
       navigate('/entrepreneurship-workshop?trial=1');
     } else if (location.pathname === '/financial-literacy') {
       navigate('/signup');
-    } else if (location.pathname === '/school-login') {
+    } else if (location.pathname === '/for-schools') {
       setShowSchoolEnquiry(true);
     } else {
       navigate('/login');
