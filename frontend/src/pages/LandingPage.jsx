@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { BookCallButton } from '@/components/BookCallDialog';
+import { SiteHeader } from '@/components/SiteHeader';
 
 const PARENT_AVATARS = [
   'https://static.prod-images.emergentagent.com/jobs/5f108aa9-f735-40f8-8a41-389db6115b0a/images/6e9d1b311fdb60b83fdafadb83d0334b813d041063d07092835b78881ba6ce8f.jpeg',
@@ -80,6 +81,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#E0FBFC]">
+      <SiteHeader />
       {/* Nav + Hero */}
       <header
         className="relative overflow-hidden"
@@ -88,25 +90,7 @@ export default function LandingPage() {
         <div className="absolute top-32 right-20 w-16 h-16 bg-[#EE6C4D] rounded-full opacity-30 animate-float stagger-2"></div>
         <div className="absolute bottom-6 left-[45%] w-12 h-12 bg-[#06D6A0] rounded-full opacity-30 animate-float stagger-3"></div>
 
-        <div className="container mx-auto px-6 pb-6">
-          <nav className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-3 -mt-12">
-              <img
-                src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/ul81dgc9_Friendly%20%27Money%20Matter%27%20Logo%20Design%20%281%29.png"
-                alt="CoinQuest Logo"
-                className="h-72 w-auto cursor-pointer"
-                onClick={() => window.location.reload()}
-              />
-            </div>
-            <button
-              data-testid="login-btn-nav"
-              onClick={() => navigate('/login')}
-              className="btn-primary px-6 py-3 text-lg"
-            >
-              Sign In
-            </button>
-          </nav>
-
+        <div className="container mx-auto px-6 pb-6 pt-10">
           <div className="flex flex-col lg:flex-row lg:items-center gap-10 lg:gap-8">
             <div className="max-w-2xl animate-bounce-in pb-12 lg:pb-0">
               <h1 className="text-5xl lg:text-6xl font-bold text-[#1D3557] mb-6 leading-tight" style={{ fontFamily: 'Fredoka' }}>

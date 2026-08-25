@@ -7,6 +7,7 @@ import {
   Video, Clock, GraduationCap, BookOpen, Layers, Mic, IndianRupee,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SiteHeader } from '@/components/SiteHeader';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
@@ -151,29 +152,13 @@ export default function EntrepreneurshipWorkshopPage() {
 
   return (
     <div className="min-h-screen bg-[#E0FBFC]">
+      <SiteHeader />
       {/* Hero */}
       <header className="relative overflow-hidden bg-[#5B21B6]">
         <div className="absolute top-24 right-16 w-16 h-16 bg-[#FFD23F] rounded-full opacity-40 animate-float stagger-2"></div>
         <div className="absolute bottom-16 left-1/5 w-12 h-12 bg-[#06D6A0] rounded-full opacity-40 animate-float stagger-3"></div>
 
         <div className="container mx-auto px-6 pb-6">
-          <nav className="flex justify-between items-center pt-6 mb-4">
-            <button
-              data-testid="ew-back-to-home-link"
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 text-white font-bold hover:text-[#FFD23F] transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" /> CoinQuest Home
-            </button>
-            <button
-              data-testid="login-btn-nav"
-              onClick={() => navigate('/login')}
-              className="bg-white text-[#5B21B6] font-bold px-6 py-3 rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] hover:-translate-y-1 transition-all text-lg"
-            >
-              Sign In
-            </button>
-          </nav>
-
           <div className="grid lg:grid-cols-2 gap-12 items-center py-10">
             <div className="animate-bounce-in">
               <span className="inline-block bg-[#FFD23F] text-[#1D3557] font-bold text-sm px-4 py-1.5 rounded-full border-2 border-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>

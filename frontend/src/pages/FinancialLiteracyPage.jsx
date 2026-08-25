@@ -4,6 +4,7 @@ import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, Schoo
 import axios from 'axios';
 import { toast } from 'sonner';
 import PricingSection from '@/components/PricingSection';
+import { SiteHeader } from '@/components/SiteHeader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -128,32 +129,14 @@ export default function FinancialLiteracyPage() {
 
   return (
     <div className="min-h-screen bg-[#E0FBFC]">
+      <SiteHeader />
 
       {/* Hero Section */}
       <header className="relative overflow-hidden">
         <div className="absolute top-32 right-20 w-16 h-16 bg-[#EE6C4D] rounded-full opacity-60 animate-float stagger-2"></div>
         <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-[#06D6A0] rounded-full opacity-60 animate-float stagger-3"></div>
 
-        <div className="container mx-auto px-6 pb-6">
-          <nav className="flex justify-between items-center mb-4">
-            <button
-              data-testid="fl-back-to-home-link"
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 text-[#1D3557] font-bold hover:text-[#EE6C4D] transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" /> CoinQuest Home
-            </button>
-            <div className="flex items-center gap-3">
-              <button
-                data-testid="login-btn-nav"
-                onClick={() => navigate('/login')}
-                className="btn-primary px-6 py-3 text-lg"
-              >
-                Sign In
-              </button>
-            </div>
-          </nav>
-
+        <div className="container mx-auto px-6 pb-6 pt-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="animate-bounce-in">
               <span className="inline-block bg-[#FFD23F] text-[#1D3557] font-bold text-sm px-4 py-1.5 rounded-full border-2 border-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
