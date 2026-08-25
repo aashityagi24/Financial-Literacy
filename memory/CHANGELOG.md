@@ -1402,3 +1402,5 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - `SiteHeader.jsx` "For Schools" nav now points to `/for-schools` (was `/school-login`); CTA map updated to match. All 4 Enquire Now buttons on the page open the same shared `SchoolEnquiryDialog`.
   - Verified via screenshot (desktop + mobile hero, all sections) and live click-through confirming the enquiry dialog opens correctly.
   - Follow-up: hero gradient ended in a peach that blended into the (then-cream) Program 1 section with no visible boundary. Swapped section backgrounds — Program 1 now white, Program 2 now cream (#FDF6E3) — so hero->Program1->Program2 each have clear contrast, matching the convention used on the Hub/Platform/Workshop pages.
+  - Removed the "Get Teacher Access" (Program 1) and "Request a Pilot" (Program 2) buttons per user request — each program section now just shows the badge/title + subtitle, no per-program CTA.
+  - Added the standard site footer (logo, Contact Us, copyright) matching the pattern used on Landing/Financial Literacy/Workshop pages.

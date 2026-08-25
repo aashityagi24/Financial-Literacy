@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   UserCheck, BookOpen, CalendarDays, Target, Printer,
-  Mic, Briefcase, Tag, Tent, ArrowRight, Sparkles,
+  Mic, Briefcase, Tag, Tent, Sparkles,
 } from 'lucide-react';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SchoolEnquiryDialog } from '@/components/SchoolEnquiryDialog';
@@ -46,7 +46,7 @@ function ProgramCard({ icon: Icon, label, desc }) {
 
 function ProgramSection({
   testId, sectionBg, programLabel, badgeBg, badgeTextColor, title, titleColor,
-  subtitle, ctaLabel, ctaBg, ctaTextColor, onCtaClick, cards,
+  subtitle, cards,
 }) {
   return (
     <section className={sectionBg} data-testid={testId}>
@@ -67,14 +67,6 @@ function ProgramSection({
             </h3>
           </div>
           <p className="text-[#3D5A80] leading-relaxed flex-1">{subtitle}</p>
-          <button
-            data-testid={`${testId}-cta-btn`}
-            onClick={onCtaClick}
-            className="flex items-center gap-2 font-bold px-6 py-3 rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557] hover:-translate-y-1 transition-all whitespace-nowrap flex-shrink-0"
-            style={{ backgroundColor: ctaBg, color: ctaTextColor }}
-          >
-            {ctaLabel} <ArrowRight className="w-4 h-4" />
-          </button>
         </div>
 
         <div className="grid md:grid-cols-3 gap-5">
@@ -136,10 +128,6 @@ export default function ForSchoolsPage() {
         title="Financial Literacy"
         titleColor="#1D3557"
         subtitle="School-led · 36 hours · Flexible scheduling. Your teachers deliver it — we equip them fully, so no session depends on an external facilitator."
-        ctaLabel="Get Teacher Access"
-        ctaBg="#1D3557"
-        ctaTextColor="#FFFFFF"
-        onCtaClick={() => setShowEnquiry(true)}
         cards={FL_CARDS}
       />
 
@@ -153,10 +141,6 @@ export default function ForSchoolsPage() {
         title="Entrepreneurship Workshop"
         titleColor="white"
         subtitle="CoinQuest-facilitated · 30 hours · Weekly sessions. Fully managed from our end, ending in a culmination showcase on your campus."
-        ctaLabel="Request a Pilot"
-        ctaBg="#5B21B6"
-        ctaTextColor="#FFFFFF"
-        onCtaClick={() => setShowEnquiry(true)}
         cards={EW_CARDS}
       />
 
@@ -210,6 +194,32 @@ export default function ForSchoolsPage() {
           </button>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="bg-[#1D3557] py-8">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+            <div className="flex flex-col items-center md:items-start">
+              <img
+                src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/ul81dgc9_Friendly%20%27Money%20Matter%27%20Logo%20Design%20%281%29.png"
+                alt="CoinQuest Logo"
+                className="h-36 w-auto"
+              />
+            </div>
+            <div className="flex flex-col items-center md:items-start gap-3">
+              <h3 className="text-white font-bold text-lg" style={{ fontFamily: 'Fredoka' }}>Contact Us</h3>
+              <a href="mailto:hello@coinquest.co.in" className="text-[#98C1D9] hover:text-white transition-colors">hello@coinquest.co.in</a>
+              <a href="tel:+919924117051" className="text-[#98C1D9] hover:text-white transition-colors">+91 9924117051</a>
+            </div>
+            <div className="flex flex-col items-center md:items-end gap-3">
+              <p className="text-[#98C1D9] text-sm text-center md:text-right mt-2">
+                © Learners' Planet<br/>
+                Educating kids in fun and interactive ways!
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer>
 
       <SchoolEnquiryDialog open={showEnquiry} onOpenChange={setShowEnquiry} />
     </div>
