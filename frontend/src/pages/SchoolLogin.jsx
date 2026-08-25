@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { School, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { School, Eye, EyeOff } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SiteHeader } from '@/components/SiteHeader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -42,7 +43,9 @@ export default function SchoolLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1D3557] via-[#2A4A6B] to-[#3D5A80] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#1D3557] via-[#2A4A6B] to-[#3D5A80]">
+      <SiteHeader />
+      <div className="relative flex items-center justify-center p-4 min-h-[calc(100vh-64px)]">
       {/* Background Decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-64 h-64 bg-[#FFD23F]/10 rounded-full blur-3xl"></div>
@@ -50,16 +53,6 @@ export default function SchoolLogin() {
       </div>
       
       <div className="w-full max-w-md relative z-10">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-white/70 hover:text-white mb-6 transition-colors"
-          data-testid="back-to-landing-btn"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Back to Home</span>
-        </button>
-        
         {/* Login Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           {/* Header */}
@@ -145,6 +138,7 @@ export default function SchoolLogin() {
             Powered by <span className="font-semibold text-[#FFD23F]">CoinQuest</span>
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

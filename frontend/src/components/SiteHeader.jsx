@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { SchoolEnquiryDialog } from '@/components/SchoolEnquiryDialog';
 
 const NAV_LINKS = [
   { label: 'Workshop', path: '/entrepreneurship-workshop', testId: 'workshop' },
@@ -6,9 +8,30 @@ const NAV_LINKS = [
   { label: 'For Schools', path: '/school-login', testId: 'for-schools' },
 ];
 
+const CTA_BY_PATH = {
+  '/entrepreneurship-workshop': { label: 'Book a Free Trial' },
+  '/financial-literacy': { label: 'Sign Up' },
+  '/school-login': { label: 'Enquire Now' },
+};
+
 export function SiteHeader() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showSchoolEnquiry, setShowSchoolEnquiry] = useState(false);
+
+  const cta = CTA_BY_PATH[location.pathname] || { label: 'Sign In' };
+
+  const handleCtaClick = () => {
+    if (location.pathname === '/entrepreneurship-workshop') {
+      navigate('/entrepreneurship-workshop?trial=1');
+    } else if (location.pathname === '/financial-literacy') {
+      navigate('/signup');
+    } else if (location.pathname === '/school-login') {
+      setShowSchoolEnquiry(true);
+    } else {
+      navigate('/login');
+    }
+  };
 
   return (
     <div className="bg-[#FDF6E3] border-b-2 border-[#1D3557]/10" data-testid="site-header">
@@ -37,13 +60,15 @@ export function SiteHeader() {
           ))}
         </nav>
         <button
-          data-testid="site-header-signin-btn"
-          onClick={() => navigate('/login')}
+          data-testid="site-header-cta-btn"
+          onClick={handleCtaClick}
           className="btn-primary px-6 py-2.5 text-base order-2 sm:order-3"
         >
-          Sign In
+          {cta.label}
         </button>
       </div>
+      <SchoolEnquiryDialog open={showSchoolEnquiry} onOpenChange={setShowSchoolEnquiry} />
     </div>
   );
 }
+
