@@ -212,20 +212,6 @@ export default function EntrepreneurshipWorkshopPage() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="mt-5 grid grid-cols-3 gap-3">
-                  <div data-testid="workshop-highlight-built-product" className="text-center p-3 bg-[#FFD23F]/20 rounded-xl border-2 border-[#1D3557]">
-                    <Hammer className="w-8 h-8 mx-auto text-[#FFD23F]" />
-                    <p className="text-sm font-bold text-[#1D3557] mt-1">Built a product</p>
-                  </div>
-                  <div data-testid="workshop-highlight-pitched-buyers" className="text-center p-3 bg-[#06D6A0]/20 rounded-xl border-2 border-[#1D3557]">
-                    <Mic className="w-8 h-8 mx-auto text-[#06D6A0]" />
-                    <p className="text-sm font-bold text-[#1D3557] mt-1">Pitched to real buyers</p>
-                  </div>
-                  <div data-testid="workshop-highlight-first-sale" className="text-center p-3 bg-[#EE6C4D]/20 rounded-xl border-2 border-[#1D3557]">
-                    <IndianRupee className="w-8 h-8 mx-auto text-[#EE6C4D]" />
-                    <p className="text-sm font-bold text-[#1D3557] mt-1">Made their first sale</p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
