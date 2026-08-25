@@ -112,7 +112,7 @@ export default function ForSchoolsPage() {
 
             {/* Hero image */}
             <div className="hidden lg:flex justify-center" data-testid="for-schools-hero-image">
-              <div className="relative w-full max-w-[380px]">
+              <div className="relative w-full max-w-[460px]">
                 <div className="bg-white rounded-[28px] border-[5px] border-[#1D3557] shadow-[8px_8px_0px_0px_#1D3557] p-3">
                   <div className="rounded-2xl overflow-hidden aspect-square">
                     <img
@@ -122,7 +122,6 @@ export default function ForSchoolsPage() {
                     />
                   </div>
                 </div>
-                <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-16 bg-[#FFD23F] rounded-full border-[3px] border-[#1D3557]"></div>
               </div>
             </div>
           </div>
