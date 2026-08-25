@@ -129,7 +129,7 @@ export default function ForSchoolsPage() {
       {/* Program 1: Financial Literacy */}
       <ProgramSection
         testId="program-financial-literacy"
-        sectionBg="bg-[#FDF6E3]"
+        sectionBg="bg-white"
         programLabel="PROGRAM ONE"
         badgeBg="#FFD23F"
         badgeTextColor="#1D3557"
@@ -146,7 +146,7 @@ export default function ForSchoolsPage() {
       {/* Program 2: Entrepreneurship Workshop */}
       <ProgramSection
         testId="program-entrepreneurship-workshop"
-        sectionBg="bg-white"
+        sectionBg="bg-[#FDF6E3]"
         programLabel="PROGRAM TWO"
         badgeBg="#5B21B6"
         badgeTextColor="#FFFFFF"
