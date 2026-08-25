@@ -1412,3 +1412,5 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Comparison table: bigger heading (text-4xl/5xl), thicker border + 8px hard shadow container, column headers color-coded (teal/yellow) to match each program.
   - Final CTA: bigger heading + button (yellow bg, 6px shadow) for more presence.
   - Verified via full-page screenshot scroll — hero, both program sections, comparison table and final CTA all confirmed rendering correctly with the new hierarchy.
+
+- **Icon consistency fix (Aug 25, 2026)**: the 5 feature-card icons per program previously alternated colors (teal/yellow/cyan mix in Program 1, purple/coral mix in Program 2 — purple bg + navy icon had weak contrast). Now every icon box within a program uses one consistent color: teal bg + navy icon for all 5 Financial Literacy cards, coral bg + navy icon for all 5 Entrepreneurship Workshop cards. Verified via screenshot — good contrast, visually uniform per program.

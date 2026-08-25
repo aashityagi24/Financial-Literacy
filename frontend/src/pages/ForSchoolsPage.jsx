@@ -7,19 +7,19 @@ import { SiteHeader } from '@/components/SiteHeader';
 import { SchoolEnquiryDialog } from '@/components/SchoolEnquiryDialog';
 
 const FL_CARDS = [
-  { icon: Target, label: 'What students walk away with', desc: 'Practical money skills — saving, budgeting and spending decisions — built through activities, not lectures.', accent: '#06D6A0', wide: true },
-  { icon: UserCheck, label: 'Who delivers it', desc: 'Your teachers. We equip them fully, so there is no dependency on external facilitators for every session.', accent: '#FFD23F' },
-  { icon: BookOpen, label: 'What we provide', desc: 'Complete curriculum, lesson plans, activities and assessment materials — ready to teach, no prep required from your staff.', accent: '#E0FBFC' },
-  { icon: CalendarDays, label: 'How it fits your schedule', desc: 'A dedicated period, an after-school club or a term-long elective — the structure adapts to however you run co-curricular time.', accent: '#06D6A0' },
-  { icon: Printer, label: 'Everything print-ready', desc: 'Worksheets, activity sheets and assignments print straight from the lesson, or go out digitally to the class.', accent: '#FFD23F' },
+  { icon: Target, label: 'What students walk away with', desc: 'Practical money skills — saving, budgeting and spending decisions — built through activities, not lectures.', wide: true },
+  { icon: UserCheck, label: 'Who delivers it', desc: 'Your teachers. We equip them fully, so there is no dependency on external facilitators for every session.' },
+  { icon: BookOpen, label: 'What we provide', desc: 'Complete curriculum, lesson plans, activities and assessment materials — ready to teach, no prep required from your staff.' },
+  { icon: CalendarDays, label: 'How it fits your schedule', desc: 'A dedicated period, an after-school club or a term-long elective — the structure adapts to however you run co-curricular time.' },
+  { icon: Printer, label: 'Everything print-ready', desc: 'Worksheets, activity sheets and assignments print straight from the lesson, or go out digitally to the class.' },
 ];
 
 const EW_CARDS = [
-  { icon: Tag, label: 'What students walk away with', desc: 'A real product, priced and pitched, with an actual sale made — a tangible outcome by the end of the program.', accent: '#5B21B6', wide: true },
-  { icon: Mic, label: 'Who delivers it', desc: 'Our facilitators run every session. Your teachers can be as involved or as hands-off as you would like.', accent: '#EE6C4D' },
-  { icon: Briefcase, label: 'What we provide', desc: 'Structured weekly sessions, all materials and a facilitator-led format — fully managed from our end.', accent: '#5B21B6' },
-  { icon: CalendarDays, label: 'How it fits your schedule', desc: 'A weekly workshop slot — activity period, elective hour or after-school program.', accent: '#EE6C4D' },
-  { icon: Tent, label: 'Culmination day on campus', desc: 'We come to your school for a showcase: stalls, pitches and real selling, with parents and leadership invited.', accent: '#5B21B6' },
+  { icon: Tag, label: 'What students walk away with', desc: 'A real product, priced and pitched, with an actual sale made — a tangible outcome by the end of the program.', wide: true },
+  { icon: Mic, label: 'Who delivers it', desc: 'Our facilitators run every session. Your teachers can be as involved or as hands-off as you would like.' },
+  { icon: Briefcase, label: 'What we provide', desc: 'Structured weekly sessions, all materials and a facilitator-led format — fully managed from our end.' },
+  { icon: CalendarDays, label: 'How it fits your schedule', desc: 'A weekly workshop slot — activity period, elective hour or after-school program.' },
+  { icon: Tent, label: 'Culmination day on campus', desc: 'We come to your school for a showcase: stalls, pitches and real selling, with parents and leadership invited.' },
 ];
 
 const COMPARISON_ROWS = [
@@ -32,7 +32,7 @@ const COMPARISON_ROWS = [
   { label: 'Best for', fl: 'Everyday financial literacy, school-wide', ew: 'A flagship program for one grade' },
 ];
 
-function ProgramCard({ icon: Icon, label, desc, accent, wide }) {
+function ProgramCard({ icon: Icon, label, desc, wide, iconBg, iconColor }) {
   return (
     <div
       className={`bg-white rounded-2xl border-[3px] border-[#1D3557] p-6 shadow-[4px_4px_0px_0px_#1D3557] hover:shadow-[6px_6px_0px_0px_#1D3557] hover:-translate-y-1 transition-all duration-200 ${wide ? 'md:col-span-2' : 'md:col-span-1'}`}
@@ -40,9 +40,9 @@ function ProgramCard({ icon: Icon, label, desc, accent, wide }) {
     >
       <div
         className="w-12 h-12 rounded-xl border-2 border-[#1D3557] flex items-center justify-center mb-4 shadow-[2px_2px_0px_0px_#1D3557]"
-        style={{ backgroundColor: accent }}
+        style={{ backgroundColor: iconBg }}
       >
-        <Icon className="w-6 h-6 text-[#1D3557]" strokeWidth={2.25} />
+        <Icon className="w-6 h-6" style={{ color: iconColor }} strokeWidth={2.25} />
       </div>
       <p className="text-sm font-bold uppercase tracking-wide text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>{label}</p>
       <p className="text-[#3D5A80] leading-relaxed">{desc}</p>
@@ -52,7 +52,7 @@ function ProgramCard({ icon: Icon, label, desc, accent, wide }) {
 
 function ProgramSection({
   testId, sectionBg, programLabel, badgeBg, badgeTextColor, badgeRotate, title, titleColor,
-  subtitle, cards,
+  subtitle, cards, cardIconBg, cardIconColor,
 }) {
   return (
     <section className={sectionBg} data-testid={testId}>
@@ -71,7 +71,7 @@ function ProgramSection({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {cards.map((c) => <ProgramCard key={c.label} {...c} />)}
+          {cards.map((c) => <ProgramCard key={c.label} {...c} iconBg={cardIconBg} iconColor={cardIconColor} />)}
         </div>
       </div>
     </section>
@@ -131,6 +131,8 @@ export default function ForSchoolsPage() {
         titleColor="#1D3557"
         subtitle="School-led · 36 hours · Flexible scheduling. Your teachers deliver it — we equip them fully, so no session depends on an external facilitator."
         cards={FL_CARDS}
+        cardIconBg="#06D6A0"
+        cardIconColor="#1D3557"
       />
 
       {/* Program 2: Entrepreneurship Workshop */}
@@ -145,6 +147,8 @@ export default function ForSchoolsPage() {
         titleColor="#5B21B6"
         subtitle="CoinQuest-facilitated · 30 hours · Weekly sessions. Fully managed from our end, ending in a culmination showcase on your campus."
         cards={EW_CARDS}
+        cardIconBg="#EE6C4D"
+        cardIconColor="#1D3557"
       />
 
       {/* Comparison table */}
