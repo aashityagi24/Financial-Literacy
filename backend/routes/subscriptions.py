@@ -57,7 +57,7 @@ class PlanConfigUpdate(BaseModel):
 
 class BatchCreate(BaseModel):
     name: str
-    grade: int  # 0-5 (K-5)
+    grades: List[int]  # one or more of 0-9 (K-9)
     start_date: str  # ISO date
     end_date: str    # ISO date
     price: int        # INR
@@ -66,7 +66,7 @@ class BatchCreate(BaseModel):
 
 class BatchUpdate(BaseModel):
     name: Optional[str] = None
-    grade: Optional[int] = None
+    grades: Optional[List[int]] = None
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     price: Optional[int] = None
@@ -914,7 +914,10 @@ async def create_money_masters_batch(batch: BatchCreate, request: Request):
     name = batch.name.strip()
     if not name:
         raise HTTPException(status_code=400, detail="Batch name is required")
-    if batch.grade < 0 or batch.grade > 9:
+    grades = sorted(set(batch.grades))
+    if not grades:
+        raise HTTPException(status_code=400, detail="Select at least one grade")
+    if any(g < 0 or g > 9 for g in grades):
         raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 9")
     if batch.price <= 0:
         raise HTTPException(status_code=400, detail="Price must be greater than 0")
@@ -924,7 +927,7 @@ async def create_money_masters_batch(batch: BatchCreate, request: Request):
     doc = {
         "batch_id": f"mmb_{uuid.uuid4().hex[:12]}",
         "name": name,
-        "grade": batch.grade,
+        "grades": grades,
         "start_date": start_date,
         "end_date": end_date,
         "price": batch.price,
@@ -976,10 +979,13 @@ async def update_money_masters_batch(batch_id: str, updates: BatchUpdate, reques
         if not name:
             raise HTTPException(status_code=400, detail="Batch name cannot be empty")
         fields["name"] = name
-    if updates.grade is not None:
-        if updates.grade < 0 or updates.grade > 9:
+    if updates.grades is not None:
+        grades = sorted(set(updates.grades))
+        if not grades:
+            raise HTTPException(status_code=400, detail="Select at least one grade")
+        if any(g < 0 or g > 9 for g in grades):
             raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 9")
-        fields["grade"] = updates.grade
+        fields["grades"] = grades
     if updates.price is not None:
         if updates.price <= 0:
             raise HTTPException(status_code=400, detail="Price must be greater than 0")
@@ -1039,7 +1045,7 @@ async def list_open_money_masters_batches(request: Request, child_id: str):
 
     now_iso = datetime.now(timezone.utc).isoformat()
     batches = await db.money_masters_batches.find({
-        "grade": child.get("grade", 0) or 0,
+        "grades": child.get("grade", 0) or 0,
         "is_active": True,
         "end_date": {"$gt": now_iso},
     }, {"_id": 0}).sort("start_date", 1).to_list(100)
@@ -1070,7 +1076,7 @@ async def create_money_masters_order(order: MoneyMastersOrderRequest, request: R
     batch = await db.money_masters_batches.find_one({"batch_id": order.batch_id}, {"_id": 0})
     if not batch or not batch.get("is_active") or batch["end_date"] <= now_iso:
         raise HTTPException(status_code=400, detail="This batch is no longer open for purchase")
-    if batch.get("grade") != (child.get("grade", 0) or 0):
+    if (child.get("grade", 0) or 0) not in batch.get("grades", []):
         raise HTTPException(status_code=400, detail="This batch does not match the child's grade")
 
     existing = await db.subscriptions.find_one({
@@ -1110,7 +1116,7 @@ async def create_money_masters_order(order: MoneyMastersOrderRequest, request: R
         "plan_type": "money_masters",
         "batch_id": order.batch_id,
         "batch_name": batch["name"],
-        "grade": batch["grade"],
+        "grade": child.get("grade", 0) or 0,
         "num_parents": 1,
         "num_children": 1,
         "amount": batch["price"],
@@ -1291,7 +1297,7 @@ async def list_public_money_masters_batches():
     batches = await db.money_masters_batches.find({
         "is_active": True,
         "end_date": {"$gt": now_iso},
-    }, {"_id": 0, "batch_id": 1, "name": 1, "grade": 1, "start_date": 1, "end_date": 1, "price": 1}).sort("grade", 1).to_list(200)
+    }, {"_id": 0, "batch_id": 1, "name": 1, "grades": 1, "start_date": 1, "end_date": 1, "price": 1}).sort("start_date", 1).to_list(200)
     return batches
 
 

@@ -111,15 +111,15 @@ export default function EntrepreneurshipWorkshopPage() {
   const activeLessons = curriculumByTrack[selectedTrack];
 
   const batchesByGrade = GRADE_LABELS.map((label, grade) => ({
-    grade, label, items: batches.filter((b) => b.grade === grade),
+    grade, label, items: batches.filter((b) => (b.grades || []).includes(grade)),
   })).filter((g) => g.items.length > 0);
 
-  const openTrialForm = (batch = null) => {
-    setForm({ ...EMPTY_FORM, batch_id: batch?.batch_id || '', child_grade: batch ? String(batch.grade) : '' });
+  const openTrialForm = (batch = null, grade = null) => {
+    setForm({ ...EMPTY_FORM, batch_id: batch?.batch_id || '', child_grade: batch ? String(grade ?? batch.grades[0]) : '' });
     setDialogOpen(true);
   };
 
-  const eligibleBatches = form.child_grade === '' ? batches : batches.filter((b) => b.grade === parseInt(form.child_grade));
+  const eligibleBatches = form.child_grade === '' ? batches : batches.filter((b) => (b.grades || []).includes(parseInt(form.child_grade)));
 
   const submitTrial = async () => {
     if (!form.parent_name.trim()) { toast.error('Please enter your name'); return; }
@@ -360,7 +360,7 @@ export default function EntrepreneurshipWorkshopPage() {
                     <span className="text-2xl font-bold text-[#5B21B6]" style={{ fontFamily: 'Fredoka' }}>₹{b.price.toLocaleString('en-IN')}</span>
                     <Button
                       data-testid={`ew-book-trial-${b.batch_id}`}
-                      onClick={() => openTrialForm(b)}
+                      onClick={() => openTrialForm(b, g.grade)}
                       className="bg-[#1D3557] hover:bg-[#2D4A6F] text-white rounded-full"
                     >
                       Book Free Trial

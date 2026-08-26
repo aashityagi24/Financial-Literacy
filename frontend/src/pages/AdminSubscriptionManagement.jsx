@@ -5,7 +5,7 @@ import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, CreditCard, Users, Calendar as CalendarIcon, DollarSign, 
-  ToggleLeft, ToggleRight, Save, RefreshCw, Search, Filter, X, Eye, Trash2, Download
+  ToggleLeft, ToggleRight, Save, RefreshCw, Search, Filter, X, Eye, Trash2, Download, Pencil
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +42,7 @@ const PLAN_LABELS = {
 
 const GRADE_LABELS = ['K', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9'];
 
-const EMPTY_BATCH_FORM = { name: '', grade: '0', start_date: null, end_date: null, price: '' };
+const EMPTY_BATCH_FORM = { name: '', grades: ['0'], start_date: null, end_date: null, price: '' };
 
 const isExpired = (endDate) => {
   if (!endDate) return false;
@@ -103,7 +103,7 @@ export default function AdminSubscriptionManagement({ user }) {
     if (batch) {
       setBatchForm({
         name: batch.name,
-        grade: String(batch.grade),
+        grades: (batch.grades || []).map(String),
         start_date: new Date(batch.start_date),
         end_date: new Date(batch.end_date),
         price: String(batch.price),
@@ -115,8 +115,16 @@ export default function AdminSubscriptionManagement({ user }) {
     }
   };
 
+  const toggleBatchGrade = (grade) => {
+    setBatchForm((prev) => ({
+      ...prev,
+      grades: prev.grades.includes(grade) ? prev.grades.filter((g) => g !== grade) : [...prev.grades, grade],
+    }));
+  };
+
   const saveBatch = async () => {
     if (!batchForm.name.trim()) { toast.error('Batch name is required'); return; }
+    if (!batchForm.grades.length) { toast.error('Select at least one grade'); return; }
     if (!batchForm.start_date || !batchForm.end_date) { toast.error('Start and end dates are required'); return; }
     if (batchForm.end_date <= batchForm.start_date) { toast.error('End date must be after start date'); return; }
     if (!batchForm.price || parseInt(batchForm.price) <= 0) { toast.error('Enter a valid price'); return; }
@@ -124,7 +132,7 @@ export default function AdminSubscriptionManagement({ user }) {
     try {
       const payload = {
         name: batchForm.name.trim(),
-        grade: parseInt(batchForm.grade),
+        grades: batchForm.grades.map(Number),
         start_date: batchForm.start_date.toISOString(),
         end_date: batchForm.end_date.toISOString(),
         price: parseInt(batchForm.price),
@@ -797,7 +805,7 @@ export default function AdminSubscriptionManagement({ user }) {
                     {batches.map((b) => (
                       <tr key={b.batch_id} className="border-t border-gray-100 hover:bg-gray-50" data-testid={`batch-row-${b.batch_id}`}>
                         <td className="px-4 py-3 font-medium text-[#1D3557]">{b.name}</td>
-                        <td className="px-4 py-3">{GRADE_LABELS[b.grade] || `Grade ${b.grade}`}</td>
+                        <td className="px-4 py-3">{(b.grades || []).map((g) => GRADE_LABELS[g] || `Grade ${g}`).join(', ')}</td>
                         <td className="px-4 py-3">{formatDate(b.start_date)}</td>
                         <td className="px-4 py-3">{formatDate(b.end_date)}</td>
                         <td className="px-4 py-3 font-medium">₹{b.price?.toLocaleString('en-IN')}</td>
@@ -823,7 +831,7 @@ export default function AdminSubscriptionManagement({ user }) {
                               className="p-1.5 rounded-md hover:bg-[#1D3557]/10 text-[#3D5A80] transition-colors"
                               title="Edit batch"
                             >
-                              <Save className="w-4 h-4" />
+                              <Pencil className="w-4 h-4" />
                             </button>
                             <button
                               data-testid={`delete-batch-${b.batch_id}`}
@@ -864,15 +872,24 @@ export default function AdminSubscriptionManagement({ user }) {
               />
             </div>
             <div>
-              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Grade</label>
-              <Select value={batchForm.grade} onValueChange={(v) => setBatchForm(prev => ({ ...prev, grade: v }))}>
-                <SelectTrigger data-testid="batch-grade-select"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {GRADE_LABELS.map((label, idx) => (
-                    <SelectItem key={idx} value={String(idx)}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Grades</label>
+              <div className="flex flex-wrap gap-2" data-testid="batch-grade-chips">
+                {GRADE_LABELS.map((label, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    data-testid={`batch-grade-chip-${idx}`}
+                    onClick={() => toggleBatchGrade(String(idx))}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                      batchForm.grades.includes(String(idx))
+                        ? 'bg-[#1D3557] text-white border-[#1D3557]'
+                        : 'bg-white text-[#1D3557] border-[#1D3557]/30 hover:border-[#1D3557]'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
