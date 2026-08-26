@@ -154,17 +154,17 @@ export default function LandingPage() {
                 <Rocket className="w-9 h-9 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>Entrepreneurship Workshop</h3>
-              <p className="text-[#3D5A80] mb-5">A grade-specific, batch-based program with live classes where kids pitch ideas, run mini ventures, and build a business mindset.</p>
+              <p className="text-[#3D5A80] mb-5">An age-specific, batch-based program with live classes where kids learn to manage money, pitch ideas, run a mini venture, and build a business mindset.</p>
               <ul className="space-y-2 mb-6 text-sm text-[#3D5A80]">
-                <li className="flex items-center gap-2"><CalendarDays className="w-4 h-4 text-[#5B21B6]" /> Dated batches with live classes included</li>
+                <li className="flex items-center gap-2"><CalendarDays className="w-4 h-4 text-[#5B21B6]" /> Dated batches with weekly live classes </li>
                 <li className="flex items-center gap-2"><Rocket className="w-4 h-4 text-[#5B21B6]" /> Idea pitching & mini-venture simulations</li>
-                <li className="flex items-center gap-2"><Users className="w-4 h-4 text-[#5B21B6]" /> Book a free trial to get started</li>
+                <li className="flex items-center gap-2"><Users className="w-4 h-4 text-[#5B21B6]" /> Group sizes upto 15 kids for personalized attention</li>
               </ul>
               <button
                 data-testid="explore-ew-btn"
                 className="mt-auto flex items-center justify-center gap-2 bg-[#5B21B6] text-white font-bold px-6 py-3 rounded-full group-hover:-translate-y-1 transition-all"
               >
-                Guided Workshop <ArrowRight className="w-4 h-4" />
+                Know more <ArrowRight className="w-4 h-4" />
               </button>
             </div>
 
@@ -178,17 +178,17 @@ export default function LandingPage() {
                 <PiggyBank className="w-9 h-9 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>Financial Literacy Platform</h3>
-              <p className="text-[#3D5A80] mb-5">Digital wallet, Money Garden, quests and badges that teach earning, saving, sharing and investing — grade by grade, KG through Class 5.</p>
+              <p className="text-[#3D5A80] mb-5">A grade-by-grade program that teaches kids to earn, save, share, and invest — through stories and hands-on activities. From KG through Class 5.</p>
               <ul className="space-y-2 mb-6 text-sm text-[#3D5A80]">
-                <li className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-[#FFD23F]" /> Game-based money lessons</li>
-                <li className="flex items-center gap-2"><Users className="w-4 h-4 text-[#FFD23F]" /> Parent dashboard, chores & allowance</li>
-                <li className="flex items-center gap-2"><GraduationCap className="w-4 h-4 text-[#FFD23F]" /> Plans from ₹49</li>
+                <li className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-[#FFD23F]" /> Interactive, age-appropraite money lessons</li>
+                <li className="flex items-center gap-2"><Users className="w-4 h-4 text-[#FFD23F]" /> Small daily quests that build real habits</li>
+                <li className="flex items-center gap-2"><GraduationCap className="w-4 h-4 text-[#FFD23F]" /> Parent dashboard, chores & allowance</li>
               </ul>
               <button
                 data-testid="explore-fl-btn"
                 className="mt-auto flex items-center justify-center gap-2 bg-[#1D3557] text-white font-bold px-6 py-3 rounded-full group-hover:-translate-y-1 transition-all"
               >
-                DIY Platform <ArrowRight className="w-4 h-4" />
+                Know more <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -278,7 +278,7 @@ export default function LandingPage() {
                 <img src="https://customer-assets.emergentagent.com/job_coinquest-kids-2/artifacts/reffqcdx_school.png" alt="School" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Schools</h3>
-              <p className="text-[#3D5A80]">Bring both programs into your classroom: the self-paced Financial Literacy Platform for daily lessons with automatic assessments, and the live Entrepreneurship Workshop for hands-on venture-building — with detailed analytics for every student either way.</p>
+              <p className="text-[#3D5A80]">The Financial Literacy curriculum can be run by your teachers in class, with lesson plans and materials fully provided — and the live Entrepreneurship Workshop is facilitated by our team, where students build real ventures.</p>
             </div>
           </div>
         </div>

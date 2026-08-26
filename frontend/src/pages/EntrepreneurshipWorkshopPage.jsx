@@ -30,7 +30,7 @@ const highlights = [
   { icon: Lightbulb, title: "Idea to Pitch", description: "Kids dream up a business idea and learn to pitch it with confidence, just like real founders.", color: "#FFD23F" },
   { icon: Store, title: "Run a Mini Venture", description: "Simulate running a shop or venture — pricing, costs, profit — in a safe, game-based world.", color: "#EE6C4D" },
   { icon: Users, title: "Teamwork & Leadership", description: "Collaborate on group projects that build negotiation, leadership and communication skills.", color: "#06D6A0" },
-  { icon: PiggyBank, title: "Smart Money Management", description: "Build core financial literacy skills — save, spend and budget wisely with the money they have and the money they earn.", color: "#3D5A80" },
+  { icon: PiggyBank, title: "Smart Money Management", description: "Every founder starts with money basics. As kids grow, the focus shifts — from saving and earning, to deciding what to do with the profit they make.", color: "#3D5A80" },
 ];
 
 // Age tracks. Grade numbers follow the platform-wide K=0..9 scale (backend
