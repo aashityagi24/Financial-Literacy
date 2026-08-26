@@ -29,6 +29,7 @@ export default function Dashboard({ user, setUser }) {
   const [loading, setLoading] = useState(true);
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [hasCalendarAccess, setHasCalendarAccess] = useState(false);
+  const [hasClassroom, setHasClassroom] = useState(true);
   const showAnimations = useFirstVisitAnimation('dashboard');
   
   const gradeNames = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
@@ -620,16 +621,19 @@ export default function Dashboard({ user, setUser }) {
             )}
           </div>
           
-          {/* My Classroom - Compact */}
-          <div className={`card-playful p-4 ${showAnimations ? 'animate-bounce-in stagger-5' : ''}`}>
-            <ClassmatesSection 
-              giftingBalance={wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance || 0} 
-              compact={true} 
-              wallet={wallet}
-              grade={grade}
-              onRefresh={fetchDashboardData}
-            />
-          </div>
+          {/* My Classroom - Compact (hidden entirely if child isn't attached to a classroom) */}
+          {hasClassroom && (
+            <div className={`card-playful p-4 ${showAnimations ? 'animate-bounce-in stagger-5' : ''}`}>
+              <ClassmatesSection 
+                giftingBalance={wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance || 0} 
+                compact={true} 
+                wallet={wallet}
+                grade={grade}
+                onRefresh={fetchDashboardData}
+                onClassroomStatusChange={setHasClassroom}
+              />
+            </div>
+          )}
         </div>
         
         {/* Lending Banner - only for grades 4-5 */}

@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { STOCKS_ENABLED } from '@/config/features';
 
-export default function ClassmatesSection({ giftingBalance, compact = false, wallet, grade = 0, onRefresh }) {
+export default function ClassmatesSection({ giftingBalance, compact = false, wallet, grade = 0, onRefresh, onClassroomStatusChange }) {
   const [classmates, setClassmates] = useState([]);
   const [classroom, setClassroom] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -46,6 +46,7 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
       const res = await axios.get(`${API}/child/classmates`);
       setClassmates(res.data.classmates || []);
       setClassroom(res.data.classroom);
+      if (onClassroomStatusChange) onClassroomStatusChange(!!res.data.classroom);
     } catch (error) {
       console.error('Failed to fetch classmates:', error);
     } finally {
@@ -158,19 +159,12 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
   }
 
   if (!classroom) {
+    if (compact) return null; // Dashboard: hide the whole Classroom card when not enrolled
     return (
-      <div className={compact ? "flex flex-col h-full" : "card-playful p-6 text-center"}>
-        {compact && (
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-              <Users className="w-5 h-5 inline mr-2" />
-              My Classroom
-            </h2>
-          </div>
-        )}
+      <div className="card-playful p-6 text-center">
         <div className="flex-1 flex flex-col items-center justify-center text-center">
-          <Users className={`${compact ? 'w-10 h-10' : 'w-12 h-12'} mx-auto text-[#98C1D9] mb-2`} />
-          <h3 className={`${compact ? 'text-sm' : 'text-lg'} font-bold text-[#1D3557] mb-1`} style={{ fontFamily: 'Fredoka' }}>No Classroom Yet</h3>
+          <Users className="w-12 h-12 mx-auto text-[#98C1D9] mb-2" />
+          <h3 className="text-lg font-bold text-[#1D3557] mb-1" style={{ fontFamily: 'Fredoka' }}>No Classroom Yet</h3>
           <p className="text-xs text-[#3D5A80]">Join a classroom to see your classmates!</p>
           <p className="text-xs text-[#3D5A80] mt-1">Profile → Join Class</p>
         </div>

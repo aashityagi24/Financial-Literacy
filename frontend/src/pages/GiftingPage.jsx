@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import BackButton from '@/components/BackButton';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
@@ -27,8 +26,6 @@ import {
 } from "@/components/ui/select";
 
 export default function GiftingPage({ user }) {
-  const [activeTab, setActiveTab] = useState('history');
-  const [giftHistory, setGiftHistory] = useState(null);
   const [charitableGiving, setCharitableGiving] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -47,9 +44,6 @@ export default function GiftingPage({ user }) {
     description: ''
   });
   const [newItem, setNewItem] = useState({ name: '', value: '' });
-  
-  const grade = user?.grade || 0;
-  const canUseCharitableGiving = grade >= 2;
 
   useEffect(() => {
     fetchData();
@@ -57,17 +51,12 @@ export default function GiftingPage({ user }) {
 
   const fetchData = async () => {
     try {
-      const [historyRes, walletRes] = await Promise.all([
-        axios.get(`${API}/child/gift-history`),
+      const [charityRes, walletRes] = await Promise.all([
+        axios.get(`${API}/child/charitable-giving`),
         axios.get(`${API}/wallet`)
       ]);
-      setGiftHistory(historyRes.data);
+      setCharitableGiving(charityRes.data);
       setWallet(walletRes.data);
-      
-      if (canUseCharitableGiving) {
-        const charityRes = await axios.get(`${API}/child/charitable-giving`);
-        setCharitableGiving(charityRes.data);
-      }
     } catch (error) {
       console.error('Failed to fetch gifting data:', error);
     } finally {
@@ -189,7 +178,7 @@ export default function GiftingPage({ user }) {
             <h1 className="text-2xl md:text-3xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
               💝 Giving
             </h1>
-            <p className="text-sm text-[#3D5A80]">Share kindness with friends and those in need</p>
+            <p className="text-sm text-[#3D5A80]">Track your generosity and the good you've done</p>
           </div>
         </div>
 
@@ -219,47 +208,18 @@ export default function GiftingPage({ user }) {
         <div className="card-playful p-4 mb-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             {/* Stats */}
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-[#EE6C4D]/20 rounded-xl flex items-center justify-center">
-                  <Send className="w-5 h-5 text-[#EE6C4D]" />
-                </div>
-                <div>
-                  <p className="text-lg font-bold text-[#1D3557]">₹{giftHistory?.total_sent?.toFixed(0) || 0}</p>
-                  <p className="text-xs text-[#3D5A80]">Sent</p>
-                </div>
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 bg-[#9B5DE5]/20 rounded-xl flex items-center justify-center">
+                <Heart className="w-5 h-5 text-[#9B5DE5]" />
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-[#06D6A0]/20 rounded-xl flex items-center justify-center">
-                  <Gift className="w-5 h-5 text-[#06D6A0]" />
-                </div>
-                <div>
-                  <p className="text-lg font-bold text-[#1D3557]">₹{giftHistory?.total_received?.toFixed(0) || 0}</p>
-                  <p className="text-xs text-[#3D5A80]">Received</p>
-                </div>
+              <div>
+                <p className="text-lg font-bold text-[#1D3557]">₹{charitableGiving?.total_value?.toFixed(0) || 0}</p>
+                <p className="text-xs text-[#3D5A80]">Donated</p>
               </div>
-              {canUseCharitableGiving && (
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-[#9B5DE5]/20 rounded-xl flex items-center justify-center">
-                    <Heart className="w-5 h-5 text-[#9B5DE5]" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold text-[#1D3557]">₹{charitableGiving?.total_value?.toFixed(0) || 0}</p>
-                    <p className="text-xs text-[#3D5A80]">Donated</p>
-                  </div>
-                </div>
-              )}
             </div>
             
             {/* Quick Action Buttons */}
             <div className="flex items-center gap-2">
-              <Link 
-                to="/classmates" 
-                className="px-4 py-2 bg-[#EE6C4D] text-white rounded-xl font-bold flex items-center gap-2 hover:bg-[#D55A3D] transition-colors"
-              >
-                <Send className="w-4 h-4" />
-                Send Gift
-              </Link>
               <button 
                 onClick={() => setShowTransferDialog(true)}
                 className="px-4 py-2 bg-[#06D6A0] text-white rounded-xl font-bold flex items-center gap-2 hover:bg-[#05C090] transition-colors"
@@ -271,98 +231,9 @@ export default function GiftingPage({ user }) {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`px-4 py-2 rounded-xl font-bold transition-all ${
-              activeTab === 'history'
-                ? 'bg-[#1D3557] text-white'
-                : 'bg-white text-[#1D3557] border-2 border-[#1D3557]'
-            }`}
-          >
-            <Gift className="w-4 h-4 inline mr-2" />
-            Gift History
-          </button>
-          {canUseCharitableGiving && (
-            <button
-              onClick={() => setActiveTab('charitable')}
-              className={`px-4 py-2 rounded-xl font-bold transition-all ${
-                activeTab === 'charitable'
-                  ? 'bg-[#9B5DE5] text-white'
-                  : 'bg-white text-[#9B5DE5] border-2 border-[#9B5DE5]'
-              }`}
-            >
-              <Heart className="w-4 h-4 inline mr-2" />
-              Charitable Giving
-            </button>
-          )}
-        </div>
-
-        {/* Content */}
-        {activeTab === 'history' && (
-          <div className="card-playful p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-[#1D3557]">Gift Transactions</h2>
-            </div>
-            
-            {giftHistory?.transactions?.length > 0 ? (
-              <div className="space-y-3">
-                {giftHistory.transactions.map((trans, idx) => (
-                  <div key={idx} className={`p-3 rounded-xl border-2 ${
-                    trans.transaction_type === 'gift_sent' 
-                      ? 'bg-red-50 border-red-200' 
-                      : 'bg-green-50 border-green-200'
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          trans.transaction_type === 'gift_sent' ? 'bg-red-100' : 'bg-green-100'
-                        }`}>
-                          {trans.transaction_type === 'gift_sent' ? (
-                            <Send className="w-5 h-5 text-red-600" />
-                          ) : (
-                            <Gift className="w-5 h-5 text-green-600" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-bold text-[#1D3557]">
-                            {trans.transaction_type === 'gift_sent' 
-                              ? `Sent to ${trans.to_user_name || 'Friend'}` 
-                              : `From ${trans.from_user_name || 'Friend'}`}
-                          </p>
-                          <p className="text-xs text-[#3D5A80]">{trans.description}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className={`font-bold text-lg ${
-                          trans.transaction_type === 'gift_sent' ? 'text-red-600' : 'text-green-600'
-                        }`}>
-                          {trans.transaction_type === 'gift_sent' ? '-' : '+'}₹{Math.abs(trans.amount).toFixed(0)}
-                        </p>
-                        <p className="text-xs text-[#3D5A80]">
-                          {new Date(trans.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Gift className="w-16 h-16 mx-auto mb-4 text-[#98C1D9]" />
-                <p className="text-[#3D5A80]">No gift transactions yet</p>
-                <Link to="/classmates" className="text-[#9B5DE5] font-bold hover:underline">
-                  Send your first gift!
-                </Link>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'charitable' && canUseCharitableGiving && (
-          <div className="card-playful p-4">
-            <div className="flex items-center justify-between mb-4">
+        {/* Charitable Giving */}
+        <div className="card-playful p-4">
+          <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-[#1D3557]">My Charitable Giving</h2>
               <Button 
                 onClick={() => setShowAddDialog(true)}
@@ -435,7 +306,6 @@ export default function GiftingPage({ user }) {
               </div>
             )}
           </div>
-        )}
 
         {/* Add Charitable Giving Dialog */}
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>

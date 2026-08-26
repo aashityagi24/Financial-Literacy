@@ -1440,3 +1440,9 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - `Dashboard.jsx`: fetches this alongside other dashboard data; Calendar nav tile only rendered when `hasCalendarAccess` is true (was previously unconditional for all children).
   - `ParentDashboard.jsx`: same check gates the header's "Live Classes" link.
   - Verified end-to-end via curl (false before any workshop subscription, true immediately after granting a test `money_masters` subscription for both the child and their linked parent, false again after removing it) + live screenshots confirming the tile/link appear only when eligible.
+
+- **Hide Classroom tab (unattached children) + simplify Giving module (Aug 26, 2026)**
+  - `ClassmatesSection.jsx`: added `onClassroomStatusChange` callback, fires with `!!classroom` after fetch. Compact mode (Dashboard) now returns `null` instead of a "No Classroom Yet" placeholder when the child has no classroom.
+  - `Dashboard.jsx`: added `hasClassroom` state (default true to avoid flash), wraps the "My Classroom" card in `{hasClassroom && (...)}`, passes the callback down. Verified live: `blank_wallet_child` (no `classroom_students` link) — card fully absent, layout collapses cleanly; `wallet_demo_child` (linked to `demo_classroom_1`) — card shows normally with classmates.
+  - `GiftingPage.jsx`: removed the "Gift History" tab, "Sent"/"Received" stat cards, and "Send Gift" quick-action (all the peer-to-peer "gift to classmate" surfacing) — the Giving module now shows only "Charitable Giving" directly, no tabs. Removed the `grade >= 2` gate so charitable giving is available to all grades now that it's the only giving option. The underlying gift-to-classmate capability at `/classmates` (classroom page) is untouched — only its entry points inside the Giving module were removed.
+  - Verified via live screenshots of both the Dashboard (classroom card correctly hidden/shown per user) and the simplified Giving page.

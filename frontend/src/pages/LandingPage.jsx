@@ -94,15 +94,15 @@ export default function LandingPage() {
           <div className="flex flex-col lg:flex-row lg:items-center gap-10 lg:gap-8">
             <div className="max-w-2xl animate-bounce-in pb-12 lg:pb-0">
               <h1 className="text-5xl lg:text-6xl font-bold text-[#1D3557] mb-6 leading-tight" style={{ fontFamily: 'Fredoka' }}>
-                Nurture the{' '}
+                Raise a child who's{' '}
                 <span className="relative inline-block">
-                  <span className="relative z-10 text-[#EE6C4D]">founder</span>
+                  <span className="relative z-10 text-[#EE6C4D]">confident with money</span>
                   <span className="absolute left-[-4px] right-[-4px] bottom-[6px] h-3 bg-[#FFD23F] -rotate-1 -z-0"></span>
                 </span>{' '}
-                in your child.
+                and fearless with ideas.
               </h1>
               <p className="text-xl text-[#3D5A80] mb-10 leading-relaxed" data-testid="hub-hero-subtext">
-                Raise a child who's confident with money and fearless with ideas. They learn financial literacy at their own pace, or join live workshops where they turn ideas into real businesses.
+                They learn financial literacy at their own pace, or join live workshops where they turn ideas into real businesses.
               </p>
               <div className="flex flex-wrap gap-4 mb-6">
                 <BookCallButton
