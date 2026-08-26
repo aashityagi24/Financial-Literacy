@@ -1434,3 +1434,9 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - `ParentDashboard.jsx`: child-detail modal's "Stock Market available" line, Stock Market summary card, and the Investing jar tile (Money Jars grid) all hidden for grade 3+ children. Money Garden (grade 1-2) unaffected. Lending was already effectively unreachable in the parent UI (dead state, no trigger existed) — left as-is.
   - Backend untouched — all data/APIs still work, this is purely a UI-level hide, fully reversible by flipping the flags back to true.
   - Verified via live login as a Grade 3 child (`wallet_demo_child`) — Stocks/Lending tiles and Investing jar gone from Dashboard + Wallet page — and a Grade 1 child (`classmate_g1`) — "My Garden" tile + jar still visible, confirming correct scoping.
+
+- **Calendar gated to Money Masters workshop subscribers only (Aug 26, 2026)**
+  - New backend endpoint `GET /api/live-classes/access` (`routes/live_classes.py`) returns `{has_access: bool}` — true only if `money_entrepreneurship` is in the active curricula (i.e. an active `money_masters` batch subscription) for the child, or for at least one linked child (parent). Financial-literacy-only subscribers get `false`.
+  - `Dashboard.jsx`: fetches this alongside other dashboard data; Calendar nav tile only rendered when `hasCalendarAccess` is true (was previously unconditional for all children).
+  - `ParentDashboard.jsx`: same check gates the header's "Live Classes" link.
+  - Verified end-to-end via curl (false before any workshop subscription, true immediately after granting a test `money_masters` subscription for both the child and their linked parent, false again after removing it) + live screenshots confirming the tile/link appear only when eligible.

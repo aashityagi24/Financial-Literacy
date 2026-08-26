@@ -28,6 +28,7 @@ export default function Dashboard({ user, setUser }) {
   const [myJobs, setMyJobs] = useState({ family_jobs: [], payday_jobs: [] });
   const [loading, setLoading] = useState(true);
   const [showStreakModal, setShowStreakModal] = useState(false);
+  const [hasCalendarAccess, setHasCalendarAccess] = useState(false);
   const showAnimations = useFirstVisitAnimation('dashboard');
   
   const gradeNames = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
@@ -52,15 +53,17 @@ export default function Dashboard({ user, setUser }) {
   
   const fetchDashboardData = async () => {
     try {
-      const [walletRes, questsRes, badgesRes, goalsRes, jobsRes] = await Promise.all([
+      const [walletRes, questsRes, badgesRes, goalsRes, jobsRes, calendarAccessRes] = await Promise.all([
         axios.get(`${API}/wallet`),
         axios.get(`${API}/child/quests-new`),
         axios.get(`${API}/badges`),
         axios.get(`${API}/child/savings-goals`),
-        axios.get(`${API}/child/jobs`).catch(() => ({ data: { family_jobs: [], payday_jobs: [] } }))
+        axios.get(`${API}/child/jobs`).catch(() => ({ data: { family_jobs: [], payday_jobs: [] } })),
+        axios.get(`${API}/live-classes/access`).catch(() => ({ data: { has_access: false } }))
       ]);
       
       setWallet(walletRes.data);
+      setHasCalendarAccess(!!calendarAccessRes.data?.has_access);
       // Filter out completed AND expired quests - check status, user_status, is_completed, has_earned, and is_expired
       const activeQuests = (questsRes.data || []).filter(q => 
         q.status !== 'approved' && 
@@ -137,7 +140,7 @@ export default function Dashboard({ user, setUser }) {
     investmentItem,
     { icon: Target, label: 'Quests', path: '/quests', color: '#9B5DE5' },
     { icon: BookMarked, label: 'Money Words', path: '/glossary', color: '#4A90A4' },
-    { icon: CalendarDays, label: 'Calendar', path: '/calendar', color: '#EF476F' },
+    hasCalendarAccess ? { icon: CalendarDays, label: 'Calendar', path: '/calendar', color: '#EF476F' } : null,
     specialFeatureItem,
   ].filter(Boolean); // Remove null items
   

@@ -184,6 +184,38 @@ async def delete_live_class(class_id: str, request: Request):
 
 # ---------------------------------------------------------- Child / Parent view
 
+@router.get("/live-classes/access")
+async def get_live_classes_access(request: Request):
+    """Whether the caller should see the Calendar/Live Classes entry point at
+    all — true only when the Money Masters & Entrepreneurship curriculum is
+    active for them (child) or for at least one of their linked children
+    (parent). Financial-literacy-only subscribers get false."""
+    from services.auth import get_current_user
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Login required")
+
+    role = user.get("role")
+    if role == "admin":
+        return {"has_access": True}
+    if role == "child":
+        active = await get_active_curricula(user, db)
+        return {"has_access": active is None or "money_entrepreneurship" in active}
+    if role == "parent":
+        links = await db.parent_child_links.find(
+            {"parent_id": user["user_id"], "status": "active"}, {"_id": 0, "child_id": 1}
+        ).to_list(50)
+        for link in links:
+            child = await db.users.find_one({"user_id": link["child_id"]}, {"_id": 0})
+            if not child:
+                continue
+            active = await get_active_curricula(child, db)
+            if active is None or "money_entrepreneurship" in active:
+                return {"has_access": True}
+        return {"has_access": False}
+    return {"has_access": False}
+
+
 @router.get("/live-classes")
 async def get_my_live_classes(request: Request):
     """Published classes scoped to the caller. Children: their grade + school

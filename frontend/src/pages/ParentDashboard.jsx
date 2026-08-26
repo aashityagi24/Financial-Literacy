@@ -163,6 +163,7 @@ export default function ParentDashboard({ user }) {
     reminder_day: 'sunday'
   });
   const [selectedLoanRequest, setSelectedLoanRequest] = useState(null);
+  const [hasCalendarAccess, setHasCalendarAccess] = useState(false);
   const [loanResponseForm, setLoanResponseForm] = useState({
     action: '',
     counter_amount: '',
@@ -205,6 +206,10 @@ export default function ParentDashboard({ user }) {
       setChildJobs(jobsRes.data?.jobs || []);
       setParentGuide(guideRes.data?.parent_guide || '');
       setParentGuidePageAudios(guideRes.data?.parent_page_audios || []);
+
+      axios.get(`${API}/live-classes/access`)
+        .then(res => setHasCalendarAccess(!!res.data?.has_access))
+        .catch(() => setHasCalendarAccess(false));
       
       // Fetch subscription info
       axios.get(`${API}/subscriptions/my-subscription`)
@@ -653,10 +658,12 @@ export default function ParentDashboard({ user }) {
             </div>
             <div className="flex items-center gap-3">
               <NotificationCenter />
-              <Link to="/calendar" className="flex items-center gap-2 px-3 py-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors" data-testid="parent-calendar-link">
-                <Calendar className="w-4 h-4 text-white" />
-                <span className="text-sm font-medium text-white hidden sm:inline">Live Classes</span>
-              </Link>
+              {hasCalendarAccess && (
+                <Link to="/calendar" className="flex items-center gap-2 px-3 py-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors" data-testid="parent-calendar-link">
+                  <Calendar className="w-4 h-4 text-white" />
+                  <span className="text-sm font-medium text-white hidden sm:inline">Live Classes</span>
+                </Link>
+              )}
               <Link to="/profile" className="flex items-center gap-2 px-3 py-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors" data-testid="parent-profile-link">
                 <User className="w-4 h-4 text-white" />
                 <span className="text-sm font-medium text-white">{user?.name || 'Parent'}</span>
