@@ -146,7 +146,7 @@ export default function FinancialLiteracyPage() {
                 Learn Money Skills <span className="text-[#EE6C4D]">While Having Fun!</span>
               </h1>
               <p className="text-xl text-[#3D5A80] mb-8 leading-relaxed">
-                CoinQuest teaches KG - Class 5 kids about earning, saving, spending, sharing, and growing money through stories, exciting games, and real-world simulations!
+                CoinQuest teaches KG - Class 3 kids about earning, saving, spending, sharing, and growing money through stories, exciting games, and real-world simulations!
               </p>
               <div className="flex flex-wrap gap-4">
                 <button
