@@ -102,7 +102,7 @@ export default function LandingPage() {
                 and fearless with ideas.
               </h1>
               <p className="text-xl text-[#3D5A80] mb-10 leading-relaxed" data-testid="hub-hero-subtext">
-                They learn financial literacy at their own pace, or join live workshops where they turn ideas into real businesses.
+                Help your child develop the most important life-skills they will ever need - the skill of managing their money & bringing their ideas to life!
               </p>
               <div className="flex flex-wrap gap-4 mb-6">
                 <BookCallButton
