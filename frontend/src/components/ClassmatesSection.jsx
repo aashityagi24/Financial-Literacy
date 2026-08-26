@@ -21,8 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { STOCKS_ENABLED } from '@/config/features';
 
-export default function ClassmatesSection({ giftingBalance, compact = false, wallet, onRefresh }) {
+export default function ClassmatesSection({ giftingBalance, compact = false, wallet, grade = 0, onRefresh }) {
   const [classmates, setClassmates] = useState([]);
   const [classroom, setClassroom] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -370,9 +371,11 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
                       <SelectItem value="savings">
                         💰 Savings (₹{wallet?.accounts?.find(a => a.account_type === 'savings')?.balance?.toFixed(0) || 0})
                       </SelectItem>
-                      <SelectItem value="investing">
-                        📈 Investing (₹{wallet?.accounts?.find(a => a.account_type === 'investing')?.balance?.toFixed(0) || 0})
-                      </SelectItem>
+                      {grade > 0 && (grade <= 2 || STOCKS_ENABLED) && (
+                        <SelectItem value="investing">
+                          📈 Investing (₹{wallet?.accounts?.find(a => a.account_type === 'investing')?.balance?.toFixed(0) || 0})
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

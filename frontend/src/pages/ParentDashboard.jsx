@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { STORE_ENABLED } from '@/config/features';
+import { STORE_ENABLED, STOCKS_ENABLED } from '@/config/features';
 import {
   Dialog,
   DialogContent,
@@ -2168,8 +2168,8 @@ export default function ParentDashboard({ user }) {
                   <span className="text-[#1D3557] font-medium">Grade: {gradeLabels[childInsights.child?.grade] || 'Unknown'}</span>
                   <span className="text-[#3D5A80] text-sm">
                     {childInsights.investment_type === 'garden' && '🌱 Money Garden available'}
-                    {childInsights.investment_type === 'stocks' && '📈 Stock Market available'}
-                    {!childInsights.investment_type && '📚 Learning focus (no investments yet)'}
+                    {STOCKS_ENABLED && childInsights.investment_type === 'stocks' && '📈 Stock Market available'}
+                    {(!childInsights.investment_type || (!STOCKS_ENABLED && childInsights.investment_type === 'stocks')) && '📚 Learning focus (no investments yet)'}
                   </span>
                 </div>
 
@@ -2179,7 +2179,9 @@ export default function ParentDashboard({ user }) {
                     <Wallet className="w-5 h-5" /> Money Jars (Balance / Spent)
                   </h4>
                   <div className="grid grid-cols-4 gap-3">
-                    {childInsights.wallet?.accounts?.map((acc) => {
+                    {childInsights.wallet?.accounts?.filter((acc) => !(
+                      acc.account_type === 'investing' && !STOCKS_ENABLED && (childInsights.child?.grade ?? 0) >= 3
+                    )).map((acc) => {
                       const isSavings = acc.account_type === 'savings';
                       const savedInGoals = childInsights.wallet?.savings_in_goals || 0;
                       
@@ -2349,7 +2351,7 @@ export default function ParentDashboard({ user }) {
                   </div>
                 )}
 
-                {childInsights.investment_type === 'stocks' && childInsights.stocks && (
+                {childInsights.investment_type === 'stocks' && childInsights.stocks && STOCKS_ENABLED && (
                   <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
                     <h4 className="font-bold text-[#1D3557] mb-3 flex items-center gap-2">
                       <LineChart className="w-5 h-5 text-blue-600" /> Stock Market

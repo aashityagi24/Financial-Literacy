@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { STOCKS_ENABLED } from '@/config/features';
 
 export default function WalletPage({ user }) {
   const [wallet, setWallet] = useState(null);
@@ -119,7 +120,8 @@ export default function WalletPage({ user }) {
         },
       };
     } else {
-      // Grade 3+: Investing jar
+      // Grade 3+: Investing jar (hidden while STOCKS_ENABLED is false)
+      if (!STOCKS_ENABLED) return baseMeta;
       return {
         ...baseMeta,
         investing: { 
@@ -137,8 +139,8 @@ export default function WalletPage({ user }) {
   // Filter accounts based on grade (used for the Transfer dialog dropdowns)
   const getFilteredAccounts = () => {
     if (!wallet?.accounts) return [];
-    if (grade === 0) {
-      // Kindergarten: Remove investing account
+    if (grade === 0 || (grade >= 3 && !STOCKS_ENABLED)) {
+      // Kindergarten, or Grade 3+ while Stocks is hidden: remove investing account
       return wallet.accounts.filter(acc => acc.account_type !== 'investing');
     }
     return wallet.accounts;
@@ -354,7 +356,7 @@ export default function WalletPage({ user }) {
                     {(transferData.from_account || transferData.to_account) && (
                       <p className="text-[11px] text-[#3D5A80] mt-1.5 italic">
                         Piggy Bank & Giving are funded from <strong>My Wallet</strong>.
-                        {grade > 0 && (
+                        {grade > 0 && (STOCKS_ENABLED || grade <= 2) && (
                           <> {grade <= 2 ? 'Garden' : 'Garden / Investing'} from <strong>CoinQuest Wallet</strong>.</>
                         )}
                         {' '}Piggy Bank money leaves only by contributing to a savings goal.

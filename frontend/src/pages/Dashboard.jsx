@@ -15,7 +15,7 @@ import ClassmatesSection from '@/components/ClassmatesSection';
 import DashboardFooter from '@/components/DashboardFooter';
 import { ChildHomework } from '@/components/ChildHomework';
 import { getDefaultAvatar } from '@/utils/avatars';
-import { STORE_ENABLED } from '@/config/features';
+import { STORE_ENABLED, STOCKS_ENABLED, LENDING_ENABLED } from '@/config/features';
 
 export default function Dashboard({ user, setUser }) {
   const navigate = useNavigate();
@@ -117,12 +117,13 @@ export default function Dashboard({ user, setUser }) {
   const getInvestmentItem = () => {
     if (grade === 0) return null; // No investments for Kindergarten
     if (grade <= 2) return { icon: TrendingUp, label: 'My Garden', path: '/garden', color: '#228B22', emoji: '🌻' };
+    if (!STOCKS_ENABLED) return null;
     return { icon: TrendingUp, label: 'Stocks', path: '/stock-market', color: '#10B981', emoji: '📈' };
   };
   
   // Lending is only for grades 4-5
   const getSpecialFeatureItem = () => {
-    if (grade >= 4) return { icon: HandCoins, label: 'Lending', path: '/lending', color: '#F59E0B', emoji: '🤝' };
+    if (LENDING_ENABLED && grade >= 4) return { icon: HandCoins, label: 'Lending', path: '/lending', color: '#F59E0B', emoji: '🤝' };
     return null; // No special feature for younger grades
   };
   
@@ -158,13 +159,14 @@ export default function Dashboard({ user, setUser }) {
         ...baseAccounts,
         investing: { bg: 'bg-gradient-to-br from-[#228B22] to-[#32CD32]', icon: '🌱', label: 'My Garden', description: 'Money to grow plants' },
       };
-    } else {
+    } else if (STOCKS_ENABLED) {
       // Grade 3+: Investing jar
       return {
         ...baseAccounts,
         investing: { bg: 'bg-gradient-to-br from-[#3D5A80] to-[#5A7BA0]', icon: '📈', description: 'Money that grows' },
       };
     }
+    return baseAccounts;
   };
   
   const accountColors = getAccountColors();
@@ -172,8 +174,8 @@ export default function Dashboard({ user, setUser }) {
   // Filter accounts based on grade
   const getFilteredAccounts = () => {
     if (!wallet?.accounts) return [];
-    if (grade === 0) {
-      // Kindergarten: Remove investing account
+    if (grade === 0 || (grade >= 3 && !STOCKS_ENABLED)) {
+      // Kindergarten, or Grade 3+ while Stocks is hidden: remove investing account
       return wallet.accounts.filter(acc => acc.account_type !== 'investing');
     }
     return wallet.accounts;
@@ -621,13 +623,14 @@ export default function Dashboard({ user, setUser }) {
               giftingBalance={wallet?.accounts?.find(a => a.account_type === 'gifting')?.balance || 0} 
               compact={true} 
               wallet={wallet}
+              grade={grade}
               onRefresh={fetchDashboardData}
             />
           </div>
         </div>
         
         {/* Lending Banner - only for grades 4-5 */}
-        {grade >= 4 && (
+        {LENDING_ENABLED && grade >= 4 && (
           <div className={`mt-8 ${showAnimations ? 'animate-bounce-in stagger-5' : ''}`}>
             <Link 
               to="/lending"

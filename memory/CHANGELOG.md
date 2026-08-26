@@ -1424,3 +1424,13 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Frontend (`AdminSubscriptionManagement.jsx`): Grade single-select dropdown replaced with multi-select toggle chips (K..Grade 9), reusing the same chip pattern as the School Enquiry form. Batches table shows comma-separated grade labels. Edit already existed (PUT-based) but the icon was an ambiguous Save icon — swapped to a Pencil icon for clarity.
   - Frontend (`EntrepreneurshipWorkshopPage.jsx` public trial widget): batch-by-grade grouping and eligible-batch filtering updated to check `grades.includes(...)` instead of exact match.
   - Verified end-to-end via curl (create with 3 grades, edit to different 3 grades, confirmed in both admin and public listings, empty-grades validation rejected) + live screenshot of the multi-select chip UI in the admin dialog.
+
+- **Hide Lending & Stocks/Investing features (Aug 26, 2026)**
+  - New flags in `config/features.js`: `STOCKS_ENABLED = false`, `LENDING_ENABLED = false` (alongside existing `STORE_ENABLED`).
+  - Confirmed scope with user: hide only the Grade 3+ "Stocks" nav tile (Grade 1-2 "My Garden" stays visible, same underlying feature different UI); hide the Investing money jar too (Grade 3+ only — Garden jar for Grade 1-2 unaffected); hide Lending entirely (all grades); hide from parent dashboard too.
+  - `Dashboard.jsx`: Stocks nav tile hidden for grade 3+, Lending nav tile + banner hidden entirely, Investing jar removed from wallet accounts + account-color map for grade 3+.
+  - `WalletPage.jsx`: same Investing-jar hiding for grade 3+, jar-source explainer text no longer mentions "Investing" when hidden.
+  - `ClassmatesSection.jsx`: "Investing" transfer-source option in the gift-to-classmate dialog now hidden for grade 3+ (added `grade` prop, passed from `Dashboard.jsx`).
+  - `ParentDashboard.jsx`: child-detail modal's "Stock Market available" line, Stock Market summary card, and the Investing jar tile (Money Jars grid) all hidden for grade 3+ children. Money Garden (grade 1-2) unaffected. Lending was already effectively unreachable in the parent UI (dead state, no trigger existed) — left as-is.
+  - Backend untouched — all data/APIs still work, this is purely a UI-level hide, fully reversible by flipping the flags back to true.
+  - Verified via live login as a Grade 3 child (`wallet_demo_child`) — Stocks/Lending tiles and Investing jar gone from Dashboard + Wallet page — and a Grade 1 child (`classmate_g1`) — "My Garden" tile + jar still visible, confirming correct scoping.
