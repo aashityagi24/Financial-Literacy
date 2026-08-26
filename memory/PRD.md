@@ -61,6 +61,12 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Progressive unlock system for children
 
 
+### Content Management — Multi-Curriculum Placement (Aug 26, 2026) ✅
+- Topics/Subtopics/Content items can belong to 2+ curricula. The FIRST ticked curriculum is the item's "home" (uses its own `parent_id`/`topic_id` + `min_grade`/`max_grade`). Every OTHER ticked curriculum gets a `curriculum_overrides.<curriculum_id> = { parent_id, min_grade, max_grade }` entry via a new "Placement for &lt;Curriculum&gt;" box in the admin dialogs (Topic: grade range only; Subtopic: Topic picker + grade range; Content: cascading Topic→Subtopic picker + grade range). Placement pickers only list topics/subtopics already tagged with that curriculum (with an amber warning if none exist yet), and saving is blocked with a toast until a placement is chosen.
+- Admin Content Management tree view (`ContentManagement.jsx`), when filtered by the Curriculum dropdown, grafts subtopics/content under their curriculum-specific placement instead of the default one (mirrors the existing per-grade `grade_parents` grafting pattern).
+- Backend (`routes/content.py`): `curriculum_overrides` persisted on create/update for `content_topics` and `content_items`, treated as a structural field (always saved globally, like `min_grade`/`max_grade`, even when a per-grade override save is in progress).
+- **Scope note**: this is Phase 1 (admin authoring + admin tree only). The live child/parent/teacher-facing delivery pipeline (`get_all_topics`/`get_topic_detail` in `content.py`) does NOT yet resolve `curriculum_overrides` — real learners still see items at their default/home placement regardless of secondary-curriculum placement. Phase 2 (making live delivery curriculum-aware) is a deferred follow-up, flagged to the user as higher-risk since it touches the progressive-unlock/grade-gating query logic.
+
 ## Current Architecture Snapshot (Aug 23, 2026)
 - Roles: child, parent, teacher, school (admin), admin.
 - Learning hierarchy: Topic → Subtopic → Content Item, grade-scoped, progressive unlock.

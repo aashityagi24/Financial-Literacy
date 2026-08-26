@@ -854,6 +854,11 @@ async def admin_create_topic(request: Request):
         "min_grade": body.get("min_grade", 0),
         "max_grade": body.get("max_grade", 5),
         "curricula": normalize_curricula(body.get("curricula")),
+        # Placement (parent topic) + grade range for every curriculum beyond
+        # the first one ticked, e.g. {"money_entrepreneurship": {"parent_id":
+        # "topic_x", "min_grade": 6, "max_grade": 9}}. Lets the same topic /
+        # subtopic sit at a different spot & grade range per curriculum.
+        "curriculum_overrides": body.get("curriculum_overrides", {}),
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.content_topics.insert_one(topic_doc)
@@ -882,6 +887,8 @@ async def admin_update_topic(topic_id: str, request: Request):
                 update_fields[field] = body[field]
         if "curricula" in body:
             update_fields["curricula"] = normalize_curricula(body.get("curricula"))
+        if "curriculum_overrides" in body:
+            update_fields["curriculum_overrides"] = body["curriculum_overrides"]
     else:
         # Per-grade override for the human-facing fields only.
         for field in ["title", "description", "thumbnail"]:
@@ -894,6 +901,10 @@ async def admin_update_topic(topic_id: str, request: Request):
         for field in ["min_grade", "max_grade"]:
             if field in body:
                 update_fields[field] = body[field]
+        # Curriculum placement/grade overrides are likewise structural (not
+        # per-grade), so they're always saved globally too.
+        if "curriculum_overrides" in body:
+            update_fields["curriculum_overrides"] = body["curriculum_overrides"]
         # Allow clearing all overrides for this grade by sending grade_overrides_clear: true
         if body.get("grade_overrides_clear"):
             await db.content_topics.update_one(
@@ -996,6 +1007,9 @@ async def admin_create_item(request: Request):
         "reward_coins": body.get("reward_coins", 5),
         "is_published": body.get("is_published", False),
         "curricula": normalize_curricula(body.get("curricula")),
+        # Placement (parent subtopic, i.e. topic_id) + grade range for every
+        # curriculum beyond the first one ticked. See topic creation above.
+        "curriculum_overrides": body.get("curriculum_overrides", {}),
         # When True (default), the child MUST complete this item before the next
         # one unlocks. When False the next item unlocks automatically — useful
         # for supplementary worksheets/activities admins want to offer but not
@@ -1057,6 +1071,8 @@ async def admin_update_item(content_id: str, request: Request):
             update_fields[field] = body[field]
     if "curricula" in body:
         update_fields["curricula"] = normalize_curricula(body.get("curricula"))
+    if "curriculum_overrides" in body:
+        update_fields["curriculum_overrides"] = body["curriculum_overrides"]
     
     if update_fields:
         await db.content_items.update_one({"content_id": content_id}, {"$set": update_fields})

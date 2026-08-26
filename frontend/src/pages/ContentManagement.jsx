@@ -100,6 +100,105 @@ const CurriculaSelector = ({ value = [], onChange }) => (
   </div>
 );
 
+// Per-curriculum "placement" fields, shown once an item belongs to more than
+// one curriculum. curricula[0] is the item's home (uses its own parent_id /
+// topic_id + min_grade / max_grade as-is). Every OTHER ticked curriculum gets
+// its own topic/subtopic + grade range, stored under
+// curriculum_overrides.<curriculum_id> = { parent_id, min_grade, max_grade }.
+const CurriculumOverridesPanel = ({ curricula = [], overrides = {}, onChange, ownMinGrade, ownMaxGrade, pickerLevel = 'none', topics = [] }) => {
+  const secondary = curricula.slice(1);
+  if (secondary.length === 0) return null;
+
+  const setOverride = (cid, patch) => {
+    onChange({ ...overrides, [cid]: { ...overrides[cid], ...patch } });
+  };
+
+  return (
+    <div className="space-y-3">
+      {secondary.map(cid => {
+        const curName = CURRICULA.find(c => c.id === cid)?.name || cid;
+        const ov = overrides[cid] || {};
+        // Only topics already tagged with this curriculum are valid targets —
+        // otherwise the placed subtopic/content would silently vanish when
+        // browsing that curriculum (its parent wouldn't show up there).
+        const curriculumTopics = topics.filter(t => (t.curricula || ['financial_literacy']).includes(cid));
+        const ownerTopic = pickerLevel === 'subtopic'
+          ? topics.find(t => (t.subtopics || []).some(s => s.topic_id === ov.parent_id))
+          : null;
+        const topicPickerValue = pickerLevel === 'topic' ? (ov.parent_id || '') : (ownerTopic?.topic_id || ov._topic_hint || '');
+        return (
+          <div key={cid} className="border border-blue-200 bg-blue-50/60 rounded-lg p-3 space-y-3" data-testid={`curriculum-override-${cid}`}>
+            <p className="text-sm font-medium text-blue-900">Placement for {curName}</p>
+            <p className="text-xs text-blue-700">This also lives under {curName} — choose where it sits there and which grades it applies to.</p>
+            {pickerLevel !== 'none' && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Topic ({curName})</label>
+                {curriculumTopics.length === 0 ? (
+                  <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
+                    No topics are tagged with {curName} yet. Tag a Topic with this curriculum first.
+                  </p>
+                ) : (
+                  <Select
+                    value={topicPickerValue}
+                    onValueChange={(v) => {
+                      if (pickerLevel === 'topic') setOverride(cid, { parent_id: v });
+                      else setOverride(cid, { _topic_hint: v, parent_id: '' });
+                    }}
+                  >
+                    <SelectTrigger data-testid={`curriculum-override-topic-${cid}`}><SelectValue placeholder="Select a topic" /></SelectTrigger>
+                    <SelectContent>
+                      {curriculumTopics.map(t => <SelectItem key={t.topic_id} value={t.topic_id}>{t.title}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
+            {pickerLevel === 'subtopic' && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Subtopic ({curName})</label>
+                {topicPickerValue && (topics.find(t => t.topic_id === topicPickerValue)?.subtopics || []).filter(s => (s.curricula || ['financial_literacy']).includes(cid)).length === 0 ? (
+                  <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
+                    No subtopics under this topic are tagged with {curName} yet. Tag a subtopic with this curriculum first.
+                  </p>
+                ) : (
+                  <Select
+                    value={ov.parent_id || ''}
+                    onValueChange={(v) => setOverride(cid, { parent_id: v })}
+                    disabled={!topicPickerValue}
+                  >
+                    <SelectTrigger data-testid={`curriculum-override-subtopic-${cid}`}><SelectValue placeholder={topicPickerValue ? 'Select a subtopic' : 'Pick a topic first'} /></SelectTrigger>
+                    <SelectContent>
+                      {(topics.find(t => t.topic_id === topicPickerValue)?.subtopics || []).filter(s => (s.curricula || ['financial_literacy']).includes(cid)).map(s => (
+                        <SelectItem key={s.topic_id} value={s.topic_id}>{s.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Min Grade ({curName})</label>
+                <Select value={String(ov.min_grade ?? ownMinGrade)} onValueChange={(v) => setOverride(cid, { min_grade: parseInt(v) })}>
+                  <SelectTrigger data-testid={`curriculum-override-min-grade-${cid}`}><SelectValue /></SelectTrigger>
+                  <SelectContent>{GRADE_OPTIONS.map(g => <SelectItem key={g.value} value={String(g.value)}>{g.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Max Grade ({curName})</label>
+                <Select value={String(ov.max_grade ?? ownMaxGrade)} onValueChange={(v) => setOverride(cid, { max_grade: parseInt(v) })}>
+                  <SelectTrigger data-testid={`curriculum-override-max-grade-${cid}`}><SelectValue /></SelectTrigger>
+                  <SelectContent>{GRADE_OPTIONS.map(g => <SelectItem key={g.value} value={String(g.value)}>{g.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const GRADE_OPTIONS = [
   { value: 0, label: 'Kindergarten' },
   { value: 1, label: '1st Grade' },
@@ -175,6 +274,7 @@ function SortableTopicItem({ topic, isSelected, onSelect, onEdit, onDelete }) {
         isSelected ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'
       } ${isDragging ? 'shadow-lg' : ''}`}
       onClick={onSelect}
+      data-testid={`topic-row-${topic.topic_id}`}
     >
       <div className="flex items-center gap-4">
         {/* Drag Handle */}
@@ -212,10 +312,10 @@ function SortableTopicItem({ topic, isSelected, onSelect, onEdit, onDelete }) {
         
         {/* Actions */}
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
+          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onEdit(); }} data-testid={`edit-topic-${topic.topic_id}`}>
             <Edit2 className="w-3 h-3 mr-1" /> Edit
           </Button>
-          <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
+          <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={(e) => { e.stopPropagation(); onDelete(); }} data-testid={`delete-topic-${topic.topic_id}`}>
             <Trash2 className="w-3 h-3 mr-1" /> Delete
           </Button>
         </div>
@@ -253,6 +353,7 @@ function SortableSubtopicItem({ subtopic, isSelected, onSelect, onEdit, onDelete
         isSelected ? 'border-green-500 bg-green-50' : 'hover:border-gray-300'
       } ${isDragging ? 'shadow-lg' : ''}`}
       onClick={onSelect}
+      data-testid={`subtopic-row-${subtopic.topic_id}`}
     >
       <div className="flex items-center gap-4">
         {/* Drag Handle */}
@@ -288,13 +389,13 @@ function SortableSubtopicItem({ subtopic, isSelected, onSelect, onEdit, onDelete
         
         {/* Actions */}
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="ghost" className="text-blue-500 hover:text-blue-600" onClick={(e) => { e.stopPropagation(); onMove(); }}>
+          <Button size="sm" variant="ghost" className="text-blue-500 hover:text-blue-600" onClick={(e) => { e.stopPropagation(); onMove(); }} data-testid={`move-subtopic-${subtopic.topic_id}`}>
             <MoveRight className="w-3 h-3 mr-1" /> Move
           </Button>
-          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
+          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); onEdit(); }} data-testid={`edit-subtopic-${subtopic.topic_id}`}>
             <Edit2 className="w-3 h-3 mr-1" /> Edit
           </Button>
-          <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
+          <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={(e) => { e.stopPropagation(); onDelete(); }} data-testid={`delete-subtopic-${subtopic.topic_id}`}>
             <Trash2 className="w-3 h-3 mr-1" /> Delete
           </Button>
         </div>
@@ -342,6 +443,7 @@ function SortableContentItem({ content, onEdit, onDelete, onMove, onDuplicate, o
       ref={setNodeRef}
       style={style}
       className={`flex items-center gap-3 p-4 border rounded-xl bg-gray-50 ${isDragging ? 'shadow-lg bg-white' : ''}`}
+      data-testid={`content-row-${content.content_id}`}
     >
       {/* Drag Handle */}
       <div
@@ -419,16 +521,16 @@ function SortableContentItem({ content, onEdit, onDelete, onMove, onDuplicate, o
             <Eye className="w-4 h-4" />
           </Button>
         )}
-        <Button size="icon" variant="ghost" className="text-blue-500 hover:text-blue-600 h-8 w-8" onClick={onMove} title="Move">
+        <Button size="icon" variant="ghost" className="text-blue-500 hover:text-blue-600 h-8 w-8" onClick={onMove} title="Move" data-testid={`move-content-${content.content_id}`}>
           <MoveRight className="w-4 h-4" />
         </Button>
         <Button size="icon" variant="ghost" className="text-purple-500 hover:text-purple-600 h-8 w-8" onClick={onDuplicate} title="Duplicate" data-testid={`duplicate-content-${content.content_id}`}>
           <Copy className="w-4 h-4" />
         </Button>
-        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onEdit} title="Edit">
+        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onEdit} title="Edit" data-testid={`edit-content-${content.content_id}`}>
           <Edit2 className="w-4 h-4" />
         </Button>
-        <Button size="icon" variant="ghost" className="text-red-500 hover:text-red-600 h-8 w-8" onClick={onDelete} title="Delete">
+        <Button size="icon" variant="ghost" className="text-red-500 hover:text-red-600 h-8 w-8" onClick={onDelete} title="Delete" data-testid={`delete-content-${content.content_id}`}>
           <Trash2 className="w-4 h-4" />
         </Button>
       </div>
@@ -458,18 +560,16 @@ export default function ContentManagement({ user }) {
   const [selectedSubtopic, _setSelectedSubtopic] = useState(null);
   
   const setSelectedTopic = (topicOrUpdater) => {
-    _setSelectedTopic(prev => {
-      const topic = typeof topicOrUpdater === 'function' ? topicOrUpdater(prev) : topicOrUpdater;
-      const params = new URLSearchParams(searchParams);
-      if (topic) {
-        params.set('topic', topic.topic_id);
-      } else {
-        params.delete('topic');
-        params.delete('subtopic');
-      }
-      setSearchParams(params, { replace: true });
-      return topic;
-    });
+    const topic = typeof topicOrUpdater === 'function' ? topicOrUpdater(selectedTopic) : topicOrUpdater;
+    _setSelectedTopic(topic);
+    const params = new URLSearchParams(searchParams);
+    if (topic) {
+      params.set('topic', topic.topic_id);
+    } else {
+      params.delete('topic');
+      params.delete('subtopic');
+    }
+    setSearchParams(params, { replace: true });
   };
   
   const setSelectedSubtopic = (subtopic) => {
@@ -494,14 +594,54 @@ export default function ContentManagement({ user }) {
   const [moveTargetId, setMoveTargetId] = useState('');
   
   // Form states
-  const [topicForm, setTopicForm] = useState({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'] });
-  const [subtopicForm, setSubtopicForm] = useState({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'] });
+  const [topicForm, setTopicForm] = useState({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'], curriculum_overrides: {} });
+  const [subtopicForm, setSubtopicForm] = useState({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'], curriculum_overrides: {} });
   const [contentForm, setContentForm] = useState({
     title: '', description: '', content_type: 'worksheet', thumbnail: '',
     min_grade: 0, max_grade: 5, reward_coins: 5, is_published: false, is_mandatory: true, content_data: {},
     visible_to: ['child'], // Default visibility to child
-    curricula: ['financial_literacy']
+    curricula: ['financial_literacy'], curriculum_overrides: {}
   });
+  
+  // Keeps curriculum_overrides in sync with the curricula list: every
+  // curriculum beyond the first (the item's "home") gets an override entry
+  // (seeded with the item's current grade range so it's explicit from the
+  // start, not an empty object that silently rides the home range);
+  // unticking a curriculum drops its override.
+  const handleCurriculaChange = (nextCurricula, setForm) => {
+    setForm(prev => {
+      const nextOverrides = {};
+      nextCurricula.slice(1).forEach(cid => {
+        nextOverrides[cid] = prev.curriculum_overrides?.[cid] || { min_grade: prev.min_grade, max_grade: prev.max_grade };
+      });
+      return { ...prev, curricula: nextCurricula, curriculum_overrides: nextOverrides };
+    });
+  };
+  
+  // Blocks saving a subtopic/content item until every secondary curriculum
+  // has a placement (topic, and subtopic for content) chosen.
+  const validateCurriculumOverrides = (form, needsSubtopic) => {
+    for (const cid of (form.curricula || []).slice(1)) {
+      if (!form.curriculum_overrides?.[cid]?.parent_id) {
+        const name = CURRICULA.find(c => c.id === cid)?.name || cid;
+        toast.error(`Choose a ${needsSubtopic ? 'topic & subtopic' : 'topic'} for ${name} before saving`);
+        return false;
+      }
+    }
+    return true;
+  };
+  
+  // Drops the transient `_topic_hint` UI key (used only to drive the Content
+  // dialog's cascading Topic→Subtopic pickers) before the overrides are sent
+  // to the backend.
+  const cleanCurriculumOverrides = (overrides) => {
+    const cleaned = {};
+    Object.entries(overrides || {}).forEach(([cid, ov]) => {
+      const { _topic_hint, ...rest } = ov || {};
+      cleaned[cid] = rest;
+    });
+    return cleaned;
+  };
   
   // File refs
   const thumbnailRef = useRef(null);
@@ -560,11 +700,23 @@ export default function ContentManagement({ user }) {
     }
   };
   
+  // Returns { min, max } grade range effective for the active curriculum
+  // filter: the curriculum-specific override when one exists, else the
+  // item's own grade range.
+  const effectiveGradeRange = (item) => {
+    if (curriculumFilter !== 'all' && item?.curriculum_overrides?.[curriculumFilter]) {
+      const ov = item.curriculum_overrides[curriculumFilter];
+      return { min: ov.min_grade ?? item.min_grade, max: ov.max_grade ?? item.max_grade };
+    }
+    return { min: item?.min_grade, max: item?.max_grade };
+  };
+
   // Filter helper function - checks if item includes the selected grade
   const matchesGradeFilter = (item) => {
     if (gradeFilter === 'all') return true;
     const grade = parseInt(gradeFilter);
-    return item.min_grade <= grade && item.max_grade >= grade;
+    const { min, max } = effectiveGradeRange(item);
+    return min <= grade && max >= grade;
   };
 
   // Curriculum filter - legacy/untagged items count as Financial Literacy.
@@ -588,20 +740,28 @@ export default function ContentManagement({ user }) {
     return item.order || 0;
   };
   
-  // Returns the effective parent_id for a subtopic for the active grade
-  // filter. When grade-specific moves are applied, grade_parents[grade]
-  // overrides the global parent_id.
+  // Returns the effective parent_id for a subtopic. A curriculum-specific
+  // placement (curriculum_overrides) wins when the curriculum filter is
+  // active, otherwise a grade-specific move (grade_parents), otherwise the
+  // subtopic's own parent_id.
   const effectiveSubtopicParent = (subtopic) => {
     if (!subtopic) return null;
+    if (curriculumFilter !== 'all' && subtopic.curriculum_overrides?.[curriculumFilter]?.parent_id) {
+      return subtopic.curriculum_overrides[curriculumFilter].parent_id;
+    }
     if (gradeFilter !== 'all' && subtopic.grade_parents?.[gradeFilter]) {
       return subtopic.grade_parents[gradeFilter];
     }
     return subtopic.parent_id;
   };
   
-  // Returns the effective topic_id for a content item for the active grade.
+  // Returns the effective topic_id for a content item for the active grade
+  // and/or curriculum filter (see effectiveSubtopicParent above).
   const effectiveContentParent = (content) => {
     if (!content) return null;
+    if (curriculumFilter !== 'all' && content.curriculum_overrides?.[curriculumFilter]?.parent_id) {
+      return content.curriculum_overrides[curriculumFilter].parent_id;
+    }
     if (gradeFilter !== 'all' && content.grade_parents?.[gradeFilter]) {
       return content.grade_parents[gradeFilter];
     }
@@ -651,15 +811,16 @@ export default function ContentManagement({ user }) {
   const allSubtopics = topics.flatMap(t => t.subtopics || []);
   const filteredTopics = topics.filter(matchesGradeFilter).filter(matchesCurriculumFilter).map(topic => {
     const own = (topic.subtopics || []).filter(matchesGradeFilter).filter(matchesCurriculumFilter);
-    if (gradeFilter === 'all') {
+    if (gradeFilter === 'all' && curriculumFilter === 'all') {
       return { ...topic, subtopics: own };
     }
     const ownIds = new Set(own.map(s => s.topic_id));
-    const grafted = allSubtopics.filter(s =>
-      !ownIds.has(s.topic_id) &&
-      s.grade_parents?.[gradeFilter] === topic.topic_id &&
-      matchesGradeFilter(s) && matchesCurriculumFilter(s)
-    );
+    const grafted = allSubtopics.filter(s => {
+      if (ownIds.has(s.topic_id) || !matchesGradeFilter(s) || !matchesCurriculumFilter(s)) return false;
+      const graftedByCurriculum = curriculumFilter !== 'all' && s.curriculum_overrides?.[curriculumFilter]?.parent_id === topic.topic_id;
+      const graftedByGrade = gradeFilter !== 'all' && s.grade_parents?.[gradeFilter] === topic.topic_id;
+      return graftedByCurriculum || graftedByGrade;
+    });
     const retained = own.filter(s => effectiveSubtopicParent(s) === topic.topic_id);
     const mergedSubtopics = [...retained, ...grafted].map(applyOverrides);
     return { ...applyOverrides(topic), subtopics: mergedSubtopics };
@@ -752,19 +913,19 @@ export default function ContentManagement({ user }) {
     try {
       if (editingItem) {
         // When grade filter active, save as per-grade override only.
-        const payload = { ...topicForm };
+        const payload = { ...topicForm, curriculum_overrides: cleanCurriculumOverrides(topicForm.curriculum_overrides) };
         if (gradeFilter !== 'all') payload.grade = gradeFilter;
         await axios.put(`${API}/admin/content/topics/${editingItem.topic_id}`, payload);
         toast.success(gradeFilter === 'all'
           ? 'Topic updated'
           : `Topic updated for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only`);
       } else {
-        await axios.post(`${API}/admin/content/topics`, { ...topicForm, parent_id: null });
+        await axios.post(`${API}/admin/content/topics`, { ...topicForm, curriculum_overrides: cleanCurriculumOverrides(topicForm.curriculum_overrides), parent_id: null });
         toast.success('Topic created');
       }
       setShowTopicDialog(false);
       setEditingItem(null);
-      setTopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'] });
+      setTopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'], curriculum_overrides: {} });
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to save topic');
@@ -776,21 +937,22 @@ export default function ContentManagement({ user }) {
       toast.error('Please select a topic first');
       return;
     }
+    if (!validateCurriculumOverrides(subtopicForm, false)) return;
     try {
       if (editingItem) {
-        const payload = { ...subtopicForm };
+        const payload = { ...subtopicForm, curriculum_overrides: cleanCurriculumOverrides(subtopicForm.curriculum_overrides) };
         if (gradeFilter !== 'all') payload.grade = gradeFilter;
         await axios.put(`${API}/admin/content/topics/${editingItem.topic_id}`, payload);
         toast.success(gradeFilter === 'all'
           ? 'Subtopic updated'
           : `Subtopic updated for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only`);
       } else {
-        await axios.post(`${API}/admin/content/topics`, { ...subtopicForm, parent_id: selectedTopic.topic_id });
+        await axios.post(`${API}/admin/content/topics`, { ...subtopicForm, curriculum_overrides: cleanCurriculumOverrides(subtopicForm.curriculum_overrides), parent_id: selectedTopic.topic_id });
         toast.success('Subtopic created');
       }
       setShowSubtopicDialog(false);
       setEditingItem(null);
-      setSubtopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'] });
+      setSubtopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'], curriculum_overrides: {} });
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to save subtopic');
@@ -820,8 +982,9 @@ export default function ContentManagement({ user }) {
       toast.error('Please select a subtopic first');
       return;
     }
+    if (!validateCurriculumOverrides(contentForm, true)) return;
     try {
-      const data = { ...contentForm, topic_id: selectedSubtopic.topic_id };
+      const data = { ...contentForm, curriculum_overrides: cleanCurriculumOverrides(contentForm.curriculum_overrides), topic_id: selectedSubtopic.topic_id };
       if (editingItem) {
         await axios.put(`${API}/admin/content/items/${editingItem.content_id}`, data);
         toast.success('Content updated');
@@ -835,7 +998,7 @@ export default function ContentManagement({ user }) {
         title: '', description: '', content_type: 'worksheet', thumbnail: '',
         min_grade: 0, max_grade: 5, reward_coins: 5, is_published: false, is_mandatory: true, content_data: {},
         visible_to: ['child'],
-        curricula: ['financial_literacy']
+        curricula: ['financial_literacy'], curriculum_overrides: {}
       });
       fetchData();
     } catch (error) {
@@ -1162,7 +1325,8 @@ export default function ContentManagement({ user }) {
       thumbnail: (override?.thumbnail ?? topic.thumbnail) || '',
       min_grade: topic.min_grade,
       max_grade: topic.max_grade,
-      curricula: topic.curricula || ['financial_literacy']
+      curricula: topic.curricula || ['financial_literacy'],
+      curriculum_overrides: topic.curriculum_overrides || {}
     });
     setShowTopicDialog(true);
   };
@@ -1176,7 +1340,8 @@ export default function ContentManagement({ user }) {
       thumbnail: (override?.thumbnail ?? subtopic.thumbnail) || '',
       min_grade: subtopic.min_grade,
       max_grade: subtopic.max_grade,
-      curricula: subtopic.curricula || ['financial_literacy']
+      curricula: subtopic.curricula || ['financial_literacy'],
+      curriculum_overrides: subtopic.curriculum_overrides || {}
     });
     setShowSubtopicDialog(true);
   };
@@ -1195,7 +1360,8 @@ export default function ContentManagement({ user }) {
       is_mandatory: content.is_mandatory !== false, // default true
       content_data: content.content_data || {},
       visible_to: content.visible_to || ['child'],
-      curricula: content.curricula || ['financial_literacy']
+      curricula: content.curricula || ['financial_literacy'],
+      curriculum_overrides: content.curriculum_overrides || {}
     });
     setShowContentDialog(true);
   };
@@ -1735,7 +1901,7 @@ export default function ContentManagement({ user }) {
                       : `Drag and drop to reorder topics for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label}. Order is saved for this grade only.`}
                   </p>
                 </div>
-                <Button onClick={() => { setEditingItem(null); setTopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'] }); setShowTopicDialog(true); }}>
+                <Button onClick={() => { setEditingItem(null); setTopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'], curriculum_overrides: {} }); setShowTopicDialog(true); }}>
                   <Plus className="w-4 h-4 mr-2" /> Add Topic
                 </Button>
               </div>
@@ -1796,7 +1962,7 @@ export default function ContentManagement({ user }) {
                   </p>
                 </div>
                 <Button 
-                  onClick={() => { setEditingItem(null); setSubtopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'] }); setShowSubtopicDialog(true); }}
+                  onClick={() => { setEditingItem(null); setSubtopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'], curriculum_overrides: {} }); setShowSubtopicDialog(true); }}
                   disabled={!selectedTopic}
                 >
                   <Plus className="w-4 h-4 mr-2" /> Add Subtopic
@@ -2017,7 +2183,7 @@ export default function ContentManagement({ user }) {
             )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-              <Input value={topicForm.title} onChange={e => setTopicForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g., Money Basics" />
+              <Input data-testid="topic-title-input" value={topicForm.title} onChange={e => setTopicForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g., Money Basics" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -2045,10 +2211,19 @@ export default function ContentManagement({ user }) {
                 </Select>
               </div>
             </div>
-            <CurriculaSelector value={topicForm.curricula} onChange={v => setTopicForm(p => ({ ...p, curricula: v }))} />
+            <CurriculaSelector value={topicForm.curricula} onChange={v => handleCurriculaChange(v, setTopicForm)} />
+            <CurriculumOverridesPanel
+              curricula={topicForm.curricula}
+              overrides={topicForm.curriculum_overrides}
+              onChange={ov => setTopicForm(p => ({ ...p, curriculum_overrides: ov }))}
+              ownMinGrade={topicForm.min_grade}
+              ownMaxGrade={topicForm.max_grade}
+              pickerLevel="none"
+              topics={topics}
+            />
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowTopicDialog(false)}>Cancel</Button>
-              <Button onClick={saveTopic} disabled={!topicForm.title}>{editingItem ? 'Update' : 'Create'}</Button>
+              <Button onClick={saveTopic} disabled={!topicForm.title} data-testid="save-topic-button">{editingItem ? 'Update' : 'Create'}</Button>
             </div>
           </div>
         </DialogContent>
@@ -2083,7 +2258,7 @@ export default function ContentManagement({ user }) {
             )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-              <Input value={subtopicForm.title} onChange={e => setSubtopicForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g., What is Money?" />
+              <Input data-testid="subtopic-title-input" value={subtopicForm.title} onChange={e => setSubtopicForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g., What is Money?" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -2111,10 +2286,19 @@ export default function ContentManagement({ user }) {
                 </Select>
               </div>
             </div>
-            <CurriculaSelector value={subtopicForm.curricula} onChange={v => setSubtopicForm(p => ({ ...p, curricula: v }))} />
+            <CurriculaSelector value={subtopicForm.curricula} onChange={v => handleCurriculaChange(v, setSubtopicForm)} />
+            <CurriculumOverridesPanel
+              curricula={subtopicForm.curricula}
+              overrides={subtopicForm.curriculum_overrides}
+              onChange={ov => setSubtopicForm(p => ({ ...p, curriculum_overrides: ov }))}
+              ownMinGrade={subtopicForm.min_grade}
+              ownMaxGrade={subtopicForm.max_grade}
+              pickerLevel="topic"
+              topics={topics}
+            />
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowSubtopicDialog(false)}>Cancel</Button>
-              <Button onClick={saveSubtopic} disabled={!subtopicForm.title}>{editingItem ? 'Update' : 'Create'}</Button>
+              <Button onClick={saveSubtopic} disabled={!subtopicForm.title} data-testid="save-subtopic-button">{editingItem ? 'Update' : 'Create'}</Button>
             </div>
           </div>
         </DialogContent>
@@ -2167,7 +2351,7 @@ export default function ContentManagement({ user }) {
             {/* Basic Info */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-              <Input value={contentForm.title} onChange={e => setContentForm(p => ({ ...p, title: e.target.value }))} placeholder="Content title" />
+              <Input data-testid="content-title-input" value={contentForm.title} onChange={e => setContentForm(p => ({ ...p, title: e.target.value }))} placeholder="Content title" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -2439,11 +2623,20 @@ export default function ContentManagement({ user }) {
               )}
             </div>
 
-            <CurriculaSelector value={contentForm.curricula} onChange={v => setContentForm(p => ({ ...p, curricula: v }))} />
+            <CurriculaSelector value={contentForm.curricula} onChange={v => handleCurriculaChange(v, setContentForm)} />
+            <CurriculumOverridesPanel
+              curricula={contentForm.curricula}
+              overrides={contentForm.curriculum_overrides}
+              onChange={ov => setContentForm(p => ({ ...p, curriculum_overrides: ov }))}
+              ownMinGrade={contentForm.min_grade}
+              ownMaxGrade={contentForm.max_grade}
+              pickerLevel="subtopic"
+              topics={topics}
+            />
             
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowContentDialog(false)}>Cancel</Button>
-              <Button onClick={saveContent} disabled={!contentForm.title}>{editingItem ? 'Update' : 'Create'}</Button>
+              <Button onClick={saveContent} disabled={!contentForm.title} data-testid="save-content-button">{editingItem ? 'Update' : 'Create'}</Button>
             </div>
           </div>
         </DialogContent>
