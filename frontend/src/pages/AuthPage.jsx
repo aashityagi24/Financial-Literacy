@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { trackMetaPixelPageView } from '@/utils/metaPixel';
 import { 
   Eye, EyeOff, ArrowLeft, Mail, Lock, User, School, Shield, Phone,
   Sparkles, BookOpen, Coins, RefreshCw, X
@@ -35,6 +36,7 @@ const generateCaptcha = () => {
 
 export default function AuthPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mode, setMode] = useState('login'); // 'login' or 'signup'
   const [identifier, setIdentifier] = useState(''); // email or username
   const [password, setPassword] = useState('');
@@ -44,6 +46,14 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  
+  // Fire a Meta Pixel PageView specifically for the /signup route (not /login,
+  // which also renders this same component).
+  useEffect(() => {
+    if (location.pathname === '/signup') {
+      trackMetaPixelPageView();
+    }
+  }, [location.pathname]);
   
   // Pre-fill the remembered identifier (email/username) to reduce login friction
   useEffect(() => {
