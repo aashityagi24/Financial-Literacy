@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   UserCheck, BookOpen, CalendarDays, Target, Printer,
   Mic, Briefcase, Tag, Tent, Sparkles,
 } from 'lucide-react';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SchoolEnquiryDialog } from '@/components/SchoolEnquiryDialog';
+import { trackMetaPixelPageView } from '@/utils/metaPixel';
 
 const FL_CARDS = [
   { icon: Target, label: 'What students walk away with', desc: 'Practical money skills — saving, budgeting and spending decisions — built through activities, not lectures.', wide: true },
@@ -80,6 +81,8 @@ function ProgramSection({
 
 export default function ForSchoolsPage() {
   const [showEnquiry, setShowEnquiry] = useState(false);
+
+  useEffect(() => { trackMetaPixelPageView(); }, []);
 
   return (
     <div className="min-h-screen bg-white">

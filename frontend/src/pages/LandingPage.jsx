@@ -6,6 +6,7 @@ import {
 import { toast } from 'sonner';
 import { BookCallButton } from '@/components/BookCallDialog';
 import { SiteHeader } from '@/components/SiteHeader';
+import { trackMetaPixelPageView } from '@/utils/metaPixel';
 
 const PARENT_AVATARS = [
   'https://static.prod-images.emergentagent.com/jobs/5f108aa9-f735-40f8-8a41-389db6115b0a/images/6e9d1b311fdb60b83fdafadb83d0334b813d041063d07092835b78881ba6ce8f.jpeg',
@@ -69,6 +70,8 @@ function HowItWorks({ id, testId, eyebrow, title, steps, bg }) {
 export default function LandingPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  useEffect(() => { trackMetaPixelPageView(); }, []);
 
   useEffect(() => {
     if (searchParams.get('session_expired') === 'true') {

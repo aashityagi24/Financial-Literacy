@@ -16,6 +16,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { INDIA_STATES, getCitiesForState } from '@/data/indiaStatesCities';
+import { trackMetaPixelPageView } from '@/utils/metaPixel';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -80,6 +81,8 @@ export default function EntrepreneurshipWorkshopPage() {
   const [trackDetailTab, setTrackDetailTab] = useState('overview');
   const [curriculumByTrack, setCurriculumByTrack] = useState({});
   const [curriculumLoading, setCurriculumLoading] = useState(false);
+
+  useEffect(() => { trackMetaPixelPageView(); }, []);
 
   useEffect(() => {
     axios.get(`${API}/subscriptions/money-masters/public-batches`)

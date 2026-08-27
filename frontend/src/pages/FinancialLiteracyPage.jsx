@@ -5,6 +5,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import PricingSection from '@/components/PricingSection';
 import { SiteHeader } from '@/components/SiteHeader';
+import { trackMetaPixelPageView } from '@/utils/metaPixel';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -22,6 +23,8 @@ export default function FinancialLiteracyPage() {
   const [walkthroughVideos, setWalkthroughVideos] = useState(null);
   const [selectedVideoTab, setSelectedVideoTab] = useState('child');
   const [selectedGrade, setSelectedGrade] = useState(null);
+
+  useEffect(() => { trackMetaPixelPageView(); }, []);
 
   useEffect(() => {
     if (searchParams.get('no_subscription') === 'true') {
