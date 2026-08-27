@@ -23,6 +23,17 @@ const API = `${BACKEND_URL}/api`;
 
 const GRADE_LABELS = ['Kindergarten', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9'];
 
+// Compact label for a batch's grade coverage, e.g. [1,2] -> "Grade 1 – Grade 2",
+// so a single multi-grade batch shows one card instead of one per grade.
+const gradeRangeLabel = (grades) => {
+  const sorted = [...(grades || [])].sort((a, b) => a - b);
+  if (sorted.length === 0) return '';
+  if (sorted.length === 1) return GRADE_LABELS[sorted[0]];
+  const isContiguous = sorted.every((g, i) => i === 0 || g === sorted[i - 1] + 1);
+  if (isContiguous) return `${GRADE_LABELS[sorted[0]]} – ${GRADE_LABELS[sorted[sorted.length - 1]]}`;
+  return sorted.map((g) => GRADE_LABELS[g]).join(', ');
+};
+
 const EMPTY_FORM = { parent_name: '', phone: '', email: '', child_name: '', child_grade: '', batch_id: '', state: '', city: '' };
 
 const formatDate = (iso) => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -81,6 +92,9 @@ export default function EntrepreneurshipWorkshopPage() {
   const [trackDetailTab, setTrackDetailTab] = useState('overview');
   const [curriculumByTrack, setCurriculumByTrack] = useState({});
   const [curriculumLoading, setCurriculumLoading] = useState(false);
+  // Grades the child-grade dropdown is restricted to when the trial dialog
+  // is opened from a specific batch card; null = no restriction (any grade).
+  const [allowedGrades, setAllowedGrades] = useState(null);
 
   useEffect(() => { trackMetaPixelPageView(); }, []);
 
@@ -93,6 +107,7 @@ export default function EntrepreneurshipWorkshopPage() {
   useEffect(() => {
     if (searchParams.get('trial') === '1') {
       setForm(EMPTY_FORM);
+      setAllowedGrades(null);
       setDialogOpen(true);
       window.history.replaceState({}, '', '/entrepreneurship-workshop');
     }
@@ -113,12 +128,10 @@ export default function EntrepreneurshipWorkshopPage() {
 
   const activeLessons = curriculumByTrack[selectedTrack];
 
-  const batchesByGrade = GRADE_LABELS.map((label, grade) => ({
-    grade, label, items: batches.filter((b) => (b.grades || []).includes(grade)),
-  })).filter((g) => g.items.length > 0);
-
-  const openTrialForm = (batch = null, grade = null) => {
-    setForm({ ...EMPTY_FORM, batch_id: batch?.batch_id || '', child_grade: batch ? String(grade ?? batch.grades[0]) : '' });
+  const openTrialForm = (batch = null) => {
+    const grades = batch?.grades || [];
+    setForm({ ...EMPTY_FORM, batch_id: batch?.batch_id || '', child_grade: grades.length ? String(grades[0]) : '' });
+    setAllowedGrades(grades.length ? grades : null);
     setDialogOpen(true);
   };
 
@@ -345,16 +358,16 @@ export default function EntrepreneurshipWorkshopPage() {
             <p className="text-xl text-[#3D5A80] max-w-2xl mx-auto">Each batch includes its curriculum content and all scheduled live classes — no separate purchase.</p>
           </div>
 
-          {batchesByGrade.length === 0 ? (
+          {batches.length === 0 ? (
             <div className="max-w-md mx-auto text-center card-playful p-8 bg-white" data-testid="ew-no-batches">
               <CalendarDays className="w-12 h-12 mx-auto text-[#3D5A80] mb-3" />
               <p className="text-[#3D5A80] font-medium">New batches are being scheduled — book a free trial and we'll notify you the moment one opens for your child's grade.</p>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto" data-testid="ew-batches-grid">
-              {batchesByGrade.flatMap((g) => g.items.map((b) => (
+              {batches.map((b) => (
                 <div key={b.batch_id} className="card-playful p-6 bg-white flex flex-col" data-testid={`ew-batch-card-${b.batch_id}`}>
-                  <span className="inline-block self-start bg-[#5B21B6]/10 text-[#5B21B6] text-xs font-bold px-3 py-1 rounded-full mb-3">{g.label}</span>
+                  <span className="inline-block self-start bg-[#5B21B6]/10 text-[#5B21B6] text-xs font-bold px-3 py-1 rounded-full mb-3">{gradeRangeLabel(b.grades)}</span>
                   <h3 className="text-lg font-bold text-[#1D3557] mb-1" style={{ fontFamily: 'Fredoka' }}>{b.name}</h3>
                   <p className="text-sm text-[#3D5A80] flex items-center gap-1 mb-4">
                     <CalendarDays className="w-4 h-4" /> {formatDate(b.start_date)} – {formatDate(b.end_date)}
@@ -363,14 +376,14 @@ export default function EntrepreneurshipWorkshopPage() {
                     <span className="text-2xl font-bold text-[#5B21B6]" style={{ fontFamily: 'Fredoka' }}>₹{b.price.toLocaleString('en-IN')}</span>
                     <Button
                       data-testid={`ew-book-trial-${b.batch_id}`}
-                      onClick={() => openTrialForm(b, g.grade)}
+                      onClick={() => openTrialForm(b)}
                       className="bg-[#1D3557] hover:bg-[#2D4A6F] text-white rounded-full"
                     >
                       Book Free Trial
                     </Button>
                   </div>
                 </div>
-              )))}
+              ))}
             </div>
           )}
         </div>
@@ -476,7 +489,9 @@ export default function EntrepreneurshipWorkshopPage() {
               <SelectTrigger data-testid="trial-grade-select"><SelectValue placeholder="Child's Grade" /></SelectTrigger>
               <SelectContent>
                 {GRADE_LABELS.map((label, idx) => (
-                  <SelectItem key={idx} value={String(idx)}>{label}</SelectItem>
+                  (!allowedGrades || allowedGrades.includes(idx)) && (
+                    <SelectItem key={idx} value={String(idx)}>{label}</SelectItem>
+                  )
                 ))}
               </SelectContent>
             </Select>
