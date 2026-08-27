@@ -559,7 +559,12 @@ export default function AdminSubscriptionManagement({ user }) {
                               <span className="font-medium">{PLAN_LABELS.money_masters}</span>
                               <p className="text-[11px] text-purple-600">{sub.batch_name} &middot; {GRADE_LABELS[sub.grade] || `Grade ${sub.grade}`}</p>
                             </div>
-                          ) : (PLAN_LABELS[sub.plan_type] || sub.plan_type)}
+                          ) : (
+                            <div>
+                              <span className="font-medium">{PLAN_LABELS[sub.plan_type] || sub.plan_type}</span>
+                              <p className="text-[11px] text-blue-600">Financial Literacy</p>
+                            </div>
+                          )}
                         </td>
                         <td className="px-4 py-3">{sub.duration_label || DURATION_LABELS[sub.duration]}</td>
                         <td className="px-4 py-3 text-center">{sub.num_children}</td>

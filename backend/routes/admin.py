@@ -155,7 +155,7 @@ async def get_users(request: Request):
             user["active_plans"] = [
                 {
                     "plan_type": e["plan_type"],
-                    "label": f"Money Masters — {e.get('batch_name') or 'Batch'}" if e["plan_type"] == "money_masters" else "Full Plan",
+                    "label": f"Money Masters — {e.get('batch_name') or 'Batch'}" if e["plan_type"] == "money_masters" else "Financial Literacy — Full Plan",
                     "end_date": e["end_date"],
                 }
                 for e in relevant
