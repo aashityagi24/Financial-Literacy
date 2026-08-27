@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -42,7 +43,7 @@ const PLAN_LABELS = {
 
 const GRADE_LABELS = ['K', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9'];
 
-const EMPTY_BATCH_FORM = { name: '', grades: ['0'], start_date: null, end_date: null, price: '' };
+const EMPTY_BATCH_FORM = { name: '', grades: ['0'], start_date: null, end_date: null, price: '', description: '' };
 
 const isExpired = (endDate) => {
   if (!endDate) return false;
@@ -107,6 +108,7 @@ export default function AdminSubscriptionManagement({ user }) {
         start_date: new Date(batch.start_date),
         end_date: new Date(batch.end_date),
         price: String(batch.price),
+        description: batch.description || '',
       });
       setBatchDialog({ open: true, editingId: batch.batch_id });
     } else {
@@ -136,6 +138,7 @@ export default function AdminSubscriptionManagement({ user }) {
         start_date: batchForm.start_date.toISOString(),
         end_date: batchForm.end_date.toISOString(),
         price: parseInt(batchForm.price),
+        description: batchForm.description.trim(),
       };
       if (batchDialog.editingId) {
         await axios.put(`${API}/subscriptions/admin/money-masters/batches/${batchDialog.editingId}`, payload);
@@ -937,6 +940,17 @@ export default function AdminSubscriptionManagement({ user }) {
                 value={batchForm.price}
                 onChange={(e) => setBatchForm(prev => ({ ...prev, price: e.target.value }))}
               />
+            </div>
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Description (optional)</label>
+              <Textarea
+                data-testid="batch-description-input"
+                placeholder="e.g. 12 live classes, weekly worksheets, and a graduation certificate"
+                rows={3}
+                value={batchForm.description}
+                onChange={(e) => setBatchForm(prev => ({ ...prev, description: e.target.value }))}
+              />
+              <p className="text-xs text-gray-500 mt-1">Shown to parents on the batch's public listing card — great place for number of classes, schedule days, or anything else worth calling out.</p>
             </div>
             <Button
               data-testid="save-batch-btn"

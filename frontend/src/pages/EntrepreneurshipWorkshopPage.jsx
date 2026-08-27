@@ -369,9 +369,12 @@ export default function EntrepreneurshipWorkshopPage() {
                 <div key={b.batch_id} className="card-playful p-6 bg-white flex flex-col" data-testid={`ew-batch-card-${b.batch_id}`}>
                   <span className="inline-block self-start bg-[#5B21B6]/10 text-[#5B21B6] text-xs font-bold px-3 py-1 rounded-full mb-3">{gradeRangeLabel(b.grades)}</span>
                   <h3 className="text-lg font-bold text-[#1D3557] mb-1" style={{ fontFamily: 'Fredoka' }}>{b.name}</h3>
-                  <p className="text-sm text-[#3D5A80] flex items-center gap-1 mb-4">
+                  <p className="text-sm text-[#3D5A80] flex items-center gap-1 mb-2">
                     <CalendarDays className="w-4 h-4" /> {formatDate(b.start_date)} – {formatDate(b.end_date)}
                   </p>
+                  {b.description && (
+                    <p className="text-sm text-[#3D5A80]/80 mb-4" data-testid={`ew-batch-description-${b.batch_id}`}>{b.description}</p>
+                  )}
                   <div className="mt-auto flex items-center justify-between">
                     <span className="text-2xl font-bold text-[#5B21B6]" style={{ fontFamily: 'Fredoka' }}>₹{b.price.toLocaleString('en-IN')}</span>
                     <Button

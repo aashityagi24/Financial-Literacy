@@ -61,6 +61,7 @@ class BatchCreate(BaseModel):
     start_date: str  # ISO date
     end_date: str    # ISO date
     price: int        # INR
+    description: Optional[str] = ""
     class_ids: Optional[List[str]] = []
 
 
@@ -70,6 +71,7 @@ class BatchUpdate(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     price: Optional[int] = None
+    description: Optional[str] = None
     is_active: Optional[bool] = None
     class_ids: Optional[List[str]] = None
 
@@ -931,6 +933,7 @@ async def create_money_masters_batch(batch: BatchCreate, request: Request):
         "start_date": start_date,
         "end_date": end_date,
         "price": batch.price,
+        "description": (batch.description or "").strip(),
         "class_ids": class_ids,
         "is_active": True,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -998,6 +1001,8 @@ async def update_money_masters_batch(batch_id: str, updates: BatchUpdate, reques
         fields["end_date"] = end_date
     if updates.is_active is not None:
         fields["is_active"] = updates.is_active
+    if updates.description is not None:
+        fields["description"] = updates.description.strip()
     if updates.class_ids is not None:
         fields["class_ids"] = await _validate_class_ids(updates.class_ids, db)
 
@@ -1297,7 +1302,7 @@ async def list_public_money_masters_batches():
     batches = await db.money_masters_batches.find({
         "is_active": True,
         "end_date": {"$gt": now_iso},
-    }, {"_id": 0, "batch_id": 1, "name": 1, "grades": 1, "start_date": 1, "end_date": 1, "price": 1}).sort("start_date", 1).to_list(200)
+    }, {"_id": 0, "batch_id": 1, "name": 1, "grades": 1, "start_date": 1, "end_date": 1, "price": 1, "description": 1}).sort("start_date", 1).to_list(200)
     return batches
 
 
