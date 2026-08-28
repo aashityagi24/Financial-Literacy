@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { SchoolEnquiryDialog } from '@/components/SchoolEnquiryDialog';
+import { PricingOffer } from '@/components/PricingOffer';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const RAZORPAY_KEY = process.env.REACT_APP_RAZORPAY_KEY_ID;
@@ -323,10 +324,13 @@ export default function PricingSection() {
                     </div>
 
                     {/* Base price */}
-                    <p className="text-4xl font-bold text-[#1D3557] mb-0.5" style={{ fontFamily: 'Fredoka' }}>
-                      ₹{price.toLocaleString('en-IN')}
-                    </p>
-                    <p className="text-xs text-gray-500 mb-3">
+                    <PricingOffer
+                      price={price}
+                      discountPercent={plan.discount_percent}
+                      priceClassName="text-4xl font-bold text-[#1D3557] mb-0.5"
+                      testId={`plan-${dur}`}
+                    />
+                    <p className="text-xs text-gray-500 mb-3 mt-0.5">
                       ₹{perDay}/day &middot; includes 1 child
                     </p>
                   </div>

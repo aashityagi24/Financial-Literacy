@@ -43,7 +43,7 @@ const PLAN_LABELS = {
 
 const GRADE_LABELS = ['K', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9'];
 
-const EMPTY_BATCH_FORM = { name: '', grades: ['0'], start_date: null, end_date: null, price: '', description: '' };
+const EMPTY_BATCH_FORM = { name: '', grades: ['0'], start_date: null, end_date: null, price: '', description: '', discount_percent: '' };
 
 const isExpired = (endDate) => {
   if (!endDate) return false;
@@ -109,6 +109,7 @@ export default function AdminSubscriptionManagement({ user }) {
         end_date: new Date(batch.end_date),
         price: String(batch.price),
         description: batch.description || '',
+        discount_percent: batch.discount_percent ? String(batch.discount_percent) : '',
       });
       setBatchDialog({ open: true, editingId: batch.batch_id });
     } else {
@@ -139,6 +140,7 @@ export default function AdminSubscriptionManagement({ user }) {
         end_date: batchForm.end_date.toISOString(),
         price: parseInt(batchForm.price),
         description: batchForm.description.trim(),
+        discount_percent: parseInt(batchForm.discount_percent) || 0,
       };
       if (batchDialog.editingId) {
         await axios.put(`${API}/subscriptions/admin/money-masters/batches/${batchDialog.editingId}`, payload);
@@ -243,6 +245,7 @@ export default function AdminSubscriptionManagement({ user }) {
         base_price: parseInt(config.base_price),
         child_prices: (config.child_prices || []).map(p => parseInt(p) || 0),
         extra_child_per_day: parseFloat(config.extra_child_per_day) || 0,
+        discount_percent: parseInt(config.discount_percent) || 0,
       });
       toast.success(`${PLAN_LABELS[planType]} - ${DURATION_LABELS[duration]} pricing updated`);
       fetchData();
@@ -751,6 +754,23 @@ export default function AdminSubscriptionManagement({ user }) {
                                 ))}
                               </div>
                             </div>
+                            <div>
+                              <label className="text-xs font-medium text-gray-500">Offer Discount % (shows a strikethrough "original price" on the public card)</label>
+                              <Input
+                                data-testid={`config-discount-${planType}-${duration}`}
+                                type="number"
+                                min="0"
+                                max="90"
+                                placeholder="0"
+                                value={config.discount_percent || ''}
+                                onChange={(e) => {
+                                  const newConfig = { ...editingConfig };
+                                  newConfig[planType][duration].discount_percent = parseInt(e.target.value) || 0;
+                                  setEditingConfig({ ...newConfig });
+                                }}
+                                className="h-8 text-sm"
+                              />
+                            </div>
                             <Button
                               data-testid={`save-config-${planType}-${duration}`}
                               onClick={() => savePlanConfig(planType, duration)}
@@ -945,6 +965,19 @@ export default function AdminSubscriptionManagement({ user }) {
                 value={batchForm.price}
                 onChange={(e) => setBatchForm(prev => ({ ...prev, price: e.target.value }))}
               />
+            </div>
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Offer Discount % (optional)</label>
+              <Input
+                data-testid="batch-discount-input"
+                type="number"
+                min="0"
+                max="90"
+                placeholder="e.g. 25"
+                value={batchForm.discount_percent}
+                onChange={(e) => setBatchForm(prev => ({ ...prev, discount_percent: e.target.value }))}
+              />
+              <p className="text-xs text-gray-500 mt-1">Shows a strikethrough "original price" next to the price above on the public batch card, framed as a limited-time offer.</p>
             </div>
             <div>
               <label className="text-sm font-bold text-[#1D3557] mb-1 block">Description (optional)</label>

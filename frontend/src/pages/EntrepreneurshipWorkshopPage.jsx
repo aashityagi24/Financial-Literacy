@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { INDIA_STATES, getCitiesForState } from '@/data/indiaStatesCities';
 import { trackMetaPixelPageView } from '@/utils/metaPixel';
+import { PricingOffer } from '@/components/PricingOffer';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -376,7 +377,12 @@ export default function EntrepreneurshipWorkshopPage() {
                     <p className="text-sm text-[#3D5A80]/80 mb-4" data-testid={`ew-batch-description-${b.batch_id}`}>{b.description}</p>
                   )}
                   <div className="mt-auto flex items-center justify-between">
-                    <span className="text-2xl font-bold text-[#5B21B6]" style={{ fontFamily: 'Fredoka' }}>₹{b.price.toLocaleString('en-IN')}</span>
+                    <PricingOffer
+                      price={b.price}
+                      discountPercent={b.discount_percent}
+                      priceClassName="text-2xl font-bold text-[#5B21B6]"
+                      testId={`batch-${b.batch_id}`}
+                    />
                     <Button
                       data-testid={`ew-book-trial-${b.batch_id}`}
                       onClick={() => openTrialForm(b)}

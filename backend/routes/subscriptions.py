@@ -53,6 +53,7 @@ class PlanConfigUpdate(BaseModel):
     base_price: int
     child_prices: list  # [2nd_child, 3rd_child, 4th_child, 5th_child]
     extra_child_per_day: float = 0
+    discount_percent: Optional[int] = 0  # shows a strikethrough "original price" offer on the public pricing card
 
 
 class BatchCreate(BaseModel):
@@ -62,6 +63,7 @@ class BatchCreate(BaseModel):
     end_date: str    # ISO date
     price: int        # INR
     description: Optional[str] = ""
+    discount_percent: Optional[int] = 0  # shows a strikethrough "original price" offer on the public batch card
     class_ids: Optional[List[str]] = []
 
 
@@ -72,6 +74,7 @@ class BatchUpdate(BaseModel):
     end_date: Optional[str] = None
     price: Optional[int] = None
     description: Optional[str] = None
+    discount_percent: Optional[int] = None
     is_active: Optional[bool] = None
     class_ids: Optional[List[str]] = None
 
@@ -117,6 +120,7 @@ async def get_plan_pricing(plan_type: str, duration: str):
             "base_price": config["base_price"],
             "child_prices": config["child_prices"],
             "extra_child_per_day": config.get("extra_child_per_day", 0),
+            "discount_percent": config.get("discount_percent", 0),
         }
     # Legacy fallback: convert old per_child_price to child_prices array
     if config and "per_child_price" in config:
@@ -125,9 +129,10 @@ async def get_plan_pricing(plan_type: str, duration: str):
             "base_price": config["base_price"],
             "child_prices": [p, p, p, p],
             "extra_child_per_day": 0,
+            "discount_percent": config.get("discount_percent", 0),
         }
     default = DEFAULT_PLANS.get(plan_type, {}).get(duration, {"base_price": 500, "child_prices": [200, 200, 200, 200], "extra_child_per_day": 0})
-    return default
+    return {**default, "discount_percent": 0}
 
 
 def calculate_total(pricing: dict, num_children: int) -> int:
@@ -156,6 +161,7 @@ async def get_plans():
                 "base_price": pricing["base_price"],
                 "child_prices": pricing["child_prices"],
                 "extra_child_per_day": pricing.get("extra_child_per_day", 0),
+                "discount_percent": pricing.get("discount_percent", 0),
                 "duration_label": DURATION_MAP[duration]["label"],
                 "duration_days": DURATION_MAP[duration]["days"],
             }
@@ -721,6 +727,7 @@ async def admin_get_plan_config(request: Request):
                     "base_price": db_config["base_price"],
                     "child_prices": db_config["child_prices"],
                     "extra_child_per_day": db_config.get("extra_child_per_day", 0),
+                    "discount_percent": db_config.get("discount_percent", 0),
                 }
             elif db_config and "per_child_price" in db_config:
                 # Legacy migration
@@ -729,9 +736,10 @@ async def admin_get_plan_config(request: Request):
                     "base_price": db_config["base_price"],
                     "child_prices": [p, p, p, p],
                     "extra_child_per_day": 0,
+                    "discount_percent": db_config.get("discount_percent", 0),
                 }
             else:
-                all_plans[plan_type][duration] = DEFAULT_PLANS[plan_type][duration]
+                all_plans[plan_type][duration] = {**DEFAULT_PLANS[plan_type][duration], "discount_percent": 0}
     
     return all_plans
 
@@ -749,6 +757,8 @@ async def admin_update_plan_config(request: Request, config: PlanConfigUpdate):
         raise HTTPException(status_code=400, detail="Invalid plan type")
     if config.duration not in DURATION_MAP:
         raise HTTPException(status_code=400, detail="Invalid duration")
+    if config.discount_percent is not None and not (0 <= config.discount_percent <= 90):
+        raise HTTPException(status_code=400, detail="Discount must be between 0 and 90")
     
     await db.subscription_plan_config.update_one(
         {"plan_type": config.plan_type, "duration": config.duration},
@@ -758,6 +768,7 @@ async def admin_update_plan_config(request: Request, config: PlanConfigUpdate):
             "base_price": config.base_price,
             "child_prices": config.child_prices,
             "extra_child_per_day": config.extra_child_per_day,
+            "discount_percent": config.discount_percent or 0,
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }},
         upsert=True
@@ -923,6 +934,9 @@ async def create_money_masters_batch(batch: BatchCreate, request: Request):
         raise HTTPException(status_code=400, detail="Grade must be between 0 (K) and 9")
     if batch.price <= 0:
         raise HTTPException(status_code=400, detail="Price must be greater than 0")
+    discount_percent = batch.discount_percent or 0
+    if not (0 <= discount_percent <= 90):
+        raise HTTPException(status_code=400, detail="Discount must be between 0 and 90")
     start_date, end_date = _validate_batch_dates(batch.start_date, batch.end_date)
     class_ids = await _validate_class_ids(batch.class_ids, db)
 
@@ -934,6 +948,7 @@ async def create_money_masters_batch(batch: BatchCreate, request: Request):
         "end_date": end_date,
         "price": batch.price,
         "description": (batch.description or "").strip(),
+        "discount_percent": discount_percent,
         "class_ids": class_ids,
         "is_active": True,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -1003,6 +1018,10 @@ async def update_money_masters_batch(batch_id: str, updates: BatchUpdate, reques
         fields["is_active"] = updates.is_active
     if updates.description is not None:
         fields["description"] = updates.description.strip()
+    if updates.discount_percent is not None:
+        if not (0 <= updates.discount_percent <= 90):
+            raise HTTPException(status_code=400, detail="Discount must be between 0 and 90")
+        fields["discount_percent"] = updates.discount_percent
     if updates.class_ids is not None:
         fields["class_ids"] = await _validate_class_ids(updates.class_ids, db)
 
@@ -1302,7 +1321,7 @@ async def list_public_money_masters_batches():
     batches = await db.money_masters_batches.find({
         "is_active": True,
         "end_date": {"$gt": now_iso},
-    }, {"_id": 0, "batch_id": 1, "name": 1, "grades": 1, "start_date": 1, "end_date": 1, "price": 1, "description": 1}).sort("start_date", 1).to_list(200)
+    }, {"_id": 0, "batch_id": 1, "name": 1, "grades": 1, "start_date": 1, "end_date": 1, "price": 1, "description": 1, "discount_percent": 1}).sort("start_date", 1).to_list(200)
     return batches
 
 
