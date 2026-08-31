@@ -5,6 +5,7 @@ import uuid
 import os
 import shutil
 import zipfile
+from services.object_storage import put_object, get_object
 
 # Upload directories
 ROOT_DIR = Path(__file__).parent.parent
@@ -18,7 +19,8 @@ INVESTMENT_IMAGES_DIR = UPLOADS_DIR / "investments"
 BADGES_DIR = UPLOADS_DIR / "badges"
 GLOSSARY_IMAGES_DIR = UPLOADS_DIR / "glossary"
 
-# Ensure directories exist
+# Ensure directories exist (still used for zip-extracted activity bundles, which
+# stay on local disk since object storage has no concept of a directory tree)
 for dir_path in [THUMBNAILS_DIR, PDFS_DIR, ACTIVITIES_DIR, VIDEOS_DIR, STORE_IMAGES_DIR, INVESTMENT_IMAGES_DIR, BADGES_DIR, GLOSSARY_IMAGES_DIR]:
     dir_path.mkdir(parents=True, exist_ok=True)
 
@@ -43,10 +45,8 @@ async def upload_general_image(file: UploadFile = File(...)):
         file_ext = "png"
     
     filename = f"img_{uuid.uuid4().hex[:12]}.{file_ext}"
-    file_path = GLOSSARY_IMAGES_DIR / filename
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    content = await file.read()
+    put_object(f"glossary/{filename}", content, file.content_type)
     
     return {"url": f"/api/uploads/glossary/{filename}"}
 
@@ -70,10 +70,8 @@ async def upload_glossary_video(file: UploadFile = File(...)):
         file_ext = "mp4"
     
     filename = f"vid_{uuid.uuid4().hex[:12]}.{file_ext}"
-    file_path = GLOSSARY_IMAGES_DIR / filename  # Store in same directory
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    content = await file.read()
+    put_object(f"glossary/{filename}", content, file.content_type)  # Store in same category
     
     return {"url": f"/api/uploads/glossary/{filename}"}
 
@@ -85,10 +83,8 @@ async def upload_badge_image(file: UploadFile = File(...)):
     
     file_ext = file.filename.split(".")[-1] if "." in file.filename else "png"
     filename = f"badge_{uuid.uuid4().hex[:12]}.{file_ext}"
-    file_path = BADGES_DIR / filename
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    content = await file.read()
+    put_object(f"badges/{filename}", content, file.content_type)
     
     return {"url": f"/api/uploads/badges/{filename}"}
 
@@ -100,10 +96,8 @@ async def upload_thumbnail(file: UploadFile = File(...)):
     
     file_ext = file.filename.split(".")[-1] if "." in file.filename else "png"
     filename = f"{uuid.uuid4().hex[:16]}.{file_ext}"
-    file_path = THUMBNAILS_DIR / filename
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    content = await file.read()
+    put_object(f"thumbnails/{filename}", content, file.content_type)
     
     return {"url": f"/api/uploads/thumbnails/{filename}"}
 
@@ -114,16 +108,16 @@ async def upload_pdf(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="File must be a PDF")
     
     filename = f"{uuid.uuid4().hex[:16]}.pdf"
-    file_path = PDFS_DIR / filename
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    content = await file.read()
+    put_object(f"pdfs/{filename}", content, "application/pdf")
     
     return {"url": f"/api/uploads/pdfs/{filename}"}
 
 @router.post("/activity")
 async def upload_activity_html(file: UploadFile = File(...)):
-    """Upload an HTML activity (zip file with HTML and assets)"""
+    """Upload an HTML activity (zip file with HTML and assets). Stays on local disk -
+    it extracts into a multi-file bundle (HTML + assets referenced by relative path),
+    which object storage (a flat key-value store) can't serve as a directory tree."""
     if not file.filename.endswith(".zip"):
         raise HTTPException(status_code=400, detail="File must be a ZIP archive")
     
@@ -188,14 +182,8 @@ async def upload_html_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="File must be an HTML file (.html or .htm)")
     
     folder_name = uuid.uuid4().hex[:16]
-    html_folder = ACTIVITIES_DIR / folder_name
-    html_folder.mkdir(parents=True, exist_ok=True)
-    
-    # Save as index.html so it can be served the same way as ZIP extracts
-    file_path = html_folder / "index.html"
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    content = await file.read()
+    put_object(f"activities/{folder_name}/index.html", content, "text/html")
     
     return {"url": f"/api/uploads/activities/{folder_name}/index.html", "folder": folder_name}
 
@@ -210,11 +198,8 @@ async def upload_video_file(file: UploadFile = File(...)):
     
     # Generate unique filename
     filename = f"{uuid.uuid4().hex[:16]}{file_ext}"
-    file_path = VIDEOS_DIR / filename
-    
-    # Save the video file
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    content = await file.read()
+    put_object(f"videos/{filename}", content, file.content_type)
     
     return {"url": f"/api/uploads/videos/{filename}"}
 
@@ -230,19 +215,10 @@ async def upload_walkthrough_video(file: UploadFile = File(...), user_type: str 
     if user_type not in ["child", "parent", "teacher"]:
         raise HTTPException(status_code=400, detail="user_type must be child, parent, or teacher")
     
-    # Use user_type in filename for walkthrough video
+    # Use user_type in filename for walkthrough video (overwrites any previous one for that type)
     filename = f"walkthrough_{user_type}{file_ext}"
-    file_path = VIDEOS_DIR / filename
-    
-    # Remove any existing walkthrough video for this user type with different extension
-    for ext in allowed_extensions:
-        existing = VIDEOS_DIR / f"walkthrough_{user_type}{ext}"
-        if existing.exists() and existing != file_path:
-            existing.unlink()
-    
-    # Save the video file
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    content = await file.read()
+    put_object(f"videos/{filename}", content, file.content_type)
     
     return {"url": f"/api/uploads/videos/{filename}"}
 
@@ -255,11 +231,8 @@ async def upload_goal_image(file: UploadFile = File(...)):
     # Generate unique filename
     file_ext = os.path.splitext(file.filename)[1].lower() or ".jpg"
     filename = f"goal_{uuid.uuid4().hex[:16]}{file_ext}"
-    file_path = THUMBNAILS_DIR / filename
-    
-    # Save the image
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    content = await file.read()
+    put_object(f"thumbnails/{filename}", content, file.content_type)
     
     return {"url": f"/api/uploads/thumbnails/{filename}"}
 
@@ -271,11 +244,8 @@ async def upload_store_image(file: UploadFile = File(...)):
     
     file_ext = file.filename.split(".")[-1] if "." in file.filename else "png"
     filename = f"{uuid.uuid4().hex[:16]}.{file_ext}"
-    file_path = STORE_IMAGES_DIR / filename
-    
     content = await file.read()
-    with open(file_path, "wb") as f:
-        f.write(content)
+    put_object(f"store/{filename}", content, file.content_type)
     
     return {"url": f"/api/uploads/store/{filename}"}
 
@@ -287,39 +257,35 @@ async def upload_investment_image(file: UploadFile = File(...)):
     
     file_ext = file.filename.split(".")[-1] if "." in file.filename else "png"
     filename = f"{uuid.uuid4().hex[:16]}.{file_ext}"
-    file_path = INVESTMENT_IMAGES_DIR / filename
-    
     content = await file.read()
-    with open(file_path, "wb") as f:
-        f.write(content)
+    put_object(f"investments/{filename}", content, file.content_type)
     
     return {"url": f"/api/uploads/investments/{filename}"}
 
 
 # ============== CHUNKED UPLOAD ==============
+# Chunks are transient scratch data for one upload session, so each part is
+# staged in object storage under chunks/{upload_id}/... and removed once the
+# session's final file is assembled (see chunked_upload_complete below).
 CHUNKS_DIR = UPLOADS_DIR / "chunks"
 CHUNKS_DIR.mkdir(parents=True, exist_ok=True)
 
-# Map destination types to directories
-DEST_MAP = {
-    "video": VIDEOS_DIR,
-    "image": GLOSSARY_IMAGES_DIR,
-    "thumbnail": THUMBNAILS_DIR,
-    "pdf": PDFS_DIR,
-    "badge": BADGES_DIR,
-    "quest": UPLOADS_DIR / "quests",
-    "repository": UPLOADS_DIR / "repository",
-    "store": STORE_IMAGES_DIR,
-    "glossary": GLOSSARY_IMAGES_DIR,
-    "investment": INVESTMENT_IMAGES_DIR,
-    "goal": THUMBNAILS_DIR,
-    "activity": ACTIVITIES_DIR,
-    "audio": UPLOADS_DIR / "audio",
+# Map destination types to public URL category
+URL_PREFIX_MAP = {
+    "video": "videos",
+    "image": "glossary",
+    "thumbnail": "thumbnails",
+    "pdf": "pdfs",
+    "badge": "badges",
+    "quest": "quests",
+    "repository": "repository",
+    "store": "store",
+    "glossary": "glossary",
+    "investment": "investments",
+    "goal": "thumbnails",
+    "audio": "audio",
+    "activity": "activities",
 }
-
-# Ensure all directories exist
-for d in DEST_MAP.values():
-    d.mkdir(parents=True, exist_ok=True)
 
 from fastapi import Form
 
@@ -327,9 +293,6 @@ from fastapi import Form
 async def chunked_upload_init(filename: str = Form(...), dest_type: str = Form("video"), total_chunks: int = Form(1)):
     """Initialize a chunked upload session"""
     upload_id = uuid.uuid4().hex[:16]
-    upload_dir = CHUNKS_DIR / upload_id
-    upload_dir.mkdir(parents=True, exist_ok=True)
-    
     return {"upload_id": upload_id, "filename": filename, "dest_type": dest_type}
 
 @router.post("/chunked/part")
@@ -339,14 +302,8 @@ async def chunked_upload_part(
     file: UploadFile = File(...)
 ):
     """Upload a single chunk"""
-    upload_dir = CHUNKS_DIR / upload_id
-    if not upload_dir.exists():
-        raise HTTPException(status_code=404, detail="Upload session not found")
-    
-    chunk_path = upload_dir / f"chunk_{chunk_index:04d}"
     content = await file.read()
-    with open(chunk_path, "wb") as f:
-        f.write(content)
+    put_object(f"chunks/{upload_id}/chunk_{chunk_index:04d}", content, "application/octet-stream")
     
     return {"chunk_index": chunk_index, "received": len(content)}
 
@@ -357,29 +314,25 @@ async def chunked_upload_complete(
     dest_type: str = Form("video"),
     total_chunks: int = Form(1)
 ):
-    """Assemble chunks into the final file"""
-    upload_dir = CHUNKS_DIR / upload_id
-    if not upload_dir.exists():
-        raise HTTPException(status_code=404, detail="Upload session not found")
-    
-    # Determine destination
-    dest_dir = DEST_MAP.get(dest_type, VIDEOS_DIR)
-    dest_dir.mkdir(parents=True, exist_ok=True)
+    """Assemble chunks (staged in object storage) into the final file"""
+    def _read_chunk(i):
+        try:
+            data, _ = get_object(f"chunks/{upload_id}/chunk_{i:04d}")
+            return data
+        except Exception:
+            raise HTTPException(status_code=400, detail=f"Missing chunk {i}")
     
     file_ext = os.path.splitext(filename)[1].lower()
-    final_filename = f"{uuid.uuid4().hex[:16]}{file_ext}"
     
-    # Handle zip files for activities
+    # Handle zip files for activities - extracted locally since object storage
+    # can't serve a directory tree of assets (see upload_activity_html above)
     if dest_type == "activity" and file_ext == ".zip":
-        # Assemble into temp file first
+        upload_dir = CHUNKS_DIR / upload_id
+        upload_dir.mkdir(parents=True, exist_ok=True)
         temp_path = upload_dir / f"temp{file_ext}"
         with open(temp_path, "wb") as outfile:
             for i in range(total_chunks):
-                chunk_path = upload_dir / f"chunk_{i:04d}"
-                if not chunk_path.exists():
-                    raise HTTPException(status_code=400, detail=f"Missing chunk {i}")
-                with open(chunk_path, "rb") as chunk:
-                    outfile.write(chunk.read())
+                outfile.write(_read_chunk(i))
         
         # Extract zip
         folder_name = uuid.uuid4().hex[:12]
@@ -405,35 +358,16 @@ async def chunked_upload_complete(
             return {"url": f"/api/uploads/activities/{folder_name}/{html_file}", "folder": folder_name}
         return {"url": f"/api/uploads/activities/{folder_name}/index.html", "folder": folder_name}
     
-    # Standard file assembly
-    final_path = dest_dir / final_filename
-    with open(final_path, "wb") as outfile:
-        for i in range(total_chunks):
-            chunk_path = upload_dir / f"chunk_{i:04d}"
-            if not chunk_path.exists():
-                raise HTTPException(status_code=400, detail=f"Missing chunk {i}")
-            with open(chunk_path, "rb") as chunk:
-                outfile.write(chunk.read())
+    # Standard file assembly - concatenate chunks and upload the final blob
+    final_filename = f"{uuid.uuid4().hex[:16]}{file_ext}"
+    assembled = b"".join(_read_chunk(i) for i in range(total_chunks))
     
-    # Cleanup chunks
-    shutil.rmtree(upload_dir, ignore_errors=True)
-    
-    # Build URL path based on dest_type
-    url_prefix_map = {
-        "video": "videos",
-        "image": "glossary",
-        "thumbnail": "thumbnails",
-        "pdf": "pdfs",
-        "badge": "badges",
-        "quest": "quests",
-        "repository": "repository",
-        "store": "store",
-        "glossary": "glossary",
-        "investment": "investments",
-        "goal": "thumbnails",
-        "audio": "audio",
-        "activity": "activities",
-    }
-    url_prefix = url_prefix_map.get(dest_type, "videos")
+    url_prefix = URL_PREFIX_MAP.get(dest_type, "videos")
+    content_type_guess = {
+        ".mp4": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime",
+        ".pdf": "application/pdf", ".png": "image/png", ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp",
+    }.get(file_ext, "application/octet-stream")
+    put_object(f"{url_prefix}/{final_filename}", assembled, content_type_guess)
     
     return {"url": f"/api/uploads/{url_prefix}/{final_filename}"}

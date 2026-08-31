@@ -50,7 +50,7 @@ class TestShoppingListBugFix:
                     f"{BASE_URL}/api/parent/shopping-list/{list_id}",
                     headers=self.parent_headers
                 )
-            except:
+            except Exception:
                 pass
     
     # ============== TEST 1: POST /api/parent/shopping-list ==============

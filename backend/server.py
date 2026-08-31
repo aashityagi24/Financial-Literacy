@@ -49,8 +49,23 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
-# Mount static files for uploads under /api/uploads so it's accessible through the proxy
-app.mount("/api/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
+# Mount static files for uploads under /api/uploads so it's accessible through the proxy.
+# Falls back to Emergent Object Storage for files not on local disk (deployed pods have
+# ephemeral disks, so new uploads are persisted to object storage - see routes/uploads.py).
+from services.object_storage import get_object as _storage_get_object
+import mimetypes as _mimetypes
+
+@api_router.get("/uploads/{file_path:path}")
+async def serve_uploaded_file(file_path: str):
+    local_path = UPLOADS_DIR / file_path
+    if local_path.is_file():
+        return FileResponse(str(local_path))
+    try:
+        data, content_type = _storage_get_object(file_path)
+    except Exception:
+        raise HTTPException(status_code=404, detail="File not found")
+    guessed = _mimetypes.guess_type(file_path)[0]
+    return Response(content=data, media_type=guessed or content_type)
 
 # ============== MODULAR ROUTES INITIALIZATION ==============
 # Initialize modular route modules with database
@@ -187,17 +202,6 @@ class TransactionCreate(BaseModel):
     amount: float
     transaction_type: str
     description: str
-
-class StoreItem(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    item_id: str
-    name: str
-    description: str
-    price: float
-    category: str  # 'avatar', 'privilege', 'game_unlock'
-    image_url: Optional[str] = None
-    min_grade: int = 0
-    max_grade: int = 5
 
 class PurchaseCreate(BaseModel):
     item_id: str
@@ -1109,7 +1113,6 @@ async def require_parent(request: Request) -> dict:
         raise HTTPException(status_code=403, detail="Parent access required")
     return user
 
-import random
 import string
 
 def generate_invite_code():
@@ -2249,26 +2252,6 @@ async def _legacy_claim_achievement(achievement_id: str, request: Request):
 
 # ============== NEW QUEST SYSTEM ==============
 
-# Upload quest image/pdf
-# @api_router.post("/upload/quest-asset")  # MOVED
-async def _legacy_upload_quest_asset(file: UploadFile = File(...)):
-    """Upload image or PDF for quests"""
-    QUEST_ASSETS_DIR = UPLOADS_DIR / "quests"
-    QUEST_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
-    
-    ext = file.filename.split('.')[-1].lower()
-    if ext not in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf']:
-        raise HTTPException(status_code=400, detail="Invalid file type. Allowed: jpg, jpeg, png, gif, webp, pdf")
-    
-    filename = f"{uuid.uuid4().hex[:12]}.{ext}"
-    file_path = QUEST_ASSETS_DIR / filename
-    
-    with open(file_path, "wb") as f:
-        content = await file.read()
-        f.write(content)
-    
-    return {"url": f"/api/uploads/quests/{filename}"}
-
 # Admin Quest Management
 # @api_router.post("/admin/quests")  # MOVED
 async def _legacy_create_admin_quest(quest_data: QuestCreate, request: Request):
@@ -3012,7 +2995,7 @@ async def submit_quest_answers(quest_id: str, request: Request):
                 # Numeric comparison
                 try:
                     is_correct = float(user_answer) == float(correct_answer)
-                except:
+                except Exception:
                     is_correct = False
             elif question["question_type"] == "mcq":
                 # MCQ - correct_answer is letter (A,B,C,D), user_answer is option text
@@ -3265,8 +3248,6 @@ async def accept_quest(quest_id: str, request: Request):
 async def complete_quest(quest_id: str, request: Request):
     """Legacy - redirect to new submission"""
     return {"message": "Please use the new quest submission system"}
-    
-    return {"message": "Quest completed", "reward": quest["reward_amount"]}
 
 # ============== STREAK ROUTES ==============
 
@@ -6100,149 +6081,6 @@ async def _legacy_contribute_to_goal(goal_id: str, request: Request):
     }
 
 # ============== FILE UPLOAD ROUTES (MIGRATED TO routes/uploads.py) ==============
-
-# @api_router.post("/upload/thumbnail")  # MOVED
-async def _legacy_upload_thumbnail(file: UploadFile = File(...)):
-    """Upload a thumbnail image"""
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
-    
-    file_ext = file.filename.split(".")[-1] if "." in file.filename else "png"
-    filename = f"{uuid.uuid4().hex[:16]}.{file_ext}"
-    file_path = THUMBNAILS_DIR / filename
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    return {"url": f"/api/uploads/thumbnails/{filename}"}
-
-# @api_router.post("/upload/pdf")  # MOVED
-async def _legacy_upload_pdf(file: UploadFile = File(...)):
-    """Upload a PDF worksheet"""
-    if not file.content_type == "application/pdf":
-        raise HTTPException(status_code=400, detail="File must be a PDF")
-    
-    filename = f"{uuid.uuid4().hex[:16]}.pdf"
-    file_path = PDFS_DIR / filename
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    return {"url": f"/api/uploads/pdfs/{filename}"}
-
-# @api_router.post("/upload/activity")  # MOVED
-async def _legacy_upload_activity_html(file: UploadFile = File(...)):
-    """Upload an HTML activity (zip file with index.html and assets)"""
-    if not file.filename.endswith(".zip"):
-        raise HTTPException(status_code=400, detail="File must be a ZIP archive")
-    
-    folder_name = uuid.uuid4().hex[:16]
-    activity_folder = ACTIVITIES_DIR / folder_name
-    activity_folder.mkdir(parents=True, exist_ok=True)
-    
-    # Save the zip file temporarily
-    zip_path = activity_folder / "temp.zip"
-    with open(zip_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    # Extract the zip file
-    try:
-        with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            # Filter out __MACOSX metadata files
-            for member in zip_ref.namelist():
-                if "__MACOSX" in member or member.startswith("._") or "/._" in member:
-                    continue
-                zip_ref.extract(member, activity_folder)
-        zip_path.unlink()  # Remove the zip file after extraction
-        
-        # Check if index.html exists at root level
-        index_path = activity_folder / "index.html"
-        if not index_path.exists():
-            # Check subdirectory (common when zipping a folder)
-            for item in activity_folder.iterdir():
-                if item.is_dir():
-                    sub_index = item / "index.html"
-                    if sub_index.exists():
-                        # Move contents up
-                        for sub_item in item.iterdir():
-                            shutil.move(str(sub_item), str(activity_folder / sub_item.name))
-                        item.rmdir()
-                        break
-        
-        # Find all HTML files in the folder (including subdirectories)
-        html_files = []
-        for html_file in activity_folder.rglob("*.html"):
-            relative_path = html_file.relative_to(activity_folder)
-            # Skip __MACOSX metadata files
-            if "__MACOSX" in str(relative_path) or str(relative_path).startswith("._"):
-                continue
-            # Clean up the display name
-            display_name = html_file.stem.replace("_", " ").replace("-", " ").replace(".html", "").replace(".htm", "")
-            display_name = display_name.title()
-            html_files.append({
-                "name": display_name,
-                "path": str(relative_path),
-                "url": f"/api/uploads/activities/{folder_name}/{relative_path}"
-            })
-        
-        # Also check for .htm files
-        for html_file in activity_folder.rglob("*.htm"):
-            relative_path = html_file.relative_to(activity_folder)
-            # Skip __MACOSX metadata files
-            if "__MACOSX" in str(relative_path) or str(relative_path).startswith("._"):
-                continue
-            display_name = html_file.stem.replace("_", " ").replace("-", " ").replace(".html", "").replace(".htm", "")
-            display_name = display_name.title()
-            html_files.append({
-                "name": display_name,
-                "path": str(relative_path),
-                "url": f"/api/uploads/activities/{folder_name}/{relative_path}"
-            })
-        
-        if not html_files:
-            shutil.rmtree(activity_folder)
-            raise HTTPException(status_code=400, detail="ZIP must contain at least one HTML file")
-        
-        # Sort HTML files - index files first (handles index.html, index.htm, index.html.html), then alphabetically
-        def sort_key(x):
-            filename = x["path"].split("/")[-1].lower()
-            is_index = filename.startswith("index")
-            return (0 if is_index else 1, x["name"].lower())
-        
-        html_files.sort(key=sort_key)
-        
-        # Primary URL is the first file in sorted order (index file if exists)
-        primary_url = html_files[0]["url"]
-            
-    except zipfile.BadZipFile:
-        shutil.rmtree(activity_folder)
-        raise HTTPException(status_code=400, detail="Invalid ZIP file")
-    
-    return {
-        "url": primary_url, 
-        "folder": folder_name,
-        "html_files": html_files
-    }
-
-# @api_router.post("/upload/html")  # MOVED
-async def _legacy_upload_html_file(file: UploadFile = File(...)):
-    """Upload a standalone HTML file (not zipped)"""
-    if not file.filename.endswith(".html") and not file.filename.endswith(".htm"):
-        raise HTTPException(status_code=400, detail="File must be an HTML file (.html or .htm)")
-    
-    folder_name = uuid.uuid4().hex[:16]
-    html_folder = ACTIVITIES_DIR / folder_name
-    html_folder.mkdir(parents=True, exist_ok=True)
-    
-    # Save as index.html so it can be served the same way as ZIP extracts
-    file_path = html_folder / "index.html"
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    return {"url": f"/api/uploads/activities/{folder_name}/index.html", "folder": folder_name}
-
-@api_router.get("/activity-files/{folder_name}")
 async def get_activity_html_files(folder_name: str):
     """Get all HTML files in an activity folder"""
     activity_folder = ACTIVITIES_DIR / folder_name
@@ -6316,42 +6154,6 @@ async def download_activity_folder(folder_name: str, request: Request):
         filename=f"activity_{folder_name}.zip",
         media_type="application/zip"
     )
-
-# @api_router.post("/upload/video")  # MOVED
-async def _legacy_upload_video_file(file: UploadFile = File(...)):
-    """Upload an MP4 video file"""
-    allowed_extensions = [".mp4", ".webm", ".mov"]
-    file_ext = os.path.splitext(file.filename)[1].lower()
-    
-    if file_ext not in allowed_extensions:
-        raise HTTPException(status_code=400, detail=f"File must be a video ({', '.join(allowed_extensions)})")
-    
-    # Generate unique filename
-    filename = f"{uuid.uuid4().hex[:16]}{file_ext}"
-    file_path = VIDEOS_DIR / filename
-    
-    # Save the video file
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    return {"url": f"/api/uploads/videos/{filename}"}
-
-# @api_router.post("/upload/goal-image")  # MOVED
-async def _legacy_upload_goal_image(file: UploadFile = File(...)):
-    """Upload an image for a savings goal"""
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
-    
-    # Generate unique filename
-    file_ext = os.path.splitext(file.filename)[1].lower() or ".jpg"
-    filename = f"goal_{uuid.uuid4().hex[:16]}{file_ext}"
-    file_path = THUMBNAILS_DIR / filename
-    
-    # Save the image
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    return {"url": f"/api/uploads/thumbnails/{filename}"}
 
 # ============== CONTENT MANAGEMENT ROUTES (MIGRATED TO routes/content.py) ==============
 
@@ -7461,7 +7263,7 @@ async def _legacy_school_upload_students(request: Request):
         
         try:
             grade = int(grade) if grade is not None else 0
-        except:
+        except Exception:
             grade = 0
         
         # Check if user exists
@@ -7949,22 +7751,6 @@ async def seed_learning_content():
 
 # ============== ADMIN STORE MANAGEMENT ==============
 
-# @api_router.post("/upload/store-image")  # MOVED
-async def _legacy_upload_store_image(file: UploadFile = File(...)):
-    """Upload an image for store items"""
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
-    
-    file_ext = file.filename.split(".")[-1] if "." in file.filename else "png"
-    filename = f"{uuid.uuid4().hex[:16]}.{file_ext}"
-    file_path = STORE_IMAGES_DIR / filename
-    
-    content = await file.read()
-    with open(file_path, "wb") as f:
-        f.write(content)
-    
-    return {"url": f"/api/uploads/store/{filename}"}
-
 # @api_router.get("/admin/store/categories")  # MOVED
 async def admin_get_store_categories(request: Request):
     """Get all store categories (admin only)"""
@@ -8075,75 +7861,6 @@ async def admin_delete_store_item(item_id: str, request: Request):
     return {"message": "Item deleted"}
 
 # ============== ADMIN INVESTMENT MANAGEMENT ==============
-
-# @api_router.post("/upload/investment-image")  # MOVED
-async def _legacy_upload_investment_image(file: UploadFile = File(...)):
-    """Upload an image for investments (plant images or stock logos)"""
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
-    
-    file_ext = file.filename.split(".")[-1] if "." in file.filename else "png"
-    filename = f"{uuid.uuid4().hex[:16]}.{file_ext}"
-    file_path = INVESTMENT_IMAGES_DIR / filename
-    
-    content = await file.read()
-    with open(file_path, "wb") as f:
-        f.write(content)
-    
-    return {"url": f"/api/uploads/investments/{filename}"}
-
-# Plants (for K-2 grades)
-# @api_router.get("/admin/investments/plants")  # MOVED
-async def admin_get_plants(request: Request):
-    """Get all plants (admin only)"""
-    await require_admin(request)
-    plants = await db.investment_plants.find({}, {"_id": 0}).to_list(100)
-    return plants
-
-# @api_router.post("/admin/investments/plants")  # MOVED
-async def admin_create_plant(data: InvestmentPlantCreate, request: Request):
-    """Create an investment plant (admin only)"""
-    await require_admin(request)
-    
-    plant = {
-        "plant_id": f"plant_{uuid.uuid4().hex[:12]}",
-        "name": data.name,
-        "description": data.description,
-        "image_url": data.image_url,
-        "base_price": data.base_price,
-        "growth_rate_min": data.growth_rate_min,
-        "growth_rate_max": data.growth_rate_max,
-        "min_lot_size": data.min_lot_size,
-        "maturity_days": data.maturity_days,
-        "is_active": data.is_active,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    
-    await db.investment_plants.insert_one(plant)
-    return {"message": "Plant created", "plant_id": plant["plant_id"]}
-
-# @api_router.put("/admin/investments/plants/{plant_id}")  # MOVED
-async def admin_update_plant(plant_id: str, data: InvestmentPlantUpdate, request: Request):
-    """Update an investment plant (admin only)"""
-    await require_admin(request)
-    
-    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
-    
-    await db.investment_plants.update_one(
-        {"plant_id": plant_id},
-        {"$set": update_data}
-    )
-    
-    return {"message": "Plant updated"}
-
-# @api_router.delete("/admin/investments/plants/{plant_id}")  # MOVED
-async def admin_delete_plant(plant_id: str, request: Request):
-    """Delete an investment plant (admin only)"""
-    await require_admin(request)
-    
-    await db.investment_plants.delete_one({"plant_id": plant_id})
-    
-    return {"message": "Plant deleted"}
 
 # Stocks (for grades 3-5)
 # @api_router.get("/admin/investments/stocks")  # MOVED

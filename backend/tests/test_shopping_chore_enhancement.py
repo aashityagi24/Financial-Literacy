@@ -50,7 +50,7 @@ class TestShoppingChoreCreation:
                     f"{BASE_URL}/api/parent/shopping-list/{list_id}",
                     headers=self.parent_headers
                 )
-            except:
+            except Exception:
                 pass
     
     def test_create_shopping_chore_has_is_shopping_chore_flag(self):
@@ -208,7 +208,7 @@ class TestChildShoppingList:
                     f"{BASE_URL}/api/parent/shopping-list/{list_id}",
                     headers=self.parent_headers
                 )
-            except:
+            except Exception:
                 pass
     
     def test_child_shopping_list_returns_items_from_active_chores(self):
@@ -376,7 +376,7 @@ class TestStorePurchaseAutoMarksShopping:
                     f"{BASE_URL}/api/parent/shopping-list/{list_id}",
                     headers=self.parent_headers
                 )
-            except:
+            except Exception:
                 pass
     
     def test_store_purchase_marks_shopping_item_as_purchased(self):
@@ -510,7 +510,7 @@ class TestMarkPurchasedEndpoint:
                     f"{BASE_URL}/api/parent/shopping-list/{list_id}",
                     headers=self.parent_headers
                 )
-            except:
+            except Exception:
                 pass
     
     def test_mark_purchased_endpoint_works(self):

@@ -3,11 +3,10 @@ from fastapi import APIRouter, HTTPException, Request, UploadFile, File
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
-from pathlib import Path
 import uuid
+from services.object_storage import put_object
 
 _db = None
-UPLOADS_DIR = Path("/app/backend/uploads")
 
 def init_db(database):
     global _db
@@ -44,19 +43,13 @@ class ChoreCreate(BaseModel):
 @router.post("/upload/quest-asset")
 async def upload_quest_asset(file: UploadFile = File(...)):
     """Upload image or PDF for quests"""
-    QUEST_ASSETS_DIR = UPLOADS_DIR / "quests"
-    QUEST_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
-    
     ext = file.filename.split('.')[-1].lower()
     if ext not in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf']:
         raise HTTPException(status_code=400, detail="Invalid file type")
     
     filename = f"{uuid.uuid4().hex[:12]}.{ext}"
-    file_path = QUEST_ASSETS_DIR / filename
-    
-    with open(file_path, "wb") as f:
-        content = await file.read()
-        f.write(content)
+    content = await file.read()
+    put_object(f"quests/{filename}", content, file.content_type or "application/octet-stream")
     
     return {"url": f"/api/uploads/quests/{filename}"}
 

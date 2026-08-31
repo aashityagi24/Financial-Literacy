@@ -46,7 +46,7 @@ class TestJoinClassroomFix:
         import json
         try:
             data = json.loads(result.stdout.strip().split('\n')[-1])
-        except:
+        except Exception:
             pytest.skip("Failed to parse test session data")
         
         session = requests.Session()

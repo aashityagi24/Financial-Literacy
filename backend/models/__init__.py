@@ -1,10 +1,10 @@
 # Models module - exports all Pydantic models
-from .user import *
-from .wallet import *
-from .store import *
-from .quest import *
-from .learning import *
-from .classroom import *
-from .parent import *
-from .investment import *
-from .school import *
+from .user import *  # noqa: F403
+from .wallet import *  # noqa: F403
+from .store import *  # noqa: F403
+from .quest import *  # noqa: F403
+from .learning import *  # noqa: F403
+from .classroom import *  # noqa: F403
+from .parent import *  # noqa: F403
+from .investment import *  # noqa: F403
+from .school import *  # noqa: F403

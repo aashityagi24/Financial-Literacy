@@ -40,7 +40,7 @@ export default function PricingSection() {
   const [selectedDuration, setSelectedDuration] = useState('6_months');
   const [numChildren, setNumChildren] = useState(1);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [checkoutForm, setCheckoutForm] = useState({ name: '', email: '', phone: '' });
+  const [checkoutForm, setCheckoutForm] = useState({ name: '', email: '', phone: '', referral_code: '' });
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSchoolEnquiry, setShowSchoolEnquiry] = useState(false);
 
@@ -160,6 +160,7 @@ export default function PricingSection() {
         subscriber_name: checkoutForm.name,
         subscriber_email: checkoutForm.email,
         subscriber_phone: checkoutForm.phone,
+        referral_code: checkoutForm.referral_code.trim() || undefined,
       });
 
       const { order_id, amount, currency, key_id } = orderRes.data;
@@ -186,7 +187,7 @@ export default function PricingSection() {
             });
             toast.success('Payment successful! Setting up your account…');
             setShowCheckout(false);
-            setCheckoutForm({ name: '', email: '', phone: '' });
+            setCheckoutForm({ name: '', email: '', phone: '', referral_code: '' });
             // Send the user to the auto-sign-in screen — it will fetch the
             // post-payment context and route them to signup, attach-password,
             // or login-existing depending on their account state.
@@ -418,7 +419,7 @@ export default function PricingSection() {
               />
             </div>
             <div>
-              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Email (use the same email for Google Sign-In)</label>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Email</label>
               <Input
                 data-testid="checkout-email"
                 type="email"
@@ -435,6 +436,15 @@ export default function PricingSection() {
                 placeholder="+91 9XXXXXXXXX"
                 value={checkoutForm.phone}
                 onChange={(e) => setCheckoutForm(prev => ({ ...prev, phone: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Referral Code <span className="text-gray-400 font-normal">(optional)</span></label>
+              <Input
+                data-testid="checkout-referral-code"
+                placeholder="Enter referral code, if any"
+                value={checkoutForm.referral_code}
+                onChange={(e) => setCheckoutForm(prev => ({ ...prev, referral_code: e.target.value }))}
               />
             </div>
 

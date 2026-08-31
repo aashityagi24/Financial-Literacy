@@ -485,7 +485,7 @@ async def admin_create_badge(request: Request):
     
     await db.achievements.insert_one(badge_doc)
     
-    return {"message": "Badge created", "badge": badge_doc}
+    return {"message": "Badge created", "badge": {k: v for k, v in badge_doc.items() if k != "_id"}}
 
 @router.put("/admin/badges/{badge_id}")
 async def admin_update_badge(badge_id: str, request: Request):

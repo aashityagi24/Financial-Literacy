@@ -1,2 +1,2 @@
 # Services module
-from .auth import *
+from .auth import *  # noqa: F403

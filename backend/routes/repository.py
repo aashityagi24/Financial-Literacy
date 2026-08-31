@@ -4,7 +4,7 @@ from typing import Optional, List
 from datetime import datetime, timezone
 from pathlib import Path
 import uuid
-import shutil
+from services.object_storage import put_object
 
 router = APIRouter(tags=["repository"])
 
@@ -205,10 +205,8 @@ async def upload_repository_file(file: UploadFile = File(...)):
         file_ext = "pdf" if is_pdf else "png"
     file_type = "pdf" if is_pdf else "image"
     filename = f"repo_{uuid.uuid4().hex[:12]}.{file_ext}"
-    file_path = REPOSITORY_DIR / filename
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    content = await file.read()
+    put_object(f"repository/{filename}", content, file.content_type or "application/octet-stream")
     
     return {
         "url": f"/api/uploads/repository/{filename}",

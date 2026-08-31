@@ -41,6 +41,7 @@ class CreateOrderRequest(BaseModel):
     subscriber_name: str
     subscriber_email: str
     subscriber_phone: str
+    referral_code: Optional[str] = None
 
 class VerifyPaymentRequest(BaseModel):
     razorpay_order_id: str
@@ -306,6 +307,7 @@ async def create_order(order: CreateOrderRequest):
         "subscriber_name": order.subscriber_name.strip(),
         "subscriber_email": order.subscriber_email.strip().lower(),
         "subscriber_phone": order.subscriber_phone.strip(),
+        "referral_code": (order.referral_code or "").strip().upper() or None,
         "parent_emails": [order.subscriber_email.strip().lower()],
         "child_user_ids": [],
         "start_date": start_date.isoformat(),
