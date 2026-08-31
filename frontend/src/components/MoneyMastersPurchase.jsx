@@ -10,6 +10,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 const RAZORPAY_KEY = process.env.REACT_APP_RAZORPAY_KEY_ID;
 const GRADE_LABELS = ['Kindergarten', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5'];
@@ -33,6 +34,7 @@ export function MoneyMastersPurchase({ children, user }) {
   const [batches, setBatches] = useState([]);
   const [loadingBatches, setLoadingBatches] = useState(false);
   const [paying, setPaying] = useState(null); // batch_id being paid
+  const [referralCode, setReferralCode] = useState('');
 
   const fetchMyBatches = async () => {
     try {
@@ -68,6 +70,7 @@ export function MoneyMastersPurchase({ children, user }) {
       const orderRes = await axios.post(`${API}/subscriptions/money-masters/create-order`, {
         batch_id: batch.batch_id,
         child_id: selectedChildId,
+        referral_code: referralCode.trim() || undefined,
       });
       const { order_id, amount, currency, key_id } = orderRes.data;
       const options = {
@@ -167,6 +170,18 @@ export function MoneyMastersPurchase({ children, user }) {
             {selectedChildId && activeForChild(selectedChildId) && (
               <div className="bg-[#D1FAE5] border border-[#06D6A0]/30 rounded-lg p-3 text-sm text-[#166534]" data-testid="mm-already-active-notice">
                 Already enrolled in <strong>{activeForChild(selectedChildId).batch_name}</strong> until {formatDate(activeForChild(selectedChildId).end_date)}.
+              </div>
+            )}
+
+            {batches.length > 0 && (
+              <div>
+                <label className="text-sm font-bold text-[#1D3557] mb-1 block">Referral Code <span className="text-gray-400 font-normal">(optional)</span></label>
+                <Input
+                  data-testid="mm-referral-code-input"
+                  placeholder="Enter referral code, if any"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value)}
+                />
               </div>
             )}
 

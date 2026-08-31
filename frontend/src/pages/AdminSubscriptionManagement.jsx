@@ -5,7 +5,7 @@ import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, CreditCard, Users, Calendar as CalendarIcon, DollarSign, 
-  ToggleLeft, ToggleRight, Save, RefreshCw, Search, Filter, X, Eye, Trash2, Download, Pencil
+  ToggleLeft, ToggleRight, Save, RefreshCw, Search, Filter, X, Eye, Trash2, Download, Pencil, Tag
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,12 @@ const GRADE_LABELS = ['K', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5'
 
 const EMPTY_BATCH_FORM = { name: '', grades: ['0'], start_date: null, end_date: null, price: '', description: '', discount_percent: '' };
 
+const REFERRAL_DISCOUNT_OPTIONS = [10, 15, 20, 25, 30, 35, 50];
+const EMPTY_REFERRAL_FORM = { code: '', discount_percent: '', applicable_batches: [], applicable_plans: [] };
+const PLATFORM_PLAN_COMBOS = ['single_parent', 'two_parents'].flatMap(
+  (plan_type) => Object.keys(DURATION_LABELS).map((duration) => ({ plan_type, duration }))
+);
+
 const isExpired = (endDate) => {
   if (!endDate) return false;
   return new Date(endDate) < new Date();
@@ -81,6 +87,10 @@ export default function AdminSubscriptionManagement({ user }) {
   const [batchDialog, setBatchDialog] = useState({ open: false, editingId: null });
   const [batchForm, setBatchForm] = useState(EMPTY_BATCH_FORM);
   const [savingBatch, setSavingBatch] = useState(false);
+  const [referralCodes, setReferralCodes] = useState([]);
+  const [referralDialog, setReferralDialog] = useState({ open: false, editingId: null });
+  const [referralForm, setReferralForm] = useState(EMPTY_REFERRAL_FORM);
+  const [savingReferral, setSavingReferral] = useState(false);
 
   useEffect(() => {
     if (user?.role !== 'admin') {
@@ -89,6 +99,7 @@ export default function AdminSubscriptionManagement({ user }) {
     }
     fetchData();
     fetchBatches();
+    fetchReferralCodes();
   }, [user, navigate]);
 
   const fetchBatches = async () => {
@@ -176,6 +187,106 @@ export default function AdminSubscriptionManagement({ user }) {
       toast.success('Batch deleted');
     } catch {
       toast.error('Failed to delete batch');
+    }
+  };
+
+  const fetchReferralCodes = async () => {
+    try {
+      const res = await axios.get(`${API}/subscriptions/admin/referral-codes`);
+      setReferralCodes(res.data || []);
+    } catch (err) {
+      toast.error('Failed to load referral codes');
+    }
+  };
+
+  const openReferralDialog = (code = null) => {
+    if (code) {
+      setReferralForm({
+        code: code.code,
+        discount_percent: String(code.discount_percent),
+        applicable_batches: code.applicable_batches || [],
+        applicable_plans: code.applicable_plans || [],
+      });
+      setReferralDialog({ open: true, editingId: code.referral_id });
+    } else {
+      setReferralForm(EMPTY_REFERRAL_FORM);
+      setReferralDialog({ open: true, editingId: null });
+    }
+  };
+
+  const toggleReferralBatch = (batchId) => {
+    setReferralForm((prev) => ({
+      ...prev,
+      applicable_batches: prev.applicable_batches.includes(batchId)
+        ? prev.applicable_batches.filter((id) => id !== batchId)
+        : [...prev.applicable_batches, batchId],
+    }));
+  };
+
+  const isReferralPlanSelected = (planType, duration) =>
+    referralForm.applicable_plans.some((p) => p.plan_type === planType && p.duration === duration);
+
+  const toggleReferralPlan = (planType, duration) => {
+    setReferralForm((prev) => ({
+      ...prev,
+      applicable_plans: isReferralPlanSelected(planType, duration)
+        ? prev.applicable_plans.filter((p) => !(p.plan_type === planType && p.duration === duration))
+        : [...prev.applicable_plans, { plan_type: planType, duration }],
+    }));
+  };
+
+  const saveReferralCode = async () => {
+    if (!referralDialog.editingId && !referralForm.code.trim()) { toast.error('Referral code is required'); return; }
+    if (!referralForm.discount_percent) { toast.error('Select a discount %'); return; }
+    if (!referralForm.applicable_batches.length && !referralForm.applicable_plans.length) {
+      toast.error('Select at least one batch or platform plan');
+      return;
+    }
+    setSavingReferral(true);
+    try {
+      if (referralDialog.editingId) {
+        await axios.put(`${API}/subscriptions/admin/referral-codes/${referralDialog.editingId}`, {
+          discount_percent: parseInt(referralForm.discount_percent),
+          applicable_batches: referralForm.applicable_batches,
+          applicable_plans: referralForm.applicable_plans,
+        });
+        toast.success('Referral code updated');
+      } else {
+        await axios.post(`${API}/subscriptions/admin/referral-codes`, {
+          code: referralForm.code.trim(),
+          discount_percent: parseInt(referralForm.discount_percent),
+          applicable_batches: referralForm.applicable_batches,
+          applicable_plans: referralForm.applicable_plans,
+        });
+        toast.success('Referral code created');
+      }
+      setReferralDialog({ open: false, editingId: null });
+      fetchReferralCodes();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to save referral code');
+    } finally {
+      setSavingReferral(false);
+    }
+  };
+
+  const toggleReferralActive = async (code) => {
+    try {
+      await axios.put(`${API}/subscriptions/admin/referral-codes/${code.referral_id}`, { is_active: !code.is_active });
+      toast.success(code.is_active ? 'Referral code deactivated' : 'Referral code activated');
+      fetchReferralCodes();
+    } catch {
+      toast.error('Failed to update referral code');
+    }
+  };
+
+  const deleteReferralCode = async (referralId) => {
+    if (!confirm('Delete this referral code permanently?')) return;
+    try {
+      await axios.delete(`${API}/subscriptions/admin/referral-codes/${referralId}`);
+      setReferralCodes((prev) => prev.filter((c) => c.referral_id !== referralId));
+      toast.success('Referral code deleted');
+    } catch {
+      toast.error('Failed to delete referral code');
     }
   };
 
@@ -400,6 +511,7 @@ export default function AdminSubscriptionManagement({ user }) {
             { id: 'leads', label: `Checkout Leads${checkoutLeads.length ? ` (${checkoutLeads.length})` : ''}`, icon: Users },
             { id: 'pricing', label: 'Plan Pricing', icon: DollarSign },
             { id: 'batches', label: 'Money Masters Batches', icon: CalendarIcon },
+            { id: 'referral', label: `Referral Codes${referralCodes.length ? ` (${referralCodes.length})` : ''}`, icon: Tag },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -879,7 +991,193 @@ export default function AdminSubscriptionManagement({ user }) {
             )}
           </div>
         )}
+
+        {/* Referral Codes Tab */}
+        {activeTab === 'referral' && (
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-[#1D3557]">Referral Codes</h3>
+                <p className="text-sm text-gray-500">Create discount codes for platform plans and Money Masters batches. Checkout rejects codes that don&apos;t exist.</p>
+              </div>
+              <Button
+                data-testid="create-referral-btn"
+                size="sm"
+                onClick={() => openReferralDialog()}
+                className="bg-[#1D3557] hover:bg-[#2D4A6F] text-white"
+              >
+                + New Referral Code
+              </Button>
+            </div>
+            {referralCodes.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <Tag className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p className="font-medium">No referral codes yet — create one to offer discounts</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" data-testid="referral-codes-table">
+                  <thead>
+                    <tr className="bg-gray-50 text-left">
+                      <th className="px-4 py-3 font-medium text-gray-600">Code</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">Discount</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">Applies To</th>
+                      <th className="px-4 py-3 font-medium text-gray-600 text-center">Uses</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">Status</th>
+                      <th className="px-4 py-3 font-medium text-gray-600 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {referralCodes.map((c) => (
+                      <tr key={c.referral_id} className="border-t border-gray-100 hover:bg-gray-50" data-testid={`referral-row-${c.referral_id}`}>
+                        <td className="px-4 py-3 font-bold text-[#1D3557]">{c.code}</td>
+                        <td className="px-4 py-3">{c.discount_percent}%</td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap gap-1">
+                            {(c.applicable_plans || []).map((p, idx) => (
+                              <span key={`p-${idx}`} className="text-[10px] bg-[#E0FBFC] text-[#1D3557] px-2 py-0.5 rounded-full">
+                                {PLAN_LABELS[p.plan_type]} · {DURATION_LABELS[p.duration]}
+                              </span>
+                            ))}
+                            {(c.applicable_batches || []).map((bid) => (
+                              <span key={bid} className="text-[10px] bg-[#F3E8FF] text-[#5B21B6] px-2 py-0.5 rounded-full">
+                                {batches.find((b) => b.batch_id === bid)?.name || 'Batch'}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-center">{c.usage_count || 0}</td>
+                        <td className="px-4 py-3">
+                          <button
+                            data-testid={`toggle-referral-${c.referral_id}`}
+                            onClick={() => toggleReferralActive(c)}
+                            className={`text-[10px] px-2 py-0.5 rounded font-medium ${
+                              c.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'
+                            }`}
+                          >
+                            {c.is_active ? 'Active' : 'Inactive'}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              data-testid={`edit-referral-${c.referral_id}`}
+                              onClick={() => openReferralDialog(c)}
+                              className="p-1.5 rounded-md hover:bg-[#1D3557]/10 text-[#3D5A80] transition-colors"
+                              title="Edit referral code"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              data-testid={`delete-referral-${c.referral_id}`}
+                              onClick={() => deleteReferralCode(c.referral_id)}
+                              className="p-1.5 rounded-md hover:bg-red-50 text-red-500 transition-colors"
+                              title="Delete permanently"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Referral Code Create/Edit Dialog */}
+      <Dialog open={referralDialog.open} onOpenChange={(open) => setReferralDialog({ open, editingId: open ? referralDialog.editingId : null })}>
+        <DialogContent className="max-w-md" data-testid="referral-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+              {referralDialog.editingId ? 'Edit Referral Code' : 'New Referral Code'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Code</label>
+              <Input
+                data-testid="referral-code-input"
+                placeholder="e.g. WELCOME25"
+                value={referralForm.code}
+                disabled={!!referralDialog.editingId}
+                onChange={(e) => setReferralForm(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Discount %</label>
+              <Select
+                value={referralForm.discount_percent ? String(referralForm.discount_percent) : ''}
+                onValueChange={(v) => setReferralForm(prev => ({ ...prev, discount_percent: v }))}
+              >
+                <SelectTrigger data-testid="referral-discount-select"><SelectValue placeholder="Select discount %" /></SelectTrigger>
+                <SelectContent>
+                  {REFERRAL_DISCOUNT_OPTIONS.map((d) => (
+                    <SelectItem key={d} value={String(d)}>{d}%</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Platform Subscription Plans</label>
+              <div className="flex flex-wrap gap-2" data-testid="referral-plan-chips">
+                {PLATFORM_PLAN_COMBOS.map(({ plan_type, duration }) => (
+                  <button
+                    key={`${plan_type}-${duration}`}
+                    type="button"
+                    data-testid={`referral-plan-checkbox-${plan_type}-${duration}`}
+                    onClick={() => toggleReferralPlan(plan_type, duration)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                      isReferralPlanSelected(plan_type, duration)
+                        ? 'bg-[#1D3557] text-white border-[#1D3557]'
+                        : 'bg-white text-[#1D3557] border-[#1D3557]/30 hover:border-[#1D3557]'
+                    }`}
+                  >
+                    {PLAN_LABELS[plan_type]} · {DURATION_LABELS[duration]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Money Masters Batches</label>
+              {batches.length === 0 ? (
+                <p className="text-xs text-gray-400">No batches created yet</p>
+              ) : (
+                <div className="flex flex-wrap gap-2" data-testid="referral-batch-chips">
+                  {batches.map((b) => (
+                    <button
+                      key={b.batch_id}
+                      type="button"
+                      data-testid={`referral-batch-checkbox-${b.batch_id}`}
+                      onClick={() => toggleReferralBatch(b.batch_id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                        referralForm.applicable_batches.includes(b.batch_id)
+                          ? 'bg-[#7C3AED] text-white border-[#7C3AED]'
+                          : 'bg-white text-[#5B21B6] border-[#5B21B6]/30 hover:border-[#5B21B6]'
+                      }`}
+                    >
+                      {b.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-gray-500">A code can apply across multiple plans and batches at once.</p>
+            <Button
+              data-testid="save-referral-btn"
+              onClick={saveReferralCode}
+              disabled={savingReferral}
+              className="w-full bg-[#1D3557] hover:bg-[#2D4A6F]"
+            >
+              <Save className="w-4 h-4 mr-1" />
+              {savingReferral ? 'Saving...' : referralDialog.editingId ? 'Save Changes' : 'Create Referral Code'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Batch Create/Edit Dialog */}
       <Dialog open={batchDialog.open} onOpenChange={(open) => setBatchDialog({ open, editingId: open ? batchDialog.editingId : null })}>

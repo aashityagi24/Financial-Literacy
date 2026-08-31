@@ -83,6 +83,28 @@ class BatchUpdate(BaseModel):
 class MoneyMastersOrderRequest(BaseModel):
     batch_id: str
     child_id: str
+    referral_code: Optional[str] = None
+
+
+class ReferralCodeCreate(BaseModel):
+    code: str
+    discount_percent: int
+    applicable_batches: List[str] = []
+    applicable_plans: List[dict] = []  # [{"plan_type": "single_parent", "duration": "1_month"}, ...]
+
+
+class ReferralCodeUpdate(BaseModel):
+    discount_percent: Optional[int] = None
+    applicable_batches: Optional[List[str]] = None
+    applicable_plans: Optional[List[dict]] = None
+    is_active: Optional[bool] = None
+
+
+class ValidateReferralCodeRequest(BaseModel):
+    code: str
+
+
+ALLOWED_REFERRAL_DISCOUNTS = [10, 15, 20, 25, 30, 35, 50]
 
 
 # ============== HELPER FUNCTIONS ==============
@@ -244,6 +266,126 @@ async def capture_checkout_lead(request: Request):
     return {"message": "lead captured"}
 
 
+# ============== REFERRAL CODES ==============
+
+async def _resolve_referral_discount(db, code: Optional[str], plan_type: str = None, duration: str = None, batch_id: str = None) -> int:
+    """Re-validates a referral code server-side and returns its discount %.
+    Raises 400 (with the exact message the checkout UI should show) if the
+    code doesn't exist or doesn't apply to this plan/batch."""
+    if not code:
+        return 0
+    code_norm = code.strip().upper()
+    doc = await db.referral_codes.find_one({"code": code_norm})
+    if not doc or not doc.get("is_active", True):
+        raise HTTPException(status_code=400, detail="This referral code does not exist")
+    applies = False
+    if batch_id and batch_id in doc.get("applicable_batches", []):
+        applies = True
+    if plan_type and duration and any(
+        p.get("plan_type") == plan_type and p.get("duration") == duration
+        for p in doc.get("applicable_plans", [])
+    ):
+        applies = True
+    if not applies:
+        raise HTTPException(status_code=400, detail="This referral code isn't valid for this plan")
+    return doc["discount_percent"]
+
+
+@router.post("/validate-referral-code")
+async def validate_referral_code(data: ValidateReferralCodeRequest):
+    """Public: checked when the user clicks 'Apply' on a referral code, before payment."""
+    db = get_db()
+    code_norm = data.code.strip().upper()
+    doc = await db.referral_codes.find_one({"code": code_norm}, {"_id": 0})
+    if not doc or not doc.get("is_active", True):
+        return {"valid": False, "message": "This referral code does not exist"}
+    return {
+        "valid": True,
+        "discount_percent": doc["discount_percent"],
+        "applicable_batches": doc.get("applicable_batches", []),
+        "applicable_plans": doc.get("applicable_plans", []),
+    }
+
+
+@router.get("/admin/referral-codes")
+async def admin_list_referral_codes(request: Request):
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    codes = await db.referral_codes.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return codes
+
+
+@router.post("/admin/referral-codes")
+async def admin_create_referral_code(data: ReferralCodeCreate, request: Request):
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    code_norm = data.code.strip().upper()
+    if not code_norm:
+        raise HTTPException(status_code=400, detail="Code is required")
+    if data.discount_percent not in ALLOWED_REFERRAL_DISCOUNTS:
+        raise HTTPException(status_code=400, detail="Invalid discount percent")
+    if not data.applicable_batches and not data.applicable_plans:
+        raise HTTPException(status_code=400, detail="Select at least one batch or platform plan")
+    if await db.referral_codes.find_one({"code": code_norm}):
+        raise HTTPException(status_code=400, detail="A referral code with this name already exists")
+
+    doc = {
+        "referral_id": f"ref_{uuid.uuid4().hex[:12]}",
+        "code": code_norm,
+        "discount_percent": data.discount_percent,
+        "applicable_batches": data.applicable_batches,
+        "applicable_plans": data.applicable_plans,
+        "is_active": True,
+        "usage_count": 0,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.referral_codes.insert_one(doc)
+    return {"message": "Referral code created", "referral_id": doc["referral_id"]}
+
+
+@router.put("/admin/referral-codes/{referral_id}")
+async def admin_update_referral_code(referral_id: str, data: ReferralCodeUpdate, request: Request):
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    fields = {}
+    if data.discount_percent is not None:
+        if data.discount_percent not in ALLOWED_REFERRAL_DISCOUNTS:
+            raise HTTPException(status_code=400, detail="Invalid discount percent")
+        fields["discount_percent"] = data.discount_percent
+    if data.applicable_batches is not None:
+        fields["applicable_batches"] = data.applicable_batches
+    if data.applicable_plans is not None:
+        fields["applicable_plans"] = data.applicable_plans
+    if data.is_active is not None:
+        fields["is_active"] = data.is_active
+    existing = await db.referral_codes.find_one({"referral_id": referral_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Referral code not found")
+    if fields:
+        await db.referral_codes.update_one({"referral_id": referral_id}, {"$set": fields})
+    return {"message": "Referral code updated"}
+
+
+@router.delete("/admin/referral-codes/{referral_id}")
+async def admin_delete_referral_code(referral_id: str, request: Request):
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    await db.referral_codes.delete_one({"referral_id": referral_id})
+    return {"message": "Referral code deleted"}
+
+
 @router.post("/create-order")
 async def create_order(order: CreateOrderRequest):
     """Create a Razorpay order for subscription purchase"""
@@ -263,6 +405,12 @@ async def create_order(order: CreateOrderRequest):
     # Get pricing
     pricing = await get_plan_pricing(order.plan_type, order.duration)
     total_amount = calculate_total(pricing, order.num_children)
+
+    # Apply a referral code discount, if one was provided (re-validated here
+    # so the charged amount is always computed server-side, never trusted from the client)
+    discount_percent = await _resolve_referral_discount(db, order.referral_code, plan_type=order.plan_type, duration=order.duration)
+    if discount_percent:
+        total_amount = round(total_amount * (1 - discount_percent / 100))
     amount_paise = total_amount * 100  # Razorpay expects paise
     
     # Create Razorpay order
@@ -308,6 +456,7 @@ async def create_order(order: CreateOrderRequest):
         "subscriber_email": order.subscriber_email.strip().lower(),
         "subscriber_phone": order.subscriber_phone.strip(),
         "referral_code": (order.referral_code or "").strip().upper() or None,
+        "discount_percent_applied": discount_percent,
         "parent_emails": [order.subscriber_email.strip().lower()],
         "child_user_ids": [],
         "start_date": start_date.isoformat(),
@@ -382,6 +531,12 @@ async def verify_payment(payment: VerifyPaymentRequest):
         {"razorpay_order_id": payment.razorpay_order_id},
         {"$set": updates}
     )
+
+    # Only now (payment actually completed) count this as a real referral redemption
+    if subscription.get("referral_code"):
+        await db.referral_codes.update_one(
+            {"code": subscription["referral_code"]}, {"$inc": {"usage_count": 1}}
+        )
     
     # Mark lead as converted
     await db.checkout_leads.update_one(
@@ -1116,6 +1271,11 @@ async def create_money_masters_order(order: MoneyMastersOrderRequest, request: R
         raise HTTPException(status_code=400, detail=f"{child.get('name', 'This child')} already has an active Money Masters subscription until {existing['end_date'][:10]}")
 
     amount_paise = batch["price"] * 100
+    discount_percent = await _resolve_referral_discount(db, order.referral_code, batch_id=order.batch_id)
+    final_price = batch["price"]
+    if discount_percent:
+        final_price = round(batch["price"] * (1 - discount_percent / 100))
+        amount_paise = final_price * 100
     subscription_id = f"sub_{uuid.uuid4().hex[:12]}"
     receipt = subscription_id[:40]
 
@@ -1145,7 +1305,9 @@ async def create_money_masters_order(order: MoneyMastersOrderRequest, request: R
         "grade": child.get("grade", 0) or 0,
         "num_parents": 1,
         "num_children": 1,
-        "amount": batch["price"],
+        "amount": final_price,
+        "referral_code": (order.referral_code or "").strip().upper() or None,
+        "discount_percent_applied": discount_percent,
         "razorpay_order_id": razor_order["id"],
         "razorpay_payment_id": None,
         "payment_status": "pending",

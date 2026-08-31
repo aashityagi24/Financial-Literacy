@@ -1,0 +1,43 @@
+{
+  "summary": "Full backend + frontend testing of the NEW Referral Code feature (admin CRUD, platform subscription checkout validation, Money Masters purchase validation). Backend: created /app/backend/tests/test_referral_codes.py with 34 pytest cases -- all 34 PASS (admin CRUD + auth guard + duplicate/empty/invalid-discount validation, all 7 allowed discounts, update/toggle/delete + persistence verification, public validate-referral-code, platform create-order discount math + invalid/wrong-plan/inactive rejection, Money Masters create-order with a temp grade-3 batch, cross-target code applying to BOTH a platform plan and a batch). Frontend: Admin -> Subscription Management -> Referral Codes tab verified end-to-end (empty state, create dialog, 3 client-side validations, discount dropdown showing exactly 10/15/20/25/30/35/50, plan chips, batch chips, table row with badges, edit with immutable code field, active/inactive toggle, delete); platform checkout on /financial-literacy showed the exact backend error toasts for an invalid code ('This referral code does not exist') and for a valid-but-wrong-plan code (\"This referral code isn't valid for this plan\") without opening Razorpay; Money Masters dialog in Parent Dashboard shows the new mm-referral-code-input, rejects an invalid code with a toast, and with a valid batch code opened Razorpay with the correctly discounted Price Summary 1500 for a 2000 batch (25% off). No real payment was captured. All test data (referral codes, temp batch, pending subscriptions, checkout lead) cleaned up -- DB back to 0 referral codes / 0 batches.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/subscriptions/create-order and /money-masters/create-order", "issue": "_resolve_referral_discount() increments referral_codes.usage_count on ORDER CREATION, not on successful payment verification. Abandoned/failed checkouts therefore inflate the admin 'Uses' column. Suggest moving the $inc into /verify-payment."},
+      {"endpoint": "POST /api/subscriptions/admin/referral-codes", "issue": "No length/charset validation on `code` (a 200-char code or code with spaces inside is accepted); also no uniqueness index on referral_codes.code (duplicate check is a read-then-write race)."},
+      {"endpoint": "PUT /api/subscriptions/admin/referral-codes/{id}", "issue": "Empty payload ({} or all-null) returns 200 'Referral code updated' even for a non-existent referral_id (404 is only raised when at least one field is set)."},
+      {"endpoint": "POST /api/subscriptions/admin/referral-codes", "issue": "applicable_plans is List[dict] (untyped) -- an arbitrary dict such as {\"foo\":1} is stored without validation; also applicable_batches batch_ids are not verified to exist (a code can be created for a deleted/unknown batch_id)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Checkout referral code (both platform PricingSection and MoneyMastersPurchase)", "issue": "The public POST /api/subscriptions/validate-referral-code endpoint is implemented but never called -- there is no 'Apply' button and no pre-payment discount preview. The user only learns the code is valid/how much it saves after the Razorpay modal opens (platform dialog still shows the full price 'Pay Rs.2,299'; MM batch card still shows Rs.2,000). Wiring an Apply button + discounted-price line would close the loop.", "affected_selectors": ["checkout-referral-code", "proceed-to-pay-btn", "mm-referral-code-input"]}
+    ],
+    "design_issues": [
+      {"screen": "Admin -> Referral Codes tab", "issues": ["Delete uses window.confirm() instead of the shadcn AlertDialog used elsewhere in the app (inconsistent)."]},
+      {"screen": "Money Masters purchase dialog", "issues": ["Referral Code field only renders when batches.length > 0 (acceptable), but the batch price is not recomputed/annotated after a code is entered, so there is no visual feedback of the discount before Razorpay."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_referral_codes.py", "/app/backend/tests/_seed_referral_mm.py"],
+  "action_items": [
+    "Move referral usage_count increment from order creation to /verify-payment so 'Uses' reflects paid conversions only.",
+    "Wire the existing /validate-referral-code endpoint to an 'Apply' button + discounted price preview in PricingSection.jsx and MoneyMastersPurchase.jsx (optional UX improvement, user-visible value).",
+    "Add code format validation (length/charset, no spaces) + a unique index on referral_codes.code; validate applicable_plans entries with a Pydantic model and verify applicable_batches ids exist.",
+    "Make PUT /admin/referral-codes/{id} return 404 for unknown ids even when the payload has no updatable fields."
+  ],
+  "critical_code_review_comments": [
+    "Referral discount is computed exclusively server-side from the DB (client cannot pass an amount) -- correct and secure.",
+    "AdminSubscriptionManagement.jsx is ~1350 lines; the referral tab + dialog should be extracted into its own component/file (>700-line guideline).",
+    "_resolve_referral_discount() has a side effect ($inc usage_count) inside a 'resolve' helper -- separate the read from the write for clarity and to avoid counting abandoned checkouts.",
+    "Inactive codes return the same message as non-existent codes ('This referral code does not exist') -- intentional/acceptable, but confirm it is the desired product behaviour."
+  ],
+  "updated_files": ["/app/backend/tests/test_referral_codes.py", "/app/backend/tests/_seed_referral_mm.py"],
+  "success_rate": {"backend": "100% (34/34 pytest cases)", "frontend": "100% of tested flows (admin CRUD UI, platform checkout validation, MM checkout validation + discounted Razorpay amount)"},
+  "seed_data_creation": "Temporary: MM batch 'TEST_QA MM Batch G3' (grade 3, Rs.2000), referral codes QAUI30 / MMQA25 / auto-generated TESTREF* codes, pending subscriptions from create-order calls, one checkout lead. ALL deleted after testing (verified: 0 referral codes, 0 MM batches, 0 pending money_masters/test subscriptions remaining).",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": true,
+  "test_credentials": "Admin admin@learnersplanet.com / finlit@2026; Parent wallet_demo_parent / testpass123 (child 'Demo Kid', grade 3) was used for the Money Masters flow.",
+  "context_for_next_testing_agent": "Referral code feature is functionally complete and passing. Regression suite: /app/backend/tests/test_referral_codes.py (self-seeds + self-cleans a grade-3 MM batch via admin API; requires wallet_demo_parent to have a linked grade-3 child). Note the parent MM batch listing endpoint requires ?child_id=. Razorpay is a LIVE key -- stop at the Razorpay 'Price Summary' screen, never continue past contact details. No open bugs; only the 4 minor hardening/UX items listed in action_items.",
+  "rca_of_the_issue": "No functional defect found. The only user-visible gap is that the built /validate-referral-code endpoint is unused, so discount feedback appears only inside the Razorpay modal; enforcement itself is correct because both create-order endpoints re-resolve the code server-side and return the exact 400 messages the UI surfaces via toast."
+}
