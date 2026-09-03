@@ -67,6 +67,12 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Backend (`routes/content.py`): `curriculum_overrides` persisted on create/update for `content_topics` and `content_items`, treated as a structural field (always saved globally, like `min_grade`/`max_grade`, even when a per-grade override save is in progress).
 - **Scope note**: this is Phase 1 (admin authoring + admin tree only). The live child/parent/teacher-facing delivery pipeline (`get_all_topics`/`get_topic_detail` in `content.py`) does NOT yet resolve `curriculum_overrides` — real learners still see items at their default/home placement regardless of secondary-curriculum placement. Phase 2 (making live delivery curriculum-aware) is a deferred follow-up, flagged to the user as higher-risk since it touches the progressive-unlock/grade-gating query logic.
 
+### Parent "Add Child" Grade Cap (Sep 3, 2026) ✅
+- Financial Literacy content is currently live only up to Grade 3. Parent's "Link a Child" → "New (no email)" tab (`ParentDashboard.jsx`) now only offers Kindergarten–3rd Grade, with a note explaining why.
+- Backend (`routes/parent.py` `/parent/create-child`) rejects grade 4+ with 400 "Financial Literacy content is currently live only up to 3rd Grade" — enforced server-side, not just UI.
+- Scope: parent-only flow. Admin/school child creation and Money Masters batch grade pickers (K-9) are untouched per user's explicit instruction. Existing children already at grade 4/5 are unaffected.
+- Self-tested via curl (grade 4 rejected, grade 3 accepted) + screenshot of the capped dropdown; test data cleaned up.
+
 ### Referral Codes (Aug 31, 2026) ✅
 - Admin → Subscription Management → "Referral Codes" tab: create/list/edit/toggle-active/delete codes. Each code has a discount % (dropdown: 10/15/20/25/30/35/50 only) and applies to one or more targets — platform subscription plans (`plan_type`+`duration` combos) and/or Money Masters batches. One code can span multiple plans/batches at once.
 - Backend (`routes/subscriptions.py`): `db.referral_codes` collection; `_resolve_referral_discount()` re-validates the code server-side (never trusts client-computed amounts) inside both `/subscriptions/create-order` and `/subscriptions/money-masters/create-order`. Wrong/nonexistent code → 400 "This referral code does not exist"; valid code not applicable to the chosen plan/batch → 400 "This referral code isn't valid for this plan". `usage_count` increments only on successful `/verify-payment` (not on order creation) so it reflects paid conversions.

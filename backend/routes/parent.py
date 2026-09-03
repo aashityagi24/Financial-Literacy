@@ -138,6 +138,8 @@ async def parent_create_child(data: ParentCreateChildRequest, request: Request):
     
     if not data.email and not data.username:
         raise HTTPException(status_code=400, detail="Either an email or a username is required")
+    if not (0 <= (data.grade or 0) <= 3):
+        raise HTTPException(status_code=400, detail="Financial Literacy content is currently live only up to 3rd Grade")
     
     try:
         created = await create_child_user(

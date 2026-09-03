@@ -1067,14 +1067,14 @@ export default function ParentDashboard({ user }) {
                           value={newChildForm.grade}
                           onChange={(e) => setNewChildForm({ ...newChildForm, grade: parseInt(e.target.value) })}
                           className="w-full border-3 border-[#1D3557] rounded-md px-3 py-2"
+                          data-testid="parent-child-grade-select"
                         >
                           <option value={0}>Kindergarten</option>
                           <option value={1}>1st Grade</option>
                           <option value={2}>2nd Grade</option>
                           <option value={3}>3rd Grade</option>
-                          <option value={4}>4th Grade</option>
-                          <option value={5}>5th Grade</option>
                         </select>
+                        <p className="text-xs text-gray-500 mt-1">Financial Literacy content is currently live up to 3rd Grade.</p>
                       </div>
 
                       {newChildCreds && (
