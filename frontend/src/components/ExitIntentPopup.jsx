@@ -66,13 +66,13 @@ export function ExitIntentPopup() {
       >
         <div className="flex flex-col md:flex-row">
           {/* Illustration side */}
-          <div className="relative md:w-2/5 min-h-[180px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#F3E8FF] via-[#F3E8FF] to-[#E0FBFC] p-6">
+          <div className="relative md:w-[44%] min-h-[260px] md:min-h-[420px] flex items-end justify-center overflow-hidden bg-gradient-to-br from-[#F3E8FF] via-[#F3E8FF] to-[#E0FBFC] pt-8">
             <div className="absolute -top-8 -left-8 w-32 h-32 rounded-full bg-[#FFD23F]/70" />
-            <div className="absolute -bottom-10 -right-6 w-40 h-40 bg-[#06D6A0]/40 rounded-[60%_40%_30%_70%/60%_30%_70%_40%]" />
+            <div className="absolute -bottom-10 -right-6 w-44 h-44 bg-[#06D6A0]/40 rounded-[60%_40%_30%_70%/60%_30%_70%_40%]" />
             <img
-              src="/hero-earner.png"
-              alt="Happy kid earning coins on CoinQuest"
-              className="relative z-10 w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-xl"
+              src="/exit-popup-girl.png"
+              alt="Happy girl holding a coin and a piggy bank"
+              className="relative z-10 w-48 sm:w-56 md:w-64 h-auto object-contain drop-shadow-2xl"
             />
             <div
               data-testid="exit-intent-price-tag"
