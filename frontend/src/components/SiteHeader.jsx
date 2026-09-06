@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { SchoolEnquiryDialog } from '@/components/SchoolEnquiryDialog';
+import { smoothScrollToElement } from '@/utils/smoothScroll';
 
 const SECTION_LINKS = [
   { label: 'Pricing', sectionId: 'pricing', testId: 'pricing' },
@@ -35,9 +36,9 @@ export function SiteHeader() {
   const scrollToSection = (sectionId) => {
     if (location.pathname !== '/') {
       navigate('/');
-      setTimeout(() => document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' }), 400);
+      setTimeout(() => smoothScrollToElement(sectionId), 450);
     } else {
-      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+      smoothScrollToElement(sectionId);
     }
   };
 

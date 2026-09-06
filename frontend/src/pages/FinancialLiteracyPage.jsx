@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import PricingSection from '@/components/PricingSection';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
+import { ExitIntentPopup } from '@/components/ExitIntentPopup';
 import { trackMetaPixelPageView } from '@/utils/metaPixel';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -143,6 +144,7 @@ export default function FinancialLiteracyPage() {
   return (
     <div className="min-h-screen bg-[#E0FBFC]">
       <SiteHeader />
+      <ExitIntentPopup />
 
       {/* Hero Section */}
       <header className="relative overflow-hidden">
@@ -152,9 +154,6 @@ export default function FinancialLiteracyPage() {
         <div className="container mx-auto px-6 pb-6 pt-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="animate-bounce-in">
-              <span className="inline-block bg-[#FFD23F] text-[#1D3557] font-bold text-sm px-4 py-1.5 rounded-full border-2 border-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
-                FINANCIAL LITERACY PLATFORM
-              </span>
               <h1 className="text-5xl lg:text-7xl font-bold text-[#1D3557] mb-6 leading-tight" style={{ fontFamily: 'Fredoka' }}>
                 Learn Money Skills <span className="text-[#EE6C4D]">While Having Fun!</span>
               </h1>

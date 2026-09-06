@@ -79,6 +79,12 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Checkout UX: platform checkout (`PricingSection.jsx`) and Money Masters purchase (`MoneyMastersPurchase.jsx`, inside Parent Dashboard) both have an optional referral code field; invalid/inapplicable codes surface the exact backend error via toast before Razorpay opens.
 - Tested by testing_agent (iteration_106): 34/34 backend pytest cases pass + full frontend flow verified (admin CRUD, both checkout paths, cross-target code applying to a platform plan AND a batch simultaneously). Minor unaddressed enhancement: the built `/validate-referral-code` endpoint isn't wired to a live "Apply"/discount-preview button pre-payment (deferred, optional UX polish).
 
+### Homepage Polish — Scroll, Badge, Exit-Intent Popup (Sep 6, 2026) ✅
+- Nav "Pricing"/"How It Works" scroll now uses a custom eased scroll (`utils/smoothScroll.js`, 1100ms duration, easeInOutQuad) instead of native `scrollIntoView({behavior:'smooth'})` — feels like a natural glide instead of an instant jump.
+- Removed the "FINANCIAL LITERACY PLATFORM" pill badge from the hero section (redundant now that this page IS the homepage).
+- New `ExitIntentPopup.jsx` on the homepage: shows a "Wait — Don't Miss Out! Try for ₹49" modal once per browser session, triggered by `mouseleave` at the top of the viewport (desktop exit-intent) with a 45s time-based fallback for mobile (no mouse events). CTA dispatches the existing `coinquest:buy-now` event (same mechanism as "Start for ₹49") to open the 1-day checkout directly.
+- Self-tested via screenshots: badge gone, scroll visibly gradual (partial-scroll frame captured mid-animation), popup fires on exit-intent, "Try for ₹49" opens checkout pre-filled with the 1-day/₹49 plan, popup doesn't re-trigger twice per session.
+
 ### Marketing Site Restructure — Platform as Homepage (Sep 6, 2026) ✅
 - Retired the old dual-chooser `LandingPage.jsx` as the homepage (file kept on disk, unrouted — not deleted). `/` now renders `FinancialLiteracyPage.jsx` directly; `/financial-literacy` is a client-side redirect (`<Navigate to="/" replace />`) for old links.
 - `SiteHeader.jsx`: removed the Workshop/Platform/For Schools nav buttons (those two pages are now footer-only, reachable but hidden from nav). Nav now has "Pricing" and "How It Works" — scroll to `#pricing` / `#how-it-works` (the "CoinQuest in Action" video section) on the home page; from other pages (Workshop, For Schools) clicking them navigates home first, then scrolls. CTA stays contextual per path.
