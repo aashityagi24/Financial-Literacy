@@ -1,55 +1,64 @@
 {
-  "component_name": "PricingOffer",
-  "context": "Marketing Site - CoinQuest (Kids Financial Literacy)",
+  "project_name": "CoinQuest Exit-Intent Popup Redesign",
+  "context": "Refining the exit-intent 'Try for ₹49' trial popup on the CoinQuest landing page to be vibrant, parent-friendly, eye-catching, and aligned with CoinQuest playful card-playful brand identity.",
+  "theme": "Light, Playful, Colorful, Parent-Focused",
   "typography": {
-    "fonts": {
-      "headings": "Fredoka",
-      "body": "Outfit"
-    },
-    "actual_price": "text-4xl md:text-5xl font-fredoka font-bold tracking-tight text-[#1D3557]",
-    "original_price": "text-xl md:text-2xl font-fredoka font-medium text-slate-500",
-    "badge_text": "text-xs font-bold font-outfit uppercase tracking-widest text-[#1D3557]"
+    "heading_font": "Fredoka, sans-serif",
+    "body_font": "Inter, system-ui, sans-serif",
+    "h1_hero": "text-2xl sm:text-3xl font-bold text-[#1D3557]",
+    "eyebrow": "text-xs uppercase tracking-wider font-extrabold text-[#5B21B6] bg-[#F3E8FF] border-2 border-[#5B21B6]/30 px-3 py-1 rounded-full",
+    "price_badge": "text-sm font-bold bg-[#FFD23F] text-[#1D3557] px-3 py-1 rounded-lg border-2 border-[#1D3557] shadow-[2px_2px_0px_0px_#1D3557]"
   },
   "colors": {
-    "primary_text": "#1D3557 (Navy Blue - var(--border-dark))",
-    "strikethrough_line": "#EE6C4D (Orange - var(--accent))",
-    "badge_background": "#06D6A0 (Green - var(--success))",
-    "original_price_text": "text-slate-500 (Muted gray for contrast hierarchy)"
+    "primary_navy": "#1D3557",
+    "coral_orange": "#EE6C4D",
+    "coral_hover": "#D95A3C",
+    "vibrant_yellow": "#FFD23F",
+    "mint_teal": "#06D6A0",
+    "purple_accent": "#5B21B6",
+    "purple_soft_bg": "#F3E8FF",
+    "sky_blue_bg": "#E0FBFC",
+    "card_border": "#1D3557",
+    "body_text": "#3D5A80"
   },
-  "visual_enhancers": {
-    "strikethrough_style": "Do NOT use standard CSS line-through. Use a custom absolute span element: `h-[3px] bg-[#EE6C4D] -translate-y-1/2 -rotate-3` to look like a playful, deliberate marker cross-out.",
-    "badge_style": "Neo-brutalist pill: `px-3 py-1 rounded-full border-2 border-[#1D3557] shadow-[2px_2px_0px_0px_#1D3557] -rotate-2 transform-gpu`."
+  "layout_strategy": {
+    "type": "Split-Card Playful Popup (Poptin Inspiration adapted to CoinQuest)",
+    "mobile": "Single column vertical stack, mascot/badge on top with organic purple/yellow blob background, text + CTA below",
+    "desktop": "2-column grid layout (40% illustration blob on left with purple/sky blue background curve, 60% text copy + price badge + CTA on right)",
+    "container_styling": "bg-white rounded-3xl border-4 border-[#1D3557] shadow-[8px_8px_0px_0px_#1D3557] overflow-hidden p-0 max-w-2xl"
   },
-  "layouts": {
-    "component_structure": "Flex column for the overall container (`flex flex-col gap-1 items-start`). Top row contains the discount badge. Bottom row is a flex container (`flex flex-row items-baseline gap-3 mt-1`) holding the actual price and original price.",
-    "spacing": "Maintain `gap-3` between the actual price and the original price. Align them using `items-baseline` so the numbers sit on the same visual baseline."
+  "key_components": {
+    "ExitIntentPopup": {
+      "file_path": "/app/frontend/src/components/ExitIntentPopup.jsx",
+      "data_testids": {
+        "popup_container": "exit-intent-popup",
+        "eyebrow_badge": "exit-intent-eyebrow",
+        "headline": "exit-intent-headline",
+        "price_tag": "exit-intent-price-tag",
+        "feature_list": "exit-intent-features",
+        "cta_button": "exit-intent-cta-btn",
+        "close_button": "exit-intent-close-btn"
+      }
+    }
   },
-  "motion": {
-    "badge_hover": "Hovering the pricing area can cause the badge to slightly rotate to 0deg or scale up (`hover:scale-105 hover:rotate-0 transition-transform duration-200`)."
-  },
-  "accessibility": {
-    "strikethrough": "The custom strikethrough span MUST have `aria-hidden=\"true\"`. The original price span MUST include an aria-label, e.g., `aria-label=\"Original price: 120000 rupees\"`.",
-    "test_ids": "Include `data-testid=\"pricing-offer-container\"`, `data-testid=\"discount-badge\"`, `data-testid=\"actual-price\"`, and `data-testid=\"original-price\"`."
+  "media_assets": {
+    "mascot_logo": "https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/ul81dgc9_Friendly%20%27Money%20Matter%27%20Logo%20Design%20%281%29.png",
+    "hero_earner": "/hero-earner.png",
+    "family_illustration": "https://customer-assets.emergentagent.com/job_coinquest-kids-2/artifacts/u42iscql_family.png"
   },
   "instructions_to_main_agent": [
-    "Build a reusable React/JS component or HTML/Tailwind block for the PricingOffer that can be embedded in both the Money Masters batch price cards and the platform subscription pricing cards.",
-    "Do NOT use standard text-decoration for the strikethrough. Use the relative/absolute span trick described in visual_enhancers for the playful brand look.",
-    "Make the badge text customizable (e.g., 'SAVE 25%' or 'LIMITED TIME OFFER').",
-    "Ensure the component scales down nicely on mobile (use responsive text classes)."
+    "Redesign /app/frontend/src/components/ExitIntentPopup.jsx to match the split-layout illustrated style requested.",
+    "Ensure DialogContent uses max-w-2xl or max-w-xl with border-4 border-[#1D3557] and offset drop shadow shadow-[8px_8px_0px_0px_#1D3557].",
+    "Left side: Use a playful rounded blob background in soft purple (#F3E8FF) or sky blue (#E0FBFC) containing the cute CoinQuest mascot image / hero-earner image and a '₹49 1-Day Trial' floating badge.",
+    "Right side: Add a 'WAIT! BEFORE YOU GO' purple/yellow eyebrow pill, bold Fredoka headline 'Give Your Child the Gift of Money Smarts!', 3 micro checkmark benefit points, ₹49 price highlight, and a thick-bordered, punchy coral CTA button.",
+    "Include data-testid on every interactive element (cta button, close button, popup container, eyebrow).",
+    "Keep all original functional behavior intact (sessionStorage key 'coinquest_exit_intent_shown', mouseleave event listener, 45s mobile fallback, and 'coinquest:buy-now' custom event trigger)."
   ],
-  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
-    "You tend to converge toward generic, 'on distribution' outputs. In frontend design, this creates what users call the 'AI slop' aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight.",
-    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
-    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
-    "Create depth through layered design elements with z-index hierarchy.",
-    "Use glass-morphism effects with backdrop filters (12-24px blur) where appropriate.",
-    "You MUST NOT apply universal transition. Eg: `transition: all`. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms.",
-    "You MUST NOT center align the app container, ie do not add `.App { text-align: center; }` in the css file. This disrupts the human natural reading flow of text.",
-    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style.",
-    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯 etc for icons.",
-    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
-    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
-    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
-    "All interactive and key informational elements MUST include a `data-testid` attribute to facilitate robust automated testing."
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Never use generic centered plain white dialogs.",
+    "Never use dark gradients or transparent backgrounds without backdrop protection.",
+    "All interactive elements MUST have data-testid attributes.",
+    "Ensure contrast meets APCA/WCAG standards (dark navy text on yellow/white/purple-light, white text on coral button).",
+    "Maintain response speed and clean React code structure."
   ]
 }

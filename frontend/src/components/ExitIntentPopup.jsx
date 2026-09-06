@@ -1,13 +1,18 @@
 import { useEffect, useState, useRef } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, CheckCircle2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+
+const BENEFITS = [
+  '50+ games, stories & activities unlocked',
+  'Watch your child learn real money skills in a day',
+  'No commitment — cancel anytime, zero risk',
+];
 
 const SESSION_KEY = 'coinquest_exit_intent_shown';
 // Mobile has no mouseleave-to-top signal, so fall back to a time-on-page
@@ -55,35 +60,78 @@ export function ExitIntentPopup() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-md text-center" data-testid="exit-intent-popup">
-        <DialogHeader>
-          <div className="mx-auto w-16 h-16 rounded-full bg-[#FFD23F] border-3 border-[#1D3557] flex items-center justify-center mb-2">
-            <Sparkles className="w-8 h-8 text-[#1D3557]" />
+      <DialogContent
+        className="max-w-2xl p-0 gap-0 overflow-hidden rounded-3xl border-4 border-[#1D3557] shadow-[8px_8px_0px_0px_#1D3557] bg-white"
+        data-testid="exit-intent-popup"
+      >
+        <div className="flex flex-col md:flex-row">
+          {/* Illustration side */}
+          <div className="relative md:w-2/5 min-h-[180px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#F3E8FF] via-[#F3E8FF] to-[#E0FBFC] p-6">
+            <div className="absolute -top-8 -left-8 w-32 h-32 rounded-full bg-[#FFD23F]/70" />
+            <div className="absolute -bottom-10 -right-6 w-40 h-40 bg-[#06D6A0]/40 rounded-[60%_40%_30%_70%/60%_30%_70%_40%]" />
+            <img
+              src="/hero-earner.png"
+              alt="Happy kid earning coins on CoinQuest"
+              className="relative z-10 w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-xl"
+            />
+            <div
+              data-testid="exit-intent-price-tag"
+              className="absolute top-4 left-4 z-20 -rotate-6 text-xs font-extrabold bg-[#FFD23F] text-[#1D3557] px-3 py-1.5 rounded-lg border-2 border-[#1D3557] shadow-[2px_2px_0px_0px_#1D3557]"
+              style={{ fontFamily: 'Fredoka' }}
+            >
+              ₹49 / 1 Day
+            </div>
           </div>
-          <DialogTitle className="text-center text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-            Wait — Don't Miss Out!
-          </DialogTitle>
-          <DialogDescription className="text-center text-base text-[#3D5A80] leading-relaxed pt-1">
-            Give your child a full day of CoinQuest for just <strong>₹49</strong> — every game, story and activity unlocked, no commitment needed.
-          </DialogDescription>
-        </DialogHeader>
 
-        <div className="flex flex-col gap-2 pt-2">
-          <Button
-            data-testid="exit-intent-cta-btn"
-            onClick={handleTryNow}
-            className="w-full py-6 text-lg font-bold bg-[#EE6C4D] hover:bg-[#D95A3C] text-white rounded-xl flex items-center justify-center gap-2"
-          >
-            <Sparkles className="w-5 h-5" />
-            Try for ₹49
-          </Button>
-          <button
-            data-testid="exit-intent-close-btn"
-            onClick={() => setOpen(false)}
-            className="text-sm text-gray-400 hover:text-gray-600 py-1"
-          >
-            No thanks, maybe later
-          </button>
+          {/* Copy side */}
+          <div className="flex-1 p-6 sm:p-8 flex flex-col gap-3">
+            <span
+              data-testid="exit-intent-eyebrow"
+              className="inline-flex items-center gap-1.5 self-start text-xs uppercase tracking-wider font-extrabold text-[#5B21B6] bg-[#F3E8FF] border-2 border-[#5B21B6]/30 px-3 py-1 rounded-full"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Wait! Before you go
+            </span>
+
+            <DialogTitle
+              data-testid="exit-intent-headline"
+              className="text-2xl font-bold text-[#1D3557] leading-tight"
+              style={{ fontFamily: 'Fredoka' }}
+            >
+              Give Your Child the Gift of Money Smarts!
+            </DialogTitle>
+
+            <DialogDescription className="sr-only">
+              Try CoinQuest for a full day for just ₹49 with no commitment.
+            </DialogDescription>
+
+            <ul data-testid="exit-intent-features" className="flex flex-col gap-1.5 py-1">
+              {BENEFITS.map((benefit) => (
+                <li key={benefit} className="flex items-start gap-2 text-sm text-[#3D5A80]">
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-[#06D6A0]" />
+                  <span>{benefit}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex flex-col gap-2 pt-1">
+              <Button
+                data-testid="exit-intent-cta-btn"
+                onClick={handleTryNow}
+                className="w-full py-6 text-lg font-bold bg-[#EE6C4D] hover:bg-[#D95A3C] text-white rounded-xl border-2 border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] hover:shadow-[1px_1px_0px_0px_#1D3557] hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-5 h-5" />
+                Try for ₹49 Today
+              </Button>
+              <button
+                data-testid="exit-intent-close-btn"
+                onClick={() => setOpen(false)}
+                className="text-sm text-gray-400 hover:text-gray-600 py-1 self-center"
+              >
+                No thanks, maybe later
+              </button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
