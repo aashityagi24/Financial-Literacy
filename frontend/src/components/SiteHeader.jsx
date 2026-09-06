@@ -4,8 +4,8 @@ import { SchoolEnquiryDialog } from '@/components/SchoolEnquiryDialog';
 import { smoothScrollToElement } from '@/utils/smoothScroll';
 
 const SECTION_LINKS = [
-  { label: 'Pricing', sectionId: 'pricing', testId: 'pricing' },
   { label: 'How It Works', sectionId: 'how-it-works', testId: 'how-it-works' },
+  { label: 'Pricing', sectionId: 'pricing', testId: 'pricing' },
 ];
 
 const CTA_BY_PATH = {
