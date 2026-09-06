@@ -7,7 +7,6 @@ import TrialBanner from "@/components/TrialBanner";
 import SubscriptionExpiredGate from "@/components/SubscriptionExpiredGate";
 
 // Pages
-import LandingPage from "@/pages/LandingPage";
 import FinancialLiteracyPage from "@/pages/FinancialLiteracyPage";
 import EntrepreneurshipWorkshopPage from "@/pages/EntrepreneurshipWorkshopPage";
 import ForSchoolsPage from "@/pages/ForSchoolsPage";
@@ -235,8 +234,8 @@ function AppRouter() {
     <>
       <ScrollToTop />
       <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/financial-literacy" element={<FinancialLiteracyPage />} />
+      <Route path="/" element={<FinancialLiteracyPage />} />
+      <Route path="/financial-literacy" element={<Navigate to="/" replace />} />
       <Route path="/entrepreneurship-workshop" element={<EntrepreneurshipWorkshopPage />} />
       <Route path="/for-schools" element={<ForSchoolsPage />} />
       <Route path="/login" element={<AuthPage />} />
@@ -457,7 +456,7 @@ function App() {
       <ContentProtection />
       {/* Toaster mounted before the router so it subscribes to the sonner
           store before any route's mount-time useEffect fires a toast
-          (e.g. LandingPage's session_expired message) — sibling effects
+          (e.g. FinancialLiteracyPage's session_expired message) — sibling effects
           run in JSX order, so this must come first. */}
       <Toaster position="top-right" richColors />
       <BrowserRouter>

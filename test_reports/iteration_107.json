@@ -1,0 +1,26 @@
+{
+  "summary": "Frontend regression testing for the CoinQuest marketing site restructure (retiring old LandingPage, moving FinancialLiteracyPage to '/', adding shared SiteHeader/SiteFooter with new Pricing/How-It-Works nav). All 25+ verification checks passed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "SchoolEnquiryDialog", "issues": ["Console warning: Missing Description or aria-describedby for DialogContent (accessibility, non-blocking)"]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "SiteHeader scrollToSection uses a fixed 400ms setTimeout after navigate('/'). On slow devices/networks the target section may not yet be mounted and the scroll silently no-ops. Consider using a MutationObserver or requestAnimationFrame loop with retry.",
+    "SiteHeader has no mobile hamburger menu -- on very narrow viewports the nav wraps below the logo which works but is not ideal. Not a bug for this change, but worth noting.",
+    "DialogContent (SchoolEnquiryDialog) missing aria-describedby -- minor a11y warning in console."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "100%"},
+  "test_credentials": "N/A - public marketing pages",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Verified: (1) '/' now serves FinancialLiteracyPage with hero 'Learn Money Skills While Having Fun!'. (2) '/financial-literacy' correctly redirects to '/'. (3) SiteHeader present on /, /entrepreneurship-workshop, /for-schools with EXACTLY two nav testids [site-header-nav-pricing, site-header-nav-how-it-works] -- no Workshop/Platform/For Schools nav buttons. (4) CTA is contextual: 'Sign Up' on /, 'Book a Free Trial' on /entrepreneurship-workshop, 'Enquire Now' on /for-schools (opens dialog). (5) Home Pricing click scrolls to #pricing; How It Works scrolls to #how-it-works (walkthrough video is configured). (6) Cross-page Pricing click from /entrepreneurship-workshop navigates to / correctly. (7) SiteFooter present on all 3 public pages with all 3 quick links (platform/workshop/for-schools) + Contact + Visit Learners' Planet. Footer link navigation works. (8) session_expired=true toast shows and URL cleaned to '/'. (9) Home CTA routes to /signup. No regressions detected.",
+  "rca of the issue": "N/A - no bugs found"
+}

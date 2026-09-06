@@ -4,6 +4,7 @@ import {
   Mic, Briefcase, Tag, Tent, Sparkles,
 } from 'lucide-react';
 import { SiteHeader } from '@/components/SiteHeader';
+import { SiteFooter } from '@/components/SiteFooter';
 import { SchoolEnquiryDialog } from '@/components/SchoolEnquiryDialog';
 import { trackMetaPixelPageView } from '@/utils/metaPixel';
 
@@ -215,30 +216,7 @@ export default function ForSchoolsPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#1D3557] py-8">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-            <div className="flex flex-col items-center md:items-start">
-              <img
-                src="https://customer-assets.emergentagent.com/job_6e7204b4-e7e4-42b3-b74e-111b68302b75/artifacts/ul81dgc9_Friendly%20%27Money%20Matter%27%20Logo%20Design%20%281%29.png"
-                alt="CoinQuest Logo"
-                className="h-36 w-auto"
-              />
-            </div>
-            <div className="flex flex-col items-center md:items-start gap-3">
-              <h3 className="text-white font-bold text-lg" style={{ fontFamily: 'Fredoka' }}>Contact Us</h3>
-              <a href="mailto:hello@coinquest.co.in" className="text-[#98C1D9] hover:text-white transition-colors">hello@coinquest.co.in</a>
-              <a href="tel:+919924117051" className="text-[#98C1D9] hover:text-white transition-colors">+91 9924117051</a>
-            </div>
-            <div className="flex flex-col items-center md:items-end gap-3">
-              <p className="text-[#98C1D9] text-sm text-center md:text-right mt-2">
-                © Learners' Planet<br/>
-                Educating kids in fun and interactive ways!
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
 
       <SchoolEnquiryDialog open={showEnquiry} onOpenChange={setShowEnquiry} />
     </div>

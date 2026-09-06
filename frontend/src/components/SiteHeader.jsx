@@ -2,15 +2,14 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { SchoolEnquiryDialog } from '@/components/SchoolEnquiryDialog';
 
-const NAV_LINKS = [
-  { label: 'Workshop', path: '/entrepreneurship-workshop', testId: 'workshop' },
-  { label: 'Platform', path: '/financial-literacy', testId: 'platform' },
-  { label: 'For Schools', path: '/for-schools', testId: 'for-schools' },
+const SECTION_LINKS = [
+  { label: 'Pricing', sectionId: 'pricing', testId: 'pricing' },
+  { label: 'How It Works', sectionId: 'how-it-works', testId: 'how-it-works' },
 ];
 
 const CTA_BY_PATH = {
   '/entrepreneurship-workshop': { label: 'Book a Free Trial' },
-  '/financial-literacy': { label: 'Sign Up' },
+  '/': { label: 'Sign Up' },
   '/for-schools': { label: 'Enquire Now' },
 };
 
@@ -24,12 +23,21 @@ export function SiteHeader() {
   const handleCtaClick = () => {
     if (location.pathname === '/entrepreneurship-workshop') {
       navigate('/entrepreneurship-workshop?trial=1');
-    } else if (location.pathname === '/financial-literacy') {
+    } else if (location.pathname === '/') {
       navigate('/signup');
     } else if (location.pathname === '/for-schools') {
       setShowSchoolEnquiry(true);
     } else {
       navigate('/login');
+    }
+  };
+
+  const scrollToSection = (sectionId) => {
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' }), 400);
+    } else {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -44,16 +52,12 @@ export function SiteHeader() {
           className="h-11 w-auto cursor-pointer order-1"
         />
         <nav className="flex items-center gap-5 sm:gap-8 order-3 sm:order-2 w-full sm:w-auto justify-center sm:justify-start">
-          {NAV_LINKS.map((link) => (
+          {SECTION_LINKS.map((link) => (
             <button
-              key={link.path}
+              key={link.sectionId}
               data-testid={`site-header-nav-${link.testId}`}
-              onClick={() => navigate(link.path)}
-              className={`font-bold text-base sm:text-lg transition-colors ${
-                location.pathname === link.path
-                  ? 'text-[#EE6C4D]'
-                  : 'text-[#1D3557] hover:text-[#5B21B6]'
-              }`}
+              onClick={() => scrollToSection(link.sectionId)}
+              className="font-bold text-base sm:text-lg text-[#1D3557] hover:text-[#5B21B6] transition-colors"
             >
               {link.label}
             </button>

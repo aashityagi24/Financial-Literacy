@@ -79,6 +79,13 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Checkout UX: platform checkout (`PricingSection.jsx`) and Money Masters purchase (`MoneyMastersPurchase.jsx`, inside Parent Dashboard) both have an optional referral code field; invalid/inapplicable codes surface the exact backend error via toast before Razorpay opens.
 - Tested by testing_agent (iteration_106): 34/34 backend pytest cases pass + full frontend flow verified (admin CRUD, both checkout paths, cross-target code applying to a platform plan AND a batch simultaneously). Minor unaddressed enhancement: the built `/validate-referral-code` endpoint isn't wired to a live "Apply"/discount-preview button pre-payment (deferred, optional UX polish).
 
+### Marketing Site Restructure — Platform as Homepage (Sep 6, 2026) ✅
+- Retired the old dual-chooser `LandingPage.jsx` as the homepage (file kept on disk, unrouted — not deleted). `/` now renders `FinancialLiteracyPage.jsx` directly; `/financial-literacy` is a client-side redirect (`<Navigate to="/" replace />`) for old links.
+- `SiteHeader.jsx`: removed the Workshop/Platform/For Schools nav buttons (those two pages are now footer-only, reachable but hidden from nav). Nav now has "Pricing" and "How It Works" — scroll to `#pricing` / `#how-it-works` (the "CoinQuest in Action" video section) on the home page; from other pages (Workshop, For Schools) clicking them navigates home first, then scrolls. CTA stays contextual per path.
+- New shared `SiteFooter.jsx` (replacing 3 duplicated inline `<footer>` blocks in FinancialLiteracyPage/EntrepreneurshipWorkshopPage/ForSchoolsPage) with a "Quick Links" column linking to all 3 public pages — this is where Workshop & For Schools now live for discovery.
+- Session-expired toast + `no_subscription` handling moved from the old `LandingPage.jsx` into `FinancialLiteracyPage.jsx` since that logic's redirect target is now the homepage.
+- Tested by testing_agent (iteration_107): 25+ checks passed, no bugs. Minor note (not fixed): header's cross-page scroll uses a fixed 400ms timeout rather than a mount-detection retry — acceptable for now.
+
 ## Current Architecture Snapshot (Aug 23, 2026)
 - Roles: child, parent, teacher, school (admin), admin.
 - Learning hierarchy: Topic → Subtopic → Content Item, grade-scoped, progressive unlock.
