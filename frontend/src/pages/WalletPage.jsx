@@ -80,8 +80,8 @@ export default function WalletPage({ user }) {
   const getAccountMeta = () => {
     const baseMeta = {
       spending: { 
-        icon: '🛒', 
-        label: 'Wallet',
+        icon: '⚡', 
+        label: 'My XP',
         color: 'from-[#EE6C4D] to-[#FF8A6C]',
         description: 'Use this to buy things!',
         action: { label: 'Go Shopping', path: '/store' }
