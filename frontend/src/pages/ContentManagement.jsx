@@ -505,7 +505,7 @@ function SortableContentItem({ content, onEdit, onDelete, onMove, onDuplicate, o
         </div>
         <p className="text-sm text-gray-500 truncate">{content.description}</p>
         {content.visible_to?.includes('child') && (
-          <p className="text-xs text-green-600 font-medium">₹{content.reward_coins} reward</p>
+          <p className="text-xs text-green-600 font-medium">{content.reward_coins} XP reward</p>
         )}
       </div>
       
@@ -2550,7 +2550,7 @@ export default function ContentManagement({ user }) {
             {/* Reward - Only show if content is visible to children */}
             {contentForm.visible_to?.includes('child') && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reward (₹)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reward (XP)</label>
                 <Input type="number" value={contentForm.reward_coins} onChange={e => setContentForm(p => ({ ...p, reward_coins: parseInt(e.target.value) || 0 }))} />
                 <p className="text-xs text-gray-500 mt-1">Children earn this when completing the content</p>
               </div>

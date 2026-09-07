@@ -299,11 +299,11 @@ export default function TopicPage({ user }) {
               });
               const coins = response.data.coins_awarded || 0;
               if (pct >= 80) {
-                toastFn(`${feedback} Earned ₹${coins}!`, { duration: 4000 });
+                toastFn(`${feedback} Earned ${coins} XP!`, { duration: 4000 });
               } else if (pct >= 50) {
-                toastFn(`${feedback} Earned ₹${coins}. Score higher for more!`, { duration: 4000 });
+                toastFn(`${feedback} Earned ${coins} XP. Score higher for more!`, { duration: 4000 });
               } else {
-                toastFn(`${feedback} Earned ₹${coins}. Try again for a bigger reward!`, { duration: 4000 });
+                toastFn(`${feedback} Earned ${coins} XP. Try again for a bigger reward!`, { duration: 4000 });
               }
               lastCompletedRef.current = selectedContent.content_id;
               // Close viewer after delay, then silently refresh in background
@@ -372,7 +372,7 @@ export default function TopicPage({ user }) {
       const response = await axios.post(`${API}/content/items/${contentId}/complete`);
       const coins = response.data.coins_awarded || 0;
       if (coins > 0) {
-        toast.success(`Completed! +₹${coins}`);
+        toast.success(`Completed! +${coins} XP`);
       } else {
         toast.success('Done! Reward already added to your wallet');
       }
@@ -699,7 +699,7 @@ export default function TopicPage({ user }) {
                           </div>
                           <h3 className="text-lg font-bold text-gray-500" style={{ fontFamily: 'Fredoka' }}>{content.title}</h3>
                           <p className="text-base text-gray-400 line-clamp-1">{content.description}</p>
-                          <p className="text-base text-gray-400 font-bold mt-1">+₹{content.reward_coins}</p>
+                          <p className="text-base text-gray-400 font-bold mt-1">+{content.reward_coins} XP</p>
                         </div>
                         
                         <div className="flex items-center">
@@ -841,8 +841,8 @@ export default function TopicPage({ user }) {
                         {user?.role === 'child' && (
                           <p className={`text-base font-bold mt-1 text-[#06D6A0]`}>
                             {isCompleted 
-                              ? `✓ Earned ₹${content.coins_earned != null ? content.coins_earned : content.reward_coins}`
-                              : `+₹${content.reward_coins}`
+                              ? `✓ Earned ${content.coins_earned != null ? content.coins_earned : content.reward_coins} XP`
+                              : `+${content.reward_coins} XP`
                             }
                           </p>
                         )}
@@ -1098,9 +1098,9 @@ export default function TopicPage({ user }) {
               <span className="text-sm font-bold text-[#06D6A0]">
                 {user?.role === 'child' 
                   ? (selectedContent.is_completed 
-                      ? `✓ Earned ₹${selectedContent.coins_earned != null ? selectedContent.coins_earned : selectedContent.reward_coins}` 
-                      : `+₹${selectedContent.reward_coins}`)
-                  : `Reward: ₹${selectedContent.reward_coins}`
+                      ? `✓ Earned ${selectedContent.coins_earned != null ? selectedContent.coins_earned : selectedContent.reward_coins} XP` 
+                      : `+${selectedContent.reward_coins} XP`)
+                  : `Reward: ${selectedContent.reward_coins} XP`
                 }
               </span>
               <div className="flex items-center gap-2">

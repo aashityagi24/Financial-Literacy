@@ -145,7 +145,7 @@ export default function StockMarketPage({ user }) {
     
     try {
       await axios.post(`${API}/wallet/transfer`, transferData);
-      toast.success(`Transferred ₹${amount} successfully!`);
+      toast.success(`Transferred ${amount} XP successfully!`);
       setShowTransfer(false);
       setTransferData({ from_account: 'spending', to_account: 'investing', amount: '' });
       fetchData();
@@ -229,7 +229,7 @@ export default function StockMarketPage({ user }) {
               >
                 <Wallet className="w-5 h-5 text-[#10B981]" />
                 <span className="text-base text-gray-400">Trading:</span>
-                <span className="text-lg font-bold text-[#10B981]">₹{investingBalance.toFixed(0)}</span>
+                <span className="text-lg font-bold text-[#10B981]">{investingBalance.toFixed(0)} XP</span>
               </button>
             </div>
           </div>
@@ -336,7 +336,7 @@ export default function StockMarketPage({ user }) {
                     </div>
                     
                     <div className="mb-3">
-                      <p className="text-2xl font-bold text-white">₹{stock.current_price.toFixed(2)}</p>
+                      <p className="text-2xl font-bold text-white">{stock.current_price.toFixed(2)} XP</p>
                       {/* Daily Change */}
                       <div className={`flex items-center gap-1 text-sm mt-1 ${isUp ? 'text-[#10B981]' : 'text-red-400'}`}>
                         {isUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
@@ -349,11 +349,11 @@ export default function StockMarketPage({ user }) {
                     <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
                       <div className="bg-[#374151]/50 rounded-lg px-2 py-1.5">
                         <span className="text-gray-500">Open:</span>
-                        <span className="text-white ml-1 font-medium">₹{stock.opening_price?.toFixed(2)}</span>
+                        <span className="text-white ml-1 font-medium">{stock.opening_price?.toFixed(2)} XP</span>
                       </div>
                       <div className="bg-[#374151]/50 rounded-lg px-2 py-1.5">
                         <span className="text-gray-500">Prev:</span>
-                        <span className="text-white ml-1 font-medium">₹{stock.previous_close?.toFixed(2)}</span>
+                        <span className="text-white ml-1 font-medium">{stock.previous_close?.toFixed(2)} XP</span>
                       </div>
                     </div>
                     
@@ -399,16 +399,16 @@ export default function StockMarketPage({ user }) {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <div className="bg-[#1F2937] rounded-xl p-4 border border-gray-700">
                 <p className="text-gray-400 text-sm mb-1">Total Invested</p>
-                <p className="text-2xl font-bold">₹{portfolio.total_invested?.toFixed(0) || 0}</p>
+                <p className="text-2xl font-bold">{portfolio.total_invested?.toFixed(0) || 0} XP</p>
               </div>
               <div className="bg-[#1F2937] rounded-xl p-4 border border-gray-700">
                 <p className="text-gray-400 text-sm mb-1">Current Value</p>
-                <p className="text-2xl font-bold">₹{portfolio.total_current_value?.toFixed(0) || 0}</p>
+                <p className="text-2xl font-bold">{portfolio.total_current_value?.toFixed(0) || 0} XP</p>
               </div>
               <div className="bg-[#1F2937] rounded-xl p-4 border border-gray-700">
                 <p className="text-gray-400 text-sm mb-1">Total P/L</p>
                 <p className={`text-2xl font-bold ${(portfolio.total_profit_loss || 0) >= 0 ? 'text-[#10B981]' : 'text-red-400'}`}>
-                  {(portfolio.total_profit_loss || 0) >= 0 ? '+' : ''}₹{portfolio.total_profit_loss?.toFixed(0) || 0}
+                  {(portfolio.total_profit_loss || 0) >= 0 ? '+' : ''}{portfolio.total_profit_loss?.toFixed(0) || 0} XP
                 </p>
               </div>
               <div className="bg-[#1F2937] rounded-xl p-4 border border-gray-700">
@@ -445,12 +445,12 @@ export default function StockMarketPage({ user }) {
                           </div>
                           <div>
                             <p className="font-bold text-lg">{holding.ticker || holding.stock?.ticker}</p>
-                            <p className="text-sm text-gray-400">{holding.quantity} shares @ ₹{holding.average_buy_price?.toFixed(2)} avg</p>
+                            <p className="text-sm text-gray-400">{holding.quantity} shares @ {holding.average_buy_price?.toFixed(2)} XP avg</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-xl">₹{holding.current_value?.toFixed(0)}</p>
-                          <p className="text-sm text-gray-400">Current: ₹{holding.current_price?.toFixed(2)}/share</p>
+                          <p className="font-bold text-xl">{holding.current_value?.toFixed(0)} XP</p>
+                          <p className="text-sm text-gray-400">Current: {holding.current_price?.toFixed(2)} XP/share</p>
                         </div>
                       </div>
                       
@@ -462,7 +462,7 @@ export default function StockMarketPage({ user }) {
                           <div className={`flex items-center gap-1 ${dailyIsUp ? 'text-[#10B981]' : 'text-red-400'}`}>
                             {dailyIsUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                             <span className="font-bold">
-                              {dailyIsUp ? '+' : ''}₹{holding.daily_change_value?.toFixed(2) || 0}
+                              {dailyIsUp ? '+' : ''}{holding.daily_change_value?.toFixed(2) || 0} XP
                             </span>
                             <span className="text-xs">
                               ({dailyIsUp ? '+' : ''}{holding.daily_change_percent?.toFixed(1) || 0}%)
@@ -476,7 +476,7 @@ export default function StockMarketPage({ user }) {
                           <div className={`flex items-center gap-1 ${totalIsUp ? 'text-[#10B981]' : 'text-red-400'}`}>
                             {totalIsUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                             <span className="font-bold">
-                              {totalIsUp ? '+' : ''}₹{holding.profit_loss?.toFixed(2) || 0}
+                              {totalIsUp ? '+' : ''}{holding.profit_loss?.toFixed(2) || 0} XP
                             </span>
                             <span className="text-xs">
                               ({totalIsUp ? '+' : ''}{holding.profit_loss_percent?.toFixed(1) || 0}%)
@@ -489,15 +489,15 @@ export default function StockMarketPage({ user }) {
                       <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
                         <div className="bg-[#374151]/30 rounded-lg px-2 py-1.5">
                           <span className="text-gray-500">Open:</span>
-                          <span className="text-white ml-1">₹{holding.opening_price?.toFixed(2)}</span>
+                          <span className="text-white ml-1">{holding.opening_price?.toFixed(2)} XP</span>
                         </div>
                         <div className="bg-[#374151]/30 rounded-lg px-2 py-1.5">
                           <span className="text-gray-500">Prev Close:</span>
-                          <span className="text-white ml-1">₹{holding.previous_close?.toFixed(2)}</span>
+                          <span className="text-white ml-1">{holding.previous_close?.toFixed(2)} XP</span>
                         </div>
                         <div className="bg-[#374151]/30 rounded-lg px-2 py-1.5">
                           <span className="text-gray-500">Avg Buy:</span>
-                          <span className="text-white ml-1">₹{holding.average_buy_price?.toFixed(2)}</span>
+                          <span className="text-white ml-1">{holding.average_buy_price?.toFixed(2)} XP</span>
                         </div>
                       </div>
                       
@@ -554,7 +554,7 @@ export default function StockMarketPage({ user }) {
                     <p className="text-gray-400 text-sm">{item.description}</p>
                     {item.is_prediction && item.prediction_target_price && (
                       <div className="mt-2 bg-[#374151] rounded-lg p-2 text-sm">
-                        <span className="text-purple-400">Target: ₹{item.prediction_target_price}</span>
+                        <span className="text-purple-400">Target: {item.prediction_target_price} XP</span>
                         {item.prediction_target_date && (
                           <span className="text-gray-500 ml-2">by {item.prediction_target_date}</span>
                         )}
@@ -587,11 +587,11 @@ export default function StockMarketPage({ user }) {
                 {/* Price */}
                 <div className="flex items-center justify-between bg-[#374151] rounded-lg p-4">
                   <div>
-                    <p className="text-3xl font-bold">₹{selectedStock.current_price?.toFixed(2)}</p>
+                    <p className="text-3xl font-bold">{selectedStock.current_price?.toFixed(2)} XP</p>
                     <div className={`flex items-center gap-2 text-sm mt-1 ${(selectedStock.daily_change || 0) >= 0 ? 'text-[#10B981]' : 'text-red-400'}`}>
                       {(selectedStock.daily_change || 0) >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                       <span className="font-medium">
-                        {(selectedStock.daily_change || 0) >= 0 ? '+' : ''}₹{selectedStock.daily_change?.toFixed(2)} ({selectedStock.daily_change_percent?.toFixed(1)}%)
+                        {(selectedStock.daily_change || 0) >= 0 ? '+' : ''}{selectedStock.daily_change?.toFixed(2)} XP ({selectedStock.daily_change_percent?.toFixed(1)}%)
                       </span>
                       <span className="text-gray-400">today</span>
                     </div>
@@ -620,15 +620,15 @@ export default function StockMarketPage({ user }) {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="bg-[#374151]/50 rounded-lg p-3 text-center">
                     <p className="text-xs text-gray-400">Today's Open</p>
-                    <p className="font-bold text-lg">₹{(selectedStock.opening_price || selectedStock.current_price)?.toFixed(2)}</p>
+                    <p className="font-bold text-lg">{(selectedStock.opening_price || selectedStock.current_price)?.toFixed(2)} XP</p>
                   </div>
                   <div className="bg-[#374151]/50 rounded-lg p-3 text-center">
                     <p className="text-xs text-gray-400">Current (Close)</p>
-                    <p className="font-bold text-lg">₹{selectedStock.current_price?.toFixed(2)}</p>
+                    <p className="font-bold text-lg">{selectedStock.current_price?.toFixed(2)} XP</p>
                   </div>
                   <div className="bg-[#374151]/50 rounded-lg p-3 text-center">
                     <p className="text-xs text-gray-400">Previous Close</p>
-                    <p className="font-bold text-lg">₹{(selectedStock.previous_close || selectedStock.current_price)?.toFixed(2)}</p>
+                    <p className="font-bold text-lg">{(selectedStock.previous_close || selectedStock.current_price)?.toFixed(2)} XP</p>
                   </div>
                 </div>
                 
@@ -646,22 +646,22 @@ export default function StockMarketPage({ user }) {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-xs text-gray-400">Shares Owned</p>
-                          <p className="font-bold">{holding.quantity} @ ₹{holding.average_buy_price?.toFixed(2)} avg</p>
+                          <p className="font-bold">{holding.quantity} @ {holding.average_buy_price?.toFixed(2)} XP avg</p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-400">Current Value</p>
-                          <p className="font-bold">₹{(selectedStock.current_price * holding.quantity).toFixed(2)}</p>
+                          <p className="font-bold">{(selectedStock.current_price * holding.quantity).toFixed(2)} XP</p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-400">Total P/L (from purchase)</p>
                           <p className={`font-bold ${totalPL >= 0 ? 'text-[#10B981]' : 'text-red-400'}`}>
-                            {totalPL >= 0 ? '+' : ''}₹{totalPL.toFixed(2)} ({totalPLPercent >= 0 ? '+' : ''}{totalPLPercent.toFixed(1)}%)
+                            {totalPL >= 0 ? '+' : ''}{totalPL.toFixed(2)} XP ({totalPLPercent >= 0 ? '+' : ''}{totalPLPercent.toFixed(1)}%)
                           </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-400">Today's P/L</p>
                           <p className={`font-bold ${(selectedStock.daily_change || 0) >= 0 ? 'text-[#10B981]' : 'text-red-400'}`}>
-                            {(selectedStock.daily_change || 0) >= 0 ? '+' : ''}₹{((selectedStock.daily_change || 0) * holding.quantity).toFixed(2)}
+                            {(selectedStock.daily_change || 0) >= 0 ? '+' : ''}{((selectedStock.daily_change || 0) * holding.quantity).toFixed(2)} XP
                           </p>
                         </div>
                       </div>
@@ -721,7 +721,7 @@ export default function StockMarketPage({ user }) {
                             key={i}
                             className={`flex-1 rounded-t ${isUp || i === 0 ? 'bg-[#10B981]' : 'bg-red-500'}`}
                             style={{ height: `${Math.max(height, 5)}%` }}
-                            title={`${h.date}: ₹${(h.close_price || h.price)?.toFixed(2)}`}
+                            title={`${h.date}: ${(h.close_price || h.price)?.toFixed(2)} XP`}
                           />
                         );
                       })}
@@ -762,7 +762,7 @@ export default function StockMarketPage({ user }) {
             <div className="space-y-4">
               <div className="bg-[#374151] rounded-lg p-4">
                 <p className="text-gray-400 text-sm">Current Price</p>
-                <p className="text-2xl font-bold">₹{selectedStock.current_price?.toFixed(2)}</p>
+                <p className="text-2xl font-bold">{selectedStock.current_price?.toFixed(2)} XP</p>
               </div>
               
               <div>
@@ -779,12 +779,12 @@ export default function StockMarketPage({ user }) {
               <div className="bg-[#374151] rounded-lg p-4">
                 <div className="flex justify-between mb-2">
                   <span className="text-gray-400">Total Cost</span>
-                  <span className="font-bold">₹{(selectedStock.current_price * buyQuantity).toFixed(2)}</span>
+                  <span className="font-bold">{(selectedStock.current_price * buyQuantity).toFixed(2)} XP</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Available Balance</span>
                   <span className={investingBalance >= selectedStock.current_price * buyQuantity ? 'text-[#10B981]' : 'text-red-400'}>
-                    ₹{investingBalance.toFixed(2)}
+                    {investingBalance.toFixed(2)} XP
                   </span>
                 </div>
               </div>
@@ -819,7 +819,7 @@ export default function StockMarketPage({ user }) {
                   <>
                     <div className="bg-[#374151] rounded-lg p-4">
                       <p className="text-gray-400 text-sm">Current Price</p>
-                      <p className="text-2xl font-bold">₹{selectedStock.current_price?.toFixed(2)}</p>
+                      <p className="text-2xl font-bold">{selectedStock.current_price?.toFixed(2)} XP</p>
                       <p className="text-sm text-gray-400 mt-1">You own: {maxQty} shares</p>
                     </div>
                     
@@ -838,14 +838,14 @@ export default function StockMarketPage({ user }) {
                     <div className="bg-[#374151] rounded-lg p-4">
                       <div className="flex justify-between mb-2">
                         <span className="text-gray-400">You will receive</span>
-                        <span className="font-bold text-[#10B981]">₹{(selectedStock.current_price * sellQuantity).toFixed(2)}</span>
+                        <span className="font-bold text-[#10B981]">{(selectedStock.current_price * sellQuantity).toFixed(2)} XP</span>
                       </div>
                       {holding && (
                         <div className="flex justify-between">
                           <span className="text-gray-400">Est. P/L on this sale</span>
                           <span className={((selectedStock.current_price - holding.average_buy_price) * sellQuantity) >= 0 ? 'text-[#10B981]' : 'text-red-400'}>
                             {((selectedStock.current_price - holding.average_buy_price) * sellQuantity) >= 0 ? '+' : ''}
-                            ₹{((selectedStock.current_price - holding.average_buy_price) * sellQuantity).toFixed(2)}
+                            {((selectedStock.current_price - holding.average_buy_price) * sellQuantity).toFixed(2)} XP
                           </span>
                         </div>
                       )}
@@ -880,8 +880,8 @@ export default function StockMarketPage({ user }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-[#374151] border-gray-600">
-                  <SelectItem value="spending">💳 Spending (₹{spendingBalance.toFixed(0)})</SelectItem>
-                  <SelectItem value="investing">📈 Trading (₹{investingBalance.toFixed(0)})</SelectItem>
+                  <SelectItem value="spending">💳 Spending ({spendingBalance.toFixed(0)} XP)</SelectItem>
+                  <SelectItem value="investing">📈 Trading ({investingBalance.toFixed(0)} XP)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -893,8 +893,8 @@ export default function StockMarketPage({ user }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-[#374151] border-gray-600">
-                  <SelectItem value="spending">💳 Spending (₹{spendingBalance.toFixed(0)})</SelectItem>
-                  <SelectItem value="investing">📈 Trading (₹{investingBalance.toFixed(0)})</SelectItem>
+                  <SelectItem value="spending">💳 Spending ({spendingBalance.toFixed(0)} XP)</SelectItem>
+                  <SelectItem value="investing">📈 Trading ({investingBalance.toFixed(0)} XP)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

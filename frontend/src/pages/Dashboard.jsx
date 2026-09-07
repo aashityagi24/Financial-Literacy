@@ -4,9 +4,9 @@ import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
-  Coins, Wallet, Store, TrendingUp, Target, Trophy, 
+  Wallet, Store, TrendingUp, Target, Trophy, 
   User, LogOut, Flame, Gift, Sparkles,
-  ChevronRight, Star, BookOpen, Shield, GraduationCap, Users, Award, HandCoins, BookMarked, Briefcase, Heart, IndianRupee, CalendarDays
+  ChevronRight, Star, BookOpen, Shield, GraduationCap, Users, Award, Handshake, BookMarked, Briefcase, Heart, IndianRupee, CalendarDays
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
@@ -127,7 +127,7 @@ export default function Dashboard({ user, setUser }) {
   
   // Lending is only for grades 4-5
   const getSpecialFeatureItem = () => {
-    if (LENDING_ENABLED && grade >= 4) return { icon: HandCoins, label: 'Lending', path: '/lending', color: '#F59E0B', emoji: '🤝' };
+    if (LENDING_ENABLED && grade >= 4) return { icon: Handshake, label: 'Lending', path: '/lending', color: '#F59E0B', emoji: '🤝' };
     return null; // No special feature for younger grades
   };
   
@@ -217,7 +217,7 @@ export default function Dashboard({ user, setUser }) {
             {streak.streak % 5 === 0 && (
               <p className="text-lg text-[#1D3557] mb-1 font-bold">🌟 5-Day Milestone Bonus! 🌟</p>
             )}
-            <p className="text-xl text-[#1D3557]">You earned <strong>₹{streak.reward}</strong>!</p>
+            <p className="text-xl text-[#1D3557]">You earned <strong>{streak.reward} XP</strong>!</p>
           </div>
         </div>
       )}
@@ -390,10 +390,12 @@ export default function Dashboard({ user, setUser }) {
                     <p className="text-sm font-bold capitalize">{displayLabel}</p>
                     {/* Show Available balance for savings/investing, total for others */}
                     <p className="text-lg font-bold">
-                      ₹{(account.account_type === 'savings' || account.account_type === 'investing'
+                      {(account.account_type === 'spending' || account.account_type === 'investing') ? '' : '₹'}
+                      {(account.account_type === 'savings' || account.account_type === 'investing'
                         ? (account.available_balance ?? account.balance)
                         : account.balance
                       )?.toFixed(0)}
+                      {(account.account_type === 'spending' || account.account_type === 'investing') ? ' XP' : ''}
                     </p>
                     {/* Show "Available" label for savings/investing */}
                     {(account.account_type === 'savings' || account.account_type === 'investing') && (
@@ -568,7 +570,7 @@ export default function Dashboard({ user, setUser }) {
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="font-bold text-[#1D3557] text-sm truncate flex-1">{quest.title}</h3>
                       <span className="bg-[#FFD23F] text-[#1D3557] px-1.5 py-0.5 rounded text-xs font-bold ml-2">
-                        +₹{quest.total_points || quest.reward_amount || 0}
+                        +{quest.total_points || quest.reward_amount || 0} XP
                       </span>
                     </div>
                     <Progress value={quest.progress || 0} className="h-1.5" />
@@ -645,7 +647,7 @@ export default function Dashboard({ user, setUser }) {
             >
               <div className="flex items-center gap-6">
                 <div className="w-16 h-16 bg-white rounded-2xl border-3 border-[#1D3557] flex items-center justify-center">
-                  <HandCoins className="w-8 h-8 text-amber-600" />
+                  <Handshake className="w-8 h-8 text-amber-600" />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-white mb-1" style={{ fontFamily: 'Fredoka' }}>

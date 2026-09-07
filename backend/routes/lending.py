@@ -97,7 +97,7 @@ async def notify_parents_bad_debt(db, loan):
         "user_id": parent_id,
         "type": "bad_debt_alert",
         "title": "Loan Default Alert",
-        "message": f"{borrower.get('name', 'Your child')} has defaulted on a loan of ₹{loan['amount']} from {loan.get('lender_name', 'a lender')}. This affects their credit score.",
+        "message": f"{borrower.get('name', 'Your child')} has defaulted on a loan of {loan['amount']} XP from {loan.get('lender_name', 'a lender')}. This affects their credit score.",
         "data": {
             "loan_id": loan["loan_id"],
             "borrower_id": loan["borrower_id"],
@@ -259,7 +259,7 @@ async def create_loan_request(request: Request):
             "user_id": recipient_id,
             "type": "loan_request",
             "title": "New Loan Request",
-            "message": f"{user.get('name', 'Someone')} is requesting to borrow ₹{amount} from you",
+            "message": f"{user.get('name', 'Someone')} is requesting to borrow {amount} XP from you",
             "data": {"request_id": loan_request["request_id"]},
             "is_read": False,
             "created_at": datetime.now(timezone.utc).isoformat()
@@ -412,7 +412,7 @@ async def respond_to_request(request_id: str, request: Request):
             "user_id": loan_request["borrower_id"],
             "type": "loan_funded",
             "title": "Loan Approved!",
-            "message": f"{user.get('name', 'Someone')} has funded your loan of ₹{amount}!",
+            "message": f"{user.get('name', 'Someone')} has funded your loan of {amount} XP!",
             "data": {"loan_id": loan["loan_id"]},
             "is_read": False,
             "created_at": datetime.now(timezone.utc).isoformat()
@@ -652,7 +652,7 @@ async def repay_loan(loan_id: str, request: Request):
     })
     
     if not borrower_wallet or borrower_wallet.get("balance", 0) < total_repayment:
-        raise HTTPException(status_code=400, detail=f"Insufficient balance. You need ₹{total_repayment}")
+        raise HTTPException(status_code=400, detail=f"Insufficient balance. You need {total_repayment} XP")
     
     # Check if late
     return_date = datetime.fromisoformat(loan["return_date"].replace("Z", "+00:00"))
@@ -687,7 +687,7 @@ async def repay_loan(loan_id: str, request: Request):
         "user_id": loan["lender_id"],
         "type": "loan_repaid",
         "title": "Loan Repaid!",
-        "message": f"{user.get('name', 'The borrower')} has repaid ₹{total_repayment}",
+        "message": f"{user.get('name', 'The borrower')} has repaid {total_repayment} XP",
         "data": {"loan_id": loan_id},
         "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
@@ -861,7 +861,7 @@ async def check_overdue_loans():
                     "user_id": loan["borrower_id"],
                     "type": "loan_reminder",
                     "title": "Loan Due Soon!",
-                    "message": f"Your loan of ₹{loan['total_repayment']} to {loan['lender_name']} is due in 3 days.",
+                    "message": f"Your loan of {loan['total_repayment']} XP to {loan['lender_name']} is due in 3 days.",
                     "data": {"loan_id": loan["loan_id"], "days_until_due": 3},
                     "is_read": False,
                     "created_at": now.isoformat()
@@ -878,7 +878,7 @@ async def check_overdue_loans():
                     "user_id": loan["borrower_id"],
                     "type": "loan_reminder",
                     "title": "Loan Due Tomorrow!",
-                    "message": f"Your loan of ₹{loan['total_repayment']} to {loan['lender_name']} is due tomorrow!",
+                    "message": f"Your loan of {loan['total_repayment']} XP to {loan['lender_name']} is due tomorrow!",
                     "data": {"loan_id": loan["loan_id"], "days_until_due": 1},
                     "is_read": False,
                     "created_at": now.isoformat()
@@ -896,7 +896,7 @@ async def check_overdue_loans():
                     "user_id": loan["borrower_id"],
                     "type": "loan_overdue",
                     "title": "Loan Overdue!",
-                    "message": f"Your loan of ₹{loan['total_repayment']} to {loan['lender_name']} is {days_overdue} day(s) overdue!",
+                    "message": f"Your loan of {loan['total_repayment']} XP to {loan['lender_name']} is {days_overdue} day(s) overdue!",
                     "data": {"loan_id": loan["loan_id"], "days_overdue": days_overdue},
                     "is_read": False,
                     "created_at": now.isoformat()
@@ -909,7 +909,7 @@ async def check_overdue_loans():
                     "user_id": loan["lender_id"],
                     "type": "loan_overdue",
                     "title": "Loan Payment Overdue",
-                    "message": f"{loan['borrower_name']}'s loan of ₹{loan['total_repayment']} is {days_overdue} day(s) overdue.",
+                    "message": f"{loan['borrower_name']}'s loan of {loan['total_repayment']} XP is {days_overdue} day(s) overdue.",
                     "data": {"loan_id": loan["loan_id"], "days_overdue": days_overdue},
                     "is_read": False,
                     "created_at": now.isoformat()

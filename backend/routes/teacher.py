@@ -552,7 +552,7 @@ async def reward_students(classroom_id: str, reward: ClassroomReward, request: R
             "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
             "user_id": student_id,
             "type": "reward",
-            "message": f"You received ₹{reward.amount} from {teacher.get('name', 'Teacher')}!",
+            "message": f"You received {reward.amount} XP from {teacher.get('name', 'Teacher')}!",
             "is_read": False,
             "created_at": datetime.now(timezone.utc).isoformat()
     })
@@ -615,7 +615,7 @@ async def create_teacher_reward_penalty(data: TeacherRewardPenalty, request: Req
         "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
         "user_id": data.student_id,
         "type": data.category,
-        "message": f"{emoji} {'Reward' if data.category == 'reward' else 'Penalty'} from {teacher.get('name', 'Teacher')}: {data.title} (₹{abs(amount)})",
+        "message": f"{emoji} {'Reward' if data.category == 'reward' else 'Penalty'} from {teacher.get('name', 'Teacher')}: {data.title} ({abs(amount)} XP)",
         "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     })
@@ -1192,7 +1192,7 @@ async def create_teacher_quest(request: Request):
                 "user_id": enrollment["student_id"],
                 "type": "new_quest",
                 "title": f"New Quest from {teacher.get('name', 'Teacher')}",
-                "message": f"Your teacher assigned a new quest: '{body.get('title')}'. Earn ₹{total_points}!",
+                "message": f"Your teacher assigned a new quest: '{body.get('title')}'. Earn {total_points} XP!",
                 "quest_id": quest_id,
                 "is_read": False,
                 "created_at": datetime.now(timezone.utc).isoformat()
@@ -1604,7 +1604,7 @@ async def complete_challenge_for_student(challenge_id: str, student_id: str, req
         "completed_at": datetime.now(timezone.utc).isoformat()
 })
     
-    return {"message": f"Challenge completed, awarded {reward} coins"}
+    return {"message": f"Challenge completed, awarded {reward} XP"}
 
 @router.post("/classrooms/{classroom_id}/announcements")
 async def create_announcement(classroom_id: str, request: Request):

@@ -94,6 +94,14 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Session-expired toast + `no_subscription` handling moved from the old `LandingPage.jsx` into `FinancialLiteracyPage.jsx` since that logic's redirect target is now the homepage.
 - Tested by testing_agent (iteration_107): 25+ checks passed, no bugs. Minor note (not fixed): header's cross-page scroll uses a fixed 400ms timeout rather than a mount-detection retry — acceptable for now.
 
+### Coins → XP Rebrand (Feb 2026)
+- Renamed the in-game play currency ("coins") to "XP" across the entire app, display-layer only (backend field names like `reward_coins`, `coins_earned`, `wallet_source='coinquest'`, `account_type='spending'` intentionally left unchanged — text/label/icon rename only, confirmed with user).
+- Scope: XP is now the ONLY currency shown for `spending` + `investing` wallet_accounts — Store purchases, Money Garden (seeds/harvest/garden money), Lending/Borrowing (100% XP), Stock Market (portfolio/trades), lesson/quiz/quest/streak/badge/teacher-challenge rewards. "CoinQuest Wallet" UI label renamed to "My XP" (icon 🎮/Coins→⚡/Zap, HandCoins→Handshake for Lending).
+- Real money (`my_wallet` — parent chores, payday jobs, allowances, parent gifts) stays ₹ and is UNCHANGED. Piggy Bank (savings) & Giving Jar (gifting) stay ₹ (funded primarily from real money) except the Giving Jar's "spending" transfer-source option which shows "My XP" + XP unit.
+- QuestsPage.jsx has a MIX: parent-created chores (`quest.creator_type === 'parent'`) credit `my_wallet` and display ₹; all other quests (admin/teacher/"CoinQuest") credit `spending` and display XP — conditional logic added per-quest.
+- MyJobsPage.jsx: swapped Coins icon → IndianRupee icon for Payday Jobs since those are real money, not XP.
+- Tested: backend regression suite `/app/backend/tests/test_xp_relabel_regression.py` (10/10 pass) + testing_agent (iteration_108) found 3 display bugs (MoneyGardenPage, LessonPage toast, QuestsPage non-conditional pills) — all fixed and self-verified via screenshots + pytest rerun.
+
 ## Current Architecture Snapshot (Aug 23, 2026)
 - Roles: child, parent, teacher, school (admin), admin.
 - Learning hierarchy: Topic → Subtopic → Content Item, grade-scoped, progressive unlock.

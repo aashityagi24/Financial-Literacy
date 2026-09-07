@@ -141,7 +141,7 @@ async def buy_farm_plot(request: Request):
     
     spending_acc = await db.wallet_accounts.find_one({"user_id": user["user_id"], "account_type": "spending"})
     if not spending_acc or spending_acc.get("balance", 0) < PLOT_COST:
-        raise HTTPException(status_code=400, detail=f"Need ₹{PLOT_COST} in spending account to buy a plot")
+        raise HTTPException(status_code=400, detail=f"Need {PLOT_COST} XP in spending account to buy a plot")
     
     plot_count = await db.farm_plots.count_documents({"user_id": user["user_id"]})
     
@@ -200,7 +200,7 @@ async def plant_seed(data: PlantSeedRequest, request: Request):
     # Use investing (gardening) account for seed purchases
     gardening_acc = await db.wallet_accounts.find_one({"user_id": user["user_id"], "account_type": "investing"})
     if not gardening_acc or gardening_acc.get("balance", 0) < seed["seed_cost"]:
-        raise HTTPException(status_code=400, detail=f"Need ₹{seed['seed_cost']} in your Garden Money to buy this seed")
+        raise HTTPException(status_code=400, detail=f"Need {seed['seed_cost']} XP in your Garden Money to buy this seed")
     
     await db.wallet_accounts.update_one(
         {"user_id": user["user_id"], "account_type": "investing"},
@@ -408,7 +408,7 @@ async def sell_produce(request: Request, plant_id: str, quantity: int):
     badge = await award_badge(db, user["user_id"], "garden_profit")
     
     return {
-        "message": f"Sold {quantity} for ₹{total_earnings}!",
+        "message": f"Sold {quantity} for {total_earnings} XP!",
         "earnings": total_earnings,
         "price_per_unit": market_price["current_price"],
         "badge_earned": badge

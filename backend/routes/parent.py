@@ -1376,7 +1376,7 @@ async def create_chore(request: Request):
         "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
         "user_id": child_id,
         "type": "chore_created",
-        "message": f"📋 New chore from {parent.get('name', 'Parent')}: {title} (₹{reward})",
+        "message": f"📋 New chore from {parent.get('name', 'Parent')}: {title} ({reward} XP)",
         "link": "/quests",
         "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
@@ -1448,7 +1448,7 @@ async def approve_chore(chore_id: str, request: Request):
     
     reward = chore.get("reward_coins", 0)
     
-    # Award coins
+    # Award XP
     await db.wallet_accounts.update_one(
         {"user_id": chore["child_id"], "account_type": "spending"},
         {"$inc": {"balance": reward}}
@@ -1459,13 +1459,13 @@ async def approve_chore(chore_id: str, request: Request):
         "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
         "user_id": chore["child_id"],
         "type": "chore_approved",
-        "message": f"🎉 Chore approved! You earned ₹{reward} for: {chore.get('title')}",
+        "message": f"🎉 Chore approved! You earned {reward} XP for: {chore.get('title')}",
         "link": "/wallet",
         "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    return {"message": "Chore approved, coins awarded"}
+    return {"message": "Chore approved, XP awarded"}
 
 @router.delete("/chores/{chore_id}")
 async def delete_chore(chore_id: str, request: Request):

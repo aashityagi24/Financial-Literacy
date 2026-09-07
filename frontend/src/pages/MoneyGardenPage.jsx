@@ -39,10 +39,10 @@ const GARDENER_IMAGE = "https://customer-assets.emergentagent.com/job_finlit-que
 // Malli's messages
 const INTRO_MESSAGES = [
   { id: 'intro', text: "Hello! I'm Malli, your garden friend! 🌻 Let me show you around!", target: null },
-  { id: 'wallet', text: "This is your Garden Money! 💰 Move coins here to buy seeds!", target: 'wallet-section' },
+  { id: 'wallet', text: "This is your Garden Money! 💰 Move XP here to buy seeds!", target: 'wallet-section' },
   { id: 'market', text: "The Market has seeds! 🏪 Pick one and plant it!", target: 'market-section' },
   { id: 'garden', text: "Your Garden! 🌱 Plant seeds and water them every day!", target: 'garden-section' },
-  { id: 'shop', text: "Your Shop! 🧺 Sell vegetables here to earn coins!", target: 'shop-section' },
+  { id: 'shop', text: "Your Shop! 🧺 Sell vegetables here to earn XP!", target: 'shop-section' },
   { id: 'done', text: "That's it! Buy → Plant → Water → Harvest → Sell! Have fun! 🎉", target: null }
 ];
 
@@ -71,18 +71,18 @@ export default function MoneyGardenPage({ user }) {
   const formatMathDisplay = (qty, price) => {
     // For single item, just show the price
     if (qty === 1) {
-      return { expression: `₹${price}`, total: price };
+      return { expression: `${price} XP`, total: price };
     }
     
     const gradeLevel = user?.grade ?? user?.grade_level ?? 5; // Default to higher grade if unknown
     
     if (gradeLevel <= 1 && qty > 1) {
       // Use repeated addition for K and Grade 1
-      const additions = Array(qty).fill(`₹${price}`).join(' + ');
+      const additions = Array(qty).fill(`${price} XP`).join(' + ');
       return { expression: additions, total: qty * price };
     } else {
       // Use multiplication for Grade 2+
-      return { expression: `${qty} × ₹${price}`, total: qty * price };
+      return { expression: `${qty} × ${price} XP`, total: qty * price };
     }
   };
   
@@ -262,7 +262,7 @@ export default function MoneyGardenPage({ user }) {
         to_account: 'investing',
         amount: amount
       });
-      toast.success(`Added ₹${amount} to garden! 💰`);
+      toast.success(`Added ${amount} XP to garden! 💰`);
       setShowTransfer(false);
       setTransferData({ from_account: 'spending', to_account: 'investing', amount: '' });
       fetchData();
@@ -341,7 +341,7 @@ export default function MoneyGardenPage({ user }) {
             <div className="flex items-center gap-4 mb-3">
               <div className="bg-white rounded-xl p-4 border-2 border-[#228B22] text-center flex-1">
                 <span className="text-3xl">🌱</span>
-                <p className="text-3xl font-bold text-[#228B22]">₹{farmingBalance}</p>
+                <p className="text-3xl font-bold text-[#228B22]">{farmingBalance} XP</p>
               </div>
               <button
                 onClick={() => setShowTransfer(true)}
@@ -362,7 +362,7 @@ export default function MoneyGardenPage({ user }) {
                     <div key={idx} className="bg-white/70 rounded-lg px-3 py-2 flex items-center justify-between text-sm">
                       <span className="text-[#3D5A80] truncate flex-1">{t.description}</span>
                       <span className={`font-bold ml-2 ${t.amount > 0 ? 'text-[#06D6A0]' : 'text-[#E63946]'}`}>
-                        {t.amount > 0 ? '+' : '-'}₹{Math.abs(Math.round(t.amount))}
+                        {t.amount > 0 ? '+' : '-'}{Math.abs(Math.round(t.amount))} XP
                       </span>
                     </div>
                   ))
@@ -517,7 +517,7 @@ export default function MoneyGardenPage({ user }) {
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-[#1D3557] truncate">{seed.name}</p>
                         <p className="text-xs text-[#3D5A80] truncate">
-                          ₹{Math.round(seed.seed_cost)} • {seed.growth_days} days
+                          {Math.round(seed.seed_cost)} XP • {seed.growth_days} days
                         </p>
                       </div>
                       <button
@@ -655,7 +655,7 @@ export default function MoneyGardenPage({ user }) {
                   >
                     <span className="text-4xl block mb-2">{seed.emoji}</span>
                     <p className="font-bold text-[#1D3557] text-sm">{seed.name}</p>
-                    <p className="text-sm font-bold text-[#E63946]">₹{Math.round(seed.seed_cost)}</p>
+                    <p className="text-sm font-bold text-[#E63946]">{Math.round(seed.seed_cost)} XP</p>
                   </div>
                 ))}
               </div>
@@ -682,7 +682,7 @@ export default function MoneyGardenPage({ user }) {
                 </div>
               )}
               <p className="text-center text-xs text-[#3D5A80] mt-3">
-                Garden Money: <span className="font-bold">₹{farmingBalance}</span>
+                Garden Money: <span className="font-bold">{farmingBalance} XP</span>
               </p>
             </div>
           ) : (
@@ -696,7 +696,7 @@ export default function MoneyGardenPage({ user }) {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between py-1.5 border-b border-gray-100">
                     <span className="text-[#3D5A80]">Cost</span>
-                    <span className="font-bold text-[#E63946]">₹{Math.round(seedDetailView.seed_cost)}</span>
+                    <span className="font-bold text-[#E63946]">{Math.round(seedDetailView.seed_cost)} XP</span>
                   </div>
                   <div className="flex justify-between py-1.5 border-b border-gray-100">
                     <span className="text-[#3D5A80]">Growth Time</span>
@@ -715,14 +715,14 @@ export default function MoneyGardenPage({ user }) {
                         return (
                           <>
                             <span className="text-[#3D5A80]">Price per {perUnitLabel}</span>
-                            <span className="font-bold text-[#06D6A0]">₹{Math.round(seedDetailView.base_sell_price)}</span>
+                            <span className="font-bold text-[#06D6A0]">{Math.round(seedDetailView.base_sell_price)} XP</span>
                           </>
                         );
                       }
                       return (
                         <>
                           <span className="text-[#3D5A80]">Total Income</span>
-                          <span className="font-bold text-[#06D6A0]">₹{Math.round(seedDetailView.harvest_yield * seedDetailView.base_sell_price)}</span>
+                          <span className="font-bold text-[#06D6A0]">{Math.round(seedDetailView.harvest_yield * seedDetailView.base_sell_price)} XP</span>
                         </>
                       );
                     })()}
@@ -732,7 +732,7 @@ export default function MoneyGardenPage({ user }) {
               
               <div className="bg-[#FFD700]/20 rounded-xl p-3 mt-3 text-center">
                 <p className="text-sm text-[#3D5A80]">
-                  Garden Money: <span className="font-bold">₹{farmingBalance}</span>
+                  Garden Money: <span className="font-bold">{farmingBalance} XP</span>
                 </p>
               </div>
 
@@ -795,7 +795,7 @@ export default function MoneyGardenPage({ user }) {
               <div className="bg-[#F0FFF0] rounded-xl p-4 mt-4">
                 <p className="text-center text-[#1D3557]">
                   <span className="font-bold text-lg">{sellQuantity} {selectedItemForSale.plant_name}</span> at{' '}
-                  <span className="font-bold text-lg text-[#06D6A0]">₹{getMarketPrice(selectedItemForSale.plant_id)}</span> each
+                  <span className="font-bold text-lg text-[#06D6A0]">{getMarketPrice(selectedItemForSale.plant_id)} XP</span> each
                 </p>
                 {/* Show math based on grade level */}
                 {sellQuantity > 1 && (
@@ -804,7 +804,7 @@ export default function MoneyGardenPage({ user }) {
                   </p>
                 )}
                 <p className="text-center text-2xl font-bold text-[#228B22] mt-2">
-                  You will get ₹{sellQuantity * getMarketPrice(selectedItemForSale.plant_id)}
+                  You will get {sellQuantity * getMarketPrice(selectedItemForSale.plant_id)} XP
                 </p>
               </div>
               
@@ -844,7 +844,7 @@ export default function MoneyGardenPage({ user }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="spending">💳 Spending (₹{spendingBalance})</SelectItem>
+                  <SelectItem value="spending">⚡ Spending ({spendingBalance} XP)</SelectItem>
                   <SelectItem value="savings">🐷 Piggy Bank (₹{savingsBalance})</SelectItem>
                 </SelectContent>
               </Select>

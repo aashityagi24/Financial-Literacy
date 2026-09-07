@@ -84,9 +84,9 @@ export default function GiftingPage({ user }) {
         to_account: 'gifting',
         amount: amount,
         transaction_type: 'transfer',
-        description: `Transfer to Giving Jar from ${transferFrom === 'spending' ? 'CoinQuest Wallet' : 'My Wallet'}`
+        description: `Transfer to Giving Jar from ${transferFrom === 'spending' ? 'My XP' : 'My Wallet'}`
       });
-      toast.success(`₹${amount} transferred to Giving Jar! 🎉`);
+      toast.success(`${transferFrom === 'spending' ? `${amount} XP` : `₹${amount}`} transferred to Giving Jar! 🎉`);
       setShowTransferDialog(false);
       setTransferAmount('');
       fetchData();
@@ -487,8 +487,8 @@ export default function GiftingPage({ user }) {
               {/* Current Balances */}
               <div className="bg-gray-50 rounded-xl p-3 space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-[#3D5A80]">🟠 CoinQuest Wallet</span>
-                  <span className="font-bold text-[#1D3557]">₹{getAccountBalance('spending').toFixed(0)}</span>
+                  <span className="text-sm text-[#3D5A80]">⚡ My XP</span>
+                  <span className="font-bold text-[#1D3557]">{getAccountBalance('spending').toFixed(0)} XP</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-[#3D5A80]">🔵 My Wallet</span>
@@ -508,7 +508,7 @@ export default function GiftingPage({ user }) {
                     <SelectValue placeholder="Select source" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="spending">🟠 CoinQuest Wallet (₹{getAccountBalance('spending').toFixed(0)})</SelectItem>
+                    <SelectItem value="spending">⚡ My XP ({getAccountBalance('spending').toFixed(0)} XP)</SelectItem>
                     <SelectItem value="my_wallet">🔵 My Wallet (₹{getAccountBalance('my_wallet').toFixed(0)})</SelectItem>
                   </SelectContent>
                 </Select>

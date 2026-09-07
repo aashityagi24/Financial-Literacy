@@ -127,7 +127,7 @@ async def create_admin_quest(quest_data: QuestCreate, request: Request):
             "user_id": child["user_id"],
             "type": "new_quest",
             "title": f"New Quest: {quest_data.title}",
-            "message": f"A new quest '{quest_data.title}' is available! Earn ₹{total_points} by completing it.",
+            "message": f"A new quest '{quest_data.title}' is available! Earn {total_points} XP by completing it.",
             "quest_id": quest_id,
             "is_read": False,
             "created_at": datetime.now(timezone.utc).isoformat()

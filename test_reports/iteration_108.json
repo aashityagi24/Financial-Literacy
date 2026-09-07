@@ -1,0 +1,38 @@
+{
+  "summary": "Verified coins->XP relabel refactor. Backend regression: all 10 endpoints (wallet/summary, wallet/transfer, learn/complete, garden, stocks, lending, quests, content/complete, teacher/classrooms, parent/children) return healthy responses - no functional regression. Frontend static + browser verification found XP relabel is CORRECT on WalletPage, StorePage, LendingBorrowingPage, StockMarketPage, Dashboard, TopicPage, GiftingPage. BUT found 3 pages with residual/incorrect ₹ symbols that should be XP: MoneyGardenPage (major - garden balance, seeds, transfer dialog Spending option), LessonPage (lesson-complete toast), and QuestsPage (teacher/CoinQuest quest tabs still show ₹).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "MoneyGardenPage.jsx", "issue": "Garden Money balance card shows '₹0' instead of 'XP' (line 344). Toast 'Added ₹X to garden' (line 265). Recent Activity rows show '±₹X' (line 365). Seed costs in Market show '₹X' (lines 520, 658, 699, 725). Sell price/proceeds show '₹X' (lines 718, 798, 807). Transfer dialog Spending option shows '💳 Spending (₹X)' instead of XP (line 847). Arithmetic expressions for kids also use ₹ (lines 74, 81, 85). Per review req, ALL of these must be XP except the Piggy Bank source option (line 848).", "selector": "money-garden-page", "priority": "HIGH"},
+      {"component": "LessonPage.jsx", "issue": "Success toast on lesson complete still shows '+₹{reward}' instead of '+X XP' (line 49). Header 'Earn X XP' and quiz bonus toasts are correctly XP - only the completion toast is wrong.", "selector": "lesson-complete-toast", "priority": "HIGH"},
+      {"component": "QuestsPage.jsx", "issue": "Quest reward pills and detail modals show '₹X' hardcoded (lines 186, 207, 582, 658, 759). This is visible in the 'All' tab and will show wrong for Teachers/CoinQuest quest tabs (which credit spending/XP). Toast on completion (line 164) already says 'X XP' - inconsistent with visible pills. Should be conditional: XP for teacher/coinquest/system quests, ₹ only for parent-chore quests that credit my_wallet.", "selector": "quest-reward-pill", "priority": "HIGH"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "WalletPage top summary", "issues": ["'Money You Can Spend ₹475' aggregates XP+real money and displays as ₹ - potentially misleading now that spending/investing are XP. Consider showing separately or excluding XP from ₹ total. (Not explicitly in the review-req but worth flagging.)"]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_xp_relabel_regression.py", "/app/test_reports/pytest/xp_relabel.xml"],
+  "action_items": [
+    "MoneyGardenPage.jsx: Convert all ₹ symbols to XP display for garden money balance, seed costs, sell proceeds, transfer dialog Spending option, and math-expression displays. Piggy Bank source option (line 848) stays ₹.",
+    "LessonPage.jsx line 49: Change `Lesson completed! +₹${response.data.reward}` to `Lesson completed! +${response.data.reward} XP`.",
+    "QuestsPage.jsx: Make reward-display conditional on quest source. Teacher/CoinQuest/system quests -> 'X XP'; parent-chore quests that pay my_wallet -> '₹X'. Affects lines 186, 207, 582, 658, 759 (and success toast on line 207 which uses '+₹').",
+    "Optional: reconsider the 'Money You Can Spend' aggregate on WalletPage now that XP and ₹ live in separate mental models."
+  ],
+  "critical_code_review_comments": [
+    "The XP vs ₹ display logic is scattered inline (repeated `isXP ? 'XP' : '₹'` patterns) - would benefit from a small helper like `formatWalletAmount(account_type, amount)` to avoid future drift/regressions like the ones found in MoneyGardenPage & QuestsPage.",
+    "Backend field names (reward_coins, coins_earned, wallet_source='coinquest') are still coin-flavored; long-term this will confuse future contributors. Document this display-only convention in code comments near the models.",
+    "QuestsPage toast on line 164 says 'X XP' but pill on line 186 says '₹X' for the same quest - indicates the initial refactor was incomplete on this file."
+  ],
+  "updated_files": ["/app/backend/tests/test_xp_relabel_regression.py"],
+  "success_rate": {"backend": "100%", "frontend": "~80% (3 pages with display bugs out of ~15 touched)"},
+  "test_credentials": "wallet_demo_child / testpass123 (child, Grade 3); wallet_demo_parent / testpass123 (parent). Login body uses 'identifier' field (not 'username').",
+  "seed_data_creation": "None. Used existing wallet_demo_child seeded data (195 XP spending, ₹255 my_wallet, ₹25 savings, ₹59 giving).",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend regression suite at /app/backend/tests/test_xp_relabel_regression.py all pass. After main agent fixes MoneyGardenPage, LessonPage line 49, and QuestsPage conditional display, retest those 3 pages visually. WalletPage, StorePage, LendingBorrowingPage, StockMarketPage, Dashboard, TopicPage, GiftingPage already verified correct. Login uses POST /api/auth/login with body {identifier, password} and returns session_token.",
+  "rca of the issue": "Root cause: refactor was done via regex + manual pass but MoneyGardenPage.jsx (which has many ₹ literals embedded in arithmetic-teaching strings and market UI) was missed / only partially updated. LessonPage completion-toast was likely missed because it uses `+₹${reward}` template string (regex may have skipped due to `+` prefix). QuestsPage was missed because reward pills use `quest.total_points || quest.reward_amount` field references and are the same UI component for both parent-chore (real money) and teacher/system (XP) quests - refactor needed conditional logic that wasn't applied. Reproduction: login as wallet_demo_child, visit /garden, /quests, complete any lesson - ₹ symbols visible where XP was expected."
+}

@@ -26,19 +26,19 @@ const childSteps = [
   {
     icon: BookOpen,
     title: "Learn & Earn",
-    description: "Take fun lessons about money and earn coins for completing them. Knowledge is treasure!",
+    description: "Take fun lessons about money and earn XP for completing them. Knowledge is treasure!",
     color: "from-[#4CC9F0] to-[#72EFDD]"
   },
   {
     icon: Target,
     title: "Complete Quests",
-    description: "Finish quests from your teacher or parents to earn coins! The more you complete, the richer you get!",
+    description: "Finish quests from your teacher or parents to earn XP! The more you complete, the richer you get!",
     color: "from-[#EE6C4D] to-[#FF9F7F]"
   },
   {
     icon: ShoppingCart,
     title: "Visit the Store",
-    description: "Spend your hard-earned coins on cool items in the virtual store. But remember - save some too!",
+    description: "Spend your hard-earned XP on cool items in the virtual store. But remember - save some too!",
     color: "from-[#3D5A80] to-[#5A7CA8]"
   },
   {
@@ -65,7 +65,7 @@ const parentSteps = [
   {
     icon: Target,
     title: "Create Chores & Rewards",
-    description: "Assign chores with coin rewards. Approve completed chores to teach the value of earning.",
+    description: "Assign chores with XP rewards. Approve completed chores to teach the value of earning.",
     color: "from-[#06D6A0] to-[#42E8B3]"
   },
   {
@@ -77,7 +77,7 @@ const parentSteps = [
   {
     icon: Gift,
     title: "Give Money & Gifts",
-    description: "Transfer coins directly to your child's wallet for special occasions or as rewards!",
+    description: "Transfer money or XP directly to your child's wallet for special occasions or as rewards!",
     color: "from-[#9B5DE5] to-[#C77DFF]"
   },
   {

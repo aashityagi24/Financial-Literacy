@@ -1152,12 +1152,12 @@ export default function ParentDashboard({ user }) {
                           <h3 className="font-bold text-[#1D3557] text-lg">{child.name}</h3>
                           <p className="text-xs text-[#3D5A80]">{gradeLabels[child.grade] || 'Unknown Grade'}</p>
                           <div className="flex items-center gap-3 text-sm text-[#3D5A80] mt-1 flex-wrap">
-                            <span className="flex items-center gap-1" title="CoinQuest Wallet (play coins)">
-                              <span className="text-[#EE6C4D] font-bold">🎮 ₹{Number(child.coinquest_balance ?? child.total_balance ?? 0).toFixed(0)}</span>
+                            <span className="flex items-center gap-1" title="My XP (in-app play currency)">
+                              <span className="text-[#EE6C4D] font-bold">⚡ {Number(child.coinquest_balance ?? child.total_balance ?? 0).toFixed(0)} XP</span>
                             </span>
                             {(child.my_wallet_balance ?? 0) > 0 && (
                               <span className="flex items-center gap-1" title="My Wallet (real earnings)">
-                                <span className="text-sky-600 font-bold">₹ ₹{Number(child.my_wallet_balance).toFixed(0)}</span>
+                                <span className="text-sky-600 font-bold">₹{Number(child.my_wallet_balance).toFixed(0)}</span>
                               </span>
                             )}
                             <span>📚 {child.lessons_completed}/{child.total_lessons}</span>
@@ -2001,7 +2001,7 @@ export default function ParentDashboard({ user }) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="digital">Digital (CoinQuest Wallet)</SelectItem>
+                        <SelectItem value="digital">Digital (My XP)</SelectItem>
                         <SelectItem value="physical">Cash (Physical)</SelectItem>
                       </SelectContent>
                     </Select>
@@ -2141,7 +2141,7 @@ export default function ParentDashboard({ user }) {
                     <p className="text-xs text-[#3D5A80]">Total Balance</p>
                     {(childInsights.wallet?.coinquest_balance !== undefined || childInsights.wallet?.my_wallet_balance !== undefined) && (
                       <p className="text-[10px] text-[#3D5A80] mt-1">
-                        🎮 ₹{Number(childInsights.wallet?.coinquest_balance || 0).toFixed(0)} · ₹ ₹{Number(childInsights.wallet?.my_wallet_balance || 0).toFixed(0)}
+                        ⚡ {Number(childInsights.wallet?.coinquest_balance || 0).toFixed(0)} XP · ₹{Number(childInsights.wallet?.my_wallet_balance || 0).toFixed(0)}
                       </p>
                     )}
                   </div>

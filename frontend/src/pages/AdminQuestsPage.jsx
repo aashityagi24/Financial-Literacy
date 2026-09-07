@@ -320,7 +320,7 @@ export default function AdminQuestsPage({ user }) {
                     </div>
                     
                     <div className="col-span-2">
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">Base Reward (₹) - For quests without questions</label>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">Base Reward (XP) - For quests without questions</label>
                       <Input
                         type="number"
                         min="0"
@@ -365,7 +365,7 @@ export default function AdminQuestsPage({ user }) {
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <label className="text-sm font-medium text-gray-700">
-                        Questions ({formData.questions.length}) {formData.questions.length > 0 && `- Total: ₹${getTotalPoints()}`}
+                        Questions ({formData.questions.length}) {formData.questions.length > 0 && `- Total: ${getTotalPoints()} XP`}
                       </label>
                       <button
                         type="button"
@@ -427,7 +427,7 @@ export default function AdminQuestsPage({ user }) {
                                 min="1"
                                 value={q.points || ''}
                                 onChange={(e) => updateQuestion(qIndex, 'points', parseInt(e.target.value) || 0)}
-                                placeholder="Reward (₹) *"
+                                placeholder="Reward (XP) *"
                               />
                               
                               <Input
@@ -600,7 +600,7 @@ export default function AdminQuestsPage({ user }) {
                       <p className="text-sm text-gray-500 line-clamp-1">{quest.description}</p>
                       <div className="flex items-center gap-4 mt-2 text-sm">
                         <span className="flex items-center gap-1 text-[#FFD23F]">
-                          <Star className="w-4 h-4" /> ₹{quest.total_points}
+                          <Star className="w-4 h-4" /> {quest.total_points} XP
                         </span>
                         <span className="flex items-center gap-1 text-gray-500">
                           <GraduationCap className="w-4 h-4" /> 

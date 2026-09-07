@@ -294,7 +294,7 @@ FIRST_TIME_BADGES = [
     {
         "achievement_id": "badge_first_garden_profit",
         "name": "Harvest Hero",
-        "description": "Earned coins from selling your crops!",
+        "description": "Earned XP from selling your crops!",
         "icon": "🌻",
         "category": "investing",
         "trigger": "garden_profit",
@@ -393,7 +393,7 @@ async def award_badge(db, user_id: str, trigger: str):
         "user_id": user_id,
         "type": "badge_earned",
         "title": f"🎖️ New Badge: {badge['name']}!",
-        "message": f"{badge['description']} You earned ₹{badge['points']}!",
+        "message": f"{badge['description']} You earned {badge['points']} XP!",
         "icon": badge["icon"],
         "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()

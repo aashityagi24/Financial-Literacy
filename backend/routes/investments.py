@@ -135,7 +135,7 @@ async def sell_investment(investment_id: str, request: Request):
         "to_account": "investing",
         "amount": current_value,
         "transaction_type": "investment_return",
-        "description": f"Sold {inv['name']} for ₹{current_value}",
+        "description": f"Sold {inv['name']} for {current_value} XP",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.transactions.insert_one(trans_doc)

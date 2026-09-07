@@ -39,18 +39,18 @@ export default function StorePage({ user }) {
   const formatCostDisplay = (qty, price) => {
     // For single item, just show the price
     if (qty === 1) {
-      return `₹${price}`;
+      return `${price} XP`;
     }
     
     const gradeLevel = user?.grade ?? user?.grade_level ?? 5; // Default to higher grade if unknown
     
     if (gradeLevel <= 1 && qty > 1) {
       // Use repeated addition for K and Grade 1
-      const additions = Array(qty).fill(`₹${price}`).join(' + ');
+      const additions = Array(qty).fill(`${price} XP`).join(' + ');
       return additions;
     } else {
       // Use multiplication for Grade 2+
-      return `${qty} × ₹${price}`;
+      return `${qty} × ${price} XP`;
     }
   };
   
@@ -203,9 +203,9 @@ export default function StorePage({ user }) {
       unit: 'unit'
     };
     if (qty === 1) {
-      return `₹${item.price}/${unitLabels[unit] || 'pc'}`;
+      return `${item.price} XP/${unitLabels[unit] || 'pc'}`;
     }
-    return `₹${item.price * qty}`;
+    return `${item.price * qty} XP`;
   };
   
   // Calculate totals for purchase dialog
@@ -265,7 +265,7 @@ export default function StorePage({ user }) {
                 </button>
                 <div className="flex items-center gap-2 bg-[#FFD23F] px-4 py-2 rounded-xl border-2 border-[#1D3557]">
                   <Wallet className="w-5 h-5 text-[#1D3557]" />
-                  <span className="font-bold text-[#1D3557]">₹{spendingBalance.toFixed(0)}</span>
+                  <span className="font-bold text-[#1D3557]">{spendingBalance.toFixed(0)} XP</span>
                 </div>
               </div>
             )}
@@ -317,7 +317,7 @@ export default function StorePage({ user }) {
           <p className="text-[#1D3557]/90 text-base leading-relaxed">
             {isParentViewMode 
               ? 'Browse items available in the store. You can use this to create shopping list chores for your child - ask them to "buy" specific items from this store using their Spending jar!'
-              : <>This is your very own <strong>practice store</strong> where you can learn to shop wisely! Use the ₹ from your <strong>Spending jar</strong> to buy things. 
+              : <>This is your very own <strong>practice store</strong> where you can learn to shop wisely! Use the XP from your <strong>Spending jar</strong> to buy things. 
                 Look at the price tags, think about if you really need something, and make smart choices!</>
             }
           </p>
@@ -451,7 +451,7 @@ export default function StorePage({ user }) {
             <li>• <strong>Compare prices</strong> before buying - is it a good deal?</li>
             <li>• <strong>Think about needs vs wants</strong> - do you really need it?</li>
             <li>• <strong>Save up</strong> for bigger items you really want!</li>
-            <li>• <strong>Budget wisely</strong> - don&apos;t spend all your ₹ at once!</li>
+            <li>• <strong>Budget wisely</strong> - don&apos;t spend all your XP at once!</li>
           </ul>
         </div>
       </main>
@@ -516,34 +516,34 @@ export default function StorePage({ user }) {
                 
                 {/* What you have */}
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-[#3D5A80] font-medium">🪙 Money you have:</span>
-                  <span className="text-xl font-bold text-[#1D3557]">₹{spendingBalance.toFixed(0)}</span>
+                  <span className="text-[#3D5A80] font-medium">⚡ XP you have:</span>
+                  <span className="text-xl font-bold text-[#1D3557]">{spendingBalance.toFixed(0)} XP</span>
                 </div>
                 
                 {/* Minus sign and cost */}
                 <div className="flex justify-between items-center py-2 border-t border-[#1D3557]/20">
                   <span className="text-[#EE6C4D] font-medium">➖ Cost ({formatCostDisplay(quantity, selectedItem.price)}):</span>
-                  <span className="text-xl font-bold text-[#EE6C4D]">- ₹{totalCost.toFixed(0)}</span>
+                  <span className="text-xl font-bold text-[#EE6C4D]">- {totalCost.toFixed(0)} XP</span>
                 </div>
                 
                 {/* Equals and result */}
                 <div className="flex justify-between items-center py-2 border-t-2 border-[#1D3557]">
-                  <span className="font-bold text-[#1D3557]">= Money left over:</span>
+                  <span className="font-bold text-[#1D3557]">= XP left over:</span>
                   <span className={`text-2xl font-bold ${canAfford ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'}`}>
-                    ₹{balanceAfter.toFixed(0)}
+                    {balanceAfter.toFixed(0)} XP
                   </span>
                 </div>
                 
                 {!canAfford && (
                   <div className="bg-[#EE6C4D]/10 rounded-xl p-3 border-2 border-[#EE6C4D] mt-2">
                     <p className="text-center text-[#EE6C4D] text-sm font-bold mb-2">
-                      😢 Oh no! You need ₹{(totalCost - spendingBalance).toFixed(0)} more!
+                      😢 Oh no! You need {(totalCost - spendingBalance).toFixed(0)} XP more!
                     </p>
                     <button
                       onClick={() => setShowTransfer(true)}
                       className="w-full py-2 bg-[#FFD23F] text-[#1D3557] font-bold rounded-xl hover:bg-[#FFE066] flex items-center justify-center gap-2"
                     >
-                      <ArrowLeftRight className="w-4 h-4" /> Move money to CoinQuest Wallet
+                      <ArrowLeftRight className="w-4 h-4" /> Top Up My XP
                     </button>
                   </div>
                 )}
@@ -566,7 +566,7 @@ export default function StorePage({ user }) {
                       : 'bg-[#98C1D9] text-[#1D3557] cursor-not-allowed'
                   }`}
                 >
-                  {purchasing ? 'Buying...' : canAfford ? `Buy ${quantity}! 🛒` : 'Need more ₹'}
+                  {purchasing ? 'Buying...' : canAfford ? `Buy ${quantity}! 🛒` : 'Need more XP'}
                 </button>
               </div>
             </div>
@@ -580,13 +580,13 @@ export default function StorePage({ user }) {
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
               <ArrowLeftRight className="w-5 h-5 inline mr-2" />
-              Move Money to CoinQuest Wallet
+              Top Up My XP
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="bg-[#E0FBFC] rounded-xl p-3">
               <p className="text-sm text-[#3D5A80]">
-                Your CoinQuest Wallet: <strong className="text-[#EE6C4D]">₹{spendingBalance.toFixed(0)}</strong>
+                Your XP Balance: <strong className="text-[#EE6C4D]">{spendingBalance.toFixed(0)} XP</strong>
               </p>
             </div>
 
@@ -606,14 +606,14 @@ export default function StorePage({ user }) {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="investing">
-                        📈 Investing (₹{wallet?.accounts?.find(a => a.account_type === 'investing')?.balance?.toFixed(0) || 0})
+                        📈 Investing ({wallet?.accounts?.find(a => a.account_type === 'investing')?.balance?.toFixed(0) || 0} XP)
                       </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold text-[#1D3557] mb-1 block">Amount (₹)</label>
+                  <label className="text-sm font-bold text-[#1D3557] mb-1 block">Amount (XP)</label>
                   <Input
                     type="number"
                     placeholder="How much to move?"
@@ -625,7 +625,7 @@ export default function StorePage({ user }) {
               </>
             ) : (
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-[#1D3557]">
-                🌟 CoinQuest coins can only be earned — they can't be transferred from other jars.
+                🌟 XP can only be earned — it can't be transferred from other jars.
                 Try completing a lesson, claiming a daily streak, earning a badge
                 {(user?.grade ?? 5) >= 1 ? ' or harvesting your garden' : ''} to get more!
               </div>
@@ -697,7 +697,7 @@ export default function StorePage({ user }) {
                         </p>
                       </div>
                       
-                      <span className="font-bold text-[#EE6C4D]">₹{purchase.price}</span>
+                      <span className="font-bold text-[#EE6C4D]">{purchase.price} XP</span>
                     </div>
                   );
                 })}
@@ -707,7 +707,7 @@ export default function StorePage({ user }) {
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-[#1D3557]">Total Spent:</span>
                     <span className="text-xl font-bold text-[#EE6C4D]">
-                      ₹{purchases.reduce((sum, p) => sum + (p.price || 0), 0).toFixed(0)}
+                      {purchases.reduce((sum, p) => sum + (p.price || 0), 0).toFixed(0)} XP
                     </span>
                   </div>
                 </div>
@@ -775,7 +775,7 @@ function ItemCard({ item, index, canAfford, categoryColor, onSelect, formatPrice
             : 'bg-[#98C1D9] text-[#1D3557]'
         }`}
       >
-        {canAfford ? 'Buy Now' : 'Need more ₹'}
+        {canAfford ? 'Buy Now' : 'Need more XP'}
       </button>
     </div>
   );

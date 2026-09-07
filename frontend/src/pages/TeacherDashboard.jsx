@@ -814,7 +814,7 @@ export default function TeacherDashboard({ user }) {
                         </div>
                         <Input 
                           type="number"
-                          placeholder="Amount (₹)" 
+                          placeholder="Amount (XP)" 
                           value={rewardForm.amount} 
                           onChange={(e) => setRewardForm({...rewardForm, amount: parseFloat(e.target.value) || 0})}
                           className="border-3 border-[#1D3557]"
@@ -963,7 +963,7 @@ export default function TeacherDashboard({ user }) {
                             />
                           </div>
                           <div>
-                            <label className="text-sm font-bold text-[#1D3557] mb-1 block">Base Reward (₹)</label>
+                            <label className="text-sm font-bold text-[#1D3557] mb-1 block">Base Reward (XP)</label>
                             <Input 
                               type="number" 
                               min="0"
@@ -980,7 +980,7 @@ export default function TeacherDashboard({ user }) {
                         <div>
                           <div className="flex items-center justify-between mb-3">
                             <label className="text-sm font-bold text-[#1D3557]">
-                              Questions ({questForm.questions.length}) {questForm.questions.length > 0 && `- Total: ₹${questForm.questions.reduce((sum, q) => sum + (parseFloat(q.points) || 0), 0)}`}
+                              Questions ({questForm.questions.length}) {questForm.questions.length > 0 && `- Total: ${questForm.questions.reduce((sum, q) => sum + (parseFloat(q.points) || 0), 0)} XP`}
                             </label>
                             <button type="button" onClick={addQuestion} className="text-sm text-[#06D6A0] hover:underline font-bold">
                               + Add Question
@@ -1051,7 +1051,7 @@ export default function TeacherDashboard({ user }) {
                                   <Input 
                                     type="number" 
                                     min="1"
-                                    placeholder="Reward (₹) *" 
+                                    placeholder="Reward (XP) *" 
                                     value={q.points || ''} 
                                     onChange={(e) => updateQuestion(qIndex, 'points', parseInt(e.target.value) || 0)}
                                     className="border-2 border-[#1D3557]/30"
@@ -1268,7 +1268,7 @@ export default function TeacherDashboard({ user }) {
                               )}
                               <p className="text-sm text-[#3D5A80] mt-1">{quest.description}</p>
                               <div className="flex items-center gap-4 mt-2 text-xs text-[#3D5A80]">
-                                <span>₹{quest.total_points || quest.reward_amount || 0} total</span>
+                                <span>{quest.total_points || quest.reward_amount || 0} XP total</span>
                                 <span>
                                   {quest.questions?.length > 0 
                                     ? `${quest.questions.length} ${quest.questions[0]?.question_type === 'mcq' ? 'MCQ' : quest.questions[0]?.question_type === 'multi_select' ? 'Multi-select' : 'Text'} question${quest.questions.length > 1 ? 's' : ''}`
@@ -1474,8 +1474,8 @@ export default function TeacherDashboard({ user }) {
                 {/* Quick Stats Row */}
                 <div className="grid grid-cols-4 gap-3">
                   <div className="bg-[#FFD23F]/20 rounded-xl p-3 text-center">
-                    <p className="text-2xl font-bold text-[#1D3557]">₹{studentInsights.wallet?.total_balance?.toFixed(0)}</p>
-                    <p className="text-xs text-[#3D5A80]">CoinQuest Balance</p>
+                    <p className="text-2xl font-bold text-[#1D3557]">{studentInsights.wallet?.total_balance?.toFixed(0)} XP</p>
+                    <p className="text-xs text-[#3D5A80]">My XP</p>
                   </div>
                   <div className="bg-[#06D6A0]/20 rounded-xl p-3 text-center">
                     <p className="text-2xl font-bold text-[#1D3557]">
@@ -1516,7 +1516,11 @@ export default function TeacherDashboard({ user }) {
                       return (
                         <div key={acc.account_type} className="bg-white rounded-lg p-3 border border-[#1D3557]/10">
                           <p className="text-xs text-[#3D5A80] capitalize mb-1">{acc.account_type}</p>
-                          <p className="text-lg font-bold text-[#1D3557]">₹{acc.balance?.toFixed(0)}</p>
+                          <p className="text-lg font-bold text-[#1D3557]">
+                            {acc.account_type === 'spending' || acc.account_type === 'investing' ? '' : '₹'}
+                            {acc.balance?.toFixed(0)}
+                            {acc.account_type === 'spending' || acc.account_type === 'investing' ? ' XP' : ''}
+                          </p>
                           <p className="text-xs text-[#3D5A80]">available</p>
                           {isSavings ? (
                             <p className="text-xs mt-1">
@@ -1525,7 +1529,9 @@ export default function TeacherDashboard({ user }) {
                             </p>
                           ) : (
                             <p className="text-xs mt-1">
-                              <span className="text-red-500 font-medium">₹{acc.spent?.toFixed(0) || 0}</span>
+                              <span className="text-red-500 font-medium">
+                                {acc.account_type === 'spending' || acc.account_type === 'investing' ? `${acc.spent?.toFixed(0) || 0} XP` : `₹${acc.spent?.toFixed(0) || 0}`}
+                              </span>
                               <span className="text-[#3D5A80]"> spent</span>
                             </p>
                           )}
@@ -1636,17 +1642,17 @@ export default function TeacherDashboard({ user }) {
                             <span className="font-bold text-lg">{studentInsights.garden?.plots_owned || 0}</span>
                           </div>
                           <div className="text-center">
-                            <span className="text-[#3D5A80] block">Total Invested</span>
-                            <span className="font-bold text-lg">₹{studentInsights.garden?.total_invested?.toFixed(0) || 0}</span>
+                            <p className="text-xs text-[#3D5A80] block">Total Invested</p>
+                            <span className="font-bold text-lg">{studentInsights.garden?.total_invested?.toFixed(0) || 0} XP</span>
                           </div>
                           <div className="text-center">
                             <span className="text-[#3D5A80] block">Total Earned</span>
-                            <span className="font-bold text-lg text-green-600">₹{studentInsights.garden?.total_earned?.toFixed(0) || 0}</span>
+                            <span className="font-bold text-lg text-green-600">{studentInsights.garden?.total_earned?.toFixed(0) || 0} XP</span>
                           </div>
                           <div className="text-center">
                             <span className="text-[#3D5A80] block">Profit/Loss</span>
                             <span className={`font-bold text-lg ${(studentInsights.garden?.profit_loss || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              {(studentInsights.garden?.profit_loss || 0) >= 0 ? '+' : ''}₹{studentInsights.garden?.profit_loss?.toFixed(0) || 0}
+                              {(studentInsights.garden?.profit_loss || 0) >= 0 ? '+' : ''}{studentInsights.garden?.profit_loss?.toFixed(0) || 0} XP
                             </span>
                           </div>
                         </div>
@@ -1666,18 +1672,18 @@ export default function TeacherDashboard({ user }) {
                           </div>
                           <div className="text-center">
                             <span className="text-[#3D5A80] block">Portfolio Value</span>
-                            <span className="font-bold text-lg">₹{studentInsights.stocks?.portfolio_value?.toFixed(0) || 0}</span>
+                            <span className="font-bold text-lg">{studentInsights.stocks?.portfolio_value?.toFixed(0) || 0} XP</span>
                           </div>
                           <div className="text-center">
                             <span className="text-[#3D5A80] block">Realized Gains</span>
                             <span className={`font-bold text-lg ${(studentInsights.stocks?.realized_gains || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              {(studentInsights.stocks?.realized_gains || 0) >= 0 ? '+' : ''}₹{studentInsights.stocks?.realized_gains?.toFixed(0) || 0}
+                              {(studentInsights.stocks?.realized_gains || 0) >= 0 ? '+' : ''}{studentInsights.stocks?.realized_gains?.toFixed(0) || 0} XP
                             </span>
                           </div>
                           <div className="text-center">
                             <span className="text-[#3D5A80] block">Unrealized P/L</span>
                             <span className={`font-bold text-lg ${(studentInsights.stocks?.unrealized_gains || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              {(studentInsights.stocks?.unrealized_gains || 0) >= 0 ? '+' : ''}₹{studentInsights.stocks?.unrealized_gains?.toFixed(0) || 0}
+                              {(studentInsights.stocks?.unrealized_gains || 0) >= 0 ? '+' : ''}{studentInsights.stocks?.unrealized_gains?.toFixed(0) || 0} XP
                             </span>
                           </div>
                         </div>
@@ -1786,22 +1792,22 @@ export default function TeacherDashboard({ user }) {
                           {idx === 0 && <span className="text-yellow-500">👑</span>}
                         </td>
                         <td className="px-2 py-2 text-right font-bold">₹{student.total_balance}</td>
-                        <td className="px-2 py-2 text-right">₹{student.spending_balance}</td>
-                        <td className="px-2 py-2 text-right text-red-500">₹{student.spending_spent || 0}</td>
+                        <td className="px-2 py-2 text-right">{student.spending_balance} XP</td>
+                        <td className="px-2 py-2 text-right text-red-500">{student.spending_spent || 0} XP</td>
                         <td className="px-2 py-2 text-right">₹{student.savings_balance}</td>
                         <td className="px-2 py-2 text-right text-green-600">₹{student.savings_in_goals || 0}</td>
                         <td className="px-2 py-2 text-right">₹{student.gifting_balance}</td>
                         <td className="px-2 py-2 text-right text-red-500">₹{student.gifting_spent || 0}</td>
-                        <td className="px-2 py-2 text-right">₹{student.investing_balance}</td>
-                        <td className="px-2 py-2 text-right text-red-500">₹{student.investing_spent || 0}</td>
+                        <td className="px-2 py-2 text-right">{student.investing_balance} XP</td>
+                        <td className="px-2 py-2 text-right text-red-500">{student.investing_spent || 0} XP</td>
                         <td className="px-2 py-2 text-center">{student.chores_completed}</td>
                         <td className="px-2 py-2 text-center">{student.quests_completed}</td>
                         <td className="px-2 py-2 text-center">{student.lessons_completed}</td>
                         <td className={`px-2 py-2 text-right ${student.garden_pl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {student.garden_pl >= 0 ? '+' : ''}₹{student.garden_pl}
+                          {student.garden_pl >= 0 ? '+' : ''}{student.garden_pl} XP
                         </td>
                         <td className={`px-2 py-2 text-right ${student.stock_pl >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {student.stock_pl >= 0 ? '+' : ''}₹{student.stock_pl}
+                          {student.stock_pl >= 0 ? '+' : ''}{student.stock_pl} XP
                         </td>
                         <td className="px-2 py-2 text-center">
                           <span className="text-green-600">{student.gifts_received}↓</span>

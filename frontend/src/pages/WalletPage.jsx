@@ -311,15 +311,16 @@ export default function WalletPage({ user }) {
                           .map(acc => {
                             const isMyWallet = acc.account_type === 'my_wallet';
                             const isSpending = acc.account_type === 'spending';
+                            const isXP = isSpending || acc.account_type === 'investing';
                             const displayLabel = isMyWallet
                               ? 'My Wallet'
                               : isSpending
-                                ? 'CoinQuest Wallet'
+                                ? 'My XP'
                                 : (accountInfo[acc.account_type]?.label || (acc.account_type.charAt(0).toUpperCase() + acc.account_type.slice(1)));
-                            const icon = isMyWallet ? '₹' : isSpending ? '🎮' : accountInfo[acc.account_type]?.icon;
+                            const icon = isMyWallet ? '₹' : isSpending ? '⚡' : accountInfo[acc.account_type]?.icon;
                             return (
                               <SelectItem key={acc.account_type} value={acc.account_type}>
-                                {icon} {displayLabel} (₹{acc.balance?.toFixed(0)})
+                                {icon} {displayLabel} ({isXP ? `${acc.balance?.toFixed(0)} XP` : `₹${acc.balance?.toFixed(0)}`})
                               </SelectItem>
                             );
                           })}
@@ -339,15 +340,16 @@ export default function WalletPage({ user }) {
                           .map(acc => {
                             const isMyWallet = acc.account_type === 'my_wallet';
                             const isSpending = acc.account_type === 'spending';
+                            const isXP = isSpending || acc.account_type === 'investing';
                             const displayLabel = isMyWallet
                               ? 'My Wallet'
                               : isSpending
-                                ? 'CoinQuest Wallet'
+                                ? 'My XP'
                                 : (accountInfo[acc.account_type]?.label || (acc.account_type.charAt(0).toUpperCase() + acc.account_type.slice(1)));
-                            const icon = isMyWallet ? '₹' : isSpending ? '🎮' : accountInfo[acc.account_type]?.icon;
+                            const icon = isMyWallet ? '₹' : isSpending ? '⚡' : accountInfo[acc.account_type]?.icon;
                             return (
                               <SelectItem key={acc.account_type} value={acc.account_type}>
-                                {icon} {displayLabel} (₹{acc.balance?.toFixed(0)})
+                                {icon} {displayLabel} ({isXP ? `${acc.balance?.toFixed(0)} XP` : `₹${acc.balance?.toFixed(0)}`})
                               </SelectItem>
                             );
                           })}
@@ -357,7 +359,7 @@ export default function WalletPage({ user }) {
                       <p className="text-[11px] text-[#3D5A80] mt-1.5 italic">
                         Piggy Bank & Giving are funded from <strong>My Wallet</strong>.
                         {grade > 0 && (STOCKS_ENABLED || grade <= 2) && (
-                          <> {grade <= 2 ? 'Garden' : 'Garden / Investing'} from <strong>CoinQuest Wallet</strong>.</>
+                          <> {grade <= 2 ? 'Garden' : 'Garden / Investing'} from <strong>My XP</strong>.</>
                         )}
                         {' '}Piggy Bank money leaves only by contributing to a savings goal.
                       </p>
@@ -365,7 +367,7 @@ export default function WalletPage({ user }) {
                   </div>
                   
                   <div>
-                    <label className="text-sm font-bold text-[#1D3557] mb-2 block">Amount (₹):</label>
+                    <label className="text-sm font-bold text-[#1D3557] mb-2 block">Amount:</label>
                     <Input 
                       type="number" 
                       min="1"
@@ -399,7 +401,7 @@ export default function WalletPage({ user }) {
           </div>
         </div>
 
-        {/* Two-Wallet Split: CoinQuest (play) vs My Wallet (real, owed by parent) */}
+        {/* Two-Wallet Split: My XP (play) vs My Wallet (real, owed by parent) */}
         <div className="grid md:grid-cols-2 gap-4 mb-6">
           <div
             className="rounded-2xl p-5 bg-gradient-to-br from-[#EE6C4D] to-[#FF8A6C] text-white shadow-lg border-2 border-white/40"
@@ -407,13 +409,13 @@ export default function WalletPage({ user }) {
           >
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">🎮</span>
-                <h3 className="text-lg font-bold" style={{ fontFamily: 'Fredoka' }}>CoinQuest Wallet</h3>
+                <span className="text-2xl">⚡</span>
+                <h3 className="text-lg font-bold" style={{ fontFamily: 'Fredoka' }}>My XP</h3>
               </div>
-              <span className="text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full">Play coins</span>
+              <span className="text-[10px] uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full">Play points</span>
             </div>
             <p className="text-4xl font-bold mt-2" style={{ fontFamily: 'Fredoka' }}>
-              ₹{Number(summary.coinquest_balance || 0).toFixed(0)}
+              {Number(summary.coinquest_balance || 0).toFixed(0)} XP
             </p>
             <p className="text-xs opacity-90 mt-1">{coinquestDescription}</p>
           </div>
@@ -447,12 +449,13 @@ export default function WalletPage({ user }) {
           </Link>
         </div>
         
-        {/* Account Cards — spending jar hidden (shown as CoinQuest Wallet above) */}
+        {/* Account Cards — spending jar hidden (shown as My XP above) */}
         <div className="grid grid-cols-2 gap-4 mb-8" data-testid="money-jars-grid">
           {getJarAccounts().map((acc, index) => {
             const info = accountInfo[acc.account_type];
             const displayLabel = info?.label || acc.account_type;
             const hasAllocation = acc.account_type === 'savings' || acc.account_type === 'investing';
+            const isXP = acc.account_type === 'investing';
             
             return (
               <div 
@@ -474,7 +477,7 @@ export default function WalletPage({ user }) {
                       <div className="flex justify-between items-center">
                         <span className="text-base font-medium">Available:</span>
                         <span className="text-xl font-bold" style={{ fontFamily: 'Fredoka' }}>
-                          ₹{(acc.available_balance ?? acc.balance)?.toFixed(0)}
+                          {isXP ? '' : '₹'}{(acc.available_balance ?? acc.balance)?.toFixed(0)}{isXP ? ' XP' : ''}
                         </span>
                       </div>
                       <div className="flex justify-between items-center mt-1 pt-1 border-t border-white/30">
@@ -482,7 +485,7 @@ export default function WalletPage({ user }) {
                           {acc.account_type === 'savings' ? 'In Goals:' : 'Invested:'}
                         </span>
                         <span className="text-xl font-bold" style={{ fontFamily: 'Fredoka' }}>
-                          ₹{(acc.allocated_balance ?? 0)?.toFixed(0)}
+                          {isXP ? '' : '₹'}{(acc.allocated_balance ?? 0)?.toFixed(0)}{isXP ? ' XP' : ''}
                         </span>
                       </div>
                     </div>
@@ -522,7 +525,7 @@ export default function WalletPage({ user }) {
               <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
                 {[
                   { value: 'all', label: 'All', icon: '🌟' },
-                  { value: 'coinquest', label: 'CoinQuest', icon: '🎮' },
+                  { value: 'coinquest', label: 'My XP', icon: '⚡' },
                   { value: 'my_wallet', label: 'My Wallet', icon: '₹' }
                 ].map((s) => (
                   <button
@@ -675,7 +678,8 @@ export default function WalletPage({ user }) {
                               isNeutral ? 'text-[#3D5A80]' : 
                               isPositive ? 'text-[#06D6A0]' : 'text-[#EE6C4D]'
                             }`}>
-                              {isNeutral ? '↔' : isPositive ? '+' : '-'}₹{displayAmount.toFixed(0)}
+                              {isNeutral ? '↔' : isPositive ? '+' : '-'}
+                              {trans.wallet_source === 'coinquest' ? `${displayAmount.toFixed(0)} XP` : `₹${displayAmount.toFixed(0)}`}
                             </span>
                           </div>
                         );

@@ -1748,7 +1748,7 @@ async def _legacy_buy_farm_plot(request: Request):
     # Check spending balance
     spending_acc = await db.wallet_accounts.find_one({"user_id": user["user_id"], "account_type": "spending"})
     if not spending_acc or spending_acc.get("balance", 0) < PLOT_COST:
-        raise HTTPException(status_code=400, detail=f"Need ₹{PLOT_COST} in spending account to buy a plot")
+        raise HTTPException(status_code=400, detail=f"Need {PLOT_COST} XP in spending account to buy a plot")
     
     # Get current plot count
     plot_count = await db.farm_plots.count_documents({"user_id": user["user_id"]})
@@ -1810,7 +1810,7 @@ async def _legacy_plant_seed(data: PlantSeedRequest, request: Request):
     # Check spending balance
     spending_acc = await db.wallet_accounts.find_one({"user_id": user["user_id"], "account_type": "spending"})
     if not spending_acc or spending_acc.get("balance", 0) < seed["seed_cost"]:
-        raise HTTPException(status_code=400, detail=f"Need ₹{seed['seed_cost']} to buy this seed")
+        raise HTTPException(status_code=400, detail=f"Need {seed['seed_cost']} XP to buy this seed")
     
     # Deduct balance
     await db.wallet_accounts.update_one(
@@ -2007,7 +2007,7 @@ async def _legacy_sell_produce(request: Request, plant_id: str, quantity: int):
     })
     
     return {
-        "message": f"Sold {quantity} for ₹{total_earnings}! 💰",
+        "message": f"Sold {quantity} for {total_earnings} XP! 💰",
         "earnings": total_earnings,
         "price_per_unit": market_price["current_price"]
     }
@@ -8499,7 +8499,7 @@ async def admin_apply_stock_news(news_id: str, request: Request):
     
     for stock in stocks:
         new_price = round(stock["current_price"] * multiplier, 2)
-        new_price = max(1, new_price)  # Minimum price of ₹1
+        new_price = max(1, new_price)  # Minimum price of 1 XP
         
         await db.investment_stocks.update_one(
             {"stock_id": stock["stock_id"]},
@@ -8719,7 +8719,7 @@ async def _legacy_buy_stock(data: BuyStockRequest, request: Request):
     # Check wallet balance (use investing account)
     wallet = await db.wallet_accounts.find_one({"user_id": user_id, "account_type": "investing"})
     if not wallet or wallet["balance"] < total_cost:
-        raise HTTPException(status_code=400, detail=f"Insufficient funds. Need ₹{total_cost:.2f}")
+        raise HTTPException(status_code=400, detail=f"Insufficient funds. Need {total_cost:.2f} XP")
     
     # Deduct from wallet
     await db.wallet_accounts.update_one(
@@ -8874,7 +8874,7 @@ async def _legacy_sell_stock(data: SellStockRequest, request: Request):
         "to_account": "investing",
         "amount": total_proceeds,
         "transaction_type": "stock_sell",
-        "description": f"Sold {data.quantity} shares of {stock['ticker']} (P/L: ₹{profit_loss:.2f})",
+        "description": f"Sold {data.quantity} shares of {stock['ticker']} (P/L: {profit_loss:.2f} XP)",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
@@ -9046,7 +9046,7 @@ async def stock_price_fluctuation(session_name: str):
             session_volatility = volatility / 3
             change_percent = random.uniform(-session_volatility, session_volatility)
             current_price = stock.get("current_price", stock.get("base_price", 10))
-            new_price = max(1.0, current_price * (1 + change_percent))  # Minimum price ₹1
+            new_price = max(1.0, current_price * (1 + change_percent))  # Minimum price 1 XP
             new_price = round(new_price, 2)
             
             # Create price history entry for embedded array
@@ -9475,7 +9475,7 @@ async def send_quest_reminders():
                     await db.notifications.insert_one({
                         "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
                         "user_id": child["user_id"],
-                        "message": f"⏰ Reminder: '{quest['title']}' is due tomorrow! Complete it to earn ₹{quest['total_points']}",
+                        "message": f"⏰ Reminder: '{quest['title']}' is due tomorrow! Complete it to earn {quest['total_points']} XP",
                         "type": "quest_reminder",
                         "link": "/quests",
                         "is_read": False,

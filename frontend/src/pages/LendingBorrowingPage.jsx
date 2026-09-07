@@ -5,7 +5,7 @@ import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
 import { 
-  ChevronLeft, HandCoins, PiggyBank, TrendingUp, TrendingDown,
+  ChevronLeft, Handshake, PiggyBank, TrendingUp, TrendingDown,
   Clock, CheckCircle2, XCircle, AlertTriangle, Users, User,
   Send, ArrowRight, Calendar, Percent, Target, Scale,
   Wallet, BadgeCheck, BadgeX, MessageSquare, RefreshCw, Star, Search, X
@@ -259,7 +259,7 @@ export default function LendingBorrowingPage({ user }) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 flex items-center justify-center">
         <div className="text-center">
-          <HandCoins className="w-16 h-16 text-amber-500 mx-auto animate-bounce" />
+          <Handshake className="w-16 h-16 text-amber-500 mx-auto animate-bounce" />
           <p className="mt-4 text-lg font-semibold text-amber-700">Loading Lending Center...</p>
         </div>
       </div>
@@ -297,7 +297,7 @@ export default function LendingBorrowingPage({ user }) {
               </BackButton>
               <div>
                 <h1 className="text-2xl font-bold flex items-center gap-2">
-                  <HandCoins className="w-8 h-8" />
+                  <Handshake className="w-8 h-8" />
                   Lending Center
                 </h1>
                 <p className="text-amber-100">Borrow & Lend money responsibly</p>
@@ -327,16 +327,16 @@ export default function LendingBorrowingPage({ user }) {
               <span className="text-sm font-medium">Borrowed</span>
             </div>
             <p className="text-2xl font-bold text-gray-800">{summary?.borrowing?.active_loans || 0}</p>
-            <p className="text-sm text-gray-500">₹{summary?.borrowing?.total_amount_owed || 0} owed</p>
+            <p className="text-sm text-gray-500">{summary?.borrowing?.total_amount_owed || 0} XP owed</p>
           </div>
           
           <div className="bg-white rounded-xl p-4 shadow-md border border-amber-100">
             <div className="flex items-center gap-2 text-green-600 mb-2">
-              <HandCoins className="w-5 h-5" />
+              <Handshake className="w-5 h-5" />
               <span className="text-sm font-medium">Lent Out</span>
             </div>
             <p className="text-2xl font-bold text-gray-800">{summary?.lending?.active_loans || 0}</p>
-            <p className="text-sm text-gray-500">₹{summary?.lending?.total_amount_lent || 0} lent</p>
+            <p className="text-sm text-gray-500">{summary?.lending?.total_amount_lent || 0} XP lent</p>
           </div>
           
           <div className="bg-white rounded-xl p-4 shadow-md border border-amber-100">
@@ -369,7 +369,7 @@ export default function LendingBorrowingPage({ user }) {
               <PiggyBank className="w-4 h-4 mr-2" /> Borrowing
             </TabsTrigger>
             <TabsTrigger value="lending" className="data-[state=active]:bg-green-500 data-[state=active]:text-white">
-              <HandCoins className="w-4 h-4 mr-2" /> Lending
+              <Handshake className="w-4 h-4 mr-2" /> Lending
             </TabsTrigger>
           </TabsList>
 
@@ -405,7 +405,7 @@ export default function LendingBorrowingPage({ user }) {
                     <div key={group.group_id} className="bg-white rounded-xl p-4 shadow-md border border-amber-100">
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <p className="font-bold text-lg text-gray-800">₹{group.amount}</p>
+                          <p className="font-bold text-lg text-gray-800">{group.amount} XP</p>
                           <p className="text-sm text-gray-600">{group.purpose}</p>
                           <p className="text-xs text-gray-400 mt-1">
                             <Calendar className="w-3 h-3 inline mr-1" />
@@ -458,10 +458,10 @@ export default function LendingBorrowingPage({ user }) {
                             <User className="w-6 h-6 text-amber-600" />
                           </div>
                           <div>
-                            <p className="font-bold text-gray-800">₹{loan.total_repayment} due</p>
+                            <p className="font-bold text-gray-800">{loan.total_repayment} XP due</p>
                             <p className="text-sm text-gray-600">From: {loan.lender_name}</p>
                             <p className="text-xs text-gray-500">
-                              Principal: ₹{loan.amount} + Interest: ₹{loan.interest_amount}
+                              Principal: {loan.amount} XP + Interest: {loan.interest_amount} XP
                             </p>
                           </div>
                         </div>
@@ -505,7 +505,7 @@ export default function LendingBorrowingPage({ user }) {
                           {loan.status === 'paid' ? <CheckCircle2 className="w-5 h-5 text-green-600" /> : <XCircle className="w-5 h-5 text-red-600" />}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-800">₹{loan.total_repayment}</p>
+                          <p className="font-medium text-gray-800">{loan.total_repayment} XP</p>
                           <p className="text-xs text-gray-500">From {loan.lender_name}</p>
                         </div>
                       </div>
@@ -545,11 +545,11 @@ export default function LendingBorrowingPage({ user }) {
                         <div className="grid grid-cols-3 gap-4 text-center">
                           <div>
                             <p className="text-xs text-gray-500">Amount</p>
-                            <p className="font-bold text-gray-800">₹{req.amount}</p>
+                            <p className="font-bold text-gray-800">{req.amount} XP</p>
                           </div>
                           <div>
                             <p className="text-xs text-gray-500">Interest</p>
-                            <p className="font-bold text-green-600">₹{req.interest_amount}</p>
+                            <p className="font-bold text-green-600">{req.interest_amount} XP</p>
                           </div>
                           <div>
                             <p className="text-xs text-gray-500">Return By</p>
@@ -563,7 +563,7 @@ export default function LendingBorrowingPage({ user }) {
                       
                       {req.status === 'countered' && req.counter_offers?.length > 0 && (
                         <div className="mt-2 bg-purple-50 rounded-lg p-2 text-sm">
-                          <p className="text-purple-700 font-medium">Your counter offer: ₹{req.counter_amount} + ₹{req.counter_interest} interest</p>
+                          <p className="text-purple-700 font-medium">Your counter offer: {req.counter_amount} XP + {req.counter_interest} XP interest</p>
                         </div>
                       )}
                       
@@ -602,7 +602,7 @@ export default function LendingBorrowingPage({ user }) {
             {lentLoans.filter(l => l.status === 'active').length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  <HandCoins className="w-5 h-5 text-green-500" /> Money You've Lent
+                  <Handshake className="w-5 h-5 text-green-500" /> Money You've Lent
                 </h3>
                 <div className="space-y-3">
                   {lentLoans.filter(l => l.status === 'active').map(loan => (
@@ -612,7 +612,7 @@ export default function LendingBorrowingPage({ user }) {
                           <CreditScoreBadge score={loan.borrower_credit_score || 70} size="sm" />
                           <div>
                             <p className="font-bold text-gray-800">{loan.borrower_name}</p>
-                            <p className="text-sm text-gray-600">Owes you: ₹{loan.total_repayment}</p>
+                            <p className="text-sm text-gray-600">Owes you: {loan.total_repayment} XP</p>
                           </div>
                         </div>
                         <div className="text-right">
@@ -646,7 +646,7 @@ export default function LendingBorrowingPage({ user }) {
                           {loan.status === 'paid' ? <CheckCircle2 className="w-5 h-5 text-green-600" /> : <BadgeX className="w-5 h-5 text-red-600" />}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-800">₹{loan.total_repayment}</p>
+                          <p className="font-medium text-gray-800">{loan.total_repayment} XP</p>
                           <p className="text-xs text-gray-500">To {loan.borrower_name}</p>
                         </div>
                       </div>
@@ -660,7 +660,7 @@ export default function LendingBorrowingPage({ user }) {
             {/* Empty State */}
             {receivedRequests.length === 0 && lentLoans.length === 0 && (
               <div className="text-center py-12 bg-white rounded-xl shadow-md">
-                <HandCoins className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <Handshake className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500">No lending activity yet</p>
                 <p className="text-sm text-gray-400">When classmates request loans, they'll appear here</p>
               </div>
@@ -681,18 +681,18 @@ export default function LendingBorrowingPage({ user }) {
           
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Amount Needed (₹)</label>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Amount Needed (XP)</label>
               <Input
                 type="number"
                 placeholder="Enter amount"
                 value={requestForm.amount}
                 onChange={(e) => setRequestForm({...requestForm, amount: e.target.value})}
               />
-              <p className="text-xs text-gray-500 mt-1">Max ₹{limits?.max_loan_parent} from parents, ₹{limits?.max_loan_classmate} from classmates</p>
+              <p className="text-xs text-gray-500 mt-1">Max {limits?.max_loan_parent} XP from parents, {limits?.max_loan_classmate} XP from classmates</p>
             </div>
             
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Interest You'll Pay (₹)</label>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Interest You'll Pay (XP)</label>
               <Input
                 type="number"
                 placeholder="Enter interest amount"
@@ -700,7 +700,7 @@ export default function LendingBorrowingPage({ user }) {
                 onChange={(e) => setRequestForm({...requestForm, interest_amount: e.target.value})}
               />
               <p className="text-xs text-gray-500 mt-1">
-                Total repayment: ₹{(parseFloat(requestForm.amount) || 0) + (parseFloat(requestForm.interest_amount) || 0)}
+                Total repayment: {(parseFloat(requestForm.amount) || 0) + (parseFloat(requestForm.interest_amount) || 0)} XP
               </p>
             </div>
             
@@ -764,7 +764,7 @@ export default function LendingBorrowingPage({ user }) {
               {parents.length > 0 && (
                 <div className="mb-3">
                   <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
-                    <User className="w-3 h-3" /> Parents (Max ₹{limits?.max_loan_parent})
+                    <User className="w-3 h-3" /> Parents (Max {limits?.max_loan_parent} XP)
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {parents
@@ -791,7 +791,7 @@ export default function LendingBorrowingPage({ user }) {
               {classmates.length > 0 ? (
                 <div>
                   <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
-                    <Users className="w-3 h-3" /> Classmates (Max ₹{limits?.max_loan_classmate})
+                    <Users className="w-3 h-3" /> Classmates (Max {limits?.max_loan_classmate} XP)
                   </p>
                   <div className="border rounded-lg max-h-48 overflow-y-auto">
                     {classmates
@@ -871,10 +871,10 @@ export default function LendingBorrowingPage({ user }) {
               {responseForm.action === 'accept' && (
                 <div className="bg-green-50 rounded-lg p-4">
                   <p className="text-green-700">
-                    You're about to lend <strong>₹{selectedRequest.counter_amount || selectedRequest.amount}</strong> to {selectedRequest.borrower_name}.
+                    You're about to lend <strong>{selectedRequest.counter_amount || selectedRequest.amount} XP</strong> to {selectedRequest.borrower_name}.
                   </p>
                   <p className="text-sm text-green-600 mt-2">
-                    You'll receive ₹{(selectedRequest.counter_amount || selectedRequest.amount) + (selectedRequest.counter_interest || selectedRequest.interest_amount)} when they repay.
+                    You'll receive {(selectedRequest.counter_amount || selectedRequest.amount) + (selectedRequest.counter_interest || selectedRequest.interest_amount)} XP when they repay.
                   </p>
                 </div>
               )}
@@ -890,7 +890,7 @@ export default function LendingBorrowingPage({ user }) {
               {responseForm.action === 'counter' && (
                 <div className="space-y-3">
                   <div>
-                    <label className="text-sm font-medium text-gray-700 mb-1 block">Your Amount (₹)</label>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Your Amount (XP)</label>
                     <Input
                       type="number"
                       value={responseForm.counter_amount}
@@ -898,7 +898,7 @@ export default function LendingBorrowingPage({ user }) {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-700 mb-1 block">Interest You Want (₹)</label>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">Interest You Want (XP)</label>
                     <Input
                       type="number"
                       value={responseForm.counter_interest}
@@ -959,7 +959,7 @@ export default function LendingBorrowingPage({ user }) {
           {selectedGroup && (
             <div className="space-y-4">
               <div className="bg-amber-50 rounded-lg p-3">
-                <p className="font-medium text-amber-800">Your Request: ₹{selectedGroup.amount}</p>
+                <p className="font-medium text-amber-800">Your Request: {selectedGroup.amount} XP</p>
                 <p className="text-sm text-amber-600">{selectedGroup.purpose}</p>
               </div>
               
@@ -984,16 +984,16 @@ export default function LendingBorrowingPage({ user }) {
                     <div className="grid grid-cols-3 gap-4 mt-3 text-center">
                       <div>
                         <p className="text-xs text-gray-500">Amount</p>
-                        <p className="font-bold">₹{offer.counter_amount || offer.amount}</p>
+                        <p className="font-bold">{offer.counter_amount || offer.amount} XP</p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Interest</p>
-                        <p className="font-bold text-green-600">₹{offer.counter_interest ?? offer.interest_amount}</p>
+                        <p className="font-bold text-green-600">{offer.counter_interest ?? offer.interest_amount} XP</p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Total</p>
                         <p className="font-bold text-amber-600">
-                          ₹{(offer.counter_amount || offer.amount) + (offer.counter_interest ?? offer.interest_amount)}
+                          {(offer.counter_amount || offer.amount) + (offer.counter_interest ?? offer.interest_amount)} XP
                         </p>
                       </div>
                     </div>

@@ -161,7 +161,9 @@ export default function QuestsPage({ user }) {
       setResults(res.data);
       
       if (res.data.coins_earned > 0) {
-        toast.success(`Great job! You earned ₹${res.data.coins_earned}!`);
+        toast.success(selectedQuest?.creator_type === 'parent' 
+          ? `Great job! You earned ₹${res.data.coins_earned}!` 
+          : `Great job! You earned ${res.data.coins_earned} XP!`);
       } else if (res.data.score === 0 && res.data.total_points > 0) {
         toast.info('Keep learning! You can try similar quests in the future.');
       }
@@ -183,7 +185,7 @@ export default function QuestsPage({ user }) {
         <div className="flex items-start justify-between mb-3">
           <span className="text-sm font-bold text-[#3D5A80]">Question {index + 1}</span>
           <span className="text-sm font-bold text-[#FFD23F] flex items-center gap-1">
-            <Star className="w-4 h-4" /> ₹{points}
+            <Star className="w-4 h-4" /> {selectedQuest?.creator_type === 'parent' ? `₹${points}` : `${points} XP`}
           </span>
         </div>
         
@@ -204,7 +206,9 @@ export default function QuestsPage({ user }) {
             {result.is_correct ? (
               <>
                 <CheckCircle className="w-4 h-4" />
-                <span className="font-bold">+₹{result.points_earned}</span>
+                <span className="font-bold">
+                  +{selectedQuest?.creator_type === 'parent' ? `₹${result.points_earned}` : `${result.points_earned} XP`}
+                </span>
               </>
             ) : (
               <>
@@ -579,7 +583,7 @@ export default function QuestsPage({ user }) {
                       
                       <div className="flex items-center gap-4 mt-2 flex-wrap">
                         <span className={`text-sm font-bold flex items-center gap-1 ${isExpired || isCompleted ? 'text-gray-400' : 'text-[#FFD23F]'}`}>
-                          <Star className="w-4 h-4" /> ₹{quest.total_points || quest.reward_amount || 0}
+                          <Star className="w-4 h-4" /> {quest.creator_type === 'parent' ? `₹${quest.total_points || quest.reward_amount || 0}` : `${quest.total_points || quest.reward_amount || 0} XP`}
                           {hasEarned && !isExpired && <span className="text-[#06D6A0] ml-1">(Earned!)</span>}
                           {isCompleted && !hasEarned && !isExpired && <span className="text-[#EE6C4D] ml-1">(Tried)</span>}
                           {isExpired && <span className="text-gray-500 ml-1">(Missed)</span>}
@@ -655,7 +659,7 @@ export default function QuestsPage({ user }) {
                   <div className="flex items-center gap-4 mt-3">
                     <span className="font-bold text-[#1D3557] flex items-center gap-1">
                       <Star className="w-5 h-5 text-[#FFD23F]" /> 
-                      Total: ₹{selectedQuest.total_points || selectedQuest.reward_amount || 0}
+                      Total: {selectedQuest.creator_type === 'parent' ? `₹${selectedQuest.total_points || selectedQuest.reward_amount || 0}` : `${selectedQuest.total_points || selectedQuest.reward_amount || 0} XP`}
                     </span>
                     {selectedQuest.due_date && (
                       <span className="text-[#3D5A80] flex items-center gap-1">
@@ -719,7 +723,7 @@ export default function QuestsPage({ user }) {
                       <div>
                         <p className="font-bold text-[#1D3557]">
                           {(results.coins_earned > 0 || results.score > 0)
-                            ? `🎉 Quest Complete! You earned ₹${results.coins_earned || results.score}!`
+                            ? `🎉 Quest Complete! You earned ${selectedQuest?.creator_type === 'parent' ? `₹${results.coins_earned || results.score}` : `${results.coins_earned || results.score} XP`}!`
                             : "Keep learning! You'll do better next time 📚"}
                         </p>
                         <p className="text-sm text-[#3D5A80]">
@@ -756,7 +760,9 @@ export default function QuestsPage({ user }) {
                 
                 {selectedQuest.has_earned && !results && (
                   <div className="text-center py-3 bg-[#06D6A0]/20 rounded-xl">
-                    <p className="text-[#06D6A0] font-bold">✓ You've already earned ₹{selectedQuest.earned_amount} from this quest</p>
+                    <p className="text-[#06D6A0] font-bold">
+                      ✓ You've already earned {selectedQuest.creator_type === 'parent' ? `₹${selectedQuest.earned_amount}` : `${selectedQuest.earned_amount} XP`} from this quest
+                    </p>
                     {selectedQuest.questions?.length > 0 && (
                       <p className="text-sm text-[#3D5A80] mt-1">You can still practice, but won't earn more.</p>
                     )}

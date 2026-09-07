@@ -3,7 +3,7 @@ import BackButton from '@/components/BackButton';
 import axios from 'axios';
 import { API } from '@/App';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, Trash2, Briefcase, Heart, Clock, BookOpen, Check, Coins, Star, X, Sparkles } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Briefcase, Heart, Clock, BookOpen, Check, IndianRupee, Star, X, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -85,7 +85,7 @@ export default function MyJobsPage({ user }) {
   const renderJobCard = (job) => (
     <div key={job.job_id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 flex items-start gap-3 shadow-sm border border-white/50" data-testid={`job-card-${job.job_id}`}>
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${job.job_type === 'family' ? 'bg-[#EE6C4D]' : 'bg-[#FFD23F]'}`}>
-        {job.job_type === 'family' ? <Heart className="w-4 h-4 text-white" /> : <Coins className="w-4 h-4 text-[#1D3557]" />}
+        {job.job_type === 'family' ? <Heart className="w-4 h-4 text-white" /> : <IndianRupee className="w-4 h-4 text-[#1D3557]" />}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
@@ -256,7 +256,7 @@ export default function MyJobsPage({ user }) {
           <div className="bg-gradient-to-br from-[#FFF9E6] to-[#FFF3CC] rounded-2xl p-5 border border-[#FFD23F]/20" data-testid="payday-jobs-section">
             <div className="flex items-center gap-2 mb-1">
               <div className="w-7 h-7 rounded-lg bg-[#FFD23F] flex items-center justify-center">
-                <Coins className="w-3.5 h-3.5 text-[#1D3557]" />
+                <IndianRupee className="w-3.5 h-3.5 text-[#1D3557]" />
               </div>
               <h2 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Payday Jobs</h2>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFD23F]/30 text-[#B8860B] font-bold">{paydayJobs.length}/3</span>
