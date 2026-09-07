@@ -102,6 +102,13 @@ A gamified financial literacy learning application for children (K-5) with disti
 - MyJobsPage.jsx: swapped Coins icon → IndianRupee icon for Payday Jobs since those are real money, not XP.
 - Tested: backend regression suite `/app/backend/tests/test_xp_relabel_regression.py` (10/10 pass) + testing_agent (iteration_108) found 3 display bugs (MoneyGardenPage, LessonPage toast, QuestsPage non-conditional pills) — all fixed and self-verified via screenshots + pytest rerun.
 
+### Parent Chore Reward Type Choice (Feb 2026)
+- Added a "Reward Type" toggle (₹ Real Money / ⚡ XP) to the parent's Create Chore flow (both the Quick Add modal's Chore tab and the full-page Create Chore dialog in ParentDashboard.jsx), defaulting to "Real Money" to preserve prior behavior.
+- Backend: `ChoreCreate` model gained `reward_type: str = "money"`; `/parent/chores-new` stores it on the chore doc; `/parent/chore-requests/{id}/validate` (approval) now branches — `reward_type == "xp"` credits the child's `spending` account (My XP) with `wallet_source: "coinquest"`, otherwise credits `my_wallet` (real money, pending settlement) exactly as before. Recurring chore re-creation carries `reward_type` forward automatically (full doc spread).
+- Notification message and QuestsPage.jsx display now correctly show "₹{amount}" for money chores and "{amount} XP" for XP chores — added a `formatReward(quest, amount)` helper (checks `creator_type === 'parent' && reward_type !== 'xp'`) replacing the old blanket `creator_type === 'parent'` check; same helper pattern applied to Dashboard.jsx's Quests preview widget.
+- Verified end-to-end via curl: created one XP chore (+30) and one money chore (+15), approved both — `coinquest_balance` (XP) increased by exactly 30 and `my_wallet_balance` (₹) increased by exactly 15, with no cross-contamination. UI toggle screenshot-verified (label/helper text swap correctly between "₹ Real Money" and "⚡ XP" modes).
+- NOTE (not in scope, pre-existing, unrelated bug spotted): the separate one-off "Give Reward/Penalty" tool (different feature, `RewardPenaltyCreate`) always credits real money (`my_wallet`) but its helper text says "to their spending wallet" — mislabeled copy, left untouched since user's request was specifically about chores/quests.
+
 ## Current Architecture Snapshot (Aug 23, 2026)
 - Roles: child, parent, teacher, school (admin), admin.
 - Learning hierarchy: Topic → Subtopic → Content Item, grade-scoped, progressive unlock.

@@ -1081,6 +1081,7 @@ async def validate_chore_request(request_id: str, request: Request):
     
     child_id = completion["user_id"]
     reward = chore.get("reward_amount", chore.get("total_points", 0))
+    reward_type = "xp" if chore.get("reward_type") == "xp" else "money"
     
     if action == "approve":
         # Update completion status
@@ -1105,23 +1106,41 @@ async def validate_chore_request(request_id: str, request: Request):
             }}
         )
         
-        # Parent chore reward → credit child's My Wallet balance + log pending entry.
-        await db.wallet_accounts.update_one(
-            {"user_id": child_id, "account_type": "my_wallet"},
-            {"$inc": {"balance": reward}, "$setOnInsert": {"account_id": f"acc_{uuid.uuid4().hex[:12]}", "user_id": child_id, "account_type": "my_wallet"}},
-            upsert=True
-        )
-        await db.transactions.insert_one({
-            "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
-            "user_id": child_id,
-            "to_account": "my_wallet",
-            "amount": reward,
-            "transaction_type": "chore_reward",
-            "wallet_source": "my_wallet",
-            "settlement_status": "pending",
-            "description": f"Approved: {chore.get('title', 'Chore')}",
-            "created_at": datetime.now(timezone.utc).isoformat()
-        })
+        if reward_type == "xp":
+            # Parent chose to reward with XP → credit child's My XP (spending) balance
+            await db.wallet_accounts.update_one(
+                {"user_id": child_id, "account_type": "spending"},
+                {"$inc": {"balance": reward}, "$setOnInsert": {"account_id": f"acc_{uuid.uuid4().hex[:12]}", "user_id": child_id, "account_type": "spending"}},
+                upsert=True
+            )
+            await db.transactions.insert_one({
+                "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+                "user_id": child_id,
+                "to_account": "spending",
+                "amount": reward,
+                "transaction_type": "chore_reward",
+                "wallet_source": "coinquest",
+                "description": f"Approved: {chore.get('title', 'Chore')}",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+        else:
+            # Parent chore reward → credit child's My Wallet balance + log pending entry.
+            await db.wallet_accounts.update_one(
+                {"user_id": child_id, "account_type": "my_wallet"},
+                {"$inc": {"balance": reward}, "$setOnInsert": {"account_id": f"acc_{uuid.uuid4().hex[:12]}", "user_id": child_id, "account_type": "my_wallet"}},
+                upsert=True
+            )
+            await db.transactions.insert_one({
+                "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
+                "user_id": child_id,
+                "to_account": "my_wallet",
+                "amount": reward,
+                "transaction_type": "chore_reward",
+                "wallet_source": "my_wallet",
+                "settlement_status": "pending",
+                "description": f"Approved: {chore.get('title', 'Chore')}",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
         
         # Handle recurring chores - schedule next instance
         if chore.get("is_recurring") and chore.get("frequency"):
@@ -1142,17 +1161,18 @@ async def validate_chore_request(request_id: str, request: Request):
             })
         
         # Notify child
+        reward_label = f"{reward} XP" if reward_type == "xp" else f"₹{reward}"
         await db.notifications.insert_one({
             "notification_id": f"notif_{uuid.uuid4().hex[:12]}",
             "user_id": child_id,
-            "message": f"🎉 Chore approved! You earned ₹{reward} for: {chore.get('title')}",
+            "message": f"🎉 Chore approved! You earned {reward_label} for: {chore.get('title')}",
             "type": "chore_approved",
             "link": "/wallet",
             "is_read": False,
             "created_at": datetime.now(timezone.utc).isoformat()
         })
         
-        return {"message": "Chore approved", "reward": reward}
+        return {"message": "Chore approved", "reward": reward, "reward_type": reward_type}
     else:
         # Reject - allow resubmission
         await db.quest_completions.update_one(

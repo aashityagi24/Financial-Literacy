@@ -570,7 +570,9 @@ export default function Dashboard({ user, setUser }) {
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="font-bold text-[#1D3557] text-sm truncate flex-1">{quest.title}</h3>
                       <span className="bg-[#FFD23F] text-[#1D3557] px-1.5 py-0.5 rounded text-xs font-bold ml-2">
-                        +{quest.total_points || quest.reward_amount || 0} XP
+                        +{quest.creator_type === 'parent' && quest.reward_type !== 'xp' 
+                          ? `₹${quest.total_points || quest.reward_amount || 0}` 
+                          : `${quest.total_points || quest.reward_amount || 0} XP`}
                       </span>
                     </div>
                     <Progress value={quest.progress || 0} className="h-1.5" />

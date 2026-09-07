@@ -35,6 +35,7 @@ class ChoreCreate(BaseModel):
     title: str
     description: Optional[str] = None
     reward_amount: float
+    reward_type: str = "money"  # "money" (credits My Wallet, real ₹) or "xp" (credits spending/My XP)
     frequency: str = "one_time"
     weekly_days: Optional[List[int]] = None
     monthly_date: Optional[int] = None
@@ -513,6 +514,7 @@ async def create_parent_chore(chore_data: ChoreCreate, request: Request):
         raise HTTPException(status_code=403, detail="Not authorized for this child")
     
     chore_id = f"chore_{uuid.uuid4().hex[:12]}"
+    reward_type = "xp" if chore_data.reward_type == "xp" else "money"
     
     chore_doc = {
         "chore_id": chore_id,
@@ -525,6 +527,7 @@ async def create_parent_chore(chore_data: ChoreCreate, request: Request):
         "description": chore_data.description,
         "reward_amount": chore_data.reward_amount,
         "total_points": chore_data.reward_amount,
+        "reward_type": reward_type,
         "frequency": chore_data.frequency,
         "weekly_days": chore_data.weekly_days,
         "monthly_date": chore_data.monthly_date,

@@ -125,6 +125,7 @@ export default function ParentDashboard({ user }) {
     title: '', 
     description: '', 
     reward_amount: 5, 
+    reward_type: 'money',
     frequency: 'one_time',
     weekly_days: [],
     monthly_date: 1
@@ -397,7 +398,7 @@ export default function ParentDashboard({ user }) {
       toast.success('Chore created!');
       setShowCreateChore(false);
       setShowRewardPenalty(false);
-      setChoreForm({ child_id: '', title: '', description: '', reward_amount: 5, frequency: 'one_time', weekly_days: [], monthly_date: 1 });
+      setChoreForm({ child_id: '', title: '', description: '', reward_amount: 5, reward_type: 'money', frequency: 'one_time', weekly_days: [], monthly_date: 1 });
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to create chore');
@@ -1374,8 +1375,8 @@ export default function ParentDashboard({ user }) {
                           </div>
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-sm font-bold text-[#1D3557] mb-1">Reward (₹) *</label>
-                              <Input type="number" placeholder="Amount" value={choreForm.reward_amount} onChange={(e) => setChoreForm({...choreForm, reward_amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
+                              <label className="block text-sm font-bold text-[#1D3557] mb-1">Reward ({choreForm.reward_type === 'xp' ? 'XP' : '₹'}) *</label>
+                              <Input type="number" placeholder="Amount" value={choreForm.reward_amount} onChange={(e) => setChoreForm({...choreForm, reward_amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" data-testid="quick-add-chore-reward-amount" />
                             </div>
                             <div>
                               <label className="block text-sm font-bold text-[#1D3557] mb-1">Frequency *</label>
@@ -1388,6 +1389,30 @@ export default function ParentDashboard({ user }) {
                                 </SelectContent>
                               </Select>
                             </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-[#1D3557] mb-1">Reward Type *</label>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setChoreForm({...choreForm, reward_type: 'money'})}
+                                className={`flex-1 py-2 rounded-xl font-bold border-3 transition-colors ${choreForm.reward_type === 'money' ? 'bg-[#06D6A0] text-white border-[#1D3557]' : 'bg-white text-[#1D3557] border-[#1D3557]/30'}`}
+                                data-testid="quick-add-reward-type-money"
+                              >
+                                ₹ Real Money
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setChoreForm({...choreForm, reward_type: 'xp'})}
+                                className={`flex-1 py-2 rounded-xl font-bold border-3 transition-colors ${choreForm.reward_type === 'xp' ? 'bg-[#EE6C4D] text-white border-[#1D3557]' : 'bg-white text-[#1D3557] border-[#1D3557]/30'}`}
+                                data-testid="quick-add-reward-type-xp"
+                              >
+                                ⚡ XP
+                              </button>
+                            </div>
+                            <p className="text-[11px] text-[#3D5A80] mt-1">
+                              {choreForm.reward_type === 'xp' ? 'Goes to My XP — spendable in Store, Garden & more.' : 'Goes to My Wallet as real money you owe your child.'}
+                            </p>
                           </div>
                           <p className="text-xs text-[#3D5A80]">Your child will need to complete this chore and request approval. You&apos;ll need to validate it before the reward is credited.</p>
                           <button onClick={handleCreateChore} className="btn-primary w-full py-3" data-testid="quick-add-submit-chore">Create Chore</button>
@@ -2894,8 +2919,8 @@ export default function ParentDashboard({ user }) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-bold text-[#1D3557] mb-1">Reward (₹) *</label>
-                  <Input type="number" placeholder="Amount" value={choreForm.reward_amount} onChange={(e) => setChoreForm({...choreForm, reward_amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" />
+                  <label className="block text-sm font-bold text-[#1D3557] mb-1">Reward ({choreForm.reward_type === 'xp' ? 'XP' : '₹'}) *</label>
+                  <Input type="number" placeholder="Amount" value={choreForm.reward_amount} onChange={(e) => setChoreForm({...choreForm, reward_amount: parseFloat(e.target.value)})} className="border-3 border-[#1D3557]" data-testid="create-chore-reward-amount" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-[#1D3557] mb-1">Frequency *</label>
@@ -2908,6 +2933,30 @@ export default function ParentDashboard({ user }) {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-[#1D3557] mb-1">Reward Type *</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setChoreForm({...choreForm, reward_type: 'money'})}
+                    className={`flex-1 py-2 rounded-xl font-bold border-3 transition-colors ${choreForm.reward_type === 'money' ? 'bg-[#06D6A0] text-white border-[#1D3557]' : 'bg-white text-[#1D3557] border-[#1D3557]/30'}`}
+                    data-testid="create-chore-reward-type-money"
+                  >
+                    ₹ Real Money
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setChoreForm({...choreForm, reward_type: 'xp'})}
+                    className={`flex-1 py-2 rounded-xl font-bold border-3 transition-colors ${choreForm.reward_type === 'xp' ? 'bg-[#EE6C4D] text-white border-[#1D3557]' : 'bg-white text-[#1D3557] border-[#1D3557]/30'}`}
+                    data-testid="create-chore-reward-type-xp"
+                  >
+                    ⚡ XP
+                  </button>
+                </div>
+                <p className="text-[11px] text-[#3D5A80] mt-1">
+                  {choreForm.reward_type === 'xp' ? 'Goes to My XP — spendable in Store, Garden & more.' : 'Goes to My Wallet as real money you owe your child.'}
+                </p>
               </div>
               <p className="text-xs text-[#3D5A80]">Your child will need to complete this chore and request approval. You&apos;ll need to validate it before the reward is credited.</p>
               <button onClick={handleCreateChore} className="btn-primary w-full py-3">Create Chore</button>
