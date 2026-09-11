@@ -214,7 +214,7 @@ export default function FinancialLiteracyPage() {
             <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
               Everything Kids Need to Learn About Money
             </h2>
-            <p className="text-xl text-[#3D5A80]">Age-appropriate financial education from Kindergarten to Class 5</p>
+            <p className="text-xl text-[#3D5A80]">Age-appropriate financial education from Kindergarten to Class 3</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
