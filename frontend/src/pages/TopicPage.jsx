@@ -549,10 +549,19 @@ export default function TopicPage({ user }) {
               📂 Subtopics
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {topic.subtopics.map((subtopic, index) => {
+              {(() => {
+                const isChildRole = user?.role === 'child';
+                const nextUpIndex = isChildRole
+                  ? topic.subtopics.findIndex(st => st.is_unlocked !== false && !st.is_completed)
+                  : -1;
+                return topic.subtopics.map((subtopic, index) => {
                 const isChild = user?.role === 'child';
                 const isLocked = isChild && subtopic.is_unlocked === false;
                 const isCompleted = isChild && subtopic.is_completed;
+                const totalCount = subtopic.content_count || 0;
+                const completedCount = Math.min(subtopic.completed_count || 0, totalCount);
+                const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+                const isNextUp = isChild && index === nextUpIndex;
                 
                 if (isLocked) {
                   return (
@@ -561,6 +570,7 @@ export default function TopicPage({ user }) {
                       className={`card-playful p-4 opacity-60 cursor-not-allowed ${showAnimations ? 'animate-bounce-in' : ''}`}
                       style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
                       onClick={() => toast.info('Complete the previous subtopic first!')}
+                      data-testid={`subtopic-card-${subtopic.topic_id}`}
                     >
                       <div className="relative">
                         {subtopic.thumbnail ? (
@@ -574,6 +584,7 @@ export default function TopicPage({ user }) {
                           <Lock className="w-8 h-8 text-white" />
                         </div>
                       </div>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Part {index + 1}</p>
                       <h3 className="font-bold text-gray-500 text-sm line-clamp-2">{subtopic.title}</h3>
                       <p className="text-xs text-gray-400 font-medium mt-1">🔒 Locked</p>
                     </div>
@@ -586,6 +597,7 @@ export default function TopicPage({ user }) {
                   to={`/learn/topic/${subtopic.topic_id}${gradeFilter ? `?grade=${gradeFilter}` : ''}`}
                   className={`card-playful p-4 hover:scale-[1.02] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0]' : ''}`}
                   style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
+                  data-testid={`subtopic-card-${subtopic.topic_id}`}
                 >
                   <div className="relative">
                     {subtopic.thumbnail ? (
@@ -605,15 +617,32 @@ export default function TopicPage({ user }) {
                       </div>
                     )}
                   </div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    {isNextUp && (
+                      <span className="inline-flex items-center bg-[#06D6A0] text-white text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-full" data-testid={`subtopic-next-up-${subtopic.topic_id}`}>
+                        Next Up
+                      </span>
+                    )}
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Part {index + 1}</p>
+                  </div>
                   <h3 className={`font-bold text-sm line-clamp-2 ${isCompleted ? 'text-[#06D6A0]' : 'text-[#1D3557]'}`}>{subtopic.title}</h3>
-                  {subtopic.content_count > 0 && (
-                    <p className={`text-xs font-medium mt-1 ${isCompleted ? 'text-[#06D6A0]' : 'text-[#06D6A0]'}`}>
+                  {isChild && totalCount > 0 ? (
+                    <div className="mt-2" data-testid={`subtopic-progress-${subtopic.topic_id}`}>
+                      <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${isCompleted ? 'bg-[#06D6A0]' : 'bg-[#4ADE80]'}`}
+                          style={{ width: `${progressPct}%` }}
+                        />
+                      </div>
+                      <p className="text-[11px] font-bold text-gray-500 mt-1">{completedCount} of {totalCount} done</p>
+                    </div>
+                  ) : subtopic.content_count > 0 && (
+                    <p className="text-xs font-medium mt-1 text-[#06D6A0]">
                       {subtopic.content_count} items
-                      {isCompleted && ' ✓'}
                     </p>
                   )}
                 </Link>
-              )})}
+              )})})()}
             </div>
           </div>
         )}

@@ -110,6 +110,10 @@ A gamified financial literacy learning application for children (K-5) with disti
 - NOTE (not in scope, pre-existing, unrelated bug spotted): the separate one-off "Give Reward/Penalty" tool (different feature, `RewardPenaltyCreate`) always credits real money (`my_wallet`) but its helper text says "to their spending wallet" — mislabeled copy, left untouched since user's request was specifically about chores/quests.
 - Follow-up fix: Dashboard.jsx's "My Money" jar-grid card for the `spending` account type was still labeled "Wallet" with a 💳 icon on the OUTSIDE of the card while showing "X XP" inside — inconsistent. Renamed the card label to "My XP" with a ⚡ icon (matches "My Wallet"/₹ card's consistent inside/outside labeling). Same fix applied to WalletPage.jsx's shared `getAccountMeta().spending` label for consistency (was unused in that page's jar-grid since spending is shown separately as the top "My XP" card, but fixed for correctness anyway).
 
+### Subtopic Progress Bars (Feb 2026)
+- `TopicPage.jsx`'s subtopic grid (the "📌 Subtopics" section shown when viewing a topic like "Understanding Money") now shows, per card: a "Part N" label, a green "NEXT UP" badge on the first unlocked-but-incomplete subtopic, a progress bar, and "{completed} of {total} done" text — using the already-existing `subtopic.completed_count`/`content_count`/`is_completed`/`is_unlocked` fields returned by `GET /content/topics/{id}` (routes/content.py). Locked subtopics keep the existing grayed-out lock overlay (no progress bar). Non-child viewers (parent/teacher/admin) keep the old "{content_count} items" text instead of a progress bar, since completion tracking is per-child.
+- Verified via screenshot with a real child account + completing a content item live: bar goes from empty ("0 of 1 done", NEXT UP badge) to full green ("1 of 1 done", checkmark badge, green border) exactly as expected.
+
 ## Current Architecture Snapshot (Aug 23, 2026)
 - Roles: child, parent, teacher, school (admin), admin.
 - Learning hierarchy: Topic → Subtopic → Content Item, grade-scoped, progressive unlock.
