@@ -76,7 +76,7 @@ export default function FinancialLiteracyPage() {
 
   const gradeDescriptions = {
     "Kindergarten": {
-      title: "Money Basics & Counting",
+      title: "Introduction to Money",
       skills: [
         "Identify and count coins (₹1, ₹2, ₹5, ₹10, ₹20, ₹50, ₹100)",
         "Learn about money being used around them and how it reaches home",
@@ -86,34 +86,34 @@ export default function FinancialLiteracyPage() {
       color: "#FFD23F"
     },
     "1st Grade": {
-      title: "Earning & Saving",
+      title: "Learning about value creation",
       skills: [
-        "Recognising and using all coins and notes up to ₹500",
-        "Learn the history, usage and evolution of money",
-        "Setting saving goals and working towards them",
-        "Learning to earn by doing jobs around house",
-        "Introduction to growing your money"
+        "Understanding Indian & Global currencies",
+        "Learnings about jobs & value creation",
+        "Introduction to savings & budgeting",
+        "Understanding to needs & wants",
+        "Introduction to forms of payments"
       ],
       color: "#06D6A0"
     },
     "2nd Grade": {
-      title: "Sharing & Investing",
+      title: "Learning to save & budget",
       skills: [
-        "Learn how to be a smart and careful shopper",
-        "Understand what budgets are and how to plan for purchases",
-        "Earning virtual money by harvesting food and selling them at the market",
-        "Introduction to borrowing and lending as a part of sharing"
+        "Learn how to be a smart shopper",
+        "Understanding planning and budgeting ",
+        "Introduction to borrowing and lending",
+        "Understanding jobs and businesses"
       ],
       color: "#EE6C4D"
     },
     "3rd Grade": {
-      title: "Employement & Consumption",
+      title: "Understanding employemnet and consumption",
       skills: [
         "Understand about different forms of employment",
         "Introduction to the Banking system of India",
         "Learn about risks, rewards and patience",
         "Introduction to Consumer Rights & Responsibilities",
-        "Stock Market Basics: Buy your first stocks"
+        "Currencies and their Conversions"
       ],
       color: "#3D5A80"
     },
