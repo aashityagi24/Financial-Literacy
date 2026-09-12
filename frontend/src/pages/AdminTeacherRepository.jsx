@@ -53,7 +53,6 @@ export default function AdminTeacherRepository() {
       if (filterSubtopic) url += `subtopic_id=${filterSubtopic}&`;
       if (filterGrade) url += `grade=${filterGrade}&`;
       if (filterType) url += `file_type=${filterType}&`;
-      if (filterContentType) url += `content_type=${encodeURIComponent(filterContentType)}&`;
       
       const [res, schoolsRes, accessRes] = await Promise.all([
         fetch(url, { credentials: 'include' }),

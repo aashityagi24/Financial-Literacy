@@ -264,6 +264,17 @@ code {
   }
 }
 
+@keyframes cta-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(140, 240, 199, 0.55);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(140, 240, 199, 0);
+    transform: scale(1.04);
+  }
+}
+
 @keyframes coin-spin {
   0% {
     transform: rotateY(0deg);
@@ -289,6 +300,10 @@ code {
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
+}
+
+.animate-cta-pulse {
+  animation: cta-pulse 1.6s ease-in-out infinite;
 }
 
 .animate-coin-spin {

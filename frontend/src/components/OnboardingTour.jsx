@@ -2,52 +2,13 @@ import { useState } from 'react';
 import axios from 'axios';
 import { API } from '@/App';
 import { 
-  Wallet, Target, ShoppingCart, TrendingUp, 
-  Users, BookOpen, Gift, ChevronRight, ChevronLeft, Sparkles
+  Wallet, Target, TrendingUp, 
+  Users, Gift, ChevronRight, ChevronLeft, Sparkles
 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
-
-const childSteps = [
-  {
-    icon: Sparkles,
-    title: "Welcome to CoinQuest!",
-    description: "Get ready for an amazing adventure where you'll learn about money while having fun!",
-    color: "from-[#FFD23F] to-[#FFEB99]"
-  },
-  {
-    icon: Wallet,
-    title: "Your Money Jars",
-    description: "You have 4 special jars: Spending (for buying), Savings (for goals), Investing (to grow), and Giving (to share)!",
-    color: "from-[#06D6A0] to-[#42E8B3]"
-  },
-  {
-    icon: BookOpen,
-    title: "Learn & Earn",
-    description: "Take fun lessons about money and earn XP for completing them. Knowledge is treasure!",
-    color: "from-[#4CC9F0] to-[#72EFDD]"
-  },
-  {
-    icon: Target,
-    title: "Complete Quests",
-    description: "Finish quests from your teacher or parents to earn XP! The more you complete, the richer you get!",
-    color: "from-[#EE6C4D] to-[#FF9F7F]"
-  },
-  {
-    icon: ShoppingCart,
-    title: "Visit the Store",
-    description: "Spend your hard-earned XP on cool items in the virtual store. But remember - save some too!",
-    color: "from-[#3D5A80] to-[#5A7CA8]"
-  },
-  {
-    icon: TrendingUp,
-    title: "Grow Your Money",
-    description: "Plant seeds in the Money Garden or trade in the Stock Market to watch your money grow!",
-    color: "from-[#9B5DE5] to-[#C77DFF]"
-  }
-];
 
 const parentSteps = [
   {
@@ -91,13 +52,14 @@ const parentSteps = [
 export default function OnboardingTour({ user, onComplete }) {
   const [currentStep, setCurrentStep] = useState(0);
   
+  // Children no longer get the onboarding tour popup — only parents do.
   const shouldShowOnboarding = user && 
-    (user.role === 'child' || user.role === 'parent') && 
+    user.role === 'parent' && 
     !user.has_completed_onboarding;
   
   const [isOpen, setIsOpen] = useState(shouldShowOnboarding);
   
-  const steps = user?.role === 'parent' ? parentSteps : childSteps;
+  const steps = parentSteps;
   const isLastStep = currentStep === steps.length - 1;
   
   const handleNext = () => {

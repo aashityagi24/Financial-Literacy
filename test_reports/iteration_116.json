@@ -1,0 +1,23 @@
+{
+  "summary": "Verified both changes on the K-3 child dashboard: (1) 'Start Learning' CTA button on classmate_g1 has class `animate-cta-pulse`, computed animationName=cta-pulse (1.6s), and box-shadow value CHANGES between two samples 800ms apart -- confirming the animation is actually running. No layout overflow at 1920x1080 or 390x844. (2) With has_completed_onboarding=false, classmate_g1 (G1) and classmate_g4_qa (G4) both log in with NO onboarding modal (data-testid=onboarding-title returns null). (3) Parent regression on wallet_demo_parent: onboarding tour STILL shows with correct title 'Welcome to CoinQuest!', 6 dots, all 6 step titles in correct order [Welcome to CoinQuest!, Connect with Your Child, Create Chores & Rewards, Manage Allowances, Give Money & Gifts, Track Progress], Next and Back navigation works. DB flags reverted to true after testing.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Parent OnboardingTour Dialog", "issues": ["Radix console warning: DialogContent missing DialogTitle for a11y and missing Description/aria-describedby. Pre-existing, not caused by this change, but worth wrapping title with VisuallyHidden or exposing accessible title/description."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "OnboardingTour DialogContent lacks accessible DialogTitle/Description (Radix a11y warning). Recommend adding VisuallyHidden DialogTitle+DialogDescription to remove console noise and improve screen-reader support."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "classmate_g1/testpass123, classmate_g4_qa/testpass123, wallet_demo_parent/testpass123",
+  "seed_data_creation": "Temporarily set has_completed_onboarding=false on classmate_g1, classmate_g4_qa, wallet_demo_parent; reverted all three back to true after testing.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Both fixes verified working. Animation runs (box-shadow varies over time, cta-pulse@1.6s). Children of any grade with has_completed_onboarding=false get NO onboarding popup. Parents still see full 6-step onboarding with functional Next/Back. Only nit is a pre-existing Radix a11y console warning on DialogContent -- not blocking."
+}

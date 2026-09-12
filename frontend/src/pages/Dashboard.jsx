@@ -434,7 +434,7 @@ export default function Dashboard({ user, setUser }) {
                     <Link
                       to={`/learn/topic/${nextLesson.subtopic_id}?highlight=${nextLesson.content_id}`}
                       data-testid="start-next-lesson-btn"
-                      className="inline-flex items-center gap-2 bg-gradient-to-r from-[#8CF0C7] to-[#4FD9A0] text-[#0F3D2E] font-bold px-6 py-2.5 rounded-xl hover:brightness-105 transition-all"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-[#8CF0C7] to-[#4FD9A0] text-[#0F3D2E] font-bold px-6 py-2.5 rounded-xl hover:brightness-105 transition-all animate-cta-pulse"
                     >
                       {nextLesson.is_new_user ? 'Start Learning' : 'Continue Learning'}
                     </Link>
