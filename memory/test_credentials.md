@@ -47,6 +47,9 @@
 - `classmate_g3` / `testpass123` — Grade 3, enrolled in Demo Class
 - All flagged `is_test_user: true` (bypasses subscription paywall)
 
+## Grade 4 Dashboard Regression QA (Feb 2026, learning-first hero feature)
+- `classmate_g4_qa` / `testpass123` — Grade 4, is_test_user: true. Used to confirm Grade 4-5 dashboard stays on the OLD layout (no next-lesson hero / Today's Goal ring, "Learn" nav tile still present).
+
 ## Homework "Open" highlight QA (Aug 7, 2026)
 - Student `classmate_g3` / `testpass123` (Grade 3, Demo Class) has 3 active homework items:
   - "HW Grade-Excluded Worksheet" (content_hwtest_gradeexcl, topic_2731433e0a5b) — content min/max grade 0-0 so it is normally grade-filtered OUT for a grade-3 child; used to verify the Open→highlight fix (backend `?highlight=` param forces inclusion).

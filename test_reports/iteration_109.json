@@ -1,0 +1,29 @@
+{
+  "summary": "Verified new learning-first dashboard hero + Today's Goal ring for Grade K-3, and Grade 4/5 regression (unchanged layout). Backend: 5/5 pytest passed on new GET /api/content/next-lesson endpoint (shape, 403 non-child, 401 unauth, completed_today increments after POST /complete, is_new_user flips false). Frontend: Playwright confirmed hero card, title 'Candy Shop', 'Your First Lesson' badge, +5 XP breadcrumb, Start Learning CTA links to /learn/topic/topic_cdac2568de6f?highlight=content_07aae589c292 and the target content card is visibly ring-highlighted on TopicPage. Today's Goal SVG ring renders '0/3' with correct data-testid. Grade 3 navItems = [My Money, Quests, Money Words] with NO nav-learn tile (correct). Grade 4 dashboard has no hero/goal ring and navItems include nav-learn (regression clean). Mobile (390x844) G3 dashboard has no horizontal overflow.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_next_lesson.py",
+    "/app/test_reports/pytest/next_lesson.xml"
+  ],
+  "action_items": [
+    "Optional: Consider adding an all_done edge-case seeded test child so regression can automatically verify the celebratory hero state without complex setup.",
+    "Optional: The 'Testing' video item is marked homework (overdue) but the new hero recommends 'Candy Shop' (also homework activity) via curriculum order - both are valid; product may want to decide whether hero should prefer homework items first."
+  ],
+  "critical_code_review_comments": [
+    "next-lesson endpoint reuses existing helpers (find_with_grade_order, apply_grade_overrides, get_classroom_done_content_ids, is_user_in_test_mode, _apply_curricula) - good consistency with GET /api/content/topics.",
+    "completed_today string-slice date compare (str(doc['completed_at'])[:10] == today) is fragile if completed_at is stored as native datetime object without ISO conversion; in practice mongo returns datetime and str(datetime) yields 'YYYY-MM-DD ...' so first 10 chars match today.isoformat() - works but consider explicit date coercion for robustness.",
+    "Hero uses reward_coins field but UI label says 'XP' (per app-wide coins->XP rebrand). Backend field name is still reward_coins - fine, but consider aliasing to reward_xp in a future cleanup.",
+    "Dashboard.jsx line 160 logic '...(grade > 3 ? [Learn] : [])' correctly hides Learn for grade<=3 (K,1,2,3). Matches requirement."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_next_lesson.py (new)"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "Created temporary Grade 4 QA child: username=classmate_g4_qa / password=testpass123 (grade=4, is_test_user=true, user_id starts with qa_g4_). Cloned password hash from classmate_g3. Use for future Grade 4/5 regression checks.",
+  "seed_data_creation": "Inserted 1 user (classmate_g4_qa, grade 4) via direct mongo insert. No content/progress seeded. All /complete side-effects during tests are cleaned up in test teardown.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "New endpoint GET /api/content/next-lesson returns {content_id, title, content_type, thumbnail, topic_id, topic_title, subtopic_id, subtopic_title, reward_coins, is_new_user, completed_today, daily_goal=3} for a child, or {content_id:null, all_done:true, completed_today, daily_goal} when everything is done, 403 for non-child. Grade K-3 dashboard: hero card + today-goal ring; nav-learn tile hidden. Grade 4-5 dashboard unchanged, has nav-learn tile. Grade 4 test account is classmate_g4_qa/testpass123. classmate_g3 is a test_mode user so progression gating is bypassed - first recommended lesson is 'Candy Shop' activity in 'Using Our Money > Buying Goods Or Services'.",
+  "rca of the issue": "N/A - new feature verification, no bugs found."
+}

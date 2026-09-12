@@ -403,6 +403,125 @@ async def get_all_topics(request: Request, grade: Optional[int] = None):
     
     return parent_topics
 
+
+@router.get("/content/next-lesson")
+async def get_next_lesson(request: Request):
+    """Find the child's next recommended lesson: the first incomplete,
+    unlocked content item in curriculum order (topic -> subtopic -> item).
+    Also returns today's completed-lesson count for the daily-goal ring.
+    Powers the learning-first Grade K-3 dashboard hero card."""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+    if not user or user.get("role") != "child":
+        raise HTTPException(status_code=403, detail="Only children can access this")
+
+    user_id = user["user_id"]
+    filter_grade = user.get("grade")
+    active_curricula = await get_active_curricula(user, db)
+
+    completed_docs = await db.user_content_progress.find(
+        {"user_id": user_id, "completed": True}, {"_id": 0, "content_id": 1, "completed_at": 1}
+    ).to_list(5000)
+    completed_content_ids = {doc["content_id"] for doc in completed_docs}
+    completed_content_ids |= await get_classroom_done_content_ids(user_id, db)
+    test_mode = await is_user_in_test_mode(user, db)
+
+    today = datetime.now(timezone.utc).date().isoformat()
+    completed_today = sum(
+        1 for doc in completed_docs
+        if doc.get("completed_at") and str(doc["completed_at"])[:10] == today
+    )
+    daily_goal = 3
+
+    visibility_or = [
+        {"visible_to": {"$in": ["child"]}},
+        {"visible_to": {"$exists": False}},
+        {"visible_to": []},
+        {"visible_to": None},
+    ]
+
+    topic_query = {"parent_id": None}
+    if filter_grade is not None:
+        topic_query = {"parent_id": None, "min_grade": {"$lte": filter_grade}, "max_grade": {"$gte": filter_grade}}
+    parent_topics = await find_with_grade_order(db.content_topics, topic_query, filter_grade, limit=None)
+    if filter_grade is not None:
+        for t in parent_topics:
+            apply_grade_overrides(t, filter_grade)
+
+    previous_topic_completed = True
+
+    for topic in parent_topics:
+        topic_id = topic["topic_id"]
+        subtopic_extra_query = {}
+        if filter_grade is not None:
+            subtopic_extra_query = {"min_grade": {"$lte": filter_grade}, "max_grade": {"$gte": filter_grade}}
+        subtopics = await find_with_grade_order(
+            db.content_topics, subtopic_extra_query, filter_grade,
+            parent_field='parent_id', parent_target=topic_id, limit=None
+        )
+        if filter_grade is not None:
+            for st in subtopics:
+                apply_grade_overrides(st, filter_grade)
+
+        topic_unlocked = True if test_mode else previous_topic_completed
+        previous_subtopic_completed = True if test_mode else previous_topic_completed
+        all_subtopics_completed = True
+        topic_has_content = False
+
+        for subtopic in subtopics:
+            subtopic_id = subtopic["topic_id"]
+            content_extra = {"is_published": True, "$or": visibility_or}
+            if filter_grade is not None:
+                content_extra["min_grade"] = {"$lte": filter_grade}
+                content_extra["max_grade"] = {"$gte": filter_grade}
+            content_extra = _apply_curricula(content_extra, active_curricula)
+
+            subtopic_content = await find_with_grade_order(
+                db.content_items, content_extra, filter_grade,
+                parent_field='topic_id', parent_target=subtopic_id, limit=None
+            )
+            if subtopic_content:
+                topic_has_content = True
+
+            subtopic_unlocked = True if test_mode else previous_subtopic_completed
+
+            if subtopic_unlocked and topic_unlocked:
+                for item in subtopic_content:
+                    if item["content_id"] not in completed_content_ids:
+                        return {
+                            "content_id": item["content_id"],
+                            "title": item["title"],
+                            "content_type": item.get("content_type"),
+                            "thumbnail": item.get("thumbnail"),
+                            "topic_id": topic_id,
+                            "topic_title": topic["title"],
+                            "subtopic_id": subtopic_id,
+                            "subtopic_title": subtopic["title"],
+                            "reward_coins": item.get("reward_coins", 5),
+                            "is_new_user": len(completed_content_ids) == 0,
+                            "completed_today": completed_today,
+                            "daily_goal": daily_goal,
+                        }
+
+            mandatory_items = [c for c in subtopic_content if c.get("is_mandatory", True)]
+            mandatory_completed = sum(1 for c in mandatory_items if c["content_id"] in completed_content_ids)
+            subtopic_unlocks_next = (len(mandatory_items) == 0) or (mandatory_completed == len(mandatory_items))
+            if not subtopic_unlocks_next and len(subtopic_content) > 0:
+                all_subtopics_completed = False
+            previous_subtopic_completed = True if test_mode else subtopic_unlocks_next
+
+        topic_completed = all_subtopics_completed and topic_has_content
+        previous_topic_completed = True if test_mode else topic_completed
+
+    # Nothing incomplete left (or no content published yet)
+    return {
+        "content_id": None,
+        "all_done": True,
+        "completed_today": completed_today,
+        "daily_goal": daily_goal,
+    }
+
 @router.get("/content/topics/{topic_id}")
 async def get_topic_detail(topic_id: str, request: Request, grade: Optional[int] = None, highlight: Optional[str] = None):
     """Get topic details with content items"""

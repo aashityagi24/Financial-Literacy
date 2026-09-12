@@ -30,9 +30,12 @@ export default function Dashboard({ user, setUser }) {
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [hasCalendarAccess, setHasCalendarAccess] = useState(false);
   const [hasClassroom, setHasClassroom] = useState(true);
+  const [nextLesson, setNextLesson] = useState(null);
+  const [nextLessonLoading, setNextLessonLoading] = useState(true);
   const showAnimations = useFirstVisitAnimation('dashboard');
   
   const gradeNames = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
+  const LESSON_TYPE_EMOJI = { worksheet: '📝', activity: '🎮', book: '📖', workbook: '📓', video: '🎬' };
   
   // Redirect non-child users to their respective dashboards
   useEffect(() => {
@@ -50,7 +53,24 @@ export default function Dashboard({ user, setUser }) {
     if (user?.role && user.role !== 'child') return;
     fetchDashboardData();
     handleDailyCheckin();
+    // Learning-first hero (next lesson + daily goal) only applies to Grade K-3
+    if ((user?.grade ?? 3) <= 3) {
+      fetchNextLesson();
+    } else {
+      setNextLessonLoading(false);
+    }
   }, [user]);
+  
+  const fetchNextLesson = async () => {
+    try {
+      const response = await axios.get(`${API}/content/next-lesson`);
+      setNextLesson(response.data);
+    } catch (error) {
+      console.error('Failed to fetch next lesson:', error);
+    } finally {
+      setNextLessonLoading(false);
+    }
+  };
   
   const fetchDashboardData = async () => {
     try {
@@ -135,7 +155,9 @@ export default function Dashboard({ user, setUser }) {
   const specialFeatureItem = getSpecialFeatureItem();
   
   const navItems = [
-    { icon: BookOpen, label: 'Learn', path: '/learn', color: '#FFD23F' },
+    // For Grade K-3 the "Learn" action already lives in the hero card above,
+    // so the quick-nav tile is dropped there to avoid duplicating it.
+    ...(grade > 3 ? [{ icon: BookOpen, label: 'Learn', path: '/learn', color: '#FFD23F' }] : []),
     { icon: Wallet, label: 'My Money', path: '/wallet', color: '#3D5A80' },
     ...(STORE_ENABLED ? [{ icon: Store, label: 'Store', path: '/store', color: '#EE6C4D' }] : []),
     investmentItem,
@@ -324,6 +346,99 @@ export default function Dashboard({ user, setUser }) {
             {user?.grade !== null && user?.grade !== undefined ? gradeNames[user.grade] : 'Grade not set'} • Ready to learn about money?
           </p>
         </div>
+        
+        {/* Learning-first hero: next lesson + daily goal (Grade K-3 only) */}
+        {grade <= 3 && (
+          <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 ${showAnimations ? 'animate-bounce-in' : ''}`}>
+            {/* Next Lesson Hero */}
+            <div
+              className="md:col-span-2 rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-6 bg-gradient-to-br from-[#FFD23F] to-[#EE6C4D] flex items-center"
+              data-testid="next-lesson-hero"
+            >
+              {nextLessonLoading ? (
+                <div className="w-full h-24 flex items-center justify-center">
+                  <div className="w-10 h-10 border-4 border-[#1D3557] border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : nextLesson?.content_id ? (
+                <div className="flex items-center gap-5 w-full">
+                  <div className="w-20 h-20 rounded-2xl bg-white border-3 border-[#1D3557] flex items-center justify-center text-4xl flex-shrink-0 shadow-[3px_3px_0px_0px_#1D3557]">
+                    {LESSON_TYPE_EMOJI[nextLesson.content_type] || '📚'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="inline-flex items-center gap-1 bg-white/90 text-[#1D3557] text-xs font-bold px-2.5 py-1 rounded-full mb-2">
+                      <Sparkles className="w-3 h-3" />
+                      {nextLesson.is_new_user ? 'Your First Lesson' : 'Continue Learning'}
+                    </span>
+                    <h2 className="text-2xl font-bold text-[#1D3557] truncate" style={{ fontFamily: 'Fredoka' }} data-testid="next-lesson-title">
+                      {nextLesson.title}
+                    </h2>
+                    <p className="text-sm text-[#1D3557]/70 truncate mb-3">
+                      {nextLesson.topic_title} • {nextLesson.subtopic_title} • +{nextLesson.reward_coins} XP
+                    </p>
+                    <Link
+                      to={`/learn/topic/${nextLesson.subtopic_id}?highlight=${nextLesson.content_id}`}
+                      data-testid="start-next-lesson-btn"
+                      className="inline-flex items-center gap-2 bg-[#1D3557] text-white font-bold px-5 py-2.5 rounded-xl hover:bg-[#3D5A80] hover:scale-105 transition-all"
+                    >
+                      {nextLesson.is_new_user ? 'Start Learning' : 'Continue'} <ChevronRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-5 w-full">
+                  <div className="w-20 h-20 rounded-2xl bg-white border-3 border-[#1D3557] flex items-center justify-center text-4xl flex-shrink-0">
+                    🎉
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }} data-testid="next-lesson-title">
+                      You've completed everything!
+                    </h2>
+                    <p className="text-sm text-[#1D3557]/70 mb-3">New lessons coming soon — great job learning!</p>
+                    <Link
+                      to="/learn"
+                      data-testid="start-next-lesson-btn"
+                      className="inline-flex items-center gap-2 bg-[#1D3557] text-white font-bold px-5 py-2.5 rounded-xl hover:bg-[#3D5A80] transition-colors"
+                    >
+                      Browse Learn <ChevronRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Today's Goal Ring */}
+            <div className="rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-5 bg-white flex flex-col items-center justify-center" data-testid="today-goal-card">
+              <h3 className="text-sm font-bold text-[#3D5A80] mb-1 uppercase tracking-wide">Today's Goal</h3>
+              {(() => {
+                const completed = nextLesson?.completed_today || 0;
+                const goal = nextLesson?.daily_goal || 3;
+                const pct = Math.min(completed / goal, 1);
+                const radius = 40;
+                const circumference = 2 * Math.PI * radius;
+                const offset = circumference * (1 - pct);
+                return (
+                  <svg width="96" height="96" viewBox="0 0 100 100" data-testid="today-goal-ring">
+                    <circle cx="50" cy="50" r={radius} fill="none" stroke="#E0FBFC" strokeWidth="10" />
+                    <circle
+                      cx="50" cy="50" r={radius} fill="none" stroke="#06D6A0" strokeWidth="10"
+                      strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
+                      transform="rotate(-90 50 50)"
+                      style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+                    />
+                    <text x="50" y="57" textAnchor="middle" fontSize="26" fontWeight="bold" fill="#1D3557">
+                      {completed}/{goal}
+                    </text>
+                  </svg>
+                );
+              })()}
+              <p className="text-sm font-bold text-[#1D3557] mt-1 text-center" data-testid="today-goal-label">
+                {(nextLesson?.completed_today || 0) >= (nextLesson?.daily_goal || 3)
+                  ? 'Goal complete! 🎉'
+                  : 'lessons done today'}
+              </p>
+            </div>
+          </div>
+        )}
         
         {/* Quick Navigation */}
         <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-8">
