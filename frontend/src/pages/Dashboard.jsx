@@ -204,6 +204,22 @@ export default function Dashboard({ user, setUser }) {
     return investingBalance > 0 ? `₹${investingBalance.toFixed(0)} invested` : 'Watch it grow';
   };
   
+  // Picks a real, fitting emoji for a paid job based on its activity name
+  // (e.g. "Walk the dog" -> 🐕) instead of a generic placeholder icon.
+  const getJobEmoji = (activity) => {
+    const a = (activity || '').toLowerCase();
+    if (a.includes('dog') || a.includes('pet') || a.includes('cat') || a.includes('walk')) return '🐕';
+    if (a.includes('plant') || a.includes('water') || a.includes('garden')) return '🌱';
+    if (a.includes('table') || a.includes('dish') || a.includes('plate') || a.includes('kitchen')) return '🍽️';
+    if (a.includes('clean') || a.includes('tidy') || a.includes('vacuum') || a.includes('room')) return '🧹';
+    if (a.includes('car') || a.includes('wash')) return '🚗';
+    if (a.includes('trash') || a.includes('garbage') || a.includes('bin')) return '🗑️';
+    if (a.includes('laundry') || a.includes('cloth') || a.includes('fold')) return '👕';
+    if (a.includes('book') || a.includes('read')) return '📚';
+    if (a.includes('bed') || a.includes('make')) return '🛏️';
+    return '💰';
+  };
+  
   const lowGradeNavItems = [
     { emoji: '👛', label: 'My Money', path: '/wallet', color: '#D6336C', subtitle: `₹${myWalletBalance.toFixed(0)} to spend` },
     investmentItem ? { emoji: investmentItem.label === 'My Garden' ? '🌱' : '📈', label: investmentItem.label, path: investmentItem.path, color: '#5B2C82', subtitle: getInvestmentSubtitle() } : null,
@@ -586,7 +602,7 @@ export default function Dashboard({ user, setUser }) {
                     onClassroomStatusChange={setHasClassroom}
                   />
                 </div>
-              ) : (myJobs.family_jobs.length + myJobs.payday_jobs.length) === 0 ? (
+              ) : myJobs.payday_jobs.length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-14 h-14 rounded-xl bg-[#E4DBF5] flex items-center justify-center flex-shrink-0 text-2xl">
@@ -602,22 +618,22 @@ export default function Dashboard({ user, setUser }) {
                   </Link>
                 </div>
               ) : (
-                <Link to="/my-jobs" className="bg-white rounded-2xl shadow-sm p-5 flex flex-col gap-2.5 hover:shadow-md transition-shadow">
+                <div className="bg-white rounded-2xl shadow-sm p-5 flex flex-col gap-2.5">
                   <h3 className="font-bold text-[#1A1A1A]" style={{ fontFamily: 'Fredoka' }}>My jobs</h3>
-                  {myJobs.family_jobs.slice(0, 1).map((job) => (
+                  {myJobs.payday_jobs.slice(0, 3).map((job) => (
                     <div key={job.job_id} className="flex items-center gap-2.5 text-sm">
-                      <span className="text-lg">🐾</span>
-                      <span className="text-[#1A1A1A] font-medium truncate flex-1">{job.activity}</span>
-                    </div>
-                  ))}
-                  {myJobs.payday_jobs.slice(0, 2).map((job) => (
-                    <div key={job.job_id} className="flex items-center gap-2.5 text-sm">
-                      <span className="text-lg">💰</span>
+                      <span className="text-lg">{getJobEmoji(job.activity)}</span>
                       <span className="text-[#1A1A1A] font-medium truncate flex-1">{job.activity}</span>
                       {job.payment_amount > 0 && <span className="font-bold text-[#5B2C82] flex-shrink-0">₹{job.payment_amount}</span>}
                     </div>
                   ))}
-                </Link>
+                  <Link
+                    to="/my-jobs"
+                    className="self-start mt-1 border-2 border-[#1A1A1A] rounded-xl px-4 py-2 font-bold text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-colors text-sm"
+                  >
+                    See all my jobs
+                  </Link>
+                </div>
               )}
             </div>
             
