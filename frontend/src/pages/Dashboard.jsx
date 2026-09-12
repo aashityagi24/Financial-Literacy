@@ -191,6 +191,7 @@ export default function Dashboard({ user, setUser }) {
   // single-purpose entry point with a short, REAL subtitle reflecting live data —
   // replaces the old icon-tile grid).
   const myWalletBalance = wallet?.accounts?.find((a) => a.account_type === 'my_wallet')?.balance || 0;
+  const myXpBalance = wallet?.accounts?.find((a) => a.account_type === 'spending')?.balance || 0;
   const investingBalance = wallet?.accounts?.find((a) => a.account_type === 'investing')?.balance || 0;
   
   const getInvestmentSubtitle = () => {
@@ -336,11 +337,24 @@ export default function Dashboard({ user, setUser }) {
                 </Link>
               )}
               
-              {/* Streak indicator */}
-              <div className="flex items-center gap-2 bg-[#FFD23F]/20 px-3 py-2 rounded-xl border-2 border-[#1D3557]">
-                <Flame className="w-5 h-5 text-[#EE6C4D]" />
-                <span className="font-bold text-[#1D3557]">{streak.streak || user?.streak_count || 0}</span>
-              </div>
+              {/* XP + streak chips (Grade K-3: soft pill style matching the reference); Grade 4-5 keeps the old streak-only badge */}
+              {grade <= 3 ? (
+                <>
+                  <div className="flex items-center gap-2 bg-white shadow-sm px-4 py-2 rounded-full" data-testid="header-xp-chip">
+                    <span className="text-lg">⭐</span>
+                    <span className="font-bold text-[#1A1A1A]">{myXpBalance.toFixed(0)} XP</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white shadow-sm px-4 py-2 rounded-full" data-testid="header-streak-chip">
+                    <span className="text-lg">🔥</span>
+                    <span className="font-bold text-[#1A1A1A]">{streak.streak || user?.streak_count || 0} days</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-2 bg-[#FFD23F]/20 px-3 py-2 rounded-xl border-2 border-[#1D3557]" data-testid="header-streak-chip">
+                  <Flame className="w-5 h-5 text-[#EE6C4D]" />
+                  <span className="font-bold text-[#1D3557]">{streak.streak || user?.streak_count || 0}</span>
+                </div>
+              )}
               
               {/* Total balance - removed, shown on dashboard */}
               

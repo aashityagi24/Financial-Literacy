@@ -1,0 +1,43 @@
+{
+  "summary": "Frontend-only verification of the new Dashboard header XP + streak pill chips for Grade K-3, and Grade 4-5 regression. Tested with real playwright viewports (390x844 mobile for G1, 1920x1080 desktop for G4). All acceptance criteria pass.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "grade1_mobile_390x844": {
+      "header-xp-chip_text": "⭐\n30 XP (matches real My XP wallet balance = 30)",
+      "header-streak-chip_text": "🔥\n1 days (matches real streak_count = 1)",
+      "horizontal_scroll": false,
+      "document_scrollWidth": 390,
+      "document_clientWidth": 390,
+      "header_scrollWidth": 390,
+      "header_items_bounding": "xp_chip(45-128), streak_chip(144-242), notification-bell(258-298), profile(314-318), logout(334-374) — all within 0..390, no wrap, no clipping",
+      "notification_bell_clickable": true,
+      "console_errors": "Only an unrelated 401 (pre-login auth-check ping) — no header-related errors"
+    },
+    "grade4_desktop": {
+      "header-xp-chip_present": false,
+      "header-streak-chip_text": "1 (bare number, no 'days' suffix — old style preserved)",
+      "header-streak-chip_classes": "bg-[#FFD23F]/20 px-3 py-2 rounded-xl border-2 border-[#1D3557] (thick navy border retained)",
+      "regression_ok": true
+    }
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Dashboard.jsx is 996 lines — over the 700-line guideline; consider splitting header, K-3 layout, and 4-5 layout into subcomponents (not blocking, but growing).",
+    "The profile <Link> in header has no visible width when the avatar image hasn't loaded yet (measured 4px wide during test); harmless but consider adding min-w on the anchor to keep spacing stable during image load.",
+    "Streak chip label reads '1 days' for streak=1 (should ideally pluralize to '1 day'); minor copy nit, not a bug per spec."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "classmate_g1/testpass123, classmate_g4_qa/testpass123 (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Header chips confirmed working correctly on real 390x844 mobile viewport (previous main-agent tool quirk about viewport is resolved on this side). No overflow, all interactions still work.",
+  "rca of the issue": "N/A — no issue found."
+}
