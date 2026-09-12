@@ -573,10 +573,17 @@ export default function Dashboard({ user, setUser }) {
                   />
                 </div>
               ) : (myJobs.family_jobs.length + myJobs.payday_jobs.length) === 0 ? (
-                <div className="bg-white rounded-2xl shadow-sm p-5 flex flex-col gap-2">
-                  <h3 className="font-bold text-[#1A1A1A]" style={{ fontFamily: 'Fredoka' }}>My jobs</h3>
-                  <p className="text-sm text-[#8A8378]">Jobs are things you do to earn money. Add your first one.</p>
-                  <Link to="/my-jobs" className="inline-flex mt-1 flex-shrink-0 border-2 border-[#1A1A1A] rounded-xl px-4 py-2 font-bold text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-colors w-fit">
+                <div className="bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-14 h-14 rounded-xl bg-[#F0E6CC] flex items-center justify-center flex-shrink-0 text-2xl">
+                      💼
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-[#1A1A1A]" style={{ fontFamily: 'Fredoka' }}>My jobs</h3>
+                      <p className="text-sm text-[#8A8378] truncate">Jobs are things you do to earn money. Add your first one.</p>
+                    </div>
+                  </div>
+                  <Link to="/my-jobs" className="flex-shrink-0 border-2 border-[#1A1A1A] rounded-xl px-4 py-2 font-bold text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-colors">
                     Add a job
                   </Link>
                 </div>

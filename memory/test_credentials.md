@@ -49,6 +49,7 @@
 
 ## Grade 4 Dashboard Regression QA (Feb 2026, learning-first hero feature)
 - `classmate_g4_qa` / `testpass123` — Grade 4, is_test_user: true. Used to confirm Grade 4-5 dashboard stays on the OLD layout (no next-lesson hero / Today's Goal ring, "Learn" nav tile still present).
+- `blank_wallet_child` / `testpass123` — Grade 3, is_test_user: true, NO classroom. Used to verify the "My Jobs" empty-state card (no-classroom branch of the K-3 dashboard detail row).
 
 ## Homework "Open" highlight QA (Aug 7, 2026)
 - Student `classmate_g3` / `testpass123` (Grade 3, Demo Class) has 3 active homework items:
