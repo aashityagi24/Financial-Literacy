@@ -8977,6 +8977,48 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ============== ROLLING SESSION MIDDLEWARE ==============
+# Keeps an actively-used session alive: every time a valid session cookie is
+# seen, its expiry is pushed forward by SESSION_TTL_DAYS. An abandoned session
+# still expires SESSION_TTL_DAYS after the user's last request. Only writes to
+# Mongo when meaningfully stale (>1 day left unrefreshed) to avoid a DB write
+# on every single request.
+SESSION_TTL_DAYS = 7
+SESSION_COOKIE_KWARGS = {"httponly": True, "secure": True, "samesite": "none", "path": "/"}
+
+@app.middleware("http")
+async def refresh_rolling_session(request: Request, call_next):
+    response = await call_next(request)
+    try:
+        session_token = request.cookies.get("session_token")
+        if session_token:
+            session = await db.user_sessions.find_one({"session_token": session_token}, {"expires_at": 1})
+            if session:
+                expires_at = session["expires_at"]
+                if isinstance(expires_at, str):
+                    expires_at = datetime.fromisoformat(expires_at)
+                if expires_at.tzinfo is None:
+                    expires_at = expires_at.replace(tzinfo=timezone.utc)
+                now = datetime.now(timezone.utc)
+                # Refresh once activity has aged the session by more than a day,
+                # instead of on every single request.
+                if expires_at > now and expires_at - now < timedelta(days=SESSION_TTL_DAYS - 1):
+                    new_expiry = now + timedelta(days=SESSION_TTL_DAYS)
+                    await db.user_sessions.update_one(
+                        {"session_token": session_token},
+                        {"$set": {"expires_at": new_expiry.isoformat()}}
+                    )
+                    response.set_cookie(
+                        key="session_token",
+                        value=session_token,
+                        max_age=SESSION_TTL_DAYS * 24 * 60 * 60,
+                        **SESSION_COOKIE_KWARGS
+                    )
+    except Exception:
+        # Best-effort refresh only; never let this break the actual request.
+        pass
+    return response
+
 # ============== CONTENT PROTECTION MIDDLEWARE ==============
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
