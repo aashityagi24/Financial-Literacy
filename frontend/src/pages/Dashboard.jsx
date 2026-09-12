@@ -634,14 +634,12 @@ export default function Dashboard({ user, setUser }) {
                   {myJobs.payday_jobs.slice(0, 3).map((job) => (
                     <div key={job.job_id} className="flex items-center gap-2.5">
                       <span className="text-lg flex-shrink-0">{getJobEmoji(job.activity)}</span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm text-[#1A1A1A] font-medium truncate">{job.activity}</p>
-                        <p className="text-xs text-[#8A8378] truncate">
-                          {job.payment_amount > 0
-                            ? `₹${job.payment_amount} for ${getJobFreqLabel(job.frequency).toLowerCase()}`
-                            : getJobFreqLabel(job.frequency)}
-                        </p>
-                      </div>
+                      <span className="text-sm text-[#1A1A1A] font-medium truncate flex-1 min-w-0">{job.activity}</span>
+                      <span className="text-xs text-[#8A8378] flex-shrink-0 whitespace-nowrap">
+                        {job.payment_amount > 0
+                          ? `₹${job.payment_amount} for ${getJobFreqLabel(job.frequency).toLowerCase()}`
+                          : getJobFreqLabel(job.frequency)}
+                      </span>
                     </div>
                   ))}
                   <Link
