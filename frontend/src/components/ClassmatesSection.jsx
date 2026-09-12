@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { STOCKS_ENABLED } from '@/config/features';
 
-export default function ClassmatesSection({ giftingBalance, compact = false, wallet, grade = 0, onRefresh, onClassroomStatusChange }) {
+export default function ClassmatesSection({ giftingBalance, compact = false, wallet, grade = 0, onRefresh, onClassroomStatusChange, variant = 'list', currentUserName, currentUserXp = 0 }) {
   const [classmates, setClassmates] = useState([]);
   const [classroom, setClassroom] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -174,6 +174,52 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
 
   // Compact view for dashboard card
   if (compact) {
+    // Simplified XP leaderboard for the Grade K-3 learning-first dashboard —
+    // ranks "You" + classmates by their current My XP (spending) balance.
+    if (variant === 'leaderboard') {
+      const ranked = [
+        { user_id: '__me', name: currentUserName || 'You', xp: currentUserXp || 0, isMe: true },
+        ...classmates.map((c) => ({ user_id: c.user_id, name: c.name, xp: c.spending_balance || 0, isMe: false, classmate: c })),
+      ].sort((a, b) => b.xp - a.xp);
+
+      return (
+        <>
+          <div data-testid="classmates-leaderboard">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-bold text-[#1A1A1A]" style={{ fontFamily: 'Fredoka' }}>My classroom</h2>
+              <Link to="/classmates" className="text-sm text-[#8A8378] hover:text-[#1A1A1A]">
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+            <div className="space-y-1.5">
+              {ranked.slice(0, 3).map((row, idx) => (
+                <div
+                  key={row.user_id}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-xl ${row.isMe ? 'bg-[#F0E6CC]' : ''}`}
+                  data-testid={`leaderboard-row-${idx}`}
+                >
+                  <span className={`text-sm font-bold w-4 flex-shrink-0 ${row.isMe ? 'text-[#1A1A1A]' : 'text-[#8A8378]'}`}>{idx + 1}</span>
+                  <span className={`flex-1 min-w-0 truncate font-bold ${row.isMe ? 'text-[#1A1A1A]' : 'text-[#4A453D]'}`}>{row.isMe ? 'You' : row.name}</span>
+                  <span className="font-bold text-[#1A1A1A] flex-shrink-0">{row.xp.toFixed(0)} XP</span>
+                  {!row.isMe && (
+                    <button
+                      onClick={() => { setSelectedClassmate(row.classmate); setShowGiftDialog(true); }}
+                      className="p-1.5 bg-[#2F5D45] text-white rounded-lg hover:brightness-110 flex-shrink-0"
+                      title="Give Gift"
+                      data-testid={`leaderboard-gift-${idx}`}
+                    >
+                      <Gift className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          {renderDialogs()}
+        </>
+      );
+    }
+
     // Filter classmates by search query
     const filteredClassmates = classmates.filter(c => 
       c.name?.toLowerCase().includes(searchQuery.toLowerCase())

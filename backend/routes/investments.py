@@ -1,4 +1,4 @@
-"""Stock Investment routes - Grade 3-5 investment simulation"""
+"""Stock Investment routes - Grade 4-5 investment simulation"""
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from datetime import datetime, timezone
@@ -34,8 +34,8 @@ async def get_investments(request: Request):
     if grade == 0:
         raise HTTPException(status_code=403, detail="Investments not available for Kindergarten")
     
-    if grade <= 2:
-        raise HTTPException(status_code=400, detail="Use /garden/farm for Grade 1-2")
+    if grade <= 3:
+        raise HTTPException(status_code=400, detail="Use /garden/farm for Grade 1-3")
     
     investments = await db.investments.find(
         {"user_id": user["user_id"]},

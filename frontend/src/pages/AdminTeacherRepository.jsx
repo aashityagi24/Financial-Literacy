@@ -66,11 +66,15 @@ export default function AdminTeacherRepository() {
       try {
         const schoolsData = await schoolsRes.json();
         setSchools(schoolsData.schools || []);
-      } catch {}
+      } catch {
+        /* ignore - schools list is optional */
+      }
       try {
         const accessData = await accessRes.json();
         setAccessSettings({ visibility: accessData.visibility || 'all', allowed_schools: accessData.allowed_schools || [] });
-      } catch {}
+      } catch {
+        /* ignore - access settings are optional */
+      }
     } catch (error) {
       if (!silent) {
         console.error('Failed to fetch repository:', error);

@@ -1290,16 +1290,25 @@ async def get_child_homework(request: Request):
     ).sort("assigned_at", -1).to_list(200)
 
     today = datetime.now(timezone.utc).date().isoformat()
-    # Resolve each homework's CURRENT topic_id from the live content item so a
-    # moved/re-parented content still opens the correct topic (stale topic_id
+    # Resolve each homework's CURRENT topic_id + reward from the live content item
+    # so a moved/re-parented content still opens the correct topic (stale topic_id
     # on the assignment would otherwise land the child on the wrong topic).
     content_ids = list({hw.get("content_id") for hw in hws if hw.get("content_id")})
     content_topic_map = {}
+    content_reward_map = {}
     if content_ids:
         async for ci in db.content_items.find(
-            {"content_id": {"$in": content_ids}}, {"_id": 0, "content_id": 1, "topic_id": 1}
+            {"content_id": {"$in": content_ids}}, {"_id": 0, "content_id": 1, "topic_id": 1, "reward_coins": 1}
         ):
             content_topic_map[ci["content_id"]] = ci.get("topic_id")
+            content_reward_map[ci["content_id"]] = ci.get("reward_coins")
+
+    # Resolve the assigning teacher's display name for the "Set by <name>" banner copy.
+    teacher_ids = list({hw.get("teacher_id") for hw in hws if hw.get("teacher_id")})
+    teacher_name_map = {}
+    if teacher_ids:
+        async for t in db.users.find({"user_id": {"$in": teacher_ids}}, {"_id": 0, "user_id": 1, "name": 1}):
+            teacher_name_map[t["user_id"]] = t.get("name")
     result = []
     for hw in hws:
         is_activity = hw.get("content_type") == "activity"
@@ -1325,6 +1334,8 @@ async def get_child_homework(request: Request):
             "content_title": hw.get("content_title"),
             "topic_id": content_topic_map.get(hw["content_id"]) or hw.get("topic_id"),
             "classroom_name": hw.get("classroom_name"),
+            "teacher_name": teacher_name_map.get(hw.get("teacher_id")),
+            "reward_coins": content_reward_map.get(hw["content_id"]),
             "due_date": hw.get("due_date"),
             "assigned_at": hw.get("assigned_at"),
             "is_activity": is_activity,

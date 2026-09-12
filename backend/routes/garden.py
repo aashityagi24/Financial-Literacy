@@ -1,4 +1,4 @@
-"""Money Garden routes - Grade 1-2 investment simulation"""
+"""Money Garden routes - Grade 1-3 investment simulation"""
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from datetime import datetime, timezone
@@ -42,8 +42,8 @@ async def get_farm(request: Request):
     
     if grade == 0:
         raise HTTPException(status_code=403, detail="Investments not available for Kindergarten")
-    if grade >= 3:
-        raise HTTPException(status_code=400, detail="Use /investments for Grade 3+")
+    if grade >= 4:
+        raise HTTPException(status_code=400, detail="Use /investments for Grade 4+")
     
     plots = await db.farm_plots.find({"user_id": user["user_id"]}, {"_id": 0}).to_list(50)
     
@@ -136,8 +136,8 @@ async def buy_farm_plot(request: Request):
     user = await get_current_user(request)
     grade = user.get("grade", 3) or 3
     
-    if grade == 0 or grade >= 3:
-        raise HTTPException(status_code=403, detail="Money Garden is for Grade 1-2 only")
+    if grade == 0 or grade >= 4:
+        raise HTTPException(status_code=403, detail="Money Garden is for Grade 1-3 only")
     
     spending_acc = await db.wallet_accounts.find_one({"user_id": user["user_id"], "account_type": "spending"})
     if not spending_acc or spending_acc.get("balance", 0) < PLOT_COST:

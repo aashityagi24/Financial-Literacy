@@ -196,7 +196,9 @@ export const ProtectedRoute = ({ children }) => {
         onLogout={async () => {
           try {
             await axios.post(`${API}/auth/logout`);
-          } catch {}
+          } catch {
+            /* ignore logout errors */
+          }
           setUser(null);
           window.location.href = '/login';
         }}

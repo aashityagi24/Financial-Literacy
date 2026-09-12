@@ -1,0 +1,29 @@
+{
+  "summary": "Round-3 CoinQuest Grade K-3 dashboard visual refinement verified end-to-end. Focus was strict conformance to the two reference screenshots and true mobile-viewport overlap check. RESULTS: ALL 6 SCENARIOS PASS. (1) classmate_g1 @ 1920x1080: dashboard bg = rgb(241,236,226) = cream #F1ECE2 ✓, hero bg = rgb(47,93,69) = dark forest-green #2F5D45 ✓, EXACTLY 4 nav cards present (nav-my-money '₹0 to spend', nav-my-garden 'Plant your first seed', nav-quests 'Find your next quest', nav-money-words 'Word of the day') with emoji icons + colored top border strip, NO nav-my-badges / nav-calendar / nav-store / nav-my-jobs in the row ✓, today-goal-card horizontal (ring left, title + 3 pips right) ✓, greeting 'Hey, Aria! 👋' + '1st Grade • ready to learn about money?' ✓, next-lesson-hero shows LESSON IMAGE placeholder + 'YOUR FIRST LESSON' label + title 'Testing' + 'Earn 5 XP' + gold Start Learning button ✓, savings empty-state 'What are you saving for?' with target icon + 'Add a goal' ✓, classmates-leaderboard on right (Demo Kid 195, Cara G3 155, You 30 highlighted in cream row, Kim K 10, Peer Kid 0) with gift-icon on every non-You row ✓, bottom-nav pill (Home/Learn/Quests/Money/Rewards, Home highlighted dark green rgb(47,93,69)) ✓. (2) classmate_g1 @ 390x844 MOBILE (viewport truly applied - confirmed w=390 h=844, docW=390, no horizontal overflow scrollW=clientW=390): bottom-nav rect = {t:763, b:828, l:20, r:370, w:350} fits within viewport, leader card bottom=570 << nav top=763 = NO OVERLAP ✓; screenshot shows Home pill highlighted green, all 5 tabs visible, savings + classroom leaderboard fully rendered above nav with clear gap. (3) classmate_g3 @ 1920: cream bg ✓, homework banner correctly positioned BETWEEN hero (bottom=412) and nav row (top=528), banner rect top=436 bottom=512, red left border, text = 'Homework: Testing | OVERDUE | Set by TTest · earn 5 XP | Open | Mark Done' (teacher_name + reward_coins both live/real, not blank) ✓, video type shows both Open and Mark Done buttons ✓. (4) Mark Done click: POST /api/child/homework/hw_ae13b88455b0/mark-done succeeded, banner advanced to next pending 'Candy Shop' with SINGLE 'Do homework' button (activity type) as spec required ✓. (5) g3 nav row shows 3 cards only (nav-my-money, nav-quests, nav-money-words) since Grade 3 has no Garden and STOCKS off - no visual gap/misalignment (grid gracefully collapses). (6) classmate_g4_qa regression: bg = rgb(224,251,252) light-blue #E0FBFC ✓, hero=0, bottom-nav=0, homework-banner=0, nav-learn=1 - old dashboard fully unchanged ✓. (7) qa_g1_noclass (no-classroom Grade 1): cream bg, hero+bottom-nav present, classmates-leaderboard=0, right card is 'My jobs' with empty state 'Jobs are things you do to earn money. Add your first one.' + 'Add a job' button ✓. (8) Gift dialog: clicking leaderboard-gift-0 on classmate_g1 opens 'Give a Gift to Demo Kid' dialog with correct classmate pre-filled, amount+message fields, Send Gift button - existing dialog logic intact ✓.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_child_homework_round2.py (from iteration_110, still valid - no rerun needed per E1 direction since backend unchanged this round)"
+  ],
+  "action_items": [
+    "None required for this round - all round-3 CSS/layout objectives met. Non-blocking carryover from iteration_110: Dashboard.jsx is 976 lines (>700 threshold), consider extracting LowGradeDashboard.jsx / HighGradeDashboard.jsx subcomponents for maintainability."
+  ],
+  "critical_code_review_comments": [
+    "Dashboard.jsx grew to 976 lines — DRY / file-size violation persists from Round 2. Splitting the Grade K-3 branch into its own component would improve testability and reduce cognitive load.",
+    "lowGradeNavItems array cleanly limited to 4 items and filters null (investmentItem gone when STOCKS disabled) — grid gracefully renders 3 cards for Grade 3 without visual defect.",
+    "Bottom-nav uses fixed bottom-4 left-1/2 -translate-x-1/2 with mb-28 on the last content row — verified on actual 390x844 viewport that this gives sufficient clearance and there is zero overlap.",
+    "Hero bg uses hex bg-[#2F5D45] and page uses conditional bg-[#F1ECE2] (grade<=3) vs bg-[#E0FBFC] (grade 4-5) - exactly matches reference screenshots."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (not retested per E1 instruction, unchanged)", "frontend": "100%"},
+  "test_credentials": "Used existing per test_credentials.md: classmate_g1 (grade 1, has classroom), classmate_g3 (grade 3, has classroom + 2 overdue hw), classmate_g4_qa (grade 4 regression), qa_g1_noclass/testpass123 (grade 1 no classroom, created in iteration_110). No new credentials created.",
+  "seed_data_creation": "Marked homework hw_ae13b88455b0 ('Testing') as done for classmate_g3 during Mark-Done validation. Only 'Candy Shop' hw_c63a55c16008 remains pending for classmate_g3 now. If next tester needs both back, run: db.homework_completions.delete_many({student_id: '368b8a71-acdf-433b-a9ab-6dbc87c10855'}).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Round-3 visual refinement fully verified. Colors, layout, structure, mobile overlap, no-classroom behavior, homework banner behavior, gift dialog reuse, and Grade 4 regression all confirmed. classmate_g3 currently has only 1 pending homework ('Candy Shop', activity type) — after this run, 'Testing' is marked done. If a future round needs the 2-pending-item state, reset via the mongo command in seed_data_creation. Bottom nav overlap on 390x844 confirmed clear (leader.b=570, nav.t=763).",
+  "rca of the issue": "N/A — feature verification, no bugs found."
+}

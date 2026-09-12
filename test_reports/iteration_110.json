@@ -1,0 +1,33 @@
+{
+  "summary": "Round-2 CoinQuest Grade K-3 dashboard redesign verified end-to-end. Backend: 5/5 pytest passed on GET /api/child/homework — new additive teacher_name + reward_coins fields resolved correctly (verified via classmate_g3: 'Testing' hw shows teacher_name='TTest' and reward_coins=5 populated from the live content item). Frontend Playwright: all 6 scenarios PASS — (1) classmate_g1 shows purple gradient hero (linear-gradient #C9A8F5→#9B5DE5), gold Start Learning btn, Today's Goal ring, all 6 lowGradeNavItems (nav-my-money 'to spend', nav-quests dynamic, nav-my-jobs demoted to tile since has classroom, nav-my-garden, nav-money-words, nav-my-badges), classmates-leaderboard with 'You' row highlighted (Aria 30 XP) and gift-icon on other rows, fixed bottom-nav-{home,learn,quests,money,rewards} with home tab purple (rgb(155,93,229)), and ZERO old jar-* / detailed cards. (2) classmate_g3 homework banner: red left border, OVERDUE pill, 'Set by TTest · earn 5 XP' subtitle, Open+Mark Done buttons (video); clicking Mark Done marks it done, banner then advances to next pending item (verified transition from 'HW Grade-Excluded Worksheet'→'Testing'). (3) classmate_g4_qa: hero=0, bottom-nav=0, homework-banner=0, nav-learn=1, jars=4 — regression clean. (4) qa_g1_noclass (newly created, no classroom): leaderboard=0, nav-my-jobs=0, My Jobs FULL CARD with 'Add a job' present, hero+bottom-nav present. (5) Mobile 390x844: scrollWidth=clientWidth=390 (no overflow), bottom-nav box x=20 w=350 fits, stays visible after scrollToBottom, mb-28 detail row gives enough clearance. (6) Gift dialog opens from leaderboard row with 'Give a Gift to Demo Kid' (correct classmate name pre-filled) reusing existing dialog logic.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_child_homework_round2.py",
+    "/app/test_reports/pytest/homework_round2.xml"
+  ],
+  "action_items": [
+    "Non-blocking observation: The seeded 'HW Grade-Excluded Worksheet' homework doc (content_hwtest_gradeexcl) has no teacher_id field, so its resolved teacher_name is null and the banner falls back to 'Demo Class' (classroom_name) as the subtitle. Newer homework assignments store teacher_id correctly (verified with 'Testing' → 'Set by TTest'). If desired, backfill teacher_id on this legacy doc so the copy is consistent, or leave the current graceful fallback as-is.",
+    "Optional: The initial useState(true) for hasClassroom in Dashboard.jsx assumes classroom presence until ClassmatesSection reports otherwise. This is fine for real users but means a brief flash of the leaderboard slot before it collapses. Consider fetching classroom status server-side alongside the initial /wallet/quests/etc Promise.all to avoid the flash."
+  ],
+  "critical_code_review_comments": [
+    "Dashboard.jsx is now 990 lines — >700 line threshold breached. Consider extracting the Grade K-3 branch and Grade 4-5 branch into two subcomponents (LowGradeDashboard.jsx, HighGradeDashboard.jsx) for maintainability.",
+    "Backend /child/homework correctly runs teacher_name and reward_coins resolution as batch queries — no N+1. Additive fields are backward compatible.",
+    "ChildHomework banner variant correctly falls back to classroom_name when teacher_name is null and omits the '· earn N XP' clause when reward_coins is null — good defensive rendering.",
+    "Bottom-nav fixed positioning (bottom-4 left-1/2 -translate-x-1/2) plus mb-28 on the detail row grid gives adequate clearance on mobile — verified no overlap with My Jobs / Savings card at 390x844."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_child_homework_round2.py (new)"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "Created new no-classroom Grade-1 test child: username=qa_g1_noclass / password=testpass123 (grade=1, role=child, is_test_user=true, parent_id=user_22d32d6b6d43, user_id starts with qa_g1_noclass_). Use this account for future 'no-classroom Grade K-3' regression checks. Note: pre-existing 'test_child_g1' (from test_credentials.md) has role='parent' misconfigured, hits subscription paywall on login — not usable as a child account.",
+  "seed_data_creation": "Inserted 1 user (qa_g1_noclass, grade 1, no classroom) via direct mongo insert. Deleted 2 stray homework_completions docs for classmate_g3 that were left over from an earlier mark-done test iteration to keep 'Testing' + 'Candy Shop' pending for the next tester. During Test 2, marked 'HW Grade-Excluded Worksheet' as done (this doc is still marked done for classmate_g3 at report time; run `db.homework_completions.delete_many({student_id: '368b8a71-acdf-433b-a9ab-6dbc87c10855'})` to reset if needed).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Round-2 dashboard verified. If retesting: classmate_g1 has classroom → leaderboard variant; qa_g1_noclass has no classroom → My Jobs full-card variant. classmate_g3 currently has 2-3 homework items: 'HW Grade-Excluded Worksheet' (marked done during this run), 'Testing' (video, overdue), 'Candy Shop' (activity, overdue). Homework banner shows the most recent assigned_at first. Backend endpoint /api/child/homework now returns teacher_name + reward_coins on each item — both are None-safe.",
+  "rca of the issue": "N/A — feature verification, no bugs found."
+}
