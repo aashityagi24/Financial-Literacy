@@ -24,7 +24,7 @@ export default function FinancialLiteracyPage() {
   const [searchParams] = useSearchParams();
   const [walkthroughVideos, setWalkthroughVideos] = useState(null);
   const [selectedVideoTab, setSelectedVideoTab] = useState('child');
-  const [selectedGrade, setSelectedGrade] = useState(null);
+  const [selectedGrade, setSelectedGrade] = useState("1st Grade");
 
   useEffect(() => { trackMetaPixelPageView(); }, []);
 
@@ -72,7 +72,7 @@ export default function FinancialLiteracyPage() {
     { icon: Trophy, title: "Quests & Badges", description: "Complete challenges and chores to earn money and badges.", color: "#3D5A80" },
   ];
 
-  const grades = ["Kindergarten", "1st Grade", "2nd Grade"];
+  const grades = ["Kindergarten", "1st Grade", "2nd Grade", "3rd Grade"];
 
   const gradeDescriptions = {
     "Kindergarten": {
