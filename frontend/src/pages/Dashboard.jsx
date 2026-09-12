@@ -446,10 +446,17 @@ export default function Dashboard({ user, setUser }) {
                 </div>
               ) : nextLesson?.content_id ? (
                 <div className="flex items-center gap-6 w-full relative z-10">
-                  <div className="w-24 h-24 rounded-2xl bg-[#E4DBF5] flex flex-col items-center justify-center flex-shrink-0 gap-1">
-                    <span className="text-3xl">{LESSON_TYPE_EMOJI[nextLesson.content_type] || '📚'}</span>
-                    <span className="text-[9px] font-bold text-[#8A73AE] tracking-wide">LESSON IMAGE</span>
-                  </div>
+                  {nextLesson.thumbnail ? (
+                    <img
+                      src={getAssetUrl(nextLesson.thumbnail)}
+                      alt=""
+                      className="w-24 h-24 rounded-2xl bg-[#E4DBF5] object-contain flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-2xl bg-[#E4DBF5] flex items-center justify-center flex-shrink-0">
+                      <span className="text-4xl">{LESSON_TYPE_EMOJI[nextLesson.content_type] || '📚'}</span>
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <span className="block text-white/70 text-xs font-bold uppercase tracking-widest mb-1">
                       {nextLesson.is_new_user ? 'Your First Lesson' : "Today's Lesson"}

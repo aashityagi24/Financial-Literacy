@@ -488,6 +488,8 @@ async def get_next_lesson(request: Request):
 
             if subtopic_unlocked and topic_unlocked:
                 for item in subtopic_content:
+                    if item.get("is_mandatory", True) is False:
+                        continue
                     if item["content_id"] not in completed_content_ids:
                         return {
                             "content_id": item["content_id"],

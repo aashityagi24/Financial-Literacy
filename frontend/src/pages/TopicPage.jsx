@@ -62,8 +62,10 @@ export default function TopicPage({ user }) {
   const [assignedContentIds, setAssignedContentIds] = useState(new Set());
   // Activity analytics popup (teacher)
   const [analyticsContent, setAnalyticsContent] = useState(null);
-  // Content id to highlight (child opening homework)
+  // Content id to highlight (child opening homework or the dashboard's next-lesson pick)
   const highlightId = searchParams.get('highlight');
+  // True only when the highlight came from a real teacher-assigned homework item
+  const isHomeworkHighlight = searchParams.get('homework') === '1';
   const trialBannerShownRef = useRef(false);
   const showAnimations = useFirstVisitAnimation(`topic-${topicId}`);
   const lastCompletedRef = useRef(null);
@@ -751,7 +753,11 @@ export default function TopicPage({ user }) {
                   >
                     {highlightId === content.content_id && (
                       <div className="mb-3 -mt-1 inline-flex items-center gap-1 text-xs font-bold text-white bg-[#EE6C4D] px-3 py-1 rounded-full" data-testid="homework-highlight-badge">
-                        <FileText className="w-3 h-3" /> Your Homework — complete this!
+                        {isHomeworkHighlight ? (
+                          <><FileText className="w-3 h-3" /> Your Homework — complete this!</>
+                        ) : (
+                          <><Play className="w-3 h-3" /> Your Next Lesson — start here!</>
+                        )}
                       </div>
                     )}
                     <div className="flex items-center gap-4">
