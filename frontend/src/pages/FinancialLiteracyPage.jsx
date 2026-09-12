@@ -25,6 +25,7 @@ export default function FinancialLiteracyPage() {
   const [walkthroughVideos, setWalkthroughVideos] = useState(null);
   const [selectedVideoTab, setSelectedVideoTab] = useState('child');
   const [selectedGrade, setSelectedGrade] = useState("1st Grade");
+  const [trialPrice, setTrialPrice] = useState(49);
 
   useEffect(() => { trackMetaPixelPageView(); }, []);
 
@@ -59,6 +60,20 @@ export default function FinancialLiteracyPage() {
       }
     };
     fetchWalkthroughVideos();
+
+    // Keep the "Start/Try for ₹X" marketing CTAs (hero button + exit-intent
+    // popup) in sync with the real 1-day trial price an admin sets in the
+    // Subscription plan-config, instead of a hardcoded number drifting apart.
+    const fetchTrialPrice = async () => {
+      try {
+        const response = await axios.get(`${API}/subscriptions/plans`);
+        const price = response.data?.plans?.single_parent?.['1_day']?.base_price;
+        if (price) setTrialPrice(price);
+      } catch (error) {
+        console.log('Could not fetch trial price, using default');
+      }
+    };
+    fetchTrialPrice();
   }, [searchParams]);
 
   const handleLogin = () => {
@@ -144,7 +159,7 @@ export default function FinancialLiteracyPage() {
   return (
     <div className="min-h-screen bg-[#E0FBFC]">
       <SiteHeader />
-      <ExitIntentPopup />
+      <ExitIntentPopup trialPrice={trialPrice} />
 
       {/* Hero Section */}
       <header className="relative overflow-hidden">
@@ -167,7 +182,7 @@ export default function FinancialLiteracyPage() {
                   className="btn-primary px-8 py-4 text-xl flex items-center gap-2"
                 >
                   <Sparkles className="w-6 h-6" />
-                  Start for ₹49
+                  Start for ₹{trialPrice}
                 </button>
                 <a
                   href="#features"

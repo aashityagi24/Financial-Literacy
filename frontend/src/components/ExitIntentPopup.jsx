@@ -22,11 +22,12 @@ const MOBILE_FALLBACK_MS = 45000;
 /**
  * Exit-intent popup for the marketing homepage: nudges a visitor who's about
  * to leave (mouse moving up towards the tab/back bar, or — on touch devices
- * where that signal doesn't exist — after a time delay) to try the ₹49
- * 1-day trial instead of bouncing with nothing.
+ * where that signal doesn't exist — after a time delay) to try the low-cost
+ * 1-day trial instead of bouncing with nothing. The price shown is passed in
+ * as `trialPrice`, sourced from the live admin-configured plan price.
  * Shown at most once per browser session.
  */
-export function ExitIntentPopup() {
+export function ExitIntentPopup({ trialPrice = 49 }) {
   const [open, setOpen] = useState(false);
   const shownRef = useRef(false);
 
@@ -79,7 +80,7 @@ export function ExitIntentPopup() {
               className="absolute top-4 left-4 z-20 -rotate-6 text-xs font-extrabold bg-[#FFD23F] text-[#1D3557] px-3 py-1.5 rounded-lg border-2 border-[#1D3557] shadow-[2px_2px_0px_0px_#1D3557]"
               style={{ fontFamily: 'Fredoka' }}
             >
-              ₹49 / 1 Day
+              ₹{trialPrice} / 1 Day
             </div>
           </div>
 
@@ -102,7 +103,7 @@ export function ExitIntentPopup() {
             </DialogTitle>
 
             <DialogDescription className="sr-only">
-              Try CoinQuest for a full day for just ₹49 with no commitment.
+              Try CoinQuest for a full day for just ₹{trialPrice} with no commitment.
             </DialogDescription>
 
             <ul data-testid="exit-intent-features" className="flex flex-col gap-1.5 py-1">
@@ -121,7 +122,7 @@ export function ExitIntentPopup() {
                 className="w-full py-6 text-lg font-bold bg-[#EE6C4D] hover:bg-[#D95A3C] text-white rounded-xl border-2 border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] hover:shadow-[1px_1px_0px_0px_#1D3557] hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center justify-center gap-2"
               >
                 <Sparkles className="w-5 h-5" />
-                Try for ₹49 Today
+                Try for ₹{trialPrice} Today
               </Button>
               <button
                 data-testid="exit-intent-close-btn"
