@@ -1,0 +1,23 @@
+{
+  "summary": "Frontend-only verification of WalletPage.jsx bug fix (yellow 'Money You Can Spend' banner + 'My Garden' XP jar removal). All 6 acceptance criteria PASS. The old totals banner (data-testid=total-balance) is fully removed from DOM; jar-investing card is removed from money-jars-grid for both Grade 1 (My Garden) and Grade 4 (Stocks). Top of /wallet correctly renders exactly two separate cards: My XP (orange, 'PLAY POINTS' badge, '{N} XP') and My Wallet (blue, 'FROM PARENT' badge, '₹{N}'), with no combined rupee-labeled total anywhere on the page. Move Money dialog for Grade 1 still correctly offers 🌱 My Garden as a transfer From/To option, so the underlying investing account is preserved. Dashboard 'My Garden' nav card for Grade 1 still navigates to /garden. No console errors, no regressions observed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Minor a11y warning: DialogContent missing `Description`/`aria-describedby` on the Move Money dialog (React console warning). Pre-existing, not caused by this fix, but easy win.",
+    "Note for main agent: for Grade 4 (classmate_g4_qa), the Move Money transfer dropdown does NOT include the Stocks/investing account — only 3 options (My XP, Giving, My Wallet). This is expected: getFilteredAccounts() intentionally filters out `investing` for Kindergarten and Grade 3+ while Stocks feature is hidden (existing feature-flag behavior, unrelated to this fix). Grade 1 correctly retains 🌱 My Garden in the dropdown."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100%"},
+  "test_credentials": "classmate_g1/testpass123, classmate_g4_qa/testpass123 (both is_test_user=true, from /app/memory/test_credentials.md)",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "WalletPage.jsx bug (yellow banner + My Garden XP-jar mislabeled as ₹) is fully fixed. Verified: (1) no [data-testid=total-balance] element in DOM; (2) no [data-testid=jar-investing]; (3) money-jars-grid children exactly ['jar-savings','jar-gifting'] for both G1 and G4; (4) no 'My Garden' / 'Stocks' / 'Money You Can Spend' text on /wallet; (5) top shows My XP (30 XP for g1, 0 XP for g4) + My Wallet (₹0) as separate cards; (6) Move Money dialog for g1 still lists '🌱 My Garden (0 XP)' as an option; (7) Dashboard My Garden card still links to /garden. Screenshots captured for both users.",
+  "rca of the issue": "N/A — verification round for an already-applied fix. Root cause per E1: WalletPage.jsx was summing my_wallet + spending(XP) + savings + investing(XP) balances into a single `totalAvailable` variable displayed with a ₹ prefix, and rendering the investing (XP-denominated) account as a jar card alongside real-₹ jars. Fix removed the totals banner + dead computation entirely, and added `account_type !== 'investing'` filter to getJarAccounts(); getFilteredAccounts() (used by transfer dialog) untouched, preserving transfer functionality."
+}

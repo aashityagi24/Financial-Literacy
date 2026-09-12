@@ -146,10 +146,12 @@ export default function WalletPage({ user }) {
     return wallet.accounts;
   };
 
-  // Jar tiles shown below the two-wallet header: hide 'spending' AND 'my_wallet' since
-  // both are represented as cards up top.
+  // Jar tiles shown below the two-wallet header: hide 'spending' and 'my_wallet' since
+  // both are represented as cards up top, and hide 'investing' (Garden/Stocks) since it's
+  // an XP-denominated play jar, not a real-money jar like Piggy Bank/Giving — showing it
+  // here confused kids about what money they can actually spend.
   const getJarAccounts = () => getFilteredAccounts().filter(
-    acc => acc.account_type !== 'spending' && acc.account_type !== 'my_wallet'
+    acc => acc.account_type !== 'spending' && acc.account_type !== 'my_wallet' && acc.account_type !== 'investing'
   );
   
   useEffect(() => {
@@ -243,20 +245,6 @@ export default function WalletPage({ user }) {
   };
   
   const filteredAccounts = getFilteredAccounts();
-  // "Money You Can Spend" = spendable money only. Excludes the Giving jar
-  // (earmarked to give away) and — via available_balance — any money locked in a
-  // savings goal or invested in the garden. Counting those confused kids because
-  // e.g. ₹25 sitting in the Giving jar was being shown as spendable.
-  // Iterate the grade-filtered accounts so a jar hidden for the child's grade
-  // (e.g. Kindergarten has no garden) can never contribute to the total.
-  const NON_SPENDABLE_ACCOUNT_TYPES = ['gifting'];
-  const totalAvailable = (filteredAccounts || []).reduce(
-    (sum, acc) =>
-      NON_SPENDABLE_ACCOUNT_TYPES.includes(acc.account_type)
-        ? sum
-        : sum + (acc.available_balance ?? acc.balance ?? 0),
-    0
-  ) || 0;
   
   if (loading) {
     return (
@@ -390,17 +378,6 @@ export default function WalletPage({ user }) {
       </header>
       
       <main className="container mx-auto px-4 py-6">
-        {/* Total Available Balance - Only spendable money */}
-        <div className="card-playful p-6 mb-6 bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] animate-bounce-in">
-          <div className="text-center">
-            <p className="text-[#1D3557] font-medium mb-1">Money You Can Spend</p>
-            <p className="text-5xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }} data-testid="total-balance">
-              ₹{totalAvailable.toFixed(0)}
-            </p>
-            <p className="text-sm text-[#1D3557]/70 mt-2">Available across all your jars</p>
-          </div>
-        </div>
-
         {/* Two-Wallet Split: My XP (play) vs My Wallet (real, owed by parent) */}
         <div className="grid md:grid-cols-2 gap-4 mb-6">
           <div
