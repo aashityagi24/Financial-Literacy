@@ -220,6 +220,17 @@ export default function Dashboard({ user, setUser }) {
     return '💰';
   };
   
+  // Matches the frequency options offered on MyJobsPage.jsx so the label shown
+  // here ("Once a week", "Three times a week", ...) is identical everywhere.
+  const JOB_FREQUENCIES = {
+    daily: 'Every day',
+    twice_week: 'Twice a week',
+    three_week: 'Three times a week',
+    weekly: 'Once a week',
+    as_needed: 'As needed',
+  };
+  const getJobFreqLabel = (val) => JOB_FREQUENCIES[val] || val;
+  
   const lowGradeNavItems = [
     { emoji: '👛', label: 'My Money', path: '/wallet', color: '#D6336C', subtitle: `₹${myWalletBalance.toFixed(0)} to spend` },
     investmentItem ? { emoji: investmentItem.label === 'My Garden' ? '🌱' : '📈', label: investmentItem.label, path: investmentItem.path, color: '#5B2C82', subtitle: getInvestmentSubtitle() } : null,
@@ -621,10 +632,16 @@ export default function Dashboard({ user, setUser }) {
                 <div className="bg-white rounded-2xl shadow-sm p-5 flex flex-col gap-2.5">
                   <h3 className="font-bold text-[#1A1A1A]" style={{ fontFamily: 'Fredoka' }}>My jobs</h3>
                   {myJobs.payday_jobs.slice(0, 3).map((job) => (
-                    <div key={job.job_id} className="flex items-center gap-2.5 text-sm">
-                      <span className="text-lg">{getJobEmoji(job.activity)}</span>
-                      <span className="text-[#1A1A1A] font-medium truncate flex-1">{job.activity}</span>
-                      {job.payment_amount > 0 && <span className="font-bold text-[#5B2C82] flex-shrink-0">₹{job.payment_amount}</span>}
+                    <div key={job.job_id} className="flex items-center gap-2.5">
+                      <span className="text-lg flex-shrink-0">{getJobEmoji(job.activity)}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-[#1A1A1A] font-medium truncate">{job.activity}</p>
+                        <p className="text-xs text-[#8A8378] truncate">
+                          {job.payment_amount > 0
+                            ? `₹${job.payment_amount} for ${getJobFreqLabel(job.frequency).toLowerCase()}`
+                            : getJobFreqLabel(job.frequency)}
+                        </p>
+                      </div>
                     </div>
                   ))}
                   <Link

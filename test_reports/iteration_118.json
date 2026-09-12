@@ -1,0 +1,18 @@
+{
+  "summary": "Verified new money+frequency subtitle line in CoinQuest child dashboard 'My jobs' card for blank_wallet_child (Grade 3, no classroom). Seeded 3 payday jobs with different frequencies (weekly@₹100, three_week@₹30, daily@₹0-unpriced). All three requested formats rendered exactly per spec: 'Walk the dog / ₹100 for once a week' (🐕), 'Water the plants / ₹30 for three times a week' (🌱), 'Organize the entire bookshelf and dust it / Every day' (no ₹0 fallback confirmed). Verified See-all button navigates to /my-jobs. No raw enum labels (weekly, three_week, twice_week, as_needed) leaked to UI. Overflow check: long activity name has truncate class applied, no clipping issue at 1920x1080 and 390x844 viewports. Regression pass: classmate_g1 and classmate_g3 (both with classrooms) correctly show My classroom leaderboard (no My jobs card); classmate_g4_qa Grade 4 dashboard unaffected.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": ["/app/tests/setup_jobs.py"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Dashboard.jsx JOB_FREQUENCIES and MyJobsPage.jsx FREQUENCIES are duplicated string maps — consider extracting to a shared util (e.g., /app/frontend/src/utils/jobFrequencies.js) to avoid future drift.",
+    "Dashboard.jsx is 1030 lines — exceeds 700-line guideline; could be split into smaller components (JobsCard, ClassroomCard, etc.)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "100%"},
+  "test_credentials": "blank_wallet_child/testpass123, classmate_g1/testpass123, classmate_g3/testpass123, classmate_g4_qa/testpass123",
+  "seed_data_creation": "Temporarily created 3 payday jobs on blank_wallet_child via POST /api/child/jobs, set payment_amount + status via direct MongoDB write on my_jobs collection, then fully cleaned up (DELETE via API for pending job + direct mongo delete_many for approved-status jobs). No residual test data.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Feature complete. The Dashboard 'My jobs' subtitle format `₹{amount} for {freq label lowercase}` (fallback to just freq label when amount==0) is working as designed and matches MyJobsPage frequency wording. If further iterations touch this card, re-run /app/tests/setup_jobs.py to seed test data (login uses identifier+password, session_token from response)."
+}
