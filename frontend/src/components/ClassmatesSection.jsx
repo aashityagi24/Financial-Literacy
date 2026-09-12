@@ -195,7 +195,7 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
               {ranked.slice(0, 3).map((row, idx) => (
                 <div
                   key={row.user_id}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xl ${row.isMe ? 'bg-[#F0E6CC]' : ''}`}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-xl ${row.isMe ? 'bg-[#E4DBF5]' : ''}`}
                   data-testid={`leaderboard-row-${idx}`}
                 >
                   <span className={`text-sm font-bold w-4 flex-shrink-0 ${row.isMe ? 'text-[#1A1A1A]' : 'text-[#8A8378]'}`}>{idx + 1}</span>
@@ -204,7 +204,7 @@ export default function ClassmatesSection({ giftingBalance, compact = false, wal
                   {!row.isMe && (
                     <button
                       onClick={() => { setSelectedClassmate(row.classmate); setShowGiftDialog(true); }}
-                      className="p-1.5 bg-[#2F5D45] text-white rounded-lg hover:brightness-110 flex-shrink-0"
+                      className="p-1.5 bg-[#5B2C82] text-white rounded-lg hover:brightness-110 flex-shrink-0"
                       title="Give Gift"
                       data-testid={`leaderboard-gift-${idx}`}
                     >

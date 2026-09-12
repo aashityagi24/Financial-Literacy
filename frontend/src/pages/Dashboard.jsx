@@ -205,10 +205,10 @@ export default function Dashboard({ user, setUser }) {
   };
   
   const lowGradeNavItems = [
-    { emoji: '👛', label: 'My Money', path: '/wallet', color: '#D9A73C', subtitle: `₹${myWalletBalance.toFixed(0)} to spend` },
-    investmentItem ? { emoji: investmentItem.label === 'My Garden' ? '🌱' : '📈', label: investmentItem.label, path: investmentItem.path, color: '#2F5D45', subtitle: getInvestmentSubtitle() } : null,
-    { emoji: '🎯', label: 'Quests', path: '/quests', color: '#8B5CF6', subtitle: activeQuestCount > 0 ? `${activeQuestCount} quest${activeQuestCount > 1 ? 's' : ''} left` : 'Find your next quest' },
-    { emoji: '💬', label: 'Money Words', path: '/glossary', color: '#A8453D', subtitle: 'Word of the day' },
+    { emoji: '👛', label: 'My Money', path: '/wallet', color: '#D6336C', subtitle: `₹${myWalletBalance.toFixed(0)} to spend` },
+    investmentItem ? { emoji: investmentItem.label === 'My Garden' ? '🌱' : '📈', label: investmentItem.label, path: investmentItem.path, color: '#5B2C82', subtitle: getInvestmentSubtitle() } : null,
+    { emoji: '🎯', label: 'Quests', path: '/quests', color: '#2FBFA6', subtitle: activeQuestCount > 0 ? `${activeQuestCount} quest${activeQuestCount > 1 ? 's' : ''} left` : 'Find your next quest' },
+    { emoji: '💬', label: 'Money Words', path: '/glossary', color: '#F5A623', subtitle: 'Word of the day' },
   ].filter(Boolean);
   
   // Grade-based account configuration
@@ -271,7 +271,7 @@ export default function Dashboard({ user, setUser }) {
   }
   
   return (
-    <div className={`min-h-screen ${grade <= 3 ? 'bg-[#F1ECE2]' : 'bg-[#E0FBFC]'}`} data-testid="dashboard">
+    <div className={`min-h-screen ${grade <= 3 ? 'bg-[#ECE6F7]' : 'bg-[#E0FBFC]'}`} data-testid="dashboard">
       {/* Streak Modal */}
       {showStreakModal && streak.reward > 0 && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -409,7 +409,7 @@ export default function Dashboard({ user, setUser }) {
           <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 ${showAnimations ? 'animate-bounce-in' : ''}`}>
             {/* Next Lesson Hero */}
             <div
-              className="md:col-span-2 rounded-3xl p-6 bg-[#2F5D45] relative overflow-hidden flex items-center shadow-sm"
+              className="md:col-span-2 rounded-3xl p-6 bg-[#5B2C82] relative overflow-hidden flex items-center shadow-sm"
               data-testid="next-lesson-hero"
             >
               <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-white/5 pointer-events-none" />
@@ -419,9 +419,9 @@ export default function Dashboard({ user, setUser }) {
                 </div>
               ) : nextLesson?.content_id ? (
                 <div className="flex items-center gap-6 w-full relative z-10">
-                  <div className="w-24 h-24 rounded-2xl bg-[#F0E6CC] flex flex-col items-center justify-center flex-shrink-0 gap-1">
+                  <div className="w-24 h-24 rounded-2xl bg-[#E4DBF5] flex flex-col items-center justify-center flex-shrink-0 gap-1">
                     <span className="text-3xl">{LESSON_TYPE_EMOJI[nextLesson.content_type] || '📚'}</span>
-                    <span className="text-[9px] font-bold text-[#8A7A52] tracking-wide">LESSON IMAGE</span>
+                    <span className="text-[9px] font-bold text-[#8A73AE] tracking-wide">LESSON IMAGE</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <span className="block text-white/70 text-xs font-bold uppercase tracking-widest mb-1">
@@ -434,7 +434,7 @@ export default function Dashboard({ user, setUser }) {
                     <Link
                       to={`/learn/topic/${nextLesson.subtopic_id}?highlight=${nextLesson.content_id}`}
                       data-testid="start-next-lesson-btn"
-                      className="inline-flex items-center gap-2 bg-gradient-to-b from-[#E5B44E] to-[#CC9B34] text-[#2B2308] font-bold px-6 py-2.5 rounded-xl hover:brightness-105 transition-all"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-[#8CF0C7] to-[#4FD9A0] text-[#0F3D2E] font-bold px-6 py-2.5 rounded-xl hover:brightness-105 transition-all"
                     >
                       {nextLesson.is_new_user ? 'Start Learning' : 'Continue Learning'}
                     </Link>
@@ -442,7 +442,7 @@ export default function Dashboard({ user, setUser }) {
                 </div>
               ) : (
                 <div className="flex items-center gap-6 w-full relative z-10">
-                  <div className="w-24 h-24 rounded-2xl bg-[#F0E6CC] flex items-center justify-center flex-shrink-0 text-4xl">
+                  <div className="w-24 h-24 rounded-2xl bg-[#E4DBF5] flex items-center justify-center flex-shrink-0 text-4xl">
                     🎉
                   </div>
                   <div>
@@ -453,7 +453,7 @@ export default function Dashboard({ user, setUser }) {
                     <Link
                       to="/learn"
                       data-testid="start-next-lesson-btn"
-                      className="inline-flex items-center gap-2 bg-gradient-to-b from-[#E5B44E] to-[#CC9B34] text-[#2B2308] font-bold px-6 py-2.5 rounded-xl hover:brightness-105 transition-all"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-[#8CF0C7] to-[#4FD9A0] text-[#0F3D2E] font-bold px-6 py-2.5 rounded-xl hover:brightness-105 transition-all"
                     >
                       Browse Learn
                     </Link>
@@ -473,9 +473,9 @@ export default function Dashboard({ user, setUser }) {
                 const offset = circumference * (1 - pct);
                 return (
                   <svg width="88" height="88" viewBox="0 0 100 100" className="flex-shrink-0" data-testid="today-goal-ring">
-                    <circle cx="50" cy="50" r={radius} fill="none" stroke="#F0E6CC" strokeWidth="10" />
+                    <circle cx="50" cy="50" r={radius} fill="none" stroke="#E4DBF5" strokeWidth="10" />
                     <circle
-                      cx="50" cy="50" r={radius} fill="none" stroke="#2F5D45" strokeWidth="10"
+                      cx="50" cy="50" r={radius} fill="none" stroke="#5B2C82" strokeWidth="10"
                       strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
                       transform="rotate(-90 50 50)"
                       style={{ transition: 'stroke-dashoffset 0.6s ease' }}
@@ -494,7 +494,7 @@ export default function Dashboard({ user, setUser }) {
                 </p>
                 <div className="flex gap-1.5">
                   {[0, 1, 2].map((i) => (
-                    <span key={i} className={`w-4 h-4 rounded-md ${i < (nextLesson?.completed_today || 0) ? 'bg-[#2F5D45]' : 'bg-[#F0E6CC]'}`} />
+                    <span key={i} className={`w-4 h-4 rounded-md ${i < (nextLesson?.completed_today || 0) ? 'bg-[#5B2C82]' : 'bg-[#E4DBF5]'}`} />
                   ))}
                 </div>
               </div>
@@ -532,7 +532,7 @@ export default function Dashboard({ user, setUser }) {
               {savingsGoals.length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between gap-4" data-testid="dashboard-savings-goal">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-14 h-14 rounded-xl bg-[#F0E6CC] flex items-center justify-center flex-shrink-0 text-2xl">
+                    <div className="w-14 h-14 rounded-xl bg-[#E4DBF5] flex items-center justify-center flex-shrink-0 text-2xl">
                       🎯
                     </div>
                     <div className="min-w-0">
@@ -557,14 +557,14 @@ export default function Dashboard({ user, setUser }) {
                           </h3>
                           <span className="text-sm text-[#8A8378] flex-shrink-0">Goal 1 of {savingsGoals.length}</span>
                         </div>
-                        <div className="h-3 rounded-full bg-[#F0E6CC] overflow-hidden">
-                          <div className="h-full rounded-full bg-[#2F5D45]" style={{ width: `${Math.max(gp, 4)}%` }} />
+                        <div className="h-3 rounded-full bg-[#E4DBF5] overflow-hidden">
+                          <div className="h-full rounded-full bg-[#5B2C82]" style={{ width: `${Math.max(gp, 4)}%` }} />
                         </div>
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-[#2F5D45] font-bold">₹{goal.current_amount?.toFixed(0) || 0} saved</span>
+                          <span className="text-[#5B2C82] font-bold">₹{goal.current_amount?.toFixed(0) || 0} saved</span>
                           <span className="text-[#8A8378]">₹{(goal.target_amount - (goal.current_amount || 0)).toFixed(0)} to go</span>
                         </div>
-                        <span className="text-sm font-bold text-[#2F5D45]">See all my goals →</span>
+                        <span className="text-sm font-bold text-[#5B2C82]">See all my goals →</span>
                       </>
                     );
                   })()}
@@ -589,7 +589,7 @@ export default function Dashboard({ user, setUser }) {
               ) : (myJobs.family_jobs.length + myJobs.payday_jobs.length) === 0 ? (
                 <div className="bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-14 h-14 rounded-xl bg-[#F0E6CC] flex items-center justify-center flex-shrink-0 text-2xl">
+                    <div className="w-14 h-14 rounded-xl bg-[#E4DBF5] flex items-center justify-center flex-shrink-0 text-2xl">
                       💼
                     </div>
                     <div className="min-w-0">
@@ -614,7 +614,7 @@ export default function Dashboard({ user, setUser }) {
                     <div key={job.job_id} className="flex items-center gap-2.5 text-sm">
                       <span className="text-lg">💰</span>
                       <span className="text-[#1A1A1A] font-medium truncate flex-1">{job.activity}</span>
-                      {job.payment_amount > 0 && <span className="font-bold text-[#2F5D45] flex-shrink-0">₹{job.payment_amount}</span>}
+                      {job.payment_amount > 0 && <span className="font-bold text-[#5B2C82] flex-shrink-0">₹{job.payment_amount}</span>}
                     </div>
                   ))}
                 </Link>
@@ -635,7 +635,7 @@ export default function Dashboard({ user, setUser }) {
                   to={item.path}
                   data-testid={`bottom-nav-${item.label.toLowerCase()}`}
                   className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-full transition-colors ${
-                    item.label === 'Home' ? 'bg-[#2F5D45] text-white' : 'text-[#8A8378] hover:bg-[#F1ECE2]'
+                    item.label === 'Home' ? 'bg-[#5B2C82] text-white' : 'text-[#8A8378] hover:bg-[#ECE6F7]'
                   }`}
                 >
                   <item.icon className="w-5 h-5" />
