@@ -69,6 +69,7 @@ export default function TopicPage({ user }) {
   const trialBannerShownRef = useRef(false);
   const showAnimations = useFirstVisitAnimation(`topic-${topicId}`);
   const lastCompletedRef = useRef(null);
+  const autoOpenedRef = useRef(false);
   
   useEffect(() => {
     fetchTopicData();
@@ -129,6 +130,23 @@ export default function TopicPage({ user }) {
     }, 500);
     return () => clearTimeout(t);
   }, [highlightId, topic]);
+
+  // Directly open the "Start Learning"/"Continue Learning" recommended item from
+  // the dashboard — the child already chose to start, so it should open right
+  // away instead of requiring a second click. Only fires once per page visit
+  // (autoOpenedRef) so it doesn't reopen after the child closes/completes it.
+  // Real teacher homework keeps the tap-to-open flow, since a child may want
+  // to browse other assigned items first.
+  useEffect(() => {
+    if (autoOpenedRef.current) return;
+    if (!highlightId || !topic || isHomeworkHighlight) return;
+    if (user?.role !== 'child') return;
+    const item = topic.content_items?.find((c) => c.content_id === highlightId);
+    if (item && item.is_unlocked !== false && !item.is_completed) {
+      autoOpenedRef.current = true;
+      openContent(item);
+    }
+  }, [highlightId, topic, isHomeworkHighlight, user?.role]);
 
   const openAssignHomework = (content, e) => {
     e?.stopPropagation();
