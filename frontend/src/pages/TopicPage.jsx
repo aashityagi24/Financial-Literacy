@@ -392,7 +392,7 @@ export default function TopicPage({ user }) {
   // completion (here) instead of just opening the app.
   const showStreakToast = (data) => {
     if (data?.streak && data.streak_reward > 0) {
-      toast.success(`🔥 Day ${data.streak} streak! +₹${data.streak_reward} bonus`, { duration: 4000 });
+      toast.success(`🔥 Day ${data.streak} streak! +${data.streak_reward} XP bonus`, { duration: 4000 });
     }
   };
 
