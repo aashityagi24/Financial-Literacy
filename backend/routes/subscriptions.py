@@ -291,6 +291,28 @@ async def _resolve_referral_discount(db, code: Optional[str], plan_type: str = N
     return doc["discount_percent"]
 
 
+async def _check_referral_not_already_redeemed(db, code: Optional[str], email: str = "", phone: str = ""):
+    """Enforce: one email or phone number can redeem a given referral code
+    only once, across any completed purchase (platform plan or Money
+    Masters batch)."""
+    if not code:
+        return
+    or_conditions = []
+    if email:
+        or_conditions.append({"subscriber_email": email})
+    if phone:
+        or_conditions.append({"subscriber_phone": phone})
+    if not or_conditions:
+        return
+    existing = await db.subscriptions.find_one({
+        "referral_code": code.strip().upper(),
+        "payment_status": "completed",
+        "$or": or_conditions,
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="This referral code has already been used with this email or phone number")
+
+
 @router.post("/validate-referral-code")
 async def validate_referral_code(data: ValidateReferralCodeRequest):
     """Public: checked when the user clicks 'Apply' on a referral code, before payment."""
@@ -409,6 +431,9 @@ async def create_order(order: CreateOrderRequest):
     # Apply a referral code discount, if one was provided (re-validated here
     # so the charged amount is always computed server-side, never trusted from the client)
     discount_percent = await _resolve_referral_discount(db, order.referral_code, plan_type=order.plan_type, duration=order.duration)
+    await _check_referral_not_already_redeemed(
+        db, order.referral_code, email=order.subscriber_email.strip().lower(), phone=order.subscriber_phone.strip()
+    )
     if discount_percent:
         total_amount = round(total_amount * (1 - discount_percent / 100))
     amount_paise = total_amount * 100  # Razorpay expects paise
@@ -1272,6 +1297,9 @@ async def create_money_masters_order(order: MoneyMastersOrderRequest, request: R
 
     amount_paise = batch["price"] * 100
     discount_percent = await _resolve_referral_discount(db, order.referral_code, batch_id=order.batch_id)
+    await _check_referral_not_already_redeemed(
+        db, order.referral_code, email=(user.get("email") or "").strip().lower(), phone=(user.get("phone") or "").strip()
+    )
     final_price = batch["price"]
     if discount_percent:
         final_price = round(batch["price"] * (1 - discount_percent / 100))

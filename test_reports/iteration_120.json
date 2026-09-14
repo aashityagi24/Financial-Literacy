@@ -1,0 +1,32 @@
+{
+  "summary": "Backend-only testing of the new 'one email/phone per referral code' enforcement across BOTH platform (POST /api/subscriptions/create-order) and Money Masters (POST /api/subscriptions/money-masters/create-order) checkout flows. Wrote 8 pytest tests in /app/backend/tests/test_referral_once_per_user.py covering: (1) block by same email different phone, (2) block by same phone different email, (3) fresh email+phone succeeds with correct 10% discount applied, (4) per-code scoping (same blocked user + different code succeeds), (5) regression - no referral_code still works, (6) admin CRUD list, (7) admin create+deactivate propagates to validate endpoint, (8) Money Masters flow blocks parent when their own account email/phone was previously redeemed under the same code (cross-plan-type, code-based match). All 8/8 passed on first run against the live backend using the production REACT_APP_BACKEND_URL. Setup used direct MongoDB inserts (payment_status='completed' fake subs, prefixed subscription_id='sub_qatest_*') and cleaned up in an autouse teardown fixture (also deletes test referral codes, MM test batch, and any qa_referral_* pending subs).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_referral_once_per_user.py",
+    "/app/test_reports/pytest/referral_once_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "_check_referral_not_already_redeemed correctly filters out empty identifiers from the $or clause (avoids false-positive match on blank subscriber_email/phone). Verified via the 'no_referral_code_still_works' regression test.",
+    "Enforcement is consistently placed AFTER _resolve_referral_discount and BEFORE razorpay order creation in both create_order and create_money_masters_order — no payment is ever attempted when the block triggers.",
+    "Match is code-based (referral_code == code.upper()) so the block correctly spans across plan_types (platform single_parent, two_parents, and money_masters all share the subscriptions collection) — verified by test_mm_blocked_when_parent_identifiers_already_redeemed which seeds a plan_type='single_parent' completed sub and blocks a subsequent money_masters order using the same code.",
+    "Minor nit: email normalization uses .strip().lower() in platform create-order but only .lower() in MM (user.get('email') || '').lower(); if a parent's DB email has stray whitespace it could technically miss. Not blocking, and current DB records are clean."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_referral_once_per_user.py (new)"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "n/a (backend-only per request)"},
+  "test_credentials": "admin@learnersplanet.com / finlit@2026 ; parent wallet_demo_parent / testpass123 (has linked child, used for MM flow)",
+  "seed_data_creation": "Direct-inserted fake completed subscription docs with subscription_id prefix 'sub_qatest_' + created temporary referral codes (prefix 'QAONCE') and one temp Money Masters batch ('TEST_ReferralOnce ...'). All cleaned up by autouse teardown fixture at end of module.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Feature is fully verified end-to-end backend-side. Reusable regression test at /app/backend/tests/test_referral_once_per_user.py — run via `pytest backend/tests/test_referral_once_per_user.py -v`. Note: relies on wallet_demo_parent having a linked child and having either email or phone populated in DB (currently satisfies both). If future changes touch _check_referral_not_already_redeemed, re-run this file first."
+}
