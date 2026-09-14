@@ -20,14 +20,12 @@ import { STORE_ENABLED, STOCKS_ENABLED, LENDING_ENABLED } from '@/config/feature
 export default function Dashboard({ user, setUser }) {
   const navigate = useNavigate();
   const [wallet, setWallet] = useState(null);
-  const [streak, setStreak] = useState({ streak: 0, reward: 0 });
   const [quests, setQuests] = useState([]);
   const [badges, setBadges] = useState([]);
   const [badgeStats, setBadgeStats] = useState({ total: 0, earned: 0 });
   const [savingsGoals, setSavingsGoals] = useState([]);
   const [myJobs, setMyJobs] = useState({ family_jobs: [], payday_jobs: [] });
   const [loading, setLoading] = useState(true);
-  const [showStreakModal, setShowStreakModal] = useState(false);
   const [hasCalendarAccess, setHasCalendarAccess] = useState(false);
   const [hasClassroom, setHasClassroom] = useState(true);
   const [nextLesson, setNextLesson] = useState(null);
@@ -54,7 +52,7 @@ export default function Dashboard({ user, setUser }) {
     // Don't fetch data if user is not a child (will be redirected)
     if (user?.role && user.role !== 'child') return;
     fetchDashboardData();
-    handleDailyCheckin();
+    refreshStreak();
     // Learning-first hero (next lesson + daily goal) only applies to Grade K-3
     if ((user?.grade ?? 3) <= 3) {
       fetchNextLesson();
@@ -65,6 +63,21 @@ export default function Dashboard({ user, setUser }) {
       setNextLessonLoading(false);
     }
   }, [user]);
+
+  // Streak now advances on a real lesson completion, not on login — this just
+  // pulls the current streak_count fresh each time the dashboard is opened,
+  // so it reflects any lessons finished on the learning page moments ago.
+  const refreshStreak = async () => {
+    try {
+      const response = await axios.get(`${API}/auth/me`);
+      setUser((prev) => {
+        if (!prev || prev.streak_count === response.data.streak_count) return prev;
+        return { ...prev, streak_count: response.data.streak_count };
+      });
+    } catch (error) {
+      console.error('Failed to refresh streak:', error);
+    }
+  };
   
   const fetchGardenSummary = async () => {
     try {
@@ -130,19 +143,6 @@ export default function Dashboard({ user, setUser }) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
       setLoading(false);
-    }
-  };
-  
-  const handleDailyCheckin = async () => {
-    try {
-      const response = await axios.post(`${API}/streak/checkin`);
-      setStreak(response.data);
-      if (response.data.reward > 0) {
-        setShowStreakModal(true);
-        setTimeout(() => setShowStreakModal(false), 3000);
-      }
-    } catch (error) {
-      console.error('Checkin failed:', error);
     }
   };
   
@@ -299,22 +299,6 @@ export default function Dashboard({ user, setUser }) {
   
   return (
     <div className={`min-h-screen ${grade <= 3 ? 'bg-[#ECE6F7]' : 'bg-[#E0FBFC]'}`} data-testid="dashboard">
-      {/* Streak Modal */}
-      {showStreakModal && streak.reward > 0 && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className={`card-playful p-8 text-center animate-bounce-in ${streak.streak % 5 === 0 ? 'bg-gradient-to-br from-[#FFD23F] to-[#FF9F1C]' : 'bg-[#FFD23F]'}`}>
-            <div className="text-6xl mb-4 animate-coin-spin">{streak.streak % 5 === 0 ? '🎉' : '🔥'}</div>
-            <h2 className="text-3xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
-              Day {streak.streak} Streak!
-            </h2>
-            {streak.streak % 5 === 0 && (
-              <p className="text-lg text-[#1D3557] mb-1 font-bold">🌟 5-Day Milestone Bonus! 🌟</p>
-            )}
-            <p className="text-xl text-[#1D3557]">You earned <strong>{streak.reward} XP</strong>!</p>
-          </div>
-        </div>
-      )}
-      
       {/* Header */}
       <header className="bg-white border-b-3 border-[#1D3557]">
         <div className="container mx-auto px-4 py-1">
@@ -373,13 +357,13 @@ export default function Dashboard({ user, setUser }) {
                   </div>
                   <div className="flex items-center gap-2 bg-white shadow-sm px-4 py-2 rounded-full" data-testid="header-streak-chip">
                     <span className="text-lg">🔥</span>
-                    <span className="font-bold text-[#1A1A1A]">{streak.streak || user?.streak_count || 0} days</span>
+                    <span className="font-bold text-[#1A1A1A]">{user?.streak_count || 0} days</span>
                   </div>
                 </>
               ) : (
                 <div className="flex items-center gap-2 bg-[#FFD23F]/20 px-3 py-2 rounded-xl border-2 border-[#1D3557]" data-testid="header-streak-chip">
                   <Flame className="w-5 h-5 text-[#EE6C4D]" />
-                  <span className="font-bold text-[#1D3557]">{streak.streak || user?.streak_count || 0}</span>
+                  <span className="font-bold text-[#1D3557]">{user?.streak_count || 0}</span>
                 </div>
               )}
               

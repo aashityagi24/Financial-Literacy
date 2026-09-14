@@ -911,6 +911,7 @@ async def complete_content_item(content_id: str, request: Request):
         upsert=True
     )
     
+    streak_result = None
     if user.get("role") == "child":
         await db.wallet_accounts.update_one(
             {"user_id": user_id, "account_type": "spending"},
@@ -926,8 +927,17 @@ async def complete_content_item(content_id: str, request: Request):
             "description": f"Completed: {item.get('title', 'Lesson')}",
             "created_at": datetime.now(timezone.utc).isoformat()
         })
-    
-    return {"message": "Content completed!", "coins_awarded": reward_coins}
+
+        # The daily streak advances on a real lesson completion, not on login.
+        from routes.achievements import advance_daily_streak
+        streak_result = await advance_daily_streak(db, user)
+
+    return {
+        "message": "Content completed!",
+        "coins_awarded": reward_coins,
+        "streak": streak_result["streak"] if streak_result else None,
+        "streak_reward": streak_result["reward"] if streak_result else 0,
+    }
 
 # ============== ADMIN CONTENT ROUTES ==============
 

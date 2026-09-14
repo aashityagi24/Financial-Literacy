@@ -326,6 +326,7 @@ export default function TopicPage({ user }) {
                 toastFn(`${feedback} Earned ${coins} XP. Try again for a bigger reward!`, { duration: 4000 });
               }
               lastCompletedRef.current = selectedContent.content_id;
+              showStreakToast(response.data);
               // Close viewer after delay, then silently refresh in background
               setTimeout(() => { closeViewer(); fetchTopicData(true); }, 2500);
             } catch (completeError) {
@@ -387,6 +388,14 @@ export default function TopicPage({ user }) {
     }
   };
   
+  // Shared feedback for the daily streak, which now advances on a real lesson
+  // completion (here) instead of just opening the app.
+  const showStreakToast = (data) => {
+    if (data?.streak && data.streak_reward > 0) {
+      toast.success(`🔥 Day ${data.streak} streak! +₹${data.streak_reward} bonus`, { duration: 4000 });
+    }
+  };
+
   const handleCompleteContent = async (contentId) => {
     try {
       const response = await axios.post(`${API}/content/items/${contentId}/complete`);
@@ -396,6 +405,7 @@ export default function TopicPage({ user }) {
       } else {
         toast.success('Done! Reward already added to your wallet');
       }
+      showStreakToast(response.data);
       lastCompletedRef.current = contentId;
       closeViewer();
       fetchTopicData(true);

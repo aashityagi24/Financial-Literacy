@@ -1,6 +1,7 @@
 """Achievement routes"""
 from fastapi import APIRouter, HTTPException, Request
 from datetime import datetime, timezone, timedelta, date
+from typing import Optional
 import uuid
 import logging
 
@@ -152,37 +153,29 @@ async def claim_streak_bonus(request: Request):
     return {"message": "No unclaimed streak bonuses"}
 
 
-@router.post("/streak/checkin")
-async def streak_checkin(request: Request):
-    """Daily streak check-in - Awards ₹5 daily, ₹10 on every 5th day (5, 10, 15, 20...), max ₹20"""
-    from services.auth import get_current_user
-    db = get_db()
-    user = await get_current_user(request)
-    
+async def advance_daily_streak(db, user: dict) -> Optional[dict]:
+    """Shared streak-advance logic: call this once per day the FIRST time a
+    child does something that should count toward their streak (a real lesson
+    completion — not merely opening the app/logging in). Awards ₹5 daily,
+    ₹10 on every 5th day, max ₹20. Returns None if the child already advanced
+    their streak today (so callers can skip showing a celebration)."""
     today = date.today().isoformat()
-    
     last_checkin = user.get("last_checkin_date")
     current_streak = user.get("streak_count", 0)
-    
+
     if last_checkin == today:
-        return {"message": "Already checked in today", "streak": current_streak, "reward": 0}
-    
+        return None
+
     yesterday = (date.today() - timedelta(days=1)).isoformat()
-    
     if last_checkin == yesterday:
         current_streak += 1
     else:
         current_streak = 1
-    
+
     # Calculate reward: ₹5 daily, ₹10 on every 5th day (5, 10, 15, 20...), max ₹20
-    if current_streak % 5 == 0:
-        reward_coins = 10
-    else:
-        reward_coins = 5
-    
-    # Cap max reward at ₹20
+    reward_coins = 10 if current_streak % 5 == 0 else 5
     reward_coins = min(reward_coins, 20)
-    
+
     await db.users.update_one(
         {"user_id": user["user_id"]},
         {"$set": {
@@ -190,14 +183,12 @@ async def streak_checkin(request: Request):
             "last_checkin_date": today
         }}
     )
-    
-    # Add reward to spending wallet
+
     await db.wallet_accounts.update_one(
         {"user_id": user["user_id"], "account_type": "spending"},
         {"$inc": {"balance": reward_coins}}
     )
-    
-    # Record transaction
+
     await db.transactions.insert_one({
         "transaction_id": f"trans_{uuid.uuid4().hex[:12]}",
         "user_id": user["user_id"],
@@ -208,11 +199,25 @@ async def streak_checkin(request: Request):
         "description": f"Day {current_streak} streak reward!" + (" (5-day bonus!)" if current_streak % 5 == 0 else ""),
         "created_at": datetime.now(timezone.utc).isoformat()
     })
-    
+
+    return {"streak": current_streak, "reward": reward_coins}
+
+
+@router.post("/streak/checkin")
+async def streak_checkin(request: Request):
+    """Daily streak check-in - Awards ₹5 daily, ₹10 on every 5th day (5, 10, 15, 20...), max ₹20"""
+    from services.auth import get_current_user
+    db = get_db()
+    user = await get_current_user(request)
+
+    result = await advance_daily_streak(db, user)
+    if result is None:
+        return {"message": "Already checked in today", "streak": user.get("streak_count", 0), "reward": 0}
+
     return {
-        "message": f"Check-in successful! {current_streak} day streak!",
-        "streak": current_streak,
-        "reward": reward_coins
+        "message": f"Check-in successful! {result['streak']} day streak!",
+        "streak": result["streak"],
+        "reward": result["reward"]
     }
 
 # ============== BADGE SYSTEM ==============

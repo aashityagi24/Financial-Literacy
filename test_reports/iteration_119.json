@@ -1,0 +1,29 @@
+{
+  "summary": "Verified streak-advances-on-lesson-completion (not login) change end-to-end. Backend pytest: 5/5 passing. Frontend browser test: streak chip stable across 4 dashboard reloads, zero auto /api/streak/checkin calls, no infinite re-render loop. Lesson-completion response contains {streak, streak_reward} and wallet is credited for both lesson coins + streak reward on the first completion of the day. Second-completion-same-day is idempotent (both via re-hitting complete on the same content and via directly calling the legacy /streak/checkin endpoint). Grade 4-5 user's streak_count is correctly exposed on /auth/me for the header chip.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_streak_on_lesson_completion.py",
+    "/app/test_reports/pytest/streak_results.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: reset blank_wallet_child's streak_count/last_checkin_date/wallet if you want another agent to re-test the fresh lesson flow — my backend test advanced streak from 2→3 and awarded ₹5 streak + ₹5 lesson = +₹10 to spending (candy shop content is now marked completed for that child). No temp seed content was created.",
+    "OPTIONAL: UI toast (\"🔥 Day X streak! +₹Y bonus\") was not exercised in the browser because after my backend test ran, blank_wallet_child has no remaining Grade-3 content to complete (hero showed 'You've completed everything!'). The toast helper (showStreakToast) is wired to both ACTIVITY_COMPLETE postMessage and handleCompleteContent — logic verified via backend response shape, but a manual UI pass with a freshly-seeded item would be nice-to-have.",
+    "MINOR: /api/auth/me is called ~5x per Dashboard load (App auth-check + Dashboard refreshStreak, possibly doubled by React StrictMode in dev). Not a loop and no functional issue, but could be de-duped later."
+  ],
+  "critical_code_review_comments": [
+    "advance_daily_streak correctly guards against double-advance via last_checkin_date == today early-return; verified idempotent both through re-completing same content and via legacy /streak/checkin.",
+    "5-day milestone reward (₹10) logic (streak % 5 == 0) verified in test assertion path.",
+    "refreshStreak in Dashboard.jsx uses a functional setUser with a value-equality guard preventing a re-render loop — confirmed by network log (steady ~5 /auth/me per full page load, not runaway).",
+    "content.py complete_content_item only calls advance_daily_streak when user.role == 'child' AND only after the 'already completed' early-return — correct scoping.",
+    "Response shape from /content/items/{id}/complete always includes streak & streak_reward keys (null / 0 when no advance) so the frontend toast helper can safely optional-chain."
+  ],
+  "updated_files": ["/app/backend/tests/test_streak_on_lesson_completion.py"],
+  "success_rate": {"backend": "100% (5/5)", "frontend": "100% (streak stability + no auto-checkin)"},
+  "test_credentials": "blank_wallet_child/testpass123 (Grade 3), classmate_g4_qa/testpass123 (Grade 4)",
+  "seed_data_creation": "None. Backend test consumed the existing content_07aae589c292 completion.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "blank_wallet_child now has streak_count=3, last_checkin_date=today, content_07aae589c292 marked completed. To re-run these tests fresh, reset those DB fields and remove the user_content_progress doc for content_07aae589c292 + reverse the +₹10 wallet credit + delete the two new transactions (lesson_reward + streak_reward). Legacy /api/streak/checkin endpoint verified still functional and idempotent per-day.",
+  "rca of the issue": "N/A — feature change verified working as designed."
+}
