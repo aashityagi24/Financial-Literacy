@@ -4,6 +4,7 @@ const QUICK_LINKS = [
   { label: 'Financial Literacy Platform', path: '/', testId: 'platform' },
   { label: 'Entrepreneurship Workshop', path: '/entrepreneurship-workshop', testId: 'workshop' },
   { label: 'For Schools', path: '/for-schools', testId: 'for-schools' },
+  { label: 'Terms & Conditions', path: '/terms', testId: 'terms' },
 ];
 
 export function SiteFooter() {
