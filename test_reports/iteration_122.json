@@ -1,0 +1,22 @@
+{
+  "summary": "Frontend-only test of TopicPage.jsx `effectiveHighlightId` next-lesson banner fix. All 6 assertions PASSED across 4 scenarios: (1) classmate_k main repro — auto-open + Mark Done on 'Sia And The Silver Coin' correctly moved the orange 'Your Next Lesson' banner to 'Sia and the Silver Coin - Workbook' (content_d65261165daf) with completed card showing green 'Earned 5 XP'; (2) continued flow — completing the workbook moved the banner again to 'Find Rs.1 coins' (content_ddc1142444ec); (3) regression classmate_g3 — homework highlight banner showed 'Your Homework — complete this!' on Candy Shop, and after completion via API + reload of the same ?highlight=...&homework=1 URL the banner disappeared entirely (no re-target to any other item); (4) stale URL reload with classmate_k — after both items completed, reloading the original ?highlight=content_90108cb5e262 correctly (a) did NOT auto-open the viewer for the completed book and (b) landed the banner on the current next-incomplete item 'Find Rs.1 coins' instead of the finished lesson.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "effectiveHighlightId useMemo logic is correct and matches spec — passthrough when unresolved, null for completed homework, next-mandatory-unlocked fallback otherwise. Scroll effect and card ring/banner correctly read effectiveHighlightId, while auto-open effect intentionally uses raw highlightId with is_completed guard (verified — no reopen for completed).",
+    "Minor: React key on the memo dependency uses full `topic` object; safe here because topic reference changes on refetch, but could be scoped to `topic?.content_items` for micro-optimization."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "100% (6/6 assertions)"},
+  "test_credentials": "classmate_k/testpass123, classmate_g3/testpass123 (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "None. Cleanup performed: deleted user_content_progress for classmate_k (content_90108cb5e262, content_d65261165daf) and classmate_g3 (content_07aae589c292); deleted today's (2026-09-21) 3 lesson/streak reward transactions for classmate_k (-15 spending) and 2 for classmate_g3 (-10 spending), restoring spending balances to 10.0 and 160 respectively; unset classmate_k streak_count/last_checkin_date; reset classmate_g3 streak_count=2 last_checkin_date=2026-09-13 (its pre-test state per prior transactions history); homework_assignment for Candy Shop (hw_c63a55c16008) was untouched and remains active.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "The `effectiveHighlightId` fix in /app/frontend/src/pages/TopicPage.jsx works correctly for all four scenarios (main repro, chained next-move, homework no-retarget, stale URL reload with no auto-open of completed). Optional-badge edge case not directly exercised but memo filter `c.is_mandatory !== false` is straightforward and covered by unit-of-logic review. Mark Done button has pulse animation; always use click(force=True) in Playwright."
+}
