@@ -1,0 +1,22 @@
+{
+  "summary": "Frontend UX fix verification for TopicPage 'Mark Done' nudge banner + pulsing button. All 6 scenarios verified end-to-end using classmate_k (Grade 0/child) and test_teacher_1. Banner appears with exact copy on incomplete non-activity content, button has animate-cta-pulse class; clicking Mark Done completes content and modal refreshes with Day-1-streak +5 XP bonus toast; re-opening completed content correctly hides banner and pulse (button label becomes 'Done'); Activity-type content correctly shows neither banner nor Mark Done button (shows 'Complete the activity to earn reward'); teacher/preview role shows 'Reward: 5 XP' with no banner/button; mobile 390px shows banner within viewport (366px wide) with clean wrap and no horizontal overflow (scrollWidth=clientWidth=390).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "TopicPage.jsx is now 1276 lines — recommend eventual split (content modal, filters, homework dialog) into subcomponents for maintainability."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "100% (6/6 scenarios pass)"},
+  "test_credentials": "classmate_k / testpass123 (child, Grade 0); test_teacher_1 / testpassword (teacher preview)",
+  "seed_data_creation": "None. Note: classmate_k Sia And The Silver Coin (content in topic_80e910ce6a69) was actually completed during Test 2 — child wallet +5 XP and Day-1 streak fired. Reversal not attempted (mentioned in request as acceptable). Main agent may reset user_content_progress + wallet if the pre-test state must be restored.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Nudge banner (data-testid='mark-done-nudge-banner') + animate-cta-pulse on data-testid='mark-done-btn' verified across child/teacher, activity/non-activity, complete/incomplete, desktop/mobile. If retesting, use classmate_g1/g2/g3 or other incomplete book/worksheet under topic_80e910ce6a69 since Sia book is now completed for classmate_k.",
+  "rca of the issue": "N/A — this was a UX enhancement, not a bug. Original issue was low-affordance small 'Mark Done' pill; fix adds a bright yellow instructional banner + pulsing animation on the button while item is incomplete. Fix is scoped correctly (role=='child' && !is_completed && content_type!='activity')."
+}
