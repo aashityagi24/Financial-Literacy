@@ -36,7 +36,8 @@ import DashboardFooter from '@/components/DashboardFooter';
 import { getDefaultAvatar } from '@/utils/avatars';
 import { JobGuideDialog } from '@/components/JobGuideDialog';
 import { MoneyBreakdownChart } from '@/components/MoneyBreakdownChart';
-import { MoneyMastersPurchase } from '@/components/MoneyMastersPurchase';
+// MoneyMastersPurchase import intentionally removed — its dashboard banner is
+// commented out below while the module is paused; restore both together.
 
 const gradeLabels = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
 
@@ -731,8 +732,8 @@ export default function ParentDashboard({ user }) {
         </div>
         )}
         
-        {/* Money Masters & Entrepreneurship standalone module */}
-        <MoneyMastersPurchase children={dashboard?.children || []} user={user} />
+        {/* Money Masters & Entrepreneurship standalone module — temporarily paused, banner hidden so parents don't register for it */}
+        {/* <MoneyMastersPurchase children={dashboard?.children || []} user={user} /> */}
 
         {/* Invite Second Parent - only for two_parents plan */}
         {subscription?.plan_type === 'two_parents' && subscription?.parent_emails?.length < 2 && (
