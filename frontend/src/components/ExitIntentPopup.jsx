@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 const BENEFITS = [
-  '50+ games, stories & activities unlocked',
+  '200+ games, stories & activities unlocked',
   'Watch your child learn real money skills in a day',
   'No commitment — cancel anytime, zero risk',
 ];
@@ -17,7 +17,7 @@ const BENEFITS = [
 const SESSION_KEY = 'coinquest_exit_intent_shown';
 // Mobile has no mouseleave-to-top signal, so fall back to a time-on-page
 // trigger if the visitor hasn't left (or converted) by then.
-const MOBILE_FALLBACK_MS = 45000;
+const MOBILE_FALLBACK_MS = 30000;
 
 /**
  * Exit-intent popup for the marketing homepage: nudges a visitor who's about
@@ -99,7 +99,7 @@ export function ExitIntentPopup({ trialPrice = 49 }) {
               className="text-2xl font-bold text-[#1D3557] leading-tight"
               style={{ fontFamily: 'Fredoka' }}
             >
-              Give Your Child the Gift of Money Smarts!
+              Give Your Child the Gift of Financial Independence!
             </DialogTitle>
 
             <DialogDescription className="sr-only">
