@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { API, getAssetUrl } from '@/App';
@@ -66,6 +66,23 @@ export default function TopicPage({ user }) {
   const highlightId = searchParams.get('highlight');
   // True only when the highlight came from a real teacher-assigned homework item
   const isHomeworkHighlight = searchParams.get('homework') === '1';
+
+  // The URL's highlight param is static, so once that item is completed the
+  // "Your Next Lesson" banner would stay stuck on a finished lesson. Follow
+  // the data instead: if the highlighted item is done, move the highlight to
+  // the next incomplete, unlocked, mandatory item. Teacher homework never
+  // re-targets a different item — it just stops highlighting.
+  const effectiveHighlightId = useMemo(() => {
+    if (!highlightId || !topic?.content_items) return highlightId;
+    const items = topic.content_items;
+    const current = items.find((c) => c.content_id === highlightId);
+    if (!current || !current.is_completed) return highlightId;
+    if (isHomeworkHighlight) return null;
+    const idx = items.findIndex((c) => c.content_id === highlightId);
+    const isCandidate = (c) => !c.is_completed && c.is_unlocked !== false && c.is_mandatory !== false;
+    const next = items.slice(idx + 1).find(isCandidate) || items.find(isCandidate);
+    return next?.content_id || null;
+  }, [highlightId, topic, isHomeworkHighlight]);
   const trialBannerShownRef = useRef(false);
   const showAnimations = useFirstVisitAnimation(`topic-${topicId}`);
   const lastCompletedRef = useRef(null);
@@ -121,15 +138,15 @@ export default function TopicPage({ user }) {
     })();
   }, [user?.role]);
 
-  // Scroll to and briefly highlight the homework content item (child opening a to-do)
+  // Scroll to and briefly highlight the recommended content item (child opening a to-do)
   useEffect(() => {
-    if (!highlightId || !topic) return;
+    if (!effectiveHighlightId || !topic) return;
     const t = setTimeout(() => {
-      const el = document.querySelector(`[data-content-id="${highlightId}"]`);
+      const el = document.querySelector(`[data-content-id="${effectiveHighlightId}"]`);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 500);
     return () => clearTimeout(t);
-  }, [highlightId, topic]);
+  }, [effectiveHighlightId, topic]);
 
   // Directly open the "Start Learning"/"Continue Learning" recommended item from
   // the dashboard — the child already chose to start, so it should open right
@@ -775,11 +792,11 @@ export default function TopicPage({ user }) {
                   <div
                     key={content.content_id}
                     data-content-id={content.content_id}
-                    className={`card-playful p-5 cursor-pointer hover:scale-[1.01] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/5' : ''} ${isTeacherOnly ? 'border-[#7C3AED] bg-[#7C3AED]/5' : ''} ${highlightId === content.content_id ? 'ring-4 ring-[#EE6C4D] ring-offset-2 shadow-xl bg-[#EE6C4D]/5' : ''}`}
+                    className={`card-playful p-5 cursor-pointer hover:scale-[1.01] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/5' : ''} ${isTeacherOnly ? 'border-[#7C3AED] bg-[#7C3AED]/5' : ''} ${effectiveHighlightId === content.content_id ? 'ring-4 ring-[#EE6C4D] ring-offset-2 shadow-xl bg-[#EE6C4D]/5' : ''}`}
                     style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
                     onClick={() => openContent(content)}
                   >
-                    {highlightId === content.content_id && (
+                    {effectiveHighlightId === content.content_id && (
                       <div className="mb-3 -mt-1 inline-flex items-center gap-1 text-xs font-bold text-white bg-[#EE6C4D] px-3 py-1 rounded-full" data-testid="homework-highlight-badge">
                         {isHomeworkHighlight ? (
                           <><FileText className="w-3 h-3" /> Your Homework — complete this!</>
