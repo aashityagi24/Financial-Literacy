@@ -1156,6 +1156,17 @@ export default function TopicPage({ user }) {
               )}
             </div>
             
+            {/* Nudge banner — tells the child in plain words that they need to
+                tap "Mark Done" to unlock their next lesson, since the small
+                pill button alone was easy to miss. */}
+            {user?.role === 'child' && !selectedContent.is_completed && selectedContent.content_type !== 'activity' && (
+              <div className="px-3 py-2 bg-[#FFD23F] border-t-2 border-[#1D3557] text-center" data-testid="mark-done-nudge-banner">
+                <span className="text-xs sm:text-sm font-extrabold text-[#1D3557]">
+                  👇 Finished? Tap "Mark Done" below to unlock your next lesson!
+                </span>
+              </div>
+            )}
+
             {/* Modal Footer - compact */}
             <div className="px-3 py-1.5 border-t-2 border-[#1D3557] flex justify-between items-center bg-[#FFD23F]/20">
               <span className="text-sm font-bold text-[#06D6A0]">
@@ -1169,8 +1180,9 @@ export default function TopicPage({ user }) {
               <div className="flex items-center gap-2">
                 {user?.role === 'child' && selectedContent.content_type !== 'activity' && (
                   <button 
+                    data-testid="mark-done-btn"
                     onClick={() => { handleCompleteContent(selectedContent.content_id); }}
-                    className="btn-primary px-3 py-1.5 text-sm"
+                    className={`btn-primary px-4 py-2 text-sm font-bold ${!selectedContent.is_completed ? 'animate-cta-pulse' : ''}`}
                   >
                     <Check className="w-4 h-4 mr-1 inline" />
                     {selectedContent.is_completed ? 'Done' : 'Mark Done'}
