@@ -22,9 +22,11 @@ const MOBILE_FALLBACK_MS = 30000;
 /**
  * Exit-intent popup for the marketing homepage: nudges a visitor who's about
  * to leave (mouse moving up towards the tab/back bar, or — on touch devices
- * where that signal doesn't exist — after a time delay) to try the low-cost
- * 1-day trial instead of bouncing with nothing. The price shown is passed in
- * as `trialPrice`, sourced from the live admin-configured plan price.
+ * where that signal doesn't exist — after a time delay, retried until a
+ * moment the visitor isn't busy) to try the low-cost 1-day trial instead of
+ * bouncing with nothing. It never fires while a form field is focused or
+ * another dialog (e.g. checkout) is open. The price shown is passed in as
+ * `trialPrice`, sourced from the live admin-configured plan price.
  * Shown at most once per browser session.
  */
 export function ExitIntentPopup({ trialPrice = 49 }) {
@@ -34,11 +36,24 @@ export function ExitIntentPopup({ trialPrice = 49 }) {
   useEffect(() => {
     if (sessionStorage.getItem(SESSION_KEY) === '1') return;
 
+    // Never interrupt a visitor who is actively typing in a form field (e.g.
+    // mid-way through the checkout/signup form) or while another dialog —
+    // like the checkout form itself — is already open.
+    const isUserEngaged = () => {
+      const el = document.activeElement;
+      const typing = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable);
+      const dialogOpen = !!document.querySelector('[role="dialog"]');
+      return typing || dialogOpen;
+    };
+
+    // Returns true only when the popup actually opened.
     const trigger = () => {
-      if (shownRef.current) return;
+      if (shownRef.current) return true;
+      if (isUserEngaged()) return false;
       shownRef.current = true;
       sessionStorage.setItem(SESSION_KEY, '1');
       setOpen(true);
+      return true;
     };
 
     const handleMouseLeave = (e) => {
@@ -46,7 +61,22 @@ export function ExitIntentPopup({ trialPrice = 49 }) {
     };
 
     document.addEventListener('mouseleave', handleMouseLeave);
-    const fallbackTimer = setTimeout(trigger, MOBILE_FALLBACK_MS);
+
+    // Time-based fallback exists only for touch devices, which have no
+    // mouse-leaves-the-top-of-the-screen signal. Running this timer on
+    // desktop too made the popup fire while people were filling forms.
+    // On touch devices, retry so it lands at a quiet moment instead of
+    // popping up mid-typing.
+    let fallbackTimer;
+    const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+    if (isTouch) {
+      const scheduleFallback = () => {
+        fallbackTimer = setTimeout(() => {
+          if (!trigger()) scheduleFallback();
+        }, MOBILE_FALLBACK_MS);
+      };
+      scheduleFallback();
+    }
 
     return () => {
       document.removeEventListener('mouseleave', handleMouseLeave);
