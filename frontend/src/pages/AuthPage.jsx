@@ -83,7 +83,15 @@ export default function AuthPage() {
     setCaptchaAnswer('');
   };
 
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
   const handleGoogleLogin = () => {
+    // Clickwrap: creating a NEW account via Google requires agreeing to the
+    // Terms first. Login mode (existing users) is unaffected.
+    if (mode === 'signup' && !termsAccepted) {
+      toast.error('Please agree to the Terms and Conditions to create an account');
+      return;
+    }
     window.location.href = `${BACKEND_URL}/api/auth/google/login`;
   };
 
@@ -171,6 +179,11 @@ export default function AuthPage() {
     
     if (!name.trim() || !identifier.trim() || !password.trim() || !phone.trim()) {
       toast.error('Please fill all fields including mobile number');
+      return;
+    }
+
+    if (!termsAccepted) {
+      toast.error('Please agree to the Terms and Conditions to create an account');
       return;
     }
     
@@ -451,6 +464,26 @@ export default function AuthPage() {
                 </div>
               )}
               
+              {/* Mandatory clickwrap — Terms & Conditions agreement (signup only) */}
+              {mode === 'signup' && (
+                <label className="flex items-start gap-2.5 cursor-pointer" data-testid="terms-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 accent-[#1D3557]"
+                    data-testid="terms-checkbox"
+                  />
+                  <span className="text-sm text-gray-600">
+                    I agree to the{' '}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#1D3557] underline" data-testid="terms-link">
+                      Terms and Conditions
+                    </a>{' '}
+                    of CoinQuest
+                  </span>
+                </label>
+              )}
+
               <Button
                 type="submit"
                 disabled={isLoading}

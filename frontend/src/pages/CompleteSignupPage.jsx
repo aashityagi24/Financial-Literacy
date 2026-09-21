@@ -28,6 +28,7 @@ export default function CompleteSignupPage() {
   const [ctx, setCtx] = useState(null); // { email, name, phone, account_status }
   const [loadingCtx, setLoadingCtx] = useState(true);
   const [form, setForm] = useState({ name: '', phone: '', password: '', confirm: '' });
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -59,6 +60,10 @@ export default function CompleteSignupPage() {
   };
 
   const submit = async () => {
+    if (!isSignin && !termsAccepted) {
+      toast.error('Please agree to the Terms and Conditions to create your account');
+      return;
+    }
     if (!form.password || form.password.length < 6) {
       toast.error('Password must be at least 6 characters');
       return;
@@ -195,6 +200,25 @@ export default function CompleteSignupPage() {
                 />
               </div>
             </div>
+          )}
+
+          {!isSignin && (
+            <label className="flex items-start gap-2.5 cursor-pointer" data-testid="complete-signup-terms-label">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-[#1D3557]"
+                data-testid="complete-signup-terms-checkbox"
+              />
+              <span className="text-sm text-gray-600">
+                I agree to the{' '}
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#1D3557] underline" data-testid="complete-signup-terms-link">
+                  Terms and Conditions
+                </a>{' '}
+                of CoinQuest
+              </span>
+            </label>
           )}
 
           <Button

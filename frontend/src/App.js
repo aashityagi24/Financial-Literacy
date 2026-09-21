@@ -51,6 +51,7 @@ import GlossaryPage from "@/pages/GlossaryPage";
 import MyJobsPage from "@/pages/MyJobsPage";
 import AuthPage from "@/pages/AuthPage";
 import CompleteSignupPage from "@/pages/CompleteSignupPage";
+import TermsPage from "@/pages/TermsPage";
 import ContentProtection from "@/components/ContentProtection";
 import ActivityScoresPage from "@/pages/ActivityScoresPage";
 import TeacherActivityAnalytics from "@/pages/TeacherActivityAnalytics";
@@ -243,6 +244,7 @@ function AppRouter() {
       <Route path="/login" element={<AuthPage />} />
       <Route path="/signup" element={<AuthPage />} />
       <Route path="/complete-signup" element={<CompleteSignupPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
       {/* Fallback: Handle if Google OAuth callback hits frontend without /api prefix */}
       <Route path="/auth/google/callback" element={<AuthCallback />} />
