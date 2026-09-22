@@ -48,8 +48,12 @@ const SECTIONS = [
     body: 'We may update these terms from time to time. Continued use of the platform after changes take effect constitutes acceptance of the updated terms.',
   },
   {
-    title: '11. Contact',
-    body: 'Questions about these terms can be sent to us through the contact details on our website.',
+    title: '11. Governing Law',
+    body: 'These Terms shall be governed by and construed in accordance with the laws of India, without regard to conflict of law principles. Any disputes shall be subject to the exclusive jurisdiction of the courts of Ahmedabad, Gujarat.',
+  },
+  {
+    title: '12. Contact',
+    body: 'If you have questions about these Terms, please contact us at: hello@coinquest.co.in',
   },
 ];
 
