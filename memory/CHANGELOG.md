@@ -2,6 +2,16 @@
 
 Chronological implementation log. See PRD.md for the static problem statement and ROADMAP.md for pending work.
 
+### Recent Updates (Feb 2026, admin UI)
+
+**Content Management: colour-coded Child/Parent/Teacher role tabs** ✅
+- User request: "Teacher, child, parent all look the same in the tabs so colour code them separately so it is easier to identify."
+- `ContentManagement.jsx`: added a `ROLE_STYLES` map (child=emerald, parent=blue, teacher=purple; each with badge/dot/checkbox/chip class variants) right after `DEFAULT_VISIBILITY`.
+- Content-list "Visible To" badges now render one colour-coded pill per role instead of a single generic blue `join(', ')` span — `data-testid="visible-to-badge-{role}-{content_id}"`.
+- Add/Edit Content modal's "Visible To (User Roles)" section now renders each role as a pill/chip with a coloured dot, filling with that role's colour when checked (`data-testid="visible-to-checkbox-{role}"`) instead of plain unstyled checkboxes.
+- Purely visual — no backend/data model changes. Testing agent verified 100% pass, zero bugs (iteration_125.json): badge colours/labels correct, chip toggle styling correct, "No roles selected" warning intact, no mobile (390px) overflow.
+
+
 ### Recent Updates (August 24, 2026, hero image)
 
 **Landing page hero — added right-side image** ✅
