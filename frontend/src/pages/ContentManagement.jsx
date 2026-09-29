@@ -65,6 +65,14 @@ const DEFAULT_VISIBILITY = {
 };
 const defaultVisibilityFor = (type) => DEFAULT_VISIBILITY[type] || ['child'];
 
+// Distinct colour treatment per role so Child / Parent / Teacher are instantly
+// tellable apart wherever "visible to" is shown or selected.
+const ROLE_STYLES = {
+  child: { label: 'Child', badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500', checkbox: 'text-emerald-600 focus:ring-emerald-500', chip: 'border-emerald-400 bg-emerald-50 text-emerald-700' },
+  parent: { label: 'Parent', badge: 'bg-blue-100 text-blue-700', dot: 'bg-blue-500', checkbox: 'text-blue-600 focus:ring-blue-500', chip: 'border-blue-400 bg-blue-50 text-blue-700' },
+  teacher: { label: 'Teacher', badge: 'bg-purple-100 text-purple-700', dot: 'bg-purple-500', checkbox: 'text-purple-600 focus:ring-purple-500', chip: 'border-purple-400 bg-purple-50 text-purple-700' },
+};
+
 // Curriculums content can belong to. Content items drive delivery scoping to a
 // school's enabled curricula; topics/subtopics carry the tag for organisation.
 const CURRICULA = [
@@ -497,11 +505,15 @@ function SortableContentItem({ content, onEdit, onDelete, onMove, onDuplicate, o
               Mandatory
             </button>
           )}
-          {content.visible_to && content.visible_to.length > 0 && (
-            <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-600">
-              {content.visible_to.join(', ')}
+          {content.visible_to && content.visible_to.length > 0 && content.visible_to.map((role) => (
+            <span
+              key={role}
+              className={`text-xs px-2 py-0.5 rounded font-medium ${ROLE_STYLES[role]?.badge || 'bg-gray-100 text-gray-600'}`}
+              data-testid={`visible-to-badge-${role}-${content.content_id}`}
+            >
+              {ROLE_STYLES[role]?.label || role}
             </span>
-          )}
+          ))}
         </div>
         <p className="text-sm text-gray-500 truncate">{content.description}</p>
         {content.visible_to?.includes('child') && (
@@ -2600,23 +2612,32 @@ export default function ContentManagement({ user }) {
               <label className="block text-sm font-medium text-gray-700">Visible To (User Roles)</label>
               <p className="text-xs text-gray-500 mb-2">Select which user types can see this content</p>
               <div className="flex flex-wrap gap-3">
-                {['child', 'parent', 'teacher'].map((role) => (
-                  <label key={role} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={contentForm.visible_to?.includes(role) || false}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setContentForm(p => ({ ...p, visible_to: [...(p.visible_to || []), role] }));
-                        } else {
-                          setContentForm(p => ({ ...p, visible_to: (p.visible_to || []).filter(r => r !== role) }));
-                        }
-                      }}
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span className="capitalize text-sm text-gray-700">{role}</span>
-                  </label>
-                ))}
+                {['child', 'parent', 'teacher'].map((role) => {
+                  const style = ROLE_STYLES[role];
+                  const checked = contentForm.visible_to?.includes(role) || false;
+                  return (
+                    <label
+                      key={role}
+                      className={`flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-full border transition-colors ${checked ? style.chip : 'border-gray-200 bg-white text-gray-600'}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setContentForm(p => ({ ...p, visible_to: [...(p.visible_to || []), role] }));
+                          } else {
+                            setContentForm(p => ({ ...p, visible_to: (p.visible_to || []).filter(r => r !== role) }));
+                          }
+                        }}
+                        className={`w-4 h-4 bg-gray-100 border-gray-300 rounded focus:ring-2 ${style.checkbox}`}
+                        data-testid={`visible-to-checkbox-${role}`}
+                      />
+                      <span className={`w-2 h-2 rounded-full ${style.dot}`}></span>
+                      <span className="text-sm font-medium">{style.label}</span>
+                    </label>
+                  );
+                })}
               </div>
               {contentForm.visible_to?.length === 0 && (
                 <p className="text-xs text-orange-500 mt-1">Warning: No roles selected. Content will not be visible to anyone.</p>
