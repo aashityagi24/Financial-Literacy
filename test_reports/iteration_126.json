@@ -1,0 +1,21 @@
+{
+  "summary": "Verified exit-intent popup mobile-removal fix on CoinQuest marketing homepage (/). Mobile emulation (390x844, touch, iPhone UA): popup NEVER appeared after 40+ seconds of active scrolling across 10 scroll positions; sessionStorage flag remained null confirming trigger() was never called. Desktop emulation (1920x800, no touch): mouseleave-to-top (clientY=0) trigger STILL works — popup appears, sessionStorage flag set to '1', all content renders correctly (headline, 200+ benefit text, ₹49 price tag, CTA 'Try for ₹49 Today', close 'No thanks, maybe later'), and CTA click dispatches the 'coinquest:buy-now' CustomEvent with detail {duration:'1_day'} as expected. isTouch detection verified: True on mobile, False on desktop, which correctly gates the mouseleave listener attachment.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "ExitIntentPopup.jsx implementation is clean and matches the fix description: touch detection via `matchMedia('(pointer: coarse)') || 'ontouchstart' in window` correctly skips the mouseleave listener on touch devices. No time-based fallback remains. Guards (typing/dialog-open) preserved. Session-once behavior intact via sessionStorage."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "100%"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Exit-intent popup mobile fix fully verified. Popup is now desktop-only (mouseleave to top of viewport). On any touch/coarse-pointer device it will never fire regardless of dwell/scroll time. Only mounted on FinancialLiteracyPage.jsx which serves route '/' (and '/financial-literacy' redirects to '/'). Uses sessionStorage key 'coinquest_exit_intent_shown' — clear it between test contexts.",
+  "rca of the issue": "N/A — verifying a fix, not diagnosing a bug. Root cause of the original nuisance was a MOBILE_FALLBACK_MS setTimeout retry loop that fired the popup after 30s on touch devices, interrupting organic scrolling. Fix removed that timer entirely and now only attaches the desktop `mouseleave` listener when isTouch === false. Verified working."
+}

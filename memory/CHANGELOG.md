@@ -2,6 +2,14 @@
 
 Chronological implementation log. See PRD.md for the static problem statement and ROADMAP.md for pending work.
 
+### Recent Updates (Feb 2026, marketing UX)
+
+**Exit-intent popup removed entirely on mobile** ✅
+- User reported: "The popup of dont leave on the phone is causing nuisance to users and obstructing their organic scroll and exploration flow. Remove it for mobile."
+- `ExitIntentPopup.jsx`: removed the `MOBILE_FALLBACK_MS` (30s) time-based retry-timer trigger that used to fire the popup on touch devices (mobile has no `mouseleave`-to-top-of-screen signal, so this timer was the only mobile trigger). The `mouseleave` listener (the sole remaining trigger) is now only attached when `isTouch` is false, so mobile/touch visitors never see this popup regardless of dwell time or scrolling. Desktop behavior (mouse-to-top trigger, form/dialog guards, once-per-session via sessionStorage) is fully unchanged.
+- Testing agent verified 100% (iteration_126.json): mobile emulation confirmed popup never appears after 40+s of scrolling; desktop mouseleave trigger + full popup content + CTA buy-now event still work correctly as a regression check.
+
+
 ### Recent Updates (Feb 2026, admin UI)
 
 **Content Management: colour-coded Child/Parent/Teacher role tabs** ✅
