@@ -15,17 +15,15 @@ const BENEFITS = [
 ];
 
 const SESSION_KEY = 'coinquest_exit_intent_shown';
-// Mobile has no mouseleave-to-top signal, so fall back to a time-on-page
-// trigger if the visitor hasn't left (or converted) by then.
-const MOBILE_FALLBACK_MS = 30000;
 
 /**
  * Exit-intent popup for the marketing homepage: nudges a visitor who's about
- * to leave (mouse moving up towards the tab/back bar, or — on touch devices
- * where that signal doesn't exist — after a time delay, retried until a
- * moment the visitor isn't busy) to try the low-cost 1-day trial instead of
- * bouncing with nothing. It never fires while a form field is focused or
- * another dialog (e.g. checkout) is open. The price shown is passed in as
+ * to leave (mouse moving up towards the tab/back bar) to try the low-cost
+ * 1-day trial instead of bouncing with nothing. Desktop-only — mobile/touch
+ * visitors have no mouseleave-to-top signal, and a time-based fallback there
+ * was interrupting organic scrolling/exploration, so it was removed for
+ * mobile entirely. It never fires while a form field is focused or another
+ * dialog (e.g. checkout) is open. The price shown is passed in as
  * `trialPrice`, sourced from the live admin-configured plan price.
  * Shown at most once per browser session.
  */
@@ -60,27 +58,17 @@ export function ExitIntentPopup({ trialPrice = 49 }) {
       if (e.clientY <= 0) trigger();
     };
 
-    document.addEventListener('mouseleave', handleMouseLeave);
-
-    // Time-based fallback exists only for touch devices, which have no
-    // mouse-leaves-the-top-of-the-screen signal. Running this timer on
-    // desktop too made the popup fire while people were filling forms.
-    // On touch devices, retry so it lands at a quiet moment instead of
-    // popping up mid-typing.
-    let fallbackTimer;
+    // Desktop-only: mobile/touch devices have no mouseleave-to-top signal,
+    // and the previous time-based fallback for touch was interrupting
+    // organic scrolling/exploration on mobile, so it has been removed —
+    // mobile visitors never see this popup.
     const isTouch = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
-    if (isTouch) {
-      const scheduleFallback = () => {
-        fallbackTimer = setTimeout(() => {
-          if (!trigger()) scheduleFallback();
-        }, MOBILE_FALLBACK_MS);
-      };
-      scheduleFallback();
+    if (!isTouch) {
+      document.addEventListener('mouseleave', handleMouseLeave);
     }
 
     return () => {
       document.removeEventListener('mouseleave', handleMouseLeave);
-      clearTimeout(fallbackTimer);
     };
   }, []);
 
