@@ -2,6 +2,16 @@
 
 Chronological implementation log. See PRD.md for the static problem statement and ROADMAP.md for pending work.
 
+### Recent Updates (Jun 2026, child navigation)
+
+**Child quick-nav on every page (bottom pill → left rail on wide screens)** ✅
+- User request: "The floating nav bar that is there on the dashboard of the child - let it be there on all the pages… if its better for design instead of the floating tablet at the bottom you can move it to the left side gap space."
+- New `components/ChildQuickNav.jsx`: Home / Learn / Quests / Money / Rewards. Below 1740px it is the familiar floating bottom pill (`data-testid="bottom-nav"`, items `bottom-nav-*`); at `min-[1740px]` it becomes a vertical rail parked in the left gutter (`side-nav`, items `side-nav-*`). Active item is derived from `useLocation().pathname` (previously "Home" was hard-coded active). A `h-24 min-[1740px]:h-0` spacer keeps page content clear of the pill.
+- Mounted once in `App.js` inside `ProtectedRoute` and gated on `user?.role === 'child'`, so it shows on every logged-in child page and never for parent/teacher/admin/school.
+- Removed the old dashboard-only bottom nav from `Dashboard.jsx` (it was Grade K-3 only and always highlighted Home).
+- Testing agent verified 100% frontend (iteration_129.json): exclusivity at 390/1600/1920, all 5 destinations from both variants, active highlighting, role scoping, dashboard content regression, no content overlap.
+
+
 ### Recent Updates (Jun 2026, mobile UX)
 
 **Mobile declutter: hamburger header + in-platform responsive polish** ✅
