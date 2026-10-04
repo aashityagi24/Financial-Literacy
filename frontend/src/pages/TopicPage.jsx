@@ -1173,20 +1173,11 @@ export default function TopicPage({ user }) {
               )}
             </div>
             
-            {/* Nudge banner — tells the child in plain words that they need to
-                tap "Mark Done" to unlock their next lesson, since the small
-                pill button alone was easy to miss. */}
-            {user?.role === 'child' && !selectedContent.is_completed && selectedContent.content_type !== 'activity' && (
-              <div className="px-3 py-2 bg-[#FFD23F] border-t-2 border-[#1D3557] text-center" data-testid="mark-done-nudge-banner">
-                <span className="text-xs sm:text-sm font-extrabold text-[#1D3557]">
-                  👇 Finished? Tap "Mark Done" below to unlock your next lesson!
-                </span>
-              </div>
-            )}
-
-            {/* Modal Footer - compact */}
-            <div className="px-3 py-1.5 border-t-2 border-[#1D3557] flex justify-between items-center bg-[#FFD23F]/20">
-              <span className="text-sm font-bold text-[#06D6A0]">
+            {/* Modal Footer - compact. The "Mark Done" nudge sits inline here
+                (between the XP label and the button) instead of as its own
+                banner row, so it never covers the activity's own buttons. */}
+            <div className="px-3 py-1.5 border-t-2 border-[#1D3557] flex justify-between items-center gap-2 bg-[#FFD23F]/20">
+              <span className="text-sm font-bold text-[#06D6A0] flex-shrink-0">
                 {user?.role === 'child' 
                   ? (selectedContent.is_completed 
                       ? `✓ Earned ${selectedContent.coins_earned != null ? selectedContent.coins_earned : selectedContent.reward_coins} XP` 
@@ -1194,7 +1185,13 @@ export default function TopicPage({ user }) {
                   : `Reward: ${selectedContent.reward_coins} XP`
                 }
               </span>
-              <div className="flex items-center gap-2">
+              {user?.role === 'child' && !selectedContent.is_completed && selectedContent.content_type !== 'activity' && (
+                <span className="text-[11px] sm:text-sm font-extrabold text-[#1D3557] text-center truncate" data-testid="mark-done-nudge-banner">
+                  <span className="hidden sm:inline">Finished? Tap &ldquo;Mark Done&rdquo; to unlock your next lesson!</span>
+                  <span className="sm:hidden">Finished? Tap &ldquo;Mark Done&rdquo; &rarr;</span>
+                </span>
+              )}
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {user?.role === 'child' && selectedContent.content_type !== 'activity' && (
                   <button 
                     data-testid="mark-done-btn"

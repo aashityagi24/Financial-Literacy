@@ -2,6 +2,14 @@
 
 Chronological implementation log. See PRD.md for the static problem statement and ROADMAP.md for pending work.
 
+### Recent Updates (Jun 2026, lesson modal)
+
+**"Mark Done" nudge moved inline into the modal footer** ✅
+- User report: the full-width yellow nudge banner sat on top of the content iframe and blocked the activity's own buttons. "Instead put this message in line with the xp points and the done button."
+- `TopicPage.jsx` (~line 1176): removed the standalone `px-3 py-2 bg-[#FFD23F]` banner row above the footer. The nudge now renders as a centered inline span inside the existing footer flex row (`+XP` on the left, nudge in the middle, `Mark Done` on the right), with `flex-shrink-0` on both ends and a shorter mobile copy (`Finished? Tap "Mark Done" →`) under `sm`. `data-testid="mark-done-nudge-banner"` kept.
+- Verified with Playwright as child `classmate_g3` on a video content item: desktop 1920 and mobile 390 both show a single footer row, no iframe overlay, no horizontal overflow.
+
+
 ### Recent Updates (Jun 2026, auth entry points)
 
 **Single "Sign Up" CTA split into Login + Register** ✅
