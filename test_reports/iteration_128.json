@@ -1,0 +1,26 @@
+{
+  "summary": "Full frontend regression on CoinQuest mobile UI polish (iteration 128). Tested at 390x844 and 1920x800 using playwright on preview URL. 27/27 header tests passed. (1) Mobile / header: logo + Login + hamburger only; Register and nav links NOT visible outside; mobile menu opens with how-it-works, pricing, Register items; Register navigates to /register, Login to /login, toggle closes menu. (2) /for-schools mobile: only Enquire Now (site-header-cta-btn) + hamburger; no Login/Register anywhere; menu Enquire opens enquiry dialog. (3) /entrepreneurship-workshop mobile: logo + Login + hamburger; mobile menu Trial button opens the Book-a-Free-Trial dialog (SPA clears ?trial=1 from URL after useEffect reads it, so URL check was functionally equivalent). (4) Desktop regression at 1920x800: nav links + inline Login + Register visible on /, hamburger hidden; /for-schools still shows only Enquire Now. (5) Child in-platform (classmate_g3): /learn topic card renders with thumbnail, title, '1 Subtopics' / '1 Items' chips on a single compact line, no overflow; How Learning Works banner is compact. (6) Topic page /learn/topic/topic_2731433e0a5b: Learning Content heading and All/Pending/Done tabs stacked properly, content row (red video icon + Video badge + Testing title + +5 XP + play) aligned on one row at 390px, no horizontal overflow. (7) Child dashboard homework banner: shows full title 'Homework: Candy Shop' and complete 'Set by TTest · earn 5 XP' line (NOT truncated), 'Do homework' CTA full-width. (8) Content viewer modal on mobile: footer is a single row with +5 XP, 'Finished? Tap \"Mark Done\" →' nudge, and Mark Done button; nothing overlays the <video> element; Mark Done click (force due to CSS pulse animation) successfully marked item as Done. (9) Parent dashboard (nudge_parent@test.com) at 390: header is one tight row (title + bell + profile avatar with name hidden on mobile + logout), 4 section tabs render in horizontally scrollable parent-section-nav. No non-scroll element overflows 390px. At 1920 desktop: profile name 'Nudge Test Parent' visible, full inline tabs. All data-testids from the spec present and functional.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "SiteHeader.jsx hamburger menu correctly scoped: Login kept outside, Register/nav moved inside on mobile only (md: breakpoints). Context-aware (schools page vs workshop vs default) is clean.",
+    "TopicPage.jsx viewer modal footer uses flex-row with +XP, inline nudge and Mark Done cleanly at 390px — nothing overlays the video iframe.",
+    "ChildHomework.jsx mobile banner stacks correctly with full title and full-width action button; no truncation observed.",
+    "Minor DX nit: mark-done-btn uses animate-cta-pulse which triggers playwright 'element is not stable' — not a user bug, but automated tests must use force=True. Consider gating the pulse animation behind prefers-reduced-motion or stop after first render.",
+    "Minor a11y warning in console: DialogContent (trial-enquiry-dialog, school-enquiry-dialog) missing aria-describedby — add <DialogDescription> or aria-describedby='...' to silence."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (not tested)", "frontend": "100%"},
+  "test_credentials": "classmate_g3 / testpass123 (child), nudge_parent@test.com / testpass123 (parent)",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 128 validated the responsive header + in-platform mobile polish. All data-testids referenced in the spec exist and work: site-header-logo, site-header-login-btn, site-header-menu-toggle, site-header-mobile-menu, site-header-mobile-nav-how-it-works, site-header-mobile-nav-pricing, site-header-mobile-register-btn, site-header-cta-btn, site-header-mobile-enquiry-btn, site-header-mobile-trial-btn, child-homework-banner, parent-profile-link, parent-section-nav, mark-done-btn. Note: the ?trial=1 query param is cleaned by the EntrepreneurshipWorkshop useEffect after it opens the dialog, so assert the dialog opens rather than inspecting the URL. mark-done-btn has animate-cta-pulse — use force=True in Playwright clicks.",
+  "rca of the issue": "N/A - no bugs found"
+}

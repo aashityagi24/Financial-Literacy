@@ -2,6 +2,18 @@
 
 Chronological implementation log. See PRD.md for the static problem statement and ROADMAP.md for pending work.
 
+### Recent Updates (Jun 2026, mobile UX)
+
+**Mobile declutter: hamburger header + in-platform responsive polish** ✅
+- User request: "On the phone the UI is not great and easy to use - it is rather cluttered… Use the hamburger icon for the header items and just leave login outside along with the logo on the landing page. Plus within the platform post registration also check the alignment and how the stories, games, videos etc appear."
+- `SiteHeader.jsx`: mobile (<md) is now ONE row — logo + `Login` + hamburger (`site-header-menu-toggle`). Nav links, `Register` and the workshop "Book a Free Trial" CTA moved into a dropdown panel (`site-header-mobile-menu`, items `site-header-mobile-nav-*`, `site-header-mobile-register-btn`, `site-header-mobile-trial-btn`, `site-header-mobile-enquiry-btn`). `/for-schools` still shows only "Enquire Now". Desktop (md+) layout unchanged.
+- `LearnPage.jsx`: topic cards use 16px→20px thumbnails, `text-base sm:text-xl` titles, `whitespace-nowrap` chips (the "1 Subtopics" chip used to wrap onto 2 lines) and a compact intro banner on mobile (long second sentence hidden under `sm`).
+- `TopicPage.jsx`: "Learning Content" heading + All/Pending/Done filter tabs now stack under `sm`; content rows (stories/games/videos/worksheets, locked variant included) use `w-16 h-16 sm:w-20 sm:h-20` thumbnails, `p-4 sm:p-5`, `text-base sm:text-lg` titles and a `w-11 sm:w-12` play button so everything fits one row at 390px.
+- `ChildHomework.jsx` banner variant: stacks vertically under `sm` with the full homework title (was `truncate` → "Homework: …") and a full-width action button.
+- `ParentDashboard.jsx`: header is a single row on mobile (title truncates, profile name hidden under `sm`, tighter gaps); section tabs use `px-3.5 sm:px-5` / `text-xs sm:text-sm` inside the existing horizontal scroller.
+- Testing agent verified 100% frontend (iteration_128.json), 27/27 header checks + child/parent in-platform checks at 390×844 and 1920×800, zero horizontal overflow outside intentional scrollers.
+
+
 ### Recent Updates (Jun 2026, lesson modal)
 
 **"Mark Done" nudge moved inline into the modal footer** ✅
