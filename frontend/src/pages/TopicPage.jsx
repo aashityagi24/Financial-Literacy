@@ -697,12 +697,12 @@ export default function TopicPage({ user }) {
         {/* Content Items */}
         {topic.content_items?.length > 0 && (
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+              <h2 className="text-lg sm:text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
                 📖 Learning Content
               </h2>
               {user?.role === 'child' && (
-                <div className="flex gap-1.5 bg-white rounded-xl p-1 border-2 border-[#1D3557]/10" data-testid="content-filter-tabs">
+                <div className="flex gap-1.5 bg-white rounded-xl p-1 border-2 border-[#1D3557]/10 self-start" data-testid="content-filter-tabs">
                   {[
                     { key: 'all', label: 'All' },
                     { key: 'pending', label: 'Pending' },
@@ -748,17 +748,17 @@ export default function TopicPage({ user }) {
                     <div
                       key={content.content_id}
                       data-content-id={content.content_id}
-                      className={`card-playful p-5 opacity-60 cursor-not-allowed bg-gray-50 ${showAnimations ? 'animate-bounce-in' : ''}`}
+                      className={`card-playful p-4 sm:p-5 opacity-60 cursor-not-allowed bg-gray-50 ${showAnimations ? 'animate-bounce-in' : ''}`}
                       style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
                       onClick={() => toast.info('Complete the previous content first!')}
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3 sm:gap-4">
                         <div className="relative">
                           {content.thumbnail ? (
-                            <img src={getAssetUrl(content.thumbnail)} alt="" className="w-20 h-20 rounded-xl border-3 border-gray-400 object-contain bg-white flex-shrink-0 grayscale" />
+                            <img src={getAssetUrl(content.thumbnail)} alt="" className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-3 border-gray-400 object-contain bg-white flex-shrink-0 grayscale" />
                           ) : (
-                            <div className="w-20 h-20 rounded-xl border-3 border-gray-400 bg-gray-200 flex items-center justify-center flex-shrink-0">
-                              <Icon className="w-10 h-10 text-gray-400" />
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-3 border-gray-400 bg-gray-200 flex items-center justify-center flex-shrink-0">
+                              <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
                             </div>
                           )}
                           <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-xl">
@@ -773,13 +773,13 @@ export default function TopicPage({ user }) {
                             </span>
                             <Lock className="w-4 h-4 text-gray-400" />
                           </div>
-                          <h3 className="text-lg font-bold text-gray-500" style={{ fontFamily: 'Fredoka' }}>{content.title}</h3>
-                          <p className="text-base text-gray-400 line-clamp-1">{content.description}</p>
-                          <p className="text-base text-gray-400 font-bold mt-1">+{content.reward_coins} XP</p>
+                          <h3 className="text-base sm:text-lg font-bold text-gray-500" style={{ fontFamily: 'Fredoka' }}>{content.title}</h3>
+                          <p className="text-sm sm:text-base text-gray-400 line-clamp-1">{content.description}</p>
+                          <p className="text-sm sm:text-base text-gray-400 font-bold mt-1">+{content.reward_coins} XP</p>
                         </div>
                         
                         <div className="flex items-center">
-                          <div className="w-12 h-12 rounded-full bg-gray-300 border-3 border-gray-400 flex items-center justify-center">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gray-300 border-3 border-gray-400 flex items-center justify-center flex-shrink-0">
                             <Lock className="w-5 h-5 text-gray-500" />
                           </div>
                         </div>
@@ -792,7 +792,7 @@ export default function TopicPage({ user }) {
                   <div
                     key={content.content_id}
                     data-content-id={content.content_id}
-                    className={`card-playful p-5 cursor-pointer hover:scale-[1.01] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/5' : ''} ${isTeacherOnly ? 'border-[#7C3AED] bg-[#7C3AED]/5' : ''} ${effectiveHighlightId === content.content_id ? 'ring-4 ring-[#EE6C4D] ring-offset-2 shadow-xl bg-[#EE6C4D]/5' : ''}`}
+                    className={`card-playful p-4 sm:p-5 cursor-pointer hover:scale-[1.01] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/5' : ''} ${isTeacherOnly ? 'border-[#7C3AED] bg-[#7C3AED]/5' : ''} ${effectiveHighlightId === content.content_id ? 'ring-4 ring-[#EE6C4D] ring-offset-2 shadow-xl bg-[#EE6C4D]/5' : ''}`}
                     style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
                     onClick={() => openContent(content)}
                   >
@@ -805,16 +805,16 @@ export default function TopicPage({ user }) {
                         )}
                       </div>
                     )}
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
                       <div className="relative">
                         {content.thumbnail ? (
-                          <img src={getAssetUrl(content.thumbnail)} alt="" className={`w-20 h-20 rounded-xl border-3 ${isCompleted ? 'border-[#06D6A0]' : 'border-[#1D3557]'} object-contain bg-white flex-shrink-0`} />
+                          <img src={getAssetUrl(content.thumbnail)} alt="" className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-3 ${isCompleted ? 'border-[#06D6A0]' : 'border-[#1D3557]'} object-contain bg-white flex-shrink-0`} />
                         ) : (
-                          <div className={`w-20 h-20 rounded-xl border-3 ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/20' : 'border-[#1D3557]'} ${config.bg} flex items-center justify-center flex-shrink-0`}>
+                          <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-3 ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/20' : 'border-[#1D3557]'} ${config.bg} flex items-center justify-center flex-shrink-0`}>
                             {isCompleted ? (
-                              <CheckCircle className={`w-10 h-10 text-[#06D6A0]`} />
+                              <CheckCircle className={`w-8 h-8 sm:w-10 sm:h-10 text-[#06D6A0]`} />
                             ) : (
-                              <Icon className={`w-10 h-10 ${config.color}`} />
+                              <Icon className={`w-8 h-8 sm:w-10 sm:h-10 ${config.color}`} />
                             )}
                           </div>
                         )}
@@ -909,7 +909,7 @@ export default function TopicPage({ user }) {
                             </button>
                           )}
                         </div>
-                        <h3 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                        <h3 className="text-base sm:text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
                           {content.title}
                           {content.is_mandatory === false && (
                             <span className="ml-2 align-middle text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
@@ -917,9 +917,9 @@ export default function TopicPage({ user }) {
                             </span>
                           )}
                         </h3>
-                        <p className="text-base text-[#3D5A80] line-clamp-1">{content.description}</p>
+                        <p className="text-sm sm:text-base text-[#3D5A80] line-clamp-1">{content.description}</p>
                         {user?.role === 'child' && (
-                          <p className={`text-base font-bold mt-1 text-[#06D6A0]`}>
+                          <p className={`text-sm sm:text-base font-bold mt-1 text-[#06D6A0]`}>
                             {isCompleted 
                               ? `✓ Earned ${content.coins_earned != null ? content.coins_earned : content.reward_coins} XP`
                               : `+${content.reward_coins} XP`
@@ -934,7 +934,7 @@ export default function TopicPage({ user }) {
                       </div>
                       
                       <div className="flex items-center">
-                        <div className={`w-12 h-12 rounded-full ${isCompleted ? 'bg-[#06D6A0]' : 'bg-[#FFD23F]'} border-3 border-[#1D3557] flex items-center justify-center`}>
+                        <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full ${isCompleted ? 'bg-[#06D6A0]' : 'bg-[#FFD23F]'} border-3 border-[#1D3557] flex items-center justify-center flex-shrink-0`}>
                           {isCompleted ? (
                             <Check className="w-6 h-6 text-white" />
                           ) : (

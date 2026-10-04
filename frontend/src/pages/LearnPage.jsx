@@ -151,13 +151,13 @@ export default function LearnPage({ user }) {
           </div>
         )}
         {/* Explanation Banner */}
-        <div className="p-5 mb-6 bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-3xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557]">
-          <h2 className="text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
+        <div className="p-4 sm:p-5 mb-5 sm:mb-6 bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] rounded-3xl border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#1D3557]">
+          <h2 className="text-base sm:text-xl font-bold text-[#1D3557] mb-2" style={{ fontFamily: 'Fredoka' }}>
             📖 How Does Learning Work?
           </h2>
-          <p className="text-[#1D3557]/90 text-base leading-relaxed">
-            Click on any <strong>topic</strong> below to start learning! Each topic has fun <strong>lessons, activities, and games</strong> that teach you about money. 
-            When you finish an activity, you&apos;ll earn ₹ to add to your wallet. The more you learn, the smarter you get with money!
+          <p className="text-[#1D3557]/90 text-sm sm:text-base leading-relaxed">
+            Click on any <strong>topic</strong> below to start learning! Each topic has fun <strong>lessons, activities, and games</strong> that teach you about money.
+            <span className="hidden sm:inline"> When you finish an activity, you&apos;ll earn ₹ to add to your wallet. The more you learn, the smarter you get with money!</span>
           </p>
         </div>
         
@@ -224,14 +224,14 @@ export default function LearnPage({ user }) {
                 ) : (
                 <Link 
                   to={`/learn/topic/${topic.topic_id}${gradeFilter !== null ? `?grade=${gradeFilter}` : ''}`}
-                  className="flex items-center gap-5 p-5 hover:bg-[#FFD23F]/10 transition-colors"
+                  className="flex items-center gap-3 sm:gap-5 p-4 sm:p-5 hover:bg-[#FFD23F]/10 transition-colors"
                 >
                   {topic.thumbnail ? (
                     <div className="relative">
                       <img 
                         src={getAssetUrl(topic.thumbnail)} 
                         alt={topic.title} 
-                        className={`w-20 h-20 rounded-2xl border-3 ${isCompleted ? 'border-[#06D6A0]' : 'border-[#1D3557]'} object-contain bg-white flex-shrink-0`}
+                        className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-3 ${isCompleted ? 'border-[#06D6A0]' : 'border-[#1D3557]'} object-contain bg-white flex-shrink-0`}
                       />
                       {isCompleted && (
                         <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#06D6A0] rounded-full flex items-center justify-center border-2 border-white">
@@ -240,18 +240,18 @@ export default function LearnPage({ user }) {
                       )}
                     </div>
                   ) : (
-                    <div className={`w-20 h-20 rounded-2xl border-3 ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]' : 'border-[#1D3557] bg-[#FFD23F]'} flex items-center justify-center flex-shrink-0 relative`}>
+                    <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-3 ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]' : 'border-[#1D3557] bg-[#FFD23F]'} flex items-center justify-center flex-shrink-0 relative`}>
                       {isCompleted ? (
-                        <CheckCircle className="w-10 h-10 text-white" />
+                        <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                       ) : (
-                        <FolderOpen className="w-10 h-10 text-[#1D3557]" />
+                        <FolderOpen className="w-8 h-8 sm:w-10 sm:h-10 text-[#1D3557]" />
                       )}
                     </div>
                   )}
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
+                      <h3 className="text-base sm:text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
                         {topic.title}
                       </h3>
                       {isCompleted && (
@@ -260,12 +260,12 @@ export default function LearnPage({ user }) {
                         </span>
                       )}
                     </div>
-                    <p className="text-[#3D5A80] mb-2 line-clamp-2">{topic.description}</p>
-                    <div className="flex items-center gap-4 text-sm">
-                      <span className="px-3 py-1 bg-[#3D5A80]/10 rounded-full text-[#3D5A80] font-medium">
+                    <p className="text-sm sm:text-base text-[#3D5A80] mb-2 line-clamp-2">{topic.description}</p>
+                    <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm">
+                      <span className="px-2.5 sm:px-3 py-1 bg-[#3D5A80]/10 rounded-full text-[#3D5A80] font-medium whitespace-nowrap">
                         {topic.subtopics?.length || 0} Subtopics
                       </span>
-                      <span className="px-3 py-1 bg-[#06D6A0]/20 rounded-full text-[#06D6A0] font-medium">
+                      <span className="px-2.5 sm:px-3 py-1 bg-[#06D6A0]/20 rounded-full text-[#06D6A0] font-medium whitespace-nowrap">
                         {(topic.content_count || 0) + (topic.subtopics?.reduce((sum, st) => sum + (st.content_count || 0), 0) || 0)} Items
                       </span>
                     </div>
@@ -276,7 +276,7 @@ export default function LearnPage({ user }) {
                     )}
                   </div>
                   
-                  <ChevronRight className="w-8 h-8 text-[#3D5A80]" />
+                  <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8 text-[#3D5A80] flex-shrink-0" />
                 </Link>
                 )}
                 

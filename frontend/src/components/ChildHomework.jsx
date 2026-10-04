@@ -58,28 +58,30 @@ export const ChildHomework = ({ variant = 'list' }) => {
     const hw = pending[0];
     return (
       <div
-        className="bg-white rounded-2xl shadow-sm border-l-[6px] border-l-red-400 p-4 mb-4 flex items-center gap-4"
+        className="bg-white rounded-2xl shadow-sm border-l-[6px] border-l-red-400 p-4 mb-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4"
         data-testid="child-homework-banner"
       >
-        <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
-          <ClipboardList className="w-5 h-5 text-red-400" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-bold text-[#1A1A1A] truncate">Homework: {hw.content_title}</h3>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide flex-shrink-0 ${hw.overdue ? 'bg-red-100 text-red-600' : 'bg-rose-100 text-rose-500'}`}>
-              {hw.overdue ? 'Overdue' : 'Due Today'}
-            </span>
+        <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+          <div className="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+            <ClipboardList className="w-5 h-5 text-red-400" />
           </div>
-          <p className="text-sm text-[#8A8378] truncate">
-            {hw.teacher_name ? `Set by ${hw.teacher_name}` : hw.classroom_name || 'Homework'}
-            {hw.reward_coins ? ` · earn ${hw.reward_coins} XP` : ''}
-          </p>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-bold text-[#1A1A1A] text-sm sm:text-base">Homework: {hw.content_title}</h3>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide flex-shrink-0 ${hw.overdue ? 'bg-red-100 text-red-600' : 'bg-rose-100 text-rose-500'}`}>
+                {hw.overdue ? 'Overdue' : 'Due Today'}
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-[#8A8378]">
+              {hw.teacher_name ? `Set by ${hw.teacher_name}` : hw.classroom_name || 'Homework'}
+              {hw.reward_coins ? ` · earn ${hw.reward_coins} XP` : ''}
+            </p>
+          </div>
         </div>
         {hw.is_activity ? (
           <button
             onClick={() => openContent(hw)}
-            className="flex-shrink-0 border-2 border-[#1A1A1A] rounded-xl px-4 py-2 font-bold text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-colors"
+            className="w-full sm:w-auto flex-shrink-0 border-2 border-[#1A1A1A] rounded-xl px-4 py-2.5 font-bold text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-colors"
             data-testid={`homework-banner-do-${hw.homework_id}`}
           >
             Do homework
@@ -88,7 +90,7 @@ export const ChildHomework = ({ variant = 'list' }) => {
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={() => openContent(hw)}
-              className="border-2 border-[#1A1A1A] rounded-xl px-3 py-2 font-bold text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-colors text-sm"
+              className="flex-1 sm:flex-none border-2 border-[#1A1A1A] rounded-xl px-3 py-2.5 font-bold text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white transition-colors text-sm"
               data-testid={`homework-banner-open-${hw.homework_id}`}
             >
               Open
@@ -96,7 +98,7 @@ export const ChildHomework = ({ variant = 'list' }) => {
             <button
               onClick={() => markDone(hw)}
               disabled={marking === hw.homework_id}
-              className="bg-[#06D6A0] hover:bg-[#05C090] text-white rounded-xl px-3 py-2 font-bold text-sm disabled:opacity-50"
+              className="flex-1 sm:flex-none bg-[#06D6A0] hover:bg-[#05C090] text-white rounded-xl px-3 py-2.5 font-bold text-sm disabled:opacity-50"
               data-testid={`homework-banner-markdone-${hw.homework_id}`}
             >
               {marking === hw.homework_id ? '…' : 'Mark Done'}
