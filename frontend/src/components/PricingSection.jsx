@@ -457,7 +457,7 @@ export default function PricingSection() {
               {isProcessing ? 'Processing...' : `Pay ₹${totalPrice.toLocaleString('en-IN')}`}
             </Button>
             <p className="text-xs text-center text-gray-500">
-              After payment, sign in with Google using the email above to access CoinQuest.
+              After payment you&apos;ll set your password and your account is created instantly — no extra steps.
             </p>
           </div>
         </DialogContent>

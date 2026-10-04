@@ -50,6 +50,7 @@ import AdminTeacherRepository from "@/pages/AdminTeacherRepository";
 import GlossaryPage from "@/pages/GlossaryPage";
 import MyJobsPage from "@/pages/MyJobsPage";
 import AuthPage from "@/pages/AuthPage";
+import RegisterPage from "@/pages/RegisterPage";
 import CompleteSignupPage from "@/pages/CompleteSignupPage";
 import TermsPage from "@/pages/TermsPage";
 import ContentProtection from "@/components/ContentProtection";
@@ -103,7 +104,7 @@ axios.interceptors.response.use(
       // Session is invalid - user may have logged in on another device
       const currentPath = window.location.pathname;
       // Don't redirect if already on auth pages
-      if (currentPath !== '/' && currentPath !== '/auth' && currentPath !== '/auth/callback' && currentPath !== '/login') {
+      if (currentPath !== '/' && currentPath !== '/auth' && currentPath !== '/auth/callback' && currentPath !== '/login' && currentPath !== '/register') {
         localStorage.removeItem('session_token');
         // Show message and redirect
         window.location.href = '/?session_expired=true';
@@ -242,7 +243,8 @@ function AppRouter() {
       <Route path="/entrepreneurship-workshop" element={<EntrepreneurshipWorkshopPage />} />
       <Route path="/for-schools" element={<ForSchoolsPage />} />
       <Route path="/login" element={<AuthPage />} />
-      <Route path="/signup" element={<AuthPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/signup" element={<Navigate to="/register" replace />} />
       <Route path="/complete-signup" element={<CompleteSignupPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/auth/callback" element={<AuthCallback />} />

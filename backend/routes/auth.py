@@ -111,6 +111,20 @@ async def unified_login(login_data: UnifiedLoginRequest, response: Response):
     # Hash password for comparison
     password_hash = hashlib.sha256(password.encode()).hexdigest()
     
+    # Does an account exist at all for this identifier? Lets the login screen
+    # tell "no account yet — please register" apart from "wrong password".
+    account_exists = await db.users.find_one({
+        "$or": [
+            {"email": identifier.lower()},
+            {"username": identifier}
+        ]
+    }, {"_id": 1})
+    if not account_exists:
+        raise HTTPException(
+            status_code=404,
+            detail="No account found for this email or username. Please register and choose a plan to get started."
+        )
+    
     # Try to find user by email or username
     user = await db.users.find_one({
         "$or": [

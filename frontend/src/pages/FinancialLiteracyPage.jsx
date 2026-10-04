@@ -192,6 +192,24 @@ export default function FinancialLiteracyPage() {
                   Learn More
                 </a>
               </div>
+              <p className="mt-5 text-base text-[#3D5A80]">
+                <button
+                  onClick={() => navigate('/register')}
+                  className="font-bold text-[#1D3557] underline underline-offset-4 hover:text-[#EE6C4D] transition-colors"
+                  data-testid="hero-register-btn"
+                >
+                  Register
+                </button>
+                <span className="mx-2 text-[#3D5A80]/50">·</span>
+                Already have an account?{' '}
+                <button
+                  onClick={() => navigate('/login')}
+                  className="font-bold text-[#1D3557] underline underline-offset-4 hover:text-[#EE6C4D] transition-colors"
+                  data-testid="hero-login-btn"
+                >
+                  Login
+                </button>
+              </p>
             </div>
 
             <div className="relative animate-bounce-in stagger-2">

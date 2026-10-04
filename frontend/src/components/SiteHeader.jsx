@@ -8,30 +8,13 @@ const SECTION_LINKS = [
   { label: 'Pricing', sectionId: 'pricing', testId: 'pricing' },
 ];
 
-const CTA_BY_PATH = {
-  '/entrepreneurship-workshop': { label: 'Book a Free Trial' },
-  '/': { label: 'Sign Up' },
-  '/for-schools': { label: 'Enquire Now' },
-};
-
 export function SiteHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showSchoolEnquiry, setShowSchoolEnquiry] = useState(false);
 
-  const cta = CTA_BY_PATH[location.pathname] || { label: 'Sign In' };
-
-  const handleCtaClick = () => {
-    if (location.pathname === '/entrepreneurship-workshop') {
-      navigate('/entrepreneurship-workshop?trial=1');
-    } else if (location.pathname === '/') {
-      navigate('/signup');
-    } else if (location.pathname === '/for-schools') {
-      setShowSchoolEnquiry(true);
-    } else {
-      navigate('/login');
-    }
-  };
+  const isSchoolsPage = location.pathname === '/for-schools';
+  const isWorkshopPage = location.pathname === '/entrepreneurship-workshop';
 
   const scrollToSection = (sectionId) => {
     if (location.pathname !== '/') {
@@ -64,16 +47,45 @@ export function SiteHeader() {
             </button>
           ))}
         </nav>
-        <button
-          data-testid="site-header-cta-btn"
-          onClick={handleCtaClick}
-          className="btn-primary px-6 py-2.5 text-base order-2 sm:order-3"
-        >
-          {cta.label}
-        </button>
+        <div className="flex items-center gap-2 sm:gap-3 order-2 sm:order-3">
+          {isSchoolsPage ? (
+            <button
+              data-testid="site-header-cta-btn"
+              onClick={() => setShowSchoolEnquiry(true)}
+              className="btn-primary px-6 py-2.5 text-base"
+            >
+              Enquire Now
+            </button>
+          ) : (
+            <>
+              {isWorkshopPage && (
+                <button
+                  data-testid="site-header-cta-btn"
+                  onClick={() => navigate('/entrepreneurship-workshop?trial=1')}
+                  className="hidden sm:inline-block font-bold text-base text-[#5B21B6] hover:text-[#1D3557] px-3 py-2 transition-colors"
+                >
+                  Book a Free Trial
+                </button>
+              )}
+              <button
+                data-testid="site-header-login-btn"
+                onClick={() => navigate('/login')}
+                className="px-5 py-2.5 text-base font-bold text-[#1D3557] bg-white border-2 border-[#1D3557] rounded-full hover:bg-[#E0FBFC] transition-colors"
+              >
+                Login
+              </button>
+              <button
+                data-testid="site-header-register-btn"
+                onClick={() => navigate('/register')}
+                className="btn-primary px-6 py-2.5 text-base"
+              >
+                Register
+              </button>
+            </>
+          )}
+        </div>
       </div>
       <SchoolEnquiryDialog open={showSchoolEnquiry} onOpenChange={setShowSchoolEnquiry} />
     </div>
   );
 }
-

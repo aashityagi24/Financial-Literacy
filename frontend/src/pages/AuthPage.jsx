@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { trackMetaPixelPageView } from '@/utils/metaPixel';
-import { 
-  Eye, EyeOff, ArrowLeft, Mail, Lock, User, School, Shield, Phone,
-  Sparkles, BookOpen, Coins, RefreshCw, X
+import {
+  Eye, EyeOff, ArrowLeft, Mail, Lock, UserPlus,
+  Sparkles, Coins, X, AlertCircle
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,48 +12,17 @@ import PricingSection from '@/components/PricingSection';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Generate a simple math captcha
-const generateCaptcha = () => {
-  const num1 = Math.floor(Math.random() * 10) + 1;
-  const num2 = Math.floor(Math.random() * 10) + 1;
-  const operators = ['+', '-'];
-  const operator = operators[Math.floor(Math.random() * operators.length)];
-  let answer;
-  
-  if (operator === '+') {
-    answer = num1 + num2;
-  } else {
-    // Ensure positive result for subtraction
-    const max = Math.max(num1, num2);
-    const min = Math.min(num1, num2);
-    answer = max - min;
-    return { question: `${max} - ${min}`, answer };
-  }
-  
-  return { question: `${num1} ${operator} ${num2}`, answer };
-};
-
 export default function AuthPage() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [mode, setMode] = useState('login'); // 'login' or 'signup'
-  const [identifier, setIdentifier] = useState(''); // email or username
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  
-  // Fire a Meta Pixel PageView specifically for the /signup route (not /login,
-  // which also renders this same component).
-  useEffect(() => {
-    if (location.pathname === '/signup') {
-      trackMetaPixelPageView();
-    }
-  }, [location.pathname]);
-  
+  const [noAccount, setNoAccount] = useState(false);
+  const [showSubscriptionPopup, setShowSubscriptionPopup] = useState(false);
+  const [subscriptionMessage, setSubscriptionMessage] = useState('');
+
   // Pre-fill the remembered identifier (email/username) to reduce login friction
   useEffect(() => {
     const saved = localStorage.getItem('remembered_identifier');
@@ -63,62 +31,34 @@ export default function AuthPage() {
       setRememberMe(true);
     }
   }, []);
-  
-  // Captcha state
-  const [captcha, setCaptcha] = useState(generateCaptcha());
-  const [captchaAnswer, setCaptchaAnswer] = useState('');
-  const [showSubscriptionPopup, setShowSubscriptionPopup] = useState(false);
-  const [subscriptionMessage, setSubscriptionMessage] = useState('');
-  
-  // Regenerate captcha when switching to signup mode
-  useEffect(() => {
-    if (mode === 'signup') {
-      setCaptcha(generateCaptcha());
-      setCaptchaAnswer('');
-    }
-  }, [mode]);
-  
-  const refreshCaptcha = () => {
-    setCaptcha(generateCaptcha());
-    setCaptchaAnswer('');
-  };
-
-  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const handleGoogleLogin = () => {
-    // Clickwrap: creating a NEW account via Google requires agreeing to the
-    // Terms first. Login mode (existing users) is unaffected.
-    if (mode === 'signup' && !termsAccepted) {
-      toast.error('Please agree to the Terms and Conditions to create an account');
-      return;
-    }
     window.location.href = `${BACKEND_URL}/api/auth/google/login`;
   };
 
-  const handleCredentialsLogin = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    
+    setNoAccount(false);
+
     if (!identifier.trim() || !password.trim()) {
       toast.error('Please enter your credentials');
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     // Remember (or forget) the identifier for next time — never store the password
     if (rememberMe) {
       localStorage.setItem('remembered_identifier', identifier.trim());
     } else {
       localStorage.removeItem('remembered_identifier');
     }
-    
+
     try {
-      // Try to determine login type based on identifier
       const isEmail = identifier.includes('@');
-      
-      // First try admin login if it looks like admin email
+
       if (isEmail && identifier.toLowerCase() === 'admin@learnersplanet.com') {
-        const response = await axios.post(
+        await axios.post(
           `${BACKEND_URL}/api/auth/admin-login`,
           { email: identifier, password },
           { withCredentials: true }
@@ -127,8 +67,8 @@ export default function AuthPage() {
         navigate('/admin');
         return;
       }
-      
-      // Try school login (username-based)
+
+      // School portals log in with a username
       if (!isEmail) {
         try {
           const response = await axios.post(
@@ -140,115 +80,37 @@ export default function AuthPage() {
           navigate('/school-dashboard', { state: { school: response.data.school } });
           return;
         } catch (schoolError) {
-          // Not a school username, continue to try unified login
+          // Not a school username — fall through to unified login
         }
       }
-      
-      // Try unified login (for users with password)
+
       const response = await axios.post(
         `${BACKEND_URL}/api/auth/login`,
         { identifier, password },
         { withCredentials: true }
       );
-      
+
       const user = response.data.user;
       toast.success(`Welcome back, ${user.name}!`);
-      
-      // Redirect based on role
+
       if (user.role === 'admin') navigate('/admin');
       else if (user.role === 'school') navigate('/school-dashboard');
       else if (user.role === 'teacher') navigate('/teacher-dashboard');
       else if (user.role === 'parent') navigate('/parent-dashboard');
       else navigate('/dashboard');
-      
+
     } catch (error) {
+      const status = error.response?.status;
       const message = error.response?.data?.detail || 'Invalid credentials';
-      if (error.response?.status === 403) {
+      if (status === 404) {
+        // The identifier has no account at all — guide them to Register
+        setNoAccount(true);
+      } else if (status === 403) {
         setSubscriptionMessage(message);
         setShowSubscriptionPopup(true);
       } else {
         toast.error(message);
       }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSignup = async (e) => {
-    e.preventDefault();
-    
-    if (!name.trim() || !identifier.trim() || !password.trim() || !phone.trim()) {
-      toast.error('Please fill all fields including mobile number');
-      return;
-    }
-
-    if (!termsAccepted) {
-      toast.error('Please agree to the Terms and Conditions to create an account');
-      return;
-    }
-    
-    // Indian 10-digit mobile validation (optional +91 / 0 prefix)
-    const digits = phone.replace(/\D/g, '');
-    const normalized = digits.startsWith('91') && digits.length === 12
-      ? digits.slice(2)
-      : digits.startsWith('0') && digits.length === 11
-      ? digits.slice(1)
-      : digits;
-    if (normalized.length !== 10 || !/^[6-9]/.test(normalized)) {
-      toast.error('Please enter a valid 10-digit Indian mobile number');
-      return;
-    }
-    
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-    
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-    
-    // Validate captcha
-    if (parseInt(captchaAnswer) !== captcha.answer) {
-      toast.error('Incorrect captcha answer. Please try again.');
-      refreshCaptcha();
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      const response = await axios.post(
-        `${BACKEND_URL}/api/auth/signup`,
-        { 
-          name,
-          email: identifier,
-          password,
-          phone
-        },
-        { withCredentials: true }
-      );
-      
-      // Auto-login: store session and redirect
-      if (response.data.session_token) {
-        localStorage.setItem('session_token', response.data.session_token);
-      }
-      const user = response.data.user;
-      toast.success(`Welcome to CoinQuest, ${user?.name || name}!`);
-      
-      if (user?.role === 'parent') navigate('/parent-dashboard');
-      else if (user?.role) navigate('/dashboard');
-      else navigate('/role-selection', { state: { user } });
-    } catch (error) {
-      const detail = error.response?.data?.detail || 'Failed to create account';
-      if (error.response?.status === 403) {
-        setSubscriptionMessage(detail);
-        setShowSubscriptionPopup(true);
-      } else {
-        toast.error(detail);
-      }
-      refreshCaptcha();
     } finally {
       setIsLoading(false);
     }
@@ -262,9 +124,8 @@ export default function AuthPage() {
         <div className="absolute bottom-10 right-10 w-96 h-96 bg-[#06D6A0]/10 rounded-full blur-3xl"></div>
         <div className="absolute top-1/2 left-1/4 w-48 h-48 bg-[#EE6C4D]/10 rounded-full blur-3xl"></div>
       </div>
-      
+
       <div className="w-full max-w-md relative z-10">
-        {/* Back Button */}
         <button
           onClick={() => navigate('/')}
           className="flex items-center gap-2 text-white/70 hover:text-white mb-6 transition-colors"
@@ -273,22 +134,18 @@ export default function AuthPage() {
           <ArrowLeft className="w-5 h-5" />
           <span>Back to Home</span>
         </button>
-        
-        {/* Auth Card */}
+
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-          {/* Header */}
           <div className="bg-gradient-to-r from-[#FFD23F] to-[#FFEB99] p-6 text-center">
             <div className="w-16 h-16 mx-auto mb-3 bg-white rounded-2xl flex items-center justify-center shadow-lg border-3 border-[#1D3557]">
               <Coins className="w-8 h-8 text-[#1D3557]" />
             </div>
             <h1 className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
-              {mode === 'login' ? 'Welcome Back!' : 'Join CoinQuest!'}
+              Welcome Back!
             </h1>
-            <p className="text-[#1D3557]/70 mt-1">
-              {mode === 'login' ? 'Sign in to continue your journey' : 'Create your account'}
-            </p>
+            <p className="text-[#1D3557]/70 mt-1">Login to continue your journey</p>
           </div>
-          
+
           <div className="p-6">
             {/* Google SSO Button */}
             <button
@@ -304,8 +161,7 @@ export default function AuthPage() {
               </svg>
               <span className="font-medium text-gray-700">Continue with Google</span>
             </button>
-            
-            {/* Divider */}
+
             <div className="relative my-5">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200"></div>
@@ -314,66 +170,25 @@ export default function AuthPage() {
                 <span className="px-3 bg-white text-gray-500">or</span>
               </div>
             </div>
-            
-            {/* Credentials Form */}
-            <form onSubmit={mode === 'login' ? handleCredentialsLogin : handleSignup} className="space-y-4">
-              {mode === 'signup' && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                    Full Name
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Your name"
-                      className="pl-10 h-12 border-2 border-gray-200 focus:border-[#1D3557] rounded-xl"
-                      data-testid="signup-name-input"
-                    />
-                  </div>
-                </div>
-              )}
-              
+
+            <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                  {mode === 'login' ? 'Email or Username' : 'Email Address'}
+                  Email or Username
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <Input
                     type="text"
                     value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder={mode === 'login' ? "email@example.com or username" : "email@example.com"}
+                    onChange={(e) => { setIdentifier(e.target.value); setNoAccount(false); }}
+                    placeholder="email@example.com or username"
                     className="pl-10 h-12 border-2 border-gray-200 focus:border-[#1D3557] rounded-xl"
                     data-testid="auth-identifier-input"
                   />
                 </div>
               </div>
-              
-              {mode === 'signup' && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                    Mobile Number <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="10-digit mobile (e.g. 9876543210)"
-                      maxLength={15}
-                      className="pl-10 h-12 border-2 border-gray-200 focus:border-[#1D3557] rounded-xl"
-                      data-testid="signup-phone-input"
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">We&apos;ll use this to reach you if needed.</p>
-                </div>
-              )}
-              
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                   Password
@@ -397,91 +212,41 @@ export default function AuthPage() {
                   </button>
                 </div>
               </div>
-              
-              {mode === 'login' && (
-                <label className="flex items-center gap-2 cursor-pointer select-none" data-testid="remember-me-label">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-2 border-gray-300 cursor-pointer accent-[#1D3557]"
-                    data-testid="remember-me-checkbox"
-                  />
-                  <span className="text-sm font-medium text-gray-600">Remember me</span>
-                </label>
-              )}
-              
-              {mode === 'signup' && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                    Confirm Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input
-                      type={showPassword ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="pl-10 h-12 border-2 border-gray-200 focus:border-[#1D3557] rounded-xl"
-                      data-testid="auth-confirm-password-input"
-                    />
-                  </div>
-                </div>
-              )}
-              
-              {/* Captcha for signup */}
-              {mode === 'signup' && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                    Verify you're human
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-[#E0FBFC] to-[#F0F9FF] rounded-xl border-2 border-[#1D3557]/20">
-                      <Shield className="w-5 h-5 text-[#1D3557]" />
-                      <span className="text-lg font-bold text-[#1D3557]">
-                        {captcha.question} = ?
-                      </span>
-                      <button
-                        type="button"
-                        onClick={refreshCaptcha}
-                        className="ml-auto p-1 text-[#3D5A80] hover:text-[#1D3557] transition-colors"
-                        title="Get new question"
-                      >
-                        <RefreshCw className="w-4 h-4" />
-                      </button>
+
+              <label className="flex items-center gap-2 cursor-pointer select-none" data-testid="remember-me-label">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-2 border-gray-300 cursor-pointer accent-[#1D3557]"
+                  data-testid="remember-me-checkbox"
+                />
+                <span className="text-sm font-medium text-gray-600">Remember me</span>
+              </label>
+
+              {/* No account found — route the user into the Register flow */}
+              {noAccount && (
+                <div className="rounded-xl border-2 border-[#EE6C4D]/40 bg-[#FFF3E0] p-4" data-testid="no-account-alert">
+                  <div className="flex gap-2.5">
+                    <AlertCircle className="w-5 h-5 text-[#EE6C4D] flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-bold text-[#1D3557] text-sm">You don&apos;t have an account yet</p>
+                      <p className="text-sm text-[#3D5A80] mt-1">
+                        We couldn&apos;t find an account for <span className="font-semibold">{identifier}</span>.
+                        Register by choosing a plan — it only takes a couple of minutes.
+                      </p>
                     </div>
-                    <Input
-                      type="number"
-                      value={captchaAnswer}
-                      onChange={(e) => setCaptchaAnswer(e.target.value)}
-                      placeholder="?"
-                      className="w-20 h-12 text-center text-lg font-bold border-2 border-[#1D3557]/30 focus:border-[#1D3557] rounded-xl"
-                      data-testid="auth-captcha-input"
-                    />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Solve the math problem above</p>
+                  <Button
+                    type="button"
+                    onClick={() => navigate('/register')}
+                    className="w-full mt-3 h-11 bg-[#EE6C4D] hover:bg-[#D85B3D] text-white font-bold rounded-xl"
+                    data-testid="no-account-register-btn"
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Register now
+                  </Button>
                 </div>
-              )}
-              
-              {/* Mandatory clickwrap — Terms & Conditions agreement (signup only) */}
-              {mode === 'signup' && (
-                <label className="flex items-start gap-2.5 cursor-pointer" data-testid="terms-checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={termsAccepted}
-                    onChange={(e) => setTermsAccepted(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 accent-[#1D3557]"
-                    data-testid="terms-checkbox"
-                  />
-                  <span className="text-sm text-gray-600">
-                    I agree to the{' '}
-                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#1D3557] underline" data-testid="terms-link">
-                      Terms and Conditions
-                    </a>{' '}
-                    of CoinQuest
-                  </span>
-                </label>
               )}
 
               <Button
@@ -493,45 +258,34 @@ export default function AuthPage() {
                 {isLoading ? (
                   <div className="flex items-center gap-2">
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    <span>{mode === 'login' ? 'Signing in...' : 'Creating account...'}</span>
+                    <span>Logging in...</span>
                   </div>
-                ) : (
-                  mode === 'login' ? 'Sign In' : 'Create Account'
-                )}
+                ) : 'Login'}
               </Button>
             </form>
-            
-            {/* Login Type Hints */}
-            {mode === 'login' && (
-              <div className="mt-4 p-3 bg-[#E0FBFC] rounded-xl">
-                <p className="text-xs text-[#3D5A80] text-center">
-                  <span className="font-medium">Tip:</span> Use your email for user accounts, 
-                  or username for school portals
-                </p>
-              </div>
-            )}
-            
-            {/* Toggle Mode */}
+
+            <div className="mt-4 p-3 bg-[#E0FBFC] rounded-xl">
+              <p className="text-xs text-[#3D5A80] text-center">
+                <span className="font-medium">Tip:</span> Use your email for parent, child & teacher accounts,
+                or your username for school portals
+              </p>
+            </div>
+
             <div className="mt-6 text-center">
               <p className="text-gray-600">
-                {mode === 'login' ? "Don't have an account?" : "Already have an account?"}
+                New to CoinQuest?
                 <button
-                  onClick={() => {
-                    setMode(mode === 'login' ? 'signup' : 'login');
-                    setPassword('');
-                    setConfirmPassword('');
-                  }}
+                  onClick={() => navigate('/register')}
                   className="ml-2 font-semibold text-[#1D3557] hover:underline"
-                  data-testid="toggle-auth-mode-btn"
+                  data-testid="go-to-register-btn"
                 >
-                  {mode === 'login' ? 'Sign Up' : 'Sign In'}
+                  Register
                 </button>
               </p>
             </div>
           </div>
         </div>
-        
-        {/* CoinQuest Branding */}
+
         <div className="text-center mt-6">
           <p className="text-white/60 text-sm">
             <Sparkles className="w-4 h-4 inline mr-1" />
@@ -539,7 +293,7 @@ export default function AuthPage() {
           </p>
         </div>
       </div>
-      
+
       {/* Subscription Required Popup */}
       {showSubscriptionPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" data-testid="subscription-popup-overlay">
