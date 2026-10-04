@@ -2,6 +2,20 @@
 
 Chronological implementation log. See PRD.md for the static problem statement and ROADMAP.md for pending work.
 
+### Recent Updates (Jun 2026, auth entry points)
+
+**Single "Sign Up" CTA split into Login + Register** ✅
+- User request: "Instead of a common Sign Up button - break it into 2 - Login & Register… In sign in if someone tries to login and their account is not there show them that you dont have an account and you need to Register… registration requires selecting a plan, so flows must be seamless with no bad dead-ends."
+- `SiteHeader.jsx`: now renders two buttons — `site-header-login-btn` (outline, → `/login`) and `site-header-register-btn` (primary, → `/register`) — on all public pages. `/for-schools` keeps ONLY "Enquire Now" (user's choice). `/entrepreneurship-workshop` keeps a "Book a Free Trial" text CTA alongside them.
+- `FinancialLiteracyPage.jsx` hero: added `hero-register-btn` / `hero-login-btn` links under the "Start for ₹X" CTA.
+- New `pages/RegisterPage.jsx` (`/register`): 3-step explainer (Choose a plan → Pay securely → Set your password) + the existing `PricingSection`, so Register leads straight into plan selection → Razorpay → `/complete-signup` (where the account is actually created). No more signup form that 403s because no plan was purchased.
+- `pages/AuthPage.jsx` rewritten as LOGIN ONLY — signup form (name/phone/confirm-password/captcha/terms) removed; submit reads "Login"; added `go-to-register-btn`.
+- No-account UX: `backend/routes/auth.py` `unified_login` now pre-checks whether any user exists for the identifier and raises **404** ("No account found for this email or username. Please register and choose a plan to get started.") before the password comparison; wrong password on an existing account still returns 401. AuthPage maps 404 → inline `no-account-alert` card with a "Register now" button (`no-account-register-btn`) → `/register`.
+- `App.js`: `/register` route added, `/signup` now redirects to `/register`, `/register` added to the session-expiry redirect exemption list.
+- `PricingSection.jsx` checkout footnote updated ("After payment you'll set your password and your account is created instantly") — it previously told users to sign in with Google.
+- Testing agent verified 100% backend + frontend (iteration_127.json): 404/401/200 login contract, all four role logins (parent/admin/teacher/school), header variants on desktop + mobile 390px, /signup redirect, /register pricing + checkout dialog validation. Regression test pinned at `/app/backend/tests/test_auth_login_states.py`.
+
+
 ### Recent Updates (Feb 2026, marketing UX)
 
 **Exit-intent popup removed entirely on mobile** ✅

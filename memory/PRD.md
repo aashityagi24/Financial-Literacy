@@ -6,7 +6,7 @@ A gamified financial literacy learning application for children (K-5) with disti
 ## What's Been Implemented
 
 ### Core MVP ✅
-- User authentication (Custom Google OAuth + Admin login + School login)
+- User authentication (Custom Google OAuth + Admin login + School login). Public entry points are split: **Login** (`/login`, existing users, email-or-username + password or Google) and **Register** (`/register`, new users → plan selection → Razorpay → `/complete-signup` where the account is created). A login attempt with an unknown identifier returns 404 and the UI tells the user to Register.
 - Role-based dashboards (Admin, Teacher, Parent, Child)
 - **Email-less child accounts** — children without email IDs can be onboarded via **username + password**:
   - Admin: dedicated "Add Child (No Email)" button with auto-suggest username + auto-generated password (one-time display)
