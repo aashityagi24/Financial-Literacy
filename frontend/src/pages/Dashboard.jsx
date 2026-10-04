@@ -642,29 +642,6 @@ export default function Dashboard({ user, setUser }) {
                 </div>
               )}
             </div>
-            
-            {/* Fixed bottom nav bar (Grade K-3 only) */}
-            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white rounded-full shadow-lg px-2 py-2 flex items-center gap-1 z-40" data-testid="bottom-nav">
-              {[
-                { icon: HomeIcon, label: 'Home', path: '/dashboard' },
-                { icon: BookOpen, label: 'Learn', path: '/learn' },
-                { icon: Target, label: 'Quests', path: '/quests' },
-                { icon: Wallet, label: 'Money', path: '/wallet' },
-                { icon: Trophy, label: 'Rewards', path: '/achievements' },
-              ].map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  data-testid={`bottom-nav-${item.label.toLowerCase()}`}
-                  className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-full transition-colors ${
-                    item.label === 'Home' ? 'bg-[#5B2C82] text-white' : 'text-[#8A8378] hover:bg-[#ECE6F7]'
-                  }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span className="text-[10px] font-bold">{item.label}</span>
-                </Link>
-              ))}
-            </div>
           </>
         )}
         

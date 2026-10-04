@@ -61,6 +61,7 @@ import { useUploadProgress, UploadProgressBar } from "@/components/UploadProgres
 
 // Components
 import OnboardingTour from "@/components/OnboardingTour";
+import ChildQuickNav from "@/components/ChildQuickNav";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
@@ -207,6 +208,7 @@ export const ProtectedRoute = ({ children }) => {
       />
       <OnboardingTour user={user} onComplete={() => setUser({...user, has_completed_onboarding: true})} />
       {children({ user, setUser })}
+      {user?.role === 'child' && <ChildQuickNav />}
     </>
   );
 };
