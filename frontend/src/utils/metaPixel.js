@@ -7,3 +7,10 @@ export const trackMetaPixelPageView = () => {
     window.fbq('track', 'PageView');
   }
 };
+
+// Fires a Meta Pixel Lead event when a user submits the checkout form.
+export const trackMetaPixelLead = () => {
+  if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+    window.fbq('track', 'Lead', { currency: 'INR' });
+  }
+};

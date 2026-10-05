@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { trackMetaPixelLead } from '../utils/metaPixel';
 import { toast } from 'sonner';
 import { Check, Users, User, ChevronDown, CreditCard, Shield, Clock, School, Phone, Mail, MapPin, Briefcase } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -144,6 +145,7 @@ export default function PricingSection() {
 
     setIsProcessing(true);
     captureLeadQuietly(checkoutForm, 'form_submitted');
+    trackMetaPixelLead();
     try {
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
