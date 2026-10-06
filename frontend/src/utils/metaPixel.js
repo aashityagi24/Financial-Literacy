@@ -8,9 +8,14 @@ export const trackMetaPixelPageView = () => {
   }
 };
 
-// Fires a Meta Pixel Lead event when a user submits the checkout form.
-export const trackMetaPixelLead = () => {
+// Fires a Meta Pixel InitiateCheckout event when a public visitor opens the
+// checkout dialog. value is the INR price shown to the user.
+export const trackMetaPixelInitiateCheckout = (value, contentName) => {
   if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
-    window.fbq('track', 'Lead', { currency: 'INR' });
+    window.fbq('track', 'InitiateCheckout', {
+      value,
+      currency: 'INR',
+      content_name: contentName,
+    });
   }
 };

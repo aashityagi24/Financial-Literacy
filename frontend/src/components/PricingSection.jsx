@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { trackMetaPixelLead } from '../utils/metaPixel';
+import { trackMetaPixelInitiateCheckout } from '../utils/metaPixel';
 import { toast } from 'sonner';
 import { Check, Users, User, ChevronDown, CreditCard, Shield, Clock, School, Phone, Mail, MapPin, Briefcase } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -58,6 +58,28 @@ export default function PricingSection() {
     fetchPlans();
   }, []);
 
+  // Keep a ref so the coinquest:buy-now event listener (which closes over a
+  // stale plans value) can still read the current plans.
+  const plansRef = useRef(null);
+  useEffect(() => { plansRef.current = plans; }, [plans]);
+
+  // Fire Meta Pixel InitiateCheckout when the checkout dialog opens.
+  // Guards:
+  //   - Public pages only (/  and /register). PricingSection is also shown
+  //     inside logged-in contexts (AuthPage, TrialBanner, TrialLimitDialog,
+  //     SubscriptionExpiredGate) — those must not fire pixel events.
+  //   - At most once per browser session per plan+duration combo so that
+  //     repeated opens of the same dialog don't send duplicate events.
+  const fireInitiateCheckout = (duration, planType, price) => {
+    const path = window.location.pathname;
+    if (path !== '/' && path !== '/register') return;
+    const key = `cq_ic_${planType}_${duration}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+    const contentName = DURATION_LABELS[duration]?.short || duration;
+    trackMetaPixelInitiateCheckout(price, contentName);
+  };
+
   // Allow other components (e.g. the LandingPage hero "Start for ₹49" CTA) to
   // deep-link straight into the 1-day Buy Now flow. Dispatch:
   //   window.dispatchEvent(new CustomEvent('coinquest:buy-now', { detail: { duration: '1_day' } }))
@@ -71,7 +93,14 @@ export default function PricingSection() {
       // Scroll pricing into view so the user has context for the checkout dialog
       document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
       // Small delay so the scroll settles before the modal opens
-      setTimeout(() => setShowCheckout(true), 400);
+      setTimeout(() => {
+        const currentPlans = plansRef.current;
+        if (currentPlans) {
+          const plan = currentPlans[planType]?.[duration];
+          if (plan) fireInitiateCheckout(duration, planType, plan.base_price);
+        }
+        setShowCheckout(true);
+      }, 400);
     };
     window.addEventListener('coinquest:buy-now', openBuyNow);
     return () => window.removeEventListener('coinquest:buy-now', openBuyNow);
@@ -145,7 +174,6 @@ export default function PricingSection() {
 
     setIsProcessing(true);
     captureLeadQuietly(checkoutForm, 'form_submitted');
-    trackMetaPixelLead();
     try {
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
@@ -342,7 +370,7 @@ export default function PricingSection() {
                   <div className="mt-auto px-5 pb-5 pt-2">
                     <button
                       data-testid={`buy-now-${dur}`}
-                      onClick={(e) => { e.stopPropagation(); setSelectedDuration(dur); handleBuyNow(); }}
+                      onClick={(e) => { e.stopPropagation(); setSelectedDuration(dur); fireInitiateCheckout(dur, selectedPlanType, calcTotal(plan, numChildren)); handleBuyNow(); }}
                       className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all ${
                         isPopular
                           ? 'bg-[#FFD23F] text-[#1D3557] hover:bg-[#FFE066]'
