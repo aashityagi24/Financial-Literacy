@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { trackMetaPixelInitiateCheckout } from '../utils/metaPixel';
+import { trackMetaPixelInitiateCheckout, trackMetaPixelPurchase, trackMetaPixelStartTrial, trackMetaPixelSubscribe } from '../utils/metaPixel';
 import { toast } from 'sonner';
 import { Check, Users, User, ChevronDown, CreditCard, Shield, Clock, School, Phone, Mail, MapPin, Briefcase } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -215,6 +215,24 @@ export default function PricingSection() {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
             });
+            // --- Meta Pixel purchase events ---
+            // amount is in paise; convert to rupees for the pixel value.
+            // Guard with razorpay_payment_id so a double-invocation of this
+            // handler (however unlikely) never double-fires the events.
+            const _payId = response.razorpay_payment_id;
+            const _fireKey = `cq_px_${_payId}`;
+            if (!sessionStorage.getItem(_fireKey)) {
+              sessionStorage.setItem(_fireKey, '1');
+              const _valueINR = amount / 100;
+              const _contentName = DURATION_LABELS[selectedDuration]?.short || selectedDuration;
+              trackMetaPixelPurchase(_valueINR, _contentName, numChildren, _payId);
+              if (selectedDuration === '1_day') {
+                trackMetaPixelStartTrial(_valueINR, `${_payId}_trial`);
+              } else {
+                trackMetaPixelSubscribe(_valueINR, _contentName, `${_payId}_sub`);
+              }
+            }
+            // --- end Meta Pixel ---
             toast.success('Payment successful! Setting up your account…');
             setShowCheckout(false);
             setCheckoutForm({ name: '', email: '', phone: '', referral_code: '' });
