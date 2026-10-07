@@ -19,12 +19,12 @@ export default function RoleSelection({ user, setUser }) {
   ];
   
   const grades = [
-    { value: 0, label: 'Kindergarten', age: '5-6 years' },
-    { value: 1, label: '1st Grade', age: '6-7 years' },
-    { value: 2, label: '2nd Grade', age: '7-8 years' },
-    { value: 3, label: '3rd Grade', age: '8-9 years' },
-    { value: 4, label: '4th Grade', age: '9-10 years' },
-    { value: 5, label: '5th Grade', age: '10-11 years' },
+    { value: 0, label: 'Starter', age: '5-6 years' },
+    { value: 1, label: 'Level 1', age: '6-7 years' },
+    { value: 2, label: 'Level 2', age: '7-8 years' },
+    { value: 3, label: 'Level 3', age: '8-9 years' },
+    { value: 4, label: 'Level 4', age: '9-10 years' },
+    { value: 5, label: 'Level 5', age: '10-11 years' },
   ];
   
   const handleRoleSelect = (role) => {
@@ -109,7 +109,7 @@ export default function RoleSelection({ user, setUser }) {
             </button>
             
             <h2 className="text-2xl font-bold text-[#1D3557] text-center mb-6" style={{ fontFamily: 'Fredoka' }}>
-              What grade are you in?
+              What level are you at?
             </h2>
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

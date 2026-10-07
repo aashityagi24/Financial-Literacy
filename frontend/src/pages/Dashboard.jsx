@@ -34,7 +34,7 @@ export default function Dashboard({ user, setUser }) {
   const [gardenSummary, setGardenSummary] = useState({ planted: 0, thirsty: 0, total: 0 });
   const showAnimations = useFirstVisitAnimation('dashboard');
   
-  const gradeNames = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
+  const gradeNames = ['Starter', 'Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5'];
   const LESSON_TYPE_EMOJI = { worksheet: '📝', activity: '🎮', book: '📖', workbook: '📓', video: '🎬' };
   
   // Redirect non-child users to their respective dashboards
@@ -411,7 +411,7 @@ export default function Dashboard({ user, setUser }) {
             Hey, {user?.name?.split(' ')[0]}! 👋
           </h1>
           <p className={`text-lg ${grade <= 3 ? 'text-[#6B6459]' : 'text-[#3D5A80]'}`}>
-            {user?.grade !== null && user?.grade !== undefined ? gradeNames[user.grade] : 'Grade not set'} • {grade <= 3 ? "ready to learn about money?" : "Ready to learn about money?"}
+            {user?.grade !== null && user?.grade !== undefined ? gradeNames[user.grade] : 'Level not set'} • {grade <= 3 ? "ready to learn about money?" : "Ready to learn about money?"}
           </p>
         </div>
         

@@ -13,7 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 
 const RAZORPAY_KEY = process.env.REACT_APP_RAZORPAY_KEY_ID;
-const GRADE_LABELS = ['Kindergarten', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5'];
+const GRADE_LABELS = ['Starter', 'Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5'];
 
 const formatDate = (iso) => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 

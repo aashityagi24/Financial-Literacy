@@ -46,12 +46,12 @@ export default function ProfilePage({ user, setUser }) {
   const [uploadingPicture, setUploadingPicture] = useState(false);
   
   const grades = [
-    { value: '0', label: 'Kindergarten' },
-    { value: '1', label: '1st Grade' },
-    { value: '2', label: '2nd Grade' },
+    { value: '0', label: 'Starter' },
+    { value: '1', label: 'Level 1' },
+    { value: '2', label: 'Level 2' },
   ];
   
-  const gradeNames = ['Kindergarten', '1st Grade', '2nd Grade'];
+  const gradeNames = ['Starter', 'Level 1', 'Level 2'];
   
   useEffect(() => {
     if (user?.role === 'child') {
@@ -270,7 +270,7 @@ export default function ProfilePage({ user, setUser }) {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <GraduationCap className="w-6 h-6 text-[#3D5A80]" />
-              <h3 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Grade Level</h3>
+              <h3 className="text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>Learning Level</h3>
             </div>
             {/* Only non-child users can edit grade */}
             {!editing && user?.role !== 'child' && (
@@ -321,7 +321,7 @@ export default function ProfilePage({ user, setUser }) {
                 {gradeNames[user?.grade] || 'Not set'}
               </p>
               <p className="text-sm text-[#3D5A80]">
-                Content is personalized for your grade level
+                Content is personalized for your level
               </p>
             </div>
           )}

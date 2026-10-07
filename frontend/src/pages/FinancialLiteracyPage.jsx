@@ -24,7 +24,7 @@ export default function FinancialLiteracyPage() {
   const [searchParams] = useSearchParams();
   const [walkthroughVideos, setWalkthroughVideos] = useState(null);
   const [selectedVideoTab, setSelectedVideoTab] = useState('child');
-  const [selectedGrade, setSelectedGrade] = useState("1st Grade");
+  const [selectedGrade, setSelectedGrade] = useState("Ages 7–8");
   const [trialPrice, setTrialPrice] = useState(49);
 
   useEffect(() => { trackMetaPixelPageView(); }, []);
@@ -87,10 +87,13 @@ export default function FinancialLiteracyPage() {
     { icon: Trophy, title: "Quests & Badges", description: "Complete challenges and chores to earn money and badges.", color: "#3D5A80" },
   ];
 
-  const grades = ["Kindergarten", "1st Grade", "2nd Grade", "3rd Grade"];
+  const grades = ["Ages 5–6", "Ages 7–8", "Ages 9–10", "Ages 11–12"];
+
+  // Icon shown in the expanded card header
+  const gradeIcon = { "Ages 5–6": "K", "Ages 7–8": "1", "Ages 9–10": "2", "Ages 11–12": "3" };
 
   const gradeDescriptions = {
-    "Kindergarten": {
+    "Ages 5–6": {
       title: "Introduction to Money",
       skills: [
         "Identify and count coins (₹1, ₹2, ₹5, ₹10, ₹20, ₹50, ₹100)",
@@ -100,7 +103,7 @@ export default function FinancialLiteracyPage() {
       ],
       color: "#FFD23F"
     },
-    "1st Grade": {
+    "Ages 7–8": {
       title: "Learning about value creation",
       skills: [
         "Understanding Indian & Global currencies",
@@ -111,7 +114,7 @@ export default function FinancialLiteracyPage() {
       ],
       color: "#06D6A0"
     },
-    "2nd Grade": {
+    "Ages 9–10": {
       title: "Learning to save & budget",
       skills: [
         "Learn how to be a smart shopper",
@@ -121,8 +124,8 @@ export default function FinancialLiteracyPage() {
       ],
       color: "#EE6C4D"
     },
-    "3rd Grade": {
-      title: "Understanding employemnet and consumption",
+    "Ages 11–12": {
+      title: "Understanding employment and consumption",
       skills: [
         "Understand about different forms of employment",
         "Introduction to the Banking system of India",
@@ -132,28 +135,6 @@ export default function FinancialLiteracyPage() {
       ],
       color: "#3D5A80"
     },
-    "4th Grade": {
-      title: "Banking & Investing",
-      skills: [
-        "Introduction to money in the digital age",
-        "Basics on bank accounts & types of loans",
-        "Read about different types of investments",
-        "Understand how deals, sales and discounts work",
-        "Learn about entrepreneurship basics"
-      ],
-      color: "#9B5DE5"
-    },
-    "5th Grade": {
-      title: "Advanced Financial Planning",
-      skills: [
-        "Learn about currencies and their conversions",
-        "Analyze stock performance and trends",
-        "Understand economic concepts (inflation, supply/demand)",
-        "Plan for bigger goals (college savings simulation)",
-        "Charitable giving and social responsibility"
-      ],
-      color: "#F15BB5"
-    }
   };
 
   return (
@@ -351,7 +332,7 @@ export default function FinancialLiteracyPage() {
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
-              Tailored for Every Grade Level
+              Tailored for Every Age
             </h2>
             <p className="text-xl text-[#3D5A80]">Content adapts to your child's age and learning level</p>
           </div>
@@ -384,7 +365,7 @@ export default function FinancialLiteracyPage() {
                     className="w-16 h-16 rounded-full border-3 border-[#1D3557] flex items-center justify-center text-2xl font-bold text-white"
                     style={{ backgroundColor: gradeDescriptions[selectedGrade].color, fontFamily: 'Fredoka' }}
                   >
-                    {selectedGrade === "Kindergarten" ? "K" : selectedGrade.charAt(0)}
+                    {gradeIcon[selectedGrade] || selectedGrade.charAt(0)}
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>

@@ -13,7 +13,7 @@ export default function ChatBuddy({ user }) {
   const [tip, setTip] = useState(null);
   const messagesEndRef = useRef(null);
   
-  const gradeNames = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
+  const gradeNames = ['Starter', 'Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5'];
   
   const suggestedQuestions = user?.grade <= 2 
     ? [

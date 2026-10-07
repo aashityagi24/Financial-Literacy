@@ -39,7 +39,7 @@ import { MoneyBreakdownChart } from '@/components/MoneyBreakdownChart';
 // MoneyMastersPurchase import intentionally removed — its dashboard banner is
 // commented out below while the module is paused; restore both together.
 
-const gradeLabels = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade'];
+const gradeLabels = ['Starter', 'Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5'];
 
 // Friendly label for a pending "My Wallet" transaction so parents can trace what they owe.
 const PENDING_TYPE_LABELS = {
@@ -1064,19 +1064,19 @@ export default function ParentDashboard({ user }) {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-[#1D3557] mb-1">Grade</label>
+                        <label className="block text-sm font-medium text-[#1D3557] mb-1">Level</label>
                         <select
                           value={newChildForm.grade}
                           onChange={(e) => setNewChildForm({ ...newChildForm, grade: parseInt(e.target.value) })}
                           className="w-full border-3 border-[#1D3557] rounded-md px-3 py-2"
                           data-testid="parent-child-grade-select"
                         >
-                          <option value={0}>Kindergarten</option>
-                          <option value={1}>1st Grade</option>
-                          <option value={2}>2nd Grade</option>
-                          <option value={3}>3rd Grade</option>
+                          <option value={0}>Starter</option>
+                          <option value={1}>Level 1</option>
+                          <option value={2}>Level 2</option>
+                          <option value={3}>Level 3</option>
                         </select>
-                        <p className="text-xs text-gray-500 mt-1">Financial Literacy content is currently live up to 3rd Grade.</p>
+                        <p className="text-xs text-gray-500 mt-1">Financial Literacy content is currently live up to Level 3.</p>
                       </div>
 
                       {newChildCreds && (
@@ -2198,7 +2198,7 @@ export default function ParentDashboard({ user }) {
 
                 {/* Grade & Investment Info */}
                 <div className="bg-[#98C1D9]/20 rounded-xl p-3 flex items-center justify-between">
-                  <span className="text-[#1D3557] font-medium">Grade: {gradeLabels[childInsights.child?.grade] || 'Unknown'}</span>
+                  <span className="text-[#1D3557] font-medium">Level: {gradeLabels[childInsights.child?.grade] || 'Unknown'}</span>
                   <span className="text-[#3D5A80] text-sm">
                     {childInsights.investment_type === 'garden' && '🌱 Money Garden available'}
                     {STOCKS_ENABLED && childInsights.investment_type === 'stocks' && '📈 Stock Market available'}
