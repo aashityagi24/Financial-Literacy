@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { 
   BookOpen, ChevronLeft, ChevronRight, Check, Download,
   FileText, FileSpreadsheet, Gamepad2, FolderOpen, ExternalLink, X,
-  Video, Book, Play, Lock, CheckCircle, BarChart3, Lightbulb, Users, MessagesSquare
+  Video, Book, Play, Lock, CheckCircle, BarChart3, Lightbulb, Users, MessagesSquare, School
 } from 'lucide-react';
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
 import { Progress } from "@/components/ui/progress";
@@ -792,7 +792,7 @@ export default function TopicPage({ user }) {
                   <div
                     key={content.content_id}
                     data-content-id={content.content_id}
-                    className={`card-playful p-4 sm:p-5 cursor-pointer hover:scale-[1.01] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/5' : ''} ${isTeacherOnly ? 'border-[#7C3AED] bg-[#7C3AED]/5' : ''} ${effectiveHighlightId === content.content_id ? 'ring-4 ring-[#EE6C4D] ring-offset-2 shadow-xl bg-[#EE6C4D]/5' : ''}`}
+                    className={`card-playful p-4 sm:p-5 cursor-pointer hover:scale-[1.01] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/5' : ''} ${isTeacherOnly ? 'border-[#7C3AED] bg-[#7C3AED]/5' : ''} ${effectiveHighlightId === content.content_id ? 'ring-4 ring-[#EE6C4D] ring-offset-2 shadow-xl bg-[#EE6C4D]/5' : ''} ${user?.role === 'teacher' && !isTeacherOnly && content.is_mandatory !== false ? 'border-l-[6px] border-l-[#06D6A0]' : ''} ${user?.role === 'teacher' && !isTeacherOnly && content.is_mandatory === false ? 'opacity-60' : ''}`}
                     style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
                     onClick={() => openContent(content)}
                   >
@@ -803,6 +803,27 @@ export default function TopicPage({ user }) {
                         ) : (
                           <><Play className="w-3 h-3" /> Your Next Lesson — start here!</>
                         )}
+                      </div>
+                    )}
+                    {/* Teacher-only: In Class / Independent planning banners */}
+                    {user?.role === 'teacher' && !isTeacherOnly && content.is_mandatory !== false && (
+                      <div
+                        className="mb-3 -mt-1 flex items-center gap-2 bg-[#06D6A0] text-white px-4 py-2 rounded-xl"
+                        data-testid={`in-class-banner-${content.content_id}`}
+                      >
+                        <School className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-sm font-bold">In Class</span>
+                        <span className="text-xs text-white/80 font-normal">— teach this during your lesson</span>
+                      </div>
+                    )}
+                    {user?.role === 'teacher' && !isTeacherOnly && content.is_mandatory === false && (
+                      <div
+                        className="mb-3 -mt-1 flex items-center gap-2 bg-gray-100 text-gray-500 px-4 py-2 rounded-xl"
+                        data-testid={`independent-banner-${content.content_id}`}
+                      >
+                        <BookOpen className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-sm font-semibold">Independent</span>
+                        <span className="text-xs text-gray-400 font-normal">— students complete this on their own</span>
                       </div>
                     )}
                     <div className="flex items-center gap-3 sm:gap-4">
@@ -911,7 +932,7 @@ export default function TopicPage({ user }) {
                         </div>
                         <h3 className="text-base sm:text-lg font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>
                           {content.title}
-                          {content.is_mandatory === false && (
+                          {user?.role !== 'teacher' && content.is_mandatory === false && (
                             <span className="ml-2 align-middle text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
                               Optional
                             </span>
