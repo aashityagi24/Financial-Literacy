@@ -126,8 +126,15 @@ export function SchoolEnquiryDialog({ open, onOpenChange }) {
             <label className="text-sm font-bold text-[#1D3557] mb-1 block">
               Grades Interested In <span className="text-xs text-gray-400 font-normal">(optional)</span>
             </label>
-            <div className="flex gap-2 mt-1">
-              {[{ key: 'kindergarten', label: 'Kindergarten' }, { key: 'grade_1', label: 'Grade 1' }, { key: 'grade_2', label: 'Grade 2' }].map(({ key, label }) => (
+            <div className="flex flex-wrap gap-2 mt-1">
+              {[
+                { key: 'kindergarten', label: 'Kindergarten' },
+                { key: 'grade_1', label: 'Grade 1' },
+                { key: 'grade_2', label: 'Grade 2' },
+                { key: 'grade_3', label: 'Grade 3' },
+                { key: 'grade_4', label: 'Grade 4' },
+                { key: 'grade_5', label: 'Grade 5' },
+              ].map(({ key, label }) => (
                 <button
                   key={key}
                   type="button"
