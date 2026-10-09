@@ -413,7 +413,7 @@ function SortableSubtopicItem({ subtopic, isSelected, onSelect, onEdit, onDelete
 }
 
 // Sortable Content Item Component for Lesson Plan
-function SortableContentItem({ content, onEdit, onDelete, onMove, onDuplicate, onTogglePublish, onToggleMandatory, typeConfig }) {
+function SortableContentItem({ content, onEdit, onDelete, onMove, onDuplicate, onTogglePublish, onToggleMandatory, typeConfig, isSelected, onToggleSelect }) {
   const {
     attributes,
     listeners,
@@ -450,9 +450,18 @@ function SortableContentItem({ content, onEdit, onDelete, onMove, onDuplicate, o
     <div 
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-3 p-4 border rounded-xl bg-gray-50 ${isDragging ? 'shadow-lg bg-white' : ''}`}
+      className={`flex items-center gap-3 p-4 border rounded-xl bg-gray-50 ${isDragging ? 'shadow-lg bg-white' : ''} ${isSelected ? 'ring-2 ring-blue-400 bg-blue-50' : ''}`}
       data-testid={`content-row-${content.content_id}`}
     >
+      {/* Bulk-select checkbox */}
+      <input
+        type="checkbox"
+        checked={isSelected}
+        onChange={onToggleSelect}
+        onClick={(e) => e.stopPropagation()}
+        className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer flex-shrink-0"
+        data-testid={`content-select-${content.content_id}`}
+      />
       {/* Drag Handle */}
       <div
         {...attributes}
@@ -601,9 +610,12 @@ export default function ContentManagement({ user }) {
   const [showContentDialog, setShowContentDialog] = useState(false);
   const [showMoveSubtopicDialog, setShowMoveSubtopicDialog] = useState(false);
   const [showMoveContentDialog, setShowMoveContentDialog] = useState(false);
+  const [showBulkMoveDialog, setShowBulkMoveDialog] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [itemToMove, setItemToMove] = useState(null);
   const [moveTargetId, setMoveTargetId] = useState('');
+  const [bulkMoveTargetId, setBulkMoveTargetId] = useState('');
+  const [selectedContentIds, setSelectedContentIds] = useState(new Set());
   
   // Form states
   const [topicForm, setTopicForm] = useState({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'], curriculum_overrides: {} });
@@ -1288,6 +1300,23 @@ export default function ContentManagement({ user }) {
     setItemToMove(content);
     setMoveTargetId('');
     setShowMoveContentDialog(true);
+  };
+
+  // Bulk move selected content items
+  const bulkMoveContent = async () => {
+    if (!bulkMoveTargetId || selectedContentIds.size === 0) return;
+    try {
+      const payload = { content_ids: [...selectedContentIds], new_topic_id: bulkMoveTargetId };
+      if (gradeFilter !== 'all') payload.grade = gradeFilter;
+      const res = await axios.post(`${API}/admin/content/items/bulk-move`, payload);
+      toast.success(res.data.message || `Moved ${selectedContentIds.size} item(s)`);
+      setShowBulkMoveDialog(false);
+      setBulkMoveTargetId('');
+      setSelectedContentIds(new Set());
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Bulk move failed');
+    }
   };
 
   // Move content to another topic/subtopic
@@ -2082,14 +2111,41 @@ export default function ContentManagement({ user }) {
                     strategy={verticalListSortingStrategy}
                   >
                     <div className="space-y-3">
-                      <p className="text-sm text-gray-500 mb-4">
+                      {/* Bulk-select bar */}
+                      <div className="flex items-center gap-3 pb-2 border-b border-gray-100">
+                        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={selectedContentIds.size === subtopicContent.length && subtopicContent.length > 0}
+                            ref={el => { if (el) el.indeterminate = selectedContentIds.size > 0 && selectedContentIds.size < subtopicContent.length; }}
+                            onChange={(e) => {
+                              if (e.target.checked) setSelectedContentIds(new Set(subtopicContent.map(c => c.content_id)));
+                              else setSelectedContentIds(new Set());
+                            }}
+                            className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
+                            data-testid="content-select-all"
+                          />
+                          Select all ({subtopicContent.length})
+                        </label>
+                        {selectedContentIds.size > 0 && (
+                          <Button
+                            size="sm"
+                            className="ml-auto bg-blue-600 hover:bg-blue-700 text-white gap-1"
+                            onClick={() => { setBulkMoveTargetId(''); setShowBulkMoveDialog(true); }}
+                            data-testid="bulk-move-btn"
+                          >
+                            <MoveRight className="w-4 h-4" />
+                            Move {selectedContentIds.size} item{selectedContentIds.size > 1 ? 's' : ''}
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500">
                         {gradeFilter === 'all'
                           ? 'Drag and drop to reorder content. Students will see content in this order.'
                           : `Reordering for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only — same content can have a different position per grade.`}
                       </p>
                       {subtopicContent.map((content) => {
                         const typeConfig = getContentTypeConfig(content.content_type);
-                        
                         return (
                           <SortableContentItem
                             key={content.content_id}
@@ -2101,6 +2157,15 @@ export default function ContentManagement({ user }) {
                             onDuplicate={() => duplicateContent(content.content_id)}
                             onTogglePublish={() => togglePublish(content.content_id)}
                             onToggleMandatory={() => toggleMandatory(content.content_id)}
+                            isSelected={selectedContentIds.has(content.content_id)}
+                            onToggleSelect={(e) => {
+                              e.stopPropagation();
+                              setSelectedContentIds(prev => {
+                                const next = new Set(prev);
+                                next.has(content.content_id) ? next.delete(content.content_id) : next.add(content.content_id);
+                                return next;
+                              });
+                            }}
                           />
                         );
                       })}
@@ -2728,6 +2793,48 @@ export default function ContentManagement({ user }) {
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowMoveContentDialog(false)}>Cancel</Button>
               <Button onClick={moveContentToTopic} disabled={!moveTargetId}>Move Content</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Move Dialog */}
+      <Dialog open={showBulkMoveDialog} onOpenChange={(open) => { setShowBulkMoveDialog(open); if (!open) setBulkMoveTargetId(''); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Move {selectedContentIds.size} item{selectedContentIds.size > 1 ? 's' : ''}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <p className="text-sm text-gray-600">
+              Move <strong>{selectedContentIds.size} selected item{selectedContentIds.size > 1 ? 's' : ''}</strong> to a different subtopic. They will be appended after any existing content there.
+            </p>
+            {gradeFilter !== 'all' && (
+              <p className="text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-md px-3 py-2">
+                Grade filter active: this move applies to <strong>{gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only</strong>.
+              </p>
+            )}
+            <Select value={bulkMoveTargetId} onValueChange={setBulkMoveTargetId} data-testid="bulk-move-target-select">
+              <SelectTrigger>
+                <SelectValue placeholder="Select destination subtopic" />
+              </SelectTrigger>
+              <SelectContent>
+                {getAllSubtopics().filter(s => s.topic_id !== selectedSubtopic?.topic_id).map(subtopic => (
+                  <SelectItem key={subtopic.topic_id} value={subtopic.topic_id}>
+                    {subtopic.parentTitle} → {subtopic.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowBulkMoveDialog(false)}>Cancel</Button>
+              <Button
+                onClick={bulkMoveContent}
+                disabled={!bulkMoveTargetId}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                data-testid="bulk-move-confirm-btn"
+              >
+                <MoveRight className="w-4 h-4 mr-1" /> Move {selectedContentIds.size} item{selectedContentIds.size > 1 ? 's' : ''}
+              </Button>
             </div>
           </div>
         </DialogContent>

@@ -1249,7 +1249,55 @@ async def admin_reorder_items(request: Request):
     
     return {"message": "Content reordered"}
 
-@router.post("/admin/content/items/{content_id}/toggle-publish")
+@router.post("/admin/content/items/bulk-move")
+async def admin_bulk_move_content(request: Request):
+    """Move multiple content items to a different topic/subtopic in one call.
+    Accepts {content_ids: [...], new_topic_id: str, grade?: int|"all"}.
+    Items are appended after any existing content at the destination."""
+    from services.auth import require_admin
+    db = get_db()
+    await require_admin(request)
+
+    body = await request.json()
+    content_ids = body.get("content_ids", [])
+    new_topic_id = body.get("new_topic_id")
+    grade = body.get("grade")
+
+    if not new_topic_id or not content_ids:
+        raise HTTPException(status_code=400, detail="content_ids and new_topic_id are required")
+
+    new_topic = await db.content_topics.find_one({"topic_id": new_topic_id})
+    if not new_topic:
+        raise HTTPException(status_code=404, detail="Target topic/subtopic not found")
+
+    grade_key = str(grade) if grade is not None and grade != "all" else None
+
+    # Find the current highest order at the destination so moved items go last.
+    max_order_doc = await db.content_items.find_one(
+        {"topic_id": new_topic_id}, sort=[("order", -1)]
+    )
+    next_order = (max_order_doc.get("order", 0) + 1) if max_order_doc else 0
+
+    moved = 0
+    for offset, content_id in enumerate(content_ids):
+        if grade_key is None:
+            await db.content_items.update_one(
+                {"content_id": content_id},
+                {"$set": {"topic_id": new_topic_id, "order": next_order + offset}}
+            )
+        else:
+            await db.content_items.update_one(
+                {"content_id": content_id},
+                {"$set": {
+                    f"grade_parents.{grade_key}": new_topic_id,
+                    f"grade_orders.{grade_key}": next_order + offset,
+                }}
+            )
+        moved += 1
+
+    return {"message": f"Moved {moved} item(s) to {new_topic['title']}", "moved": moved}
+
+
 async def admin_toggle_publish(content_id: str, request: Request):
     """Toggle content publish status"""
     from services.auth import require_admin
