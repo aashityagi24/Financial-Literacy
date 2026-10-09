@@ -70,7 +70,8 @@ export async function uploadFile(file, destType, directEndpoint, onProgress) {
       reportProgress(Math.round(((i + 1) / totalChunks) * 90));
     }
 
-    // 3. Complete
+    // 3. Kick off background assembly — returns immediately with job_id so
+    //    the request finishes well before any proxy timeout.
     const completeForm = new FormData();
     completeForm.append('upload_id', upload_id);
     completeForm.append('filename', file.name);
@@ -78,14 +79,46 @@ export async function uploadFile(file, destType, directEndpoint, onProgress) {
     completeForm.append('total_chunks', totalChunks.toString());
     let completeRes;
     try {
-      completeRes = await axios.post(`${API}/upload/chunked/complete`, completeForm);
+      completeRes = await axios.post(`${API}/upload/chunked/complete`, completeForm, { timeout: 30000 });
     } catch (err) {
       throw new Error(`Upload assembly failed: ${err.response?.data?.detail || err.message}`);
     }
-    
-    reportProgress(100);
-    hideUploadProgress();
-    return completeRes.data;
+
+    // Activity zip uploads still complete synchronously and return {url, folder}
+    if (completeRes.data.url) {
+      reportProgress(100);
+      hideUploadProgress();
+      return completeRes.data;
+    }
+
+    // 4. Poll for assembly completion (progress ticks from 90 → 98 while waiting)
+    const { job_id } = completeRes.data;
+    if (!job_id) throw new Error('Upload assembly failed: no job ID returned');
+
+    let progress = 90;
+    while (true) {
+      await new Promise((r) => setTimeout(r, 2000));
+      let statusRes;
+      try {
+        statusRes = await axios.get(`${API}/upload/chunked/status/${job_id}`, { timeout: 15000 });
+      } catch (err) {
+        throw new Error(`Status check failed: ${err.response?.data?.detail || err.message}`);
+      }
+
+      const { status, url, error } = statusRes.data;
+      if (status === 'done') {
+        reportProgress(100);
+        hideUploadProgress();
+        return { url };
+      }
+      if (status === 'error') {
+        throw new Error(error || 'Upload assembly failed on server');
+      }
+      // Still pending — nudge the progress bar
+      progress = Math.min(98, progress + 2);
+      reportProgress(progress);
+    }
+
   } catch (err) {
     hideUploadProgress();
     throw err;

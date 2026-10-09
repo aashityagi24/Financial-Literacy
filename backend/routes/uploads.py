@@ -5,7 +5,13 @@ import uuid
 import os
 import shutil
 import zipfile
+import threading
 from services.object_storage import put_object, get_object
+
+# In-memory store for background assembly jobs.
+# key: job_id (str), value: {"status": "pending"|"done"|"error", "url": str|None, "error": str|None}
+# Single-pod deployment → plain dict is safe and lightweight.
+_upload_jobs: dict = {}
 
 # Upload directories
 ROOT_DIR = Path(__file__).parent.parent
@@ -314,60 +320,88 @@ async def chunked_upload_complete(
     dest_type: str = Form("video"),
     total_chunks: int = Form(1)
 ):
-    """Assemble chunks (staged in object storage) into the final file"""
+    """
+    Start background assembly of chunks and return a job_id immediately.
+    For activity/zip uploads the extraction is local and fast, so we still
+    do it synchronously here to preserve the existing response shape.
+    """
     def _read_chunk(i):
         try:
             data, _ = get_object(f"chunks/{upload_id}/chunk_{i:04d}")
             return data
         except Exception:
-            raise HTTPException(status_code=400, detail=f"Missing chunk {i}")
-    
+            raise RuntimeError(f"Missing chunk {i}")
+
     file_ext = os.path.splitext(filename)[1].lower()
-    
-    # Handle zip files for activities - extracted locally since object storage
-    # can't serve a directory tree of assets (see upload_activity_html above)
+
+    # ── Activity zip: local extraction, no object-storage round-trip on the
+    # assembly step, so it completes quickly — keep it synchronous. ──────────
     if dest_type == "activity" and file_ext == ".zip":
         upload_dir = CHUNKS_DIR / upload_id
         upload_dir.mkdir(parents=True, exist_ok=True)
         temp_path = upload_dir / f"temp{file_ext}"
-        with open(temp_path, "wb") as outfile:
-            for i in range(total_chunks):
-                outfile.write(_read_chunk(i))
-        
-        # Extract zip
+        try:
+            with open(temp_path, "wb") as outfile:
+                for i in range(total_chunks):
+                    outfile.write(_read_chunk(i))
+        except RuntimeError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+
         folder_name = uuid.uuid4().hex[:12]
         extract_dir = ACTIVITIES_DIR / folder_name
         extract_dir.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(temp_path, 'r') as zip_ref:
-            # Filter out __MACOSX metadata files
             for member in zip_ref.namelist():
                 if "__MACOSX" in member or member.startswith("._") or "/._" in member:
                     continue
                 zip_ref.extract(member, extract_dir)
-        
-        # Find HTML file
+
         html_file = None
         for f in extract_dir.rglob("*.html"):
             html_file = f.name
             break
-        
-        # Cleanup
+
         shutil.rmtree(upload_dir, ignore_errors=True)
-        
+
         if html_file:
             return {"url": f"/api/uploads/activities/{folder_name}/{html_file}", "folder": folder_name}
         return {"url": f"/api/uploads/activities/{folder_name}/index.html", "folder": folder_name}
-    
-    # Standard file assembly - concatenate chunks and upload the final blob
-    final_filename = f"{uuid.uuid4().hex[:16]}{file_ext}"
-    assembled = b"".join(_read_chunk(i) for i in range(total_chunks))
-    
-    url_prefix = URL_PREFIX_MAP.get(dest_type, "videos")
-    content_type_guess = {
-        ".mp4": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime",
-        ".pdf": "application/pdf", ".png": "image/png", ".jpg": "image/jpeg",
-        ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp",
-    }.get(file_ext, "application/octet-stream")
-    put_object(f"{url_prefix}/{final_filename}", assembled, content_type_guess)
-    
-    return {"url": f"/api/uploads/{url_prefix}/{final_filename}"}
+
+    # ── All other types (video, pdf, image, …): assemble in a background
+    # thread so the HTTP request returns immediately and does not hit the
+    # proxy timeout while fetching/uploading potentially large files. ─────────
+    job_id = uuid.uuid4().hex[:16]
+    _upload_jobs[job_id] = {"status": "pending", "url": None, "error": None}
+
+    def _worker():
+        try:
+            final_filename = f"{uuid.uuid4().hex[:16]}{file_ext}"
+            assembled = b"".join(_read_chunk(i) for i in range(total_chunks))
+
+            url_prefix = URL_PREFIX_MAP.get(dest_type, "videos")
+            content_type_guess = {
+                ".mp4": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime",
+                ".pdf": "application/pdf", ".png": "image/png", ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp",
+            }.get(file_ext, "application/octet-stream")
+            put_object(f"{url_prefix}/{final_filename}", assembled, content_type_guess)
+
+            _upload_jobs[job_id] = {
+                "status": "done",
+                "url": f"/api/uploads/{url_prefix}/{final_filename}",
+                "error": None,
+            }
+        except Exception as exc:
+            _upload_jobs[job_id] = {"status": "error", "url": None, "error": str(exc)}
+
+    threading.Thread(target=_worker, daemon=True).start()
+    return {"job_id": job_id, "status": "pending"}
+
+
+@router.get("/chunked/status/{job_id}")
+async def chunked_upload_status(job_id: str):
+    """Poll for the result of a background assembly job."""
+    job = _upload_jobs.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
