@@ -357,6 +357,8 @@ export default function AdminSubscriptionManagement({ user }) {
         child_prices: (config.child_prices || []).map(p => parseInt(p) || 0),
         extra_child_per_day: parseFloat(config.extra_child_per_day) || 0,
         discount_percent: parseInt(config.discount_percent) || 0,
+        discount_end_date: config.discount_end_date || null,
+        future_price: parseInt(config.future_price) || null,
       });
       toast.success(`${PLAN_LABELS[planType]} - ${DURATION_LABELS[duration]} pricing updated`);
       fetchData();
@@ -867,7 +869,7 @@ export default function AdminSubscriptionManagement({ user }) {
                               </div>
                             </div>
                             <div>
-                              <label className="text-xs font-medium text-gray-500">Offer Discount % (shows a strikethrough "original price" on the public card)</label>
+                              <label className="text-xs font-medium text-gray-500">Discount % (controls "Launch price" pill visibility)</label>
                               <Input
                                 data-testid={`config-discount-${planType}-${duration}`}
                                 type="number"
@@ -879,6 +881,36 @@ export default function AdminSubscriptionManagement({ user }) {
                                   const newConfig = { ...editingConfig };
                                   newConfig[planType][duration].discount_percent = parseInt(e.target.value) || 0;
                                   setEditingConfig({ ...newConfig });
+                                }}
+                                className="h-8 text-sm"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-xs font-medium text-gray-500">Launch price ends on (date)</label>
+                              <Input
+                                data-testid={`config-end-date-${planType}-${duration}`}
+                                type="date"
+                                value={config.discount_end_date || ''}
+                                onChange={(e) => {
+                                  const newConfig = JSON.parse(JSON.stringify(editingConfig));
+                                  newConfig[planType][duration].discount_end_date = e.target.value || null;
+                                  setEditingConfig(newConfig);
+                                }}
+                                className="h-8 text-sm"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-xs font-medium text-gray-500">Future price ₹ (shown in "Goes up to" hint)</label>
+                              <Input
+                                data-testid={`config-future-price-${planType}-${duration}`}
+                                type="number"
+                                min="0"
+                                placeholder="e.g. 999"
+                                value={config.future_price || ''}
+                                onChange={(e) => {
+                                  const newConfig = JSON.parse(JSON.stringify(editingConfig));
+                                  newConfig[planType][duration].future_price = parseInt(e.target.value) || null;
+                                  setEditingConfig(newConfig);
                                 }}
                                 className="h-8 text-sm"
                               />

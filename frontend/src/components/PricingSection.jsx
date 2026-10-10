@@ -376,6 +376,8 @@ export default function PricingSection() {
                     <PricingOffer
                       price={price}
                       discountPercent={plan.discount_percent}
+                      discountEndDate={plan.discount_end_date}
+                      futurePrice={plan.future_price}
                       priceClassName="text-4xl font-bold text-[#1D3557] mb-0.5"
                       testId={`plan-${dur}`}
                     />

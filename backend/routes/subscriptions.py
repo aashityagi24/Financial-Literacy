@@ -54,7 +54,9 @@ class PlanConfigUpdate(BaseModel):
     base_price: int
     child_prices: list  # [2nd_child, 3rd_child, 4th_child, 5th_child]
     extra_child_per_day: float = 0
-    discount_percent: Optional[int] = 0  # shows a strikethrough "original price" offer on the public pricing card
+    discount_percent: Optional[int] = 0
+    discount_end_date: Optional[str] = None   # ISO date — launch price expires on this day
+    future_price: Optional[int] = None         # price shown in the "Goes up to ₹X on {date}" line
 
 
 class BatchCreate(BaseModel):
@@ -144,6 +146,8 @@ async def get_plan_pricing(plan_type: str, duration: str):
             "child_prices": config["child_prices"],
             "extra_child_per_day": config.get("extra_child_per_day", 0),
             "discount_percent": config.get("discount_percent", 0),
+            "discount_end_date": config.get("discount_end_date"),
+            "future_price": config.get("future_price"),
         }
     # Legacy fallback: convert old per_child_price to child_prices array
     if config and "per_child_price" in config:
@@ -187,6 +191,8 @@ async def get_plans():
                 "discount_percent": pricing.get("discount_percent", 0),
                 "duration_label": DURATION_MAP[duration]["label"],
                 "duration_days": DURATION_MAP[duration]["days"],
+                "discount_end_date": pricing.get("discount_end_date"),
+                "future_price": pricing.get("future_price"),
             }
     
     return {
@@ -910,6 +916,8 @@ async def admin_get_plan_config(request: Request):
                     "child_prices": db_config["child_prices"],
                     "extra_child_per_day": db_config.get("extra_child_per_day", 0),
                     "discount_percent": db_config.get("discount_percent", 0),
+                    "discount_end_date": db_config.get("discount_end_date"),
+                    "future_price": db_config.get("future_price"),
                 }
             elif db_config and "per_child_price" in db_config:
                 # Legacy migration
@@ -919,9 +927,11 @@ async def admin_get_plan_config(request: Request):
                     "child_prices": [p, p, p, p],
                     "extra_child_per_day": 0,
                     "discount_percent": db_config.get("discount_percent", 0),
+                    "discount_end_date": db_config.get("discount_end_date"),
+                    "future_price": db_config.get("future_price"),
                 }
             else:
-                all_plans[plan_type][duration] = {**DEFAULT_PLANS[plan_type][duration], "discount_percent": 0}
+                all_plans[plan_type][duration] = {**DEFAULT_PLANS[plan_type][duration], "discount_percent": 0, "discount_end_date": None, "future_price": None}
     
     return all_plans
 
@@ -951,6 +961,8 @@ async def admin_update_plan_config(request: Request, config: PlanConfigUpdate):
             "child_prices": config.child_prices,
             "extra_child_per_day": config.extra_child_per_day,
             "discount_percent": config.discount_percent or 0,
+            "discount_end_date": config.discount_end_date or None,
+            "future_price": config.future_price or None,
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }},
         upsert=True
