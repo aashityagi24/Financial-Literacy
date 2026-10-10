@@ -151,46 +151,33 @@ export default function FinancialLiteracyPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="animate-bounce-in">
               <h1 className="text-5xl lg:text-7xl font-bold text-[#1D3557] mb-6 leading-tight" style={{ fontFamily: 'Fredoka' }}>
-                Learn Money Skills <span className="text-[#EE6C4D]">While Having Fun!</span>
+                Money lessons your 5–10-year-old will <span className="text-[#EE6C4D]">actually look forward to.</span>
               </h1>
               <p className="text-xl text-[#3D5A80] mb-8 leading-relaxed">
-                CoinQuest teaches 5 - 10 year kids about earning, saving, spending, sharing, and growing money through stories, exciting games, and real-world simulations!
+                Stories, games and real jobs at home that teach your child to earn, save, spend and share. 10 minutes a day, from KG to Class 5.
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-col gap-3">
+                <div>
+                  <button
+                    data-testid="get-started-btn"
+                    onClick={() => window.dispatchEvent(new CustomEvent('coinquest:buy-now', { detail: { duration: '1_day' } }))}
+                    className="btn-primary px-8 py-4 text-xl flex items-center gap-2"
+                  >
+                    <Sparkles className="w-6 h-6" />
+                    Try a day for ₹{trialPrice}
+                  </button>
+                  <p className="mt-2 text-sm text-[#1D3557]/70">
+                    One-time payment · No auto-renewal · UPI or card
+                  </p>
+                </div>
                 <button
-                  data-testid="get-started-btn"
-                  onClick={() => window.dispatchEvent(new CustomEvent('coinquest:buy-now', { detail: { duration: '1_day' } }))}
-                  className="btn-primary px-8 py-4 text-xl flex items-center gap-2"
+                  onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="self-start flex items-center gap-1.5 text-base font-semibold text-[#1D3557] hover:text-[#EE6C4D] transition-colors"
+                  data-testid="hero-watch-tour-btn"
                 >
-                  <Sparkles className="w-6 h-6" />
-                  Start for ₹{trialPrice}
+                  <span className="text-[#EE6C4D]">▶</span> Watch a 2-minute tour
                 </button>
-                <a
-                  href="#features"
-                  className="btn-secondary px-8 py-4 text-xl flex items-center gap-2"
-                >
-                  <BookOpen className="w-6 h-6" />
-                  Learn More
-                </a>
               </div>
-              <p className="mt-5 text-base text-[#3D5A80]">
-                <button
-                  onClick={() => navigate('/register')}
-                  className="font-bold text-[#1D3557] underline underline-offset-4 hover:text-[#EE6C4D] transition-colors"
-                  data-testid="hero-register-btn"
-                >
-                  Register
-                </button>
-                <span className="mx-2 text-[#3D5A80]/50">·</span>
-                Already have an account?{' '}
-                <button
-                  onClick={() => navigate('/login')}
-                  className="font-bold text-[#1D3557] underline underline-offset-4 hover:text-[#EE6C4D] transition-colors"
-                  data-testid="hero-login-btn"
-                >
-                  Login
-                </button>
-              </p>
             </div>
 
             <div className="relative animate-bounce-in stagger-2">
