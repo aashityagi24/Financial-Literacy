@@ -161,7 +161,7 @@ export default function FinancialLiteracyPage() {
                 className="font-bold text-[#1D3557] mb-3 sm:mb-6"
                 style={{ fontFamily: 'Fredoka', fontSize: 'clamp(2rem, 7.5vw, 3.5rem)', lineHeight: '1.1' }}
               >
-                Money lessons your <span style={{ whiteSpace: 'nowrap' }}>5- to 10-year-old</span> will <span className="text-[#EE6C4D]">actually look forward to.</span>
+                Money lessons your <span style={{ whiteSpace: 'nowrap' }}>5 to 10-year-old</span> will <span className="text-[#EE6C4D]">actually look forward to.</span>
               </h1>
               <p className="text-xl text-[#3D5A80] mb-4 sm:mb-8 leading-relaxed">
                 Stories, games and real jobs at home that teach your child to earn, save, spend and share. 10 minutes a day, from KG to Class 5.
