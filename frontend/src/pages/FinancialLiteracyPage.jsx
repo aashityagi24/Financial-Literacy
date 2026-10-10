@@ -208,6 +208,86 @@ export default function FinancialLiteracyPage() {
         </div>
       </header>
 
+      {/* Video Walkthrough Section */}
+      {walkthroughVideos?.child?.url && (
+        <section id="how-it-works" className="py-20 bg-[#F8F9FA]" data-testid="walkthrough-video-section">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
+                {walkthroughVideos.global?.title || 'See exactly what your child will do'}
+              </h2>
+              <p className="text-xl text-[#3D5A80] max-w-2xl mx-auto">
+                {walkthroughVideos.global?.description || 'A 2-minute look inside CoinQuest: the stories and games your child plays, and what you see on your dashboard.'}
+              </p>
+            </div>
+
+            <div className="max-w-4xl mx-auto">
+              <div className="flex flex-wrap justify-center gap-4 mb-8">
+                <button
+                  onClick={() => setSelectedVideoTab('child')}
+                  data-testid="video-tab-child"
+                  className={`flex items-center gap-2 px-6 py-3 rounded-full border-2 transition-all cursor-pointer ${
+                    selectedVideoTab === 'child'
+                      ? 'bg-[#06D6A0] border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] text-white'
+                      : 'bg-white border-[#1D3557] hover:shadow-[2px_2px_0px_0px_#1D3557] text-[#1D3557]'
+                  }`}
+                >
+                  <Play className={`w-4 h-4 ${selectedVideoTab === 'child' ? 'text-white' : 'text-[#06D6A0]'}`} />
+                  <span className="text-sm font-bold">What your child does</span>
+                </button>
+
+                {walkthroughVideos.parent?.url && (
+                  <button
+                    onClick={() => setSelectedVideoTab('parent')}
+                    data-testid="video-tab-parent"
+                    className={`flex items-center gap-2 px-6 py-3 rounded-full border-2 transition-all cursor-pointer ${
+                      selectedVideoTab === 'parent'
+                        ? 'bg-[#FFD23F] border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] text-[#1D3557]'
+                        : 'bg-white border-[#1D3557] hover:shadow-[2px_2px_0px_0px_#1D3557] text-[#1D3557]'
+                    }`}
+                  >
+                    <Star className={`w-4 h-4 ${selectedVideoTab === 'parent' ? 'text-[#1D3557]' : 'text-[#FFD23F]'}`} />
+                    <span className="text-sm font-bold">What you see</span>
+                  </button>
+                )}
+
+                {walkthroughVideos.teacher?.url && (
+                  <button
+                    onClick={() => setSelectedVideoTab('teacher')}
+                    data-testid="video-tab-teacher"
+                    className={`flex items-center gap-2 px-6 py-3 rounded-full border-2 transition-all cursor-pointer ${
+                      selectedVideoTab === 'teacher'
+                        ? 'bg-[#EE6C4D] border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] text-white'
+                        : 'bg-white border-[#1D3557] hover:shadow-[2px_2px_0px_0px_#1D3557] text-[#1D3557]'
+                    }`}
+                  >
+                    <Trophy className={`w-4 h-4 ${selectedVideoTab === 'teacher' ? 'text-white' : 'text-[#EE6C4D]'}`} />
+                    <span className="text-sm font-bold">For teachers</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="card-playful p-4 bg-white">
+                <div className="relative rounded-2xl overflow-hidden border-3 border-[#1D3557] bg-black aspect-video">
+                  <video
+                    key={selectedVideoTab}
+                    controls
+                    className="w-full h-full"
+                    poster={walkthroughVideos[selectedVideoTab]?.poster ? getAssetUrl(walkthroughVideos[selectedVideoTab].poster) : undefined}
+                    preload="metadata"
+                    playsInline
+                    data-testid="walkthrough-video-player"
+                  >
+                    <source src={getAssetUrl(walkthroughVideos[selectedVideoTab]?.url || walkthroughVideos.child?.url)} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Features Section */}
       <section id="features" className="py-20 bg-white">
         <div className="container mx-auto px-6">
@@ -238,81 +318,6 @@ export default function FinancialLiteracyPage() {
           </div>
         </div>
       </section>
-
-      {/* Video Walkthrough Section */}
-      {walkthroughVideos?.child?.url && (
-        <section id="how-it-works" className="py-20 bg-[#F8F9FA]" data-testid="walkthrough-video-section">
-          <div className="container mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
-                {walkthroughVideos.global?.title || 'See CoinQuest in Action'}
-              </h2>
-              <p className="text-xl text-[#3D5A80] max-w-2xl mx-auto">
-                {walkthroughVideos.global?.description || 'Watch how kids learn financial literacy through fun games and activities'}
-              </p>
-            </div>
-
-            <div className="max-w-4xl mx-auto">
-              <div className="flex flex-wrap justify-center gap-4 mb-8">
-                <button
-                  onClick={() => setSelectedVideoTab('child')}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-full border-2 transition-all cursor-pointer ${
-                    selectedVideoTab === 'child'
-                      ? 'bg-[#06D6A0] border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] text-white'
-                      : 'bg-white border-[#1D3557] hover:shadow-[2px_2px_0px_0px_#1D3557] text-[#1D3557]'
-                  }`}
-                >
-                  <Play className={`w-4 h-4 ${selectedVideoTab === 'child' ? 'text-white' : 'text-[#06D6A0]'}`} />
-                  <span className="text-sm font-bold">Child</span>
-                </button>
-
-                {walkthroughVideos.parent?.url && (
-                  <button
-                    onClick={() => setSelectedVideoTab('parent')}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-full border-2 transition-all cursor-pointer ${
-                      selectedVideoTab === 'parent'
-                        ? 'bg-[#FFD23F] border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] text-[#1D3557]'
-                        : 'bg-white border-[#1D3557] hover:shadow-[2px_2px_0px_0px_#1D3557] text-[#1D3557]'
-                    }`}
-                  >
-                    <Star className={`w-4 h-4 ${selectedVideoTab === 'parent' ? 'text-[#1D3557]' : 'text-[#FFD23F]'}`} />
-                    <span className="text-sm font-bold">Parent</span>
-                  </button>
-                )}
-
-                {walkthroughVideos.teacher?.url && (
-                  <button
-                    onClick={() => setSelectedVideoTab('teacher')}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-full border-2 transition-all cursor-pointer ${
-                      selectedVideoTab === 'teacher'
-                        ? 'bg-[#EE6C4D] border-[#1D3557] shadow-[3px_3px_0px_0px_#1D3557] text-white'
-                        : 'bg-white border-[#1D3557] hover:shadow-[2px_2px_0px_0px_#1D3557] text-[#1D3557]'
-                    }`}
-                  >
-                    <Trophy className={`w-4 h-4 ${selectedVideoTab === 'teacher' ? 'text-white' : 'text-[#EE6C4D]'}`} />
-                    <span className="text-sm font-bold">Teacher</span>
-                  </button>
-                )}
-              </div>
-
-              <div className="card-playful p-4 bg-white">
-                <div className="relative rounded-2xl overflow-hidden border-3 border-[#1D3557] bg-black aspect-video">
-                  <video
-                    key={selectedVideoTab}
-                    controls
-                    className="w-full h-full"
-                    poster=""
-                    data-testid="walkthrough-video-player"
-                  >
-                    <source src={getAssetUrl(walkthroughVideos[selectedVideoTab]?.url || walkthroughVideos.child?.url)} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Grade Levels Section */}
       <section className="py-20">

@@ -1462,10 +1462,11 @@ async def get_walkthrough_video(request: Request):
             videos[user_type] = {
                 "url": setting.get("value"),
                 "title": setting.get("title", ""),
-                "description": setting.get("description", "")
+                "description": setting.get("description", ""),
+                "poster": setting.get("poster", None)
             }
         else:
-            videos[user_type] = {"url": None, "title": "", "description": ""}
+            videos[user_type] = {"url": None, "title": "", "description": "", "poster": None}
     
     # Also return global title/description for the section
     global_setting = await db.site_settings.find_one({"key": "walkthrough_video_global"}, {"_id": 0})
@@ -1500,15 +1501,18 @@ async def update_walkthrough_video(request: Request):
         )
     else:
         # Update video for specific user type
+        update_fields = {
+            "key": f"walkthrough_video_{user_type}",
+            "value": body.get("url"),
+            "title": body.get("title", ""),
+            "description": body.get("description", ""),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        if "poster" in body:
+            update_fields["poster"] = body.get("poster")
         await db.site_settings.update_one(
             {"key": f"walkthrough_video_{user_type}"},
-            {"$set": {
-                "key": f"walkthrough_video_{user_type}",
-                "value": body.get("url"),
-                "title": body.get("title", ""),
-                "description": body.get("description", ""),
-                "updated_at": datetime.now(timezone.utc).isoformat()
-            }},
+            {"$set": update_fields},
             upsert=True
         )
     return {"message": f"Walkthrough video for {user_type} updated"}

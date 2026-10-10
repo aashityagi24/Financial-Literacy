@@ -128,6 +128,16 @@ A gamified financial literacy learning application for children (K-5) with disti
 - **Grade 3 moved from Stocks to Garden**: `getInvestmentItem()` threshold changed `grade<=2`→`grade<=3`. Backend gates swapped: `GET /garden/farm` + `POST /garden/buy-plot` now block `grade>=4` (was `>=3`); `GET /investments` now blocks `grade<=3` (was `<=2`). 5 seed-catalog docs (Red Chilli, Tomato, Eggplant, Wheat, Strawberry) had `max_grade` widened 2→3 so Grade 3 doesn't see an empty seed shop.
 - Tested across 4 rounds by testing_agent (iterations 109-112): 100% pass each round, zero unresolved bugs. New regression suite: `/app/backend/tests/test_round4_garden_investments.py`. QA account `classmate_g4_qa`/`testpass123` added for grade-4 regression baseline (see test_credentials.md).
 
+### Video Walkthrough Section Enhancements (Oct 2026) ✅
+- Moved video section directly below the hero on the landing page (before "Everything Kids Need to Learn About Money")
+- Updated heading default to "See exactly what your child will do"
+- Updated subtext to "A 2-minute look inside CoinQuest: the stories and games your child plays, and what you see on your dashboard."
+- Renamed video tabs: "Child" → "What your child does" (default), "Parent" → "What you see", "Teacher" → "For teachers"
+- Added `preload="metadata"` and `playsInline` attributes to video element
+- Added `poster` field support to `GET/PUT /api/admin/settings/walkthrough-video` (no breaking change)
+- Added new `POST /api/upload/walkthrough-poster?user_type=child|parent|teacher` endpoint for poster image uploads
+- Admin walkthrough video page (`/admin/video`) now shows a "Poster / Thumbnail Image" section per tab with click-to-select dropzone, "Upload Poster" button, and a "Remove" delete button
+
 ## Current Architecture Snapshot (Aug 23, 2026)
 - Roles: child, parent, teacher, school (admin), admin.
 - Learning hierarchy: Topic → Subtopic → Content Item, grade-scoped, progressive unlock.

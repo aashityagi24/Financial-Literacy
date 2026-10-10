@@ -5,7 +5,7 @@ import { uploadFile } from '@/utils/chunkedUpload';
 import { API, getAssetUrl } from '@/App';
 import { toast } from 'sonner';
 import { 
-  ChevronLeft, Video, Upload, Trash2, Save, Play, Loader2, FileVideo, Eye, Users, GraduationCap, Baby
+  ChevronLeft, Video, Upload, Trash2, Save, Play, Loader2, FileVideo, Eye, Users, GraduationCap, Baby, Image
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,17 +24,23 @@ export default function AdminVideoManagement({ user }) {
     parent: useRef(null),
     teacher: useRef(null)
   };
+  const posterInputRefs = {
+    child: useRef(null),
+    parent: useRef(null),
+    teacher: useRef(null)
+  };
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingType, setUploadingType] = useState(null);
+  const [uploadingPosterType, setUploadingPosterType] = useState(null);
   const [uploadProgress, setUploadProgress] = useState({});
   const [activeTab, setActiveTab] = useState('child');
   
   const [videoData, setVideoData] = useState({
-    child: { url: null, title: '', description: '' },
-    parent: { url: null, title: '', description: '' },
-    teacher: { url: null, title: '', description: '' },
-    global: { title: 'See CoinQuest in Action', description: 'Watch how kids learn financial literacy through fun games and activities' }
+    child: { url: null, title: '', description: '', poster: null },
+    parent: { url: null, title: '', description: '', poster: null },
+    teacher: { url: null, title: '', description: '', poster: null },
+    global: { title: 'See exactly what your child will do', description: 'A 2-minute look inside CoinQuest: the stories and games your child plays, and what you see on your dashboard.' }
   });
   
   const [selectedFiles, setSelectedFiles] = useState({
@@ -44,6 +50,18 @@ export default function AdminVideoManagement({ user }) {
   });
   
   const [previewUrls, setPreviewUrls] = useState({
+    child: null,
+    parent: null,
+    teacher: null
+  });
+
+  const [selectedPosterFiles, setSelectedPosterFiles] = useState({
+    child: null,
+    parent: null,
+    teacher: null
+  });
+
+  const [previewPosterUrls, setPreviewPosterUrls] = useState({
     child: null,
     parent: null,
     teacher: null
@@ -62,10 +80,10 @@ export default function AdminVideoManagement({ user }) {
     try {
       const response = await axios.get(`${API}/admin/settings/walkthrough-video`);
       setVideoData({
-        child: response.data.child || { url: null, title: '', description: '' },
-        parent: response.data.parent || { url: null, title: '', description: '' },
-        teacher: response.data.teacher || { url: null, title: '', description: '' },
-        global: response.data.global || { title: 'See CoinQuest in Action', description: 'Watch how kids learn financial literacy through fun games and activities' }
+        child: { url: null, title: '', description: '', poster: null, ...response.data.child },
+        parent: { url: null, title: '', description: '', poster: null, ...response.data.parent },
+        teacher: { url: null, title: '', description: '', poster: null, ...response.data.teacher },
+        global: response.data.global || { title: 'See exactly what your child will do', description: 'A 2-minute look inside CoinQuest: the stories and games your child plays, and what you see on your dashboard.' }
       });
     } catch (error) {
       console.error('Failed to fetch video data:', error);
@@ -161,13 +179,83 @@ export default function AdminVideoManagement({ user }) {
       await axios.delete(`${API}/admin/settings/walkthrough-video?user_type=${userType}`);
       setVideoData(prev => ({
         ...prev,
-        [userType]: { url: null, title: '', description: '' }
+        [userType]: { url: null, title: '', description: '', poster: null }
       }));
       setSelectedFiles(prev => ({ ...prev, [userType]: null }));
       setPreviewUrls(prev => ({ ...prev, [userType]: null }));
       toast.success(`${userType.charAt(0).toUpperCase() + userType.slice(1)} video deleted successfully`);
     } catch (error) {
       toast.error('Failed to delete video');
+    }
+  };
+
+  const handlePosterSelect = (userType, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file (JPG, PNG, WebP, etc.)');
+      return;
+    }
+    setSelectedPosterFiles(prev => ({ ...prev, [userType]: file }));
+    setPreviewPosterUrls(prev => ({ ...prev, [userType]: URL.createObjectURL(file) }));
+  };
+
+  const handlePosterUpload = async (userType) => {
+    if (!selectedPosterFiles[userType]) {
+      toast.error('Please select a poster image first');
+      return;
+    }
+    setUploadingPosterType(userType);
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedPosterFiles[userType]);
+      const uploadResponse = await axios.post(
+        `${API}/upload/walkthrough-poster?user_type=${userType}`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+      const posterUrl = uploadResponse.data.url;
+
+      await axios.put(`${API}/admin/settings/walkthrough-video`, {
+        user_type: userType,
+        url: videoData[userType].url,
+        title: videoData[userType].title,
+        description: videoData[userType].description,
+        poster: posterUrl
+      });
+
+      setVideoData(prev => ({
+        ...prev,
+        [userType]: { ...prev[userType], poster: posterUrl }
+      }));
+      setSelectedPosterFiles(prev => ({ ...prev, [userType]: null }));
+      setPreviewPosterUrls(prev => ({ ...prev, [userType]: null }));
+      toast.success('Poster image uploaded successfully!');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to upload poster image');
+    } finally {
+      setUploadingPosterType(null);
+    }
+  };
+
+  const handlePosterDelete = async (userType) => {
+    try {
+      await axios.put(`${API}/admin/settings/walkthrough-video`, {
+        user_type: userType,
+        url: videoData[userType].url,
+        title: videoData[userType].title,
+        description: videoData[userType].description,
+        poster: null
+      });
+      setVideoData(prev => ({
+        ...prev,
+        [userType]: { ...prev[userType], poster: null }
+      }));
+      setSelectedPosterFiles(prev => ({ ...prev, [userType]: null }));
+      setPreviewPosterUrls(prev => ({ ...prev, [userType]: null }));
+      toast.success('Poster image removed');
+    } catch (error) {
+      toast.error('Failed to remove poster image');
     }
   };
 
@@ -298,6 +386,9 @@ export default function AdminVideoManagement({ user }) {
                     key={previewUrls[activeTab] || videoData[activeTab]?.url}
                     controls
                     className="w-full h-full"
+                    poster={videoData[activeTab]?.poster ? getAssetUrl(videoData[activeTab].poster) : undefined}
+                    preload="metadata"
+                    playsInline
                   >
                     <source 
                       src={previewUrls[activeTab] || getAssetUrl(videoData[activeTab]?.url)} 
@@ -355,6 +446,81 @@ export default function AdminVideoManagement({ user }) {
                       onClick={() => handleDelete(activeTab)}
                       variant="outline"
                       className="border-2 border-[#EE6C4D] text-[#EE6C4D] hover:bg-[#EE6C4D] hover:text-white"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Poster / Thumbnail Section */}
+          <div className="mt-6 pt-6 border-t-2 border-[#1D3557]/10">
+            <h3 className="text-sm font-bold text-[#1D3557] mb-1">Poster / Thumbnail Image</h3>
+            <p className="text-xs text-[#3D5A80] mb-4">Shown before the video plays. Upload a clear app screenshot so the video doesn't appear as a black box.</p>
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Current Poster */}
+              <div>
+                <p className="text-xs font-semibold text-[#3D5A80] mb-2">
+                  {previewPosterUrls[activeTab] ? 'Preview' : 'Current Poster'}
+                </p>
+                <div className="relative rounded-xl overflow-hidden border-2 border-[#1D3557] bg-[#F8F9FA] aspect-video flex items-center justify-center">
+                  {previewPosterUrls[activeTab] || videoData[activeTab]?.poster ? (
+                    <img
+                      src={previewPosterUrls[activeTab] || getAssetUrl(videoData[activeTab].poster)}
+                      alt="Video poster"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center text-[#3D5A80]/50">
+                      <Image className="w-10 h-10 mb-1" />
+                      <p className="text-xs">No poster set</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Poster Upload */}
+              <div className="space-y-3">
+                <input
+                  type="file"
+                  ref={posterInputRefs[activeTab]}
+                  onChange={(e) => handlePosterSelect(activeTab, e)}
+                  accept="image/*"
+                  className="hidden"
+                  data-testid={`poster-file-input-${activeTab}`}
+                />
+                <div
+                  onClick={() => posterInputRefs[activeTab].current?.click()}
+                  className="border-2 border-dashed border-[#1D3557]/30 rounded-xl p-5 text-center cursor-pointer hover:border-[#1D3557]/50 hover:bg-[#F8F9FA] transition-all"
+                >
+                  <Image className="w-8 h-8 mx-auto mb-2 text-[#3D5A80]" />
+                  <p className="text-sm font-bold text-[#1D3557]">
+                    {selectedPosterFiles[activeTab] ? selectedPosterFiles[activeTab].name : 'Click to select image'}
+                  </p>
+                  <p className="text-xs text-[#3D5A80] mt-1">JPG, PNG, WebP recommended</p>
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => handlePosterUpload(activeTab)}
+                    disabled={!selectedPosterFiles[activeTab] || uploadingPosterType === activeTab}
+                    className="flex-1 bg-[#3D5A80] hover:bg-[#2c4260] text-white border-2 border-[#1D3557]"
+                    data-testid={`poster-upload-btn-${activeTab}`}
+                  >
+                    {uploadingPosterType === activeTab ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-2" />
+                    )}
+                    Upload Poster
+                  </Button>
+                  {videoData[activeTab]?.poster && (
+                    <Button
+                      onClick={() => handlePosterDelete(activeTab)}
+                      variant="outline"
+                      className="border-2 border-[#EE6C4D] text-[#EE6C4D] hover:bg-[#EE6C4D] hover:text-white"
+                      data-testid={`poster-delete-btn-${activeTab}`}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
