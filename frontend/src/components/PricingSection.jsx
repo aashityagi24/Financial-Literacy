@@ -324,7 +324,7 @@ export default function PricingSection() {
                   key={n}
                   data-testid={`children-count-${n}`}
                   onClick={() => setNumChildren(n)}
-                  className={`w-8 h-8 rounded-full font-bold text-sm transition-all ${
+                  className={`w-11 h-11 rounded-full font-bold text-sm transition-all ${
                     numChildren === n
                       ? 'bg-[#EE6C4D] text-white shadow-md scale-110'
                       : 'bg-white text-[#1D3557] hover:bg-[#EE6C4D]/20 border border-[#1D3557]/20'
@@ -338,7 +338,7 @@ export default function PricingSection() {
         </div>
 
         {/* Duration Cards with Tiered Pricing */}
-        <div className="grid md:grid-cols-4 gap-5 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 min-[600px]:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
           {DURATION_ORDER.map((dur) => {
             const plan = plans[selectedPlanType]?.[dur];
             if (!plan) return null;
@@ -365,10 +365,10 @@ export default function PricingSection() {
               subLabel = `₹${fmt(Math.round(price / 365))} a day · you save ₹${fmt(saving)} vs monthly`;
             }
             const durLabel = {
-              '1_day': { name: '1 Day', tag: 'Try it', tagColor: 'bg-[#E0FBFC] text-[#3D5A80]' },
+              '1_day': { name: '1 Day', tag: 'Start here', tagColor: 'bg-[#E0FBFC] text-[#3D5A80]' },
               '1_month': { name: '1 Month', tag: '', tagColor: '' },
               '6_months': { name: '6 Months', tag: 'Best value', tagColor: 'bg-[#E0FBFC] text-[#3D5A80]' },
-              '1_year': { name: '1 Year', tag: 'Max saving', tagColor: 'bg-[#D1FAE5] text-[#166534]' },
+              '1_year': { name: '1 Year', tag: 'Lowest price per day', tagColor: 'bg-[#D1FAE5] text-[#166534]' },
             }[dur];
 
             return (
@@ -385,9 +385,9 @@ export default function PricingSection() {
                   }`}
                 >
                   <div className="px-5 pt-5 pb-0">
-                    {/* Title row */}
-                    <div className="flex items-center gap-2 mb-3">
-                      <h3 className="text-xl font-bold text-[#1D3557]" style={{ fontFamily: 'Fredoka' }}>{durLabel.name}</h3>
+                    {/* Title row — name never wraps; tag drops to its own line if needed */}
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-3">
+                      <h3 className="text-xl font-bold text-[#1D3557] whitespace-nowrap" style={{ fontFamily: 'Fredoka' }}>{durLabel.name}</h3>
                       {durLabel.tag && (
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${durLabel.tagColor}`}>{durLabel.tag}</span>
                       )}

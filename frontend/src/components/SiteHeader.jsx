@@ -88,7 +88,7 @@ export function SiteHeader() {
               <button
                 data-testid="site-header-register-btn"
                 onClick={() => go('/register')}
-                className="btn-primary px-6 py-2.5 text-base hidden md:inline-block"
+                className="px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-bold text-[#1D3557] bg-white border-2 border-[#1D3557] rounded-full hover:bg-[#E0FBFC] transition-colors hidden md:inline-block"
               >
                 Register
               </button>

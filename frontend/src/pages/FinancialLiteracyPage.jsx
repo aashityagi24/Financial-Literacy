@@ -154,13 +154,16 @@ export default function FinancialLiteracyPage() {
         <div className="absolute top-32 right-20 w-16 h-16 bg-[#EE6C4D] rounded-full opacity-60 animate-float stagger-2"></div>
         <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-[#06D6A0] rounded-full opacity-60 animate-float stagger-3"></div>
 
-        <div className="container mx-auto px-6 pb-6 pt-10">
+        <div className="container mx-auto px-6 pb-6 pt-4 sm:pt-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="animate-bounce-in">
-              <h1 className="text-5xl lg:text-7xl font-bold text-[#1D3557] mb-6 leading-tight" style={{ fontFamily: 'Fredoka' }}>
-                Money lessons your 5–10-year-old will <span className="text-[#EE6C4D]">actually look forward to.</span>
+              <h1
+                className="font-bold text-[#1D3557] mb-3 sm:mb-6"
+                style={{ fontFamily: 'Fredoka', fontSize: 'clamp(2rem, 7.5vw, 3.5rem)', lineHeight: '1.1' }}
+              >
+                Money lessons your <span style={{ whiteSpace: 'nowrap' }}>5–10-year-old</span> will <span className="text-[#EE6C4D]">actually look forward to.</span>
               </h1>
-              <p className="text-xl text-[#3D5A80] mb-8 leading-relaxed">
+              <p className="text-xl text-[#3D5A80] mb-4 sm:mb-8 leading-relaxed">
                 Stories, games and real jobs at home that teach your child to earn, save, spend and share. 10 minutes a day, from KG to Class 5.
               </p>
               <div className="flex flex-col gap-3">
@@ -179,7 +182,7 @@ export default function FinancialLiteracyPage() {
                 </div>
                 <button
                   onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="self-start flex items-center gap-1.5 text-base font-semibold text-[#1D3557] hover:text-[#EE6C4D] transition-colors"
+                  className="self-start flex items-center gap-1.5 min-h-[44px] py-2.5 text-base font-semibold text-[#1D3557] hover:text-[#EE6C4D] transition-colors"
                   data-testid="hero-watch-tour-btn"
                 >
                   <span className="text-[#EE6C4D]">▶</span> Watch a 2-minute tour
@@ -302,7 +305,7 @@ export default function FinancialLiteracyPage() {
             <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
               Everything Kids Need to Learn About Money
             </h2>
-            <p className="text-xl text-[#3D5A80]">Age-appropriate money lessons for ages 5–12, KG to Class 5.</p>
+            <p className="text-xl text-[#3D5A80]">Age-appropriate money lessons for ages 5–10, KG to Class 5.</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -442,7 +445,7 @@ export default function FinancialLiteracyPage() {
                 <img src="https://customer-assets.emergentagent.com/job_coinquest-kids-2/artifacts/hnfemth6_children.png" alt="Kids" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>For your child</h3>
-              <p className="text-[#3D5A80]">Grow a money garden, run a market stall and finish quests. Short, playful lessons made for ages 5–12.</p>
+              <p className="text-[#3D5A80]">Grow a money garden, run a market stall and finish quests. Short, playful lessons made for ages 5–10.</p>
             </div>
 
             <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">

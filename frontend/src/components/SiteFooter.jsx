@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const QUICK_LINKS = [
   { label: 'Financial Literacy Platform', path: '/', testId: 'platform' },
@@ -8,8 +8,6 @@ const QUICK_LINKS = [
 ];
 
 export function SiteFooter() {
-  const navigate = useNavigate();
-
   return (
     <footer className="bg-[#1D3557] py-8" data-testid="site-footer">
       <div className="container mx-auto px-6">
@@ -22,17 +20,17 @@ export function SiteFooter() {
             />
           </div>
 
-          <div className="flex flex-col items-center md:items-start gap-3">
-            <h3 className="text-white font-bold text-lg" style={{ fontFamily: 'Fredoka' }}>Quick Links</h3>
+          <div className="flex flex-col items-center md:items-start gap-1">
+            <h3 className="text-white font-bold text-lg mb-2" style={{ fontFamily: 'Fredoka' }}>Quick Links</h3>
             {QUICK_LINKS.map((link) => (
-              <button
+              <Link
                 key={link.path}
+                to={link.path}
                 data-testid={`site-footer-link-${link.testId}`}
-                onClick={() => navigate(link.path)}
-                className="text-[#98C1D9] hover:text-white transition-colors text-left"
+                className="text-[#98C1D9] hover:text-white transition-colors py-2.5 block min-h-[44px] flex items-center"
               >
                 {link.label}
-              </button>
+              </Link>
             ))}
           </div>
 
