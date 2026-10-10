@@ -342,7 +342,25 @@ export default function PricingSection() {
             const price = calcTotal(plan, numChildren);
             const isPopular = dur === '6_months';
             const isSelected = selectedDuration === dur;
-            const perDay = (price / (plan.duration_days || 1)).toFixed(1);
+
+            // Sub-label helpers
+            const monthTotal = plans[selectedPlanType]?.['1_month']
+              ? calcTotal(plans[selectedPlanType]['1_month'], numChildren)
+              : 0;
+            const childLabel = numChildren === 1 ? '1 child' : `${numChildren} children`;
+            const fmt = (n) => n.toLocaleString('en-IN');
+            let subLabel;
+            if (dur === '1_day') {
+              subLabel = `₹${fmt(price)} for one day · ${childLabel}`;
+            } else if (dur === '1_month') {
+              subLabel = `₹${fmt(Math.round(price / 30))} a day · ${childLabel}`;
+            } else if (dur === '6_months') {
+              const saving = monthTotal * 6 - price;
+              subLabel = `₹${fmt(Math.round(price / 180))} a day · you save ₹${fmt(saving)} vs monthly`;
+            } else {
+              const saving = monthTotal * 12 - price;
+              subLabel = `₹${fmt(Math.round(price / 365))} a day · you save ₹${fmt(saving)} vs monthly`;
+            }
             const durLabel = {
               '1_day': { name: '1 Day', tag: 'Try it', tagColor: 'bg-[#E0FBFC] text-[#3D5A80]' },
               '1_month': { name: '1 Month', tag: '', tagColor: '' },
@@ -381,8 +399,8 @@ export default function PricingSection() {
                       priceClassName="text-4xl font-bold text-[#1D3557] mb-0.5"
                       testId={`plan-${dur}`}
                     />
-                    <p className="text-xs text-gray-500 mb-3 mt-0.5">
-                      ₹{perDay}/day &middot; includes 1 child
+                    <p className="text-xs text-gray-500 mb-3 mt-0.5" data-testid={`plan-sublabel-${dur}`}>
+                      {subLabel}
                     </p>
                   </div>
 
