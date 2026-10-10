@@ -402,17 +402,17 @@ export default function FinancialLiteracyPage() {
         <div className="container mx-auto px-6">
           <div className="card-playful p-12 bg-[#E0FBFC] text-center">
             <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-6" style={{ fontFamily: 'Fredoka' }}>
-              Ready to Start the Adventure?
+              Give it one day.
             </h2>
             <p className="text-xl text-[#1D3557] mb-8 max-w-2xl mx-auto">
-              Give your child the gift of financial literacy. Try our 1-day plan to explore!
+              For ₹{trialPrice} your child gets every story, game and quest for a day. No auto-renewal.
             </p>
             <button
               data-testid="cta-get-started-btn"
-              onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => window.dispatchEvent(new CustomEvent('coinquest:buy-now', { detail: { duration: '1_day' } }))}
               className="bg-[#1D3557] text-white font-bold text-xl px-10 py-5 rounded-full border-3 border-[#1D3557] shadow-[4px_4px_0px_0px_#FFD23F] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_#FFD23F] transition-all"
             >
-              Choose a Plan
+              Try a day for ₹{trialPrice}
             </button>
           </div>
         </div>
@@ -433,24 +433,31 @@ export default function FinancialLiteracyPage() {
               <div className="w-20 h-20 mx-auto mb-4 bg-[#FFD23F] rounded-full border-3 border-[#1D3557] flex items-center justify-center overflow-hidden p-2">
                 <img src="https://customer-assets.emergentagent.com/job_coinquest-kids-2/artifacts/hnfemth6_children.png" alt="Kids" className="w-full h-full object-contain" />
               </div>
-              <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Kids</h3>
-              <p className="text-[#3D5A80]">Learn money skills through games! Grow gardens, start businesses, earn rewards. No boring stuff—just fun!</p>
+              <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>For your child</h3>
+              <p className="text-[#3D5A80]">Grow a money garden, run a market stall and finish quests. Short, playful lessons made for ages 5–12.</p>
             </div>
 
             <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">
               <div className="w-20 h-20 mx-auto mb-4 bg-[#06D6A0] rounded-full border-3 border-[#1D3557] flex items-center justify-center overflow-hidden p-2">
                 <img src="https://customer-assets.emergentagent.com/job_coinquest-kids-2/artifacts/u42iscql_family.png" alt="Family" className="w-full h-full object-contain" />
               </div>
-              <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Parents</h3>
-              <p className="text-[#3D5A80]">Give your child a lifetime advantage with money skills learned early. Fun games, parent dashboard, setting-up chores and allowance and more!</p>
+              <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>For you</h3>
+              <p className="text-[#3D5A80]">A dashboard that shows what your child learnt today, plus chores and pocket money you can set up together.</p>
             </div>
 
             <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">
               <div className="w-20 h-20 mx-auto mb-4 bg-[#EE6C4D] rounded-full border-3 border-[#1D3557] flex items-center justify-center overflow-hidden p-2">
                 <img src="https://customer-assets.emergentagent.com/job_coinquest-kids-2/artifacts/reffqcdx_school.png" alt="School" className="w-full h-full object-contain" />
               </div>
-              <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>Schools</h3>
-              <p className="text-[#3D5A80]">Engage students with game-based financial lessons. Complete curriculum, automatic assessments, and detailed analytics. No preparation needed—just click and teach.</p>
+              <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>For schools</h3>
+              <p className="text-[#3D5A80]">A ready-to-teach classroom programme with assessments and reports.</p>
+              <button
+                data-testid="see-school-plan-link"
+                onClick={() => navigate('/for-schools')}
+                className="mt-3 text-[#EE6C4D] font-semibold hover:underline text-sm"
+              >
+                See the school plan →
+              </button>
             </div>
           </div>
         </div>
