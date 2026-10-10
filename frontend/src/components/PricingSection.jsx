@@ -274,10 +274,10 @@ export default function PricingSection() {
       <div className="container mx-auto px-6">
         <div className="text-center mb-8">
           <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>
-            Choose Your Plan
+            Start with one day. Stay if it clicks.
           </h2>
           <p className="text-base text-[#3D5A80] max-w-xl mx-auto">
-            Start your child&apos;s financial literacy journey today.
+            Every plan includes every story, game and quest, and the parent dashboard.
           </p>
         </div>
 
@@ -294,7 +294,7 @@ export default function PricingSection() {
               }`}
             >
               <User className="w-4 h-4" />
-              Single Parent Login
+              1 parent account
             </button>
             <button
               data-testid="plan-type-two"
@@ -306,12 +306,13 @@ export default function PricingSection() {
               }`}
             >
               <Users className="w-4 h-4" />
-              Dual Parent Login
+              2 parent accounts
             </button>
           </div>
         </div>
-
-        {/* Children Selector */}
+        <p className="text-center text-xs text-gray-400 -mt-3 mb-5">
+          With 2 accounts, both parents can log in and follow progress.
+        </p>
         <div className="flex justify-center mb-6">
           <div className="flex items-center gap-3 bg-[#FFF3E0] rounded-full px-5 py-2 border border-[#EE6C4D]/30">
             <span className="text-sm font-bold text-[#1D3557]">Children:</span>
@@ -415,7 +416,7 @@ export default function PricingSection() {
                           : 'bg-[#06D6A0] text-white hover:bg-[#05C090]'
                       }`}
                     >
-                      Buy Now
+                      {{ '1_day': 'Start 1 day', '1_month': 'Choose 1 month', '6_months': 'Choose 6 months', '1_year': 'Choose 1 year' }[dur] || 'Buy Now'}
                     </button>
                   </div>
 
@@ -433,9 +434,12 @@ export default function PricingSection() {
           })}
         </div>
 
-        <div className="flex items-center justify-center gap-4 mt-5 text-xs text-[#3D5A80]">
-          <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure Payment</span>
-          <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Instant Access</span>
+        <div className="flex flex-col items-center gap-1 mt-5 text-xs text-[#3D5A80]">
+          <p className="text-center text-gray-500">Every plan is a one-time payment. Nothing renews automatically.</p>
+          <span className="flex items-center gap-3">
+            <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure UPI and card payment</span>
+            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Instant access</span>
+          </span>
         </div>
 
         {/* School Enquiry CTA */}
