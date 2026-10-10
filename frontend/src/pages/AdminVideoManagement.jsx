@@ -211,8 +211,7 @@ export default function AdminVideoManagement({ user }) {
       formData.append('file', selectedPosterFiles[userType]);
       const uploadResponse = await axios.post(
         `${API}/upload/walkthrough-poster?user_type=${userType}`,
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
+        formData
       );
       const posterUrl = uploadResponse.data.url;
 
