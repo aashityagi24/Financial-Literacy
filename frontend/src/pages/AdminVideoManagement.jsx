@@ -200,6 +200,28 @@ export default function AdminVideoManagement({ user }) {
     setPreviewPosterUrls(prev => ({ ...prev, [userType]: URL.createObjectURL(file) }));
   };
 
+  const compressImage = (file, maxW = 1200, maxH = 630, quality = 0.85) =>
+    new Promise((resolve, reject) => {
+      const img = new window.Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let { width: w, height: h } = img;
+        if (w > maxW || h > maxH) {
+          const scale = Math.min(maxW / w, maxH / h);
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Canvas compression failed')), 'image/jpeg', quality);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Failed to read image')); };
+      img.src = url;
+    });
+
   const handlePosterUpload = async (userType) => {
     if (!selectedPosterFiles[userType]) {
       toast.error('Please select a poster image first');
@@ -207,8 +229,17 @@ export default function AdminVideoManagement({ user }) {
     }
     setUploadingPosterType(userType);
     try {
+      // Compress to JPEG ≤1200×630 before sending (avoids 413 from proxy)
+      let blob;
+      try {
+        blob = await compressImage(selectedPosterFiles[userType]);
+      } catch (compressErr) {
+        toast.error(`Could not process image: ${compressErr.message}`);
+        return;
+      }
+
       const formData = new FormData();
-      formData.append('file', selectedPosterFiles[userType]);
+      formData.append('file', new File([blob], 'poster.jpg', { type: 'image/jpeg' }));
       let uploadResponse;
       try {
         uploadResponse = await axios.post(
