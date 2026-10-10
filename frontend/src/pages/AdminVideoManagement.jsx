@@ -209,19 +209,32 @@ export default function AdminVideoManagement({ user }) {
     try {
       const formData = new FormData();
       formData.append('file', selectedPosterFiles[userType]);
-      const uploadResponse = await axios.post(
-        `${API}/upload/walkthrough-poster?user_type=${userType}`,
-        formData
-      );
+      let uploadResponse;
+      try {
+        uploadResponse = await axios.post(
+          `${API}/upload/walkthrough-poster?user_type=${userType}`,
+          formData
+        );
+      } catch (uploadErr) {
+        const msg = uploadErr.response?.data?.detail || uploadErr.message || 'Image upload failed';
+        toast.error(`Upload failed: ${msg}`);
+        return;
+      }
       const posterUrl = uploadResponse.data.url;
 
-      await axios.put(`${API}/admin/settings/walkthrough-video`, {
-        user_type: userType,
-        url: videoData[userType].url,
-        title: videoData[userType].title,
-        description: videoData[userType].description,
-        poster: posterUrl
-      });
+      try {
+        await axios.put(`${API}/admin/settings/walkthrough-video`, {
+          user_type: userType,
+          url: videoData[userType].url,
+          title: videoData[userType].title,
+          description: videoData[userType].description,
+          poster: posterUrl
+        });
+      } catch (saveErr) {
+        const msg = saveErr.response?.data?.detail || saveErr.message || 'Failed to save poster';
+        toast.error(`Save failed: ${msg}`);
+        return;
+      }
 
       setVideoData(prev => ({
         ...prev,
@@ -230,8 +243,6 @@ export default function AdminVideoManagement({ user }) {
       setSelectedPosterFiles(prev => ({ ...prev, [userType]: null }));
       setPreviewPosterUrls(prev => ({ ...prev, [userType]: null }));
       toast.success('Poster image uploaded successfully!');
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to upload poster image');
     } finally {
       setUploadingPosterType(null);
     }

@@ -231,16 +231,20 @@ async def upload_walkthrough_video(file: UploadFile = File(...), user_type: str 
 @router.post("/walkthrough-poster")
 async def upload_walkthrough_poster(file: UploadFile = File(...), user_type: str = "child"):
     """Upload a poster/thumbnail image for a walkthrough video"""
-    if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
+    # Allow image/* OR octet-stream (some browsers omit the MIME type for images)
+    ct = file.content_type or ""
+    if ct and not ct.startswith("image/") and ct != "application/octet-stream":
+        raise HTTPException(status_code=400, detail=f"File must be an image, got: {ct}")
 
     if user_type not in ["child", "parent", "teacher"]:
         raise HTTPException(status_code=400, detail="user_type must be child, parent, or teacher")
 
-    file_ext = os.path.splitext(file.filename)[1].lower() or ".jpg"
+    file_ext = os.path.splitext(file.filename or "")[1].lower() or ".jpg"
     filename = f"walkthrough_poster_{user_type}{file_ext}"
     content = await file.read()
-    put_object(f"thumbnails/{filename}", content, file.content_type)
+    if not content:
+        raise HTTPException(status_code=400, detail="Empty file received")
+    put_object(f"thumbnails/{filename}", content, ct or "image/jpeg")
 
     return {"url": f"/api/uploads/thumbnails/{filename}"}
 
