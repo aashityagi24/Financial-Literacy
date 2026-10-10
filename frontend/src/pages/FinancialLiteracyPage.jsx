@@ -87,7 +87,12 @@ export default function FinancialLiteracyPage() {
     { icon: Trophy, title: "Quests & Badges", description: "Complete challenges and chores to earn money and badges.", color: "#3D5A80" },
   ];
 
-  const grades = ["Ages 5–6", "Ages 7–8", "Ages 9–10", "Ages 11–12"];
+  const grades = [
+    "Ages 5–6",
+    "Ages 7–8",
+    // "Ages 9–10",   // uncomment when Grade 2 content is added to the app
+    // "Ages 11–12",  // uncomment when Grade 3 content is added to the app
+  ];
 
   // Icon shown in the expanded card header
   const gradeIcon = { "Ages 5–6": "K", "Ages 7–8": "1", "Ages 9–10": "2", "Ages 11–12": "3" };
@@ -96,42 +101,44 @@ export default function FinancialLiteracyPage() {
     "Ages 5–6": {
       title: "Introduction to Money",
       skills: [
-        "Identify and count coins (₹1, ₹2, ₹5, ₹10, ₹20, ₹50, ₹100)",
-        "Learn about money being used around them and how it reaches home",
-        "Understand different ways in which people pay for things",
-        "Simple earning, spending and saving exercises through fun tasks and activities"
+        "Recognise and count Indian coins and notes",
+        "Where money comes from and how it reaches home",
+        "Different ways people pay for things",
+        "Earn, spend and save through fun tasks and games",
       ],
       color: "#FFD23F"
     },
     "Ages 7–8": {
       title: "Learning about value creation",
       skills: [
-        "Understanding Indian & Global currencies",
-        "Learnings about jobs & value creation",
-        "Introduction to savings & budgeting",
-        "Understanding to needs & wants",
-        "Introduction to forms of payments"
+        "Indian and world currencies",
+        "How jobs create value",
+        "Saving and simple budgets",
+        "Needs and wants",
+        "Ways to pay: cash, cards and UPI",
       ],
       color: "#06D6A0"
     },
+    // Grade 2 — uncomment "Ages 9–10" in the grades array above to show this tab
     "Ages 9–10": {
-      title: "Learning to save & budget",
+      title: "Learning to save and budget",
       skills: [
-        "Learn how to be a smart shopper",
-        "Understanding planning and budgeting ",
-        "Introduction to borrowing and lending",
-        "Understanding jobs and businesses"
+        "How to be a smart shopper",
+        "Planning and budgeting",
+        "Borrowing and lending",
+        "How jobs and businesses work",
       ],
       color: "#EE6C4D"
     },
+    // Grade 3 — uncomment "Ages 11–12" in the grades array above to show this tab
     "Ages 11–12": {
-      title: "Understanding employment and consumption",
+      title: "Employment and consumption",
       skills: [
-        "Understand about different forms of employment",
-        "Introduction to the Banking system of India",
-        "Learn about risks, rewards and patience",
-        "Introduction to Consumer Rights & Responsibilities",
-        "Currencies and their Conversions"
+        "Different types of jobs and employment",
+        "How India's banking system works",
+        "Risk, reward and patience",
+        "Consumer rights and responsibilities",
+        "Currency conversions",
       ],
       color: "#3D5A80"
     },
@@ -295,7 +302,7 @@ export default function FinancialLiteracyPage() {
             <h2 className="text-4xl lg:text-5xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
               Everything Kids Need to Learn About Money
             </h2>
-            <p className="text-xl text-[#3D5A80]">Age-appropriate financial education from Kindergarten to Class 3</p>
+            <p className="text-xl text-[#3D5A80]">Age-appropriate money lessons for ages 5–12, KG to Class 5.</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -385,11 +392,12 @@ export default function FinancialLiteracyPage() {
                 </div>
 
                 <button
-                  onClick={handleLogin}
+                  onClick={() => window.dispatchEvent(new CustomEvent('coinquest:buy-now', { detail: { duration: '1_day' } }))}
                   className="mt-6 w-full py-3 rounded-xl font-bold text-white transition-all hover:-translate-y-1"
                   style={{ backgroundColor: gradeDescriptions[selectedGrade].color }}
+                  data-testid="grade-cta-btn"
                 >
-                  Start Learning for {selectedGrade}
+                  Try a day for ₹{trialPrice}
                 </button>
               </div>
             </div>
