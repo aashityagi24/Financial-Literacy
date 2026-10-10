@@ -90,7 +90,7 @@ export default function FinancialLiteracyPage() {
   const grades = [
     "Ages 5–6",
     "Ages 7–8",
-    // "Ages 9–10",   // uncomment when Grade 2 content is added to the app
+    "Ages 9–10",
     // "Ages 11–12",  // uncomment when Grade 3 content is added to the app
   ];
 
