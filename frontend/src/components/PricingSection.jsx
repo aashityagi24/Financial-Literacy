@@ -44,6 +44,7 @@ export default function PricingSection() {
   const [checkoutForm, setCheckoutForm] = useState({ name: '', email: '', phone: '', referral_code: '' });
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSchoolEnquiry, setShowSchoolEnquiry] = useState(false);
+  const [showReferralInput, setShowReferralInput] = useState(false);
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -155,6 +156,7 @@ export default function PricingSection() {
     if (!open && checkoutForm.email?.trim()) {
       captureLeadQuietly(checkoutForm, 'form_closed');
     }
+    if (!open) setShowReferralInput(false);
     setShowCheckout(open);
   };
 
@@ -486,6 +488,7 @@ export default function PricingSection() {
               <Input
                 data-testid="checkout-name"
                 placeholder="Enter your full name"
+                autoComplete="name"
                 value={checkoutForm.name}
                 onChange={(e) => setCheckoutForm(prev => ({ ...prev, name: e.target.value }))}
               />
@@ -496,6 +499,7 @@ export default function PricingSection() {
                 data-testid="checkout-email"
                 type="email"
                 placeholder="your.email@gmail.com"
+                autoComplete="email"
                 value={checkoutForm.email}
                 onChange={(e) => setCheckoutForm(prev => ({ ...prev, email: e.target.value }))}
               />
@@ -506,18 +510,33 @@ export default function PricingSection() {
                 data-testid="checkout-phone"
                 type="tel"
                 placeholder="+91 9XXXXXXXXX"
+                autoComplete="tel"
                 value={checkoutForm.phone}
                 onChange={(e) => setCheckoutForm(prev => ({ ...prev, phone: e.target.value }))}
               />
             </div>
             <div>
-              <label className="text-sm font-bold text-[#1D3557] mb-1 block">Referral Code <span className="text-gray-400 font-normal">(optional)</span></label>
-              <Input
-                data-testid="checkout-referral-code"
-                placeholder="Enter referral code, if any"
-                value={checkoutForm.referral_code}
-                onChange={(e) => setCheckoutForm(prev => ({ ...prev, referral_code: e.target.value }))}
-              />
+              {!showReferralInput ? (
+                <button
+                  type="button"
+                  data-testid="show-referral-link"
+                  onClick={() => setShowReferralInput(true)}
+                  className="text-xs text-[#3D5A80] hover:text-[#1D3557] underline underline-offset-2"
+                >
+                  Have a referral code?
+                </button>
+              ) : (
+                <div>
+                  <label className="text-sm font-bold text-[#1D3557] mb-1 block">Referral Code</label>
+                  <Input
+                    data-testid="checkout-referral-code"
+                    placeholder="Enter referral code"
+                    autoFocus
+                    value={checkoutForm.referral_code}
+                    onChange={(e) => setCheckoutForm(prev => ({ ...prev, referral_code: e.target.value }))}
+                  />
+                </div>
+              )}
             </div>
 
             <Button
@@ -528,6 +547,18 @@ export default function PricingSection() {
             >
               {isProcessing ? 'Processing...' : `Pay ₹${totalPrice.toLocaleString('en-IN')}`}
             </Button>
+            <div className="text-center space-y-1">
+              <p className="text-xs text-gray-500">One-time payment · No auto-renewal · Secure UPI and card payment</p>
+              <a
+                href="https://wa.me/919328705924"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="checkout-whatsapp-link"
+                className="text-xs text-[#06D6A0] hover:underline font-medium"
+              >
+                Questions? WhatsApp us
+              </a>
+            </div>
             <p className="text-xs text-center text-gray-500">
               After payment you&apos;ll set your password and your account is created instantly — no extra steps.
             </p>
