@@ -56,7 +56,7 @@ const FAQS = [
 
 export function FAQSection({ onBuyDay }) {
   return (
-    <section className="py-20 bg-white" data-testid="faq-section">
+    <section className="py-20 bg-[#E8F4FD]" data-testid="faq-section">
       <div className="container mx-auto px-6 max-w-3xl">
         {/* Heading */}
         <div className="text-center mb-10">
