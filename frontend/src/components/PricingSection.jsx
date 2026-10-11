@@ -558,6 +558,12 @@ export default function PricingSection() {
               >
                 Questions? WhatsApp us
               </a>
+              <p className="text-xs text-gray-400">
+                Plans are non-refundable.{' '}
+                <a href="/refunds" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
+                  See refund policy
+                </a>
+              </p>
             </div>
             <p className="text-xs text-center text-gray-500">
               After payment you&apos;ll set your password and your account is created instantly — no extra steps.

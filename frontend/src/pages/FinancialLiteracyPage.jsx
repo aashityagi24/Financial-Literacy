@@ -4,6 +4,7 @@ import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, Schoo
 import axios from 'axios';
 import { toast } from 'sonner';
 import PricingSection from '@/components/PricingSection';
+import { FAQSection } from '@/components/FAQSection';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import { ExitIntentPopup } from '@/components/ExitIntentPopup';
@@ -473,6 +474,9 @@ export default function FinancialLiteracyPage() {
           </div>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <FAQSection onBuyDay={() => window.dispatchEvent(new CustomEvent('coinquest:buy-now', { detail: { duration: '1_day' } }))} />
 
       {/* Pricing Section */}
       <PricingSection />

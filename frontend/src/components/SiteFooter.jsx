@@ -5,6 +5,7 @@ const QUICK_LINKS = [
   { label: 'Entrepreneurship Workshop', path: '/entrepreneurship-workshop', testId: 'workshop' },
   { label: 'For Schools', path: '/for-schools', testId: 'for-schools' },
   { label: 'Terms & Conditions', path: '/terms', testId: 'terms' },
+  { label: 'Refunds & Cancellations', path: '/refunds', testId: 'refunds' },
 ];
 
 export function SiteFooter() {
