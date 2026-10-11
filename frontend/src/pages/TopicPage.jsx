@@ -792,7 +792,7 @@ export default function TopicPage({ user }) {
                   <div
                     key={content.content_id}
                     data-content-id={content.content_id}
-                    className={`card-playful p-4 sm:p-5 cursor-pointer hover:scale-[1.01] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/5' : ''} ${isTeacherOnly ? 'border-[#7C3AED] bg-[#7C3AED]/5' : ''} ${effectiveHighlightId === content.content_id ? 'ring-4 ring-[#EE6C4D] ring-offset-2 shadow-xl bg-[#EE6C4D]/5' : ''} ${user?.role === 'teacher' && !isTeacherOnly && content.is_mandatory !== false ? 'border-l-[6px] border-l-[#06D6A0]' : ''} ${user?.role === 'teacher' && !isTeacherOnly && content.is_mandatory === false ? 'opacity-60' : ''}`}
+                    className={`card-playful p-4 sm:p-5 cursor-pointer hover:scale-[1.01] transition-transform ${showAnimations ? 'animate-bounce-in' : ''} ${isCompleted ? 'border-[#06D6A0] bg-[#06D6A0]/5' : ''} ${isTeacherOnly ? 'border-[#7C3AED] bg-[#7C3AED]/5' : ''} ${effectiveHighlightId === content.content_id ? 'ring-4 ring-[#EE6C4D] ring-offset-2 shadow-xl bg-[#EE6C4D]/5' : ''} ${user?.role === 'teacher' && !isTeacherOnly && content.is_mandatory !== false && _visibleTo.includes('teacher') ? 'border-l-[6px] border-l-[#06D6A0]' : ''} ${user?.role === 'teacher' && !isTeacherOnly && content.is_mandatory === false ? 'opacity-60' : ''}`}
                     style={showAnimations ? { animationDelay: `${index * 0.05}s` } : {}}
                     onClick={() => openContent(content)}
                   >
@@ -806,7 +806,7 @@ export default function TopicPage({ user }) {
                       </div>
                     )}
                     {/* Teacher-only: In Class / Independent planning banners */}
-                    {user?.role === 'teacher' && !isTeacherOnly && content.is_mandatory !== false && (
+                    {user?.role === 'teacher' && !isTeacherOnly && content.is_mandatory !== false && _visibleTo.includes('teacher') && (
                       <div
                         className="mb-3 -mt-1 flex items-center gap-2 bg-[#06D6A0] text-white px-4 py-2 rounded-xl"
                         data-testid={`in-class-banner-${content.content_id}`}
