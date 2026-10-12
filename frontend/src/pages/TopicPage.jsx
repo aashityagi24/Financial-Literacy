@@ -6,7 +6,8 @@ import { toast } from 'sonner';
 import { 
   BookOpen, ChevronLeft, ChevronRight, Check, Download,
   FileText, FileSpreadsheet, Gamepad2, FolderOpen, ExternalLink, X,
-  Video, Book, Play, Lock, CheckCircle, BarChart3, Lightbulb, Users, MessagesSquare, School
+  Video, Book, Play, Lock, CheckCircle, BarChart3, Lightbulb, Users, MessagesSquare, School,
+  ZoomIn, ZoomOut
 } from 'lucide-react';
 import { useFirstVisitAnimation } from '@/hooks/useFirstVisitAnimation';
 import { Progress } from "@/components/ui/progress";
@@ -62,6 +63,7 @@ export default function TopicPage({ user }) {
   const [assignedContentIds, setAssignedContentIds] = useState(new Set());
   // Activity analytics popup (teacher)
   const [analyticsContent, setAnalyticsContent] = useState(null);
+  const [iframeZoom, setIframeZoom] = useState(1);
   // Content id to highlight (child opening homework or the dashboard's next-lesson pick)
   const highlightId = searchParams.get('highlight');
   // True only when the highlight came from a real teacher-assigned homework item
@@ -441,6 +443,7 @@ export default function TopicPage({ user }) {
     setSelectedContent(content);
     setHtmlFiles([]);
     setCurrentHtmlIndex(0);
+    setIframeZoom(1);
     
     if (isWorksheetLike(content.content_type)) {
       if (content.content_data?.pdf_url) {
@@ -1112,6 +1115,32 @@ export default function TopicPage({ user }) {
                     </a>
                   )
                 )}
+                {/* Zoom controls — shown for all iframe content except video */}
+                {selectedContent.content_type !== 'video' && (
+                  <div className="flex items-center gap-1 border-2 border-[#1D3557] rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => setIframeZoom(z => Math.max(0.5, parseFloat((z - 0.1).toFixed(1))))}
+                      disabled={iframeZoom <= 0.5}
+                      className="p-2 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                      title="Zoom out"
+                      data-testid="content-zoom-out"
+                    >
+                      <ZoomOut className="w-4 h-4 text-[#1D3557]" />
+                    </button>
+                    <span className="text-xs font-semibold text-[#1D3557] px-1 min-w-[36px] text-center select-none">
+                      {Math.round(iframeZoom * 100)}%
+                    </span>
+                    <button
+                      onClick={() => setIframeZoom(z => Math.min(2, parseFloat((z + 0.1).toFixed(1))))}
+                      disabled={iframeZoom >= 2}
+                      className="p-2 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                      title="Zoom in"
+                      data-testid="content-zoom-in"
+                    >
+                      <ZoomIn className="w-4 h-4 text-[#1D3557]" />
+                    </button>
+                  </div>
+                )}
                 <button 
                   onClick={closeViewer}
                   className="p-2 hover:bg-red-100 rounded-xl border-2 border-[#1D3557]"
@@ -1142,11 +1171,15 @@ export default function TopicPage({ user }) {
             )}
             
             {/* Modal Content */}
-            <div className="flex-1 bg-gray-100">
+            <div className="flex-1 relative overflow-hidden bg-gray-100">
               {isWorksheetLike(selectedContent.content_type) && (
                 <iframe 
                   src={selectedContent.content_data.pdf_url}
-                  className="w-full h-full"
+                  style={{
+                    position: 'absolute', top: 0, left: 0, border: 'none',
+                    width: `${100 / iframeZoom}%`, height: `${100 / iframeZoom}%`,
+                    transform: `scale(${iframeZoom})`, transformOrigin: 'top left'
+                  }}
                   title={selectedContent.title}
                 />
               )}
@@ -1157,7 +1190,11 @@ export default function TopicPage({ user }) {
                       ? getAssetUrl(htmlFiles.length > 0 ? htmlFiles[0]?.url : selectedContent.content_data.html_url)
                       : getAssetUrl(htmlFiles.length > 0 ? htmlFiles[currentHtmlIndex]?.url : selectedContent.content_data.html_url)
                   }
-                  className="w-full h-full"
+                  style={{
+                    position: 'absolute', top: 0, left: 0, border: 'none',
+                    width: `${100 / iframeZoom}%`, height: `${100 / iframeZoom}%`,
+                    transform: `scale(${iframeZoom})`, transformOrigin: 'top left'
+                  }}
                   title={selectedContent.title}
                   sandbox="allow-scripts allow-same-origin allow-forms"
                 />
@@ -1165,7 +1202,11 @@ export default function TopicPage({ user }) {
               {selectedContent.content_type === 'book' && selectedContent.content_data?.pdf_url && (
                 <iframe 
                   src={getAssetUrl(selectedContent.content_data.pdf_url)}
-                  className="w-full h-full"
+                  style={{
+                    position: 'absolute', top: 0, left: 0, border: 'none',
+                    width: `${100 / iframeZoom}%`, height: `${100 / iframeZoom}%`,
+                    transform: `scale(${iframeZoom})`, transformOrigin: 'top left'
+                  }}
                   title={selectedContent.title}
                 />
               )}
@@ -1176,7 +1217,11 @@ export default function TopicPage({ user }) {
                       ? getAssetUrl(htmlFiles.length > 0 ? htmlFiles[0]?.url : selectedContent.content_data.html_url)
                       : getAssetUrl(htmlFiles.length > 0 ? htmlFiles[currentHtmlIndex]?.url : selectedContent.content_data.html_url)
                   }
-                  className="w-full h-full"
+                  style={{
+                    position: 'absolute', top: 0, left: 0, border: 'none',
+                    width: `${100 / iframeZoom}%`, height: `${100 / iframeZoom}%`,
+                    transform: `scale(${iframeZoom})`, transformOrigin: 'top left'
+                  }}
                   title={selectedContent.title}
                   sandbox="allow-scripts allow-same-origin allow-forms"
                 />
