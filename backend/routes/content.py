@@ -1298,6 +1298,7 @@ async def admin_bulk_move_content(request: Request):
     return {"message": f"Moved {moved} item(s) to {new_topic['title']}", "moved": moved}
 
 
+@router.post("/admin/content/items/{content_id}/toggle-publish")
 async def admin_toggle_publish(content_id: str, request: Request):
     """Toggle content publish status"""
     from services.auth import require_admin
