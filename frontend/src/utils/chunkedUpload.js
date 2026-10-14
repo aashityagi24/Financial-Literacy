@@ -2,7 +2,8 @@ import axios from 'axios';
 import { showUploadProgress, setUploadPercent, hideUploadProgress } from '@/components/UploadProgress';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
-const CHUNK_SIZE = 512 * 1024; // 512KB chunks (well under proxy limits)
+const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB — large chunks = far fewer roundtrips
+const PARALLEL_CHUNKS = 3; // upload this many chunks concurrently
 
 /**
  * Upload a file using chunked upload (bypasses proxy body size limits).
@@ -19,14 +20,12 @@ export async function uploadFile(file, destType, directEndpoint, onProgress) {
   };
 
   try {
-    // For small files (under 512KB), use direct upload
+    // For small files (under one chunk), use direct upload
     if (file.size <= CHUNK_SIZE) {
       const formData = new FormData();
       formData.append('file', file);
       reportProgress(50);
-      const res = await axios.post(`${API}${directEndpoint}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await axios.post(`${API}${directEndpoint}`, formData);
       reportProgress(100);
       hideUploadProgress();
       return res.data;
@@ -48,8 +47,10 @@ export async function uploadFile(file, destType, directEndpoint, onProgress) {
     }
     const { upload_id } = initRes.data;
 
-    // 2. Upload chunks
-    for (let i = 0; i < totalChunks; i++) {
+    // 2. Upload chunks — PARALLEL_CHUNKS at a time
+    let completedChunks = 0;
+
+    const uploadChunk = async (i) => {
       const start = i * CHUNK_SIZE;
       const end = Math.min(start + CHUNK_SIZE, file.size);
       const chunk = file.slice(start, end);
@@ -60,18 +61,25 @@ export async function uploadFile(file, destType, directEndpoint, onProgress) {
       chunkForm.append('file', chunk, `chunk_${i}`);
 
       try {
-        await axios.post(`${API}/upload/chunked/part`, chunkForm, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        await axios.post(`${API}/upload/chunked/part`, chunkForm);
       } catch (err) {
         throw new Error(`Chunk ${i + 1}/${totalChunks} failed: ${err.response?.data?.detail || err.message}`);
       }
+      completedChunks++;
+      reportProgress(Math.round((completedChunks / totalChunks) * 85));
+    };
 
-      reportProgress(Math.round(((i + 1) / totalChunks) * 90));
+    // Run chunks in parallel batches
+    for (let batch = 0; batch < totalChunks; batch += PARALLEL_CHUNKS) {
+      const batchIndexes = [];
+      for (let j = batch; j < Math.min(batch + PARALLEL_CHUNKS, totalChunks); j++) {
+        batchIndexes.push(j);
+      }
+      await Promise.all(batchIndexes.map(uploadChunk));
     }
 
-    // 3. Kick off background assembly — returns immediately with job_id so
-    //    the request finishes well before any proxy timeout.
+    // 3. Kick off background assembly — returns immediately with job_id
+    reportProgress(87);
     const completeForm = new FormData();
     completeForm.append('upload_id', upload_id);
     completeForm.append('filename', file.name);
@@ -91,13 +99,13 @@ export async function uploadFile(file, destType, directEndpoint, onProgress) {
       return completeRes.data;
     }
 
-    // 4. Poll for assembly completion (progress ticks from 90 → 98 while waiting)
+    // 4. Poll for assembly completion (progress ticks 87 → 98 while waiting)
     const { job_id } = completeRes.data;
     if (!job_id) throw new Error('Upload assembly failed: no job ID returned');
 
-    let progress = 90;
+    let progress = 87;
     while (true) {
-      await new Promise((r) => setTimeout(r, 2000));
+      await new Promise((r) => setTimeout(r, 1500));
       let statusRes;
       try {
         statusRes = await axios.get(`${API}/upload/chunked/status/${job_id}`, { timeout: 15000 });
@@ -114,7 +122,6 @@ export async function uploadFile(file, destType, directEndpoint, onProgress) {
       if (status === 'error') {
         throw new Error(error || 'Upload assembly failed on server');
       }
-      // Still pending — nudge the progress bar
       progress = Math.min(98, progress + 2);
       reportProgress(progress);
     }

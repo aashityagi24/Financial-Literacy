@@ -331,7 +331,6 @@ async def chunked_upload_part(
     """Upload a single chunk"""
     content = await file.read()
     put_object(f"chunks/{upload_id}/chunk_{chunk_index:04d}", content, "application/octet-stream")
-    
     return {"chunk_index": chunk_index, "received": len(content)}
 
 @router.post("/chunked/complete")
@@ -396,8 +395,23 @@ async def chunked_upload_complete(
 
     def _worker():
         try:
+            from concurrent.futures import ThreadPoolExecutor, as_completed
             final_filename = f"{uuid.uuid4().hex[:16]}{file_ext}"
-            assembled = b"".join(_read_chunk(i) for i in range(total_chunks))
+
+            # Fetch all chunks in parallel (up to 10 concurrent) to minimise
+            # object-storage round-trip time.
+            chunks: dict[int, bytes] = {}
+            def _fetch(i):
+                data, _ = get_object(f"chunks/{upload_id}/chunk_{i:04d}")
+                return i, data
+
+            with ThreadPoolExecutor(max_workers=10) as pool:
+                futures = [pool.submit(_fetch, i) for i in range(total_chunks)]
+                for fut in as_completed(futures):
+                    i, data = fut.result()
+                    chunks[i] = data
+
+            assembled = b"".join(chunks[i] for i in range(total_chunks))
 
             url_prefix = URL_PREFIX_MAP.get(dest_type, "videos")
             content_type_guess = {
@@ -406,6 +420,21 @@ async def chunked_upload_complete(
                 ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp",
             }.get(file_ext, "application/octet-stream")
             put_object(f"{url_prefix}/{final_filename}", assembled, content_type_guess)
+
+            # Clean up chunks in background so we don't hold the job result
+            def _cleanup():
+                for i in range(total_chunks):
+                    try:
+                        from services.object_storage import init_storage, STORAGE_URL, APP_NAME
+                        import requests as _req
+                        key = init_storage()
+                        _req.delete(
+                            f"{STORAGE_URL}/objects/{APP_NAME}/uploads/chunks/{upload_id}/chunk_{i:04d}",
+                            headers={"X-Storage-Key": key}, timeout=10
+                        )
+                    except Exception:
+                        pass
+            threading.Thread(target=_cleanup, daemon=True).start()
 
             _upload_jobs[job_id] = {
                 "status": "done",

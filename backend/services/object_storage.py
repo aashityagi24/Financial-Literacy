@@ -29,8 +29,23 @@ def put_object(relative_path: str, data: bytes, content_type: str) -> dict:
     resp = requests.put(
         f"{STORAGE_URL}/objects/{path}",
         headers={"X-Storage-Key": key, "Content-Type": content_type},
-        data=data, timeout=120,
+        data=data, timeout=300,
     )
+    resp.raise_for_status()
+    return resp.json()
+
+
+def put_object_path(relative_path: str, file_path, content_type: str) -> dict:
+    """Stream-upload a local file to `{APP_NAME}/uploads/{relative_path}`.
+    Avoids loading large files into memory — suitable for videos."""
+    key = init_storage()
+    path = f"{APP_NAME}/uploads/{relative_path}"
+    with open(file_path, "rb") as fh:
+        resp = requests.put(
+            f"{STORAGE_URL}/objects/{path}",
+            headers={"X-Storage-Key": key, "Content-Type": content_type},
+            data=fh, timeout=600,
+        )
     resp.raise_for_status()
     return resp.json()
 
