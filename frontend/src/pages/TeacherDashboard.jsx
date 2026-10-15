@@ -1482,7 +1482,7 @@ export default function TeacherDashboard({ user }) {
                       {studentInsights.learning?.lessons_completed || 0}
                       {studentInsights.learning?.total_lessons ? <span className="text-base text-[#3D5A80]">/{studentInsights.learning.total_lessons}</span> : null}
                     </p>
-                    <p className="text-xs text-[#3D5A80]">Lessons</p>
+                    <p className="text-xs text-[#3D5A80]">Chapters</p>
                     {studentInsights.learning?.total_topics ? (
                       <p className="text-[10px] text-[#3D5A80] mt-1">
                         {studentInsights.learning.topics_completed || 0}/{studentInsights.learning.total_topics} topics · {studentInsights.learning.subtopics_completed || 0}/{studentInsights.learning.total_subtopics || 0} subtopics
@@ -1699,7 +1699,7 @@ export default function TeacherDashboard({ user }) {
                   </h4>
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-[#3D5A80]">Lessons Completed:</span>
+                      <span className="text-[#3D5A80]">Chapters Completed:</span>
                       <span className="font-bold">{studentInsights.learning?.lessons_completed} / {studentInsights.learning?.total_lessons}</span>
                     </div>
                     <Progress 
@@ -1748,7 +1748,7 @@ export default function TeacherDashboard({ user }) {
                       <th className="px-2 py-2 text-center whitespace-nowrap" colSpan="2">Investing</th>
                       <th className="px-2 py-2 text-center whitespace-nowrap">Chores</th>
                       <th className="px-2 py-2 text-center whitespace-nowrap">Quests</th>
-                      <th className="px-2 py-2 text-center whitespace-nowrap">Lessons</th>
+                      <th className="px-2 py-2 text-center whitespace-nowrap">Chapters</th>
                       <th className="px-2 py-2 text-right whitespace-nowrap">Garden P/L</th>
                       <th className="px-2 py-2 text-right whitespace-nowrap">Stock P/L</th>
                       <th className="px-2 py-2 text-center whitespace-nowrap">Gifts</th>
@@ -2290,7 +2290,7 @@ export default function TeacherDashboard({ user }) {
                   }}
                   className="px-3 py-1.5 border rounded-lg text-sm"
                 >
-                  <option value="">All Lessons</option>
+                  <option value="">All Chapters</option>
                   {repositoryTopics.map(t => (
                     <option key={t.topic_id} value={t.topic_id}>{t.title}</option>
                   ))}

@@ -263,7 +263,7 @@ export default function LearnPage({ user }) {
                     <p className="text-sm sm:text-base text-[#3D5A80] mb-2 line-clamp-2">{topic.description}</p>
                     <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm">
                       <span className="px-2.5 sm:px-3 py-1 bg-[#3D5A80]/10 rounded-full text-[#3D5A80] font-medium whitespace-nowrap">
-                        {topic.subtopics?.length || 0} Lessons
+                        {topic.subtopics?.length || 0} Chapters
                       </span>
                       <span className="px-2.5 sm:px-3 py-1 bg-[#06D6A0]/20 rounded-full text-[#06D6A0] font-medium whitespace-nowrap">
                         {(topic.content_count || 0) + (topic.subtopics?.reduce((sum, st) => sum + (st.content_count || 0), 0) || 0)} Items

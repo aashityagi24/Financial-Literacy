@@ -365,7 +365,7 @@ export default function AdminTeacherRepository() {
               onChange={(e) => handleTopicChange(e.target.value)}
               className="px-3 py-2 border rounded-lg text-sm"
             >
-              <option value="">All Lessons</option>
+              <option value="">All Chapters</option>
               {topics.map(t => (
                 <option key={t.topic_id} value={t.topic_id}>{t.title}</option>
               ))}
@@ -377,7 +377,7 @@ export default function AdminTeacherRepository() {
                 onChange={(e) => setFilterSubtopic(e.target.value)}
                 className="px-3 py-2 border rounded-lg text-sm"
               >
-                <option value="">All Lessons</option>
+                <option value="">All Chapters</option>
                 {subtopics.map(s => (
                   <option key={s.topic_id} value={s.topic_id}>{s.title}</option>
                 ))}
@@ -639,24 +639,24 @@ export default function AdminTeacherRepository() {
                 />
               </div>
 
-              {/* Lesson & Sub-lesson */}
+              {/* Chapter & Lesson */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#1D3557] mb-2">Lesson *</label>
+                  <label className="block text-sm font-medium text-[#1D3557] mb-2">Chapter *</label>
                   <select
                     value={formData.topic_id}
                     onChange={(e) => handleFormTopicChange(e.target.value)}
                     className="w-full px-3 py-2 border rounded-lg text-sm"
                     required
                   >
-                    <option value="">Select Lesson</option>
+                    <option value="">Select Chapter</option>
                     {topics.map(t => (
                       <option key={t.topic_id} value={t.topic_id}>{t.title}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#1D3557] mb-2">Sub-lesson *</label>
+                  <label className="block text-sm font-medium text-[#1D3557] mb-2">Lesson *</label>
                   <select
                     value={formData.subtopic_id}
                     onChange={(e) => setFormData(prev => ({ ...prev, subtopic_id: e.target.value }))}
@@ -664,7 +664,7 @@ export default function AdminTeacherRepository() {
                     required
                     disabled={!formData.topic_id}
                   >
-                    <option value="">Select Lesson</option>
+                    <option value="">Select Chapter</option>
                     {subtopics.map(s => (
                       <option key={s.topic_id} value={s.topic_id}>{s.title}</option>
                     ))}

@@ -70,7 +70,7 @@ export default function TopicPage({ user }) {
   const isHomeworkHighlight = searchParams.get('homework') === '1';
 
   // The URL's highlight param is static, so once that item is completed the
-  // "Your Next Lesson" banner would stay stuck on a finished lesson. Follow
+  // "Your Next Chapter" banner would stay stuck on a finished lesson. Follow
   // the data instead: if the highlighted item is done, move the highlight to
   // the next incomplete, unlocked, mandatory item. Teacher homework never
   // re-targets a different item — it just stops highlighting.
@@ -522,7 +522,7 @@ export default function TopicPage({ user }) {
     return (
       <div className="min-h-screen bg-[#E0FBFC] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-[#3D5A80] text-lg">Lesson not found</p>
+          <p className="text-[#3D5A80] text-lg">Chapter not found</p>
           <Link to={`/learn${gradeFilter ? `?grade=${gradeFilter}` : ''}`} className="btn-primary mt-4 inline-block px-6 py-3">Back to Learn</Link>
         </div>
       </div>
@@ -585,7 +585,7 @@ export default function TopicPage({ user }) {
                 <Lock className="w-8 h-8 text-gray-500" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-600">Lesson Locked</h3>
+                <h3 className="text-lg font-bold text-gray-600">Chapter Locked</h3>
                 <p className="text-gray-500">Complete the previous topics to unlock this one!</p>
               </div>
             </div>
@@ -804,7 +804,7 @@ export default function TopicPage({ user }) {
                         {isHomeworkHighlight ? (
                           <><FileText className="w-3 h-3" /> Your Homework — complete this!</>
                         ) : (
-                          <><Play className="w-3 h-3" /> Your Next Lesson — start here!</>
+                          <><Play className="w-3 h-3" /> Your Next Chapter — start here!</>
                         )}
                       </div>
                     )}

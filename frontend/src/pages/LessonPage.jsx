@@ -46,9 +46,9 @@ export default function LessonPage({ user }) {
     try {
       const response = await axios.post(`${API}/learn/lessons/${lessonId}/complete`);
       if (response.data.reward > 0) {
-        toast.success(`Lesson completed! +${response.data.reward} XP`);
+        toast.success(`Chapter completed! +${response.data.reward} XP`);
       } else {
-        toast.info('Lesson already completed');
+        toast.info('Chapter already completed');
       }
       navigate(-1);
     } catch (error) {
@@ -120,7 +120,7 @@ export default function LessonPage({ user }) {
       <main className="container mx-auto px-4 py-6 max-w-3xl">
         {!showQuiz ? (
           <>
-            {/* Lesson Content */}
+            {/* Chapter Content */}
             <div className="card-playful p-6 mb-6 animate-bounce-in">
               <div className="prose prose-lg max-w-none">
                 <div className="lesson-content text-[#1D3557]">
@@ -163,7 +163,7 @@ export default function LessonPage({ user }) {
                   className="btn-primary flex-1 py-4 text-lg flex items-center justify-center gap-2"
                 >
                   {completing ? 'Completing...' : (
-                    <>Complete Lesson <Check className="w-5 h-5" /></>
+                    <>Complete Chapter <Check className="w-5 h-5" /></>
                   )}
                 </button>
               )}
@@ -275,7 +275,7 @@ export default function LessonPage({ user }) {
                       onClick={() => navigate(-1)}
                       className="btn-primary flex-1 py-3"
                     >
-                      Back to Lesson
+                      Back to Chapter
                     </button>
                   </div>
                 </div>

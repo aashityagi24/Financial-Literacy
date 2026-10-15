@@ -569,7 +569,7 @@ export default function AdminPage({ user }) {
               </div>
               <div>
                 <h3 className="text-sm font-bold text-white">Content</h3>
-                <p className="text-white/70 text-xs">Lessons & sub-lessons</p>
+                <p className="text-white/70 text-xs">Chapters & lessons</p>
               </div>
             </div>
           </Link>
@@ -835,12 +835,12 @@ export default function AdminPage({ user }) {
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <BookOpen className="w-8 h-8 text-[#06D6A0] mb-2" />
               <p className="text-3xl font-bold text-gray-800">{stats?.content?.topics || 0}</p>
-              <p className="text-sm text-gray-500">Lessons</p>
+              <p className="text-sm text-gray-500">Chapters</p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <span className="text-3xl block mb-2">📂</span>
               <p className="text-3xl font-bold text-gray-800">{stats?.content?.subtopics || 0}</p>
-              <p className="text-sm text-gray-500">Sub-lessons</p>
+              <p className="text-sm text-gray-500">Lessons</p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <span className="text-3xl block mb-2">📄</span>
