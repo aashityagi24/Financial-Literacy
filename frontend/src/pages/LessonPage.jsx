@@ -275,7 +275,7 @@ export default function LessonPage({ user }) {
                       onClick={() => navigate(-1)}
                       className="btn-primary flex-1 py-3"
                     >
-                      Back to Topic
+                      Back to Lesson
                     </button>
                   </div>
                 </div>

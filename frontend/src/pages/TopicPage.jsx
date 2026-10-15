@@ -522,7 +522,7 @@ export default function TopicPage({ user }) {
     return (
       <div className="min-h-screen bg-[#E0FBFC] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-[#3D5A80] text-lg">Topic not found</p>
+          <p className="text-[#3D5A80] text-lg">Lesson not found</p>
           <Link to={`/learn${gradeFilter ? `?grade=${gradeFilter}` : ''}`} className="btn-primary mt-4 inline-block px-6 py-3">Back to Learn</Link>
         </div>
       </div>
@@ -585,7 +585,7 @@ export default function TopicPage({ user }) {
                 <Lock className="w-8 h-8 text-gray-500" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-600">Topic Locked</h3>
+                <h3 className="text-lg font-bold text-gray-600">Lesson Locked</h3>
                 <p className="text-gray-500">Complete the previous topics to unlock this one!</p>
               </div>
             </div>
@@ -596,7 +596,7 @@ export default function TopicPage({ user }) {
         {topic.subtopics?.length > 0 && (
           <div className="mb-8">
             <h2 className="text-xl font-bold text-[#1D3557] mb-4" style={{ fontFamily: 'Fredoka' }}>
-              📂 Subtopics
+              📂 Lessons
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {(() => {

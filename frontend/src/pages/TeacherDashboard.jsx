@@ -2290,7 +2290,7 @@ export default function TeacherDashboard({ user }) {
                   }}
                   className="px-3 py-1.5 border rounded-lg text-sm"
                 >
-                  <option value="">All Topics</option>
+                  <option value="">All Lessons</option>
                   {repositoryTopics.map(t => (
                     <option key={t.topic_id} value={t.topic_id}>{t.title}</option>
                   ))}
@@ -2304,7 +2304,7 @@ export default function TeacherDashboard({ user }) {
                     }}
                     className="px-3 py-1.5 border rounded-lg text-sm"
                   >
-                    <option value="">All Subtopics</option>
+                    <option value="">All Lessons</option>
                     {repositorySubtopics.map(s => (
                       <option key={s.topic_id} value={s.topic_id}>{s.title}</option>
                     ))}

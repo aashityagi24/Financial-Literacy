@@ -140,10 +140,10 @@ const CurriculumOverridesPanel = ({ curricula = [], overrides = {}, onChange, ow
             <p className="text-xs text-blue-700">This also lives under {curName} — choose where it sits there and which grades it applies to.</p>
             {pickerLevel !== 'none' && (
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Topic ({curName})</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Lesson ({curName})</label>
                 {curriculumTopics.length === 0 ? (
                   <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
-                    No topics are tagged with {curName} yet. Tag a Topic with this curriculum first.
+                    No lessons are tagged with {curName} yet. Tag a Lesson with this curriculum first.
                   </p>
                 ) : (
                   <Select
@@ -163,7 +163,7 @@ const CurriculumOverridesPanel = ({ curricula = [], overrides = {}, onChange, ow
             )}
             {pickerLevel === 'subtopic' && (
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Subtopic ({curName})</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Sub-lesson ({curName})</label>
                 {topicPickerValue && (topics.find(t => t.topic_id === topicPickerValue)?.subtopics || []).filter(s => (s.curricula || ['financial_literacy']).includes(cid)).length === 0 ? (
                   <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5">
                     No subtopics under this topic are tagged with {curName} yet. Tag a subtopic with this curriculum first.
@@ -648,7 +648,7 @@ export default function ContentManagement({ user }) {
     for (const cid of (form.curricula || []).slice(1)) {
       if (!form.curriculum_overrides?.[cid]?.parent_id) {
         const name = CURRICULA.find(c => c.id === cid)?.name || cid;
-        toast.error(`Choose a ${needsSubtopic ? 'topic & subtopic' : 'topic'} for ${name} before saving`);
+        toast.error(`Choose a ${needsSubtopic ? 'lesson & sub-lesson' : 'lesson'} for ${name} before saving`);
         return false;
       }
     }
@@ -941,11 +941,11 @@ export default function ContentManagement({ user }) {
         if (gradeFilter !== 'all') payload.grade = gradeFilter;
         await axios.put(`${API}/admin/content/topics/${editingItem.topic_id}`, payload);
         toast.success(gradeFilter === 'all'
-          ? 'Topic updated'
-          : `Topic updated for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only`);
+          ? 'Lesson updated'
+          : `Lesson updated for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only`);
       } else {
         await axios.post(`${API}/admin/content/topics`, { ...topicForm, curriculum_overrides: cleanCurriculumOverrides(topicForm.curriculum_overrides), parent_id: null });
-        toast.success('Topic created');
+        toast.success('Lesson created');
       }
       setShowTopicDialog(false);
       setEditingItem(null);
@@ -968,11 +968,11 @@ export default function ContentManagement({ user }) {
         if (gradeFilter !== 'all') payload.grade = gradeFilter;
         await axios.put(`${API}/admin/content/topics/${editingItem.topic_id}`, payload);
         toast.success(gradeFilter === 'all'
-          ? 'Subtopic updated'
-          : `Subtopic updated for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only`);
+          ? 'Lesson updated'
+          : `Lesson updated for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only`);
       } else {
         await axios.post(`${API}/admin/content/topics`, { ...subtopicForm, curriculum_overrides: cleanCurriculumOverrides(subtopicForm.curriculum_overrides), parent_id: selectedTopic.topic_id });
-        toast.success('Subtopic created');
+        toast.success('Lesson created');
       }
       setShowSubtopicDialog(false);
       setEditingItem(null);
@@ -1031,10 +1031,10 @@ export default function ContentManagement({ user }) {
   };
   
   const deleteTopic = async (topicId, isSubtopic = false) => {
-    if (!confirm(`Delete this ${isSubtopic ? 'subtopic' : 'topic'} and all its content?`)) return;
+    if (!confirm(`Delete this ${isSubtopic ? 'sub-lesson' : 'lesson'} and all its content?`)) return;
     try {
       await axios.delete(`${API}/admin/content/topics/${topicId}`);
-      toast.success(`${isSubtopic ? 'Subtopic' : 'Topic'} deleted`);
+      toast.success(`${isSubtopic ? 'Sub-lesson' : 'Lesson'} deleted`);
       if (isSubtopic && selectedSubtopic?.topic_id === topicId) setSelectedSubtopic(null);
       if (!isSubtopic && selectedTopic?.topic_id === topicId) {
         setSelectedTopic(null);
@@ -1130,7 +1130,7 @@ export default function ContentManagement({ user }) {
     
     try {
       await axios.post(`${API}/admin/content/topics/reorder`, payload);
-      toast.success('Topics reordered');
+      toast.success('Lessons reordered');
       fetchData();
     } catch (error) {
       toast.error('Failed to reorder topics');
@@ -1154,7 +1154,7 @@ export default function ContentManagement({ user }) {
     
     try {
       await axios.post(`${API}/admin/content/topics/reorder`, payload);
-      toast.success('Subtopics reordered');
+      toast.success('Lessons reordered');
       fetchData();
     } catch (error) {
       toast.error('Failed to reorder subtopics');
@@ -1196,7 +1196,7 @@ export default function ContentManagement({ user }) {
     if (gradeFilter !== 'all') payload.grade = gradeFilter;
     try {
       await axios.post(`${API}/admin/content/topics/reorder`, payload);
-      toast.success('Topics reordered');
+      toast.success('Lessons reordered');
     } catch (error) {
       toast.error('Failed to reorder topics');
       fetchData(); // Revert on error
@@ -1219,7 +1219,7 @@ export default function ContentManagement({ user }) {
     if (gradeFilter !== 'all') payload.grade = gradeFilter;
     try {
       await axios.post(`${API}/admin/content/topics/reorder`, payload);
-      toast.success('Subtopics reordered');
+      toast.success('Lessons reordered');
       fetchData(); // Refresh to sync
     } catch (error) {
       toast.error('Failed to reorder subtopics');
@@ -1282,8 +1282,8 @@ export default function ContentManagement({ user }) {
       if (gradeFilter !== 'all') payload.grade = gradeFilter;
       await axios.post(`${API}/admin/content/subtopics/${itemToMove.topic_id}/move`, payload);
       toast.success(gradeFilter === 'all'
-        ? 'Subtopic moved successfully'
-        : `Subtopic moved for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only`);
+        ? 'Lesson moved successfully'
+        : `Lesson moved for ${gradeFilterOptions.find(o => o.value === gradeFilter)?.label} only`);
       setShowMoveSubtopicDialog(false);
       setItemToMove(null);
       setMoveTargetId('');
@@ -1529,13 +1529,13 @@ export default function ContentManagement({ user }) {
             </TabsTrigger>
             <TabsTrigger value="topics" className="flex items-center gap-2">
               <FolderOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">1. Topics</span>
-              <span className="sm:hidden">Topics</span>
+              <span className="hidden sm:inline">1. Lessons</span>
+              <span className="sm:hidden">Lessons</span>
             </TabsTrigger>
             <TabsTrigger value="subtopics" className="flex items-center gap-2">
               <Layers className="w-4 h-4" />
-              <span className="hidden sm:inline">2. Subtopics</span>
-              <span className="sm:hidden">Subtopics</span>
+              <span className="hidden sm:inline">2. Sub-lessons</span>
+              <span className="sm:hidden">Sub-lessons</span>
             </TabsTrigger>
             <TabsTrigger value="lesson-plan" className="flex items-center gap-2">
               <ListOrdered className="w-4 h-4" />
@@ -1578,17 +1578,17 @@ export default function ContentManagement({ user }) {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="subtopic">Subtopics</SelectItem>
+                      <SelectItem value="subtopic">Sub-lessons</SelectItem>
                       <SelectItem value="content">Content</SelectItem>
                     </SelectContent>
                   </Select>
                   
                   <Select value={repoTopicFilter} onValueChange={setRepoTopicFilter}>
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Topic" />
+                      <SelectValue placeholder="Lesson" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Topics</SelectItem>
+                      <SelectItem value="all">All Lessons</SelectItem>
                       {topics.map(topic => (
                         <SelectItem key={topic.topic_id} value={topic.topic_id}>
                           {topic.title}
@@ -1628,8 +1628,8 @@ export default function ContentManagement({ user }) {
                     <tr>
                       <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Type</th>
                       <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Title</th>
-                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3 hidden md:table-cell">Topic</th>
-                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3 hidden lg:table-cell">Subtopic</th>
+                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3 hidden md:table-cell">Lesson</th>
+                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3 hidden lg:table-cell">Sub-lesson</th>
                       <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Grade</th>
                       <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">Actions</th>
                     </tr>
@@ -1654,7 +1654,7 @@ export default function ContentManagement({ user }) {
                           <tr key={`sub-${subtopic.topic_id}`} className="hover:bg-gray-50">
                             <td className="px-4 py-3">
                               <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700">
-                                <Layers className="w-3 h-3" /> Subtopic
+                                <Layers className="w-3 h-3" /> Sub-lesson
                               </span>
                             </td>
                             <td className="px-4 py-3">
@@ -1918,10 +1918,10 @@ export default function ContentManagement({ user }) {
               {/* Stats Summary */}
               <div className="mt-4 flex gap-4 text-sm text-gray-500">
                 <span className="flex items-center gap-1">
-                  <FolderOpen className="w-4 h-4" /> {topics.length} Topics
+                  <FolderOpen className="w-4 h-4" /> {topics.length} Lessons
                 </span>
                 <span className="flex items-center gap-1">
-                  <Layers className="w-4 h-4" /> {topics.reduce((acc, t) => acc + (t.subtopics?.length || 0), 0)} Subtopics
+                  <Layers className="w-4 h-4" /> {topics.reduce((acc, t) => acc + (t.subtopics?.length || 0), 0)} Sub-lessons
                 </span>
                 <span className="flex items-center gap-1">
                   <FileText className="w-4 h-4" /> {allContent.length} Content Items
@@ -1935,7 +1935,7 @@ export default function ContentManagement({ user }) {
             <div className="bg-white rounded-xl border shadow-sm p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-800">Step 1: Manage Topics</h2>
+                  <h2 className="text-lg font-semibold text-gray-800">Step 1: Manage Lessons</h2>
                   <p className="text-sm text-gray-500">
                     {gradeFilter === 'all'
                       ? 'Drag and drop to reorder your learning topics'
@@ -1943,7 +1943,7 @@ export default function ContentManagement({ user }) {
                   </p>
                 </div>
                 <Button onClick={() => { setEditingItem(null); setTopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'], curriculum_overrides: {} }); setShowTopicDialog(true); }}>
-                  <Plus className="w-4 h-4 mr-2" /> Add Topic
+                  <Plus className="w-4 h-4 mr-2" /> Add Lesson
                 </Button>
               </div>
               
@@ -1982,10 +1982,10 @@ export default function ContentManagement({ user }) {
                 <div className="mt-6 p-4 bg-blue-50 rounded-lg flex items-center justify-between">
                   <div>
                     <p className="text-sm text-blue-600">Selected: <strong>{effectiveText(selectedTopic, 'title')}</strong></p>
-                    <p className="text-xs text-blue-500">Click Subtopics tab to manage subtopics</p>
+                    <p className="text-xs text-blue-500">Click Sub-lessons tab to manage sub-lessons</p>
                   </div>
                   <Button onClick={() => setActiveTab('subtopics')}>
-                    Next: Subtopics <ChevronRight className="w-4 h-4 ml-1" />
+                    Next: Sub-lessons <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
               )}
@@ -1997,7 +1997,7 @@ export default function ContentManagement({ user }) {
             <div className="bg-white rounded-xl border shadow-sm p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-800">Step 2: Manage Subtopics</h2>
+                  <h2 className="text-lg font-semibold text-gray-800">Step 2: Manage Sub-lessons</h2>
                   <p className="text-sm text-gray-500">
                     {selectedTopic ? `Drag and drop to reorder subtopics under ${effectiveText(selectedTopic, 'title')}` : 'Select a topic first'}
                   </p>
@@ -2006,7 +2006,7 @@ export default function ContentManagement({ user }) {
                   onClick={() => { setEditingItem(null); setSubtopicForm({ title: '', description: '', thumbnail: '', min_grade: 0, max_grade: 5, curricula: ['financial_literacy'], curriculum_overrides: {} }); setShowSubtopicDialog(true); }}
                   disabled={!selectedTopic}
                 >
-                  <Plus className="w-4 h-4 mr-2" /> Add Subtopic
+                  <Plus className="w-4 h-4 mr-2" /> Add Sub-lesson
                 </Button>
               </div>
               
@@ -2015,7 +2015,7 @@ export default function ContentManagement({ user }) {
                   <FolderOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                   <p className="text-gray-500 mb-4">Please select a topic first</p>
                   <Button variant="outline" onClick={() => setActiveTab('topics')}>
-                    <ChevronLeft className="w-4 h-4 mr-1" /> Go to Topics
+                    <ChevronLeft className="w-4 h-4 mr-1" /> Go to Lessons
                   </Button>
                 </div>
               ) : selectedTopicSubtopics.filter(matchesGradeFilter).length === 0 ? (
@@ -2089,7 +2089,7 @@ export default function ContentManagement({ user }) {
                   <ListOrdered className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                   <p className="text-gray-500 mb-4">Please select a subtopic first</p>
                   <Button variant="outline" onClick={() => setActiveTab('subtopics')}>
-                    <ChevronLeft className="w-4 h-4 mr-1" /> Go to Subtopics
+                    <ChevronLeft className="w-4 h-4 mr-1" /> Go to Sub-lessons
                   </Button>
                 </div>
               ) : subtopicContent.length === 0 ? (
@@ -2189,7 +2189,7 @@ export default function ContentManagement({ user }) {
                   <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                   <p className="text-gray-500 mb-4">Please select a subtopic first</p>
                   <Button variant="outline" onClick={() => setActiveTab('subtopics')}>
-                    <ChevronLeft className="w-4 h-4 mr-1" /> Go to Subtopics
+                    <ChevronLeft className="w-4 h-4 mr-1" /> Go to Sub-lessons
                   </Button>
                 </div>
               ) : (
@@ -2238,7 +2238,7 @@ export default function ContentManagement({ user }) {
       <Dialog open={showTopicDialog} onOpenChange={setShowTopicDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editingItem ? 'Edit Topic' : 'New Topic'}</DialogTitle>
+            <DialogTitle>{editingItem ? 'Edit Lesson' : 'New Lesson'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             {editingItem && gradeFilter !== 'all' && (
@@ -2310,11 +2310,11 @@ export default function ContentManagement({ user }) {
       <Dialog open={showSubtopicDialog} onOpenChange={setShowSubtopicDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editingItem ? 'Edit Subtopic' : 'New Subtopic'}</DialogTitle>
+            <DialogTitle>{editingItem ? 'Edit Sub-lesson' : 'New Sub-lesson'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-4">
             <div className="p-3 bg-blue-50 rounded-lg text-sm text-blue-600">
-              Parent Topic: <strong>{effectiveText(selectedTopic, 'title')}</strong>
+              Parent Lesson: <strong>{effectiveText(selectedTopic, 'title')}</strong>
             </div>
             {editingItem && gradeFilter !== 'all' && (
               <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800 flex items-start justify-between gap-3">
@@ -2728,11 +2728,11 @@ export default function ContentManagement({ user }) {
         </DialogContent>
       </Dialog>
       
-      {/* Move Subtopic Dialog */}
+      {/* Move Sub-lesson Dialog */}
       <Dialog open={showMoveSubtopicDialog} onOpenChange={setShowMoveSubtopicDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Move Subtopic</DialogTitle>
+            <DialogTitle>Move Sub-lesson</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <p className="text-sm text-gray-600">
@@ -2757,7 +2757,7 @@ export default function ContentManagement({ user }) {
             </Select>
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={() => setShowMoveSubtopicDialog(false)}>Cancel</Button>
-              <Button onClick={moveSubtopicToTopic} disabled={!moveTargetId}>Move Subtopic</Button>
+              <Button onClick={moveSubtopicToTopic} disabled={!moveTargetId}>Move Sub-lesson</Button>
             </div>
           </div>
         </DialogContent>
