@@ -32,6 +32,13 @@
         <!-- End Meta Pixel Code -->
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <!-- Early connection hints — browser starts TCP/TLS handshakes before
+             JS even executes, shaving ~100-300ms off API and payment loads -->
+        <link rel="preconnect" href="https://smart-money-learn-5.preview.emergentagent.com" />
+        <link rel="preconnect" href="https://coinquest.co.in" />
+        <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
+        <link rel="dns-prefetch" href="https://api.razorpay.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <meta name="theme-color" content="#1D3557" />
         <meta name="description" content="Money lessons for children aged 5–10 (KG to Class 5): stories, games and real jobs at home, 10 minutes a day. Made in India. Try a day for ₹29." />
         <meta name="apple-mobile-web-app-capable" content="yes" />

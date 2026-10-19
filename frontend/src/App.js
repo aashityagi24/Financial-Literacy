@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
 import axios from "axios";
@@ -6,63 +6,75 @@ import { Toaster } from "@/components/ui/sonner";
 import TrialBanner from "@/components/TrialBanner";
 import SubscriptionExpiredGate from "@/components/SubscriptionExpiredGate";
 
-// Pages
+// Landing page — loaded immediately (it IS the first screen every visitor sees)
 import FinancialLiteracyPage from "@/pages/FinancialLiteracyPage";
-import EntrepreneurshipWorkshopPage from "@/pages/EntrepreneurshipWorkshopPage";
-import ForSchoolsPage from "@/pages/ForSchoolsPage";
+// AuthCallback handles a URL hash synchronously at the top of AppRouter, so it
+// must be a direct import (lazy loads fire after render, which is too late).
 import AuthCallback from "@/pages/AuthCallback";
-import RoleSelection from "@/pages/RoleSelection";
-import Dashboard from "@/pages/Dashboard";
-import WalletPage from "@/pages/WalletPage";
-import MyWalletPage from "@/pages/MyWalletPage";
-import StorePage from "@/pages/StorePage";
-import QuestsPage from "@/pages/QuestsPage";
-import AchievementsPage from "@/pages/AchievementsPage";
-// ChatBuddy removed - AI feature disabled to prevent test cheating
-import ProfilePage from "@/pages/ProfilePage";
-import LearnPage from "@/pages/LearnPage";
-import TopicPage from "@/pages/TopicPage";
-import LessonPage from "@/pages/LessonPage";
-import AdminPage from "@/pages/AdminPage";
-import TeacherDashboard from "@/pages/TeacherDashboard";
-import ParentDashboard from "@/pages/ParentDashboard";
-import ContentManagement from "@/pages/ContentManagement";
-import LiveClassesPage from "@/pages/LiveClassesPage";
-import LiveClassesAdmin from "@/pages/LiveClassesAdmin";
-import AdminStoreManagement from "@/pages/AdminStoreManagement";
-import AdminInvestmentManagement from "@/pages/AdminInvestmentManagement";
-import ClassmatesPage from "@/pages/ClassmatesPage";
-import SavingsGoalsPage from "@/pages/SavingsGoalsPage";
-import AdminQuestsPage from "@/pages/AdminQuestsPage";
-import ParentShoppingList from "@/pages/ParentShoppingList";
-import MoneyGardenPage from "@/pages/MoneyGardenPage";
-import AdminGardenManagement from "@/pages/AdminGardenManagement";
-import StockMarketPage from "@/pages/StockMarketPage";
-import AdminStockManagement from "@/pages/AdminStockManagement";
-import SchoolLogin from "@/pages/SchoolLogin";
-import SchoolDashboard from "@/pages/SchoolDashboard";
-import GiftingPage from "@/pages/GiftingPage";
-import AdminBadgeManagement from "@/pages/AdminBadgeManagement";
-import AdminVideoManagement from "@/pages/AdminVideoManagement";
-import LendingBorrowingPage from "@/pages/LendingBorrowingPage";
-import AdminGlossaryManagement from "@/pages/AdminGlossaryManagement";
-import AdminTeacherRepository from "@/pages/AdminTeacherRepository";
-import GlossaryPage from "@/pages/GlossaryPage";
-import MyJobsPage from "@/pages/MyJobsPage";
-import AuthPage from "@/pages/AuthPage";
-import RegisterPage from "@/pages/RegisterPage";
-import CompleteSignupPage from "@/pages/CompleteSignupPage";
-import TermsPage from "@/pages/TermsPage";
-import RefundsPage from "@/pages/RefundsPage";
+
+// All other pages are lazy-loaded — they ship in separate chunks and are only
+// downloaded when a user actually navigates to that route.
+const EntrepreneurshipWorkshopPage = lazy(() => import("@/pages/EntrepreneurshipWorkshopPage"));
+const ForSchoolsPage = lazy(() => import("@/pages/ForSchoolsPage"));
+const RoleSelection = lazy(() => import("@/pages/RoleSelection"));
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const WalletPage = lazy(() => import("@/pages/WalletPage"));
+const MyWalletPage = lazy(() => import("@/pages/MyWalletPage"));
+const StorePage = lazy(() => import("@/pages/StorePage"));
+const QuestsPage = lazy(() => import("@/pages/QuestsPage"));
+const AchievementsPage = lazy(() => import("@/pages/AchievementsPage"));
+const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
+const LearnPage = lazy(() => import("@/pages/LearnPage"));
+const TopicPage = lazy(() => import("@/pages/TopicPage"));
+const LessonPage = lazy(() => import("@/pages/LessonPage"));
+const AdminPage = lazy(() => import("@/pages/AdminPage"));
+const TeacherDashboard = lazy(() => import("@/pages/TeacherDashboard"));
+const ParentDashboard = lazy(() => import("@/pages/ParentDashboard"));
+const ContentManagement = lazy(() => import("@/pages/ContentManagement"));
+const LiveClassesPage = lazy(() => import("@/pages/LiveClassesPage"));
+const LiveClassesAdmin = lazy(() => import("@/pages/LiveClassesAdmin"));
+const AdminStoreManagement = lazy(() => import("@/pages/AdminStoreManagement"));
+const AdminInvestmentManagement = lazy(() => import("@/pages/AdminInvestmentManagement"));
+const ClassmatesPage = lazy(() => import("@/pages/ClassmatesPage"));
+const SavingsGoalsPage = lazy(() => import("@/pages/SavingsGoalsPage"));
+const AdminQuestsPage = lazy(() => import("@/pages/AdminQuestsPage"));
+const ParentShoppingList = lazy(() => import("@/pages/ParentShoppingList"));
+const MoneyGardenPage = lazy(() => import("@/pages/MoneyGardenPage"));
+const AdminGardenManagement = lazy(() => import("@/pages/AdminGardenManagement"));
+const StockMarketPage = lazy(() => import("@/pages/StockMarketPage"));
+const AdminStockManagement = lazy(() => import("@/pages/AdminStockManagement"));
+const SchoolLogin = lazy(() => import("@/pages/SchoolLogin"));
+const SchoolDashboard = lazy(() => import("@/pages/SchoolDashboard"));
+const GiftingPage = lazy(() => import("@/pages/GiftingPage"));
+const AdminBadgeManagement = lazy(() => import("@/pages/AdminBadgeManagement"));
+const AdminVideoManagement = lazy(() => import("@/pages/AdminVideoManagement"));
+const LendingBorrowingPage = lazy(() => import("@/pages/LendingBorrowingPage"));
+const AdminGlossaryManagement = lazy(() => import("@/pages/AdminGlossaryManagement"));
+const AdminTeacherRepository = lazy(() => import("@/pages/AdminTeacherRepository"));
+const GlossaryPage = lazy(() => import("@/pages/GlossaryPage"));
+const MyJobsPage = lazy(() => import("@/pages/MyJobsPage"));
+const AuthPage = lazy(() => import("@/pages/AuthPage"));
+const RegisterPage = lazy(() => import("@/pages/RegisterPage"));
+const CompleteSignupPage = lazy(() => import("@/pages/CompleteSignupPage"));
+const TermsPage = lazy(() => import("@/pages/TermsPage"));
+const RefundsPage = lazy(() => import("@/pages/RefundsPage"));
+const ActivityScoresPage = lazy(() => import("@/pages/ActivityScoresPage"));
+const TeacherActivityAnalytics = lazy(() => import("@/pages/TeacherActivityAnalytics"));
+const AdminSubscriptionManagement = lazy(() => import("@/pages/AdminSubscriptionManagement"));
+
 import ContentProtection from "@/components/ContentProtection";
-import ActivityScoresPage from "@/pages/ActivityScoresPage";
-import TeacherActivityAnalytics from "@/pages/TeacherActivityAnalytics";
-import AdminSubscriptionManagement from "@/pages/AdminSubscriptionManagement";
 import { useUploadProgress, UploadProgressBar } from "@/components/UploadProgress";
 
 // Components
 import OnboardingTour from "@/components/OnboardingTour";
 import ChildQuickNav from "@/components/ChildQuickNav";
+
+// Minimal spinner shown while a lazy chunk is being fetched
+const PageLoader = () => (
+  <div className="min-h-screen bg-[#E0FBFC] flex items-center justify-center">
+    <div className="w-12 h-12 border-4 border-[#1D3557] border-t-[#FFD23F] rounded-full animate-spin" />
+  </div>
+);
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
@@ -240,6 +252,7 @@ function AppRouter() {
   return (
     <>
       <ScrollToTop />
+      <Suspense fallback={<PageLoader />}>
       <Routes>
       <Route path="/" element={<FinancialLiteracyPage />} />
       <Route path="/financial-literacy" element={<Navigate to="/" replace />} />
@@ -455,6 +468,7 @@ function AppRouter() {
         </ProtectedRoute>
       } />
     </Routes>
+      </Suspense>
     </>
   );
 }

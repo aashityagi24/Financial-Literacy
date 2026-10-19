@@ -60,11 +60,7 @@ export default function FinancialLiteracyPage() {
         console.log('No walkthrough video configured');
       }
     };
-    fetchWalkthroughVideos();
 
-    // Keep the "Start/Try for ₹X" marketing CTAs (hero button + exit-intent
-    // popup) in sync with the real 1-day trial price an admin sets in the
-    // Subscription plan-config, instead of a hardcoded number drifting apart.
     const fetchTrialPrice = async () => {
       try {
         const response = await axios.get(`${API}/subscriptions/plans`);
@@ -74,7 +70,14 @@ export default function FinancialLiteracyPage() {
         console.log('Could not fetch trial price, using default');
       }
     };
-    fetchTrialPrice();
+
+    // Defer non-critical API calls until after the first paint so they
+    // don't compete with rendering the visible content above the fold.
+    const timer = setTimeout(() => {
+      fetchWalkthroughVideos();
+      fetchTrialPrice();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [searchParams]);
 
   const handleLogin = () => {
