@@ -25,6 +25,7 @@ export default function FinancialLiteracyPage() {
   const [searchParams] = useSearchParams();
   const [walkthroughVideos, setWalkthroughVideos] = useState(null);
   const [selectedVideoTab, setSelectedVideoTab] = useState('child');
+  const [videoPlaying, setVideoPlaying] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState("Ages 7–8");
   const [trialPrice, setTrialPrice] = useState(49);
 
@@ -198,9 +199,16 @@ export default function FinancialLiteracyPage() {
               <div className="card-playful p-8 bg-white">
                 <img
                   data-testid="hero-image"
-                  src="https://customer-assets-lxgj4vgw.emergentagent.net/job_0398c744-4209-4c10-8036-86989679bc23/artifacts/js5jy0cl_1.png"
+                  src="/hero-child-800.webp"
+                  srcSet="/hero-child-400.webp 390w, /hero-child-800.webp 640w"
+                  sizes="(max-width: 1023px) 390px, 640px"
                   alt="Child learning about money with CoinQuest"
+                  width="640"
+                  height="799"
+                  fetchpriority="high"
+                  decoding="async"
                   className="w-full h-64 object-cover rounded-2xl border-3 border-[#1D3557]"
+                  style={{ aspectRatio: '640/799', contentVisibility: 'auto' }}
                 />
                 <div className="mt-6 grid grid-cols-3 gap-4">
                   <div className="text-center p-3 bg-[#FFD23F]/20 rounded-xl border-2 border-[#1D3557]">
@@ -238,7 +246,7 @@ export default function FinancialLiteracyPage() {
             <div className="max-w-4xl mx-auto">
               <div className="flex flex-wrap justify-center gap-4 mb-8">
                 <button
-                  onClick={() => setSelectedVideoTab('child')}
+                  onClick={() => { setSelectedVideoTab('child'); setVideoPlaying(false); }}
                   data-testid="video-tab-child"
                   className={`flex items-center gap-2 px-6 py-3 rounded-full border-2 transition-all cursor-pointer ${
                     selectedVideoTab === 'child'
@@ -252,7 +260,7 @@ export default function FinancialLiteracyPage() {
 
                 {walkthroughVideos.parent?.url && (
                   <button
-                    onClick={() => setSelectedVideoTab('parent')}
+                    onClick={() => { setSelectedVideoTab('parent'); setVideoPlaying(false); }}
                     data-testid="video-tab-parent"
                     className={`flex items-center gap-2 px-6 py-3 rounded-full border-2 transition-all cursor-pointer ${
                       selectedVideoTab === 'parent'
@@ -267,7 +275,7 @@ export default function FinancialLiteracyPage() {
 
                 {walkthroughVideos.teacher?.url && (
                   <button
-                    onClick={() => setSelectedVideoTab('teacher')}
+                    onClick={() => { setSelectedVideoTab('teacher'); setVideoPlaying(false); }}
                     data-testid="video-tab-teacher"
                     className={`flex items-center gap-2 px-6 py-3 rounded-full border-2 transition-all cursor-pointer ${
                       selectedVideoTab === 'teacher'
@@ -283,18 +291,43 @@ export default function FinancialLiteracyPage() {
 
               <div className="card-playful p-4 bg-white">
                 <div className="relative rounded-2xl overflow-hidden border-3 border-[#1D3557] bg-black aspect-video">
-                  <video
-                    key={selectedVideoTab}
-                    controls
-                    className="w-full h-full"
-                    poster={walkthroughVideos[selectedVideoTab]?.poster ? getAssetUrl(walkthroughVideos[selectedVideoTab].poster) : undefined}
-                    preload="metadata"
-                    playsInline
-                    data-testid="walkthrough-video-player"
-                  >
-                    <source src={getAssetUrl(walkthroughVideos[selectedVideoTab]?.url || walkthroughVideos.child?.url)} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
+                  {videoPlaying ? (
+                    <video
+                      key={selectedVideoTab}
+                      controls
+                      autoPlay
+                      className="w-full h-full"
+                      poster={walkthroughVideos[selectedVideoTab]?.poster ? getAssetUrl(walkthroughVideos[selectedVideoTab].poster) : undefined}
+                      preload="auto"
+                      playsInline
+                      data-testid="walkthrough-video-player"
+                    >
+                      <source src={getAssetUrl(walkthroughVideos[selectedVideoTab]?.url || walkthroughVideos.child?.url)} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <button
+                      onClick={() => setVideoPlaying(true)}
+                      className="w-full h-full flex items-center justify-center group"
+                      aria-label="Play walkthrough video"
+                      data-testid="walkthrough-video-player"
+                    >
+                      {walkthroughVideos[selectedVideoTab]?.poster ? (
+                        <img
+                          src={getAssetUrl(walkthroughVideos[selectedVideoTab].poster)}
+                          alt="Video thumbnail"
+                          className="absolute inset-0 w-full h-full object-cover"
+                          width="640" height="360"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#1D3557] to-[#3D5A80]" />
+                      )}
+                      <div className="relative z-10 w-16 h-16 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <svg className="w-7 h-7 text-[#1D3557] ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                      </div>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -446,7 +479,7 @@ export default function FinancialLiteracyPage() {
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">
               <div className="w-20 h-20 mx-auto mb-4 bg-[#FFD23F] rounded-full border-3 border-[#1D3557] flex items-center justify-center overflow-hidden p-2">
-                <img src="https://customer-assets.emergentagent.com/job_coinquest-kids-2/artifacts/hnfemth6_children.png" alt="Kids" className="w-full h-full object-contain" />
+                <img src="https://customer-assets.emergentagent.com/job_coinquest-kids-2/artifacts/hnfemth6_children.png" alt="Kids" width="72" height="72" loading="lazy" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>For your child</h3>
               <p className="text-[#3D5A80]">Grow a money garden, run a market stall and finish quests. Short, playful lessons made for ages 5–10.</p>
@@ -454,7 +487,7 @@ export default function FinancialLiteracyPage() {
 
             <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">
               <div className="w-20 h-20 mx-auto mb-4 bg-[#06D6A0] rounded-full border-3 border-[#1D3557] flex items-center justify-center overflow-hidden p-2">
-                <img src="https://customer-assets.emergentagent.com/job_coinquest-kids-2/artifacts/u42iscql_family.png" alt="Family" className="w-full h-full object-contain" />
+                <img src="https://customer-assets.emergentagent.com/job_coinquest-kids-2/artifacts/u42iscql_family.png" alt="Family" width="72" height="72" loading="lazy" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>For you</h3>
               <p className="text-[#3D5A80]">A dashboard that shows what your child learnt today, plus chores and pocket money you can set up together.</p>
@@ -462,7 +495,7 @@ export default function FinancialLiteracyPage() {
 
             <div className="bg-white rounded-3xl border-3 border-[#1D3557] shadow-[6px_6px_0px_0px_#1D3557] p-8 text-center">
               <div className="w-20 h-20 mx-auto mb-4 bg-[#EE6C4D] rounded-full border-3 border-[#1D3557] flex items-center justify-center overflow-hidden p-2">
-                <img src="https://customer-assets.emergentagent.com/job_coinquest-kids-2/artifacts/reffqcdx_school.png" alt="School" className="w-full h-full object-contain" />
+                <img src="https://customer-assets.emergentagent.com/job_coinquest-kids-2/artifacts/reffqcdx_school.png" alt="School" width="72" height="72" loading="lazy" className="w-full h-full object-contain" />
               </div>
               <h3 className="text-2xl font-bold text-[#1D3557] mb-3" style={{ fontFamily: 'Fredoka' }}>For schools</h3>
               <p className="text-[#3D5A80]">A ready-to-teach classroom programme with assessments and reports.</p>

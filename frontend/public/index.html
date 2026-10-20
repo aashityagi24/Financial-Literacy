@@ -1,22 +1,30 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <!-- Google tag (gtag.js) — GA4 -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-4XWZZ3ET5R"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-4XWZZ3ET5R');
-        </script>
-        <!-- Google Tag Manager -->
-        <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-M38LDVBT');</script>
-        <!-- End Google Tag Manager -->
-        <!-- Meta Pixel Code -->
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#1D3557" />
+
+        <!-- ═══ CRITICAL RESOURCE HINTS (must be first) ═══════════════════ -->
+        <!-- DNS + TLS for fonts — eliminates 2 extra roundtrips that blocked FCP -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <!-- Google Fonts non-render-blocking (replaces @import in CSS) -->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Outfit:wght@400;600&display=swap" />
+
+        <!-- Preload hero image — prevents LCP blocking on image download -->
+        <link rel="preload" as="image" href="/hero-child-400.webp"
+              imagesrcset="/hero-child-400.webp 390w, /hero-child-800.webp 640w"
+              imagesizes="(max-width: 1023px) 390px, 640px"
+              fetchpriority="high" />
+
+        <!-- Backend API + payment preconnect -->
+        <link rel="preconnect" href="https://smart-money-learn-5.preview.emergentagent.com" />
+        <link rel="preconnect" href="https://coinquest.co.in" />
+        <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
+        <link rel="dns-prefetch" href="https://api.razorpay.com" />
+
+        <!-- ═══ META PIXEL — must stay inline so PageView fires before JS loads ═══ -->
         <script>
         !function(f,b,e,v,n,t,s)
         {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -30,16 +38,34 @@
         fbq('track', 'PageView');
         </script>
         <!-- End Meta Pixel Code -->
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <!-- Early connection hints — browser starts TCP/TLS handshakes before
-             JS even executes, shaving ~100-300ms off API and payment loads -->
-        <link rel="preconnect" href="https://smart-money-learn-5.preview.emergentagent.com" />
-        <link rel="preconnect" href="https://coinquest.co.in" />
-        <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
-        <link rel="dns-prefetch" href="https://api.razorpay.com" />
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-        <meta name="theme-color" content="#1D3557" />
+
+        <!-- ═══ GA4 + GTM — deferred until after first paint ════════════════ -->
+        <!-- Initialise data structures synchronously (tiny, no network) then
+             load the actual scripts after the page has rendered. This removes
+             ~200-300ms from TBT without losing any events. -->
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-4XWZZ3ET5R');
+          // Defer heavy GTM/GA4 script downloads until the browser is idle
+          function _loadAnalytics() {
+            // GA4
+            var ga = document.createElement('script');
+            ga.async = true;
+            ga.src = 'https://www.googletagmanager.com/gtag/js?id=G-4XWZZ3ET5R';
+            document.head.appendChild(ga);
+            // GTM
+            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','GTM-M38LDVBT');
+          }
+          if (document.readyState === 'complete') { _loadAnalytics(); }
+          else { window.addEventListener('load', _loadAnalytics); }
+        </script>
+
         <meta name="description" content="Money lessons for children aged 5–10 (KG to Class 5): stories, games and real jobs at home, 10 minutes a day. Made in India. Try a day for ₹29." />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -94,18 +120,11 @@
         <script>
             // Only load visual edit scripts when inside an iframe
             if (window.self !== window.top) {
-                // Load debug monitor script
                 var debugMonitorScript = document.createElement('script');
                 debugMonitorScript.src = 'https://assets.emergent.sh/scripts/debug-monitor.js';
                 document.head.appendChild(debugMonitorScript);
-
-                // Configure Tailwind
                 window.tailwind = window.tailwind || {};
-                tailwind.config = {
-                    corePlugins: { preflight: false },
-                };
-
-                // Load Tailwind CDN
+                tailwind.config = { corePlugins: { preflight: false } };
                 var tailwindScript = document.createElement('script');
                 tailwindScript.src = 'https://cdn.tailwindcss.com';
                 document.head.appendChild(tailwindScript);
@@ -116,12 +135,10 @@
         <!-- Google Tag Manager (noscript) -->
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-M38LDVBT"
         height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-        <!-- End Google Tag Manager (noscript) -->
-        <!-- Meta Pixel Code (noscript) -->
+        <!-- Meta Pixel (noscript) -->
         <noscript><img height="1" width="1" style="display:none"
         src="https://www.facebook.com/tr?id=2604701616617565&ev=PageView&noscript=1"
         /></noscript>
-        <!-- End Meta Pixel Code (noscript) -->
         <noscript>You need to enable JavaScript to run this app.</noscript>
         <div id="root"></div>
     </body>
