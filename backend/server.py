@@ -58,14 +58,17 @@ import mimetypes as _mimetypes
 @api_router.get("/uploads/{file_path:path}")
 async def serve_uploaded_file(file_path: str):
     local_path = UPLOADS_DIR / file_path
+    # Content-addressed uploads (video posters, thumbnails, etc.) never change
+    # once uploaded, so long-lived caching is safe.
+    cache_headers = {"Cache-Control": "public, max-age=31536000, immutable"}
     if local_path.is_file():
-        return FileResponse(str(local_path))
+        return FileResponse(str(local_path), headers=cache_headers)
     try:
         data, content_type = _storage_get_object(file_path)
     except Exception:
         raise HTTPException(status_code=404, detail="File not found")
     guessed = _mimetypes.guess_type(file_path)[0]
-    return Response(content=data, media_type=guessed or content_type)
+    return Response(content=data, media_type=guessed or content_type, headers=cache_headers)
 
 # ============== MODULAR ROUTES INITIALIZATION ==============
 # Initialize modular route modules with database

@@ -1,8 +1,13 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import { SchoolEnquiryDialog } from '@/components/SchoolEnquiryDialog';
 import { smoothScrollToElement } from '@/utils/smoothScroll';
+
+// Lazy-load the school enquiry dialog — removes @radix-ui/react-dialog from the main bundle.
+// It loads on first click (instant since bundle is small); we also prefetch on idle below.
+const SchoolEnquiryDialog = lazy(() =>
+  import('@/components/SchoolEnquiryDialog').then(m => ({ default: m.SchoolEnquiryDialog }))
+);
 
 const SECTION_LINKS = [
   { label: 'How It Works', sectionId: 'how-it-works', testId: 'how-it-works' },
@@ -17,6 +22,17 @@ export function SiteHeader() {
 
   const isSchoolsPage = location.pathname === '/for-schools';
   const isWorkshopPage = location.pathname === '/entrepreneurship-workshop';
+
+  // Prefetch the enquiry dialog on idle so it's instant when the button is clicked
+  useState(() => {
+    const prefetch = () => import('@/components/SchoolEnquiryDialog');
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(prefetch, { timeout: 4000 });
+      return () => cancelIdleCallback(id);
+    }
+    const t = setTimeout(prefetch, 3500);
+    return () => clearTimeout(t);
+  });
 
   const scrollToSection = (sectionId) => {
     setMenuOpen(false);
@@ -151,7 +167,9 @@ export function SiteHeader() {
         </div>
       )}
 
-      <SchoolEnquiryDialog open={showSchoolEnquiry} onOpenChange={setShowSchoolEnquiry} />
+      <Suspense fallback={null}>
+        <SchoolEnquiryDialog open={showSchoolEnquiry} onOpenChange={setShowSchoolEnquiry} />
+      </Suspense>
     </div>
   );
 }

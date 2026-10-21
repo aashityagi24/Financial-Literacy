@@ -147,9 +147,15 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Live Classes (`db.live_classes`): admin-managed dated sessions, grade-range + curriculum scoped, visible to child/parent only.
 - See `CHANGELOG.md` for the full chronological implementation log and `ROADMAP.md` for the prioritized backlog.
 
-## Performance Architecture (Oct 2026)
-- Self-hosted fonts: `/public/fonts/fredoka-latin.woff2` + `/public/fonts/outfit-latin.woff2` (variable fonts, Latin subset, ~30 KB each). `@font-face` declared inline in `index.html`; preloaded with `<link rel="preload" as="font">`. No Google Fonts dependency.
+## Performance Architecture (Oct–Nov 2026)
+- Self-hosted fonts: `/public/fonts/fredoka-latin.woff2` + `/public/fonts/outfit-latin.woff2` (variable fonts, Latin subset, ~30 KB each). `@font-face` declared inline in `index.html`; preloaded with `<link rel="preload" as="font">`. No Google Fonts dependency. → eliminated FCP bottleneck (was 2.7s → now 1.7s).
+- Hero image: AVIF 400/800w (`/public/hero-child-400.avif`, `hero-child-800.avif`). `<picture>` with AVIF→WebP fallback. `<link rel="preload" as="image">` in head with AVIF `imagesrcset`.
+- Social proof images: Local WebP in `/public/images/` (converted from external CDN PNGs, saves ~59 KB + external CDN requests eliminated).
 - Route-level code splitting: all authenticated/admin/teacher routes lazy-loaded via `React.lazy()` in App.js.
-- Below-fold splitting: `PricingSection`, `FAQSection`, `ExitIntentPopup` lazy-loaded in `FinancialLiteracyPage` with idle-callback prefetch.
-- `react-snap` postbuild is non-fatal (`react-snap || true`); crawls public pages for static HTML but build proceeds even if Chromium is unavailable.
-- Browserslist: `defaults, not dead, Android >= 7, Samsung >= 14` (covers Samsung Internet + older Android WebViews common in India).
+- PricingSection: eagerly imported in both FinancialLiteracyPage and RegisterPage (webpack keeps it in main.js; Suspense wrapper removed to avoid hydration gap).
+- FAQSection, ExitIntentPopup: lazy-loaded in FinancialLiteracyPage.
+- `react-snap` postbuild is non-fatal (`react-snap || true`); crawls /, /register, /for-schools, /terms, /refunds, /entrepreneurship-workshop.
+- Browserslist: `defaults, not dead, Android >= 7, Samsung >= 14`.
+- LCP fix: walkthrough video section (previously conditional on `walkthroughVideos?.child?.url`) now always rendered when data exists; poster image uses `fetchPriority="high"` (not `loading="lazy"`). Eliminates API-gated LCP element appearing at 8.7s.
+- Cache headers: `/api/uploads/*` now returns `Cache-Control: public, max-age=31536000, immutable`.
+- Static JS/CSS cache headers require platform-level nginx config (not in application code). JS/CSS filenames contain content hashes so long-lived caching is safe once platform is configured.
