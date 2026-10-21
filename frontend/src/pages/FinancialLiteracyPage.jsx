@@ -161,7 +161,7 @@ export default function FinancialLiteracyPage() {
 
         <div className="container mx-auto px-6 pb-6 pt-4 sm:pt-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="animate-bounce-in">
+            <div>
               <h1
                 className="font-bold text-[#1D3557] mb-3 sm:mb-6"
                 style={{ fontFamily: 'Fredoka', fontSize: 'clamp(2rem, 7.5vw, 3.5rem)', lineHeight: '1.1' }}
@@ -195,20 +195,19 @@ export default function FinancialLiteracyPage() {
               </div>
             </div>
 
-            <div className="relative animate-bounce-in stagger-2">
+            <div className="relative">
               <div className="card-playful p-8 bg-white">
                 <img
                   data-testid="hero-image"
                   src="/hero-child-800.webp"
-                  srcSet="/hero-child-400.webp 390w, /hero-child-800.webp 640w"
-                  sizes="(max-width: 1023px) 390px, 640px"
+                  srcSet="/hero-child-400.webp 390w, /hero-child-800.webp 800w"
+                  sizes="(max-width: 1023px) calc(100vw - 96px), 640px"
                   alt="Child learning about money with CoinQuest"
-                  width="640"
-                  height="799"
+                  width="800"
+                  height="999"
                   fetchpriority="high"
-                  decoding="async"
+                  decoding="sync"
                   className="w-full h-64 object-cover rounded-2xl border-3 border-[#1D3557]"
-                  style={{ aspectRatio: '640/799', contentVisibility: 'auto' }}
                 />
                 <div className="mt-6 grid grid-cols-3 gap-4">
                   <div className="text-center p-3 bg-[#FFD23F]/20 rounded-xl border-2 border-[#1D3557]">
