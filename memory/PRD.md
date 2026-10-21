@@ -146,3 +146,10 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Money Masters batches (`db.money_masters_batches`): admin-managed, per-grade, dated, priced cohorts — buying one includes that batch's live classes and curriculum content, no base plan required.
 - Live Classes (`db.live_classes`): admin-managed dated sessions, grade-range + curriculum scoped, visible to child/parent only.
 - See `CHANGELOG.md` for the full chronological implementation log and `ROADMAP.md` for the prioritized backlog.
+
+## Performance Architecture (Oct 2026)
+- Self-hosted fonts: `/public/fonts/fredoka-latin.woff2` + `/public/fonts/outfit-latin.woff2` (variable fonts, Latin subset, ~30 KB each). `@font-face` declared inline in `index.html`; preloaded with `<link rel="preload" as="font">`. No Google Fonts dependency.
+- Route-level code splitting: all authenticated/admin/teacher routes lazy-loaded via `React.lazy()` in App.js.
+- Below-fold splitting: `PricingSection`, `FAQSection`, `ExitIntentPopup` lazy-loaded in `FinancialLiteracyPage` with idle-callback prefetch.
+- `react-snap` postbuild is non-fatal (`react-snap || true`); crawls public pages for static HTML but build proceeds even if Chromium is unavailable.
+- Browserslist: `defaults, not dead, Android >= 7, Samsung >= 14` (covers Samsung Internet + older Android WebViews common in India).

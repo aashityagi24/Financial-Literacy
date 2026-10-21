@@ -1,14 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, School, Play, PiggyBank, HandCoins, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
-import PricingSection from '@/components/PricingSection';
-import { FAQSection } from '@/components/FAQSection';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
-import { ExitIntentPopup } from '@/components/ExitIntentPopup';
 import { trackMetaPixelPageView } from '@/utils/metaPixel';
+
+// Below-fold components — lazy-loaded so they don't ship in the initial JS bundle.
+// Pricing, FAQ, and ExitIntentPopup are never visible above the fold.
+const PricingSection = lazy(() => import('@/components/PricingSection'));
+const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ default: m.FAQSection })));
+const ExitIntentPopup = lazy(() => import('@/components/ExitIntentPopup').then(m => ({ default: m.ExitIntentPopup })));
+
+// Tiny fallback while below-fold sections are fetched
+const SectionFallback = () => <div className="py-20" aria-hidden="true" />;
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -149,10 +155,30 @@ export default function FinancialLiteracyPage() {
     },
   };
 
+  // Prefetch below-fold chunks immediately after first paint so they're ready
+  // before the user scrolls or clicks "Try a day". Uses idle callback to avoid
+  // competing with LCP/FCP rendering.
+  useEffect(() => {
+    const prefetch = () => {
+      import('@/components/PricingSection');
+      import('@/components/FAQSection');
+      import('@/components/ExitIntentPopup');
+    };
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(prefetch, { timeout: 3000 });
+      return () => cancelIdleCallback(id);
+    }
+    // Fallback for browsers without requestIdleCallback (e.g. Safari)
+    const t = setTimeout(prefetch, 2500);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#E0FBFC]">
       <SiteHeader />
-      <ExitIntentPopup trialPrice={trialPrice} />
+      <Suspense fallback={null}>
+        <ExitIntentPopup trialPrice={trialPrice} />
+      </Suspense>
 
       {/* Hero Section */}
       <header className="relative overflow-hidden">
@@ -511,10 +537,14 @@ export default function FinancialLiteracyPage() {
       </section>
 
       {/* FAQ Section */}
-      <FAQSection onBuyDay={() => window.dispatchEvent(new CustomEvent('coinquest:buy-now', { detail: { duration: '1_day' } }))} />
+      <Suspense fallback={<SectionFallback />}>
+        <FAQSection onBuyDay={() => window.dispatchEvent(new CustomEvent('coinquest:buy-now', { detail: { duration: '1_day' } }))} />
+      </Suspense>
 
       {/* Pricing Section */}
-      <PricingSection />
+      <Suspense fallback={<SectionFallback />}>
+        <PricingSection />
+      </Suspense>
 
       {/* Footer */}
       <SiteFooter />

@@ -6,11 +6,37 @@
         <meta name="theme-color" content="#1D3557" />
 
         <!-- ═══ CRITICAL RESOURCE HINTS (must be first) ═══════════════════ -->
-        <!-- DNS + TLS for fonts — eliminates 2 extra roundtrips that blocked FCP -->
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <!-- Google Fonts non-render-blocking (replaces @import in CSS) -->
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Outfit:wght@400;600&display=swap" />
+        <!-- Self-hosted fonts — preload the 2 WOFF2 files so they start downloading
+             before the CSS is parsed. No external round-trip to Google Fonts. -->
+        <link rel="preload" as="font" type="font/woff2"
+              href="/fonts/fredoka-latin.woff2" crossorigin />
+        <link rel="preload" as="font" type="font/woff2"
+              href="/fonts/outfit-latin.woff2" crossorigin />
+
+        <!-- Inline @font-face — zero extra network request; references /fonts/ which
+             is served straight from /public/fonts/, bypassing webpack. -->
+        <style>
+          @font-face {
+            font-family: 'Fredoka';
+            font-style: normal;
+            font-weight: 100 900;
+            font-display: swap;
+            src: url('/fonts/fredoka-latin.woff2') format('woff2');
+            unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,
+              U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,
+              U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+          }
+          @font-face {
+            font-family: 'Outfit';
+            font-style: normal;
+            font-weight: 100 900;
+            font-display: swap;
+            src: url('/fonts/outfit-latin.woff2') format('woff2');
+            unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,
+              U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,
+              U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+          }
+        </style>
 
         <!-- Preload hero image — prevents LCP blocking on image download -->
         <link rel="preload" as="image" href="/hero-child-800.webp"

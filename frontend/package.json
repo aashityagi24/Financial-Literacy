@@ -63,14 +63,15 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "postbuild": "react-snap",
+    "postbuild": "react-snap || true",
     "test": "craco test"
   },
   "browserslist": {
     "production": [
-      ">0.2%",
+      "defaults",
       "not dead",
-      "not op_mini all"
+      "Android >= 7",
+      "Samsung >= 14"
     ],
     "development": [
       "last 1 chrome version",
@@ -99,7 +100,6 @@
     "skipThirdPartyRequests": true,
     "headless": true,
     "puppeteerArgs": ["--no-sandbox", "--disable-setuid-sandbox"],
-    "inlineCss": true,
     "saveAs": "html",
     "fixInsecureRequests": true
   },

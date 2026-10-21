@@ -1,5 +1,6 @@
-/* Fonts loaded via <link> in index.html (non-render-blocking).
-   @import here would block all CSS parsing until Google Fonts responds. */
+/* Self-hosted variable fonts — declared via inline <style> in index.html so webpack
+   doesn't try to resolve the absolute /fonts/ path.
+   @font-face rules are in index.html for zero-RTT font loading with preload. */
 
 /* ── CLS prevention ─────────────────────────────────────────────────────────
    Set aspect-ratio on media containers so the browser reserves space before
