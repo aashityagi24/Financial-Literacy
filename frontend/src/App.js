@@ -8,6 +8,7 @@ import SubscriptionExpiredGate from "@/components/SubscriptionExpiredGate";
 
 // Landing page — loaded immediately (it IS the first screen every visitor sees)
 import FinancialLiteracyPage from "@/pages/FinancialLiteracyPage";
+import ZainPage from "@/pages/ZainPage";
 // AuthCallback handles a URL hash synchronously at the top of AppRouter, so it
 // must be a direct import (lazy loads fire after render, which is too late).
 import AuthCallback from "@/pages/AuthCallback";
@@ -61,6 +62,7 @@ const RefundsPage = lazy(() => import("@/pages/RefundsPage"));
 const ActivityScoresPage = lazy(() => import("@/pages/ActivityScoresPage"));
 const TeacherActivityAnalytics = lazy(() => import("@/pages/TeacherActivityAnalytics"));
 const AdminSubscriptionManagement = lazy(() => import("@/pages/AdminSubscriptionManagement"));
+
 
 import ContentProtection from "@/components/ContentProtection";
 import { useUploadProgress, UploadProgressBar } from "@/components/UploadProgress";
@@ -258,6 +260,7 @@ function AppRouter() {
       <Route path="/financial-literacy" element={<Navigate to="/" replace />} />
       <Route path="/entrepreneurship-workshop" element={<EntrepreneurshipWorkshopPage />} />
       <Route path="/for-schools" element={<ForSchoolsPage />} />
+      <Route path="/zain" element={<ZainPage />} />
       <Route path="/login" element={<AuthPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/signup" element={<Navigate to="/register" replace />} />

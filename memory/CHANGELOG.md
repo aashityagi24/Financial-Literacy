@@ -1510,3 +1510,21 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
   - Verified via live screenshots of both the Dashboard (classroom card correctly hidden/shown per user) and the simplified Giving page.
 
 - **Workshop track grade boundaries corrected (Aug 26, 2026)**: `EntrepreneurshipWorkshopPage.jsx` TRACKS array grade ranges changed per user spec — Kidpreneur grade 1-3 -> grade 1-2 (age label "Ages 6-8" -> "Ages 6-7"), Youngpreneur grade 4-6 -> grade 3-5 ("Ages 9-11" -> "Ages 8-10"), Teenpreneur grade 7-9 -> grade 6-9 ("Ages 12-15" -> "Ages 11-14"). The Lessons tab already pulled grade-filtered content via `/subscriptions/money-masters/public-curriculum?min_grade=&max_grade=`, so this was a pure boundary fix, no backend change needed. Verified via curl (different topic counts per range) + live screenshots of all 3 tracks' Lessons tabs.
+
+
+### /zain Meta-Ad Landing Page (Oct 31, 2026) ✅
+- **New public React route `/zain`** — standalone landing page for "Zain's big dreams" Meta ad campaign. No login required; accessible by anyone.
+- **All required sections built:**
+  - Hero: pill "A REAL COINQUEST MONEY STORY", heading, sub-line "3 minutes · No sign-up · Ages 5–10", yellow "Start the story →" CTA, trust line "1,100+ children learning"
+  - Story player: fetches story via new public API `/api/public/story/zain`; embeds HTML book in iframe when story exists; graceful "Story coming soon" fallback in preview (story only in production DB)
+  - After-story: 3 learning points, "Your child enjoyed that? There are 500+ more." heading, supporting copy, "Try a day for ₹49 →" CTA, WhatsApp link to 9328705924
+  - What is CoinQuest section
+  - Parent dashboard screenshot (generated representative image)
+  - FAQ accordion: 3 questions (screen time / ages / safety)
+  - Bottom dark CTA section
+  - Sticky bar: shows after 60 seconds or when user scrolls past story section
+- **Razorpay checkout directly on page**: inline modal (name/email/phone) → create-order → Razorpay SDK → verify-payment → redirect to /complete-signup
+- **Meta Pixel events**: PageView on mount, ViewContent (5s engagement or "Start the story" tap), StoryComplete custom event (3 min after story starts, once per visit via sessionStorage), InitiateCheckout on CTA tap, Purchase + StartTrial on payment success
+- **Backend public endpoint**: `GET /api/public/story/zain` (no auth) — searches DB for Zain story by title, returns html_url + metadata for the iframe
+- **Images**: removed old unapproved generated story images; dashboard image saved to `/public/images/zain-dashboard.webp`
+- **Testing**: 13/13 frontend tests passing (iteration_131.json); unauthenticated access confirmed; checkout modal verified; FAQ accordion verified; WhatsApp link verified

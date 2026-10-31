@@ -939,6 +939,31 @@ async def complete_content_item(content_id: str, request: Request):
         "streak_reward": streak_result["reward"] if streak_result else 0,
     }
 
+# ============== PUBLIC LANDING PAGE ROUTES ==============
+
+@router.get("/public/story/zain")
+async def get_zain_story_public():
+    """Public endpoint for the /zain landing page — no auth required.
+    Returns the Zain story metadata so the standalone landing page can
+    embed the story without requiring users to be logged in."""
+    story = await db.content_items.find_one(
+        {"title": {"$regex": "zain", "$options": "i"}, "is_published": True},
+        {"_id": 0}
+    )
+    if not story:
+        raise HTTPException(status_code=404, detail="Story not found")
+
+    cd = story.get("content_data", {})
+    return {
+        "title": story.get("title"),
+        "description": story.get("description", ""),
+        "content_type": story.get("content_type"),
+        "thumbnail": story.get("thumbnail"),
+        "html_url": cd.get("html_url"),
+        "audio_url": cd.get("audio_url"),
+    }
+
+
 # ============== ADMIN CONTENT ROUTES ==============
 
 @router.get("/admin/content/topics")
