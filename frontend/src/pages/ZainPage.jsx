@@ -470,7 +470,7 @@ export default function ZainPage() {
         <div className="max-w-sm mx-auto text-center">
           <img
             src="/images/zain-dashboard.webp"
-            alt="CoinQuest parent dashboard showing child's daily progress"
+            alt="CoinQuest Parent Dashboard showing children's learning progress, chores, rewards and money story"
             className="w-full max-w-xs mx-auto rounded-2xl shadow-lg mb-4"
             loading="lazy"
           />
