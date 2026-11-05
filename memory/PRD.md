@@ -160,12 +160,22 @@ A gamified financial literacy learning application for children (K-5) with disti
 - Cache headers: `/api/uploads/*` now returns `Cache-Control: public, max-age=31536000, immutable`.
 - Static JS/CSS cache headers require platform-level nginx config (not in application code). JS/CSS filenames contain content hashes so long-lived caching is safe once platform is configured.
 
-## /zain Landing Page (Oct 31, 2026)
+## /zain Landing Page (Oct 31, 2026 — updated Nov 2026)
 - New public route `/zain` — Meta-ad landing page for "Zain's big dreams" story; no login required.
 - `ZainPage.jsx` in `src/pages/`: eagerly imported (not lazy) for immediate render on `/zain`.
 - Backend: `GET /api/public/story/zain` — searches DB for Zain story (case-insensitive), returns html_url + thumbnail (no auth).
 - Story displayed in iframe (html_url from API); graceful "Story coming soon" fallback when not found.
-- Meta Pixel: PageView, ViewContent (5s engagement), StoryComplete custom (3 min timer, once per visit), InitiateCheckout, Purchase, StartTrial.
+- Story iframe confirmed lightweight standalone HTML (NOT main React bundle) — same format as Sia/Mia stories.
+- **postMessage tracking (Nov 2026):** `injectStoryTracker` injects JS on iframe load; hooks next/prev button clicks and sends:
+  - `{type:'cq_story', event:'page', page:N, story:'zain_story'}` on each navigation
+  - `{type:'cq_story', event:'started', story:'zain_story'}` once when page >= 2
+  - `{type:'cq_story', event:'completed', story:'zain_story'}` once on last page (nextBtn.disabled)
+  - Target origin `'*'`; parent listener validates `e.origin === window.location.origin`
+- Parent message listener fires Meta `ViewContent` (once per visit) on started/page≥2, `StoryComplete` custom event on completed; GA4 `story_started` / `story_completed` events.
+- After-story section (learning points + ₹29 CTA) revealed only on `completed` message.
+- 3-min timer fallback for StoryComplete if injection fails (cross-origin iframe).
+- Meta Pixel: PageView on load, ViewContent (postMessage or button-click), StoryComplete (postMessage), InitiateCheckout, Purchase, StartTrial.
+- **Pricing (Nov 2026):** 1-day plan updated to ₹29 (DEFAULT_PLANS code + preview DB via admin API). Production DB may need admin-panel update if previous ₹49 override exists.
 - Razorpay checkout inline: modal with name/email/phone → /api/subscriptions/create-order → Razorpay SDK → verify → /complete-signup.
 - Sticky bar: appears after 60s OR when story section exits viewport (IntersectionObserver).
-- Dashboard screenshot at `/public/images/zain-dashboard.webp`.
+- Dashboard screenshot at `/public/images/zain-dashboard.webp` (real user-provided screenshot).

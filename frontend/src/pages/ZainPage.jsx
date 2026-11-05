@@ -103,20 +103,52 @@ export default function ZainPage() {
     return () => obs.disconnect();
   }, [story]);
 
-  // ── Listen for postMessage from story iframe (last page) ──────────────────
+  // ── Listen for postMessages from the story iframe ────────────────────────
   useEffect(() => {
-    const handler = (e) => {
-      if (e.data?.type === 'cq_story_last_page') {
+    const handleMsg = (e) => {
+      // Security: only accept messages from the same origin
+      if (e.origin !== window.location.origin) return;
+      const d = e.data;
+      if (!d || d.type !== 'cq_story' || d.story !== 'zain_story') return;
+
+      // 'started' OR reaching page 2+ → ViewContent (once per visit)
+      if (d.event === 'started' || (d.event === 'page' && d.page >= 2)) {
+        if (!vcFired.current) {
+          vcFired.current = true;
+          sessionStorage.setItem('cq_zain_vc', '1');
+          fbq('track', 'ViewContent', { content_name: 'zain_story' });
+          if (typeof window.gtag === 'function') {
+            window.gtag('event', 'story_started', {
+              event_category: 'engagement',
+              story_name: 'zain_story',
+            });
+          }
+        }
+      }
+
+      // 'completed' → StoryComplete + reveal after-story section (once per visit)
+      if (d.event === 'completed') {
         setStoryComplete(true);
         setShowStickyBar(true);
-        fireStoryComplete();
+        if (!scFired.current) {
+          scFired.current = true;
+          sessionStorage.setItem('cq_zain_sc', '1');
+          fbq('trackCustom', 'StoryComplete', { content_name: 'zain_story' });
+          if (typeof window.gtag === 'function') {
+            window.gtag('event', 'story_completed', {
+              event_category: 'engagement',
+              story_name: 'zain_story',
+            });
+          }
+        }
       }
     };
-    window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
+
+    window.addEventListener('message', handleMsg);
+    return () => window.removeEventListener('message', handleMsg);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Inject last-page tracker into story iframe ───────────────────────────
+  // ── Inject page-tracking script into story iframe ───────────────────────
   const injectStoryTracker = useCallback(() => {
     try {
       const iDoc = iframeRef.current?.contentWindow?.document;
@@ -125,21 +157,50 @@ export default function ZainPage() {
       const script = iDoc.createElement('script');
       script.textContent = `
         (function () {
+          if (window.__cq_tracker_installed) return;
+          window.__cq_tracker_installed = true;
           var nextBtn = document.getElementById('next-btn');
+          var prevBtn = document.getElementById('prev-btn');
           if (!nextBtn) return;
-          function check() {
-            if (nextBtn.disabled) {
-              window.parent.postMessage({ type: 'cq_story_last_page' }, '*');
-            }
+
+          var STORY = 'zain_story';
+          var startedOnce = false;
+          var completedOnce = false;
+          var pageNum = 1; // 1-based; title page = 1
+
+          function post(evt, extra) {
+            var msg = { type: 'cq_story', event: evt, story: STORY };
+            if (extra && extra.page !== undefined) msg.page = extra.page;
+            // '*' is safe — the parent listener validates origin before processing
+            window.parent.postMessage(msg, '*');
           }
-          check(); // check immediately in case already on last page
-          var obs = new MutationObserver(check);
-          obs.observe(nextBtn, { attributes: true, attributeFilter: ['disabled'] });
+
+          nextBtn.addEventListener('click', function () {
+            // existing handler already ran (renderPages is synchronous) —
+            // pageNum/disabled state is already updated
+            pageNum++;
+            post('page', { page: pageNum });
+            if (!startedOnce && pageNum >= 2) {
+              startedOnce = true;
+              post('started');
+            }
+            if (!completedOnce && nextBtn.disabled) {
+              completedOnce = true;
+              post('completed');
+            }
+          });
+
+          if (prevBtn) {
+            prevBtn.addEventListener('click', function () {
+              if (pageNum > 1) pageNum--;
+              post('page', { page: pageNum });
+            });
+          }
         })();
       `;
       iDoc.head.appendChild(script);
     } catch (_) {
-      // cross-origin or unavailable — safe to ignore (timer fallback below)
+      // cross-origin iframe — safe to ignore; 3-min timer fallback still fires
     }
   }, []);
 

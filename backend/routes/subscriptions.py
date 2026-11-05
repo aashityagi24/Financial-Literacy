@@ -120,7 +120,7 @@ DURATION_MAP = {
 
 DEFAULT_PLANS = {
     "single_parent": {
-        "1_day": {"base_price": 49, "child_prices": [29, 25, 20, 15], "extra_child_per_day": 29},
+        "1_day": {"base_price": 29, "child_prices": [19, 15, 12, 10], "extra_child_per_day": 19},
         "1_month": {"base_price": 499, "child_prices": [179, 149, 119, 99], "extra_child_per_day": 6.0},
         "6_months": {"base_price": 2299, "child_prices": [799, 649, 519, 399], "extra_child_per_day": 4.4},
         "1_year": {"base_price": 3999, "child_prices": [1299, 1049, 849, 649], "extra_child_per_day": 3.6},
