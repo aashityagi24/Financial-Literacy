@@ -1,6 +1,7 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, UploadFile, File, Form
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.gzip import GZipMiddleware
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -56,19 +57,82 @@ from services.object_storage import get_object as _storage_get_object
 import mimetypes as _mimetypes
 
 @api_router.get("/uploads/{file_path:path}")
-async def serve_uploaded_file(file_path: str):
+async def serve_uploaded_file(request: Request, file_path: str):
     local_path = UPLOADS_DIR / file_path
-    # Content-addressed uploads (video posters, thumbnails, etc.) never change
-    # once uploaded, so long-lived caching is safe.
+    # Uploaded files get a new random name on every upload and never change, so
+    # long-lived caching is safe.  Videos must also support Range so browsers
+    # can seek and iPhones / iPads can play them.
     cache_headers = {"Cache-Control": "public, max-age=31536000, immutable"}
+    media_type = _mimetypes.guess_type(file_path)[0] or "application/octet-stream"
+
     if local_path.is_file():
-        return FileResponse(str(local_path), headers=cache_headers)
+        file_size = os.path.getsize(str(local_path))
+        range_header = request.headers.get("range", "")
+        if range_header.startswith("bytes="):
+            try:
+                spec = range_header[6:].strip()
+                start_str, end_str = spec.split("-", 1)
+                start = int(start_str) if start_str else 0
+                end   = int(end_str)   if end_str   else file_size - 1
+                end   = min(end, file_size - 1)
+                length = end - start + 1
+                with open(str(local_path), "rb") as fh:
+                    fh.seek(start)
+                    partial = fh.read(length)
+                return Response(
+                    content=partial,
+                    status_code=206,
+                    media_type=media_type,
+                    headers={
+                        **cache_headers,
+                        "Content-Range": f"bytes {start}-{end}/{file_size}",
+                        "Accept-Ranges": "bytes",
+                        "Content-Length": str(length),
+                    },
+                )
+            except (ValueError, IndexError, IOError):
+                pass  # Fall through to full-file response
+        return FileResponse(
+            str(local_path),
+            media_type=media_type,
+            headers={**cache_headers, "Accept-Ranges": "bytes"},
+        )
+
+    # Object storage fallback (deployed pods have ephemeral disks)
     try:
         data, content_type = _storage_get_object(file_path)
     except Exception:
         raise HTTPException(status_code=404, detail="File not found")
     guessed = _mimetypes.guess_type(file_path)[0]
-    return Response(content=data, media_type=guessed or content_type, headers=cache_headers)
+    ct = guessed or content_type
+    total = len(data)
+    range_header = request.headers.get("range", "")
+    if range_header.startswith("bytes="):
+        try:
+            spec = range_header[6:].strip()
+            start_str, end_str = spec.split("-", 1)
+            start = int(start_str) if start_str else 0
+            end   = int(end_str)   if end_str   else total - 1
+            end   = min(end, total - 1)
+            partial = data[start:end + 1]
+            return Response(
+                content=partial,
+                status_code=206,
+                media_type=ct,
+                headers={
+                    **cache_headers,
+                    "Content-Range": f"bytes {start}-{end}/{total}",
+                    "Accept-Ranges": "bytes",
+                    "Content-Length": str(len(partial)),
+                },
+            )
+        except (ValueError, IndexError):
+            pass
+    return Response(
+        content=data,
+        media_type=ct,
+        headers={**cache_headers, "Accept-Ranges": "bytes"},
+    )
 
 # ============== MODULAR ROUTES INITIALIZATION ==============
 # Initialize modular route modules with database
@@ -1326,6 +1390,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Compress JSON/HTML/text responses ≥ 1 KB.  Binary types (images, video,
+# PDF) are already compressed and are skipped automatically by content-type.
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 # ============== ROLLING SESSION MIDDLEWARE ==============
 # Keeps an actively-used session alive: every time a valid session cookie is
 # seen, its expiry is pushed forward by SESSION_TTL_DAYS. An abandoned session
@@ -1378,15 +1446,17 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     
-    # For uploaded content, add extra protection
+    # For uploaded content, deliver inline and add CSP for HTML
     if "/api/uploads/" in str(request.url.path):
-        # Prevent content from being downloaded directly
         response.headers["Content-Disposition"] = "inline"
-        # Prevent caching of sensitive content
-        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
-        response.headers["Pragma"] = "no-cache"
-        response.headers["Expires"] = "0"
-        # Content Security Policy for HTML content
+        # Cache-Control is already set to immutable by the route handler;
+        # do NOT override it here.  Remove legacy no-cache fields.
+        for h in ("pragma", "expires"):
+            try:
+                del response.headers[h]
+            except KeyError:
+                pass
+        # Content Security Policy for HTML story/activity files
         if request.url.path.endswith('.html'):
             response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
     

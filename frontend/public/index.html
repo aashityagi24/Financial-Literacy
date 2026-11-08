@@ -46,7 +46,6 @@
               fetchpriority="high" type="image/avif" />
 
         <!-- Backend API + payment preconnect -->
-        <link rel="preconnect" href="https://smart-money-learn-5.preview.emergentagent.com" />
         <link rel="preconnect" href="https://coinquest.co.in" />
         <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
         <link rel="dns-prefetch" href="https://api.razorpay.com" />
@@ -144,19 +143,6 @@
         <link rel="manifest" href="/manifest.json" />
         
         <title>Financial Literacy for Kids in India | CoinQuest by Learners' Planet</title>
-        <script>
-            // Only load visual edit scripts when inside an iframe
-            if (window.self !== window.top) {
-                var debugMonitorScript = document.createElement('script');
-                debugMonitorScript.src = 'https://assets.emergent.sh/scripts/debug-monitor.js';
-                document.head.appendChild(debugMonitorScript);
-                window.tailwind = window.tailwind || {};
-                tailwind.config = { corePlugins: { preflight: false } };
-                var tailwindScript = document.createElement('script');
-                tailwindScript.src = 'https://cdn.tailwindcss.com';
-                document.head.appendChild(tailwindScript);
-            }
-        </script>
     </head>
     <body>
         <!-- Google Tag Manager (noscript) -->
