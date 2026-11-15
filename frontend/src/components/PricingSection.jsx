@@ -67,12 +67,16 @@ export default function PricingSection() {
     if (showCheckout && !prevShowCheckout.current) {
       const path = window.location.pathname;
       if (path === '/' || path === '/register') {
+        const plan = plans?.[selectedPlanType]?.[selectedDuration];
+        let price = plan?.base_price || 0;
+        const cp = plan?.child_prices || [];
+        for (let i = 1; i < numChildren; i++) price += (cp[i - 1] || 0);
         const contentName = DURATION_LABELS[selectedDuration]?.short || selectedDuration;
-        trackMetaPixelInitiateCheckout(totalPrice, contentName, numChildren);
+        trackMetaPixelInitiateCheckout(price, contentName, numChildren);
       }
     }
     prevShowCheckout.current = showCheckout;
-  }, [showCheckout, selectedDuration, numChildren, totalPrice]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [showCheckout, selectedDuration, numChildren, selectedPlanType, plans]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Allow other components (e.g. the LandingPage hero "Start for ₹49" CTA) to
   // deep-link straight into the 1-day Buy Now flow. Dispatch:
