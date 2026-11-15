@@ -1797,6 +1797,46 @@ async def process_recurring_allowances():
             "created_at": today.isoformat()
         })
 
+
+# ── Serve React production build (registered last, after all API routes) ──────
+# GZipMiddleware (added above) compresses all responses ≥ 1 KB including JS/CSS.
+# In the preview environment yarn start handles the frontend on port 3000; this
+# code activates only when the production build directory is present, which is
+# always the case after `yarn build` runs during the deployment pipeline.
+#
+# Cache policy:
+#   /static/**        content-hashed by webpack → safe for 1-year immutable cache
+#   index.html / /*   must revalidate on every visit (no-cache)
+#
+_REACT_BUILD = Path(__file__).parent.parent / "frontend" / "build"
+
+if _REACT_BUILD.exists():
+    @app.get("/static/{file_path:path}", include_in_schema=False)
+    async def _serve_react_static(file_path: str):
+        """Webpack content-hashed assets — immutable 1-year cache."""
+        p = _REACT_BUILD / "static" / file_path
+        if not p.is_file():
+            raise HTTPException(status_code=404, detail="Not found")
+        mt = _mimetypes.guess_type(str(p))[0] or "application/octet-stream"
+        return FileResponse(str(p), media_type=mt,
+                            headers={"Cache-Control": "public, max-age=31536000, immutable"})
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def _serve_react_spa(full_path: str):
+        """SPA fallback: serve root build assets directly; everything else → index.html."""
+        # Exact file in build root (manifest.json, favicon.ico, robots.txt, …)
+        if full_path:
+            p = _REACT_BUILD / full_path
+            if p.is_file():
+                mt = _mimetypes.guess_type(str(p))[0] or "application/octet-stream"
+                return FileResponse(str(p), media_type=mt,
+                                    headers={"Cache-Control": "no-cache"})
+        # All other paths → serve index.html so React Router handles them
+        return FileResponse(str(_REACT_BUILD / "index.html"),
+                            media_type="text/html",
+                            headers={"Cache-Control": "no-cache"})
+
+
 @app.on_event("startup")
 async def startup_scheduler():
     """Start the scheduler when the app starts"""

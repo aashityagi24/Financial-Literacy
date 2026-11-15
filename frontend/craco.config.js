@@ -100,6 +100,31 @@ webpackConfig.devServer = (devServerConfig) => {
     };
   }
 
+  // ── Performance: gzip + correct Cache-Control headers ────────────────────
+  // webpack-dev-server v4: compress:true enables the standard 'compression'
+  // express middleware, which gzips JS/CSS/JSON for clients that send
+  // Accept-Encoding: gzip.
+  devServerConfig.compress = true;
+
+  // Set Cache-Control headers:
+  //   • /static/** files all carry a content hash in their name (safe to keep
+  //     for a year — the hash changes on every new build).
+  //   • Everything else (index.html, manifest.json, …) must revalidate.
+  const _prevMiddlewares = devServerConfig.setupMiddlewares;
+  devServerConfig.setupMiddlewares = (middlewares, devServer) => {
+    devServer.app.use((req, res, next) => {
+      const url = req.url || '';
+      if (url.startsWith('/static/')) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      } else {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+      next();
+    });
+    if (_prevMiddlewares) return _prevMiddlewares(middlewares, devServer);
+    return middlewares;
+  };
+
   return devServerConfig;
 };
 
