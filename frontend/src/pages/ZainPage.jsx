@@ -236,6 +236,7 @@ export default function ZainPage() {
       value: checkoutPrice || 29,
       currency: 'INR',
       content_name: '1 Day',
+      num_children: 1,
     });
     setShowCheckout(true);
   };
@@ -269,6 +270,14 @@ export default function ZainPage() {
       });
       const { order_id, amount, currency, key_id } = data;
 
+      // ── Meta Pixel: AddPaymentInfo ─────────────────────────────────────────
+      const _val = amount / 100;
+      fbq('track', 'AddPaymentInfo', { value: _val, currency: 'INR', content_name: '1 Day' });
+
+      // Flags to prevent double-firing PaymentAbandoned.
+      let _rzpPaymentFailed = false;
+      let _rzpPaymentSucceeded = false;
+
       const rzp = new window.Razorpay({
         key: key_id || process.env.REACT_APP_RAZORPAY_KEY_ID,
         amount, currency,
@@ -276,6 +285,7 @@ export default function ZainPage() {
         description: 'Financial Literacy for Children – 1 Day',
         order_id,
         handler: async resp => {
+          _rzpPaymentSucceeded = true;
           try {
             await axios.post(`${API}/subscriptions/verify-payment`, {
               razorpay_order_id:  resp.razorpay_order_id,
@@ -299,9 +309,18 @@ export default function ZainPage() {
         },
         prefill: { name: name.trim(), email: email.trim(), contact: phone.trim() },
         theme:   { color: '#1D3557' },
-        modal:   { ondismiss: () => setProcessing(false) },
+        modal:   {
+          ondismiss: () => {
+            setProcessing(false);
+            if (!_rzpPaymentSucceeded && !_rzpPaymentFailed) {
+              fbq('trackCustom', 'PaymentAbandoned', { value: _val, currency: 'INR', content_name: '1 Day', reason: 'dismissed' });
+            }
+          },
+        },
       });
       rzp.on('payment.failed', r => {
+        _rzpPaymentFailed = true;
+        fbq('trackCustom', 'PaymentAbandoned', { value: _val, currency: 'INR', content_name: '1 Day', reason: 'failed' });
         setFormErr(`Payment failed: ${r.error.description}`);
         setProcessing(false);
       });

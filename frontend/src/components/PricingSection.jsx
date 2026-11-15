@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { trackMetaPixelInitiateCheckout, trackMetaPixelPurchase, trackMetaPixelStartTrial, trackMetaPixelSubscribe } from '../utils/metaPixel';
+import { trackMetaPixelInitiateCheckout, trackMetaPixelAddPaymentInfo, trackMetaPixelPaymentAbandoned, trackMetaPixelPurchase, trackMetaPixelStartTrial, trackMetaPixelSubscribe } from '../utils/metaPixel';
 import { toast } from 'sonner';
 import { Check, Users, User, ChevronDown, CreditCard, Shield, Clock, School, Phone, Mail, MapPin, Briefcase } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -59,27 +59,20 @@ export default function PricingSection() {
     fetchPlans();
   }, []);
 
-  // Keep a ref so the coinquest:buy-now event listener (which closes over a
-  // stale plans value) can still read the current plans.
-  const plansRef = useRef(null);
-  useEffect(() => { plansRef.current = plans; }, [plans]);
-
-  // Fire Meta Pixel InitiateCheckout when the checkout dialog opens.
-  // Guards:
-  //   - Public pages only (/  and /register). PricingSection is also shown
-  //     inside logged-in contexts (AuthPage, TrialBanner, TrialLimitDialog,
-  //     SubscriptionExpiredGate) — those must not fire pixel events.
-  //   - At most once per browser session per plan+duration combo so that
-  //     repeated opens of the same dialog don't send duplicate events.
-  const fireInitiateCheckout = (duration, planType, price) => {
-    const path = window.location.pathname;
-    if (path !== '/' && path !== '/register') return;
-    const key = `cq_ic_${planType}_${duration}`;
-    if (sessionStorage.getItem(key)) return;
-    sessionStorage.setItem(key, '1');
-    const contentName = DURATION_LABELS[duration]?.short || duration;
-    trackMetaPixelInitiateCheckout(price, contentName);
-  };
+  // ── Meta Pixel: InitiateCheckout ─────────────────────────────────────────
+  // Fire exactly once per modal opening, whichever button triggered it.
+  // Guard: only on public pages (/ and /register); not inside the logged-in app.
+  const prevShowCheckout = useRef(false);
+  useEffect(() => {
+    if (showCheckout && !prevShowCheckout.current) {
+      const path = window.location.pathname;
+      if (path === '/' || path === '/register') {
+        const contentName = DURATION_LABELS[selectedDuration]?.short || selectedDuration;
+        trackMetaPixelInitiateCheckout(totalPrice, contentName, numChildren);
+      }
+    }
+    prevShowCheckout.current = showCheckout;
+  }, [showCheckout, selectedDuration, numChildren, totalPrice]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Allow other components (e.g. the LandingPage hero "Start for ₹49" CTA) to
   // deep-link straight into the 1-day Buy Now flow. Dispatch:
@@ -95,11 +88,6 @@ export default function PricingSection() {
       document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
       // Small delay so the scroll settles before the modal opens
       setTimeout(() => {
-        const currentPlans = plansRef.current;
-        if (currentPlans) {
-          const plan = currentPlans[planType]?.[duration];
-          if (plan) fireInitiateCheckout(duration, planType, plan.base_price);
-        }
         setShowCheckout(true);
       }, 400);
     };
@@ -203,6 +191,17 @@ export default function PricingSection() {
         return;
       }
 
+      const _contentName = DURATION_LABELS[selectedDuration]?.short || selectedDuration;
+      const _valueINR = amount / 100;
+
+      // ── Meta Pixel: AddPaymentInfo ─────────────────────────────────────────
+      // Fires once per checkout attempt, just before the Razorpay window opens.
+      trackMetaPixelAddPaymentInfo(_valueINR, _contentName);
+
+      // Flags used by ondismiss / payment.failed to avoid double-firing.
+      let _rzpPaymentFailed = false;
+      let _rzpPaymentSucceeded = false;
+
       const options = {
         key: key_id || RAZORPAY_KEY,
         amount,
@@ -211,6 +210,7 @@ export default function PricingSection() {
         description: `${planMeta[selectedPlanType].label} - ${DURATION_LABELS[selectedDuration].short}`,
         order_id,
         handler: async (response) => {
+          _rzpPaymentSucceeded = true;
           try {
             await axios.post(`${API}/subscriptions/verify-payment`, {
               razorpay_order_id: response.razorpay_order_id,
@@ -225,8 +225,6 @@ export default function PricingSection() {
             const _fireKey = `cq_px_${_payId}`;
             if (!sessionStorage.getItem(_fireKey)) {
               sessionStorage.setItem(_fireKey, '1');
-              const _valueINR = amount / 100;
-              const _contentName = DURATION_LABELS[selectedDuration]?.short || selectedDuration;
               trackMetaPixelPurchase(_valueINR, _contentName, numChildren, _payId);
               if (selectedDuration === '1_day') {
                 trackMetaPixelStartTrial(_valueINR, `${_payId}_trial`);
@@ -253,12 +251,22 @@ export default function PricingSection() {
         },
         theme: { color: '#1D3557' },
         modal: {
-          ondismiss: () => setIsProcessing(false),
+          ondismiss: () => {
+            setIsProcessing(false);
+            // Only fire 'dismissed' if the payment neither succeeded nor failed.
+            // When payment.failed fires first, ondismiss also fires — we only
+            // want 'failed' in that case, not a second PaymentAbandoned event.
+            if (!_rzpPaymentSucceeded && !_rzpPaymentFailed) {
+              trackMetaPixelPaymentAbandoned(_valueINR, _contentName, 'dismissed');
+            }
+          },
         },
       };
 
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', (response) => {
+        _rzpPaymentFailed = true;
+        trackMetaPixelPaymentAbandoned(_valueINR, _contentName, 'failed');
         toast.error(`Payment failed: ${response.error.description}`);
         setIsProcessing(false);
       });
@@ -411,7 +419,7 @@ export default function PricingSection() {
                   <div className="mt-auto px-5 pb-5 pt-2">
                     <button
                       data-testid={`buy-now-${dur}`}
-                      onClick={(e) => { e.stopPropagation(); setSelectedDuration(dur); fireInitiateCheckout(dur, selectedPlanType, calcTotal(plan, numChildren)); handleBuyNow(); }}
+                      onClick={(e) => { e.stopPropagation(); setSelectedDuration(dur); handleBuyNow(); }}
                       className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all ${
                         isPopular
                           ? 'bg-[#FFD23F] text-[#1D3557] hover:bg-[#FFE066]'
