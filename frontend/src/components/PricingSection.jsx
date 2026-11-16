@@ -99,6 +99,11 @@ export default function PricingSection() {
     return () => window.removeEventListener('coinquest:buy-now', openBuyNow);
   }, []);
 
+  // Broadcast checkout open/close so the mobile sticky bar on the homepage can hide itself
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('coinquest:checkout-change', { detail: { open: showCheckout } }));
+  }, [showCheckout]);
+
   if (!plans || !planMeta) return null;
 
   const currentPlan = plans[selectedPlanType]?.[selectedDuration];

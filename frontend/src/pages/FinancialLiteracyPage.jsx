@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Coins, BookOpen, Users, Sparkles, TrendingUp, Gift, Star, Trophy, School, Play, PiggyBank, HandCoins, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
@@ -37,7 +37,58 @@ export default function FinancialLiteracyPage() {
   const [selectedGrade, setSelectedGrade] = useState("Ages 7–8");
   const [trialPrice, setTrialPrice] = useState(49);
 
+  // ── Mobile sticky CTA bar state ───────────────────────────────────────────
+  const heroCtaRef = useRef(null);
+  const [heroInView, setHeroInView] = useState(true);
+  const [pricingInView, setPricingInView] = useState(false);
+  const [footerInView, setFooterInView] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  // Show bar only on mobile (<768px handled by md:hidden) when hero CTA is scrolled
+  // away, pricing/footer not yet visible, and checkout modal is closed.
+  const showStickyBar = !heroInView && !pricingInView && !footerInView && !checkoutOpen;
+
   useEffect(() => { trackMetaPixelPageView(); }, []);
+
+  // Hero CTA observer — sticky bar appears once hero "Try a day" button scrolls out of view
+  useEffect(() => {
+    const el = heroCtaRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => setHeroInView(e.isIntersecting), { threshold: 0 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // Pricing section observer — bar disappears when pricing comes into view.
+  // Retries because PricingSection renders null until its plans API resolves.
+  useEffect(() => {
+    let obs;
+    const setup = () => {
+      if (obs) return;
+      const el = document.getElementById('pricing');
+      if (!el) return;
+      obs = new IntersectionObserver(([e]) => setPricingInView(e.isIntersecting), { threshold: 0.05 });
+      obs.observe(el);
+    };
+    setup();
+    const t = setTimeout(setup, 1500);
+    return () => { clearTimeout(t); obs?.disconnect(); };
+  }, []);
+
+  // Footer observer — bar also hides when the footer is visible (user has scrolled past pricing)
+  useEffect(() => {
+    const el = document.querySelector('[data-testid="site-footer"]');
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => setFooterInView(e.isIntersecting), { threshold: 0.1 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // Checkout modal listener — bar hides while checkout modal is open (covers virtual-keyboard case too)
+  useEffect(() => {
+    const handler = (evt) => setCheckoutOpen(evt.detail?.open ?? false);
+    window.addEventListener('coinquest:checkout-change', handler);
+    return () => window.removeEventListener('coinquest:checkout-change', handler);
+  }, []);
 
   useEffect(() => {
     if (searchParams.get('session_expired') === 'true') {
@@ -176,7 +227,7 @@ export default function FinancialLiteracyPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#E0FBFC]">
+    <div className="min-h-screen bg-[#E0FBFC] pb-20 md:pb-0">
       <SiteHeader />
       <Suspense fallback={null}>
         <ExitIntentPopup trialPrice={trialPrice} />
@@ -202,6 +253,7 @@ export default function FinancialLiteracyPage() {
               <div className="flex flex-col gap-3">
                 <div>
                   <button
+                    ref={heroCtaRef}
                     data-testid="get-started-btn"
                     onClick={() => window.dispatchEvent(new CustomEvent('coinquest:buy-now', { detail: { duration: '1_day' } }))}
                     className="btn-primary px-8 py-4 text-xl flex items-center gap-2"
@@ -558,6 +610,41 @@ export default function FinancialLiteracyPage() {
 
       {/* Pricing Section — eagerly imported (webpack puts it in main.js anyway) */}
       <PricingSection />
+
+      {/* ── Mobile sticky CTA bar ─── mobile-only (<768 px) ───────────────────
+           Slides up once hero CTA scrolls out of view; hides again when the
+           pricing section or footer enters the viewport, or when the checkout
+           modal is open (covers virtual-keyboard-open state too).         */}
+      <div
+        data-testid="mobile-sticky-cta"
+        aria-hidden={!showStickyBar}
+        className={`fixed bottom-0 left-0 right-0 z-40 md:hidden transition-transform duration-300 ease-out motion-reduce:transition-none ${
+          showStickyBar ? 'translate-y-0 pointer-events-auto' : 'translate-y-full pointer-events-none'
+        }`}
+      >
+        <div
+          className="bg-[#F5F0E8] border-t border-[#1D3557]/15 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] flex items-center justify-between px-4"
+          style={{ minHeight: '64px', paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          <div>
+            <p
+              className="font-bold text-[#1D3557] leading-tight"
+              style={{ fontFamily: 'Fredoka', fontSize: '1.05rem' }}
+            >
+              Try a day · ₹{trialPrice}
+            </p>
+            <p className="text-xs text-[#1D3557]/60 mt-0.5">No auto-renewal</p>
+          </div>
+          <button
+            data-testid="mobile-sticky-cta-btn"
+            onClick={() => window.dispatchEvent(new CustomEvent('coinquest:buy-now', { detail: { duration: '1_day' } }))}
+            className="btn-primary px-5 py-2.5 text-base"
+            aria-label="Try CoinQuest for one day"
+          >
+            Start
+          </button>
+        </div>
+      </div>
 
       {/* Footer */}
       <SiteFooter />

@@ -128,6 +128,16 @@ A gamified financial literacy learning application for children (K-5) with disti
 - **Grade 3 moved from Stocks to Garden**: `getInvestmentItem()` threshold changed `grade<=2`→`grade<=3`. Backend gates swapped: `GET /garden/farm` + `POST /garden/buy-plot` now block `grade>=4` (was `>=3`); `GET /investments` now blocks `grade<=3` (was `<=2`). 5 seed-catalog docs (Red Chilli, Tomato, Eggplant, Wheat, Strawberry) had `max_grade` widened 2→3 so Grade 3 doesn't see an empty seed shop.
 - Tested across 4 rounds by testing_agent (iterations 109-112): 100% pass each round, zero unresolved bugs. New regression suite: `/app/backend/tests/test_round4_garden_investments.py`. QA account `classmate_g4_qa`/`testpass123` added for grade-4 regression baseline (see test_credentials.md).
 
+### Mobile Sticky CTA Bar on Homepage (Nov 2026) ✅
+- Mobile-only (`md:hidden`) fixed bottom bar on `FinancialLiteracyPage.jsx` — appears only on <768 px screens.
+- Visibility logic via `IntersectionObserver`: shows when hero "Try a day" button scrolls out of view; hides when the `#pricing` section or footer enters the viewport.
+- Hides whenever the checkout modal is open (via `coinquest:checkout-change` custom event dispatched by `PricingSection` on `showCheckout` state change) — also covers virtual-keyboard-open state.
+- Tapping bar dispatches `coinquest:buy-now` with `{duration:'1_day'}` → same InitiateCheckout event path as the hero button (no duplicate Pixel event).
+- Design: cream `#F5F0E8` background, thin `border-[#1D3557]/15` top border, `shadow-[0_-4px_16px]`, `min-h-[64px]` + `env(safe-area-inset-bottom)`. Left: Fredoka "Try a day · ₹{price}" + small "No auto-renewal". Right: `btn-primary` "Start" button.
+- Slide-up `transition-transform duration-300 ease-out`; `motion-reduce:transition-none` respects `prefers-reduced-motion`.
+- `pb-20 md:pb-0` added to page root so bar never obscures footer or content.
+- Tested (iteration_132): 9/9 frontend tests pass at 360×640 and 390×844.
+
 ### Video Walkthrough Section Enhancements (Oct 2026) ✅
 - Moved video section directly below the hero on the landing page (before "Everything Kids Need to Learn About Money")
 - Updated heading default to "See exactly what your child will do"
