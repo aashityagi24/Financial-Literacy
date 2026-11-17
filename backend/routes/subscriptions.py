@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from datetime import datetime, timezone, timedelta
-from typing import Optional, List
+from typing import Optional, List, Any
 import uuid
 import os
 import re
@@ -42,6 +42,7 @@ class CreateOrderRequest(BaseModel):
     subscriber_email: str
     subscriber_phone: str
     referral_code: Optional[str] = None
+    source: Optional[Any] = None  # cq_src JSON blob {first_touch, last_touch} from localStorage
 
 class VerifyPaymentRequest(BaseModel):
     razorpay_order_id: str
@@ -414,6 +415,22 @@ async def admin_delete_referral_code(referral_id: str, request: Request):
     return {"message": "Referral code deleted"}
 
 
+def _short_src(src: Any, touch: str) -> str:
+    """Build a short Razorpay notes string like 'whatsapp/chat/ctwa/ladder' (≤255 chars)."""
+    if not src or not isinstance(src, dict):
+        return ""
+    t = src.get(touch)
+    if not t or not isinstance(t, dict):
+        return ""
+    parts = [
+        t.get("utm_source", ""),
+        t.get("utm_medium", ""),
+        t.get("utm_campaign", ""),
+        t.get("utm_content", ""),
+    ]
+    return "/".join(p for p in parts if p)[:255]
+
+
 @router.post("/create-order")
 async def create_order(order: CreateOrderRequest):
     """Create a Razorpay order for subscription purchase"""
@@ -459,6 +476,8 @@ async def create_order(order: CreateOrderRequest):
                 "plan_type": order.plan_type,
                 "duration": order.duration,
                 "num_children": str(order.num_children),
+                "src": _short_src(order.source, "last_touch"),
+                "first_src": _short_src(order.source, "first_touch"),
             }
         })
     except Exception as e:
@@ -494,6 +513,9 @@ async def create_order(order: CreateOrderRequest):
         "end_date": end_date.isoformat(),
         "is_active": False,
         "created_at": datetime.now(timezone.utc).isoformat(),
+        # Source attribution — stored as-is from the frontend cq_src object.
+        # Nullable; never trusted for pricing (server always recomputes amounts).
+        "source": order.source if isinstance(order.source, dict) else None,
     }
     
     await db.subscriptions.insert_one(subscription)

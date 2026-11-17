@@ -1528,3 +1528,12 @@ A comprehensive peer-to-peer and parent-to-child lending system for financial li
 - **Backend public endpoint**: `GET /api/public/story/zain` (no auth) — searches DB for Zain story by title, returns html_url + metadata for the iframe
 - **Images**: removed old unapproved generated story images; dashboard image saved to `/public/images/zain-dashboard.webp`
 - **Testing**: 13/13 frontend tests passing (iteration_131.json); unauthenticated access confirmed; checkout modal verified; FAQ accordion verified; WhatsApp link verified
+
+## Source Tracking (Nov 2026)
+- NEW `frontend/src/utils/utmTracking.js`: `captureUtm()` / `getSrc()` — reads UTM params from URL, writes `cq_src` JSON to localStorage with `first_touch` / `last_touch` logic (30-day first-touch window); all reads/writes wrapped in try/catch for Instagram in-app browser
+- NEW `frontend/src/pages/WaPage.jsx`: `/wa` and `/wa/:content` routes redirect to `/?utm_source=whatsapp&utm_medium=chat&utm_campaign=ctwa[&utm_content=…]`
+- `App.js`: added `/wa` and `/wa/:content` routes; `captureUtm()` called on every `location.search` change
+- `PricingSection.jsx` + `ZainPage.jsx`: `source: getSrc()` added to both create-order POSTs
+- `metaPixel.js`: `trackMetaPixelPurchase` accepts optional `srcData`; adds `src_source`, `src_campaign`, `src_content` custom fields to Purchase event (empty strings when absent; eventID unchanged)
+- `backend/routes/subscriptions.py`: `CreateOrderRequest.source: Optional[Any]`; `_short_src()` helper builds "whatsapp/chat/ctwa/ladder" strings; Razorpay notes get `src` + `first_src`; subscription document stores `source` dict
+- `AdminSubscriptionManagement.jsx`: Source column in table (last_touch badges, first_touch on hover), Source filter dropdown, paid-orders-by-source breakdown row (clickable pills filter the table, respects date filter)

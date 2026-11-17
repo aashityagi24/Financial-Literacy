@@ -91,6 +91,7 @@ export default function AdminSubscriptionManagement({ user }) {
   const [referralDialog, setReferralDialog] = useState({ open: false, editingId: null });
   const [referralForm, setReferralForm] = useState(EMPTY_REFERRAL_FORM);
   const [savingReferral, setSavingReferral] = useState(false);
+  const [sourceFilter, setSourceFilter] = useState('all'); // 'all' | any utm_source value
 
   useEffect(() => {
     if (user?.role !== 'admin') {
@@ -430,6 +431,11 @@ export default function AdminSubscriptionManagement({ user }) {
     }
     // Duration filter
     if (durationFilter !== 'all' && sub.duration !== durationFilter) return false;
+    // Source filter
+    if (sourceFilter !== 'all') {
+      const lt = sub.source?.last_touch;
+      if (!lt?.utm_source || lt.utm_source !== sourceFilter) return false;
+    }
     // Date range filter
     if (dateFrom) {
       const subDate = new Date(sub.created_at || sub.start_date);
@@ -443,6 +449,29 @@ export default function AdminSubscriptionManagement({ user }) {
     }
     return true;
   });
+
+  // Paid-orders-by-source breakdown (applies date filter but not source/duration filter)
+  const paidSubsInDateRange = subscriptions.filter(sub => {
+    if (sub.payment_status !== 'completed') return false;
+    if (dateFrom) {
+      const d = new Date(sub.created_at || sub.start_date);
+      if (d < dateFrom) return false;
+    }
+    if (dateTo) {
+      const d = new Date(sub.created_at || sub.start_date);
+      const eod = new Date(dateTo); eod.setHours(23, 59, 59, 999);
+      if (d > eod) return false;
+    }
+    return true;
+  });
+  const sourceBreakdown = paidSubsInDateRange.reduce((acc, sub) => {
+    const src = sub.source?.last_touch?.utm_source || '(direct)';
+    acc[src] = (acc[src] || 0) + 1;
+    return acc;
+  }, {});
+  const sourceBreakdownSorted = Object.entries(sourceBreakdown).sort((a, b) => b[1] - a[1]);
+  // Distinct source values for the filter dropdown
+  const distinctSources = [...new Set(subscriptions.map(s => s.source?.last_touch?.utm_source).filter(Boolean))];
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
@@ -483,7 +512,7 @@ export default function AdminSubscriptionManagement({ user }) {
 
       <div className="max-w-7xl mx-auto p-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <CreditCard className="w-6 h-6 text-[#3D5A80] mb-1" />
             <p className="text-2xl font-bold text-[#1D3557]">{stats.total}</p>
@@ -505,6 +534,31 @@ export default function AdminSubscriptionManagement({ user }) {
             <p className="text-sm text-gray-500">Total Revenue</p>
           </div>
         </div>
+
+        {/* Source breakdown — paid orders per utm_source, respects the date filter */}
+        {sourceBreakdownSorted.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6" data-testid="source-breakdown">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              Paid orders by source{(dateFrom || dateTo) ? ' (date-filtered)' : ''}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {sourceBreakdownSorted.map(([src, count]) => (
+                <button
+                  key={src}
+                  data-testid={`source-breakdown-${src}`}
+                  onClick={() => setSourceFilter(sourceFilter === src ? 'all' : src)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                    sourceFilter === src
+                      ? 'bg-[#1D3557] text-white border-[#1D3557]'
+                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  {src} · {count}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6">
@@ -602,6 +656,20 @@ export default function AdminSubscriptionManagement({ user }) {
                     </SelectContent>
                   </Select>
                 </div>
+                {/* Source filter — dynamically populated from actual subscription data */}
+                <div className="flex items-center gap-1.5">
+                  <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                    <SelectTrigger className="w-36 h-8 text-xs" data-testid="sub-source-filter">
+                      <SelectValue placeholder="All Sources" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Sources</SelectItem>
+                      {distinctSources.map(src => (
+                        <SelectItem key={src} value={src}>{src}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <Popover>
                   <PopoverTrigger asChild>
                     <button className="h-8 px-3 text-xs border rounded-md flex items-center gap-1.5 hover:bg-gray-50" data-testid="sub-date-from">
@@ -625,9 +693,9 @@ export default function AdminSubscriptionManagement({ user }) {
                     <Calendar mode="single" selected={dateTo} onSelect={setDateTo} />
                   </PopoverContent>
                 </Popover>
-                {(durationFilter !== 'all' || dateFrom || dateTo) && (
+                {(durationFilter !== 'all' || dateFrom || dateTo || sourceFilter !== 'all') && (
                   <button
-                    onClick={() => { setDurationFilter('all'); setDateFrom(null); setDateTo(null); }}
+                    onClick={() => { setDurationFilter('all'); setDateFrom(null); setDateTo(null); setSourceFilter('all'); }}
                     className="h-8 px-2 text-xs text-red-500 hover:bg-red-50 rounded-md flex items-center gap-1"
                     data-testid="clear-sub-filters"
                   >
@@ -655,6 +723,7 @@ export default function AdminSubscriptionManagement({ user }) {
                       <th className="px-4 py-3 font-medium text-gray-600">Amount</th>
                       <th className="px-4 py-3 font-medium text-gray-600">Start</th>
                       <th className="px-4 py-3 font-medium text-gray-600">Expires</th>
+                      <th className="px-4 py-3 font-medium text-gray-600">Source</th>
                       <th className="px-4 py-3 font-medium text-gray-600">Status</th>
                       <th className="px-4 py-3 font-medium text-gray-600 text-center">Users</th>
                     </tr>
@@ -688,6 +757,26 @@ export default function AdminSubscriptionManagement({ user }) {
                         <td className="px-4 py-3 font-medium">{sub.amount ? `₹${sub.amount.toLocaleString('en-IN')}` : 'Free'}</td>
                         <td className="px-4 py-3">{formatDate(sub.start_date)}</td>
                         <td className="px-4 py-3">{formatDate(sub.end_date)}</td>
+                        <td className="px-4 py-3" data-testid={`sub-source-${sub.subscription_id}`}>
+                          {sub.source?.last_touch ? (
+                            <div
+                              title={sub.source.first_touch
+                                ? `First touch: ${[sub.source.first_touch.utm_source, sub.source.first_touch.utm_campaign, sub.source.first_touch.utm_content].filter(Boolean).join(' / ')}`
+                                : undefined}
+                            >
+                              <span className="text-xs font-medium text-[#1D3557] bg-[#E0FBFC] px-2 py-0.5 rounded">
+                                {sub.source.last_touch.utm_source}
+                              </span>
+                              {sub.source.last_touch.utm_campaign && (
+                                <p className="text-[10px] text-gray-500 mt-0.5">
+                                  {[sub.source.last_touch.utm_campaign, sub.source.last_touch.utm_content].filter(Boolean).join(' / ')}
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3">
                           {(() => {
                             const expired = isExpired(sub.end_date);

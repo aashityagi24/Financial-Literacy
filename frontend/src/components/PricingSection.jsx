@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { trackMetaPixelInitiateCheckout, trackMetaPixelAddPaymentInfo, trackMetaPixelPaymentAbandoned, trackMetaPixelPurchase, trackMetaPixelStartTrial, trackMetaPixelSubscribe } from '../utils/metaPixel';
+import { getSrc } from '../utils/utmTracking';
 import { toast } from 'sonner';
 import { Check, Users, User, ChevronDown, CreditCard, Shield, Clock, School, Phone, Mail, MapPin, Briefcase } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -190,6 +191,7 @@ export default function PricingSection() {
         subscriber_email: checkoutForm.email,
         subscriber_phone: checkoutForm.phone,
         referral_code: checkoutForm.referral_code.trim() || undefined,
+        source: getSrc(),
       });
 
       const { order_id, amount, currency, key_id } = orderRes.data;
@@ -234,7 +236,7 @@ export default function PricingSection() {
             const _fireKey = `cq_px_${_payId}`;
             if (!sessionStorage.getItem(_fireKey)) {
               sessionStorage.setItem(_fireKey, '1');
-              trackMetaPixelPurchase(_valueINR, _contentName, numChildren, _payId);
+              trackMetaPixelPurchase(_valueINR, _contentName, numChildren, _payId, getSrc());
               if (selectedDuration === '1_day') {
                 trackMetaPixelStartTrial(_valueINR, `${_payId}_trial`);
               } else {

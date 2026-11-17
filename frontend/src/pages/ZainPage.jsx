@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { getSrc } from '../utils/utmTracking';
 
 const BACKEND = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND}/api`;
@@ -267,6 +268,7 @@ export default function ZainPage() {
       const { data } = await axios.post(`${API}/subscriptions/create-order`, {
         plan_type: 'single_parent', duration: '1_day', num_children: 1,
         subscriber_name: name.trim(), subscriber_email: email.trim(), subscriber_phone: phone.trim(),
+        source: getSrc(),
       });
       const { order_id, amount, currency, key_id } = data;
 
@@ -297,8 +299,13 @@ export default function ZainPage() {
             if (!sessionStorage.getItem(fk)) {
               sessionStorage.setItem(fk, '1');
               const val = amount / 100;
-              fbq('track', 'Purchase',    { value: val, currency: 'INR', content_name: '1 Day' }, { eventID: payId });
-              fbq('track', 'StartTrial',  { value: val, currency: 'INR' },                         { eventID: `${payId}_t` });
+              const _srcData = getSrc();
+              const lt = _srcData?.last_touch || {};
+              fbq('track', 'Purchase',    {
+                value: val, currency: 'INR', content_name: '1 Day',
+                src_source: lt.utm_source || '', src_campaign: lt.utm_campaign || '', src_content: lt.utm_content || '',
+              }, { eventID: payId });
+              fbq('track', 'StartTrial',  { value: val, currency: 'INR' }, { eventID: `${payId}_t` });
             }
             setShowCheckout(false);
             navigate(`/complete-signup?order_id=${resp.razorpay_order_id}`);

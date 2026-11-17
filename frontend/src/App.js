@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, lazy, Suspense } from "react";
+import { captureUtm } from "@/utils/utmTracking";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
 import axios from "axios";
@@ -9,6 +10,7 @@ import SubscriptionExpiredGate from "@/components/SubscriptionExpiredGate";
 // Landing page — loaded immediately (it IS the first screen every visitor sees)
 import FinancialLiteracyPage from "@/pages/FinancialLiteracyPage";
 import ZainPage from "@/pages/ZainPage";
+import WaPage from "@/pages/WaPage";
 // AuthCallback handles a URL hash synchronously at the top of AppRouter, so it
 // must be a direct import (lazy loads fire after render, which is too late).
 import AuthCallback from "@/pages/AuthCallback";
@@ -244,7 +246,13 @@ function ScrollToTop() {
 // App Router with session_id detection
 function AppRouter() {
   const location = useLocation();
-  
+
+  // Capture UTM / referral params on every navigation so first_touch and
+  // last_touch in localStorage["cq_src"] are always up to date.
+  useEffect(() => {
+    captureUtm();
+  }, [location.search]);
+
   // CRITICAL: Check for session_id synchronously during render (not in useEffect)
   // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
   if (location.hash?.includes('session_id=')) {
@@ -258,6 +266,9 @@ function AppRouter() {
       <Routes>
       <Route path="/" element={<FinancialLiteracyPage />} />
       <Route path="/financial-literacy" element={<Navigate to="/" replace />} />
+      {/* WhatsApp short-link: /wa → /?utm_source=whatsapp… ; /wa/:content adds utm_content */}
+      <Route path="/wa" element={<WaPage />} />
+      <Route path="/wa/:content" element={<WaPage />} />
       <Route path="/entrepreneurship-workshop" element={<EntrepreneurshipWorkshopPage />} />
       <Route path="/for-schools" element={<ForSchoolsPage />} />
       <Route path="/zain" element={<ZainPage />} />

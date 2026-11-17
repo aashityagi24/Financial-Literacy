@@ -37,10 +37,23 @@ export const trackMetaPixelPaymentAbandoned = (value, contentName, reason) => {
 
 // Fires after /api/subscriptions/verify-payment returns success.
 // eventID is razorpay_payment_id — used for future CAPI deduplication.
-export const trackMetaPixelPurchase = (value, contentName, numChildren, eventID) => {
+// srcData is the cq_src object from localStorage (optional); when present,
+// last_touch fields are attached as custom data for attribution.
+export const trackMetaPixelPurchase = (value, contentName, numChildren, eventID, srcData) => {
   if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+    const lt = srcData?.last_touch || {};
     window.fbq('track', 'Purchase',
-      { value, currency: 'INR', content_name: contentName, num_children: numChildren },
+      {
+        value,
+        currency: 'INR',
+        content_name: contentName,
+        num_children: numChildren,
+        // Source attribution — empty strings when not present (not null/undefined,
+        // so the fields always appear in the Pixel Helper for easy inspection)
+        src_source:   lt.utm_source   || '',
+        src_campaign: lt.utm_campaign || '',
+        src_content:  lt.utm_content  || '',
+      },
       { eventID }
     );
   }
