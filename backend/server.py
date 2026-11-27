@@ -54,7 +54,17 @@ api_router = APIRouter(prefix="/api")
 # Falls back to Emergent Object Storage for files not on local disk (deployed pods have
 # ephemeral disks, so new uploads are persisted to object storage - see routes/uploads.py).
 from services.object_storage import get_object as _storage_get_object
+import asyncio as _asyncio
 import mimetypes as _mimetypes
+
+# ── In-memory asset cache ────────────────────────────────────────────────────
+# Thumbnails/images are content-addressed (UUID filename, never mutated).
+# Caching the first object-storage fetch in RAM means every subsequent request
+# is served in microseconds instead of a ~300-500 ms storage round-trip.
+# Bounded at 1 000 entries (~100 MB worst-case for large images) to cap RAM use.
+_ASSET_CACHE: dict = {}   # file_path → (data: bytes, content_type: str)
+_ASSET_CACHE_MAX = 1000
+# ────────────────────────────────────────────────────────────────────────────
 
 @api_router.get("/uploads/{file_path:path}")
 async def serve_uploaded_file(request: Request, file_path: str):
@@ -98,13 +108,32 @@ async def serve_uploaded_file(request: Request, file_path: str):
             headers={**cache_headers, "Accept-Ranges": "bytes"},
         )
 
-    # Object storage fallback (deployed pods have ephemeral disks)
+    # ── Object storage path ──────────────────────────────────────────────────
+    # 1. Serve from RAM cache when available (sub-millisecond).
+    if file_path in _ASSET_CACHE:
+        data, ct = _ASSET_CACHE[file_path]
+        return Response(
+            content=data,
+            media_type=_mimetypes.guess_type(file_path)[0] or ct,
+            headers={**cache_headers, "Accept-Ranges": "bytes", "X-Cache": "HIT"},
+        )
+
+    # 2. Fetch from object storage — run in a thread so the event loop stays
+    #    free for other concurrent thumbnail requests (requests.get is blocking).
     try:
-        data, content_type = _storage_get_object(file_path)
+        data, content_type = await _asyncio.to_thread(_storage_get_object, file_path)
     except Exception:
         raise HTTPException(status_code=404, detail="File not found")
-    guessed = _mimetypes.guess_type(file_path)[0]
-    ct = guessed or content_type
+
+    # 3. Populate cache (drop oldest entry if at capacity — simple FIFO eviction).
+    if len(_ASSET_CACHE) >= _ASSET_CACHE_MAX:
+        try:
+            _ASSET_CACHE.pop(next(iter(_ASSET_CACHE)))
+        except StopIteration:
+            pass
+    _ASSET_CACHE[file_path] = (data, content_type)
+
+    ct = _mimetypes.guess_type(file_path)[0] or content_type
     total = len(data)
     range_header = request.headers.get("range", "")
     if range_header.startswith("bytes="):
